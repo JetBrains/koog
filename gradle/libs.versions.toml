@@ -1,0 +1,105 @@
+[versions]
+annotations = "26.0.1"
+antlr = "4.13.1"
+caffeine = "3.1.8"
+catboost-slf4j = "1.2.5"
+clikt = "4.2.2"
+fleet-parsers = "0.3.180"
+fuzzy-resolve = "9"
+grazie-gradle = "0.3.6"
+grazie-platform = "0.4.49"
+jackson = "2.12.3"
+jetbrains-markdown = "0.5.0"
+jgit = "7.1.0.202411261347-r"
+jgrapht = "1.5.2"
+jline = "3.25.0"
+junit = "5.8.2"
+kotlin = "2.1.10"
+kotlinx-coroutines = "1.10.1"
+kotlinx-datetime = "0.6.1"
+kotlinx-io = "0.7.0"
+kotlinx-serialization = "1.7.3" # check with IJ
+ktor3 = "3.0.3"
+lettuce = "6.5.5.RELEASE"
+logback = "1.5.13"
+lsp4j = "0.24.0"
+ml-api = "75"
+mockk = "1.13.8"
+mosaic = "0.17.0"
+shadow = "8.1.1"
+slf4j = "2.0.16"
+space-sdk-jvm = "2024.3-187640"
+
+[libraries]
+ai-grazie-api-gateway-client = { module = "ai.grazie.api:api-gateway-client", version.ref = "grazie-platform" }
+ai-grazie-client-ktor = { module = "ai.grazie.client:client-ktor", version.ref = "grazie-platform" }
+ai-grazie-model-auth = { module = "ai.grazie.model:model-auth", version.ref = "grazie-platform" }
+ai-grazie-model-common = { module = "ai.grazie.model:model-common", version.ref = "grazie-platform" }
+ai-grazie-model-llm = { module = "ai.grazie.model:model-llm", version.ref = "grazie-platform" }
+ai-grazie-model-nlp = { module = "ai.grazie.model:model-nlp", version.ref = "grazie-platform" }
+ai-grazie-model-task = { module = "ai.grazie.model:model-task", version.ref = "grazie-platform" }
+ai-grazie-model-text = { module = "ai.grazie.model:model-text", version.ref = "grazie-platform" }
+ai-grazie-nlp-common = { module = "ai.grazie.nlp:nlp-common", version.ref = "grazie-platform" }
+ai-grazie-nlp-encoder-starcoder = { module = "ai.grazie.nlp:nlp-encoder-starcoder", version.ref = "grazie-platform" }
+ai-grazie-nlp-tokenizer = { module = "ai.grazie.nlp:nlp-tokenizer", version.ref = "grazie-platform" }
+ai-grazie-tasks-provider-proxy-model = { module = "ai.grazie.tasks.provider.model:tasks-provider-proxy-model", version.ref = "grazie-platform" }
+ai-grazie-utils-common = { module = "ai.grazie.utils:utils-common", version.ref = "grazie-platform" }
+antlr4 = { module = "org.antlr:antlr4", version.ref = "antlr" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
+clikt = { module = "com.github.ajalt.clikt:clikt", version.ref = "clikt" }
+eclipse-jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
+eclipse-lsp4 = { module = "org.eclipse.lsp4j:org.eclipse.lsp4j", version.ref = "lsp4j" }
+fleet-parsers-core = { module = "org.jetbrains:ij-parsing-core", version.ref = "fleet-parsers" }
+fleet-parsers-cpp = { module = "org.jetbrains:cpp-parser", version.ref = "fleet-parsers" }
+fleet-parsers-csharp = { module = "org.jetbrains:csharp-parser", version.ref = "fleet-parsers" }
+fleet-parsers-css = { module = "org.jetbrains:css-parser", version.ref = "fleet-parsers" }
+fleet-parsers-go = { module = "org.jetbrains:go-parser", version.ref = "fleet-parsers" }
+fleet-parsers-java = { module = "org.jetbrains:java-parser", version.ref = "fleet-parsers" }
+fleet-parsers-javascript = { module = "org.jetbrains:javascript-parser", version.ref = "fleet-parsers" }
+fleet-parsers-kotlin = { module = "org.jetbrains:kotlin-parser", version.ref = "fleet-parsers" }
+fleet-parsers-php = { module = "org.jetbrains:php-parser", version.ref = "fleet-parsers" }
+fleet-parsers-python = { module = "org.jetbrains:python-parser", version.ref = "fleet-parsers" }
+fleet-parsers-rust = { module = "org.jetbrains:rust-parser", version.ref = "fleet-parsers" }
+fleet-parsers-scala = { module = "org.jetbrains:scala-parser", version.ref = "fleet-parsers" }
+fleet-parsers-shell = { module = "org.jetbrains:shell-parser", version.ref = "fleet-parsers" }
+fleet-parsers-syntax = { module = "org.jetbrains:lang-syntax", version.ref = "fleet-parsers" }
+jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jackson" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrains-markdown" }
+jgrapht-core = { module = "org.jgrapht:jgrapht-core", version.ref = "jgrapht" }
+jline = { module = "org.jline:jline", version.ref = "jline" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
+kotlinx-io-core-jvm = { module = "org.jetbrains.kotlinx:kotlinx-io-core-jvm", version.ref = "kotlinx-io" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
+ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor3" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor3" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
+ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
+lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+mlapi-api = { module = "com.jetbrains.mlapi:ml-api", version.ref = "ml-api" }
+mlapi-catboost-slf4j = { module = "com.jetbrains.mlapi:catboost-shadow-need-slf4j", version.ref = "catboost-slf4j" }
+mlapi-tools = { module = "com.jetbrains.mlapi:ml-tools", version.ref = "ml-api" }
+mlapi-tools-suspendable = { module = "com.jetbrains.mlapi:ml-tools-suspendable", version.ref = "ml-api" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+models-fuzzy-resolve = { module = "com.jetbrains.ml.models:fuzzy-resolve-model", version.ref = "fuzzy-resolve" }
+mosaic-runtime = { module = "com.jakewharton.mosaic:mosaic-runtime", version.ref = "mosaic" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+space-sdk-jvm = { module = "org.jetbrains:space-sdk-jvm", version.ref = "space-sdk-jvm" }
+
+[plugins]
+compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
