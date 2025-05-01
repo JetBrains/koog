@@ -27,7 +27,7 @@ dependencies {
     implementation("ai.jetbrains.code.files:code-files-vfs:1.0.0-beta.55+0.4.45")
 
     implementation(project(":code-prompt:code-prompt-markdown"))
-    implementation(project(":code-prompt:code-prompt-structure"))
+    implementation(project(":prompt:prompt-structure"))
 
     implementation(libs.ai.grazie.api.gateway.client)
     implementation(libs.ai.grazie.client.ktor)

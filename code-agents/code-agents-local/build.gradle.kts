@@ -16,7 +16,7 @@ kotlin {
                 api(project(":code-agents:code-agents-core"))
                 api(project(":code-prompt:code-prompt-executor:code-prompt-executor-model"))
                 api(project(":code-prompt:code-prompt-llm"))
-                api(project(":code-prompt:code-prompt-structure"))
+                api(project(":prompt:prompt-structure"))
 
                 implementation(project(":code-agents:code-agents-tools-registry"))
                 implementation(project(":code-prompt:code-prompt-markdown"))

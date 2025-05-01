@@ -11,7 +11,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":code-prompt:code-prompt-model"))
+                api(project(":prompt:prompt-model"))
             }
         }
 

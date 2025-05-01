@@ -1,7 +1,9 @@
 package ai.grazie.code.prompt.structure.json
 
-import kotlin.test.*
 import kotlinx.serialization.Serializable
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class JsonStructureLanguageTest {
     private val structuredLanguage = JsonStructureLanguage()

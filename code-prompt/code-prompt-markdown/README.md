@@ -203,4 +203,4 @@ Within a list item block, you can add nested lists:
 
 ## Integration with TextContentBuilder
 
-This module uses `TextContentBuilder` from the `code-prompt-model` module under the hood, but provides a more specialized interface for markdown generation.
+This module uses `TextContentBuilder` from the `prompt-model` module under the hood, but provides a more specialized interface for markdown generation.

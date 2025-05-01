@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":code-agents:code-agents-core-tools"))
-                api(project(":code-prompt:code-prompt-model"))
+                api(project(":prompt:prompt-model"))
                 implementation(libs.kotlinx.datetime)
             }
         }

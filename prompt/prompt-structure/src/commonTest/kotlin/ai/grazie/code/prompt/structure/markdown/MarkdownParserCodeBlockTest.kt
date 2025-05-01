@@ -1,10 +1,10 @@
 package ai.grazie.code.prompt.structure.markdown
 
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.test.runTest
 
 class MarkdownParserCodeBlockTest {
 
