@@ -14,7 +14,7 @@ kotlin {
             dependencies {
                 api(project(":code-prompt:code-prompt-executor:code-prompt-executor-model"))
 
-                implementation(project(":code-prompt:code-prompt-markdown"))
+                implementation(project(":prompt:prompt-markdown"))
 
                 implementation(libs.ai.grazie.utils.common)
             }

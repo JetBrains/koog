@@ -14,7 +14,7 @@ kotlin {
             dependencies {
                 api(project(":code-agents:code-agents-local-features:code-agents-local-features-memory-old"))
                 api(project(":code-prompt:code-prompt-executor:code-prompt-executor-model"))
-                implementation(project(":code-prompt:code-prompt-markdown"))
+                implementation(project(":prompt:prompt-markdown"))
                 implementation(project(":prompt:prompt-structure"))
                 implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.datetime)

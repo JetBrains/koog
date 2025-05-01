@@ -14,7 +14,7 @@ kotlin {
             dependencies {
                 api(project(":code-agents:code-agents-local"))
                 api("ai.jetbrains.code.files:code-files-model:1.0.0-beta.55+0.4.45")
-                implementation(project(":code-prompt:code-prompt-markdown"))
+                implementation(project(":prompt:prompt-markdown"))
 
                 implementation(libs.ai.grazie.model.auth)
                 implementation(libs.ai.grazie.utils.common)

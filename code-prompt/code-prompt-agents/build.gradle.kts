@@ -12,7 +12,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":code-agents:code-agents-core-tools"))
-                implementation(project(":code-prompt:code-prompt-markdown"))
+                implementation(project(":prompt:prompt-markdown"))
             }
         }
     }

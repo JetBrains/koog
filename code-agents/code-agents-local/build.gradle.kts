@@ -19,7 +19,7 @@ kotlin {
                 api(project(":prompt:prompt-structure"))
 
                 implementation(project(":code-agents:code-agents-tools-registry"))
-                implementation(project(":code-prompt:code-prompt-markdown"))
+                implementation(project(":prompt:prompt-markdown"))
 
                 implementation(libs.ai.grazie.api.gateway.client)
                 implementation(libs.ai.grazie.client.ktor)
