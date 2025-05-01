@@ -10,7 +10,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.jsonPrimitive
 
-internal val ToolJson = Json {
+internal val JsonForTool = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
     explicitNulls = false
@@ -62,7 +62,7 @@ fun serializeToolDescriptorsToJsonString(toolDescriptors: List<ToolDescriptor>):
         )
     }
 
-    return ToolJson.encodeToString(toolModels)
+    return JsonForTool.encodeToString(toolModels)
 }
 
 private fun <T> ToolParameterDescriptor<T>.toToolParameterModel(): ToolParameterModel = ToolParameterModel(
@@ -71,12 +71,12 @@ private fun <T> ToolParameterDescriptor<T>.toToolParameterModel(): ToolParameter
     description = description,
     enumValues = (type as? ToolParameterType.Enum<*>)?.toToolEnumValues(),
     itemType = (type as? ToolParameterType.List<*>)?.toToolArrayItemType(),
-    default = defaultValue?.let { ToolJson.encodeToJsonElement(type.serializer, it) }
+    default = defaultValue?.let { JsonForTool.encodeToJsonElement(type.serializer, it) }
 )
 
 
 private fun <T : Enum<T>> ToolParameterType.Enum<T>.toToolEnumValues(): List<String> = entries.map {
-    ToolJson.encodeToJsonElement(serializer, it).jsonPrimitive.content
+    JsonForTool.encodeToJsonElement(serializer, it).jsonPrimitive.content
 }
 
 private fun ToolParameterType.List<*>.toToolArrayItemType(): ToolArrayItemTypeModel = ToolArrayItemTypeModel(
