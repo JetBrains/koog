@@ -12,30 +12,17 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(project(":prompt:prompt-cache:prompt-cache-model"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
-
-                implementation(project(":prompt:prompt-markdown"))
-
-                implementation(libs.ai.grazie.utils.common)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
-
-        commonTest {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
-            }
-        }
-
+        
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
-            }
-        }
-
-        jsTest {
-            dependencies {
-                implementation(kotlin("test-js"))
+                implementation(libs.junit.jupiter.params)
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }
