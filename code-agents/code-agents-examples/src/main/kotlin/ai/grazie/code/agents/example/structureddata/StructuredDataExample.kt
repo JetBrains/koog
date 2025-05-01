@@ -12,7 +12,7 @@ import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.code.prompt.structure.json.LLMDescription
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
@@ -213,7 +213,7 @@ fun main(): Unit = runBlocking {
                     this.requestLLMStructured(
                         structure = weatherForecastStructure,
                         // the model that would handle coercion if the output does not conform to the requested structure
-                        fixingModel = JetBrainsAIModels.OpenAI.GPT4_1_Mini,
+                        fixingModel = OllamaModels.Meta.LLAMA_3_2,
                     )
                 }
 
@@ -243,7 +243,7 @@ fun main(): Unit = runBlocking {
     val token = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
 
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(JetBrainsAIModels.OpenAI.GPT4_1_Mini, "weather-forecast") {
+        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "weather-forecast") {
             system(
                 """
                 You are a weather forecasting assistant.

@@ -23,7 +23,7 @@ import ai.grazie.code.agents.local.memory.storage.EncryptedStorage
 import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.Path
@@ -105,7 +105,7 @@ fun createProjectAnalyzerAgent(
 
     // Agent configuration
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "project-analyzer") {},
+        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "project-analyzer") {},
         maxAgentIterations = maxAgentIterations
     )
 

@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt
 
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -13,7 +13,7 @@ class PromptTest {
 
     @Test
     fun testDSLBuilding() {
-        val prompt = Prompt.build(JetBrainsAIModels.OpenAI.GPT4o, "test") {
+        val prompt = Prompt.build(OllamaModels.Meta.LLAMA_3_2, "test") {
             system("You are a helpful assistant")
             user("Hello")
             assistant("Hi! How can I help you?")
@@ -41,7 +41,7 @@ class PromptTest {
 
     @Test
     fun testSerialization() {
-        val prompt = Prompt.build(JetBrainsAIModels.OpenAI.GPT4o, "test") {
+        val prompt = Prompt.build(OllamaModels.Meta.LLAMA_3_2, "test") {
             system("You are a helpful assistant")
             user("Hello")
         }

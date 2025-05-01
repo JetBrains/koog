@@ -16,7 +16,7 @@ import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
@@ -276,7 +276,7 @@ class AIAgentPipelineTest {
     ): KotlinAIAgent {
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {
+            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
                 system(systemPrompt ?: "Test system message")
                 user(userPrompt ?: "Test user message")
                 assistant(assistantPrompt ?: "Test assistant response")

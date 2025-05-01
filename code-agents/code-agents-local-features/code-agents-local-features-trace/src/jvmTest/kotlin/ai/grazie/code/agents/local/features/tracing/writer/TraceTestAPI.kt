@@ -6,7 +6,7 @@ import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.agent.LocalAgentStrategy
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.CoroutineScope
 
 fun createAgent(
@@ -15,7 +15,7 @@ fun createAgent(
     installFeatures: suspend KotlinAIAgent.FeatureContext.() -> Unit = { }
 ): KotlinAIAgent {
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {
+        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
             system("Test system message")
             user("Test user message")
             assistant("Test assistant response")

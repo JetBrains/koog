@@ -8,7 +8,7 @@ import ai.grazie.code.agents.local.dsl.builders.forwardTo
 import ai.grazie.code.agents.local.dsl.builders.simpleStrategy
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -20,7 +20,7 @@ class LocalAgentNodesHistoryCompressionTest {
     /**
      * Helper function to create a prompt with the specified number of message pairs
      */
-    private fun createPromptWithMessages(count: Int) = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {
+    private fun createPromptWithMessages(count: Int) = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
         system("Test system message")
 
         // Add the specified number of user/assistant message pairs

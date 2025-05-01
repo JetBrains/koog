@@ -10,7 +10,7 @@ import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.simpleApi.SayToUser
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
 
 fun main() {
@@ -56,7 +56,7 @@ fun main() {
 
         // Create agent config with a proper prompt
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "tone_analysis") {
+            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "tone_analysis") {
                 system(
                     """
                     You are an question answering agent with access to the tone analysis tools.

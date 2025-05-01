@@ -11,7 +11,7 @@ import ai.grazie.code.agents.local.environment.ReceivedToolResult
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -67,7 +67,7 @@ class GraphTestingFeatureTest {
             mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
         }
 
-        val basePrompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {}
+        val basePrompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {}
 
         KotlinAIAgent(
             toolRegistry = toolRegistry,

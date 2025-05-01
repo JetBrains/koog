@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.cache.files
 
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -41,7 +41,7 @@ class FileCodePromptCacheTest {
         return Prompt(
             messages = listOf(Message.User(content)),
             id = "test-id-${content.hashCode()}",
-            model = JetBrainsAIModels.Google.Flash2_0
+            model = OllamaModels.Meta.LLAMA_3_2
         )
     }
     

@@ -6,7 +6,7 @@ import ai.grazie.code.agents.local.memory.prompts.MemoryPrompts
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -23,7 +23,7 @@ class MemoryChunkingFeature(
      */
     suspend fun execute(content: String): List<MemoryChunk> {
         val prompt = prompt(
-            JetBrainsAIModels.Google.Flash2_0,
+            OllamaModels.Meta.LLAMA_3_2,
             "code-engine-memory-chunking"
         ) {
             system(MemoryPrompts.ChunkContent)

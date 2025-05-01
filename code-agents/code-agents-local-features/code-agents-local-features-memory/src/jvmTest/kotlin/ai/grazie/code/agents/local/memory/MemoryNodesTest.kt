@@ -15,7 +15,7 @@ import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -125,7 +125,7 @@ class MemoryNodesTest {
         }
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {
+            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
                 assistant("I'll remember that you prefer Python for data analysis tasks")
@@ -184,7 +184,7 @@ class MemoryNodesTest {
         val memory = TestMemoryProvider()
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {
+            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
                 assistant("I'll remember that you prefer Python for data analysis tasks")

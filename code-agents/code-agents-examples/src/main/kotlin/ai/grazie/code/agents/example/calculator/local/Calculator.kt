@@ -12,7 +12,7 @@ import ai.grazie.code.agents.local.environment.ReceivedToolResult
 import ai.grazie.code.agents.local.simpleApi.TalkTool
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -98,7 +98,7 @@ fun main() = runBlocking {
 
     // Create agent config with proper prompt
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(JetBrainsAIModels.Anthropic.Sonnet_3_7, "test") {
+        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
             system("You are a calculator.")
         },
         maxAgentIterations = 50

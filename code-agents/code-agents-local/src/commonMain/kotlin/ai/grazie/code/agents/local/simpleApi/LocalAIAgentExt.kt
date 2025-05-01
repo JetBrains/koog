@@ -7,8 +7,8 @@ import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
 import ai.jetbrains.code.prompt.llm.LLModel
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.coroutines.CoroutineScope
 
@@ -30,7 +30,7 @@ fun simpleChatAgent(
     executor: CodePromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",
-    llmModel: LLModel = JetBrainsAIModels.OpenAI.GPT4oMini,
+    llmModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
     temperature: Double = 1.0,
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry? = null,
@@ -85,7 +85,7 @@ fun simpleSingleRunAgent(
     executor: CodePromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",
-    llmModel: LLModel = JetBrainsAIModels.OpenAI.GPT4oMini,
+    llmModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
     temperature: Double = 1.0,
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,

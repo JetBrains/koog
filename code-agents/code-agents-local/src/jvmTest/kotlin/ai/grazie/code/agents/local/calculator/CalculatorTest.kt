@@ -13,7 +13,7 @@ import ai.grazie.code.agents.local.dsl.extensions.onAssistantMessage
 import ai.grazie.code.agents.local.dsl.extensions.onToolCall
 import ai.grazie.code.agents.local.graph.ToolSelectionStrategy
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -59,7 +59,7 @@ class CalculatorTest {
 
         // Create agent config with proper prompt
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {
+            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
                 system(
                     """
                     You are an question answering agent with access to the calculator tools.

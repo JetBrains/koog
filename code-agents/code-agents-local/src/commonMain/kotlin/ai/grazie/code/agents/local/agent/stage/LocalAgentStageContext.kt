@@ -24,8 +24,8 @@ import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
 import ai.jetbrains.code.prompt.llm.LLModel
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
@@ -200,7 +200,7 @@ sealed class LocalAgentLLMSession(
     open suspend fun <T> requestLLMStructured(
         structure: StructuredData<T>,
         retries: Int = 1,
-        fixingModel: LLModel = JetBrainsAIModels.OpenAI.GPT4_1_Mini
+        fixingModel: LLModel = OllamaModels.Meta.LLAMA_3_2
     ): StructuredResponse<T> {
         validateSession()
         return executor.executeStructured(prompt, structure, retries, fixingModel)

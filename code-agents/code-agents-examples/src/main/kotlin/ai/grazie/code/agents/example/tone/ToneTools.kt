@@ -2,8 +2,8 @@ package ai.grazie.code.agents.example.tone
 
 import ai.grazie.code.agents.core.tools.*
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.serialization.Serializable
 
 object ToneTools {
@@ -36,7 +36,7 @@ object ToneTools {
             val executor: CodePromptExecutor = null!!
 
             // Create a prompt to analyze the tone
-            val prompt = prompt(JetBrainsAIModels.OpenAI.GPT4o, "analyze_tone") {
+            val prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "analyze_tone") {
                 system(
                     "You are a helpful assistant that analyzes the tone of text. " +
                             "Determine if the text has a $toneType tone. " +

@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.local.simpleApi.SayToUser
 import ai.grazie.code.agents.local.simpleApi.simpleChatAgent
 import ai.grazie.code.agents.local.simpleApi.simpleSingleRunAgent
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -53,7 +53,7 @@ class SimpleAgentIntegrationTest {
                 executor = null!!,
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = JetBrainsAIModels.OpenAI.GPT4oMini,
+                llmModel = OllamaModels.Meta.LLAMA_3_2,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 maxIterations = 10,
@@ -97,7 +97,7 @@ class SimpleAgentIntegrationTest {
                 executor = null!!,
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = JetBrainsAIModels.OpenAI.GPT4_1,
+                llmModel = OllamaModels.Meta.LLAMA_3_2,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 maxIterations = 10,
@@ -139,7 +139,7 @@ class SimpleAgentIntegrationTest {
                 executor = null!!,
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = JetBrainsAIModels.OpenAI.GPT4oMini,
+                llmModel = OllamaModels.Meta.LLAMA_3_2,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 maxIterations = 10,
@@ -186,7 +186,7 @@ class SimpleAgentIntegrationTest {
                 executor = null!!,
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = JetBrainsAIModels.OpenAI.GPT4oMini,
+                llmModel = OllamaModels.Meta.LLAMA_3_2,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 toolRegistry = toolRegistry,

@@ -3,9 +3,9 @@ package ai.grazie.code.agents.local.agent
 import ai.grazie.code.agents.core.model.agent.AIAgentConfig
 import ai.grazie.model.auth.GrazieAgent
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.llm.OllamaModels
 
 open class LocalAgentConfig(
     val prompt: Prompt,
@@ -15,7 +15,7 @@ open class LocalAgentConfig(
     companion object {
         fun withSystemPrompt(
             prompt: String,
-            llm: LLModel = JetBrainsAIModels.OpenAI.GPT4oMini,
+            llm: LLModel = OllamaModels.Meta.LLAMA_3_2,
             id: String = "code-engine-agents",
             maxAgentIterations: Int = 3,
             agent: GrazieAgent = GrazieAgent("code-engine-agents", "dev"),

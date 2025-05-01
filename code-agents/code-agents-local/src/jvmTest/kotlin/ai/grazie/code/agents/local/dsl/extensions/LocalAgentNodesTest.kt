@@ -10,7 +10,7 @@ import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -32,7 +32,7 @@ class LocalAgentNodesTest {
         }
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(JetBrainsAIModels.OpenAI.GPT4o, "test-agent") {},
+            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test-agent") {},
             maxAgentIterations = 10
         )
 

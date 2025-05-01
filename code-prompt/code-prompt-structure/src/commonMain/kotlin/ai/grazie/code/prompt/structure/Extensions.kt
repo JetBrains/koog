@@ -6,8 +6,8 @@ import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
 import ai.jetbrains.code.prompt.llm.LLModel
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.text.TextContentBuilder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -62,7 +62,7 @@ suspend fun <T> CodePromptExecutor.executeStructured(
     prompt: Prompt,
     structure: StructuredData<T>,
     retries: Int = 1,
-    fixingModel: LLModel = JetBrainsAIModels.OpenAI.GPT4o,
+    fixingModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
 ): StructuredResponse<T> {
     val prompt = prompt(prompt) {
         user {

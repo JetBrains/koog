@@ -17,7 +17,7 @@ import ai.grazie.code.agents.local.environment.ReceivedToolResult
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
@@ -142,7 +142,7 @@ class LLMHistoryTransitionPolicyTest {
             }
         }
         dummyAgentConfig = LocalAgentConfig(
-            prompt = prompt(JetBrainsAIModels.Google.Flash2_0, "test-agent") {},
+            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test-agent") {},
             maxAgentIterations = 30
         )
     }

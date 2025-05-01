@@ -4,8 +4,8 @@ import ai.grazie.code.prompt.markdown.markdown
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.JetBrainsAIModels
 import ai.jetbrains.code.prompt.llm.LLModel
+import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.serialization.SerializationException
 
@@ -19,7 +19,7 @@ import kotlinx.serialization.SerializationException
  */
 class StructureParser(
     val executor: CodePromptExecutor,
-    val fixingModel: LLModel = JetBrainsAIModels.OpenAI.GPT4_1_Mini,
+    val fixingModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
     companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.prompt.structure.${StructureParser::class.simpleName}")
