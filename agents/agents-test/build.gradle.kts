@@ -14,7 +14,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
 
-                implementation(project(":code-agents:code-agents-local"))
+                implementation(project(":agents:agents-local"))
 
                 implementation(libs.ai.grazie.utils.common)
                 implementation(libs.jetbrains.annotations)

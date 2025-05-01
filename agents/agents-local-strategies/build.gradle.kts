@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":code-agents:code-agents-local"))
+                api(project(":agents:agents-local"))
             }
         }
 

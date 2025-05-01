@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":code-agents:code-agents-local"))
+                api(project(":agents:agents-local"))
                 api("ai.jetbrains.code.files:code-files-model:1.0.0-beta.55+0.4.45")
 
                 implementation(libs.ai.grazie.model.llm)
