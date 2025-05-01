@@ -18,7 +18,7 @@ kotlin {
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-structure"))
 
-                implementation(project(":code-agents:code-agents-tools-registry"))
+                implementation(project(":agents:agents-tools-registry"))
                 implementation(project(":prompt:prompt-markdown"))
 
                 implementation(libs.ai.grazie.api.gateway.client)
@@ -41,7 +41,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(project(":code-agents:code-agents-test"))
+                implementation(project(":agents:agents-test"))
                 implementation(libs.mockk)
             }
         }

@@ -16,8 +16,8 @@ application {
 
 dependencies {
     implementation(project(":code-agents:code-agents-local-features:code-agents-local-features-memory"))
-    implementation(project(":code-agents:code-agents-local-strategies"))
-    implementation(project(":code-agents:code-agents-tools-registry"))
+    implementation(project(":agents:agents-local-strategies"))
+    implementation(project(":agents:agents-tools-registry"))
     implementation("ai.jetbrains.code.exec:code-exec-jvm:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.exec:code-exec-tools:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.features:code-features-common:1.0.0-beta.55+0.4.45")
@@ -34,7 +34,7 @@ dependencies {
     implementation(libs.logback.classic)
 
     testImplementation(kotlin("test"))
-    testImplementation(project(":code-agents:code-agents-test"))
+    testImplementation(project(":agents:agents-test"))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
 }

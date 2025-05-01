@@ -1,0 +1,44 @@
+import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
+
+group = "${rootProject.group}.agents"
+version = rootProject.version
+
+plugins {
+    id("ai.kotlin.multiplatform")
+    alias(libs.plugins.kotlin.serialization)
+}
+
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                implementation(kotlin("test"))
+
+                implementation(project(":code-agents:code-agents-local"))
+
+                implementation(libs.ai.grazie.utils.common)
+                implementation(libs.jetbrains.annotations)
+                implementation(libs.logback.classic)
+            }
+        }
+
+        commonTest {
+            dependencies {
+                implementation(project(":agents:agents-tools-registry"))
+                implementation(libs.ai.grazie.model.auth)
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+
+                implementation(libs.ktor.client.cio)
+            }
+        }
+    }
+}
+
+// Configure the publication to use the Grazie Public Maven repository
+publishToGraziePublicMaven()

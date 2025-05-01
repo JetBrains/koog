@@ -64,7 +64,7 @@ To start working with IdeFormer in your project, you will need:
 - `ai.jetbrains.code.agents`
     - [code-agents-core](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-core)
     - [code-agents-core-tools](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-core-tools)
-    - [code-agents-tools-registry](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-tools-registry)
+    - [agents-tools-registry](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-tools-registry)
     - [code-agents-ideformer-client](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-client)
     - [code-agents-ideformer-daemon](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-daemon)
     - [code-agents-ideformer-executable](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-executable)
@@ -474,9 +474,9 @@ or handling different types of events and exceptions.
 [^2]:
     Defining tool descriptors in code is good for fast experiments, but for production purposes this method is not recommended.
     Please contribute to `GlobalAgentToolsRegistry.Tools` and then feel free to use the `fromRegistry` method instead.
-    You can read more about contributing [here](https://github.com/JetBrains/code-engine/tree/main/code-agents/code-agents-tools-registry#contributing-tools).
+    You can read more about contributing [here](https://github.com/JetBrains/koan-agents/tree/main/agents/agents-tools-registry#contributing-tools).
 
 [^3]:
     Writing prompts in code is good for fast experiments, but for production purposes this method is not recommended.
     Please contribute to `GlobalAgentToolsRegistry.Prompts` and then feel free to use `fromRegistry` method.
-    You can read more about contributing [here](https://github.com/JetBrains/code-engine/tree/main/code-agents/code-agents-tools-registry#contributing-prompts).
+    You can read more about contributing [here](https://github.com/JetBrains/koan-agents/tree/main/agents/agents-tools-registry#contributing-prompts).

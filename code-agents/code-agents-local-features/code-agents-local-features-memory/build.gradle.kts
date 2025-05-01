@@ -41,7 +41,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(project(":code-agents:code-agents-test"))
+                implementation(project(":agents:agents-test"))
                 implementation(libs.mockk)
             }
         }
