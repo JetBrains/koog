@@ -15,7 +15,7 @@ application {
 }
 
 dependencies {
-    implementation(project(":code-agents:code-agents-local-features:code-agents-local-features-memory"))
+    implementation(project(":agents:agents-local-features:agents-local-features-memory"))
     implementation(project(":agents:agents-local-strategies"))
     implementation(project(":agents:agents-tools-registry"))
     implementation("ai.jetbrains.code.exec:code-exec-jvm:1.0.0-beta.55+0.4.45")
