@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":code-prompt:code-prompt-llm"))
+                api(project(":prompt:prompt-llm"))
                 implementation(libs.kotlinx.serialization.json)
             }
         }

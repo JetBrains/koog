@@ -11,7 +11,7 @@ plugins {
 
 dependencies {
     api(project(":code-prompt:code-prompt-executor:code-prompt-executor-model"))
-    implementation(project(":code-prompt:code-prompt-executor:code-prompt-executor-tools"))
+    implementation(project(":prompt:prompt-executor:prompt-executor-tools"))
 
     implementation(libs.ai.grazie.utils.common)
     implementation(libs.ktor.client.cio)
