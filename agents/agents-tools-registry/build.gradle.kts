@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":code-agents:code-agents-core-tools"))
+                api(project(":agents:agents-core-tools"))
                 api("ai.jetbrains.code.files:code-files-model:1.0.0-beta.55+0.4.45")
                 implementation("ai.jetbrains.code.files:code-files-tools:1.0.0-beta.55+0.4.45")
                 implementation(project(":prompt:prompt-markdown"))

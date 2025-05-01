@@ -63,7 +63,7 @@ To start working with IdeFormer in your project, you will need:
 
 - `ai.jetbrains.code.agents`
     - [code-agents-core](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-core)
-    - [code-agents-core-tools](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-core-tools)
+    - [agents-core-tools](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-core-tools)
     - [agents-tools-registry](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-tools-registry)
     - [code-agents-ideformer-client](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-client)
     - [code-agents-ideformer-daemon](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-daemon)
@@ -452,8 +452,8 @@ instead of specifying it manually!
 ## Examples
 
 Code examples of how to write your own agent from start to finish are contained in the
-[code-agents-examples](code-agents-examples) module.
-Remember to copy [env.template.properties](./code-agents-examples/env.template.properties) 
+[agents-examples](agents-examples) module.
+Remember to copy [env.template.properties](./agents-examples/env.template.properties) 
 and specify required parameters.
 Then use `runExample...` Gradle tasks to run them.
 

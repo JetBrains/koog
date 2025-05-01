@@ -367,7 +367,7 @@ For detailed documentation on these features, check the following resources in t
 ## Need Help? 🆘
 
 - **Examples and Documentation**:
-  - Check the `code-agents-examples` directory for working code examples
+  - Check the `agents-examples` directory for working code examples
   - Browse the `docs` directory for detailed guides
   - Look at implementation tests for usage patterns
 

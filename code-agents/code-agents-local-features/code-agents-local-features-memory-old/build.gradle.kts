@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":code-agents:code-agents-core-tools"))
+                api(project(":agents:agents-core-tools"))
                 implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.serialization.core)

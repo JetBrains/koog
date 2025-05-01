@@ -11,7 +11,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":code-agents:code-agents-core-tools"))
+                api(project(":agents:agents-core-tools"))
                 implementation(project(":prompt:prompt-markdown"))
             }
         }

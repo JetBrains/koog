@@ -517,4 +517,4 @@ context.withMemory {
 }
 ```
 
-For more details on using MemoryFeature, see the examples in the `code-agents-examples` module.
+For more details on using MemoryFeature, see the examples in the `agents-examples` module.
