@@ -1,7 +1,6 @@
 package ai.grazie.code.agents.example.simpleapi
 
 import ai.grazie.code.agents.core.tools.SimpleToolRegistry
-import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.local.simpleApi.simpleChatAgent
 import kotlinx.coroutines.runBlocking
 
@@ -24,9 +23,8 @@ fun main() = runBlocking {
             )
         )
     }
-    val grazieToken = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
     val agent = simpleChatAgent(
-        grazieToken,
+        executor = null!!,
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
         cs = this,
         temperature = 0.0,

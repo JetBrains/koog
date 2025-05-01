@@ -8,12 +8,9 @@ import kotlinx.coroutines.runBlocking
  * The agent maintains a conversation with the user until explicitly terminated.
  */
 fun main() = runBlocking {
-    // Get the API token from environment variable
-    val apiToken = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
-
     // Create a chat agent with a system prompt
     val agent = simpleChatAgent(
-        apiToken = apiToken,
+        executor = null!!,
         cs = this,
         systemPrompt = "You are a helpful assistant. Answer user questions concisely."
     )

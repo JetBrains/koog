@@ -9,16 +9,13 @@ import kotlinx.coroutines.runBlocking
  * The agent processes a single input and provides a response.
  */
 fun main() = runBlocking {
-    // Get the API token from environment variable
-    val apiToken = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
-
     var result = ""
     val handler = EventHandler {
         handleResult { result = it!! }
     }
     // Create a single-run agent with a system prompt
     val agent = simpleSingleRunAgent(
-        apiToken = apiToken,
+        executor = null!!,
         cs = this,
         eventHandler = handler,
         systemPrompt = "You are a code assistant. Provide concise code examples."

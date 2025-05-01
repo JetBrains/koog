@@ -102,7 +102,7 @@ class LoggingFeature(val logger: Logger) {
 @Suppress("unused")
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = simpleSingleRunAgent(
-        apiToken = "<your-api-token>",
+        executor = null!!,
         cs = coroutineScope,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
