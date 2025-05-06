@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.dsl.extensions
 
 import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMWriteSession
-import ai.grazie.code.agents.tools.registry.GlobalAgentPrompts.Generic.summarizeInTLDR
+import ai.grazie.code.agents.local.prompts.Prompts.summarizeInTLDR
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.message.Message
 

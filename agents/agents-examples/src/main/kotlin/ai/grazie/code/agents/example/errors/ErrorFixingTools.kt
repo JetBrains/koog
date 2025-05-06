@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.tools.registry.tools
+package ai.grazie.code.agents.example.errors
 
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.SerialName
@@ -29,7 +29,7 @@ object ErrorFixingTools {
     }
 
     abstract class SearchReplaceTool : SimpleTool<SearchReplaceTool.Args>() {
-        @Serializable
+        @kotlinx.serialization.Serializable
         data class Args(
             @SerialName("file_path")
             val filePath: String,

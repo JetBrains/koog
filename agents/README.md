@@ -64,10 +64,6 @@ To start working with IdeFormer in your project, you will need:
 - `ai.jetbrains.code.agents`
     - [agents-core](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-core)
     - [agents-core-tools](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-core-tools)
-    - [agents-tools-registry](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-tools-registry)
-    - [code-agents-ideformer-client](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-client)
-    - [code-agents-ideformer-daemon](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-daemon)
-    - [code-agents-ideformer-executable](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/code-agents-ideformer-executable)
 - `ai.jetbrains.code.files`
     - [code-files-jvm](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.files/code-files-jvm)
     - [code-files-model](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.files/code-files-model)
@@ -466,17 +462,3 @@ and ensuring proper communication with the IdeFormer service.
 This framework is flexible and allows you to customize the tools and the agent's logic for any arbitrary use case.
 Feel free to extend it to suit more complex scenarios, such as multi-stage processes, integrating additional tools,
 or handling different types of events and exceptions.
-
-[^1]:
-    The required version for these dependencies is influenced by the version of `code-engine` you are using.
-    For example, if you are using `1.0.0-beta.26+0.4.16`, then you will need either `0.4.16` or later patches.
-
-[^2]:
-    Defining tool descriptors in code is good for fast experiments, but for production purposes this method is not recommended.
-    Please contribute to `GlobalAgentToolsRegistry.Tools` and then feel free to use the `fromRegistry` method instead.
-    You can read more about contributing [here](https://github.com/JetBrains/koan-agents/tree/main/agents/agents-tools-registry#contributing-tools).
-
-[^3]:
-    Writing prompts in code is good for fast experiments, but for production purposes this method is not recommended.
-    Please contribute to `GlobalAgentToolsRegistry.Prompts` and then feel free to use `fromRegistry` method.
-    You can read more about contributing [here](https://github.com/JetBrains/koan-agents/tree/main/agents/agents-tools-registry#contributing-prompts).

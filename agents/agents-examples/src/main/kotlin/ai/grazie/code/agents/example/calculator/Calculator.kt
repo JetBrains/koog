@@ -10,7 +10,8 @@ import ai.grazie.code.agents.local.dsl.builders.forwardTo
 import ai.grazie.code.agents.local.dsl.builders.strategy
 import ai.grazie.code.agents.local.dsl.extensions.*
 import ai.grazie.code.agents.local.environment.ReceivedToolResult
-import ai.grazie.code.agents.local.simpleApi.TalkTool
+import ai.grazie.code.agents.local.simpleApi.AskUser
+import ai.grazie.code.agents.local.simpleApi.SayToUser
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -25,8 +26,8 @@ fun main() = runBlocking {
     val toolRegistry = ToolRegistry {
         stage(calculatorStageName) {
             // Special tool, required with this type of agent.
-            tool(TalkTool)
-
+            tool(AskUser)
+            tool(SayToUser)
             with(CalculatorTools) {
                 tools()
             }
@@ -47,36 +48,36 @@ fun main() = runBlocking {
 
             edge(
                 (nodeSendInput forwardTo nodeFinish)
-                    transformed { it.first() }
-                    onAssistantMessage { true }
+                        transformed { it.first() }
+                        onAssistantMessage { true }
             )
 
             edge(
                 (nodeSendInput forwardTo nodeExecuteToolMultiple)
-                    onMultipleToolCalls { true }
+                        onMultipleToolCalls { true }
             )
 
             edge(
                 (nodeExecuteToolMultiple forwardTo nodeCompressHistory)
-                    onCondition { _ -> llm.readSession { prompt.messages.size > 100 } }
+                        onCondition { _ -> llm.readSession { prompt.messages.size > 100 } }
             )
 
             edge(nodeCompressHistory forwardTo nodeSendToolResultMultiple)
 
             edge(
                 (nodeExecuteToolMultiple forwardTo nodeSendToolResultMultiple)
-                    onCondition { _ -> llm.readSession { prompt.messages.size <= 100 } }
+                        onCondition { _ -> llm.readSession { prompt.messages.size <= 100 } }
             )
 
             edge(
                 (nodeSendToolResultMultiple forwardTo nodeExecuteToolMultiple)
-                    onMultipleToolCalls { true }
+                        onMultipleToolCalls { true }
             )
 
             edge(
                 (nodeSendToolResultMultiple forwardTo nodeFinish)
-                    transformed { it.first() }
-                    onAssistantMessage { true }
+                        transformed { it.first() }
+                        onAssistantMessage { true }
             )
 
         }

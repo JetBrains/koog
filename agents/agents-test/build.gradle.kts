@@ -26,7 +26,6 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(project(":agents:agents-tools-registry"))
                 implementation(libs.ai.grazie.model.auth)
                 implementation(libs.kotlinx.coroutines.test)
             }
