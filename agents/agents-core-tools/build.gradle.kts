@@ -16,6 +16,12 @@ kotlin {
             }
         }
 
+        jvmMain {
+            dependencies {
+                implementation(kotlin("reflect"))
+            }
+        }
+
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
@@ -26,6 +32,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.junit.jupiter.params)
             }
         }
     }

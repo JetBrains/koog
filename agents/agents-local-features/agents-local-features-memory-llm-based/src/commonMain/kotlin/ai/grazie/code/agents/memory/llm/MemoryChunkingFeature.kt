@@ -1,15 +1,15 @@
 package ai.grazie.code.agents.memory.llm
 
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.memory.chunk.BasicMemoryChunk
 import ai.grazie.code.agents.memory.chunk.MemoryChunk
 import ai.grazie.code.prompt.markdown.markdown
 import ai.grazie.code.prompt.structure.executeStructured
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
-import ai.grazie.code.prompt.structure.json.LLMDescription
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -46,9 +46,9 @@ class MemoryChunkingFeature(
         @Serializable
         @SerialName("MemoryChunk")
         data class LLMMemoryChunk(
-            @LLMDescription("The content of the memory chunk")
+            @property:LLMDescription("The content of the memory chunk")
             val content: String,
-            @LLMDescription("The tags associated with the memory chunk")
+            @property:LLMDescription("The tags associated with the memory chunk")
             val tags: List<String>
         )
     }
@@ -61,7 +61,7 @@ class MemoryChunkingFeature(
      */
     suspend fun execute(content: String): List<MemoryChunk> {
         val prompt = prompt(
-            OllamaModels.Meta.LLAMA_3_2,
+            OpenAIModels.GPT4o,
             "code-engine-memory-chunking",
             LLMParams(schema = LLMMemoryCollection.structure.schema)
         ) {

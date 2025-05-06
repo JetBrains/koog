@@ -810,7 +810,8 @@ class Testing {
                                         tools = agent.toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                                         prompt = agent.agentConfig.prompt,
                                         promptExecutor = CodePromptExecutorProxy(agent.promptExecutor, pipeline),
-                                        environment = environment
+                                        environment = environment,
+                                        config = agent.agentConfig
                                     )
                                 }
 

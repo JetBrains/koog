@@ -3,6 +3,7 @@ package ai.grazie.code.agents.example.errors.local
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.errors.RunTestErrorFixingToolImpl
 import ai.grazie.code.agents.example.errors.SearchReplaceToolImpl
 import ai.grazie.code.agents.local.KotlinAIAgent
@@ -14,8 +15,9 @@ import ai.grazie.code.agents.local.graph.ToolSelectionStrategy
 import ai.grazie.code.agents.tools.registry.tools.ErrorFixingTools
 import ai.grazie.utils.annotations.ExperimentalAPI
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.createTempDirectory
@@ -25,7 +27,7 @@ import kotlin.io.path.writeText
 
 @OptIn(ExperimentalAPI::class)
 fun main() = runBlocking {
-    val executor: CodePromptExecutor = null!!
+    val executor: CodePromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
     val code = """
         fun main() {
@@ -79,7 +81,7 @@ fun main() = runBlocking {
             edge(fixError forwardTo verifyCode transformed { ErrorFixingTools.RunTestTool.Args(file.name) })
             edge(verifyCode forwardTo fixError onSuccessful {
                 it.text.contains("Failed!")
-            } transformed { it.asSuccessful().result.text })
+            } transformed { it.result.text })
             edge(verifyCode forwardTo nodeFinish onSuccessful {
                 it.text.contains("Passed!")
             } transformed { "Error was successfully fixed" })
@@ -107,7 +109,7 @@ fun main() = runBlocking {
     }
 
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
+        prompt = prompt(OpenAIModels.GPT4o, "test") {
             system(
                 """
                 You are a senior software engineer with 10 years of experience in Kotlin.

@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.tools
 
-import ai.grazie.code.agents.core.tools.serialization.JsonForTool
+import ai.grazie.code.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -167,14 +167,14 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param args The arguments to be encoded.
      * @return A JsonObject representing the encoded arguments.
      */
-    fun encodeArgs(args: TArgs): JsonObject = JsonForTool.encodeToJsonElement(argsSerializer, args).jsonObject
+    fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(argsSerializer, args).jsonObject
     /**
      * Encodes the provided arguments into a JSON string representation using the configured serializer.
      *
      * @param args the arguments to be encoded into a JSON string
      * @return the JSON string representation of the provided arguments
      */
-    fun encodeArgsToString(args: TArgs): String = JsonForTool.encodeToString(argsSerializer, args)
+    fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(argsSerializer, args)
 
     /**
      * Decodes the provided raw JSON arguments into an instance of the specified arguments type.
@@ -182,14 +182,14 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param rawArgs the raw JSON object that contains the encoded arguments
      * @return the decoded arguments of type TArgs
      */
-    fun decodeArgs(rawArgs: JsonObject): TArgs = JsonForTool.decodeFromJsonElement(argsSerializer, rawArgs)
+    fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(argsSerializer, rawArgs)
     /**
      * Decodes a raw string representation of arguments into the corresponding object of type TArgs.
      *
      * @param rawArgs The raw string containing the encoded arguments.
      * @return The decoded arguments as an instance of type TArgs.
      */
-    fun decodeArgsFromString(rawArgs: String): TArgs = JsonForTool.decodeFromString(argsSerializer, rawArgs)
+    fun decodeArgsFromString(rawArgs: String): TArgs = ToolJson.decodeFromString(argsSerializer, rawArgs)
 
 
     /**

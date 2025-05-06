@@ -11,24 +11,23 @@ fun ToolDescriptor.toJSONSchema(): JsonObject {
      * It maps the declared type to a JSON type. For enums, it creates an "enum" array containing the valid options.
      * For arrays, it recursively converts the items type.
      */
-    fun <T> toolParameterToSchema(
-        type: ToolParameterType<T>,
+    fun toolParameterToSchema(
+        type: ToolParameterType,
         description: String? = null,
-        defaultValue: T? = null
     ): JsonObject = buildJsonObject {
         when (type) {
             is ToolParameterType.String -> put("type", "string")
             is ToolParameterType.Integer -> put("type", "integer")
             is ToolParameterType.Float -> put("type", "number")
             is ToolParameterType.Boolean -> put("type", "boolean")
-            is ToolParameterType.Enum<*> -> {
+            is ToolParameterType.Enum -> {
                 // Assuming the enum entries expose a 'name' property.
-                val enumValues = type.entries.map { JsonPrimitive(it.name) }
+                val enumValues = type.entries.map { JsonPrimitive(it) }
                 put("type", "string")
                 put("enum", JsonArray(enumValues))
             }
 
-            is ToolParameterType.List<*> -> {
+            is ToolParameterType.List -> {
                 put("type", "array")
                 put("items", toolParameterToSchema(type.itemsType))
             }
@@ -36,15 +35,6 @@ fun ToolDescriptor.toJSONSchema(): JsonObject {
 
         if (description != null) {
             put("description", JsonPrimitive(description))
-        }
-
-        if (defaultValue != null) {
-            when (defaultValue) {
-                is String -> put("default", JsonPrimitive(defaultValue))
-                is Number -> put("default", JsonPrimitive(defaultValue))
-                is Boolean -> put("default", JsonPrimitive(defaultValue))
-                else -> put("default", JsonPrimitive(defaultValue.toString()))
-            }
         }
     }
 

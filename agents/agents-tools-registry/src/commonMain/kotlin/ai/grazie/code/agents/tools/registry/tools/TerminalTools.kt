@@ -1,6 +1,12 @@
 package ai.grazie.code.agents.tools.registry.tools
 
-import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.Tool
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterType
+import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.core.tools.serialization.ToolResultStringSerializer
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 object TerminalTools {
@@ -147,8 +153,7 @@ object TerminalTools {
                 ToolParameterDescriptor(
                     name = "agentArgumentation",
                     description = "Optional argumentation for the agent to explain why this command should be executed.",
-                    type = ToolParameterType.String,
-                    defaultValue = "No additional argumentation provided."
+                    type = ToolParameterType.String
                 )
             )
         )

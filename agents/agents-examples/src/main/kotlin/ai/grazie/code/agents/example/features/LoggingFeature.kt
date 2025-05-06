@@ -1,5 +1,6 @@
 package ai.grazie.code.agents.example.features
 
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.agent.LocalAgentStorageKey
 import ai.grazie.code.agents.local.agent.createStorageKey
 import ai.grazie.code.agents.local.features.AIAgentPipeline
@@ -8,6 +9,7 @@ import ai.grazie.code.agents.local.features.config.FeatureConfig
 import ai.grazie.code.agents.local.features.handler.AfterToolCallsHandler
 import ai.grazie.code.agents.local.features.handler.BeforeNodeHandler
 import ai.grazie.code.agents.local.simpleApi.simpleSingleRunAgent
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
@@ -102,7 +104,7 @@ class LoggingFeature(val logger: Logger) {
 @Suppress("unused")
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = simpleSingleRunAgent(
-        executor = null!!,
+        executor = simpleOpenAIExecutor(TokenService.openAIToken),
         cs = coroutineScope,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {

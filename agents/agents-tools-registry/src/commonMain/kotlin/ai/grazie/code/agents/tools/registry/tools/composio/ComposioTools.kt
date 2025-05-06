@@ -1,10 +1,17 @@
 package ai.grazie.code.agents.tools.registry.tools.composio
 
-import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.Tool
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterType
+import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.core.tools.serialization.ToolResultStringSerializer
 import ai.grazie.code.agents.tools.registry.utils.formatLinesWithNumbers
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 object ComposioTools {
     sealed interface ComposioToolArgs : Tool.Args {
@@ -15,8 +22,7 @@ object ComposioTools {
                 ToolParameterDescriptor(
                     name = "thought",
                     description = "LLM reasoning for calling this tool.",
-                    type = ToolParameterType.String,
-                    defaultValue = null
+                    type = ToolParameterType.String
                 )
             )
         }
@@ -75,7 +81,7 @@ object ComposioTools {
                 @SerialName("method_name")
                 val methodName: String,
                 @SerialName("class_name")
-                val className: String?,
+                val className: String? = null,
                 override val thought: String? = null
             ) : ComposioToolArgs
 
@@ -111,8 +117,7 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "class_name",
                         description = "Name of the class containing the target method.",
-                        type = ToolParameterType.String,
-                        defaultValue = null
+                        type = ToolParameterType.String
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -155,8 +160,7 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "class_name",
                         description = "Name of the class containing the target method.",
-                        type = ToolParameterType.String,
-                        defaultValue = null
+                        type = ToolParameterType.String
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -223,8 +227,7 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "git_repo_path",
                         description = "Relative path of the git repository. Defaults to current directory.",
-                        type = ToolParameterType.String,
-                        defaultValue = "."
+                        type = ToolParameterType.String
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -376,8 +379,7 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "line_number",
                         description = "Line number from which to begin display. Defaults to the start of the file.",
-                        type = ToolParameterType.Integer,
-                        defaultValue = 0
+                        type = ToolParameterType.Integer
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -443,20 +445,17 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "direction",
                         description = "Scroll direction: up or down.",
-                        type = ToolParameterType.String,
-                        defaultValue = "down"
+                        type = ToolParameterType.String
                     ),
                     ToolParameterDescriptor(
                         name = "lines",
                         description = "Number of lines to scroll by. Defaults to 0 (automatic).",
-                        type = ToolParameterType.Integer,
-                        defaultValue = 0
+                        type = ToolParameterType.Integer
                     ),
                     ToolParameterDescriptor(
                         name = "scroll_id",
                         description = "Unique ID for consecutive scrolling commands.",
-                        type = ToolParameterType.Integer,
-                        defaultValue = 0
+                        type = ToolParameterType.Integer
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -534,14 +533,12 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "end_line",
                         description = "End line of the edit range. If omitted, will just insert text.",
-                        type = ToolParameterType.Integer,
-                        defaultValue = null
+                        type = ToolParameterType.Integer
                     ),
                     ToolParameterDescriptor(
                         name = "file_path",
                         description = "Path of the file to edit. If omitted, edits the currently open file.",
-                        type = ToolParameterType.String,
-                        defaultValue = null
+                        type = ToolParameterType.String
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -597,8 +594,7 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "is_directory",
                         description = "Whether to create a directory instead of a file.",
-                        type = ToolParameterType.Boolean,
-                        defaultValue = false
+                        type = ToolParameterType.Boolean
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -669,30 +665,26 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "depth",
                         description = "Max depth to search for files. Leave null for unlimited depth.",
-                        type = ToolParameterType.Integer,
-                        defaultValue = null
+                        type = ToolParameterType.Integer
                     ),
                     ToolParameterDescriptor(
                         name = "case_sensitive",
                         description = "Whether the search is case sensitive.",
-                        type = ToolParameterType.Boolean,
-                        defaultValue = false
+                        type = ToolParameterType.Boolean
                     ),
                     ToolParameterDescriptor(
                         name = "include",
                         description = "Directories to include in the search.",
                         type = ToolParameterType.List(
                             itemsType = ToolParameterType.String,
-                        ),
-                        defaultValue = null
+                        )
                     ),
                     ToolParameterDescriptor(
                         name = "exclude",
                         description = "Directories to exclude from the search.",
                         type = ToolParameterType.List(
                             itemsType = ToolParameterType.String,
-                        ),
-                        defaultValue = null
+                        )
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -766,28 +758,24 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "pattern",
                         description = "Glob pattern for files to search in.",
-                        type = ToolParameterType.String,
-                        defaultValue = null
+                        type = ToolParameterType.String
                     ),
                     ToolParameterDescriptor(
                         name = "recursive",
                         description = "Whether to search recursively in subdirectories.",
-                        type = ToolParameterType.Boolean,
-                        defaultValue = true
+                        type = ToolParameterType.Boolean
                     ),
                     ToolParameterDescriptor(
                         name = "case_insensitive",
                         description = "Whether the search is case insensitive.",
-                        type = ToolParameterType.Boolean,
-                        defaultValue = true
+                        type = ToolParameterType.Boolean
                     ),
                     ToolParameterDescriptor(
                         name = "exclude",
                         description = "Directories to exclude from the search.",
                         type = ToolParameterType.List(
                             itemsType = ToolParameterType.String,
-                        ),
-                        defaultValue = null
+                        )
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -841,8 +829,7 @@ object ComposioTools {
                     ToolParameterDescriptor(
                         name = "file_path",
                         description = "Path of the file to write to. If omitted, defaults to the currently open file.",
-                        type = ToolParameterType.String,
-                        defaultValue = null
+                        type = ToolParameterType.String
                     )
                 ) + ComposioToolArgs.optionalParameters
             )
@@ -901,8 +888,7 @@ object ComposioTools {
                         description = "Paths of the newly created files to be included in the patch. Provide an array of strings.",
                         type = ToolParameterType.List(
                             itemsType = ToolParameterType.String,
-                        ),
-                        defaultValue = emptyList<String>()
+                        )
                     )
                 ) + ComposioToolArgs.optionalParameters
             )

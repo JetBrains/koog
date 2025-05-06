@@ -14,6 +14,7 @@ import kotlinx.serialization.json.JsonObject
  * supported only by a number of models, but may greatly improve speed and accuracy of result.
  * For example, in OpenAI that feature is called PredictedOutput
  *
+ * @property toolChoice Used to switch tool calling behavior of LLM.
  *
  * This class also includes a nested `Builder` class to facilitate constructing instances in a more
  * customizable and incremental way.
@@ -23,11 +24,12 @@ data class LLMParams(
     val temperature: Double? = null,
     val speculation: String? = null,
     val schema: Schema? = null,
+    val toolChoice: ToolChoice? = null,
 ) {
     fun default(default: LLMParams): LLMParams = copy(
         temperature = temperature ?: default.temperature,
         speculation = speculation ?: default.speculation,
-        schema = schema ?: default.schema,
+        schema = schema ?: default.schema
     )
 
     @Serializable
@@ -43,5 +45,35 @@ data class LLMParams(
             @Serializable
             data class Full(override val name: String, override val schema: JsonObject) : JSON
         }
+    }
+
+    /**
+     * Used to switch tool calling behavior of LLM
+     */
+    @Serializable
+    sealed class ToolChoice {
+        /**
+         *  LLM will call the tool [name] as a response
+         */
+        @Serializable
+        data class Named(val name: String): ToolChoice()
+
+        /**
+         * LLM will not call tools at all, and only generate text
+         */
+        @Serializable
+        object None: ToolChoice()
+
+        /**
+         * LLM will automatically decide whether to call tools or to generate text
+         */
+        @Serializable
+        object Auto: ToolChoice()
+
+        /**
+         * LLM will only call tools
+         */
+        @Serializable
+        object Required: ToolChoice()
     }
 }

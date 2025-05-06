@@ -34,7 +34,7 @@ object RiderProjectTemplateTools {
                 val options: List<String>,
                 val answer: String,
             ) : Result(), ToolResult.JSONSerializable<Answer> {
-                override val serializer: KSerializer<Answer> = serializer()
+                override fun getSerializer(): KSerializer<Answer> = serializer()
             }
 
             @Serializable
@@ -42,7 +42,7 @@ object RiderProjectTemplateTools {
                 val responseType: ResponseType = ResponseType.ADDITION,
                 val content: String,
             ) : Result(), ToolResult.JSONSerializable<Addition> {
-                override val serializer: KSerializer<Addition> = serializer()
+                override fun getSerializer(): KSerializer<Addition> = serializer()
             }
 
             @Serializable
@@ -50,7 +50,7 @@ object RiderProjectTemplateTools {
                 val responseType: ResponseType = ResponseType.ACCEPT,
                 val content: Map<String, Template?>,
             ) : Result(), ToolResult.JSONSerializable<Accept> {
-                override val serializer: KSerializer<Accept> = serializer()
+                override fun getSerializer(): KSerializer<Accept> = serializer()
             }
         }
 
@@ -98,21 +98,21 @@ object RiderProjectTemplateTools {
             @SerialName("success") SUCCESS,
             @SerialName("fail")    FAIL,
         }
-        
+
         @Serializable
         sealed class Result : ToolResult{
             @Serializable
             data class Success(
                 val status: Status = Status.SUCCESS,
             ) : Result(), ToolResult.JSONSerializable<Success> {
-                override val serializer: KSerializer<Success> = serializer()
+                override fun getSerializer(): KSerializer<Success> = serializer()
             }
 
             @Serializable
             data class Fail(
                 val status: Status = Status.FAIL,
             ) : Result(), ToolResult.JSONSerializable<Fail> {
-                override val serializer: KSerializer<Fail> = serializer()
+                override fun getSerializer(): KSerializer<Fail> = serializer()
             }
         }
 

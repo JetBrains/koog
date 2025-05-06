@@ -28,6 +28,10 @@ dependencies {
 
     implementation(project(":prompt:prompt-markdown"))
     implementation(project(":prompt:prompt-structure"))
+    implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+    implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+    implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
+    implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
     implementation(libs.ai.grazie.api.gateway.client)
     implementation(libs.ai.grazie.client.ktor)
@@ -69,3 +73,4 @@ registerRunExampleTask("runExampleMarkdownStreaming", "ai.grazie.code.agents.exa
 registerRunExampleTask("runExampleMarkdownStreamingWithTool", "ai.grazie.code.agents.example.structureddata.MarkdownStreamingWithToolsExampleKt")
 registerRunExampleTask("runExampleRiderProjectTemplate", "ai.grazie.code.agents.example.rider.project.template.RiderProjectTemplateKt")
 registerRunExampleTask("runExampleExecSandbox", "ai.grazie.code.agents.example.execsandbox.ExecSandboxKt")
+registerRunExampleTask("runExampleLoopComponent", "ai.grazie.code.agents.example.components.loop.ProjectGeneratorKt")

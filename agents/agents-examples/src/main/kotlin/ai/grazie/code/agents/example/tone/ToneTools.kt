@@ -1,9 +1,11 @@
 package ai.grazie.code.agents.example.tone
 
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.example.TokenService
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.serialization.Serializable
 
 object ToneTools {
@@ -33,10 +35,10 @@ object ToneTools {
         )
 
         override suspend fun doExecute(args: Args): String {
-            val executor: CodePromptExecutor = null!!
+            val executor: CodePromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
             // Create a prompt to analyze the tone
-            val prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "analyze_tone") {
+            val prompt = prompt(OpenAIModels.GPT4o, "analyze_tone") {
                 system(
                     "You are a helpful assistant that analyzes the tone of text. " +
                             "Determine if the text has a $toneType tone. " +

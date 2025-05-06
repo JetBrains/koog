@@ -1,6 +1,8 @@
 package ai.grazie.code.agents.tools.registry.tools
 
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.serialization.ToolResultStringSerializer
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -166,7 +168,7 @@ object CommunicationTools {
                         <python>poetry run python</python>
                         <python>uv run python</python>
                     """.trimIndent(),
-                    type = ToolParameterType.List<String>(ToolParameterType.String),
+                    type = ToolParameterType.List(ToolParameterType.String),
                 )
             )
         )

@@ -183,7 +183,8 @@ class LocalAgentStrategy(
                     tools = toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                     prompt = currentPrompt,
                     promptExecutor = CodePromptExecutorProxy(promptExecutor, pipeline),
-                    environment = environment
+                    environment = environment,
+                    config = config,
                 )
 
                 val context = LocalAgentStageContextImpl(

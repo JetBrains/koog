@@ -2,6 +2,7 @@ package ai.grazie.code.agents.example.calculator.local
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.calculator.CalculatorTools
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
@@ -11,12 +12,13 @@ import ai.grazie.code.agents.local.dsl.extensions.*
 import ai.grazie.code.agents.local.environment.ReceivedToolResult
 import ai.grazie.code.agents.local.simpleApi.TalkTool
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val executor: CodePromptExecutor = null!!
+    val executor: CodePromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
     val calculatorStageName = "calculator"
 
     // Create tool registry with calculator tools
@@ -37,7 +39,7 @@ fun main() = runBlocking {
             requiredTools = toolRegistry.stagesToolDescriptors.getValue(calculatorStageName)
         ) {
             val nodeSendInput by nodeLLMSendStageInputMultiple()
-            val nodeExecuteToolMultiple by nodeExecuteMultipleTools()
+            val nodeExecuteToolMultiple by nodeExecuteMultipleTools(parallelTools = true)
             val nodeSendToolResultMultiple by nodeLLMSendMultipleToolResults()
             val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>()
 
@@ -98,7 +100,7 @@ fun main() = runBlocking {
 
     // Create agent config with proper prompt
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
+        prompt = prompt(OpenAIModels.GPT4o, "test") {
             system("You are a calculator.")
         },
         maxAgentIterations = 50

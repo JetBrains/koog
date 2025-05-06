@@ -53,20 +53,17 @@ abstract class FileSearchTool : SimpleTool<FileSearchTool.Args>() {
             ToolParameterDescriptor(
                 name = "base_dir",
                 description = "Base directory for search",
-                type = ToolParameterType.String,
-                defaultValue = "."
+                type = ToolParameterType.String
             ),
             ToolParameterDescriptor(
                 name = "read_content",
                 description = "Whether to read file contents",
-                type = ToolParameterType.Boolean,
-                defaultValue = false
+                type = ToolParameterType.Boolean
             ),
             ToolParameterDescriptor(
                 name = "max_depth",
                 description = "Maximum directory depth for search",
-                type = ToolParameterType.Integer,
-                defaultValue = 10
+                type = ToolParameterType.Integer
             )
         )
     )

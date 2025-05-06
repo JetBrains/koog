@@ -2,6 +2,8 @@ package ai.grazie.code.agents.example.structureddata
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.dsl.builders.forwardTo
@@ -9,10 +11,13 @@ import ai.grazie.code.agents.local.dsl.builders.strategy
 import ai.grazie.code.agents.local.dsl.extensions.nodeLLMSendStageInput
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
-import ai.grazie.code.prompt.structure.json.LLMDescription
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.MultiLLMCodePromptExecutor
+import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
@@ -27,30 +32,30 @@ import kotlinx.serialization.Serializable
 @SerialName("WeatherForecast")
 @LLMDescription("Weather forecast for a given location")
 data class WeatherForecast(
-    @LLMDescription("Temperature in Celsius")
+    @property:LLMDescription("Temperature in Celsius")
     val temperature: Int,
-    @LLMDescription("Weather conditions (e.g., sunny, cloudy, rainy)")
+    @property:LLMDescription("Weather conditions (e.g., sunny, cloudy, rainy)")
     val conditions: String,
-    @LLMDescription("Chance of precipitation in percentage")
+    @property:LLMDescription("Chance of precipitation in percentage")
     val precipitation: Int,
-    @LLMDescription("Coordinates of the location")
+    @property:LLMDescription("Coordinates of the location")
     val latLon: LatLon,
     val pollution: Pollution,
     val alert: WeatherAlert,
     // lists
-    @LLMDescription("List of news articles")
+    @property:LLMDescription("List of news articles")
     val news: List<WeatherNews>,
     // maps
-    @LLMDescription("Map of weather sources")
+    @property:LLMDescription("Map of weather sources")
     val sources: Map<String, WeatherSource>
 ) {
     // Nested classes
     @Serializable
     @SerialName("LatLon")
     data class LatLon(
-        @LLMDescription("Latitude of the location")
+        @property:LLMDescription("Latitude of the location")
         val lat: Double,
-        @LLMDescription("Longitude of the location")
+        @property:LLMDescription("Longitude of the location")
         val lon: Double
     )
 
@@ -58,9 +63,9 @@ data class WeatherForecast(
     @Serializable
     @SerialName("WeatherNews")
     data class WeatherNews(
-        @LLMDescription("Title of the news article")
+        @property:LLMDescription("Title of the news article")
         val title: String,
-        @LLMDescription("Link to the news article")
+        @property:LLMDescription("Link to the news article")
         val link: String
     )
 
@@ -68,9 +73,9 @@ data class WeatherForecast(
     @Serializable
     @SerialName("WeatherSource")
     data class WeatherSource(
-        @LLMDescription("Name of the weather station")
+        @property:LLMDescription("Name of the weather station")
         val stationName: String,
-        @LLMDescription("Authority of the weather station")
+        @property:LLMDescription("Authority of the weather station")
         val stationAuthority: String
     )
 
@@ -102,7 +107,7 @@ data class WeatherForecast(
         data class StormAlert(
             override val severity: Severity,
             override val message: String,
-            @LLMDescription("Wind speed in km/h")
+            @property:LLMDescription("Wind speed in km/h")
             val windSpeed: Double // km/h
         ) : WeatherAlert()
 
@@ -111,7 +116,7 @@ data class WeatherForecast(
         data class FloodAlert(
             override val severity: Severity,
             override val message: String,
-            @LLMDescription("Expected rainfall in mm")
+            @property:LLMDescription("Expected rainfall in mm")
             val expectedRainfall: Double // mm
         ) : WeatherAlert()
 
@@ -120,16 +125,15 @@ data class WeatherForecast(
         data class TemperatureAlert(
             override val severity: Severity,
             override val message: String,
-            @LLMDescription("Temperature threshold in Celsius")
+            @property:LLMDescription("Temperature threshold in Celsius")
             val threshold: Int, // in Celsius
-            @LLMDescription("Whether the alert is a heat warning")
+            @property:LLMDescription("Whether the alert is a heat warning")
             val isHeatWarning: Boolean
         ) : WeatherAlert()
     }
 }
 
 fun main(): Unit = runBlocking {
-    val executor: CodePromptExecutor = null!!
 
     // Optional examples, to help LLM understand the format better
     val exampleForecasts = listOf(
@@ -213,7 +217,7 @@ fun main(): Unit = runBlocking {
                     this.requestLLMStructured(
                         structure = weatherForecastStructure,
                         // the model that would handle coercion if the output does not conform to the requested structure
-                        fixingModel = OllamaModels.Meta.LLAMA_3_2,
+                        fixingModel = OpenAIModels.GPT4oMini,
                     )
                 }
 
@@ -240,10 +244,8 @@ fun main(): Unit = runBlocking {
         }
     }
 
-    val token = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
-
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "weather-forecast") {
+        prompt = prompt(AnthropicModels.Sonnet_3_7, "weather-forecast") {
             system(
                 """
                 You are a weather forecasting assistant.
@@ -255,7 +257,10 @@ fun main(): Unit = runBlocking {
     )
 
     val runner = KotlinAIAgent(
-        promptExecutor = executor,
+        promptExecutor = MultiLLMCodePromptExecutor(
+            LLMProvider.OpenAI to OpenAIDirectLLMClient(TokenService.openAIToken),
+            LLMProvider.Anthropic to AnthropicDirectLLMClient(TokenService.anthropicToken),
+        ),
         toolRegistry = ToolRegistry.EMPTY, // no tools needed for this example
         strategy = agentStrategy,
         eventHandler = eventHandler,

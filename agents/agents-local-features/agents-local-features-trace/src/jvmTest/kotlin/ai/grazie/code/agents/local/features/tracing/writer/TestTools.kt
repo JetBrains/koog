@@ -20,8 +20,7 @@ class DummyTool : SimpleTool<DummyTool.Args>() {
             ToolParameterDescriptor(
                 name = "dummy",
                 description = "Dummy parameter",
-                type = ToolParameterType.String,
-                defaultValue = ""
+                type = ToolParameterType.String
             )
         )
     )

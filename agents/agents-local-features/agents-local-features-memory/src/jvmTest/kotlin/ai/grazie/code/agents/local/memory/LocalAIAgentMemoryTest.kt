@@ -1,5 +1,6 @@
 package ai.grazie.code.agents.local.memory
 
+import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMContext
 import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMWriteSession
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
@@ -8,6 +9,7 @@ import ai.grazie.code.agents.local.memory.feature.MemoryFeature
 import ai.grazie.code.agents.local.memory.model.*
 import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
 import ai.grazie.code.agents.local.memory.providers.NoMemory
+import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
@@ -64,7 +66,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(
@@ -152,7 +155,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(
@@ -272,7 +276,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(
@@ -340,7 +345,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(

@@ -2,6 +2,7 @@ package ai.grazie.code.agents.core.tools
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 interface ToolResult {
@@ -22,8 +23,7 @@ interface ToolResult {
     @kotlinx.serialization.Serializable
     @JvmInline
     value class Text(val text: String) : ToolResult.JSONSerializable<Text> {
-        override val serializer: KSerializer<Text>
-            get() = serializer()
+        override fun getSerializer(): KSerializer<Text> = serializer()
 
         constructor(e: Exception) : this("Failed with exception '${e::class.simpleName}' and message '${e.message}'")
 
@@ -45,8 +45,8 @@ interface ToolResult {
     }
 
     interface JSONSerializable<T : JSONSerializable<T>> : ToolResult {
-        val serializer: KSerializer<T>
+        fun getSerializer(): KSerializer<T>
 
-        override fun toStringDefault(): String = json.encodeToString(serializer, this as T)
+        override fun toStringDefault(): String = json.encodeToString(getSerializer(), this as T)
     }
 }

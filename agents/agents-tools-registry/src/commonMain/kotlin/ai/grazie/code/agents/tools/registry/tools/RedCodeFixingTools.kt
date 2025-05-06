@@ -16,7 +16,7 @@ object RedCodeFixingTools {
 
             @Serializable
             data class Result(val imports: List<String>) : ToolResult.JSONSerializable<Result> {
-                override val serializer: KSerializer<Result> = serializer()
+                override fun getSerializer(): KSerializer<Result> = serializer()
             }
 
             final override val argsSerializer = Args.serializer()
@@ -50,7 +50,7 @@ object RedCodeFixingTools {
                 @SerialName("new_imports_in_file")
                 val newImportsInFile: List<String>
             ) : ToolResult.JSONSerializable<Result> {
-                override val serializer: KSerializer<Result> = serializer()
+                override fun getSerializer(): KSerializer<Result> = serializer()
             }
 
 
@@ -91,7 +91,7 @@ object RedCodeFixingTools {
                 @SerialName("new_imports_in_file")
                 val newImportsInFile: List<String>
             ) : ToolResult.JSONSerializable<Result> {
-                override val serializer: KSerializer<Result> = serializer()
+                override fun getSerializer(): KSerializer<Result> = serializer()
             }
 
 
@@ -132,7 +132,7 @@ object RedCodeFixingTools {
                 @SerialName("dependencies")
                 val dependencies: List<String>
             ) : ToolResult.JSONSerializable<Result> {
-                override val serializer: KSerializer<Result> = serializer()
+                override fun getSerializer(): KSerializer<Result> = serializer()
             }
 
             final override val argsSerializer = Args.serializer()
@@ -167,7 +167,7 @@ object RedCodeFixingTools {
                 @SerialName("new_all_dependencies_in_module")
                 val newAllDependenciesInModule: List<String>
             ) : ToolResult.JSONSerializable<Result> {
-                override val serializer: KSerializer<Result> = serializer()
+                override fun getSerializer(): KSerializer<Result> = serializer()
             }
 
             final override val argsSerializer = Args.serializer()
@@ -207,7 +207,7 @@ object RedCodeFixingTools {
                 @SerialName("new_imports_in_file")
                 val newImportsInFile: List<String>
             ) : ToolResult.JSONSerializable<Result> {
-                override val serializer: KSerializer<Result> = serializer()
+                override fun getSerializer(): KSerializer<Result> = serializer()
             }
 
             final override val argsSerializer = Args.serializer()
@@ -242,7 +242,7 @@ object RedCodeFixingTools {
             @SerialName("total_number_of_errors_in_project")
             val totalNumberOfErrorsInProject: Int
         ) : ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
 
             @Serializable
             data class ModuleError(
@@ -325,7 +325,7 @@ object RedCodeFixingTools {
             @SerialName("build_errors_in_module")
             val buildErrorsInModule: List<BuildErrorDetail>?
         ) : ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
 
             @Serializable
             data class ErrorDetail(
@@ -400,7 +400,7 @@ object RedCodeFixingTools {
             @SerialName("parent_module_roots")
             val parentModuleRoots: List<String>
         ) : ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
         }
 
         final override val argsSerializer = Args.serializer()
@@ -440,7 +440,7 @@ object RedCodeFixingTools {
             @SerialName("build_script_location")
             val buildScriptLocation: String?
         ): ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
         }
 
         final override val argsSerializer = Args.serializer()
@@ -483,7 +483,7 @@ object RedCodeFixingTools {
             @SerialName("is_partial_file_content")
             val isPartialFileContent: Boolean
         ): ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
         }
 
         final override val argsSerializer = Args.serializer()
@@ -543,7 +543,7 @@ object RedCodeFixingTools {
             @SerialName("error_message")
             val errorMessage: String?
         ) : ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
         }
 
         final override val argsSerializer = Args.serializer()
@@ -607,7 +607,7 @@ object RedCodeFixingTools {
             @SerialName("error_message")
             val errorMessage: String?
         ) : ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
         }
 
         @Serializable
@@ -640,7 +640,7 @@ object RedCodeFixingTools {
                 ToolParameterDescriptor(
                     name = "relative_position",
                     description = "Specifies whether to insert the new text BEFORE or AFTER the specified line. Can be: BEFORE or AFTER.",
-                    type = ToolParameterType.Enum(Position.entries, Position.serializer())
+                    type = ToolParameterType.Enum(Position.entries)
                 ),
                 ToolParameterDescriptor(
                     name = "text_to_insert",
@@ -665,7 +665,7 @@ object RedCodeFixingTools {
             @SerialName("total_occurrences")
             val totalOccurrences: Int
         ): ToolResult.JSONSerializable<Result> {
-            override val serializer: KSerializer<Result> = serializer()
+            override fun getSerializer(): KSerializer<Result> = serializer()
 
             @Serializable
             data class Occurrence(

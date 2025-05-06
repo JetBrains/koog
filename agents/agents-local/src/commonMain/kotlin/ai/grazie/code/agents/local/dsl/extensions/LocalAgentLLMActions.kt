@@ -1,6 +1,7 @@
 package ai.grazie.code.agents.local.dsl.extensions
 
 import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMWriteSession
+import ai.jetbrains.code.prompt.params.LLMParams
 
 fun LocalAgentLLMWriteSession.clearHistory() {
     prompt = prompt.copy(messages = emptyList())
@@ -8,6 +9,49 @@ fun LocalAgentLLMWriteSession.clearHistory() {
 
 fun LocalAgentLLMWriteSession.leaveLastNMessages(n: Int) {
     prompt = prompt.copy(messages = prompt.messages.takeLast(n))
+}
+
+/**
+ * Sets the [LLMParams.ToolChoice] for this LLM session.
+ */
+fun LocalAgentLLMWriteSession.setToolChoice(toolChoice: LLMParams.ToolChoice?) {
+    prompt = prompt.copy(params = prompt.params.copy(toolChoice = toolChoice))
+}
+
+/**
+ * Set the [LLMParams.ToolChoice] to [LLMParams.ToolChoice.Auto] to make LLM automatically decide between calling tools and generating text
+ */
+fun LocalAgentLLMWriteSession.setToolChoiceAuto() {
+    setToolChoice(LLMParams.ToolChoice.Auto)
+}
+
+/**
+ * Set the [LLMParams.ToolChoice] to [LLMParams.ToolChoice.Required] to make LLM always call tools
+ */
+fun LocalAgentLLMWriteSession.setToolChoiceRequired() {
+    setToolChoice(LLMParams.ToolChoice.Required)
+}
+
+/**
+ * Set the [LLMParams.ToolChoice] to [LLMParams.ToolChoice.None] to make LLM never call tools
+ */
+fun LocalAgentLLMWriteSession.setToolChoiceNone() {
+    setToolChoice(LLMParams.ToolChoice.None)
+}
+
+/**
+ * Set the [LLMParams.ToolChoice] to [LLMParams.ToolChoice.None] to make LLM call one specific tool [toolName]
+ */
+fun LocalAgentLLMWriteSession.setToolChoiceNamed(toolName: String) {
+    setToolChoice(LLMParams.ToolChoice.Named(toolName))
+}
+
+/**
+ * Unset the [LLMParams.ToolChoice].
+ * Mostly, if left unspecified, the default value of this parameter is [LLMParams.ToolChoice.Auto]
+ */
+fun LocalAgentLLMWriteSession.unsetToolChoice() {
+    setToolChoice(null)
 }
 
 /**

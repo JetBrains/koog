@@ -2,6 +2,7 @@ package ai.grazie.code.agents.example.memory
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.memory.tools.*
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
@@ -22,8 +23,9 @@ import ai.grazie.code.agents.local.memory.storage.Aes256GCMEncryptor
 import ai.grazie.code.agents.local.memory.storage.EncryptedStorage
 import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.Path
@@ -105,7 +107,7 @@ fun createProjectAnalyzerAgent(
 
     // Agent configuration
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "project-analyzer") {},
+        prompt = prompt(AnthropicModels.Sonnet_3_7, "project-analyzer") {},
         maxAgentIterations = maxAgentIterations
     )
 
@@ -229,8 +231,6 @@ fun createProjectAnalyzerAgent(
  * Main entry point for running the project analyzer agent.
  */
 fun main() = runBlocking {
-    val executor: CodePromptExecutor = null!!
-
     // Create real implementations of tools
     val bashTool = BashToolImpl()
     val fileSearchTool = FileSearchToolImpl()
@@ -259,7 +259,7 @@ fun main() = runBlocking {
         featureName = "project-analyzer",
         productName = "dev-cli",
         organizationName = "grazie",
-        promptExecutor = executor,
+        promptExecutor = simpleAnthropicExecutor(TokenService.anthropicToken),
         cs = this,
     )
     agent.run("")

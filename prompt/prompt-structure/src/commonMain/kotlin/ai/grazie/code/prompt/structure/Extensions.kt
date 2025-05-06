@@ -5,6 +5,7 @@ import ai.grazie.code.prompt.structure.json.JsonStructureLanguage
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.llm.OllamaModels
@@ -62,7 +63,7 @@ suspend fun <T> CodePromptExecutor.executeStructured(
     prompt: Prompt,
     structure: StructuredData<T>,
     retries: Int = 1,
-    fixingModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
+    fixingModel: LLModel = OpenAIModels.GPT4o
 ): StructuredResponse<T> {
     val prompt = prompt(prompt) {
         user {

@@ -1,8 +1,6 @@
 package ai.grazie.code.agents.core.tools
 
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
+
 import kotlin.enums.EnumEntries
 
 /**
@@ -19,8 +17,8 @@ import kotlin.enums.EnumEntries
 data class ToolDescriptor(
     val name: String,
     val description: String,
-    val requiredParameters: List<ToolParameterDescriptor<*>> = emptyList(),
-    val optionalParameters: List<ToolParameterDescriptor<*>> = emptyList(),
+    val requiredParameters: List<ToolParameterDescriptor> = emptyList(),
+    val optionalParameters: List<ToolParameterDescriptor> = emptyList(),
 )
 
 /**
@@ -37,11 +35,8 @@ data class ToolDescriptor(
  * @property type The data type of the tool parameter.
  * @property defaultValue The default value of the tool parameter (nullable).
  */
-data class ToolParameterDescriptor<T>(
-    val name: String,
-    val description: String,
-    val type: ToolParameterType<T>,
-    val defaultValue: T? = null
+data class ToolParameterDescriptor(
+    val name: String, val description: String, val type: ToolParameterType
 )
 
 /**
@@ -52,39 +47,26 @@ data class ToolParameterDescriptor<T>(
  * @param T The type of data that the tool parameter represents.
  * @property name The name associated with the type of tool parameter.
  */
-sealed class ToolParameterType<T>(val name: kotlin.String) {
-    /**
-     * Describes how to serialize default value for a given type
-     */
-    internal abstract val serializer: KSerializer<T>
+sealed class ToolParameterType(val name: kotlin.String) {
 
     /**
      * Represents a string type parameter.
      */
-    data object String : ToolParameterType<kotlin.String>("STRING") {
-        override val serializer = kotlin.String.serializer()
-    }
+    data object String : ToolParameterType("STRING")
 
     /**
      * Represents an integer type parameter.
      */
-    data object Integer : ToolParameterType<Int>("INT") {
-        override val serializer = Int.serializer()
-    }
+    data object Integer : ToolParameterType("INT")
 
     /**
      * Represents a float type parameter.
      */
-    data object Float : ToolParameterType<kotlin.Float>("FLOAT") {
-        override val serializer = kotlin.Float.serializer()
-    }
-
+    data object Float : ToolParameterType("FLOAT")
     /**
      * Represents a boolean type parameter.
      */
-    data object Boolean : ToolParameterType<kotlin.Boolean>("BOOLEAN") {
-        override val serializer = kotlin.Boolean.serializer()
-    }
+    data object Boolean : ToolParameterType("BOOLEAN")
 
     /**
      * Represents an enum type parameter.
@@ -92,10 +74,9 @@ sealed class ToolParameterType<T>(val name: kotlin.String) {
      * @param E The specific enumeration type handled by this parameter type.
      * @property entries The entries for the enumeration, allowing the parameter to be one of these values.
      */
-    data class Enum<E : kotlin.Enum<E>>(
-        val entries: EnumEntries<E>,
-        override val serializer: KSerializer<E>
-    ) : ToolParameterType<E>("ENUM")
+    data class Enum(
+        val entries: Array<kotlin.String>,
+    ) : ToolParameterType("ENUM")
 
     /**
      * Represents an array type parameter.
@@ -103,7 +84,11 @@ sealed class ToolParameterType<T>(val name: kotlin.String) {
      * @param T The type of each item within the array.
      * @property itemsType The type definition for the items within the array.
      */
-    data class List<T>(val itemsType: ToolParameterType<T>) : ToolParameterType<kotlin.collections.List<T>>("ARRAY") {
-        override val serializer = ListSerializer(itemsType.serializer)
+    data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY")
+
+    companion object {
+        fun Enum(entries: EnumEntries<*>): Enum = Enum(entries.map { it.name }.toTypedArray())
+        fun Enum(entries: Array<kotlin.Enum<*>>): Enum = Enum(entries.map { it.name }.toTypedArray())
     }
 }
+

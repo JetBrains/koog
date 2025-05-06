@@ -19,50 +19,43 @@ class ToolSerializationTest {
                 ToolParameterDescriptor(
                     name = "p1",
                     description = "blah blah",
-                    type = ToolParameterType.String,
-                    defaultValue = "hello"
+                    type = ToolParameterType.String
                 ),
                 ToolParameterDescriptor(
                     name = "p2",
                     description = "blah blah",
-                    type = ToolParameterType.Integer,
-                    defaultValue = 15
+                    type = ToolParameterType.Integer
                 ),
                 ToolParameterDescriptor(
                     name = "p3",
                     description = "blah blah",
-                    type = ToolParameterType.Enum(MyEnum.entries, MyEnum.serializer()),
-                    defaultValue = MyEnum.B
+                    type = ToolParameterType.Enum(MyEnum.entries)
                 ),
                 ToolParameterDescriptor(
                     name = "p4",
                     description = "blah blah",
-                    type = ToolParameterType.List<String>(ToolParameterType.String),
-                    defaultValue = listOf("a")
+                    type = ToolParameterType.List(ToolParameterType.String)
                 ),
                 ToolParameterDescriptor(
                     name = "p5",
                     description = "blah blah",
-                    type = ToolParameterType.List<Int>(ToolParameterType.Integer),
-                    defaultValue = listOf(15)
+                    type = ToolParameterType.List(ToolParameterType.Integer)
                 ),
                 ToolParameterDescriptor(
                     name = "p6",
                     description = "blah blah",
                     type = ToolParameterType.List(
-                        ToolParameterType.Enum(MyEnum.entries, MyEnum.serializer())
-                    ),
-                    defaultValue = listOf(MyEnum.A, MyEnum.B)
+                        ToolParameterType.Enum(MyEnum.entries)
+                    )
                 ),
                 ToolParameterDescriptor(
                     name = "p7",
                     description = "blah blah",
                     type = ToolParameterType.List(
                         ToolParameterType.List(
-                            ToolParameterType.Enum(MyEnum.entries, MyEnum.serializer())
+                            ToolParameterType.Enum(MyEnum.entries)
                         )
-                    ),
-                    defaultValue = listOf(listOf(MyEnum.C))
+                    )
                 ),
             ),
             optionalParameters = emptyList()
@@ -74,7 +67,7 @@ class ToolSerializationTest {
         assertEquals(
             //language=JSON
             expected = """
-            [{"name":"tool-1","description":"really good tool!","required_parameters":[{"name":"p1","type":"STRING","description":"blah blah","default":"hello"},{"name":"p2","type":"INT","description":"blah blah","default":15},{"name":"p3","type":"ENUM","description":"blah blah","enum":["A","B","C","D"],"default":"B"},{"name":"p4","type":"ARRAY","description":"blah blah","items":{"type":"STRING"},"default":["a"]},{"name":"p5","type":"ARRAY","description":"blah blah","items":{"type":"INT"},"default":[15]},{"name":"p6","type":"ARRAY","description":"blah blah","items":{"type":"ENUM","enum":["A","B","C","D"]},"default":["A","B"]},{"name":"p7","type":"ARRAY","description":"blah blah","items":{"type":"ARRAY","items":{"type":"ENUM","enum":["A","B","C","D"]}},"default":[["C"]]}],"optional_parameters":[]}]
+            [{"name":"tool-1","description":"really good tool!","required_parameters":[{"name":"p1","type":"STRING","description":"blah blah"},{"name":"p2","type":"INT","description":"blah blah"},{"name":"p3","type":"ENUM","description":"blah blah","enum":["A","B","C","D"]},{"name":"p4","type":"ARRAY","description":"blah blah","items":{"type":"STRING"}},{"name":"p5","type":"ARRAY","description":"blah blah","items":{"type":"INT"}},{"name":"p6","type":"ARRAY","description":"blah blah","items":{"type":"ENUM","enum":["A","B","C","D"]}},{"name":"p7","type":"ARRAY","description":"blah blah","items":{"type":"ARRAY","items":{"type":"ENUM","enum":["A","B","C","D"]}}}],"optional_parameters":[]}]
             """.trimIndent(),
             actual = serializeToolDescriptorsToJsonString(toolDescriptors)
         )

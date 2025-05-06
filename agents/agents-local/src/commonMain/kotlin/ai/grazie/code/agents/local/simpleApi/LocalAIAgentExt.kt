@@ -5,9 +5,9 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.coroutines.CoroutineScope
 
@@ -17,7 +17,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param apiToken The API token used for authentication with the LLM system.
  * @param cs The coroutine scope within which the agent will operate.
  * @param systemPrompt System-level instructions provided to the agent (default is an empty string).
- * @param llmModel The language model to be used by the agent (default is JetBrainsAIModels.OpenAI.GPT4oMini).
+ * @param llmModel The language model to be used by the agent (default is OpenAIModels.GPT4o).
  * @param temperature A value between 0.0 and 1.0 controlling the randomness of the responses (default is 1.0).
  * @param eventHandler Optional event handler for managing results, errors, and tool-specific events (default is null).
  * @param toolRegistry Optional registry of tools available to the agent (default includes basic tools such as AskUser and ExitTool).
@@ -29,7 +29,7 @@ fun simpleChatAgent(
     executor: CodePromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",
-    llmModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
+    llmModel: LLModel = OpenAIModels.GPT4o,
     temperature: Double = 1.0,
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry? = null,
@@ -67,24 +67,24 @@ fun simpleChatAgent(
 }
 
 /**
- * Creates and configures a single-run AI agent instance.
+ * Creates and configures a `KotlinAIAgent` instance with a single-run strategy.
  *
- * @param apiToken A string representing the API token for authentication.
- * @param cs The CoroutineScope instance used for managing coroutines.
- * @param systemPrompt An optional system prompt to guide the agent's behavior. Defaults to an empty string.
- * @param llmModel The language model to be used by the agent. Defaults to JetBrainsAIModels.OpenAI.GPT4oMini.
- * @param temperature A double value denoting the randomness of the model's responses. Defaults to 1.0.
- * @param eventHandler An optional EventHandler to manage and delegate specific events. Defaults to null.
- * @param toolRegistry An optional ToolRegistry for managing tools associated with the agent. Defaults to null.
- * @param maxIterations The maximum number of iterations the agent is allowed to perform. Defaults to 50.
- * @param llmApi The GrazieEnvironment specifying the environment for the LLM API. Defaults to GrazieEnvironment.Production.
- * @return An instance of KotlinAIAgent configured according to the specified parameters.
+ * @param executor The `CodePromptExecutor` responsible for executing the prompts.
+ * @param cs The `CoroutineScope` used to manage coroutine operations.
+ * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
+ * @param llmModel The language model to be used by the agent. Default is `OpenAIModels.GPT4o`.
+ * @param temperature The sampling temperature for the language model, controlling randomness. Default is 1.0.
+ * @param eventHandler The `EventHandler` to handle events such as initialization, results, and errors. Default is `EventHandler.NO_HANDLER`.
+ * @param toolRegistry The `ToolRegistry` containing tools available to the agent. Default is `ToolRegistry.EMPTY`.
+ * @param maxIterations Maximum number of iterations for the agent's execution. Default is 50.
+ * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
+ * @return A configured instance of `KotlinAIAgent` with a single-run execution strategy.
  */
 fun simpleSingleRunAgent(
     executor: CodePromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",
-    llmModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
+    llmModel: LLModel = OpenAIModels.GPT4o,
     temperature: Double = 1.0,
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,

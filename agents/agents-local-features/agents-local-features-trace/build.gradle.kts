@@ -1,4 +1,5 @@
 import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
+import org.gradle.kotlin.dsl.project
 
 group = "${rootProject.group}.agents"
 version = rootProject.version
@@ -27,6 +28,7 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45")
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.server.cio)
             }

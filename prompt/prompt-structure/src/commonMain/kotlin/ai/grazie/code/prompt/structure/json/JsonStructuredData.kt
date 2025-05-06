@@ -1,5 +1,6 @@
 package ai.grazie.code.prompt.structure.json
 
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.prompt.structure.DescriptionMetadata
 import ai.grazie.code.prompt.structure.StructuredData
 import ai.grazie.code.prompt.structure.structure
@@ -15,9 +16,6 @@ import kotlinx.serialization.serializer
  * Annotation to provide description for fields in structured output classes.
  * @param description The description of the field for LLM.
  */
-@Target(AnnotationTarget.PROPERTY, AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class LLMDescription(val description: String)
 
 
 /**

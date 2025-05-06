@@ -1,4 +1,5 @@
 import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
+import org.gradle.kotlin.dsl.project
 
 group = "${rootProject.group}.prompt"
 version = rootProject.version
@@ -15,6 +16,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
 
                 implementation(project(":prompt:prompt-markdown"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
 
                 implementation(libs.ai.grazie.utils.common)
             }
