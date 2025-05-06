@@ -17,7 +17,7 @@ import ai.grazie.code.agents.local.model.message.LocalAgentEnvironmentToAgentIni
 import ai.grazie.code.agents.local.model.message.LocalAgentEnvironmentToolResultToAgentContent
 import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.text.TextContentBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -29,7 +29,7 @@ class KotlinAIAgent(
     strategy: LocalAgentStrategy,
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     agentConfig: LocalAgentConfig,
-    val promptExecutor: CodePromptExecutor,
+    val promptExecutor: PromptExecutor,
     private val cs: CoroutineScope,
     installFeatures: suspend FeatureContext.() -> Unit = {}
 ) : AIAgent<LocalAgentStrategy, LocalAgentConfig>(

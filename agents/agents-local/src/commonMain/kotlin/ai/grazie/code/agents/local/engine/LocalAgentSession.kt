@@ -9,7 +9,7 @@ import ai.grazie.code.agents.local.agent.LocalAgentStrategy
 import ai.grazie.code.agents.local.environment.LocalAgentEnvironmentProxy
 import ai.grazie.code.agents.local.features.AIAgentPipeline
 import ai.grazie.utils.mpp.UUID
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.channels.Channel
 
 class LocalAgentSession(
@@ -18,7 +18,7 @@ class LocalAgentSession(
     val config: LocalAgentConfig,
     val tools: ToolRegistry,
     val userMessage: String,
-    val promptExecutor: CodePromptExecutor,
+    val promptExecutor: PromptExecutor,
     internal val pipeline: AIAgentPipeline
 ) {
     val sessionUuid: UUID = UUID.Companion.random()

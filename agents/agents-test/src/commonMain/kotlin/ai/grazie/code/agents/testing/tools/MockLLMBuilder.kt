@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 
 class ToolCondition<Args : Tool.Args, Result : ToolResult>(
@@ -143,7 +143,7 @@ class MockLLMBuilder {
     infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String) =
         does { ToolResult.Text(action()) }
 
-    fun build(): CodePromptExecutor {
+    fun build(): PromptExecutor {
         val combinedExactMatches = assistantExactMatches.mapValues {
             Message.Assistant(it.value.trimIndent())
         } + toolCallExactMatches
@@ -221,7 +221,7 @@ fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
     eventHandler: EventHandler? = null,
     init: MockLLMBuilder.() -> Unit
-): CodePromptExecutor {
+): PromptExecutor {
 
     // Clear previous matches
     DefaultResponseReceiver.clearMatches()

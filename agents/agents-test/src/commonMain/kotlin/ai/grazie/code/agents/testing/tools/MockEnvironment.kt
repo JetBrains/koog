@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.tools.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.local.environment.AgentEnvironment
 import ai.grazie.code.agents.local.environment.ReceivedToolResult
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 
 @OptIn(InternalAgentToolsApi::class)
@@ -14,7 +14,7 @@ private object MockToolsEnabler : DirectToolCallsEnabler
 @OptIn(InternalAgentToolsApi::class)
 class MockEnvironment(
     val toolRegistry: ToolRegistry,
-    val promptExecutor: CodePromptExecutor,
+    val promptExecutor: PromptExecutor,
     val baseEnvironment: AgentEnvironment? = null
 ) : AgentEnvironment {
     override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {

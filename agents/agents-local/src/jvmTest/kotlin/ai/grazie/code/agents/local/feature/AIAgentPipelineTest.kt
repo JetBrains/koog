@@ -15,7 +15,7 @@ import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
@@ -119,7 +119,7 @@ class AIAgentPipelineTest {
             strategy,
             toolRegistry = toolRegistry,
             userPrompt = "add 2 and 2",
-            codePromptExecutor = CalculatorChatExecutor
+            promptExecutor = CalculatorChatExecutor
         ) {
             install(TestFeature) { events = interceptedEvents }
         }
@@ -271,7 +271,7 @@ class AIAgentPipelineTest {
         systemPrompt: String? = null,
         assistantPrompt: String? = null,
         toolRegistry: ToolRegistry? = null,
-        codePromptExecutor: CodePromptExecutor? = null,
+        promptExecutor: PromptExecutor? = null,
         installFeatures: suspend FeatureContext.() -> Unit = {}
     ): KotlinAIAgent {
 
@@ -298,7 +298,7 @@ class AIAgentPipelineTest {
             strategy = strategy,
             eventHandler = EventHandler { },
             agentConfig = agentConfig,
-            promptExecutor = codePromptExecutor ?: testExecutor,
+            promptExecutor = promptExecutor ?: testExecutor,
             cs = coroutineScope,
             installFeatures = installFeatures,
         )

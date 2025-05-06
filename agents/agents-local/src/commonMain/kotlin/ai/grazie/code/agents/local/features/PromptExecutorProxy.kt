@@ -3,21 +3,21 @@ package ai.grazie.code.agents.local.features
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 
 /**
- * A wrapper around [CodePromptExecutor] that allows for adding internal functionality to the executor
+ * A wrapper around [PromptExecutor] that allows for adding internal functionality to the executor
  * to catch and log events related to LLM calls.
  *
- * @property executor The [CodePromptExecutor] to wrap.
+ * @property executor The [PromptExecutor] to wrap.
  * @property pipeline The [AIAgentPipeline] associated with the executor.
  */
-class CodePromptExecutorProxy(
-  private val executor: CodePromptExecutor,
-  private val pipeline: AIAgentPipeline
-): CodePromptExecutor {
+class PromptExecutorProxy(
+    private val executor: PromptExecutor,
+    private val pipeline: AIAgentPipeline
+): PromptExecutor {
 
     companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.local.agent.PipelineAwareCodePromptExecutor")
