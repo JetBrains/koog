@@ -44,27 +44,9 @@ interface ToolResult {
         override fun toStringDefault(): String = result.toString()
     }
 
-    interface JSONSerializable<T : JSONSerializable<T>> : ToolResult, ToJSON {
+    interface JSONSerializable<T : JSONSerializable<T>> : ToolResult {
         val serializer: KSerializer<T>
 
-        override fun toJSON() = json.encodeToString(serializer, this as T)
-
-        override fun toStringDefault(): String = toJSON()
-    }
-
-    interface ToJSON : ToolResult {
-        fun toJSON(): String
-    }
-
-    interface ToXML : ToolResult {
-        fun toXML(): String
-    }
-
-    interface ToMarkdown : ToolResult {
-        fun toMarkdown(): String
-    }
-
-    interface ToPlain : ToolResult {
-        fun toPlain(): String
+        override fun toStringDefault(): String = json.encodeToString(serializer, this as T)
     }
 }
