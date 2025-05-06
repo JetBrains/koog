@@ -5,8 +5,8 @@ import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.utils.ActiveProperty
-import ai.grazie.code.agents.core.utils.RWLock
+import ai.grazie.code.agents.local.utils.ActiveProperty
+import ai.grazie.code.agents.local.utils.RWLock
 import ai.grazie.code.agents.local.InternalAgentsApi
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.agent.LocalAgentStateManager
@@ -579,7 +579,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args the arguments required to execute the tool.
      * @return a `SafeTool.Result` containing the tool's execution result of type `TResult`.
      */
-    @Suppress("UNCHECKED_CAST")
     suspend inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> callTool(
         tool: Tool<TArgs, TResult>,
         args: TArgs
@@ -594,7 +593,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The arguments required to execute the tool, which must be a subtype of [Tool.Args].
      * @return A [SafeTool.Result] containing the result of the tool execution, which is a subtype of [ToolResult].
      */
-    @Suppress("UNCHECKED_CAST")
     suspend inline fun <reified TArgs : Tool.Args> callTool(
         toolName: String,
         args: TArgs
@@ -609,7 +607,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The arguments to be passed to the tool, conforming to the [Tool.Args] type.
      * @return The raw result of the tool's execution as a String.
      */
-    @Suppress("UNCHECKED_CAST")
     suspend inline fun <reified TArgs : Tool.Args> callToolRaw(
         toolName: String,
         args: TArgs
@@ -626,7 +623,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The arguments to be passed to the tool for its execution.
      * @return A result wrapper containing either the successful result of the tool's execution or an error.
      */
-    @Suppress("UNCHECKED_CAST")
     suspend inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> callTool(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         args: TArgs
@@ -644,8 +640,8 @@ class LocalAgentLLMWriteSession internal constructor(
      * @return A SafeTool instance wrapping the found tool and its environment.
      * @throws IllegalArgumentException if the specified tool is not found in the tool registry.
      */
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult> {
+        @Suppress("UNCHECKED_CAST")
         val tool = (toolRegistry.stages.first().tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool with type ${toolClass.simpleName} is not defined"))
 
@@ -658,7 +654,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The input arguments required for the tool execution, represented as an instance of `Tool.Args`.
      * @return A `SafeTool.Result` containing the outcome of the tool's execution, which may be of any type that extends `ToolResult`.
      */
-    @Suppress("UNCHECKED_CAST")
     suspend inline fun <reified ToolT : Tool<*, *>> callTool(
         args: Tool.Args
     ): SafeTool.Result<out ToolResult> {
@@ -724,7 +719,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of concurrent executions. Default value is 16.
      * @return A flow emitting the results of the tool executions wrapped in a SafeTool.Result object.
      */
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
         tool: Tool<TArgs, TResult>,
         concurrency: Int = 16
@@ -744,7 +738,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of parallel executions allowed. Default is 16.
      * @return A Flow containing the results of the tool executions, wrapped in `SafeTool.Result`.
      */
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int = 16
@@ -762,7 +755,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency the number of concurrent tool calls to be executed. Defaults to 16.
      * @return a flow of raw string results from the parallel tool calls.
      */
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCallsRaw(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int = 16
@@ -782,8 +774,8 @@ class LocalAgentLLMWriteSession internal constructor(
      * @return the tool that matches the specified name and types
      * @throws IllegalArgumentException if the tool is not defined or the types are incompatible
      */
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> findToolByNameAndArgs(toolName: String): Tool<TArgs, TResult> =
+        @Suppress("UNCHECKED_CAST")
         (toolRegistry.getTool(toolName) as? Tool<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments"))
 
@@ -795,8 +787,8 @@ class LocalAgentLLMWriteSession internal constructor(
      * @throws IllegalArgumentException If the tool with the specified name is not defined or its arguments
      * are incompatible with the expected type.
      */
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified TArgs : Tool.Args> findToolByName(toolName: String): SafeTool<TArgs, *> {
+        @Suppress("UNCHECKED_CAST")
         val tool = (toolRegistry.getTool(toolName) as? Tool<TArgs, *>
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments"))
 

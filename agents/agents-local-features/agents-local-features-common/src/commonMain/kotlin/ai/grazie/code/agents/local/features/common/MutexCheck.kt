@@ -4,7 +4,7 @@ import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-object MutexCheck {
+internal object MutexCheck {
 
     private val logger = LoggerFactory.create("ai.grazie.code.agents.local.features.common.provider.WriterLockUtil")
 

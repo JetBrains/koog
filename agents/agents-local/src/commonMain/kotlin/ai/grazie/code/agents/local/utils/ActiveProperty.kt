@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.utils
+package ai.grazie.code.agents.local.utils
 
 import kotlin.reflect.KProperty
 
@@ -10,7 +10,7 @@ import kotlin.reflect.KProperty
  * @property value The initial value of the property.
  * @property checkIsActive A lambda function that determines if the property is active.
  */
-class ActiveProperty<T>(
+internal class ActiveProperty<T>(
     private var value: T,
     private val checkIsActive: () -> Boolean
 ) {

@@ -2,7 +2,7 @@ package ai.grazie.code.agents.local.features.common
 
 import kotlinx.coroutines.CancellationException
 
-object ExceptionExtractor {
+internal object ExceptionExtractor {
 
     /**
      * Extension property that retrieves the root cause of a [CancellationException].
