@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
- * MultiLLMCodePromptExecutor is a class responsible for executing prompts
+ * MultiLLMPromptExecutor is a class responsible for executing prompts
  * across multiple Large Language Models (LLMs). This implementation supports direct execution
  * with specific LLM clients or utilizes a fallback strategy if no primary LLM client is available
  * for the requested provider.
@@ -21,10 +21,10 @@ import kotlinx.coroutines.flow.flow
  * @param llmClients A map containing LLM providers associated with their respective [DirectLLMClient]s.
  * @param fallback Optional settings to configure the fallback mechanism in case a specific provider is not directly available.
  */
-open class MultiLLMCodePromptExecutor(
+open class MultiLLMPromptExecutor(
     private val llmClients: Map<LLMProvider, DirectLLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
-) : CodePromptExecutor {
+) : PromptExecutor {
     /**
      * Represents configuration for a fallback large language model (LLM) execution strategy.
      *
@@ -50,7 +50,7 @@ open class MultiLLMCodePromptExecutor(
     }
 
     /**
-     * Initializes a new instance of the `MultiLLMCodePromptExecutor` class with multiple LLM clients.
+     * Initializes a new instance of the `MultiLLMPromptExecutor` class with multiple LLM clients.
      *
      * Allows specifying a variable number of client-provider pairs, where each pair links a specific
      * `LLMProvider` with a corresponding implementation of `DirectLLMClient`. All provided pairs are
@@ -63,7 +63,7 @@ open class MultiLLMCodePromptExecutor(
     constructor(vararg llmClients: Pair<LLMProvider, DirectLLMClient>) : this(mapOf(*llmClients))
 
     /**
-     * Companion object for `MultiLLMCodePromptExecutor` class.
+     * Companion object for `MultiLLMPromptExecutor` class.
      *
      * Provides shared utilities and constants, including a logger instance for logging
      * events and debugging information related to the execution of prompts using
@@ -71,7 +71,7 @@ open class MultiLLMCodePromptExecutor(
      */
     companion object {
         /**
-         * Logger instance used for logging messages within the LLMCodePromptExecutor and MultiLLMCodePromptExecutor classes.
+         * Logger instance used for logging messages within the LLMPromptExecutor and MultiLLMPromptExecutor classes.
          *
          * This logger is utilized to provide debug logs during the execution of prompts and handling of streaming responses.
          * It primarily tracks operations such as prompt execution initiation, tool usage, and responses received from the
@@ -80,7 +80,7 @@ open class MultiLLMCodePromptExecutor(
          * The logger can aid in debugging by capturing detailed information about the state and flow of operations within
          * the respective classes.
          */
-        private val logger = LoggerFactory.create("ai.jetbrains.code.prompt.executor.llms.LLMCodePromptExecutor")
+        private val logger = LoggerFactory.create("ai.jetbrains.code.prompt.executor.llms.LLMPromptExecutor")
     }
 
     /**

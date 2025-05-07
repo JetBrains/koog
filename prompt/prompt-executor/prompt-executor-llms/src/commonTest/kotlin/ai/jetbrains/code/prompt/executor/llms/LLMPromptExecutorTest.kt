@@ -16,7 +16,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class LLMCodePromptExecutorTest {
+class LLMPromptExecutorTest {
 
     // Mock client for OpenAI
     private class MockOpenAILLMClient : DirectLLMClient {
@@ -42,7 +42,7 @@ class LLMCodePromptExecutorTest {
 
     @Test
     fun testExecuteWithOpenAI() = runTest {
-        val executor = MultiLLMCodePromptExecutor(
+        val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
@@ -59,7 +59,7 @@ class LLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteWithAnthropic() = runTest {
-        val executor = MultiLLMCodePromptExecutor(
+        val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
@@ -76,7 +76,7 @@ class LLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteStreamingWithOpenAI() = runTest {
-        val executor = MultiLLMCodePromptExecutor(
+        val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
@@ -94,7 +94,7 @@ class LLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteStreamingWithAnthropic() = runTest {
-        val executor = MultiLLMCodePromptExecutor(
+        val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
@@ -112,7 +112,7 @@ class LLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteWithUnsupportedProvider() = runTest {
-        val executor = MultiLLMCodePromptExecutor()
+        val executor = MultiLLMPromptExecutor()
 
         val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-prompt") {
             system("You are a helpful assistant.")
@@ -126,7 +126,7 @@ class LLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteStreamingWithUnsupportedProvider() = runTest {
-        val executor = MultiLLMCodePromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient())
+        val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient())
         
         val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-prompt") {
             system("You are a helpful assistant.")

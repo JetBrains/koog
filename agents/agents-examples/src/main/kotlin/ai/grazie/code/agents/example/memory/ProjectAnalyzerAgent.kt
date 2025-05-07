@@ -25,7 +25,7 @@ import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.Path
@@ -46,7 +46,7 @@ fun createProjectAnalyzerAgent(
     codeAnalysisTool: CodeAnalysisTool,
     memoryProvider: AgentMemoryProvider,
     cs: CoroutineScope,
-    promptExecutor: CodePromptExecutor,
+    promptExecutor: PromptExecutor,
     maxAgentIterations: Int = 50,
     featureName: String? = null,
     productName: String? = null,

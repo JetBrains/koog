@@ -16,15 +16,15 @@ import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.time.Duration.Companion.milliseconds
 
-class FileCodePromptCacheTest {
+class FilePromptCacheTest {
     @TempDir
     lateinit var tempDir: Path
     
-    private lateinit var cache: FileCodePromptCache
+    private lateinit var cache: FilePromptCache
     
     @BeforeEach
     fun setUp() {
-        cache = FileCodePromptCache(tempDir)
+        cache = FilePromptCache(tempDir)
     }
     
     @AfterEach
@@ -65,7 +65,7 @@ class FileCodePromptCacheTest {
     @Test
     fun `test file limit enforcement`() = runBlocking {
         // Create a cache with a small file limit
-        val smallCache = FileCodePromptCache(tempDir, maxFiles = 3)
+        val smallCache = FilePromptCache(tempDir, maxFiles = 3)
         
         // Create several prompts and responses
         val prompts = (1..5).map { createTestPrompt("test prompt $it") }
@@ -94,7 +94,7 @@ class FileCodePromptCacheTest {
     @Test
     fun `test least recently accessed files are removed`() = runBlocking {
         // Create a cache with a small file limit
-        val smallCache = FileCodePromptCache(tempDir, maxFiles = 3)
+        val smallCache = FilePromptCache(tempDir, maxFiles = 3)
         
         // Create several prompts and responses
         val prompts = (1..3).map { createTestPrompt("test prompt $it") }
@@ -131,9 +131,9 @@ class FileCodePromptCacheTest {
     
     @Test
     fun `test default max files value`() {
-        val defaultCache = FileCodePromptCache(tempDir)
+        val defaultCache = FilePromptCache(tempDir)
         // This is a reflection-based test to verify the default value
-        val field = FileCodePromptCache::class.java.getDeclaredField("maxFiles")
+        val field = FilePromptCache::class.java.getDeclaredField("maxFiles")
         field.isAccessible = true
         val maxFiles = field.get(defaultCache) as Int
         assertEquals(3000, maxFiles, "Default maxFiles should be 3000")

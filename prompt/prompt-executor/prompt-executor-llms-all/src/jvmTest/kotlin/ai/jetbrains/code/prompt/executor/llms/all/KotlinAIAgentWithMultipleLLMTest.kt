@@ -16,7 +16,7 @@ import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
-import ai.jetbrains.code.prompt.executor.llms.MultiLLMCodePromptExecutor
+import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.ReportingLLMLLMClient.Event
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.message.Message
@@ -299,7 +299,7 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         // Create the executor
         val executor = //grazieExecutor
-            MultiLLMCodePromptExecutor(
+            MultiLLMPromptExecutor(
                 LLMProvider.OpenAI to openAIClient,
                 LLMProvider.Anthropic to anthropicClient
             )

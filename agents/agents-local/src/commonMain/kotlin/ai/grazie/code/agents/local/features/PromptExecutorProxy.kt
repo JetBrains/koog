@@ -20,7 +20,7 @@ class PromptExecutorProxy(
 ): PromptExecutor {
 
     companion object {
-        private val logger = LoggerFactory.create("ai.grazie.code.agents.local.agent.PipelineAwareCodePromptExecutor")
+        private val logger = LoggerFactory.create("ai.grazie.code.agents.local.agent.PipelineAwarePromptExecutor")
     }
 
     override suspend fun execute(prompt: Prompt): String {

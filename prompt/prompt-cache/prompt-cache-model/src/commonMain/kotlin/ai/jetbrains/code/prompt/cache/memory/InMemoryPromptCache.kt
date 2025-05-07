@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.cache.memory
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.jetbrains.code.prompt.cache.model.CodePromptCache
+import ai.jetbrains.code.prompt.cache.model.PromptCache
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.datetime.Clock
@@ -9,12 +9,12 @@ import kotlinx.datetime.Instant
 import kotlin.math.absoluteValue
 
 /**
- * In-memory implementation of [CodePromptCache].
+ * In-memory implementation of [PromptCache].
  * This implementation stores cache entries in memory.
  */
-class InMemoryCodePromptCache(private val maxEntries: Int?) : CodePromptCache {
-    companion object : CodePromptCache.Factory.Named("memory") {
-        override fun create(config: String): CodePromptCache {
+class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
+    companion object : PromptCache.Factory.Named("memory") {
+        override fun create(config: String): PromptCache {
             val parts = elements(config)
             require(parts[0] == "memory") { "Invalid cache type: ${parts[0]}. Expected 'memory'." }
             val limit = when {
@@ -22,7 +22,7 @@ class InMemoryCodePromptCache(private val maxEntries: Int?) : CodePromptCache {
                 parts[1].equals("unlimited", ignoreCase = true) -> null
                 else -> parts[1].toIntOrNull() ?: error("Invalid memory cache size limit: ${parts[1]}. Expected a number or 'unlimited'.")
             }
-            return InMemoryCodePromptCache(limit)
+            return InMemoryPromptCache(limit)
         }
     }
 
