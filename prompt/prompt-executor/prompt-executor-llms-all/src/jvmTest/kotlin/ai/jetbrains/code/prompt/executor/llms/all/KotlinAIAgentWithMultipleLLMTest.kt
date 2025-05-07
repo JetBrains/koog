@@ -31,7 +31,9 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
 import kotlin.coroutines.coroutineContext
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -284,16 +286,116 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
     }
 
+    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
     @Disabled("This test requires valid API keys")
-    @OptIn(DelicateCoroutinesApi::class)
     @Test
     fun testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
-        // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
         // Create the clients
-        val eventsChannel = Channel<Event>()
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val fs = MockFileSystem()
+        val eventHandler = EventHandler {
+            onToolCall { stage, tool, arguments ->
+                println(
+                    "[$stage] Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
 
+            handleResult {
+                eventsChannel.send(Event.Termination)
+            }
+        }
+        val agent = createTestAgent(eventsChannel, fs, eventHandler, maxAgentIterations = 42)
+
+        val result = agent.runAndGetResult(
+            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+        )
+
+        assertNotNull(result)
+
+        assertTrue(
+            fs.fileCount() > 0,
+            "Agent must have created at least one file"
+        )
+
+        val messages = mutableListOf<Event.Message>()
+        for (msg in eventsChannel) {
+            if (msg is Event.Message) messages.add(msg)
+            else break
+        }
+
+        assertTrue(
+            messages.any { it.llmClient == "AnthropicDirectLLMClient" },
+            "At least one message must be delegated to Anthropic client"
+        )
+
+        assertTrue(
+            messages.any { it.llmClient == "OpenAIDirectLLMClient" },
+            "At least one message must be delegated to OpenAI client"
+        )
+
+        assertTrue(
+            messages
+                .filter { it.llmClient == "AnthropicDirectLLMClient" }
+                .all { it.prompt.model.provider == LLMProvider.Anthropic },
+            "All prompts with Anthropic model must be delegated to Anthropic client"
+        )
+
+        assertTrue(
+            messages
+                .filter { it.llmClient == "OpenAIDirectLLMClient" }
+                .all { it.prompt.model.provider == LLMProvider.OpenAI },
+            "All prompts with OpenAI model must be delegated to OpenAI client"
+        )
+    }
+
+    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
+    @Disabled("This test requires valid API keys")
+    @Test
+    fun testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val fs = MockFileSystem()
+        var errorMessage: String? = null
+        val eventHandler = EventHandler {
+            onToolCall { stage, tool, arguments ->
+                println(
+                    "[$stage] Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+
+            handleResult {
+                eventsChannel.send(Event.Termination)
+            }
+
+            handleError {
+                errorMessage = it.message
+                true
+            }
+        }
+        val steps = 10
+        val agent = createTestAgent(eventsChannel, fs, eventHandler, maxAgentIterations = steps)
+
+        val result = agent.runAndGetResult(
+            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+        )
+        assertNull(result)
+        assertEquals(
+            "Local AI Agent has run into a problem: agent couldn't finish in given number of steps ($steps). " +
+                    "Please, consider increasing `maxAgentIterations` value in agent's configuration",
+            errorMessage
+        )
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun createTestAgent(
+        eventsChannel: Channel<Event>,
+        fs: MockFileSystem,
+        eventHandler: EventHandler,
+        maxAgentIterations: Int
+    ): KotlinAIAgent {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
@@ -361,8 +463,6 @@ class KotlinAIAgentWithMultipleLLMTest {
             }
         }
 
-        val fs = MockFileSystem()
-
         val tools = ToolRegistry {
             stage("anthropic") {
                 tool(CreateFile(fs))
@@ -375,25 +475,12 @@ class KotlinAIAgentWithMultipleLLMTest {
             }
         }
 
-
         // Create the agent
-        val agent = KotlinAIAgent(
+        return KotlinAIAgent(
             toolRegistry = tools,
             strategy = strategy,
-            eventHandler = EventHandler {
-                onToolCall { stage, tool, arguments ->
-                    println(
-                        "[$stage] Calling tool ${tool.name} with arguments ${
-                            arguments.toString().lines().first().take(100)
-                        }"
-                    )
-                }
-
-                handleResult {
-                    eventsChannel.send(Event.Termination)
-                }
-            },
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            eventHandler = eventHandler,
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, maxAgentIterations),
             promptExecutor = executor,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
         ) {
@@ -401,46 +488,5 @@ class KotlinAIAgentWithMultipleLLMTest {
                 addMessageProcessor(TestLogPrinter())
             }
         }
-
-        val result = agent.runAndGetResult(
-            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-        )
-
-        assertNotNull(result)
-
-        assertTrue(
-            fs.fileCount() > 0,
-            "Agent must have created at least one file"
-        )
-
-        val messages = mutableListOf<Event.Message>()
-        for (msg in eventsChannel) {
-            if (msg is Event.Message) messages.add(msg)
-            else break
-        }
-
-        assertTrue(
-            messages.any { it.llmClient == "AnthropicSuspendableDirectClient" },
-            "At least one message must be delegated to Anthropic client"
-        )
-
-        assertTrue(
-            messages.any { it.llmClient == "OpenAISuspendableDirectClient" },
-            "At least one message must be delegated to OpenAI client"
-        )
-
-        assertTrue(
-            messages
-                .filter { it.llmClient == "AnthropicSuspendableDirectClient" }
-                .all { it.prompt.model.provider == LLMProvider.Anthropic },
-            "All prompts with Anthropic model must be delegated to Anthropic client"
-        )
-
-        assertTrue(
-            messages
-                .filter { it.llmClient == "OpenAISuspendableDirectClient" }
-                .all { it.prompt.model.provider == LLMProvider.OpenAI },
-            "All prompts with OpenAI model must be delegated to OpenAI client"
-        )
     }
 }
