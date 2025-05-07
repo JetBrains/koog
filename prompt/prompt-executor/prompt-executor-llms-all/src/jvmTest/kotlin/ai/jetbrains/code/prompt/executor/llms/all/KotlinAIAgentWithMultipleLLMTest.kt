@@ -12,10 +12,10 @@ import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.ReportingLLMLLMClient.Event
 import ai.jetbrains.code.prompt.llm.LLMProvider
@@ -488,5 +488,398 @@ class KotlinAIAgentWithMultipleLLMTest {
                 addMessageProcessor(TestLogPrinter())
             }
         }
+    }
+
+    @Disabled
+    @Test
+    fun `test agent with openAI and Anthropic clients`() = runTest {
+        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
+        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
+        )
+
+        val strategy = strategy("test", llmHistoryTransitionPolicy = ContextTransitionPolicy.CLEAR_LLM_HISTORY) {
+            stage("anthropic") {
+                val definePromptAnthropic by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(AnthropicModels.Sonnet_3_7, "test") {
+                                system("You are a helpful assistant. You need to solve my task.")
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+
+
+                edge(nodeStart forwardTo definePromptAnthropic)
+                edge(definePromptAnthropic forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            }
+            stage("openai") {
+                val definePromptOpenAI by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(OpenAIModels.GPT4o, "test") {
+                                system(
+                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " + "Please analyze the whole produced solution, and check that it is valid." + "Write concise verification result."
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+
+                edge(nodeStart forwardTo definePromptOpenAI)
+                edge(definePromptOpenAI forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            }
+            stage("anthropic") {
+                val definePromptAnthropic by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(AnthropicModels.Sonnet_3_7, "test") {
+                                system("Add some joke at the end of the solution.")
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+
+
+                edge(nodeStart forwardTo definePromptAnthropic)
+                edge(definePromptAnthropic forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            }
+        }
+
+        val tools = ToolRegistry {}
+
+        val agent = KotlinAIAgent(
+            toolRegistry = tools,
+            strategy = strategy,
+            eventHandler = EventHandler {
+                onToolCall { stage, tool, arguments ->
+                    println(
+                        "[$stage] Calling tool ${tool.name} with arguments ${
+                            arguments.toString().lines().first().take(100)
+                        }"
+                    )
+                }
+
+                handleResult {
+                    println(Event.Termination)
+                }
+            },
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            promptExecutor = executor,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+        }
+
+        val result = agent.runAndGetResult(
+            "Name me a capital of France"
+        )
+
+        assertNotNull(result)
+    }
+
+    @Disabled
+    @Test
+    fun `test agent with openAI client only`() = runTest {
+        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
+
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient
+        )
+
+        val strategy = strategy("test", llmHistoryTransitionPolicy = ContextTransitionPolicy.CLEAR_LLM_HISTORY) {
+            stage("openai_initial") {
+                val defineInitialPrompt by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(OpenAIModels.O3Mini, "test") {
+                                system("You are a helpful assistant. You need to solve my task.")
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+
+
+                edge(nodeStart forwardTo defineInitialPrompt)
+                edge(defineInitialPrompt forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            }
+            stage("openai_judge") {
+                val defineLLMasAJudgePrompt by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(OpenAIModels.GPT4o, "test") {
+                                system(
+                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " + "Please analyze the whole produced solution, and check that it is valid." + "Write concise verification result."
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+
+                edge(nodeStart forwardTo defineLLMasAJudgePrompt)
+                edge(defineLLMasAJudgePrompt forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            }
+        }
+
+        val tools = ToolRegistry {}
+
+        val agent = KotlinAIAgent(
+            toolRegistry = tools,
+            strategy = strategy,
+            eventHandler = EventHandler {
+                onToolCall { stage, tool, arguments ->
+                    println(
+                        "[$stage] Calling tool ${tool.name} with arguments ${
+                            arguments.toString().lines().first().take(100)
+                        }"
+                    )
+                }
+
+                handleResult {
+                    println(Event.Termination)
+                }
+            },
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            promptExecutor = executor,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+        }
+
+        val result = agent.runAndGetResult(
+            "Name me a capital of France"
+        )
+
+        assertNotNull(result)
+    }
+
+    @Disabled
+    @Test
+    fun `test agent with Anthropic client only`() = runTest {
+        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.Anthropic to anthropicClient
+        )
+
+        val strategy = strategy("test", llmHistoryTransitionPolicy = ContextTransitionPolicy.CLEAR_LLM_HISTORY) {
+            stage("openai_initial") {
+                val defineInitialPrompt by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(AnthropicModels.Sonnet_3_5, "test") {
+                                system("You are a helpful assistant. You need to solve my task.")
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+
+
+                edge(nodeStart forwardTo defineInitialPrompt)
+                edge(defineInitialPrompt forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            }
+            stage("openai_judge") {
+                val defineLLMasAJudgePrompt by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(AnthropicModels.Sonnet_3_7, "test") {
+                                system(
+                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " + "Please analyze the whole produced solution, and check that it is valid." + "Write concise verification result."
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+
+                edge(nodeStart forwardTo defineLLMasAJudgePrompt)
+                edge(defineLLMasAJudgePrompt forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+            }
+        }
+
+        val tools = ToolRegistry {}
+
+        val agent = KotlinAIAgent(
+            toolRegistry = tools,
+            strategy = strategy,
+            eventHandler = EventHandler {
+                onToolCall { stage, tool, arguments ->
+                    println(
+                        "[$stage] Calling tool ${tool.name} with arguments ${
+                            arguments.toString().lines().first().take(100)
+                        }"
+                    )
+                }
+
+                handleResult {
+                    println(Event.Termination)
+                }
+            },
+            agentConfig = LocalAgentConfig(prompt(AnthropicModels.Sonnet_3_7, "test") {}, 15),
+            promptExecutor = executor,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+        }
+
+        val result = agent.runAndGetResult(
+            "Name me a capital of France"
+        )
+
+        assertNotNull(result)
+    }
+
+    @Disabled
+    @Test
+    fun `test agent with openAI and Anthropic with tools`() = runTest(timeout = 300.seconds) {
+        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
+        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
+        )
+
+        val strategy = strategy("test-tools", llmHistoryTransitionPolicy = ContextTransitionPolicy.CLEAR_LLM_HISTORY) {
+            stage("anthropic-calculator") {
+                val definePromptAnthropic by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(AnthropicModels.Sonnet_3_7, "test-tools") {
+                                system("You are a helpful assistant. You need to solve a math problem using the calculator tool.")
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+                val callTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+
+                edge(nodeStart forwardTo definePromptAnthropic)
+                edge(definePromptAnthropic forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo callTool onToolCall { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+                edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+            }
+            stage("openai-color-picker") {
+                val definePromptOpenAI by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(OpenAIModels.GPT4o, "test-tools") {
+                                system(
+                                    "You are a helpful assistant. You need to pick some colors using the colorPicker tool. " +
+                                            "Please pick at least 3 colors."
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+                val callTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+
+                edge(nodeStart forwardTo definePromptOpenAI)
+                edge(definePromptOpenAI forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo callTool onToolCall { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+                edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+            }
+            stage("anthropic-summary") {
+                val definePromptAnthropic by node<Unit, Unit> {
+                    llm.writeSession {
+                        rewritePrompt {
+                            prompt(AnthropicModels.Sonnet_3_7, "test-tools") {
+                                system("Summarize the results of the previous operations and add a joke at the end.")
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+                val callTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+
+                edge(nodeStart forwardTo definePromptAnthropic)
+                edge(definePromptAnthropic forwardTo callLLM transformed { stageInput })
+                edge(callLLM forwardTo callTool onToolCall { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+                edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+            }
+        }
+
+        val tools = ToolRegistry {
+            stage("anthropic-calculator") {
+                tool(TestUtils.CalculatorTool())
+            }
+            stage("openai-color-picker") {
+                tool(TestUtils.ColorPickerTool())
+            }
+            stage("anthropic-summary") {
+                tool(TestUtils.SummaryTool())
+            }
+        }
+
+        val agent = KotlinAIAgent(
+            toolRegistry = tools,
+            strategy = strategy,
+            eventHandler = EventHandler {
+                onToolCall { stage, tool, arguments ->
+                    println(
+                        "[$stage] Calling tool ${tool.name} with arguments ${
+                            arguments.toString().lines().first().take(100)
+                        }"
+                    )
+                }
+
+                handleResult {
+                    println(Event.Termination)
+                }
+            },
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test-tools") {}, 15),
+            promptExecutor = executor,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+        }
+
+        val result = agent.runAndGetResult(
+            "Calculate 42 + 58 and then pick some nice colors for my website"
+        )
+
+        assertNotNull(result)
     }
 }
