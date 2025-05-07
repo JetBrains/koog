@@ -14,11 +14,11 @@ import ai.grazie.code.agents.local.simpleApi.TalkTool
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val executor: CodePromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
+    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
     val calculatorStageName = "calculator"
 
     // Create tool registry with calculator tools

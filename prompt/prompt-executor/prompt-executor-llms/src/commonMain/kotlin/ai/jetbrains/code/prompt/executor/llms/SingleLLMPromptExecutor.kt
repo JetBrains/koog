@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -16,14 +16,14 @@ import kotlinx.coroutines.flow.flow
  * or a streaming flow of response chunks from the LLM provider. It delegates the actual LLM interaction to the provided
  * implementation of `DirectLLMClient`.
  *
- * @constructor Creates an instance of `LLMCodePromptExecutor`.
+ * @constructor Creates an instance of `LLMPromptExecutor`.
  * @param llmClient The client used for direct communication with the LLM provider.
  */
-open class SingleLLMCodePromptExecutor(
+open class SingleLLMPromptExecutor(
     private val llmClient: DirectLLMClient,
-) : CodePromptExecutor {
+) : PromptExecutor {
     companion object {
-        private val logger = LoggerFactory.create("ai.jetbrains.code.prompt.executor.llms.LLMCodePromptExecutor")
+        private val logger = LoggerFactory.create("ai.jetbrains.code.prompt.executor.llms.LLMPromptExecutor")
     }
 
     override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {

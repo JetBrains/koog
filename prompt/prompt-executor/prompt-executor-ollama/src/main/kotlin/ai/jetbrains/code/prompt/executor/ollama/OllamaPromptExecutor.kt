@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.create
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaCustomModelConverters
 import ai.jetbrains.code.prompt.executor.ollama.client.dto.*
@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.flow
  * Executes code-related prompts using LLM Chat services.
  * This executor provides a unified way to handle prompts and obtain responses from LLM services.
  */
-class OllamaCodePromptExecutor(private val client: OllamaClient) : CodePromptExecutor {
+class OllamaPromptExecutor(private val client: OllamaClient) : PromptExecutor {
     companion object {
-        private val logger = LoggerFactory.create(OllamaCodePromptExecutor::class)
-        fun default(): OllamaCodePromptExecutor = OllamaCodePromptExecutor(OllamaClient())
+        private val logger = LoggerFactory.create(OllamaPromptExecutor::class)
+        fun default(): OllamaPromptExecutor = OllamaPromptExecutor(OllamaClient())
     }
 
 

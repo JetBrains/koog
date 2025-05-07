@@ -1,10 +1,15 @@
 package ai.grazie.code.agents.example.errors
 
+import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.example.normalize
 import ai.grazie.code.agents.tools.registry.tools.ErrorFixingTools
 import ai.grazie.code.files.jvm.JVMDocumentProvider
 import ai.grazie.code.files.model.DocumentProvider.DocumentRange
 import ai.grazie.code.files.model.DocumentProvider.Position
+import ai.grazie.code.prompt.structure.json.LLMDescription
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import java.nio.file.Path
 import kotlin.io.path.name
 import kotlin.io.path.readText
@@ -66,5 +71,19 @@ class SearchReplaceToolImpl(val testFile: Path) : ErrorFixingTools.SearchReplace
         } catch (e: Exception) {
             return "Failed to edit file: ${e.message}"
         }
+    }
+}
+
+@Serializable
+@SerialName("CritiqueRsult")
+@LLMDescription("LLM as a judge feedback on the agent result.")
+data class CritiqueResultWithMessage(
+    @LLMDescription("Critique result: true if results is correct and meets all requirements, false if agent should continue improve result.")
+    val result: Boolean,
+    @LLMDescription("Critique messages: string with comment on critique result.")
+    val message: String
+) : ToolResult {
+    override fun toStringDefault(): String {
+        return Json.encodeToString(serializer(), this)
     }
 }

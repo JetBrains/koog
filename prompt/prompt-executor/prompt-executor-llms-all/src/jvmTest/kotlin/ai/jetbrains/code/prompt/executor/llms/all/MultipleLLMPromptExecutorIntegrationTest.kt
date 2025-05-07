@@ -12,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class MultipleLLMCodePromptExecutorIntegrationTest {
+class MultipleLLMPromptExecutorIntegrationTest {
 
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
@@ -27,7 +27,7 @@ class MultipleLLMCodePromptExecutorIntegrationTest {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey,)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
         
-        val executor = DefaultMultiLLMCodePromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
         
         val prompt = Prompt.build(OpenAIModels.GPT4o, "test-prompt") {
             system("You are a helpful assistant.")
@@ -51,7 +51,7 @@ class MultipleLLMCodePromptExecutorIntegrationTest {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
         
-        val executor = DefaultMultiLLMCodePromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
         
         val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-prompt") {
             system("You are a helpful assistant.")
@@ -75,7 +75,7 @@ class MultipleLLMCodePromptExecutorIntegrationTest {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
         
-        val executor = DefaultMultiLLMCodePromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
         
         val prompt = Prompt.build(OpenAIModels.GPT4o, "test-streaming") {
             system("You are a helpful assistant.")
@@ -105,7 +105,7 @@ class MultipleLLMCodePromptExecutorIntegrationTest {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
         
-        val executor = DefaultMultiLLMCodePromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
         
         val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-streaming") {
             system("You are a helpful assistant.")
@@ -135,7 +135,7 @@ class MultipleLLMCodePromptExecutorIntegrationTest {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
         
-        val executor = DefaultMultiLLMCodePromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
         
         val prompt = Prompt.build(OpenAIModels.GPT4o, "test-code") {
             system("You are a helpful coding assistant.")
@@ -161,7 +161,7 @@ class MultipleLLMCodePromptExecutorIntegrationTest {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
         
-        val executor = DefaultMultiLLMCodePromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
         
         val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-code") {
             system("You are a helpful coding assistant.")

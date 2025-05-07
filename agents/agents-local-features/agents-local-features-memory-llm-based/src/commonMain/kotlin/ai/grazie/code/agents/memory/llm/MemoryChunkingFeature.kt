@@ -9,13 +9,13 @@ import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 class MemoryChunkingFeature(
-    private val executor: CodePromptExecutor
+    private val executor: PromptExecutor
 ) {
     /**
      * Data class for the LLM response when generating memory chunks.

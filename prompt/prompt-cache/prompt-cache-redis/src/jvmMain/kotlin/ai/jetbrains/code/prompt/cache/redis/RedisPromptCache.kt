@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.json.JSON
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.create
-import ai.jetbrains.code.prompt.cache.model.CodePromptCache
+import ai.jetbrains.code.prompt.cache.model.PromptCache
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
@@ -22,32 +22,32 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Redis-based implementation of [CodePromptCache].
+ * Redis-based implementation of [PromptCache].
  * This implementation stores cache entries in a Redis database.
  *
  * @param client The Redis client to use for connecting to Redis
  */
 @OptIn(ExperimentalLettuceCoroutinesApi::class)
-class RedisCodePromptCache(
+class RedisPromptCache(
     private val client: RedisClient,
     private val prefix: String,
     private val ttl: Duration,
-) : CodePromptCache {
+) : PromptCache {
 
-    companion object : CodePromptCache.Factory.Named("redis") {
-        private val logger = LoggerFactory.create(RedisCodePromptCache::class)
+    companion object : PromptCache.Factory.Named("redis") {
+        private val logger = LoggerFactory.create(RedisPromptCache::class)
 
         private const val DEFAULT_URI = "redis://localhost:6379"
         private const val CACHE_KEY_PREFIX = "code-prompt-cache:"
 
-        override fun create(config: String): CodePromptCache {
+        override fun create(config: String): PromptCache {
             val parts = elements(config)
             require(parts[0] == "redis") { "Invalid cache type: ${parts[0]}. Expected 'redis'." }
             val uri = parts.getOrNull(1)?.takeIf { it.isNotBlank() } ?: DEFAULT_URI
             val client = RedisClient.create(uri)
             val prefix = parts.getOrNull(2)?.takeIf { it.isNotBlank() } ?: CACHE_KEY_PREFIX
             val ttlInSeconds = parts.getOrNull(3)?.takeIf { it.isNotBlank() }?.toLongOrNull()?.seconds ?: 1.days
-            return RedisCodePromptCache(client, prefix, ttlInSeconds)
+            return RedisPromptCache(client, prefix, ttlInSeconds)
         }
     }
 
@@ -72,7 +72,7 @@ class RedisCodePromptCache(
      * Generate a cache key for a prompt with tools.
      */
     private fun cacheKey(request: Request): String {
-        return this@RedisCodePromptCache.prefix + request.id
+        return this@RedisPromptCache.prefix + request.id
     }
 
     override suspend fun get(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response>? {

@@ -10,7 +10,7 @@ import ai.grazie.code.agents.local.dsl.builders.forwardTo
 import ai.grazie.code.agents.local.dsl.builders.strategy
 import ai.grazie.code.agents.local.dsl.extensions.*
 import ai.grazie.code.agents.local.graph.LocalAgentNode
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
@@ -85,7 +85,7 @@ suspend fun planWork(
     initialTaskDescription: String,
     subAgents: List<AgentDescriptor>,
     observingTools: ToolRegistry,
-    promptExecutor: CodePromptExecutor,
+    promptExecutor: PromptExecutor,
     eventHandler: EventHandler,
     config: LocalAgentConfig,
     coroutineScope: CoroutineScope

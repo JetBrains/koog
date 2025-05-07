@@ -16,7 +16,7 @@ import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMCli
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import ai.jetbrains.code.prompt.executor.llms.MultiLLMCodePromptExecutor
+import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.runBlocking
@@ -257,7 +257,7 @@ fun main(): Unit = runBlocking {
     )
 
     val runner = KotlinAIAgent(
-        promptExecutor = MultiLLMCodePromptExecutor(
+        promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAIDirectLLMClient(TokenService.openAIToken),
             LLMProvider.Anthropic to AnthropicDirectLLMClient(TokenService.anthropicToken),
         ),

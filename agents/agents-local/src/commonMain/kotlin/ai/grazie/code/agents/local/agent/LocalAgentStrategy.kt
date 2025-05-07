@@ -15,10 +15,10 @@ import ai.grazie.code.agents.local.dsl.extensions.clearHistory
 import ai.grazie.code.agents.local.dsl.extensions.nodeLLMCompressHistory
 import ai.grazie.code.agents.local.environment.AgentEnvironment
 import ai.grazie.code.agents.local.features.AIAgentPipeline
-import ai.grazie.code.agents.local.features.CodePromptExecutorProxy
+import ai.grazie.code.agents.local.features.PromptExecutorProxy
 import ai.grazie.code.agents.local.graph.LocalAgentNode
 import ai.grazie.utils.mpp.UUID
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.CompletableDeferred
 
 /**
@@ -163,7 +163,7 @@ class LocalAgentStrategy(
         sessionUuid: UUID,
         userInput: String,
         toolRegistry: ToolRegistry,
-        promptExecutor: CodePromptExecutor,
+        promptExecutor: PromptExecutor,
         environment: AgentEnvironment,
         config: LocalAgentConfig,
         pipeline: AIAgentPipeline,
@@ -182,7 +182,7 @@ class LocalAgentStrategy(
                     toolRegistry = toolRegistry,
                     tools = toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                     prompt = currentPrompt,
-                    promptExecutor = CodePromptExecutorProxy(promptExecutor, pipeline),
+                    promptExecutor = PromptExecutorProxy(promptExecutor, pipeline),
                     environment = environment,
                     config = config,
                 )

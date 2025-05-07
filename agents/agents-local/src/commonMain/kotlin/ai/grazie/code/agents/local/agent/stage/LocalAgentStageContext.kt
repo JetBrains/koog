@@ -21,7 +21,7 @@ import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.params.LLMParams
@@ -313,7 +313,7 @@ data class LocalAgentLLMContext(
     internal var tools: List<ToolDescriptor>,
     val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private var prompt: Prompt,
-    internal val promptExecutor: CodePromptExecutor,
+    internal val promptExecutor: PromptExecutor,
     private val environment: AgentEnvironment,
     private val config: LocalAgentConfig,
 ) {
@@ -364,7 +364,7 @@ data class LocalAgentLLMContext(
  */
 @OptIn(ExperimentalStdlibApi::class)
 sealed class LocalAgentLLMSession(
-    protected val executor: CodePromptExecutor,
+    protected val executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     prompt: Prompt,
     protected val config: LocalAgentConfig,
@@ -543,7 +543,7 @@ sealed class LocalAgentLLMSession(
 @Suppress("unused")
 class LocalAgentLLMWriteSession internal constructor(
     val environment: AgentEnvironment,
-    executor: CodePromptExecutor,
+    executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     val toolRegistry: ToolRegistry,
     prompt: Prompt,
@@ -971,7 +971,7 @@ class LocalAgentLLMWriteSession internal constructor(
 
 class LocalAgentLLMReadSession internal constructor(
     tools: List<ToolDescriptor>,
-    executor: CodePromptExecutor,
+    executor: PromptExecutor,
     prompt: Prompt,
     config: LocalAgentConfig,
 ) : LocalAgentLLMSession(executor, tools, prompt, config)

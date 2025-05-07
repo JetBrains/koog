@@ -82,6 +82,5 @@ data class OllamaChatRequestDTO(
 data class OllamaChatResponseDTO(
     val model: String,
     val message: OllamaChatMessageDTO? = null,
-    val done: Boolean,
+    val done: Boolean
 )
-

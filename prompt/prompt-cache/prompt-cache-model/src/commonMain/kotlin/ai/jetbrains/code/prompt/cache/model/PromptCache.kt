@@ -8,12 +8,12 @@ import ai.jetbrains.code.prompt.message.Message
  * Interface for caching prompt execution results.
  * Implementations should provide a way to store and retrieve prompt execution results.
  */
-interface CodePromptCache {
+interface PromptCache {
     interface Factory {
         class Aggregated(val factories: List<Factory.Named>) : Factory {
             constructor(vararg factories: Factory.Named) : this(factories.toList())
 
-            override fun create(config: String): CodePromptCache {
+            override fun create(config: String): PromptCache {
                 for (factory in factories) {
                     if (factory.supports(config)) return factory.create(config)
                 }
@@ -25,7 +25,7 @@ interface CodePromptCache {
             fun supports(config: String): Boolean = name == elements(config).firstOrNull()
         }
 
-        fun create(config: String): CodePromptCache
+        fun create(config: String): PromptCache
 
         fun elements(config: String): List<String> {
             val result = mutableListOf<String>()

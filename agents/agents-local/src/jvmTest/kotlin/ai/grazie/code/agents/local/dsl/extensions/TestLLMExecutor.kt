@@ -2,12 +2,12 @@ package ai.grazie.code.agents.local.dsl.extensions
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class TestLLMExecutor : CodePromptExecutor {
+class TestLLMExecutor : PromptExecutor {
     // Track the number of TLDR messages created
     var tldrCount = 0
         private set

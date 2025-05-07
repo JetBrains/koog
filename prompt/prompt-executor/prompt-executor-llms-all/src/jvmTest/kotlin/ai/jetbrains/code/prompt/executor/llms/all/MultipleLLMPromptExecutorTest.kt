@@ -14,7 +14,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class MultipleLLMCodePromptExecutorTest {
+class MultipleLLMPromptExecutorTest {
 
     // Mock client for OpenAI
     private class MockOpenAILLMClient : OpenAIDirectLLMClient("fake-key") {
@@ -40,7 +40,7 @@ class MultipleLLMCodePromptExecutorTest {
 
     @Test
     fun testExecuteWithOpenAI() = runTest {
-        val executor = DefaultMultiLLMCodePromptExecutor(
+        val executor = DefaultMultiLLMPromptExecutor(
             MockOpenAILLMClient(),
             MockAnthropicLLMClient()
         )
@@ -57,7 +57,7 @@ class MultipleLLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteWithAnthropic() = runTest {
-        val executor = DefaultMultiLLMCodePromptExecutor(
+        val executor = DefaultMultiLLMPromptExecutor(
             MockOpenAILLMClient(),
             MockAnthropicLLMClient()
         )
@@ -74,7 +74,7 @@ class MultipleLLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteStreamingWithOpenAI() = runTest {
-        val executor = DefaultMultiLLMCodePromptExecutor(
+        val executor = DefaultMultiLLMPromptExecutor(
             MockOpenAILLMClient(),
             MockAnthropicLLMClient()
         )
@@ -92,7 +92,7 @@ class MultipleLLMCodePromptExecutorTest {
     
     @Test
     fun testExecuteStreamingWithAnthropic() = runTest {
-        val executor = DefaultMultiLLMCodePromptExecutor(
+        val executor = DefaultMultiLLMPromptExecutor(
             MockOpenAILLMClient(),
             MockAnthropicLLMClient()
         )

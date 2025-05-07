@@ -7,11 +7,11 @@ import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.dsl.builders.forwardTo
 import ai.grazie.code.agents.local.dsl.builders.simpleStrategy
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val executor: CodePromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
+    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
     val agentStrategy = simpleStrategy("library-assistant") {
         val getMdOutput by node<Unit, String> { _ ->

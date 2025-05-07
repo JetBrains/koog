@@ -17,7 +17,7 @@ import ai.grazie.utils.annotations.ExperimentalAPI
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.createTempDirectory
@@ -27,7 +27,7 @@ import kotlin.io.path.writeText
 
 @OptIn(ExperimentalAPI::class)
 fun main() = runBlocking {
-    val executor: CodePromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
+    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
     val code = """
         fun main() {

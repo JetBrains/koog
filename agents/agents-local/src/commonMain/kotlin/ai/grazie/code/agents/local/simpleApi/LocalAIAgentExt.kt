@@ -6,7 +6,7 @@ import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.coroutines.CoroutineScope
@@ -26,7 +26,7 @@ import kotlinx.coroutines.CoroutineScope
  * @return A configured instance of KotlinAIAgent ready for use.
  */
 fun simpleChatAgent(
-    executor: CodePromptExecutor,
+    executor: PromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",
     llmModel: LLModel = OpenAIModels.GPT4o,
@@ -69,7 +69,7 @@ fun simpleChatAgent(
 /**
  * Creates and configures a `KotlinAIAgent` instance with a single-run strategy.
  *
- * @param executor The `CodePromptExecutor` responsible for executing the prompts.
+ * @param executor The `PromptExecutor` responsible for executing the prompts.
  * @param cs The `CoroutineScope` used to manage coroutine operations.
  * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
  * @param llmModel The language model to be used by the agent. Default is `OpenAIModels.GPT4o`.
@@ -81,7 +81,7 @@ fun simpleChatAgent(
  * @return A configured instance of `KotlinAIAgent` with a single-run execution strategy.
  */
 fun simpleSingleRunAgent(
-    executor: CodePromptExecutor,
+    executor: PromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",
     llmModel: LLModel = OpenAIModels.GPT4o,

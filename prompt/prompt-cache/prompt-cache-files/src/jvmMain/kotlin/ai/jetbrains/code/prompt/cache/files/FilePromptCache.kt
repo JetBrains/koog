@@ -2,7 +2,7 @@ package ai.jetbrains.code.prompt.cache.files
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.json.JSON
-import ai.jetbrains.code.prompt.cache.model.CodePromptCache
+import ai.jetbrains.code.prompt.cache.model.PromptCache
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.sync.Mutex
@@ -18,19 +18,19 @@ import kotlin.io.path.*
 import kotlin.math.absoluteValue
 
 /**
- * File-based implementation of [CodePromptCache].
+ * File-based implementation of [PromptCache].
  * This implementation stores cache entries in files on the file system.
  *
  * @param storage The directory where cache files will be stored
  * @param maxFiles The maximum number of files to store in the cache (default: 3000).
  *                When this limit is reached, the least recently accessed files will be removed.
  */
-class FileCodePromptCache(
+class FilePromptCache(
     storage: Path,
     private val maxFiles: Int? = 3000
-) : CodePromptCache {
-    class Factory(val default: Path) : CodePromptCache.Factory.Named("file") {
-        override fun create(config: String): CodePromptCache {
+) : PromptCache {
+    class Factory(val default: Path) : PromptCache.Factory.Named("file") {
+        override fun create(config: String): PromptCache {
             val parts = elements(config)
             val path = when {
                 parts.size < 2 -> default
@@ -45,7 +45,7 @@ class FileCodePromptCache(
                 )
             }
 
-            return FileCodePromptCache(path, maxFiles)
+            return FilePromptCache(path, maxFiles)
         }
     }
 

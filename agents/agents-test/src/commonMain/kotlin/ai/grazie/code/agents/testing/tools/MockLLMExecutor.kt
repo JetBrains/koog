@@ -6,7 +6,7 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -20,7 +20,7 @@ internal class MockLLMExecutor(
     private val toolRegistry: ToolRegistry? = null,
     private val logger: MPPLogger = LoggerFactory.create(MockLLMExecutor::class.simpleName!!),
     val toolActions: List<ToolCondition<*, *>> = emptyList()
-) : CodePromptExecutor {
+) : PromptExecutor {
     // Executing just prompt
     override suspend fun execute(prompt: Prompt): String {
         logger.debug { "Executing prompt without tools, prompt: $prompt" }

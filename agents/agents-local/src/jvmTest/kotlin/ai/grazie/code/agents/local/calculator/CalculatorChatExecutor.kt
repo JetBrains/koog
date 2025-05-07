@@ -3,14 +3,14 @@ package ai.grazie.code.agents.local.calculator
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.json.JSON
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-object CalculatorChatExecutor : CodePromptExecutor {
+object CalculatorChatExecutor : PromptExecutor {
     private val plusAliases = listOf("add", "sum", "plus")
     private val minusAliases = listOf("subtract", "minus")
     private val multiplyAliases = listOf("multiply", "times")

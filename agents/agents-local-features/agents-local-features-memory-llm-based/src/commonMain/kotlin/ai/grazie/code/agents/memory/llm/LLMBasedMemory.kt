@@ -3,7 +3,7 @@ package ai.grazie.code.agents.memory.llm
 import ai.grazie.code.agents.memory.Memory
 import ai.grazie.code.agents.memory.chunk.MemoryChunk
 import ai.grazie.code.agents.memory.storage.MemoryStorage
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 
 /**
  * Implementation of Memory that uses an LLM (GeminiFlash2_0) to generate memory chunks with tags.
@@ -12,7 +12,7 @@ import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
  */
 class LLMBasedMemory(
     private val storage: MemoryStorage,
-    private val executor: CodePromptExecutor
+    private val executor: PromptExecutor
 ) : Memory {
     private val chunking = MemoryChunkingFeature(executor)
 
