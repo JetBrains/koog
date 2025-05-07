@@ -41,3 +41,44 @@ jobs:
 
       - name: TestClasses with Gradle Wrapper
         run: ./gradlew jvmTestClasses jsTestClasses
+
+  tests:
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+
+      # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
+
+      - name: JvmTest with Gradle Wrapper
+        env:
+          JB_SPACE_CLIENT_ID: ${{ secrets.JB_SPACE_CLIENT_ID }}
+          JB_SPACE_CLIENT_SECRET: ${{ secrets.JB_SPACE_CLIENT_SECRET }}
+          USER_STGN_JWT_TOKEN: ${{ secrets.USER_STGN_JWT_TOKEN }}
+        run: ./gradlew jvmTest --continue
+
+      - name: Collect reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reports-${{ matrix.os }}
+          path: |
+            **/build/reports/
