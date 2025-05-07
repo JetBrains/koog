@@ -6,7 +6,8 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-object RiderProjectTemplateTools {
+object ProjectTemplateTools {
+
     abstract class CreateStructureTool : Tool<CreateStructureTool.Args, CreateStructureTool.Result>() {
         @Serializable
         data class Args(

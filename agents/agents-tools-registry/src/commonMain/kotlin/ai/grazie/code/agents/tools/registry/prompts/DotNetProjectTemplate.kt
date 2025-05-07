@@ -18,7 +18,7 @@ data class Template (
 )
 
 @Serializable
-data class RiderProjectTemplate (
+data class DotNetProjectTemplate (
     val description: String,
     @EncodeDefault(Mode.ALWAYS)
     val templates: List<Template> = ProjectTemplates

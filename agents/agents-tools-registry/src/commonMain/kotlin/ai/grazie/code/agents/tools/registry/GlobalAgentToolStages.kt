@@ -37,11 +37,11 @@ object GlobalAgentToolStages {
     }
 
 
-    fun FleetProjectGenerator(
-        createDirectory: FleetProjectGeneratorTools.CreateDirectoryTool,
-        createFile: FleetProjectGeneratorTools.CreateFileTool,
-        setFileText: FleetProjectGeneratorTools.SetFileTextTool,
-        log: FleetProjectGeneratorTools.LogTool,
+    fun ProjectGenerator(
+        createDirectory: ProjectGeneratorTools.CreateDirectoryTool,
+        createFile: ProjectGeneratorTools.CreateFileTool,
+        setFileText: ProjectGeneratorTools.SetFileTextTool,
+        log: ProjectGeneratorTools.LogTool,
 
         stageName: String = ToolStage.DEFAULT_STAGE_NAME,
         toolListName: String = ToolStage.DEFAULT_TOOL_LIST_NAME
