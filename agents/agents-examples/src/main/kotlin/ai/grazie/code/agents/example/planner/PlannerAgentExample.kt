@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.example.local.planner
+package ai.grazie.code.agents.example.planner
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
@@ -25,7 +25,7 @@ interface PlannerNode {
 
         fun build(): PlannerNode
 
-        data class Reference(var builder: PlannerNode.Builder)
+        data class Reference(var builder: Builder)
     }
 }
 

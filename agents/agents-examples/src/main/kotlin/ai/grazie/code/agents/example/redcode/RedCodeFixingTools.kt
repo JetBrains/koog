@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.tools.registry.tools
+package ai.grazie.code.agents.example.redcode
 
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer

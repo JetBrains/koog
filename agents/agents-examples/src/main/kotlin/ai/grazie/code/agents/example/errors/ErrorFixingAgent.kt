@@ -1,18 +1,15 @@
-package ai.grazie.code.agents.example.errors.local
+package ai.grazie.code.agents.example.errors
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.example.errors.RunTestErrorFixingToolImpl
-import ai.grazie.code.agents.example.errors.SearchReplaceToolImpl
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.dsl.builders.forwardTo
 import ai.grazie.code.agents.local.dsl.builders.strategy
 import ai.grazie.code.agents.local.dsl.extensions.*
 import ai.grazie.code.agents.local.graph.ToolSelectionStrategy
-import ai.grazie.code.agents.tools.registry.tools.ErrorFixingTools
 import ai.grazie.utils.annotations.ExperimentalAPI
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels

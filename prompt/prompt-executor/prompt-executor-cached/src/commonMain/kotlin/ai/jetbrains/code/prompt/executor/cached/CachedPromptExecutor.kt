@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.executor.cached
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.jetbrains.code.prompt.cache.model.CodePromptCache
+import ai.jetbrains.code.prompt.cache.model.PromptCache
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.flow
  * @param nested The nested executor to use for cache misses
  */
 class CachedPromptExecutor(
-    private val cache: CodePromptCache,
+    private val cache: PromptCache,
     private val nested: PromptExecutor
 ) : PromptExecutor {
 
