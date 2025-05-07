@@ -441,10 +441,10 @@ sealed class LocalAgentLLMSession(
         validateSession()
         val promptWithDisabledTools = prompt.copy(
             params = prompt.params.copy(
-                toolChoice = LLMParams.ToolChoice.None
+                toolChoice = null
             )
         )
-        return executeSingle(promptWithDisabledTools, tools)
+        return executeSingle(promptWithDisabledTools, emptyList())
     }
 
     open suspend fun requestLLMOnlyCallingTools(): Message.Response {

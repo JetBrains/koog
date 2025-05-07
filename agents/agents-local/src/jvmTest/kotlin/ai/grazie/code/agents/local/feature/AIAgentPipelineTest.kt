@@ -79,8 +79,8 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("LLM + Tools: ") || it.startsWith("LLM: ") }
         val expectedEvents = listOf(
-            "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [dummy, __tools_list__])",
-            "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response)]', tools: [dummy, __tools_list__])",
+            "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [])",
+            "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response)]', tools: [])",
             "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [dummy, __tools_list__])",
             "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response)]', tools: [dummy, __tools_list__])",
         )
