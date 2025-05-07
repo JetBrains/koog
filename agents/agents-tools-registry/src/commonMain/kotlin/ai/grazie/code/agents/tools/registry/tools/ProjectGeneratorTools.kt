@@ -3,7 +3,8 @@ package ai.grazie.code.agents.tools.registry.tools
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.Serializable
 
-object FleetProjectGeneratorTools {
+object ProjectGeneratorTools {
+
     abstract class CreateDirectoryTool : SimpleTool<CreateDirectoryTool.Args>() {
         @Serializable
         data class Args(val parentDirectory: String, val name: String) : Tool.Args

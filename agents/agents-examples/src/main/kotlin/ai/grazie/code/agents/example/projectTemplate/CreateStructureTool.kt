@@ -1,12 +1,11 @@
-package ai.grazie.code.agents.example.rider.project.template
+package ai.grazie.code.agents.example.projectTemplate
 
 import ai.grazie.code.agents.tools.registry.prompts.ProjectTemplates
 import ai.grazie.code.agents.tools.registry.prompts.Template
-import ai.grazie.code.agents.tools.registry.tools.RiderProjectTemplateTools
-import ai.grazie.code.agents.tools.registry.tools.RiderProjectTemplateTools.CreateStructureTool.Result.ResponseType
+import ai.grazie.code.agents.tools.registry.tools.ProjectTemplateTools
+import ai.grazie.code.agents.tools.registry.tools.ProjectTemplateTools.CreateStructureTool.Result.ResponseType
 
-
-object CreateStructureTool : RiderProjectTemplateTools.CreateStructureTool() {
+object CreateStructureTool : ProjectTemplateTools.CreateStructureTool() {
     private fun ResponseType.Companion.fromValue(value: String): ResponseType? {
         return ResponseType.entries.find { it.value == value }
     }
@@ -53,14 +52,5 @@ object CreateStructureTool : RiderProjectTemplateTools.CreateStructureTool() {
                 }
             }
         }
-    }
-}
-
-
-object CreateDependenciesTool : RiderProjectTemplateTools.CreateDependenciesTool() {
-    override suspend fun execute(args: Args): Result {
-        println("Observing args:")
-        println(args)
-        return Result.Success()
     }
 }
