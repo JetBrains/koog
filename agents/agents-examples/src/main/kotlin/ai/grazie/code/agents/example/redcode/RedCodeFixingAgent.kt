@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.example.redcode
 
 import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.dsl.builders.forwardTo
@@ -14,8 +14,7 @@ import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.annotations.ExperimentalAPI
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.ollama.OllamaPromptExecutor
-import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.runBlocking
@@ -28,26 +27,26 @@ import kotlinx.serialization.json.Json
  */
 @OptIn(ExperimentalAPI::class)
 fun main() = runBlocking {
-    val executor = OllamaPromptExecutor(OllamaClient())
-    
+    val executor = simpleOpenAIExecutor(TokenService.openAIToken)
+
     // Define the project root path
     val projectRootPath = System.getProperty("user.dir")
-    
+
     // Create tool registry with all the red code fixing tools
     val toolRegistry = ToolRegistry {
         stage {
             // List files with errors
             tool(SimpleKotlinListFilesWithErrorsTool(projectRootPath))
-            
+
             // Find errors in a specific file
             tool(SimpleKotlinFindErrorsInFileTool(projectRootPath))
-            
+
             // Read file text
             tool(SimpleKotlinReadFileTextTool(projectRootPath))
-            
+
             // Edit file text
             tool(SimpleKotlinEditFileTextTool(projectRootPath))
-            
+
             // Import fixing tools
             tool(SimpleKotlinListImportsInFileTool(projectRootPath))
             tool(SimpleKotlinAddImportsToFileTool(projectRootPath))
@@ -75,13 +74,13 @@ fun main() = runBlocking {
                         updatePrompt {
                             user(input)
                         }
-                        
+
                         requestLLM()
                     }
                 }
                 val nodeExecuteTool by nodeExecuteTool()
                 val nodeSendToolResult by nodeLLMSendToolResult()
-                
+
                 edge(nodeStart forwardTo nodeSendInput transformed { it })
                 edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
                 edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true } transformed {})
@@ -89,14 +88,14 @@ fun main() = runBlocking {
                 edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
                 edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
             }
-            
+
             // Structured LLM call for summary
             val summarizeFixes by node<String, FixingResultWithMessage>("summarize_fixes") { task ->
                 val structuredResponse = llm.writeSession {
                     updatePrompt {
                         user(task)
                     }
-                    
+
                     this.requestLLMStructured(
                         structure = JsonStructuredData.createJsonStructure<FixingResultWithMessage>(
                             schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
@@ -107,42 +106,42 @@ fun main() = runBlocking {
                 }
                 structuredResponse.structure
             }
-            
+
             // Connect the nodes
-            edge(nodeStart forwardTo fixErrors transformed { 
+            edge(nodeStart forwardTo fixErrors transformed {
                 "Please help me fix compilation errors in this project. " +
-                "First, list all files with errors using the list_files_with_errors tool, " +
-                "then analyze and fix each error one by one."
+                        "First, list all files with errors using the list_files_with_errors tool, " +
+                        "then analyze and fix each error one by one."
             })
-            
+
             edge(
                 fixErrors forwardTo summarizeFixes
-                transformed { "Please provide a summary of the fixes you made to resolve the compilation errors." }
+                        transformed { "Please provide a summary of the fixes you made to resolve the compilation errors." }
             )
-            
+
             edge(
                 summarizeFixes forwardTo nodeFinish
-                transformed { "Red code fixing completed: ${it.message}" }
+                        transformed { "Red code fixing completed: ${it.message}" }
             )
         }
     }
-    
+
     // Create event handler for logging
     val eventHandler = EventHandler {
         onToolCall { stage, tool, args ->
             println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
         }
-        
+
         handleError {
             println("An error occurred: ${it.message}\n${it.stackTraceToString()}")
             true
         }
-        
+
         handleResult {
             println("Result: $it")
         }
     }
-    
+
     val agentConfig = LocalAgentConfig(
         prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "red-code-fixing") {
             system(
@@ -166,7 +165,7 @@ fun main() = runBlocking {
         },
         maxAgentIterations = 100
     )
-    
+
     // Create the agent
     val agent = KotlinAIAgent(
         toolRegistry = toolRegistry,
@@ -176,7 +175,7 @@ fun main() = runBlocking {
         agentConfig = agentConfig,
         cs = this
     )
-    
+
     // Run the agent
     val result = agent.run("Fix all compilation errors in the project")
     println("Agent completed with result: $result")

@@ -1,9 +1,8 @@
-package ai.grazie.code.agents.example.calculator.local
+package ai.grazie.code.agents.example.calculator
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.example.calculator.CalculatorTools
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.dsl.builders.forwardTo

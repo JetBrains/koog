@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.example.errors
 
 import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.example.normalize
 import ai.grazie.code.files.jvm.JVMDocumentProvider
 import ai.grazie.code.files.model.DocumentProvider.DocumentRange
 import ai.grazie.code.files.model.DocumentProvider.Position
-import ai.grazie.code.prompt.structure.json.LLMDescription
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
