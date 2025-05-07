@@ -48,7 +48,7 @@ class ToolTest {
 
         @Serializable
         data class Result(val first: String, val second: Int) : ToolResult {
-            override fun toStringDefault(): String = JsonForTool.encodeToString(serializer(), this)
+            override fun toStringDefault(): String = ToolJson.encodeToString(serializer(), this)
         }
 
         override val argsSerializer = Args.serializer()
