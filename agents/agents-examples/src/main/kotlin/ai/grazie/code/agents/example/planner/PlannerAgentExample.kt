@@ -2,14 +2,19 @@ package ai.grazie.code.agents.example.planner
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.agent.createStorageKey
-import ai.grazie.code.agents.local.agent.stage.LocalAgentStageContext
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
+import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.createStorageKey
+import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.local.dsl.extensions.*
-import ai.grazie.code.agents.local.graph.LocalAgentNode
+import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
+import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
+import ai.grazie.code.agents.core.dsl.extension.onIsInstance
+import ai.grazie.code.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.CompletableDeferred

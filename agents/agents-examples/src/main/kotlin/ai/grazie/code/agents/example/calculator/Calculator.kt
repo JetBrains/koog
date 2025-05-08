@@ -3,14 +3,20 @@ package ai.grazie.code.agents.example.calculator
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
+import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.local.dsl.extensions.*
-import ai.grazie.code.agents.local.environment.ReceivedToolResult
-import ai.grazie.code.agents.local.simpleApi.AskUser
-import ai.grazie.code.agents.local.simpleApi.SayToUser
+import ai.grazie.code.agents.core.environment.ReceivedToolResult
+import ai.grazie.code.agents.core.api.AskUser
+import ai.grazie.code.agents.core.api.SayToUser
+import ai.grazie.code.agents.core.dsl.extension.nodeExecuteMultipleTools
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMCompressHistory
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInputMultiple
+import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
+import ai.grazie.code.agents.core.dsl.extension.onMultipleToolCalls
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -48,12 +54,12 @@ fun main() = runBlocking {
             edge(
                 (nodeSendInput forwardTo nodeFinish)
                         transformed { it.first() }
-                        onAssistantMessage { true }
+                    onAssistantMessage { true }
             )
 
             edge(
                 (nodeSendInput forwardTo nodeExecuteToolMultiple)
-                        onMultipleToolCalls { true }
+                    onMultipleToolCalls { true }
             )
 
             edge(

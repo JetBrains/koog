@@ -2,9 +2,9 @@ package ai.grazie.code.agents.local.features.tracing.writer
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.LocalAgentStrategy
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.CoroutineScope

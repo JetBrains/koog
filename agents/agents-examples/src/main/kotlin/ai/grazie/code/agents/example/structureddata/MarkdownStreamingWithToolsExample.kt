@@ -2,10 +2,10 @@ package ai.grazie.code.agents.example.structureddata
 
 import ai.grazie.code.agents.core.tools.SimpleToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.simpleStrategy
+import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.flow.collect

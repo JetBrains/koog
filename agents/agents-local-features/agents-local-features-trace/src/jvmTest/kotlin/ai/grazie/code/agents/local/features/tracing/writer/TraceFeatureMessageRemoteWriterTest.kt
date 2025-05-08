@@ -1,15 +1,15 @@
 package ai.grazie.code.agents.local.features.tracing.writer
 
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.simpleStrategy
-import ai.grazie.code.agents.local.dsl.extensions.nodeLLMRequest
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.local.features.common.model.*
 import ai.grazie.code.agents.local.features.common.remote.client.ClientConnectionConfig
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.common.remote.server.ServerConnectionConfig
-import ai.grazie.code.agents.local.features.message.FeatureMessage
-import ai.grazie.code.agents.local.features.message.FeatureMessageProcessor
-import ai.grazie.code.agents.local.features.message.use
+import ai.grazie.code.agents.core.feature.message.FeatureMessage
+import ai.grazie.code.agents.core.feature.message.FeatureMessageProcessor
+import ai.grazie.code.agents.core.feature.message.use
 import ai.grazie.code.agents.local.features.tracing.NetUtil.findAvailablePort
 import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
 import ai.grazie.utils.mpp.LoggerFactory

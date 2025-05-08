@@ -2,10 +2,10 @@ package ai.grazie.code.agents.local.memory
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
+import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.local.memory.feature.MemoryFeature
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.grazie.code.agents.local.memory.feature.withMemory

@@ -9,6 +9,7 @@ import ai.grazie.code.agents.core.model.AIAgentServiceError
 import ai.grazie.code.agents.core.model.agent.AIAgentConfig
 import ai.grazie.code.agents.core.model.agent.AIAgentStrategy
 import ai.grazie.code.agents.core.model.message.*
+import ai.grazie.code.agents.core.tool.tools.TerminationTool
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.coroutines.CompletableDeferred

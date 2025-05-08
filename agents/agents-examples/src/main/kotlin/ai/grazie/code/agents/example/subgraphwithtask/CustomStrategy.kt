@@ -1,13 +1,13 @@
 package ai.grazie.code.agents.example.subgraphwithtask
 
 import ai.grazie.code.agents.core.tools.Tool
-import ai.grazie.code.agents.local.agent.ContextTransitionPolicy
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
-import ai.grazie.code.agents.local.dsl.extensions.ProvideVerifiedSubgraphResult
-import ai.grazie.code.agents.local.dsl.extensions.VerifiedSubgraphResult
-import ai.grazie.code.agents.local.dsl.extensions.subgraphWithTask
-import ai.grazie.code.agents.local.dsl.extensions.subgraphWithVerification
+import ai.grazie.code.agents.core.agent.ContextTransitionPolicy
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.ProvideVerifiedSubgraphResult
+import ai.grazie.code.agents.core.dsl.extension.VerifiedSubgraphResult
+import ai.grazie.code.agents.core.dsl.extension.subgraphWithTask
+import ai.grazie.code.agents.core.dsl.extension.subgraphWithVerification
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 

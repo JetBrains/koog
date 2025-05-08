@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.memory
 
-import ai.grazie.code.agents.local.environment.AgentEnvironment
-import ai.grazie.code.agents.local.environment.ReceivedToolResult
+import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.jetbrains.code.prompt.message.Message
 
 class MockAgentEnvironment: AgentEnvironment {
