@@ -14,7 +14,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
 
-                implementation(project(":agents:agents-local"))
+                implementation(project(":agents:agents-core"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 

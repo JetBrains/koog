@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.features.common.remote.server
 
-import ai.grazie.code.agents.local.features.message.Closeable
-import ai.grazie.code.agents.local.features.message.FeatureMessage
+import ai.grazie.code.agents.core.feature.message.Closeable
+import ai.grazie.code.agents.core.feature.message.FeatureMessage
 
 /**
  * Represents a server responsible for managing and facilitating communication of feature messages.

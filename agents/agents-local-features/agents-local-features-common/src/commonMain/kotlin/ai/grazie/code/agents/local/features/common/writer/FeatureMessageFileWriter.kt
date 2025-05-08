@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.local.features.common.writer
 
 import ai.grazie.code.agents.local.features.common.MutexCheck.withLockCheck
-import ai.grazie.code.agents.local.features.message.FeatureMessage
-import ai.grazie.code.agents.local.features.message.FeatureMessageProcessor
+import ai.grazie.code.agents.core.feature.message.FeatureMessage
+import ai.grazie.code.agents.core.feature.message.FeatureMessageProcessor
 import ai.grazie.code.files.model.FileSystemProvider
 import ai.grazie.code.files.model.isFile
 import ai.grazie.utils.mpp.LoggerFactory

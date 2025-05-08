@@ -2,11 +2,16 @@ package ai.jetbrains.code.prompt.executor.llms.all
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.ContextTransitionPolicy
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
+import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.ContextTransitionPolicy
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
+import ai.grazie.code.agents.core.dsl.extension.onToolCall
 import ai.grazie.code.agents.local.dsl.extensions.*
 import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
 import ai.jetbrains.code.prompt.dsl.Prompt

@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.features.tracing.feature
 
-import ai.grazie.code.agents.local.features.config.FeatureConfig
-import ai.grazie.code.agents.local.features.message.FeatureMessage
+import ai.grazie.code.agents.core.feature.config.FeatureConfig
+import ai.grazie.code.agents.core.feature.message.FeatureMessage
 
 /**
  * Configuration for the tracing feature.

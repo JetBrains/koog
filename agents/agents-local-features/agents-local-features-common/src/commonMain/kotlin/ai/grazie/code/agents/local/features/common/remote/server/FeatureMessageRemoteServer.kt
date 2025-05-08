@@ -2,7 +2,7 @@ package ai.grazie.code.agents.local.features.common.remote.server
 
 import ai.grazie.code.agents.local.features.common.ExceptionExtractor.rootCause
 import ai.grazie.code.agents.local.features.common.model.DefinedFeatureEvent
-import ai.grazie.code.agents.local.features.message.FeatureMessage
+import ai.grazie.code.agents.core.feature.message.FeatureMessage
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import io.ktor.http.*

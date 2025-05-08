@@ -5,9 +5,9 @@ import ai.grazie.code.agents.local.features.common.remote.client.ClientConnectio
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.common.remote.server.ServerConnectionConfig
 import ai.grazie.code.agents.local.features.common.writer.FeatureMessageRemoteWriter
-import ai.grazie.code.agents.local.features.message.FeatureMessage
-import ai.grazie.code.agents.local.features.message.FeatureStringMessage
-import ai.grazie.code.agents.local.features.message.use
+import ai.grazie.code.agents.core.feature.message.FeatureMessage
+import ai.grazie.code.agents.core.feature.message.FeatureStringMessage
+import ai.grazie.code.agents.core.feature.message.use
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import io.ktor.http.*

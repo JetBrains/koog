@@ -2,9 +2,9 @@ package ai.grazie.code.agents.test
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.simpleApi.SayToUser
-import ai.grazie.code.agents.local.simpleApi.simpleChatAgent
-import ai.grazie.code.agents.local.simpleApi.simpleSingleRunAgent
+import ai.grazie.code.agents.core.api.SayToUser
+import ai.grazie.code.agents.core.api.simpleChatAgent
+import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope

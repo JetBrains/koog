@@ -3,8 +3,8 @@ package ai.grazie.code.agents.testing.tools
 import ai.grazie.code.agents.core.tools.DirectToolCallsEnabler
 import ai.grazie.code.agents.core.tools.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.environment.AgentEnvironment
-import ai.grazie.code.agents.local.environment.ReceivedToolResult
+import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 
