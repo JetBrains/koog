@@ -17,7 +17,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
                 implementation(project(":agents:agents-core"))
-                implementation(project(":agents:agents-core-tools"))
+                implementation(project(":agents:agents-tools"))
                 implementation(project(":agents:agents-local-features:agents-local-features-trace"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-model"))

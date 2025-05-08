@@ -18,7 +18,7 @@ pluginManagement {
 //include(":code-activity:code-activity-jvm")
 //include(":code-activity:code-activity-model")
 include(":agents:agents-core")
-include(":agents:agents-core-tools")
+include(":agents:agents-tools")
 include(":agents:agents-examples")
 //include(":code-agents:code-agents-ideformer-client")
 //include(":code-agents:code-agents-ideformer-daemon")

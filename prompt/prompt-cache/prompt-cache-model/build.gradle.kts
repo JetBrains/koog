@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":agents:agents-core-tools"))
+                api(project(":agents:agents-tools"))
                 api(project(":prompt:prompt-model"))
                 implementation(libs.kotlinx.datetime)
             }
