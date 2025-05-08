@@ -1,17 +1,11 @@
 package ai.grazie.code.agents.example.tone
 
-import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.LocalAgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMCompressHistory
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
-import ai.grazie.code.agents.core.dsl.extension.onToolCall
-import ai.grazie.code.agents.local.dsl.extensions.*
+import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
+import ai.grazie.code.agents.core.tools.ToolRegistry
 
 /**
  * Creates a strategy for the tone analysis agent.
