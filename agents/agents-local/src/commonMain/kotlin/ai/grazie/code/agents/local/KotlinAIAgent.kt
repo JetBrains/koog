@@ -73,10 +73,10 @@ class KotlinAIAgent(
 
     private var session: LocalAgentSession? = null
 
-    override suspend fun init(prompt: String): AgentToEnvironmentMessage {
+    override suspend fun CoroutineScope.init(prompt: String): AgentToEnvironmentMessage {
         val activeSession =
             LocalAgentSession(
-                this,
+                this@KotlinAIAgent,
                 strategy,
                 agentConfig,
                 toolRegistry,
@@ -85,7 +85,7 @@ class KotlinAIAgent(
                 pipeline
             )
         session = activeSession
-        cs.launch(Dispatchers.SuitableForIO) {
+        launch(Dispatchers.SuitableForIO) {
             activeSession.run()
         }
 

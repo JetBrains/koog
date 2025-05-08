@@ -12,8 +12,10 @@ import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -55,7 +57,7 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
      *
      * @param prompt The initial input string to start the agent execution process.
      */
-    suspend fun run(prompt: String) {
+    suspend fun run(prompt: String) = coroutineScope {
         runningMutex.withLock {
             if (isRunning) throw IllegalStateException("Agent is already running!")
             isRunning = true
@@ -239,7 +241,7 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
         return agentResultDeferred.await()
     }
 
-    protected abstract suspend fun init(prompt: String): AgentToEnvironmentMessage
+    protected abstract suspend fun CoroutineScope.init(prompt: String): AgentToEnvironmentMessage
 
     protected abstract suspend fun toolResult(
         toolCallId: String?,
