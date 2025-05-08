@@ -18,4 +18,7 @@ sealed class LLMProvider(val id: String, val display: String) {
 
     @Serializable
     data object Alibaba : LLMProvider("alibaba", "Alibaba")
+    
+    @Serializable
+    data object OpenRouter : LLMProvider("openrouter", "OpenRouter")
 }
