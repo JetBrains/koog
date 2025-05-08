@@ -2,8 +2,8 @@ package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.KotlinAIAgent
-import ai.grazie.code.agents.core.KotlinAIAgent.FeatureContext
+import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.KotlinAIAgent.FeatureContext
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.calculator.CalculatorChatExecutor

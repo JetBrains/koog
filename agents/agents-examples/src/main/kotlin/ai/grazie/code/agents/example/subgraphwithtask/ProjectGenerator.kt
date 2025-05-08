@@ -10,7 +10,7 @@ import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.Dele
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.LSDirectoriesTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.ReadFileTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.RunCommand
-import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels

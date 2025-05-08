@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.feature
 
-import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
