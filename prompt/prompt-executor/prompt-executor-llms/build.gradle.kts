@@ -15,7 +15,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
-                implementation(project(":agents:agents-core-tools"))
+                implementation(project(":agents:agents-tools"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-model"))
                 implementation(libs.ai.grazie.utils.common)

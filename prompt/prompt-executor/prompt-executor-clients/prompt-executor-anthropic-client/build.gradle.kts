@@ -17,7 +17,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":agents:agents-core-tools"))
+                implementation(project(":agents:agents-tools"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-model"))
