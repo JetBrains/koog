@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core
+package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
@@ -29,7 +29,7 @@ class KotlinAIAgent(
     val promptExecutor: PromptExecutor,
     private val cs: CoroutineScope,
     installFeatures: suspend FeatureContext.() -> Unit = {}
-) : AIAgent<LocalAgentStrategy, LocalAgentConfig>(
+) : AIAgentBase<LocalAgentStrategy, LocalAgentConfig>(
     strategy = strategy,
     toolRegistry = toolRegistry,
     agentConfig = agentConfig,

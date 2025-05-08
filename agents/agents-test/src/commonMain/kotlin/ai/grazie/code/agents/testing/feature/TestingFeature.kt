@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.testing.feature
 
-import ai.grazie.code.agents.core.KotlinAIAgent.FeatureContext
+import ai.grazie.code.agents.core.agent.KotlinAIAgent.FeatureContext
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey

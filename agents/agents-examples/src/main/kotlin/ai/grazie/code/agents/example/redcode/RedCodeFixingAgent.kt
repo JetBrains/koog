@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.example.redcode
 
-import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo

@@ -3,7 +3,7 @@ package ai.grazie.code.agents.core.engine
 import ai.grazie.code.agents.core.model.message.AgentToEnvironmentMessage
 import ai.grazie.code.agents.core.model.message.EnvironmentToAgentMessage
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.environment.LocalAgentEnvironmentProxy

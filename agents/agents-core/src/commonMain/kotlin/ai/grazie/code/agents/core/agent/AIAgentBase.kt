@@ -1,7 +1,8 @@
 @file:OptIn(InternalAgentToolsApi::class)
 
-package ai.grazie.code.agents.core
+package ai.grazie.code.agents.core.agent
 
+import ai.grazie.code.agents.core.api.AIAgent
 import ai.grazie.code.agents.core.event.AgentHandlerContext
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.exception.AIAgentEngineException
@@ -39,15 +40,15 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
  * @param toolRegistry A registry managing tools and their associated stages available to the agent.
  * @param eventHandler An event handler that listens for and processes various agent-related events.
  */
-abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentConfig>(
+abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentConfig>(
     protected val strategy: TStrategy,
     val toolRegistry: ToolRegistry,
     private val eventHandler: EventHandler,
     val agentConfig: TConfig,
-) {
+) : AIAgent {
 
     private companion object {
-        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.${AIAgent::class.simpleName!!}")
+        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.${AIAgentBase::class.simpleName!!}")
 
         private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
 
@@ -81,7 +82,7 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
      *
      * @param prompt The initial input string to start the agent execution process.
      */
-    suspend fun run(prompt: String) {
+    override suspend fun run(prompt: String) {
         runningMutex.withLock {
             if (isRunning) throw IllegalStateException("Agent is already running!")
             isRunning = true
@@ -129,7 +130,7 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
      * @param userPrompt The input string used to initialize and run the agent.
      * @return A string containing the result of the agent's execution, or null if the result could not be retrieved.
      */
-    suspend fun runAndGetResult(userPrompt: String): String? {
+    override suspend fun runAndGetResult(userPrompt: String): String? {
         run(userPrompt)
         return agentResultDeferred.await()
     }
@@ -176,7 +177,7 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
                     message = "Tool \"${content.toolName}\" not found!",
                     toolCallId = content.toolCallId,
                     toolName = content.toolName,
-                    agentId = this@AIAgent.strategy.name,
+                    agentId = this@AIAgentBase.strategy.name,
                 )
             }
 
