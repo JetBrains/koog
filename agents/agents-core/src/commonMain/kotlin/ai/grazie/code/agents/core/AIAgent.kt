@@ -45,10 +45,35 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
     private val eventHandler: EventHandler,
     val agentConfig: TConfig,
 ) {
+
+    private companion object {
+        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.${AIAgent::class.simpleName!!}")
+
+        private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
+
+        private const val NO_CONTENT = "Could not find \"content\", but \"error\" is also absent!"
+
+        private const val NO_RESULT = "Required tool argument value not found: \"${TerminationTool.ARG}\"!"
+
+        private const val CONNECTION_REQUIRED = "Can not send messages without a connection to Agentic Engine!"
+    }
+
     private var isRunning = false
     private val runningMutex = Mutex()
 
     private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
+
+    protected abstract suspend fun init(prompt: String): AgentToEnvironmentMessage
+
+    protected abstract suspend fun toolResult(
+        toolCallId: String?,
+        toolName: String,
+        agentId: String,
+        message: String,
+        result: ToolResult? = null
+    ): EnvironmentToolResultToAgentContent
+
+    protected abstract suspend fun sendToAgent(message: EnvironmentToAgentMessage): AgentToEnvironmentMessage
 
     /**
      * Executes the main agent lifecycle, handling messages between the agent and its environment.
@@ -97,6 +122,19 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
             }
         }
     }
+
+    /**
+     * Runs the agent with the given user input and retrieves the final result after the agent's execution.
+     *
+     * @param userPrompt The input string used to initialize and run the agent.
+     * @return A string containing the result of the agent's execution, or null if the result could not be retrieved.
+     */
+    suspend fun runAndGetResult(userPrompt: String): String? {
+        run(userPrompt)
+        return agentResultDeferred.await()
+    }
+
+    //region Private Methods
 
     private suspend fun processToolCallSingle(message: AgentToolCallSingleToEnvironmentMessage): EnvironmentToolResultSingleToAgentMessage {
         return EnvironmentToolResultSingleToAgentMessage(
@@ -221,12 +259,12 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
 
         if (messageError == null) {
             logger.debug { "Finished execution chain, processing final result..." }
-            check(messageContent != null) { Precondition.NO_CONTENT }
+            check(messageContent != null) { NO_CONTENT }
 
-            check(messageContent.toolName == TerminationTool.NAME) { Precondition.INVALID_TOOL }
+            check(messageContent.toolName == TerminationTool.NAME) { INVALID_TOOL }
 
             val element = messageContent.toolArgs[TerminationTool.ARG]
-            check(element != null) { Precondition.NO_RESULT }
+            check(element != null) { NO_RESULT }
 
             val result = element.jsonPrimitive.contentOrNull
 
@@ -240,31 +278,5 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
         }
     }
 
-    suspend fun runAndGetResult(userPrompt: String): String? {
-        run(userPrompt)
-        return agentResultDeferred.await()
-    }
-
-    protected abstract suspend fun init(prompt: String): AgentToEnvironmentMessage
-
-    protected abstract suspend fun toolResult(
-        toolCallId: String?,
-        toolName: String,
-        agentId: String,
-        message: String,
-        result: ToolResult? = null
-    ): EnvironmentToolResultToAgentContent
-
-    protected abstract suspend fun sendToAgent(message: EnvironmentToAgentMessage): AgentToEnvironmentMessage
-
-    private companion object {
-        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.${AIAgent::class.simpleName!!}")
-    }
-
-    private object Precondition {
-        const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
-        const val NO_CONTENT = "Could not find \"content\", but \"error\" is also absent!"
-        const val NO_RESULT = "Required tool argument value not found: \"${TerminationTool.ARG}\"!"
-        const val CONNECTION_REQUIRED = "Can not send messages without a connection to Agentic Engine!"
-    }
+    //endregion Private Methods
 }
