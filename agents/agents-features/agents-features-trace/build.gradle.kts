@@ -13,7 +13,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":agents:agents-local-features:agents-local-features-common"))
+                api(project(":agents:agents-features:agents-features-common"))
 
                 implementation(libs.ai.grazie.model.auth)
                 implementation(libs.ai.grazie.utils.common)

@@ -1,20 +1,14 @@
 package ai.grazie.code.agents.example.memory
 
-import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.example.memory.tools.*
 import ai.grazie.code.agents.core.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.grazie.code.agents.core.dsl.extension.nodeUpdatePrompt
-import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
-import ai.grazie.code.agents.core.dsl.extension.onToolCall
-import ai.grazie.code.agents.local.dsl.extensions.*
+import ai.grazie.code.agents.core.dsl.extension.*
+import ai.grazie.code.agents.core.event.EventHandler
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.example.memory.tools.*
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.feature.MemoryFeature
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeLoadFromMemory

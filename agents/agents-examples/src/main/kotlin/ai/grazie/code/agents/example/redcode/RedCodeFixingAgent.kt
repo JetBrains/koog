@@ -1,19 +1,18 @@
 package ai.grazie.code.agents.example.redcode
 
-import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.graph.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.local.dsl.extensions.*
-import ai.grazie.code.agents.core.agent.graph.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
 import ai.grazie.code.agents.core.dsl.extension.onToolCall
+import ai.grazie.code.agents.core.event.EventHandler
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.annotations.ExperimentalAPI

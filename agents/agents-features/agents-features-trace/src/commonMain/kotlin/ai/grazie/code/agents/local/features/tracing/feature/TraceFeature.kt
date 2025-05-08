@@ -22,7 +22,7 @@ class TraceFeature {
             LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.feature.TracingFeature")
 
         override val key: LocalAgentStorageKey<TraceFeature> =
-            LocalAgentStorageKey("agents-local-features-tracing")
+            LocalAgentStorageKey("agents-features-tracing")
 
         override fun createInitialConfig() = TraceFeatureConfig()
 

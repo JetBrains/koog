@@ -474,7 +474,7 @@ class LoggingFeature(val logger: Logger) {
 
 The MemoryFeature provides persistent memory capabilities for agents. It allows agents to store and retrieve information across runs.
 
-> **Note**: MemoryFeature is in a separate module and requires a separate dependency. It's defined in the `agents-local-features/agents-local-features-memory` module.
+> **Note**: MemoryFeature is in a separate module and requires a separate dependency. It's defined in the `agents-features/agents-features-memory` module.
 
 Installation:
 
