@@ -16,7 +16,6 @@ application {
 
 dependencies {
     implementation(project(":agents:agents-local-features:agents-local-features-memory"))
-    implementation(project(":agents:agents-local-strategies"))
     implementation("ai.jetbrains.code.exec:code-exec-jvm:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.exec:code-exec-tools:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.features:code-features-common:1.0.0-beta.55+0.4.45")
