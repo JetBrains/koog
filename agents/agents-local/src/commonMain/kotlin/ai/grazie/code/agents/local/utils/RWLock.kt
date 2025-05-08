@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.utils
+package ai.grazie.code.agents.local.utils
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -8,7 +8,7 @@ import kotlinx.coroutines.sync.withLock
  *
  * This implementation uses `kotlinx.coroutines.sync.Mutex` to coordinate access for both readers and writers.
  */
-class RWLock {
+internal class RWLock {
     private val writeMutex = Mutex()
     private var readersCount = 0
     private val readersCountMutex = Mutex()

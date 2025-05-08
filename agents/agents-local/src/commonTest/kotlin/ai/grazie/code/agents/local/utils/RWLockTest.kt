@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.utils
+package ai.grazie.code.agents.local.utils
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay

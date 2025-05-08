@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.local.dsl.builders
 
-import ai.grazie.code.agents.core.utils.Some
+import ai.grazie.code.agents.local.utils.Some
 import ai.grazie.code.agents.local.agent.stage.LocalAgentStageContext
 import ai.grazie.code.agents.local.graph.LocalAgentNode
 import ai.grazie.code.agents.local.graph.SimpleLocalAgentNode

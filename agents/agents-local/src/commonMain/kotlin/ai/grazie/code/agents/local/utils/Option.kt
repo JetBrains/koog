@@ -1,6 +1,6 @@
-package ai.grazie.code.agents.core.utils
+package ai.grazie.code.agents.local.utils
 
-sealed class Option<out A> {
+internal sealed class Option<out A> {
     abstract val value: A
 
     abstract val isEmpty: Boolean
@@ -19,12 +19,12 @@ sealed class Option<out A> {
     }
 }
 
-data object None : Option<Nothing>() {
+internal data object None : Option<Nothing>() {
     override val isEmpty: Boolean = true
 
     override val value get() = throw NoSuchElementException("None.value")
 }
 
-data class Some<T>(override val value: T) : Option<T>() {
+internal data class Some<T>(override val value: T) : Option<T>() {
     override val isEmpty: Boolean = false
 }
