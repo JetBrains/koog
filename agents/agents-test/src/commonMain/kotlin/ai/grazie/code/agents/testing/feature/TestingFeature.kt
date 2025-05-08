@@ -167,8 +167,6 @@ class LocalAgentStageContextMockBuilder() : LocalAgentStageContextMockBuilderBas
                     return this === other
                 }
 
-                override fun hashCode(): Int = super.hashCode()
-
                 @Suppress("UNUSED_PARAMETER")
                 operator fun get(propertyName: String): Any? {
                     error("Unimplemented property access: $name.$propertyName")
@@ -185,7 +183,7 @@ class LocalAgentStageContextMockBuilder() : LocalAgentStageContextMockBuilderBas
 
 
 @TestOnly
-sealed abstract class NodeReference<Input, Output> {
+sealed class NodeReference<Input, Output> {
     abstract fun resolve(stage: LocalAgentStage): LocalAgentNode<Input, Output>
 
     object Start : NodeReference<Unit, Unit>() {
