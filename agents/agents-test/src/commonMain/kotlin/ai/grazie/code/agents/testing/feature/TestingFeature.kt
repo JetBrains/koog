@@ -1,16 +1,16 @@
 package ai.grazie.code.agents.testing.feature
 
 import ai.grazie.code.agents.core.KotlinAIAgent.FeatureContext
-import ai.grazie.code.agents.core.agent.LocalAgentStateManager
-import ai.grazie.code.agents.core.agent.LocalAgentStorage
-import ai.grazie.code.agents.core.agent.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.createStorageKey
-import ai.grazie.code.agents.core.agent.graph.FinishNode
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
-import ai.grazie.code.agents.core.agent.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStage
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.createStorageKey
+import ai.grazie.code.agents.core.agent.entity.FinishNode
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.dsl.builder.BaseBuilder
 import ai.grazie.code.agents.core.environment.AgentEnvironment

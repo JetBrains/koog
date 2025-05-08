@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.KotlinAIAgent
 import ai.grazie.code.agents.core.KotlinAIAgent.FeatureContext
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.calculator.CalculatorChatExecutor
 import ai.grazie.code.agents.core.calculator.CalculatorTools.PlusTool
 import ai.grazie.code.agents.core.dsl.builder.forwardTo

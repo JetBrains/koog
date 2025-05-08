@@ -1,7 +1,11 @@
 package ai.grazie.code.agents.core.dsl.builder
 
-import ai.grazie.code.agents.core.agent.graph.*
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.FinishNode
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.LocalAgentSubgraph
+import ai.grazie.code.agents.core.agent.entity.StartNode
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.tools.Tool
 import kotlin.reflect.KProperty
 

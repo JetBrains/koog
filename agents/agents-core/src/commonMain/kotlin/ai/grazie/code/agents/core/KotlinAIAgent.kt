@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core
 
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.model.message.*

@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.agent
 
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 
 
 open class LocalAgentException(problem: String) : Exception("Local AI Agent has run into a problem: $problem")

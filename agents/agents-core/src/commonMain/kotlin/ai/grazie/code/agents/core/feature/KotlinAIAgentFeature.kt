@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
-import ai.grazie.code.agents.core.agent.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.feature.config.FeatureConfig
 
 /**

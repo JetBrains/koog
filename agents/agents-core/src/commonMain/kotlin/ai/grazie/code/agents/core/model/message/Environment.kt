@@ -3,7 +3,7 @@ package ai.grazie.code.agents.core.model.message
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 
 data class LocalAgentEnvironmentInitializeMessageContent(
     override val agentId: String,

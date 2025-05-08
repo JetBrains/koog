@@ -1,11 +1,11 @@
 @file:OptIn(InternalAgentsApi::class)
 
-package ai.grazie.code.agents.core.agent.graph
+package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.agent.AgentMaxNumberOfIterationsReachedException
 import ai.grazie.code.agents.core.agent.AgentStuckInTheNodeException
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStage
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.grazie.code.agents.core.prompt.Prompts.selectRelevantTools

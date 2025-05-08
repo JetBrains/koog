@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.model.message.EnvironmentToAgentMessage
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.environment.LocalAgentEnvironmentProxy
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.utils.mpp.UUID

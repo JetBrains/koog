@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.KotlinAIAgent
-import ai.grazie.code.agents.core.agent.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult

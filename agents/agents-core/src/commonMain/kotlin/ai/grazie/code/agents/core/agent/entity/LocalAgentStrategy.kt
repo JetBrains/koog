@@ -1,15 +1,15 @@
-package ai.grazie.code.agents.core.agent
+package ai.grazie.code.agents.core.agent.entity
 
-import ai.grazie.code.agents.core.agent.ContextTransitionPolicy.*
+import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy.*
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.model.agent.AIAgentStrategy
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.utils.runCatchingCancellable
-import ai.grazie.code.agents.core.agent.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStage
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContextImpl
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContextImpl
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentStageBuilder
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.extension.clearHistory
@@ -17,7 +17,6 @@ import ai.grazie.code.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.PromptExecutorProxy
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.CompletableDeferred
@@ -68,9 +67,9 @@ class LocalAgentStrategy(
      * depending on the specified [llmHistoryTransitionPolicy].
      */
     internal var stages: List<LocalAgentStage> = when (llmHistoryTransitionPolicy) {
-        PERSIST_LLM_HISTORY  -> stages
+        PERSIST_LLM_HISTORY -> stages
         COMPRESS_LLM_HISTORY -> insertIntermediateStage(stages, COMPRESS_HISTORY_STAGE)
-        CLEAR_LLM_HISTORY    -> insertIntermediateStage(stages, CLEAR_HISTORY_STAGE)
+        CLEAR_LLM_HISTORY -> insertIntermediateStage(stages, CLEAR_HISTORY_STAGE)
     }
 
     /**

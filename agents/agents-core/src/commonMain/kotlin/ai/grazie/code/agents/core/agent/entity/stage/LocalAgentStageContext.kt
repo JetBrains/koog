@@ -1,9 +1,9 @@
 @file:OptIn(InternalAgentsApi::class)
 
-package ai.grazie.code.agents.core.agent.stage
-import ai.grazie.code.agents.core.agent.LocalAgentStateManager
-import ai.grazie.code.agents.core.agent.LocalAgentStorage
-import ai.grazie.code.agents.core.agent.LocalAgentStorageKey
+package ai.grazie.code.agents.core.agent.entity.stage
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
@@ -139,7 +139,7 @@ interface LocalAgentStageContext {
     /**
      * Retrieves a feature of the specified type from the current context.
      *
-     * @param feature The [ai.grazie.code.agents.core.feature.KotlinAIAgentFeature] instance representing the feature to retrieve.
+     * @param feature The [KotlinAIAgentFeature] instance representing the feature to retrieve.
      *                This parameter defines the configuration and unique identity of the feature.
      * @return The feature instance of type [Feature], or null if the feature is not available in the context.
      */
@@ -500,7 +500,7 @@ sealed class LocalAgentLLMSession(
     /**
      * Coerce LLM to provide a structured output.
      *
-     * @see [ai.grazie.code.prompt.structure.executeStructured]
+     * @see [executeStructured]
      */
     open suspend fun <T> requestLLMStructured(
         structure: StructuredData<T>,
@@ -516,7 +516,7 @@ sealed class LocalAgentLLMSession(
      * Expect LLM to reply in a structured format and try to parse it.
      * For more robust version with model coercion and correction see [requestLLMStructured]
      *
-     * @see [ai.grazie.code.prompt.structure.executeStructuredOneShot]
+     * @see [executeStructuredOneShot]
      */
     open suspend fun <T> requestLLMStructuredOneShot(structure: StructuredData<T>): StructuredResponse<T> {
         validateSession()
@@ -590,7 +590,7 @@ class LocalAgentLLMWriteSession internal constructor(
      *
      * @param toolName The name of the tool to be executed.
      * @param args The arguments required to execute the tool, which must be a subtype of [Tool.Args].
-     * @return A [ai.grazie.code.agents.core.environment.SafeTool.Result] containing the result of the tool execution, which is a subtype of [ToolResult].
+     * @return A [SafeTool.Result] containing the result of the tool execution, which is a subtype of [ToolResult].
      */
     suspend inline fun <reified TArgs : Tool.Args> callTool(
         toolName: String,
@@ -839,7 +839,7 @@ class LocalAgentLLMWriteSession internal constructor(
      *
      * LLM might answer only with a textual assistant message.
      *
-     * @return the response from the LLM after processing the request, as a [ai.jetbrains.code.prompt.message.Message.Response].
+     * @return the response from the LLM after processing the request, as a [Message.Response].
      */
     override suspend fun requestLLMWithoutTools(): Message.Response {
         return super.requestLLMWithoutTools().also { response -> updatePrompt { message(response) } }
@@ -880,7 +880,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * Makes an asynchronous request to a Large Language Model (LLM) and updates the current prompt
      * with the response received from the LLM.
      *
-     * @return A [ai.jetbrains.code.prompt.message.Message.Response] object containing the response from the LLM.
+     * @return A [Message.Response] object containing the response from the LLM.
      */
     override suspend fun requestLLM(): Message.Response {
         return super.requestLLM().also { response -> updatePrompt { message(response) } }

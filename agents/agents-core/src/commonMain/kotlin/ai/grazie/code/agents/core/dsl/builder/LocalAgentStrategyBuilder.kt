@@ -2,8 +2,8 @@ package ai.grazie.code.agents.core.dsl.builder
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolStage
-import ai.grazie.code.agents.core.agent.ContextTransitionPolicy
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 
 class LocalAgentStrategyBuilder(
     private val name: String,

@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphDelegate
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.agent.graph.ToolSelectionStrategy
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.params.LLMParams

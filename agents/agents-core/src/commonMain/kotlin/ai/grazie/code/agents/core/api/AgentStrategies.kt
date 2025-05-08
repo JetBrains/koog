@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.api
 
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
