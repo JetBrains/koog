@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.local.memory.feature
 
-import ai.grazie.code.agents.core.agent.createStorageKey
-import ai.grazie.code.agents.core.agent.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.stage.LocalAgentLLMWriteSession
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.createStorageKey
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.core.feature.config.FeatureConfig

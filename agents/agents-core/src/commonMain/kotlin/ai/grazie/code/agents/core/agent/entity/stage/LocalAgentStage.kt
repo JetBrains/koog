@@ -1,9 +1,9 @@
-package ai.grazie.code.agents.core.agent.stage
+package ai.grazie.code.agents.core.agent.entity.stage
 
-import ai.grazie.code.agents.core.agent.graph.FinishAgentNode
-import ai.grazie.code.agents.core.agent.graph.LocalAgentSubgraph
-import ai.grazie.code.agents.core.agent.graph.StartAgentNode
-import ai.grazie.code.agents.core.agent.graph.ToolSelectionStrategy
+import ai.grazie.code.agents.core.agent.entity.FinishAgentNode
+import ai.grazie.code.agents.core.agent.entity.LocalAgentSubgraph
+import ai.grazie.code.agents.core.agent.entity.StartAgentNode
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 
 sealed class LocalAgentStage(name: String, start: StartAgentNode) : LocalAgentSubgraph<Unit, String>(

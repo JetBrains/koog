@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.local.memory.feature.history
 
-import ai.grazie.code.agents.core.agent.stage.LocalAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
 import ai.grazie.code.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.grazie.code.agents.local.memory.feature.retrieveFactsFromHistory
 import ai.grazie.code.agents.local.memory.model.Concept

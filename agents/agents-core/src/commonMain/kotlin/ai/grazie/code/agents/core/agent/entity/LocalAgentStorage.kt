@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.agent
+package ai.grazie.code.agents.core.agent.entity
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

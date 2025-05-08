@@ -2,9 +2,9 @@ package ai.grazie.code.agents.example.planner
 
 import ai.grazie.code.agents.core.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.createStorageKey
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.createStorageKey
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*

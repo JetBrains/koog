@@ -2,7 +2,7 @@ package ai.grazie.code.agents.example.errors
 
 import ai.grazie.code.agents.core.KotlinAIAgent
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.graph.ToolSelectionStrategy
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*

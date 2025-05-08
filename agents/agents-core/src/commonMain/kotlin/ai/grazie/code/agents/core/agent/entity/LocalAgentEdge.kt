@@ -1,7 +1,7 @@
-package ai.grazie.code.agents.core.agent.graph
+package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.utils.Option
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 
 class LocalAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
     val toNode: LocalAgentNode<OutgoingInput, *>,

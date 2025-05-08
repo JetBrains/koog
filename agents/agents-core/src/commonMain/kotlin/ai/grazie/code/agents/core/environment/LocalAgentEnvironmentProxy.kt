@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.environment
 
 import ai.grazie.code.agents.core.agent.AgentTerminationByClientException
-import ai.grazie.code.agents.core.agent.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.engine.UnexpectedAgentMessageException
 import ai.grazie.code.agents.core.engine.UnexpectedDoubleInitializationException
 import ai.grazie.code.agents.core.feature.AIAgentPipeline

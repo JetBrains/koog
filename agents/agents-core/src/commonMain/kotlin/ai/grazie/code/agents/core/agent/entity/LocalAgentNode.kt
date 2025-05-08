@@ -1,6 +1,6 @@
-package ai.grazie.code.agents.core.agent.graph
+package ai.grazie.code.agents.core.agent.entity
 
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 
 abstract class LocalAgentNode<Input, Output> internal constructor() {

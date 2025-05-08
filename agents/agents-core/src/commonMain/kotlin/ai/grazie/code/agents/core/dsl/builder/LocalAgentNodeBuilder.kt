@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.core.dsl.builder
 
 import ai.grazie.code.agents.core.utils.Some
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
-import ai.grazie.code.agents.core.agent.graph.SimpleLocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.SimpleLocalAgentNode
 
 open class LocalAgentNodeBuilder<Input, Output> internal constructor(
     private val execute: suspend LocalAgentStageContext.(Input) -> Output

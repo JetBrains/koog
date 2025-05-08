@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.core.dsl.builder
 
 import ai.grazie.code.agents.core.utils.Option
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.agent.graph.LocalAgentEdge
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.LocalAgentEdge
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 
 class LocalAgentEdgeBuilder<IncomingOutput, OutgoingInput> internal constructor(
     private val edgeIntermediateBuilder: LocalAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>,

@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.example.features
 
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.core.agent.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.createStorageKey
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.createStorageKey
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.core.feature.config.FeatureConfig

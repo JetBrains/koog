@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
 import ai.grazie.code.agents.core.KotlinAIAgent
-import ai.grazie.code.agents.core.agent.ContextTransitionPolicy
+import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy

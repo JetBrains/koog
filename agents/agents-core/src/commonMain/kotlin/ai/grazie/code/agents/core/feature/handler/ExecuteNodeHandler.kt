@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.feature.handler
 
-import ai.grazie.code.agents.core.agent.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.agent.graph.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 
 /**
  * Container for node execution handlers.
