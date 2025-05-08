@@ -39,13 +39,13 @@ class MemoryChunkingFeature(
 
         return chunks.mapNotNull { chunk ->
             val chunkObj = chunk.jsonObject
-            val content = chunkObj["content"]?.jsonPrimitive?.content ?: return@mapNotNull null
-            val tags = chunkObj["tags"]?.jsonArray?.mapNotNull { it.jsonPrimitive.content } ?: return@mapNotNull null
+            val chunkContent = chunkObj["content"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            val chunkTags = chunkObj["tags"]?.jsonArray?.mapNotNull { it.jsonPrimitive.content } ?: return@mapNotNull null
 
             BasicMemoryChunk(
                 UUID.random().toString(),
-                content,
-                tags
+                chunkContent,
+                chunkTags
             )
         }
     }

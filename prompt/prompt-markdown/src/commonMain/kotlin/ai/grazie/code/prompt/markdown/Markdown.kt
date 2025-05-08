@@ -235,12 +235,12 @@ class MarkdownContentBuilder : TextContentBuilder() {
         fun item(text: String) {
             val bullet = bullet(counter++)
             for ((index, line) in text.split("\n").withIndex()) {
-                val text = when {
+                val lineText = when {
                     index == 0 -> "$bullet$line"
                     line.isNotBlank() -> " ".repeat(bullet.length) + line
                     else -> line
                 }
-                +text
+                +lineText
             }
         }
 
