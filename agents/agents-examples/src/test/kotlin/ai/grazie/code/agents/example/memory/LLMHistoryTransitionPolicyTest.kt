@@ -16,7 +16,7 @@ import ai.grazie.code.agents.local.environment.AgentEnvironment
 import ai.grazie.code.agents.local.environment.ReceivedToolResult
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.CompletableDeferred
@@ -37,7 +37,7 @@ class LLMHistoryTransitionPolicyTest {
     /**
      * Mock LLM executor that tracks conversation history for testing.
      */
-    class MockLLMExecutor : CodePromptExecutor {
+    class MockLLMExecutor : PromptExecutor {
         val messageHistory = mutableListOf<String>()
 
         override suspend fun execute(prompt: Prompt): String {

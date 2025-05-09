@@ -3,9 +3,9 @@ package ai.grazie.code.prompt.structure
 import ai.grazie.code.prompt.markdown.markdown
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.serialization.SerializationException
 
@@ -14,15 +14,16 @@ import kotlinx.serialization.SerializationException
  * A parser for processing structured data that utilizes language models (LLMs) and attempts to
  * correct any errors in the provided content to produce valid structured outputs.
  *
- * @property executor A `CodePromptExecutor` instance responsible for executing language model prompts.
- * @property fixingModel The language model to use for processing and attempting to fix format. Defaults to the `GPT4o` model in the `JetBrainsAIModels`.
+ * @property executor A `PromptExecutor` instance responsible for executing language model prompts.
+ * @property fixingModel The language model to use for processing and attempting to fix format. Defaults to the `GPT4o` model in the `OpenAIModels`.
  */
 class StructureParser(
-    val executor: CodePromptExecutor,
-    val fixingModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
+    val executor: PromptExecutor,
+    val fixingModel: LLModel = OpenAIModels.GPT4o,
 ) {
     companion object {
-        private val logger = LoggerFactory.create("ai.grazie.code.prompt.structure.${StructureParser::class.simpleName}")
+        private val logger =
+            LoggerFactory.create("ai.grazie.code.prompt.structure.${StructureParser::class.simpleName}")
     }
 
     /**
@@ -43,7 +44,11 @@ class StructureParser(
         }
     }
 
-    private suspend fun <T> tryFixStructure(content: String, exception: SerializationException, structure: StructuredData<T>): T {
+    private suspend fun <T> tryFixStructure(
+        content: String,
+        exception: SerializationException,
+        structure: StructuredData<T>
+    ): T {
         val prompt = prompt(
             fixingModel,
             "code-engine-structure-fixing",

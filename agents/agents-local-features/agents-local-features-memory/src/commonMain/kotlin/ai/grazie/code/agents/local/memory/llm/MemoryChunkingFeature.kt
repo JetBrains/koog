@@ -5,7 +5,7 @@ import ai.grazie.code.agents.local.memory.model.MemoryChunk
 import ai.grazie.code.agents.local.memory.prompts.MemoryPrompts
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -13,7 +13,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 class MemoryChunkingFeature(
-    private val executor: CodePromptExecutor
+    private val executor: PromptExecutor
 ) {
     /**
      * Analyzes the content and splits it into memory chunks with tags.

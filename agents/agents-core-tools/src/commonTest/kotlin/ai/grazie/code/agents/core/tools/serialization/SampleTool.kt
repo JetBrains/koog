@@ -16,8 +16,7 @@ internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>() {
             ToolParameterDescriptor(
                 name = "arg1",
                 description = "First tool argument 1",
-                type = ToolParameterType.String,
-                defaultValue = "hello"
+                type = ToolParameterType.String
             ),
         )
     )

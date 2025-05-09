@@ -12,6 +12,9 @@ sealed class LLMCapability(val id: String) {
 
     @Serializable
     data object Tools : LLMCapability("tools")
+    
+    @Serializable
+    data object Vision : LLMCapability("vision")
 
     @Serializable
     sealed class Schema(val lang: String) : LLMCapability("$lang-schema") {

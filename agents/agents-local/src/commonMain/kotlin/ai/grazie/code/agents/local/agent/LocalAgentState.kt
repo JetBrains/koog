@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.local.agent
 
-import ai.grazie.code.agents.core.utils.ActiveProperty
+import ai.grazie.code.agents.local.utils.ActiveProperty
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 

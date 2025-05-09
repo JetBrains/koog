@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.memory.llm
 
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
-import ai.grazie.code.prompt.structure.json.LLMDescription
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -34,9 +34,9 @@ data class LLMMemoryCollection(val chunks: List<LLMMemoryChunk>) {
     @Serializable
     @SerialName("LLMMemoryChunk")
     data class LLMMemoryChunk(
-        @LLMDescription("The content of the memory chunk")
+        @property:LLMDescription("The content of the memory chunk")
         val content: String,
-        @LLMDescription("The tags associated with the memory chunk")
+        @property:LLMDescription("The tags associated with the memory chunk")
         val tags: List<String>
     )
 }

@@ -2,12 +2,12 @@ package ai.grazie.code.agents.local.features.tracing.writer
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
-class TestLLMExecutor : CodePromptExecutor {
+class TestLLMExecutor : PromptExecutor {
     override suspend fun execute(prompt: Prompt): String {
         return handlePrompt(prompt).content
     }

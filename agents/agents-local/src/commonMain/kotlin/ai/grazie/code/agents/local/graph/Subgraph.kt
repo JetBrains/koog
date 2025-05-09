@@ -3,6 +3,7 @@
 package ai.grazie.code.agents.local.graph
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.local.InternalAgentsApi
 import ai.grazie.code.agents.local.agent.AgentMaxNumberOfIterationsReachedException
 import ai.grazie.code.agents.local.agent.AgentStuckInTheNodeException
@@ -12,7 +13,6 @@ import ai.grazie.code.agents.local.dsl.extensions.replaceHistoryWithTLDR
 import ai.grazie.code.agents.local.prompts.Prompts.selectRelevantTools
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
-import ai.grazie.code.prompt.structure.json.LLMDescription
 import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.serialization.Serializable
 
@@ -109,7 +109,7 @@ open class LocalAgentSubgraph<Input, Output>(
 
     @Serializable
     private data class SelectedTools(
-        @LLMDescription("List of selected tools for the given subtask")
+        @property:LLMDescription("List of selected tools for the given subtask")
         val tools: List<String>
     )
 

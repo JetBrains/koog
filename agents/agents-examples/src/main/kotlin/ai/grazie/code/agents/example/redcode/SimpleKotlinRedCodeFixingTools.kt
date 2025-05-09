@@ -1,8 +1,7 @@
 package ai.grazie.code.agents.example.redcode
 
-import ai.grazie.code.agents.tools.registry.tools.RedCodeFixingTools
-import ai.grazie.code.agents.tools.registry.tools.RedCodeFixingTools.DependencyFixingTools
-import ai.grazie.code.agents.tools.registry.tools.RedCodeFixingTools.ImportFixingTools
+import ai.grazie.code.agents.example.redcode.RedCodeFixingTools.DependencyFixingTools
+import ai.grazie.code.agents.example.redcode.RedCodeFixingTools.ImportFixingTools
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File

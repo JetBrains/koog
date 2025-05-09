@@ -1,5 +1,6 @@
 package ai.grazie.code.agents.local.dsl.builders
 
+import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.local.agent.stage.LocalAgentStageContext
 import ai.grazie.code.agents.local.graph.*
 import kotlin.reflect.KProperty
@@ -27,6 +28,14 @@ abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
         define: LocalAgentSubgraphBuilder<Input, Output>.() -> Unit
     ): LocalAgentSubgraphDelegate<Input, Output> {
         return LocalAgentSubgraphBuilder<Input, Output>(name, toolSelectionStrategy).also { it.define() }.build()
+    }
+
+    fun <Input, Output> subgraph(
+        name: String? = null,
+        tools: List<Tool<*, *>>,
+        define: LocalAgentSubgraphBuilder<Input, Output>.() -> Unit
+    ): LocalAgentSubgraphDelegate<Input, Output> {
+        return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), define)
     }
 
     fun <IncomingOutput, OutgoingInput> edge(

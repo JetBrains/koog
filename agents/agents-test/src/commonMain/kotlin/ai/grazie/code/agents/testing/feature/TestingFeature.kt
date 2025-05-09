@@ -13,8 +13,8 @@ import ai.grazie.code.agents.local.dsl.builders.BaseBuilder
 import ai.grazie.code.agents.local.environment.AgentEnvironment
 import ai.grazie.code.agents.local.environment.ReceivedToolResult
 import ai.grazie.code.agents.local.features.AIAgentPipeline
-import ai.grazie.code.agents.local.features.CodePromptExecutorProxy
 import ai.grazie.code.agents.local.features.KotlinAIAgentFeature
+import ai.grazie.code.agents.local.features.PromptExecutorProxy
 import ai.grazie.code.agents.local.features.config.FeatureConfig
 import ai.grazie.code.agents.local.graph.FinishNode
 import ai.grazie.code.agents.local.graph.LocalAgentNode
@@ -809,8 +809,9 @@ class Testing {
                                     LocalAgentLLMContext(
                                         tools = agent.toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                                         prompt = agent.agentConfig.prompt,
-                                        promptExecutor = CodePromptExecutorProxy(agent.promptExecutor, pipeline),
-                                        environment = environment
+                                        promptExecutor = PromptExecutorProxy(agent.promptExecutor, pipeline),
+                                        environment = environment,
+                                        config = agent.agentConfig
                                     )
                                 }
 

@@ -7,10 +7,8 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonPrimitive
 
-internal val JsonForTool = Json {
+internal val ToolJson = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
     explicitNulls = false
@@ -35,11 +33,6 @@ internal data class ToolParameterModel(
     @SerialName("enum") val enumValues: List<String>? = null,
     // for lists
     @SerialName("items") val itemType: ToolArrayItemTypeModel? = null,
-    /*
-      The exact type depends on the particular parameter type, so it's easier to make it "dynamic"
-      instead of dealing with custom serializers.
-    */
-    val default: JsonElement? = null,
 )
 
 @Serializable
@@ -62,26 +55,23 @@ fun serializeToolDescriptorsToJsonString(toolDescriptors: List<ToolDescriptor>):
         )
     }
 
-    return JsonForTool.encodeToString(toolModels)
+    return ToolJson.encodeToString(toolModels)
 }
 
-private fun <T> ToolParameterDescriptor<T>.toToolParameterModel(): ToolParameterModel = ToolParameterModel(
+private fun ToolParameterDescriptor.toToolParameterModel(): ToolParameterModel = ToolParameterModel(
     name = name,
     type = type.name,
     description = description,
-    enumValues = (type as? ToolParameterType.Enum<*>)?.toToolEnumValues(),
-    itemType = (type as? ToolParameterType.List<*>)?.toToolArrayItemType(),
-    default = defaultValue?.let { JsonForTool.encodeToJsonElement(type.serializer, it) }
+    enumValues = (type as? ToolParameterType.Enum)?.toToolEnumValues(),
+    itemType = (type as? ToolParameterType.List)?.toToolArrayItemType(),
 )
 
 
-private fun <T : Enum<T>> ToolParameterType.Enum<T>.toToolEnumValues(): List<String> = entries.map {
-    JsonForTool.encodeToJsonElement(serializer, it).jsonPrimitive.content
-}
+private fun <T : Enum<T>> ToolParameterType.Enum.toToolEnumValues(): List<String> = entries.asList()
 
-private fun ToolParameterType.List<*>.toToolArrayItemType(): ToolArrayItemTypeModel = ToolArrayItemTypeModel(
+private fun ToolParameterType.List.toToolArrayItemType(): ToolArrayItemTypeModel = ToolArrayItemTypeModel(
     type = itemsType.name,
-    enum = (itemsType as? ToolParameterType.Enum<*>)?.toToolEnumValues(),
-    items = (itemsType as? ToolParameterType.List<*>)?.toToolArrayItemType()
+    enum = (itemsType as? ToolParameterType.Enum)?.toToolEnumValues(),
+    items = (itemsType as? ToolParameterType.List)?.toToolArrayItemType()
 )
 

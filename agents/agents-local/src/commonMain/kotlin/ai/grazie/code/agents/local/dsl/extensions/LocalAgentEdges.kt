@@ -80,7 +80,36 @@ inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : To
         }
 }
 
-@Suppress("unused")
+/**
+ * Creates an edge that filters tool call messages for a specific tool.
+ *
+ * @param tool The tool to match against
+ */
+infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+        LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
+    tool: Tool<*, *>,
+): LocalAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
+    return onIsInstance(Message.Tool.Call::class)
+        .onCondition {
+            it.tool == tool.name
+        }
+}
+
+/**
+ * Creates an edge that filters tool call messages to NOT be a specific tool
+ *
+ * @param tool The tool to match against
+ */
+infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+        LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolNotCalled(
+    tool: Tool<*, *>,
+): LocalAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
+    return onIsInstance(Message.Tool.Call::class)
+        .onCondition {
+            it.tool != tool.name
+        }
+}
+
 /**
  * Creates an edge that filters tool result messages for a specific tool and result condition.
  *

@@ -5,7 +5,8 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.local.simpleApi.SayToUser
 import ai.grazie.code.agents.local.simpleApi.simpleChatAgent
 import ai.grazie.code.agents.local.simpleApi.simpleSingleRunAgent
-import ai.jetbrains.code.prompt.llm.OllamaModels
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -50,10 +51,10 @@ class SimpleAgentIntegrationTest {
             actualToolCalls.clear()
 
             val agent = simpleChatAgent(
-                executor = null!!,
+                executor = simpleOpenAIExecutor(apiToken),
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = OllamaModels.Meta.LLAMA_3_2,
+                llmModel = OpenAIModels.GPT4o,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 maxIterations = 10,
@@ -94,10 +95,10 @@ class SimpleAgentIntegrationTest {
             actualToolCalls.clear()
 
             val agent = simpleChatAgent(
-                executor = null!!,
+                executor = simpleOpenAIExecutor(apiToken),
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = OllamaModels.Meta.LLAMA_3_2,
+                llmModel = OpenAIModels.GPT4oMini,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 maxIterations = 10,
@@ -136,10 +137,10 @@ class SimpleAgentIntegrationTest {
             actualToolCalls.clear()
 
             val agent = simpleSingleRunAgent(
-                executor = null!!,
+                executor = simpleOpenAIExecutor(apiToken),
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = OllamaModels.Meta.LLAMA_3_2,
+                llmModel = OpenAIModels.GPT4oMini,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 maxIterations = 10,
@@ -183,10 +184,10 @@ class SimpleAgentIntegrationTest {
             actualToolCalls.clear()
 
             val agent = simpleSingleRunAgent(
-                executor = null!!,
+                executor = simpleOpenAIExecutor(apiToken),
                 cs = this,
                 systemPrompt = systemPrompt,
-                llmModel = OllamaModels.Meta.LLAMA_3_2,
+                llmModel = OpenAIModels.GPT4oMini,
                 temperature = 1.0,
                 eventHandler = eventHandler,
                 toolRegistry = toolRegistry,

@@ -1,5 +1,6 @@
 package ai.grazie.code.agents.local.memory
 
+import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMContext
 import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMWriteSession
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
@@ -8,9 +9,10 @@ import ai.grazie.code.agents.local.memory.feature.MemoryFeature
 import ai.grazie.code.agents.local.memory.model.*
 import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
 import ai.grazie.code.agents.local.memory.providers.NoMemory
+import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import io.mockk.*
@@ -46,7 +48,7 @@ class LocalAIAgentMemoryTest {
     @Test
     fun testSaveFactsFromHistory() = runTest {
         val memoryFeature = mockk<AgentMemoryProvider>()
-        val promptExecutor = mockk<CodePromptExecutor>()
+        val promptExecutor = mockk<PromptExecutor>()
         val responseSlot = slot<Message.Response>()
 
         val response = mockk<Message.Response>()
@@ -64,7 +66,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(
@@ -96,7 +99,7 @@ class LocalAIAgentMemoryTest {
     @Test
     fun testLoadFactsWithScopeMatching() = runTest {
         val memoryFeature = mockk<AgentMemoryProvider>()
-        val promptExecutor = mockk<CodePromptExecutor>()
+        val promptExecutor = mockk<PromptExecutor>()
         val concept = Concept("test", "test description", FactType.SINGLE)
 
         val testTimestamp = 1234567890L
@@ -152,7 +155,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(
@@ -248,7 +252,7 @@ class LocalAIAgentMemoryTest {
     @Test
     fun testSequentialTimestamps() = runTest {
         val memoryFeature = mockk<AgentMemoryProvider>()
-        val promptExecutor = mockk<CodePromptExecutor>()
+        val promptExecutor = mockk<PromptExecutor>()
         val savedFacts = mutableListOf<SingleFact>()
 
         // Mock DefaultTimeProvider to return sequential timestamps
@@ -272,7 +276,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(
@@ -322,7 +327,7 @@ class LocalAIAgentMemoryTest {
 
     fun testLoadFactsToAgent() = runTest {
         val memoryFeature = mockk<AgentMemoryProvider>()
-        val promptExecutor = mockk<CodePromptExecutor>()
+        val promptExecutor = mockk<PromptExecutor>()
         val concept = Concept("test", "test description", FactType.SINGLE)
 
         coEvery {
@@ -340,7 +345,8 @@ class LocalAIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt(testModel, "test") { },
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment()
+            environment = MockAgentEnvironment(),
+            config = LocalAgentConfig(Prompt.Empty, 100),
         )
 
         val memory = MemoryFeature(

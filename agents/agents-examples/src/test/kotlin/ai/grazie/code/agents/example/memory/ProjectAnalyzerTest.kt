@@ -7,7 +7,7 @@ import ai.grazie.code.agents.example.memory.tools.FileSearchTool
 import ai.grazie.code.agents.local.memory.model.*
 import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -63,7 +63,7 @@ class ProjectAnalyzerTest {
     /**
      * Mock LLM executor that returns predefined responses for testing.
      */
-    class MockLLMExecutor : CodePromptExecutor {
+    class MockLLMExecutor : PromptExecutor {
         // Configure responses for different prompts
         val responseForEnvironmentInfo = "I'll analyze the environment information."
         val responseForProjectDependencies = "I'll analyze the project dependencies."

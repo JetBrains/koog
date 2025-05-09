@@ -60,10 +60,6 @@ allprojects {
 disableDistTasks()
 
 subprojects {
-    tasks.withType<Jar> {
-        val automaticModuleName = archiveBaseName.map { it.replace("-", ".") + ".jvm" }
-        manifest.attributes("Automatic-Module-Name" to automaticModuleName)
-    }
     tasks.withType<Test> {
         testLogging {
             showStandardStreams = true

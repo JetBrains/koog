@@ -30,55 +30,6 @@ object SayToUser : SimpleTool<SayToUser.Args>() {
     }
 }
 
-
-/**
- * The `TalkTool` allows agent to say something to the output (via `println`) or read input from the user (via `readln`).
- */
-object TalkTool : SimpleTool<TalkTool.Args>() {
-    @Serializable
-    data class Args(val message: String, val doPrint: Boolean?, val doInput: Boolean?) : Tool.Args
-
-    override val argsSerializer = Args.serializer()
-
-    override val descriptor = ToolDescriptor(
-        name = "__talk__", description = "Service tool, used by the agent to talk.",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "reasons",
-                description = "Reasons for the message",
-                type = ToolParameterType.String
-            ),
-            ToolParameterDescriptor(
-                name = "message", description = "Message from the agent", type = ToolParameterType.String
-            ),
-        ),
-        optionalParameters = listOf(
-            ToolParameterDescriptor(
-                name = "doPrint",
-                description = "If true, the message will be printed to stdout",
-                type = ToolParameterType.Boolean
-            ),
-            ToolParameterDescriptor(
-                name = "doInput",
-                description = "If true, the message will be read from stdin",
-                type = ToolParameterType.Boolean
-            ),
-        )
-    )
-
-    override suspend fun doExecute(args: Args): String {
-        if (args.doPrint == true)
-            println("Agent says: ${args.message}")
-
-        if (args.doInput == true) {
-            print("Enter your question:")
-            return readln()
-        }
-
-        return "DONE"
-    }
-}
-
 /**
  * Object representation of a tool that provides an interface for agent-user interaction.
  * It allows the agent to ask the user for input (via `stdout`/`stdin`).

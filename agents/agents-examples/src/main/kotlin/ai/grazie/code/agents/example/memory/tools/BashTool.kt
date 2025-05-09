@@ -39,8 +39,7 @@ abstract class BashTool : SimpleTool<BashTool.Args>() {
             ToolParameterDescriptor(
                 name = "working_dir",
                 description = "Working directory for command execution",
-                type = ToolParameterType.String,
-                defaultValue = "."
+                type = ToolParameterType.String
             )
         )
     )

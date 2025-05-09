@@ -2,6 +2,7 @@ package ai.grazie.code.agents.example.tone
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
@@ -9,12 +10,13 @@ import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.simpleApi.SayToUser
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() {
-    val executor: CodePromptExecutor = null!!
+    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
     /**
      * Describe the list of tools for your agent.
@@ -56,7 +58,7 @@ fun main() {
 
         // Create agent config with a proper prompt
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "tone_analysis") {
+            prompt = prompt(OpenAIModels.GPT4o, "tone_analysis") {
                 system(
                     """
                     You are an question answering agent with access to the tone analysis tools.

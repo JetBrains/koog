@@ -3,14 +3,7 @@ package ai.grazie.code.agents.example.guesser
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.Serializable
 
-/**
- * 1. Define the tool
- *
- * **IMPORTANT**: Defining tools in your own code is good for fast experiments only,
- * but for production purposes this method is not recommended.
- * Please contribute to [ai.grazie.code.agents.tools.registry.GlobalAgentToolStages]
- * [here](https://github.com/JetBrains/koan-agents/tree/main/agents/agents-tools-registry)
- **/
+
 abstract class GuesserTool(
     name: String,
     description: String,

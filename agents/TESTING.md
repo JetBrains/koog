@@ -452,7 +452,7 @@ fun testMultiStageAgentStructure() = runBlocking {
         mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
     }
 
-    val basePrompt = prompt(JetBrainsAIModels.OpenAI.GPT4oMini, "test") {}
+    val basePrompt = prompt(OpenAIModels.GPT4o, "test") {}
 
     KotlinAIAgent(
         toolRegistry = toolRegistry,

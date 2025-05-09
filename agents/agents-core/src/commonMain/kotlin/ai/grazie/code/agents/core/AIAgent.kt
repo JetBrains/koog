@@ -85,6 +85,11 @@ abstract class AIAgent<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentCo
                 }
 
                 null -> {
+                    // If execution is stopped by an error (and we didn't throw an exception up to this point),
+                    // let's complete the deferred with null to unblock any awaiting coroutines.
+                    if (!agentResultDeferred.isCompleted) {
+                        agentResultDeferred.complete(null)
+                    }
                     logger.debug { "Agent execution completed. Stopping..." }
                     runningMutex.withLock {
                         isRunning = false

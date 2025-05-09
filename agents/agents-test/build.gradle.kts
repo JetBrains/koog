@@ -15,6 +15,8 @@ kotlin {
                 implementation(kotlin("test"))
 
                 implementation(project(":agents:agents-local"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
                 implementation(libs.ai.grazie.utils.common)
                 implementation(libs.jetbrains.annotations)
@@ -24,7 +26,6 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(project(":agents:agents-tools-registry"))
                 implementation(libs.ai.grazie.model.auth)
                 implementation(libs.kotlinx.coroutines.test)
             }

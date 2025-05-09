@@ -60,8 +60,7 @@ abstract class CodeAnalysisTool : SimpleTool<CodeAnalysisTool.Args>() {
             ToolParameterDescriptor(
                 name = "base_dir",
                 description = "Base directory for analysis",
-                type = ToolParameterType.String,
-                defaultValue = "."
+                type = ToolParameterType.String
             )
         )
     )
@@ -101,17 +100,17 @@ class CodeAnalysisToolImpl : CodeAnalysisTool() {
     private fun analyzeDependencies(filePath: Path): String {
         val content = filePath.readText()
         return when {
-            filePath.toString().endsWith(".gradle.kts") || filePath.toString().endsWith(".gradle") -> 
+            filePath.toString().endsWith(".gradle.kts") || filePath.toString().endsWith(".gradle") ->
                 analyzeGradleDependencies(content)
-            filePath.toString().endsWith(".xml") && filePath.toString().contains("pom") -> 
+            filePath.toString().endsWith(".xml") && filePath.toString().contains("pom") ->
                 analyzeMavenDependencies(content)
-            filePath.toString().endsWith("package.json") -> 
+            filePath.toString().endsWith("package.json") ->
                 analyzeNpmDependencies(content)
-            filePath.toString().endsWith("requirements.txt") || filePath.toString().endsWith("pyproject.toml") -> 
+            filePath.toString().endsWith("requirements.txt") || filePath.toString().endsWith("pyproject.toml") ->
                 analyzePythonDependencies(content)
-            filePath.toString().endsWith("Cargo.toml") -> 
+            filePath.toString().endsWith("Cargo.toml") ->
                 analyzeRustDependencies(content)
-            filePath.toString().endsWith("CMakeLists.txt") -> 
+            filePath.toString().endsWith("CMakeLists.txt") ->
                 analyzeCMakeDependencies(content)
             else -> "Error: Unsupported build file type: $filePath"
         }
@@ -214,10 +213,10 @@ class CodeAnalysisToolImpl : CodeAnalysisTool() {
     private fun analyzeCMakeDependencies(content: String): String {
         // Look for find_package, target_link_libraries, etc.
         val dependencies = content.lines()
-            .filter { 
-                it.contains("find_package", ignoreCase = true) || 
-                it.contains("target_link_libraries", ignoreCase = true) ||
-                it.contains("include_directories", ignoreCase = true)
+            .filter {
+                it.contains("find_package", ignoreCase = true) ||
+                        it.contains("target_link_libraries", ignoreCase = true) ||
+                        it.contains("include_directories", ignoreCase = true)
             }
             .joinToString("\n") { it.trim() }
 
@@ -235,7 +234,7 @@ class CodeAnalysisToolImpl : CodeAnalysisTool() {
             filePath.toString().endsWith(".xml") -> analyzeIdeaCodeStyle(content)
             filePath.toString().contains(".eslintrc") -> analyzeEslintConfig(content)
             filePath.toString().contains(".prettierrc") -> analyzePrettierConfig(content)
-            filePath.toString().contains("pyproject.toml") && content.contains("[tool.black]") -> 
+            filePath.toString().contains("pyproject.toml") && content.contains("[tool.black]") ->
                 analyzeBlackConfig(content)
             else -> "Error: Unsupported code style file type: $filePath"
         }
@@ -299,17 +298,17 @@ class CodeAnalysisToolImpl : CodeAnalysisTool() {
     private fun analyzeProjectStructure(filePath: Path): String {
         val content = filePath.readText()
         return when {
-            filePath.toString().endsWith(".gradle.kts") || filePath.toString().endsWith(".gradle") -> 
+            filePath.toString().endsWith(".gradle.kts") || filePath.toString().endsWith(".gradle") ->
                 analyzeGradleStructure(content)
-            filePath.toString().endsWith(".xml") && filePath.toString().contains("pom") -> 
+            filePath.toString().endsWith(".xml") && filePath.toString().contains("pom") ->
                 analyzeMavenStructure(content)
-            filePath.toString().endsWith("package.json") -> 
+            filePath.toString().endsWith("package.json") ->
                 analyzeNpmStructure(content)
-            filePath.toString().endsWith("pyproject.toml") -> 
+            filePath.toString().endsWith("pyproject.toml") ->
                 analyzePythonStructure(content)
-            filePath.toString().endsWith("Cargo.toml") -> 
+            filePath.toString().endsWith("Cargo.toml") ->
                 analyzeRustStructure(content)
-            filePath.toString().endsWith("CMakeLists.txt") -> 
+            filePath.toString().endsWith("CMakeLists.txt") ->
                 analyzeCMakeStructure(content)
             else -> "Error: Unsupported project file type: $filePath"
         }
@@ -385,10 +384,10 @@ class CodeAnalysisToolImpl : CodeAnalysisTool() {
     private fun analyzeCMakeStructure(content: String): String {
         // Look for project name, version, etc.
         val projectInfo = content.lines()
-            .filter { 
-                it.contains("project(", ignoreCase = true) || 
-                it.contains("cmake_minimum_required", ignoreCase = true) ||
-                it.contains("add_subdirectory", ignoreCase = true)
+            .filter {
+                it.contains("project(", ignoreCase = true) ||
+                        it.contains("cmake_minimum_required", ignoreCase = true) ||
+                        it.contains("add_subdirectory", ignoreCase = true)
             }
             .joinToString("\n") { it.trim() }
 

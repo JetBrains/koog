@@ -2,6 +2,7 @@ package ai.grazie.code.agents.local.dsl.extensions
 
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.local.dsl.builders.LocalAgentNodeDelegate
 import ai.grazie.code.agents.local.dsl.builders.LocalAgentSubgraphBuilderBase
 import ai.grazie.code.agents.local.environment.ReceivedToolResult
@@ -78,6 +79,56 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInputMultiple(
         }
     }
 
+
+/**
+ * Creates a node that sends a user message to the LLM and gets a response with LLM allowed ONLY to call tools.
+ *
+ * @param name Optional name for the node.
+ */
+fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name: String? = null): LocalAgentNodeDelegate<String, Message.Response> =
+    node(name) { message ->
+        llm.writeSession {
+            updatePrompt {
+                user(message)
+            }
+
+            requestLLMOnlyCallingTools()
+        }
+    }
+
+/**
+ * Creates a node that sends a user message to the LLM and gets a response,
+ * with LLM forced to call specifically the provided tool.
+ *
+ * @param name Optional name for the node.
+ * @param tool Tool that LLM is forced to call.
+ */
+fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
+    name: String? = null,
+    tool: ToolDescriptor
+): LocalAgentNodeDelegate<String, Message.Response> =
+    node(name) { message ->
+        llm.writeSession {
+            updatePrompt {
+                user(message)
+            }
+
+            requestLLMForceOneTool(tool)
+        }
+    }
+
+/**
+ * Creates a node that sends a user message to the LLM and gets a response,
+ * with LLM forced to call specifically the provided tool.
+ *
+ * @param name Optional name for the node.
+ * @param tool Tool that LLM is forced to call.
+ */
+fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
+    name: String? = null,
+    tool: Tool<*, *>
+): LocalAgentNodeDelegate<String, Message.Response> =
+    nodeLLMSendMessageForceOneTool(name, tool.descriptor)
 
 /**
  * LLM node that processes user messages and returns a response from LLM. The node configuration determines whether tool
@@ -182,12 +233,18 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
  * A node that executes multiple tool calls and returns their results.
  *
  * @param name Optional name for the node.
+ * @param parallelTools Should tools be called in environment in parallel (`false` by default)
  */
 fun LocalAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
-    name: String? = null
+    name: String? = null,
+    parallelTools: Boolean = false,
 ): LocalAgentNodeDelegate<List<Message.Tool.Call>, List<ReceivedToolResult>> =
     node(name) { toolCalls ->
-        environment.executeTools(toolCalls)
+        if (parallelTools) {
+            environment.executeTools(toolCalls)
+        } else {
+            toolCalls.map { environment.executeTool(it) }
+        }
     }
 
 /**

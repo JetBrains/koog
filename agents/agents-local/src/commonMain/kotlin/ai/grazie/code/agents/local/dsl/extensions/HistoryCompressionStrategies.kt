@@ -1,7 +1,8 @@
 package ai.grazie.code.agents.local.dsl.extensions
 
 import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMWriteSession
-import ai.grazie.code.agents.tools.registry.GlobalAgentPrompts.Generic.summarizeInTLDR
+import ai.grazie.code.agents.local.prompts.Prompts.summarizeInTLDR
+import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.message.Message
 
 /**
@@ -33,6 +34,7 @@ abstract class HistoryCompressionStrategy {
      */
     protected suspend fun compressPromptIntoTLDR(llmSession: LocalAgentLLMWriteSession): List<Message.Response> {
         return with(llmSession) {
+            prompt = prompt.copy(prompt.messages.dropLastWhile { it is Message.Tool.Call })
             updatePrompt {
                 user {
                     summarizeInTLDR()

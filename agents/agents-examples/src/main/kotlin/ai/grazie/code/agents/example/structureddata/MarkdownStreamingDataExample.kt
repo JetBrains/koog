@@ -1,15 +1,17 @@
 package ai.grazie.code.agents.example.structureddata
 
 import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.KotlinAIAgent
 import ai.grazie.code.agents.local.agent.LocalAgentConfig
 import ai.grazie.code.agents.local.dsl.builders.forwardTo
 import ai.grazie.code.agents.local.dsl.builders.simpleStrategy
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val executor: CodePromptExecutor = null!!
+    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
     val agentStrategy = simpleStrategy("library-assistant") {
         val getMdOutput by node<Unit, String> { _ ->

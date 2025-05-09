@@ -11,6 +11,7 @@ import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.json.Json
 
 /**
  * Client for interacting with the Ollama API.
@@ -20,13 +21,18 @@ import io.ktor.serialization.kotlinx.json.*
  */
 class OllamaClient(
     private val url: String = "http://localhost:11434",
-    client: HttpClient =  HttpClient(CIO)
+    client: HttpClient = HttpClient(CIO)
 ) {
 
     private val client = client.config {
         install(Logging)
         install(ContentNegotiation) {
-            json()
+            json(
+                Json {
+                    // This ensures fields like `created_at` are ignored
+                    ignoreUnknownKeys = true
+                }
+            )
         }
     }
 

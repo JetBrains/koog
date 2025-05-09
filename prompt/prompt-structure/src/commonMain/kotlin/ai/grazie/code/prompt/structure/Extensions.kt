@@ -5,9 +5,9 @@ import ai.grazie.code.prompt.structure.json.JsonStructureLanguage
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.model.CodePromptExecutor
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
-import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.text.TextContentBuilder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -34,7 +34,7 @@ data class StructuredResponse<T>(val structure: T, val raw: String)
  * for interpreting the raw response from the execution.
  * @return A [StructuredResponse] containing both parsed structure and raw text
  */
-suspend fun <T> CodePromptExecutor.executeStructuredOneShot(prompt: Prompt, structure: StructuredData<T>): StructuredResponse<T> {
+suspend fun <T> PromptExecutor.executeStructuredOneShot(prompt: Prompt, structure: StructuredData<T>): StructuredResponse<T> {
     val text = execute(prompt)
     return StructuredResponse(structure = structure.parse(text), raw = text)
 }
@@ -58,11 +58,11 @@ suspend fun <T> CodePromptExecutor.executeStructuredOneShot(prompt: Prompt, stru
  * @return A [StructuredResponse] containing both parsed structure and raw text
  * @throws IllegalStateException if parsing fails after all retries
 */
-suspend fun <T> CodePromptExecutor.executeStructured(
+suspend fun <T> PromptExecutor.executeStructured(
     prompt: Prompt,
     structure: StructuredData<T>,
     retries: Int = 1,
-    fixingModel: LLModel = OllamaModels.Meta.LLAMA_3_2,
+    fixingModel: LLModel = OpenAIModels.GPT4o
 ): StructuredResponse<T> {
     val prompt = prompt(prompt) {
         user {

@@ -1,0 +1,149 @@
+package ai.jetbrains.code.prompt.executor.llms
+
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.utils.mpp.LoggerFactory
+import ai.jetbrains.code.prompt.dsl.Prompt
+import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
+import ai.jetbrains.code.prompt.llm.LLMProvider
+import ai.jetbrains.code.prompt.llm.LLModel
+import ai.jetbrains.code.prompt.message.Message
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
+/**
+ * MultiLLMPromptExecutor is a class responsible for executing prompts
+ * across multiple Large Language Models (LLMs). This implementation supports direct execution
+ * with specific LLM clients or utilizes a fallback strategy if no primary LLM client is available
+ * for the requested provider.
+ *
+ * @constructor Constructs an executor instance with a map of LLM providers associated with their respective clients.
+ * @param llmClients A map containing LLM providers associated with their respective [DirectLLMClient]s.
+ * @param fallback Optional settings to configure the fallback mechanism in case a specific provider is not directly available.
+ */
+open class MultiLLMPromptExecutor(
+    private val llmClients: Map<LLMProvider, DirectLLMClient>,
+    private val fallback: FallbackPromptExecutorSettings? = null
+) : PromptExecutor {
+    /**
+     * Represents configuration for a fallback large language model (LLM) execution strategy.
+     *
+     * This class is used to specify a fallback LLM provider and model that can be utilized
+     * when the primary LLM execution fails. It ensures that the fallback model is associated
+     * with the specified fallback provider.
+     *
+     * @property fallbackProvider The LLMProvider responsible for handling fallback requests.
+     * @property fallbackModel The LLModel instance to be used for fallback execution.
+     *
+     * @throws IllegalArgumentException If the provider of the fallback model does not match the
+     * fallback provider.
+     */
+    data class FallbackPromptExecutorSettings(
+        val fallbackProvider: LLMProvider,
+        val fallbackModel: LLModel
+    ) {
+        init {
+            check(fallbackModel.provider == fallbackProvider) {
+                "LLM model provider must match the fallback provider"
+            }
+        }
+    }
+
+    /**
+     * Initializes a new instance of the `MultiLLMPromptExecutor` class with multiple LLM clients.
+     *
+     * Allows specifying a variable number of client-provider pairs, where each pair links a specific
+     * `LLMProvider` with a corresponding implementation of `DirectLLMClient`. All provided pairs are
+     * internally converted into a map for efficient access and management of clients by their associated
+     * providers.
+     *
+     * @param llmClients Variable number of pairs, where each pair consists of an `LLMProvider` representing
+     *                   the provider and a `DirectLLMClient` for communication with that provider.
+     */
+    constructor(vararg llmClients: Pair<LLMProvider, DirectLLMClient>) : this(mapOf(*llmClients))
+
+    /**
+     * Companion object for `MultiLLMPromptExecutor` class.
+     *
+     * Provides shared utilities and constants, including a logger instance for logging
+     * events and debugging information related to the execution of prompts using
+     * multiple LLM clients.
+     */
+    companion object {
+        /**
+         * Logger instance used for logging messages within the LLMPromptExecutor and MultiLLMPromptExecutor classes.
+         *
+         * This logger is utilized to provide debug logs during the execution of prompts and handling of streaming responses.
+         * It primarily tracks operations such as prompt execution initiation, tool usage, and responses received from the
+         * respective LLM clients.
+         *
+         * The logger can aid in debugging by capturing detailed information about the state and flow of operations within
+         * the respective classes.
+         */
+        private val logger = LoggerFactory.create("ai.jetbrains.code.prompt.executor.llms.LLMPromptExecutor")
+    }
+
+    /**
+     * Lazily initialized fallback client for interacting with a fallback LLM provider.
+     *
+     * Utilizes the fallback provider specified in the `fallbackSettings` to retrieve a corresponding
+     * `DirectLLMClient` from the `llmClients` collection, if available. This client is intended to
+     * handle cases where no specific provider is matched during prompt execution.
+     *
+     * Returns `null` if `fallbackSettings` or its `fallbackProvider` is not specified.
+     */
+    private val fallbackClient: DirectLLMClient? by lazy { fallback?.fallbackProvider?.let(llmClients::get) }
+
+    init {
+        if (fallback != null) {
+            check(fallback.fallbackProvider in llmClients.keys) {
+                "Fallback client not found for provider: ${fallback.fallbackProvider}"
+            }
+        }
+    }
+
+    /**
+     * Executes a given prompt using the specified tools and returns a list of response messages.
+     *
+     * @param prompt The `Prompt` to be executed, containing the input messages, model, and parameters.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
+     * @throws IllegalArgumentException If no client is found for the prompt's model provider and no fallback settings are configured.
+     */
+    override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools" }
+
+        val provider = prompt.model.provider
+
+        val response = when {
+            provider in llmClients -> llmClients[provider]!!.execute(prompt, tools)
+            fallback != null -> fallbackClient!!.execute(
+                prompt.copy(model = fallback.fallbackModel),
+                tools
+            )
+            else -> throw IllegalArgumentException("No client found for provider: $provider")
+        }
+
+        logger.debug { "Response: $response" }
+
+        return response
+    }
+
+    /**
+     * Executes the given prompt and streams the response in chunks as a flow.
+     *
+     * @param prompt The prompt to execute, containing the model, messages, and parameters.
+     **/
+    override suspend fun executeStreaming(prompt: Prompt): Flow<String> = flow {
+        logger.debug { "Executing streaming prompt: $prompt" }
+
+        val provider = prompt.model.provider
+        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+
+        val responseFlow = client.executeStreaming(prompt)
+
+        responseFlow.collect { chunk ->
+            emit(chunk)
+        }
+    }
+}

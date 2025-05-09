@@ -1,6 +1,8 @@
 package ai.grazie.code.agents.example.simpleapi
 
+import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.simpleApi.simpleChatAgent
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -10,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     // Create a chat agent with a system prompt
     val agent = simpleChatAgent(
-        executor = null!!,
+        executor = simpleOpenAIExecutor(TokenService.openAIToken),
         cs = this,
         systemPrompt = "You are a helpful assistant. Answer user questions concisely."
     )
