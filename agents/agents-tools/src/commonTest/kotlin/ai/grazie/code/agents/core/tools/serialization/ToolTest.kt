@@ -1,6 +1,7 @@
 package ai.grazie.code.agents.core.tools.serialization
 
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

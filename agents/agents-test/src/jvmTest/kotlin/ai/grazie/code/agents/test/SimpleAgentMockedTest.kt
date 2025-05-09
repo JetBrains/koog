@@ -1,16 +1,16 @@
 package ai.grazie.code.agents.test
 
-import ai.grazie.code.agents.core.api.ExitTool
-import ai.grazie.code.agents.core.api.SayToUser
 import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.tools.ExitTool
+import ai.grazie.code.agents.core.tools.tools.SayToUser
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import kotlinx.coroutines.runBlocking
-import kotlin.test.Test
 import kotlin.test.AfterTest
+import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class SimpleAgentMockedTest {

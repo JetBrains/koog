@@ -3,7 +3,7 @@
 package ai.grazie.code.agents.core.tools.reflect
 
 import ai.grazie.code.agents.core.tools.DirectToolCallsEnabler
-import ai.grazie.code.agents.core.tools.InternalAgentToolsApi
+import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.core.tools.annotations.Tool
 import kotlinx.coroutines.runBlocking

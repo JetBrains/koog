@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentToolsApi::class)
-
 package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
@@ -8,6 +6,7 @@ import ai.grazie.code.agents.core.api.AIAgent
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.AgentEnvironmentUtils.mapToToolResult
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
+import ai.grazie.code.agents.core.environment.TerminationTool
 import ai.grazie.code.agents.core.event.AgentHandlerContext
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.exception.AIAgentEngineException
@@ -17,8 +16,9 @@ import ai.grazie.code.agents.core.feature.config.FeatureConfig
 import ai.grazie.code.agents.core.model.AIAgentServiceError
 import ai.grazie.code.agents.core.model.AIAgentServiceErrorType
 import ai.grazie.code.agents.core.model.message.*
-import ai.grazie.code.agents.core.tool.tools.TerminationTool
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.grazie.code.agents.core.tools.tools.StageTool
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
@@ -33,10 +33,13 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
+@OptIn(InternalAgentToolsApi::class)
 private class DirectToolCallsEnablerImpl : DirectToolCallsEnabler
 
+@OptIn(InternalAgentToolsApi::class)
 private class AllowDirectToolCallsContext(val toolEnabler: DirectToolCallsEnabler)
 
+@OptIn(InternalAgentToolsApi::class)
 private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCallsContext.() -> T) =
     AllowDirectToolCallsContext(DirectToolCallsEnablerImpl()).block()
 
@@ -214,15 +217,16 @@ open class AIAgentBase(
         )
     }
 
+    @OptIn(InternalAgentToolsApi::class)
     private suspend fun processToolCall(content: AgentToolCallToEnvironmentContent): EnvironmentToolResultToAgentContent =
         allowToolCalls {
             logger.debug { "Handling tool call sent by server..." }
 
-            val stage = content.toolArgs[ToolStage.STAGE_PARAM_NAME]?.jsonPrimitive?.contentOrNull
+            val stage = content.toolArgs[StageTool.STAGE_PARAM_NAME]?.jsonPrimitive?.contentOrNull
                 ?.let { stageArg -> toolRegistry.getStageByName(stageArg) }
                 // If the tool appears in different stages, the first one will be returned
                 ?: toolRegistry.getStageByToolOrNull(content.toolName)
-                ?: toolRegistry.getStageByName(ToolStage.DEFAULT_STAGE_NAME)
+                ?: toolRegistry.getStageByName(StageTool.DEFAULT_STAGE_NAME)
 
             val tool = stage.getToolOrNull(content.toolName)
 

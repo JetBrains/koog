@@ -4,6 +4,7 @@ import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.core.tools.annotations.Tool
 import ai.grazie.code.agents.core.tools.serialization.ToolJson
+import ai.grazie.code.agents.core.tools.tools.StageTool
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -16,15 +17,15 @@ import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.kotlinFunction
 
 /**
- * Converts the current [ToolSet] instance into a [ToolStage].
- * This method constructs a [ToolStage] using the `name` property of the [ToolSet]
+ * Converts the current [ToolSet] instance into a [ai.grazie.code.agents.core.tools.tools.StageTool].
+ * This method constructs a [ai.grazie.code.agents.core.tools.tools.StageTool] using the `name` property of the [ToolSet]
  * and the tools converted from the set via the [ToolSet.asTools] method.
  *
  * @param json The [Json] instance to use for serialization when converting tools. Defaults to a new [Json] instance if not provided.
- * @return A [ToolStage] instance containing the name of the [ToolSet] and its converted tools.
+ * @return A [ai.grazie.code.agents.core.tools.tools.StageTool] instance containing the name of the [ToolSet] and its converted tools.
  */
-fun ToolSet.asToolStage(json: Json = Json): ToolStage {
-    return ToolStage(name, this.asTools(json = json))
+fun ToolSet.asToolStage(json: Json = Json): StageTool {
+    return StageTool(name, this.asTools(json = json))
 }
 
 /**
@@ -134,14 +135,14 @@ fun ToolRegistry.Builder.stage(toolSet: ToolSet, name: String = toolSet.name) {
  *
  * See [asTool] for the description
  */
-fun ToolStage.Builder.tool(
+fun StageTool.Builder.tool(
     callable: KFunction<*>,
     thisRef: Any? = null,
     name: String? = null,
     description: String? = null,
 ) = tool(callable.asTool(thisRef = thisRef, json = ToolJson, name = name, description = description))
 
-fun ToolStage.Builder.toolsFrom(toolSet: ToolSet) {
+fun StageTool.Builder.toolsFrom(toolSet: ToolSet) {
     toolSet.asTools().forEach { tool(it) }
 }
 

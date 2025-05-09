@@ -1,6 +1,7 @@
 package ai.grazie.code.agents.core.calculator
 
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.tools.StageTool
 import kotlinx.serialization.Serializable
 
 object CalculatorTools {
@@ -78,7 +79,7 @@ object CalculatorTools {
         }
     }
 
-    fun ToolStage.Builder.tools() {
+    fun StageTool.Builder.tools() {
         tool(PlusTool)
         tool(MinusTool)
         tool(DivideTool)

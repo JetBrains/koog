@@ -1,14 +1,11 @@
 package ai.grazie.code.agents.core.tools
 
+import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
-
-@RequiresOptIn
-annotation class InternalAgentToolsApi
-
 
 /**
  * This interface serves as a safeguard for controlling direct tool calls from outside
@@ -215,12 +212,4 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      */
     @Serializable
     data object EmptyArgs : Args
-}
-
-abstract class SimpleTool<TArgs : Tool.Args> : Tool<TArgs, ToolResult.Text>() {
-    override fun encodeResultToString(result: ToolResult.Text): String = result.text
-
-    final override suspend fun execute(args: TArgs): ToolResult.Text = ToolResult.Text(doExecute(args))
-
-    abstract suspend fun doExecute(args: TArgs): String
 }

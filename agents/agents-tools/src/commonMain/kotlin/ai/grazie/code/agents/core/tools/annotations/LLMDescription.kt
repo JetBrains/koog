@@ -15,12 +15,3 @@ package ai.grazie.code.agents.core.tools.annotations
     AnnotationTarget.FUNCTION
 )
 annotation class LLMDescription(val description: String)
-
-/**
- * Annotation for tools to be collected by reflection from an object.
- *
- * @property customName The custom name of the tool. If not provided, the name of the function is used.
- */
-@Target(AnnotationTarget.FUNCTION)
-@Suppress("unused")
-annotation class Tool(val customName: String = "")
