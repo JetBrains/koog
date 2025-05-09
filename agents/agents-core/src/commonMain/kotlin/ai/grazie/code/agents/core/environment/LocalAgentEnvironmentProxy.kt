@@ -40,7 +40,7 @@ class LocalAgentEnvironmentProxy(
         pipeline.onBeforeToolCalls(toolCalls)
 
         engine.send(
-            AgentToolCallMultipleToEnvironmentMessage(
+            AgentToolCallsToEnvironmentMessage(
                 sessionUuid = sessionUuid,
                 content = toolCalls.map { call ->
                     AgentToolCallToEnvironmentContent(
@@ -124,5 +124,4 @@ class LocalAgentEnvironmentProxy(
             }
         }
     }
-
 }

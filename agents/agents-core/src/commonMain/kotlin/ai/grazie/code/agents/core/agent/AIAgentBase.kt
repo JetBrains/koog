@@ -82,47 +82,43 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
      *
      * @param prompt The initial input string to start the agent execution process.
      */
-    override suspend fun run(prompt: String) {
-        runningMutex.withLock {
-            if (isRunning) throw IllegalStateException("Agent is already running!")
-            isRunning = true
-        }
-
-        var currentMessage: AgentToEnvironmentMessage? = init(prompt)
-        while (isRunning) {
-            when (currentMessage) {
-                is AgentToolCallSingleToEnvironmentMessage -> {
-                    currentMessage = sendToAgent(processToolCallSingle(currentMessage))
-                }
-
-                is AgentToolCallMultipleToEnvironmentMessage -> {
-                    currentMessage = sendToAgent(processToolCallMultiple(currentMessage))
-                }
-
-                is AgentErrorToEnvironmentMessage -> {
-                    processError(currentMessage.error)
-                    currentMessage = null
-                }
-
-                is AgentTerminationToEnvironmentMessage -> {
-                    terminate(currentMessage)
-                    currentMessage = null
-                }
-
-                null -> {
-                    // If execution is stopped by an error (and we didn't throw an exception up to this point),
-                    // let's complete the deferred with null to unblock any awaiting coroutines.
-                    if (!agentResultDeferred.isCompleted) {
-                        agentResultDeferred.complete(null)
-                    }
-                    logger.debug { "Agent execution completed. Stopping..." }
-                    runningMutex.withLock {
-                        isRunning = false
-                    }
-                }
-            }
-        }
-    }
+//    override suspend fun run(prompt: String) {
+//        runningMutex.withLock {
+//            if (isRunning) throw IllegalStateException("Agent is already running!")
+//            isRunning = true
+//        }
+//
+//        var currentMessage: AgentToEnvironmentMessage? = init(prompt)
+//        while (isRunning) {
+//            when (currentMessage) {
+//                is AgentToolCallsToEnvironmentMessage -> {
+//                    currentMessage = sendToAgent(processToolCallMultiple(currentMessage))
+//                }
+//
+//                is AgentErrorToEnvironmentMessage -> {
+//                    processError(currentMessage.error)
+//                    currentMessage = null
+//                }
+//
+//                is AgentTerminationToEnvironmentMessage -> {
+//                    terminate(currentMessage)
+//                    currentMessage = null
+//                }
+//
+//                null -> {
+//                    // If execution is stopped by an error (and we didn't throw an exception up to this point),
+//                    // let's complete the deferred with null to unblock any awaiting coroutines.
+//                    if (!agentResultDeferred.isCompleted) {
+//                        agentResultDeferred.complete(null)
+//                    }
+//                    logger.debug { "Agent execution completed. Stopping..." }
+//                    runningMutex.withLock {
+//                        isRunning = false
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     /**
      * Runs the agent with the given user input and retrieves the final result after the agent's execution.
@@ -135,16 +131,7 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
         return agentResultDeferred.await()
     }
 
-    //region Private Methods
-
-    private suspend fun processToolCallSingle(message: AgentToolCallSingleToEnvironmentMessage): EnvironmentToolResultSingleToAgentMessage {
-        return EnvironmentToolResultSingleToAgentMessage(
-            sessionUuid = message.sessionUuid,
-            content = processToolCall(message.content)
-        )
-    }
-
-    private suspend fun processToolCallMultiple(message: AgentToolCallMultipleToEnvironmentMessage): EnvironmentToolResultMultipleToAgentMessage {
+    protected suspend fun processToolCallMultiple(message: AgentToolCallsToEnvironmentMessage): EnvironmentToolResultMultipleToAgentMessage {
         // call tools in parallel and return results
         val results = supervisorScope {
             message.content
@@ -242,7 +229,7 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
             )
         }
 
-    private suspend fun processError(error: AIAgentServiceError) {
+    protected suspend fun processError(error: AIAgentServiceError) {
         try {
             throw error.asException()
         } catch (e: AIAgentEngineException) {
@@ -254,7 +241,7 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
         }
     }
 
-    private suspend fun terminate(message: AgentTerminationToEnvironmentMessage) {
+    protected suspend fun terminate(message: AgentTerminationToEnvironmentMessage) {
         val messageContent = message.content
         val messageError = message.error
 
