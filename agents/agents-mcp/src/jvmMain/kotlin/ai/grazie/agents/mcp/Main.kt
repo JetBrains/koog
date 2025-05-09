@@ -2,8 +2,8 @@ package ai.grazie.agents.mcp
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.local.simpleApi.simpleSingleRunAgent
-import ai.jetbrains.code.prompt.executor.ollama.OllamaPromptExecutor
-import ai.jetbrains.code.prompt.llm.OllamaModels
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
@@ -21,10 +21,6 @@ import kotlinx.io.buffered
 fun main() {
     // Get the API key from environment variables
     val apiKey = System.getenv("GOOGLE_MAPS_API_KEY")
-    if (apiKey == null) {
-        println("Please set the GOOGLE_MAPS_API_KEY environment variable")
-        return
-    }
 
     // Start the Docker container with the Google Maps MCP server
     val process = ProcessBuilder(
@@ -46,8 +42,6 @@ fun main() {
             output = process.outputStream.asSink().buffered()
         )
 
-
-
         runBlocking {
             // Connect the MCP client to the server using the transport
             mcp.connect(transport)
@@ -57,8 +51,8 @@ fun main() {
 
             // Create the runner
             val agent = simpleSingleRunAgent(
-                executor = OllamaPromptExecutor.default(),
-                llmModel = OllamaModels.Meta.LLAMA_3_2,
+                executor = simpleOpenAIExecutor(System.getenv("OPEN_AI_TOKEN")),
+                llmModel = OpenAIModels.GPT4o,
                 toolRegistry = toolRegistry,
                 eventHandler = EventHandler {
                     onToolCall { stage, tool, args ->
@@ -76,7 +70,10 @@ fun main() {
                 },
                 cs = this
             )
-            agent.run("Get coordinates of 1600 Amphitheatre Parkway, Mountain View, CA")
+            agent.run(
+                "Get coordinates of Jetbrains Office in Berlin." +
+                        "You can only call tools. Get it by calling maps_geocode tool."
+            )
         }
     } finally {
         // Shutdown the Docker container

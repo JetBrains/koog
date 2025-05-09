@@ -1,5 +1,4 @@
 import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
-import org.gradle.kotlin.dsl.project
 
 group = "${rootProject.group}.agents"
 version = rootProject.version
@@ -22,9 +21,7 @@ kotlin {
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-local"))
                 implementation(project(":prompt:prompt-model"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-ollama"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }

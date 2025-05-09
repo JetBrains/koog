@@ -1,13 +1,16 @@
 package ai.grazie.agents.mcp
 
 import ai.grazie.code.agents.core.tools.*
+import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.*
 import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 
 /**
@@ -18,41 +21,59 @@ class MCPToolRegistryProvider {
      * Creates a ToolRegistry with tools from the MCP server.
      */
     fun fromClient(mcpClient: Client, stageName: String = ToolStage.DEFAULT_STAGE_NAME): ToolRegistry {
-        val mcpTools = runBlocking { mcpClient.listTools() }?.tools ?: emptyList()
-
+        val sdkTools = runBlocking { mcpClient.listTools() }?.tools ?: emptyList()
         return ToolRegistry {
             stage(stageName) {
-                mcpTools.forEach { mcpTool ->
-                    val toolDescriptor = parseToolDescriptor(mcpTool)
+                // TODO: Remove take
+                sdkTools.take(1).forEach { sdkTool ->
+                    val toolDescriptor = parseToolDescriptor(sdkTool)
                     tool(MCPTool(mcpClient, toolDescriptor))
                 }
             }
         }
     }
 
+    private fun parseParameterType(element: JsonObject): ToolParameterType? {
+        val typeStr = if ("type" in element) {
+            element.getValue("type").jsonPrimitive.content
+        } else {
+            return null
+        }
+
+        val type = when (typeStr.lowercase()) {
+            "string" -> ToolParameterType.String
+            "integer" -> ToolParameterType.Integer
+            "number" -> ToolParameterType.Float
+            "boolean" -> ToolParameterType.Boolean
+            "array" -> {
+                val items = if ("items" in element) {
+                    element.getValue("items").jsonObject
+                } else {
+                    error("Array type parameters must have items property")
+                }
+                val itemType = parseParameterType(items) ?: return null
+                ToolParameterType.List(itemsType = itemType)
+            }
+
+            else -> null
+        }
+
+        return type
+    }
+
     private fun parseParameters(properties: JsonObject): List<ToolParameterDescriptor> {
-        return properties.map { (name, element) ->
-            // The element is a JsonObject that looks like {"type":"string","description":"The address to geocode"}
-            val description = if (element is JsonObject && "description" in element) {
-                element["description"]?.jsonPrimitive?.content ?: ""
+        return properties.mapNotNull { (name, element) ->
+            if (element !is JsonObject) {
+                return@mapNotNull null
+            }
+
+            val description = if ("description" in element) {
+                element.getValue("description").jsonPrimitive.content
             } else {
                 ""
             }
 
-            val typeStr = if (element is JsonObject && "type" in element) {
-                element["type"]?.jsonPrimitive?.content ?: "string"
-            } else {
-                "string"
-            }
-
-            val type = when (typeStr.lowercase()) {
-                "string" -> ToolParameterType.String
-                "integer" -> ToolParameterType.Integer
-                "number" -> ToolParameterType.Float
-                "boolean" -> ToolParameterType.Boolean
-                "array" ->
-                else -> ToolParameterType.String // Default to string for unknown types
-            }
+            val type = parseParameterType(element) ?: return@mapNotNull null
 
             ToolParameterDescriptor(
                 name = name,
@@ -83,26 +104,55 @@ private class MCPTool(
     override val descriptor: ToolDescriptor
 ) : Tool<MCPTool.Args, MCPTool.Result>() {
 
-    @Serializable
-    data class Args(val arguments: Map<String, Any>) : Tool.Args
+    @Serializable(with = ArgsSerializer::class)
+    data class Args(val arguments: JsonObject) : Tool.Args
 
-    class Result private constructor(private val content: String) : ToolResult {
-        override fun toStringDefault(): String = content
+    class ArgsSerializer : KSerializer<Args> {
+        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ai.grazie.agents.mcp.MCPTool.Args") {
+            element("arguments", JsonObject.serializer().descriptor)
+        }
 
-        companion object {
-            fun create(content: String): Result = Result(content)
+        override fun serialize(encoder: Encoder, value: Args) {
+            when (encoder) {
+                is JsonEncoder -> {
+                    value.arguments
+                }
+
+                else -> {
+                    val jsonString = Json.encodeToString(JsonObject.serializer(), value.arguments)
+                    encoder.encodeString(jsonString)
+                }
+            }
+        }
+
+        override fun deserialize(decoder: Decoder): Args {
+            return when (decoder) {
+                is JsonDecoder -> {
+                    val jsonElement = decoder.decodeJsonElement()
+                    Args(jsonElement as JsonObject)
+                }
+
+                else -> {
+                    val jsonString = decoder.decodeString()
+                    val jsonObject = Json.decodeFromString(JsonObject.serializer(), jsonString)
+                    Args(jsonObject)
+                }
+            }
         }
     }
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
+    class Result(val promptMessageContents: List<PromptMessageContent>) : ToolResult {
+        // TODO: Decide on how to dump to string different types of content
+        override fun toStringDefault(): String = promptMessageContents.toString()
+    }
+
+    override val argsSerializer: KSerializer<Args> = ArgsSerializer()
 
     override suspend fun execute(args: Args): Result {
         val result = mcpClient.callTool(
             name = descriptor.name,
             arguments = args.arguments
         )
-
-        val content = (result?.content ?: "No result").toString()
-        return Result.create(content)
+        return Result(result?.content ?: emptyList())
     }
 }
