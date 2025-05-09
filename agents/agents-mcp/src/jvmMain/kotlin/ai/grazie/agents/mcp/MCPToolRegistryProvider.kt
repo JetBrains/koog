@@ -22,10 +22,10 @@ class MCPToolRegistryProvider {
      */
     fun fromClient(mcpClient: Client, stageName: String = ToolStage.DEFAULT_STAGE_NAME): ToolRegistry {
         val sdkTools = runBlocking { mcpClient.listTools() }?.tools ?: emptyList()
+        println(sdkTools)
         return ToolRegistry {
             stage(stageName) {
-                // TODO: Remove take
-                sdkTools.take(1).forEach { sdkTool ->
+                sdkTools.forEach { sdkTool ->
                     val toolDescriptor = parseToolDescriptor(sdkTool)
                     tool(MCPTool(mcpClient, toolDescriptor))
                 }
@@ -55,6 +55,22 @@ class MCPToolRegistryProvider {
                 ToolParameterType.List(itemsType = itemType)
             }
 
+            "object" -> {
+                val properties = if ("properties" in element) {
+                    element.getValue("properties").jsonObject
+                } else {
+                    error("Object type parameters must have properties property")
+                }
+                ToolParameterType.Object(properties.map { (name, property) ->
+                    val description = if ("description" in element) {
+                        element.getValue("description").jsonPrimitive.content
+                    } else {
+                        ""
+                    }
+                    ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject) ?: return null)
+                })
+            }
+
             else -> null
         }
 
@@ -76,9 +92,7 @@ class MCPToolRegistryProvider {
             val type = parseParameterType(element) ?: return@mapNotNull null
 
             ToolParameterDescriptor(
-                name = name,
-                description = description,
-                type = type
+                name = name, description = description, type = type
             )
         }
     }
@@ -100,8 +114,7 @@ class MCPToolRegistryProvider {
  * A Tool implementation that calls an MCP tool.
  */
 private class MCPTool(
-    private val mcpClient: Client,
-    override val descriptor: ToolDescriptor
+    private val mcpClient: Client, override val descriptor: ToolDescriptor
 ) : Tool<MCPTool.Args, MCPTool.Result>() {
 
     @Serializable(with = ArgsSerializer::class)
@@ -150,8 +163,7 @@ private class MCPTool(
 
     override suspend fun execute(args: Args): Result {
         val result = mcpClient.callTool(
-            name = descriptor.name,
-            arguments = args.arguments
+            name = descriptor.name, arguments = args.arguments
         )
         return Result(result?.content ?: emptyList())
     }

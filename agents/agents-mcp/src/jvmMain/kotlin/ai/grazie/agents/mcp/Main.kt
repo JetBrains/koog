@@ -70,9 +70,11 @@ fun main() {
                 },
                 cs = this
             )
+            val request = "Get elevation of the Jetbrains Office in Munich, Germany?"
+            println(request)
             agent.run(
-                "Get coordinates of Jetbrains Office in Berlin." +
-                        "You can only call tools. Get it by calling maps_geocode tool."
+                request +
+                        "You can only call tools. Get it by calling maps_geocode and maps_elevation tools."
             )
         }
     } finally {

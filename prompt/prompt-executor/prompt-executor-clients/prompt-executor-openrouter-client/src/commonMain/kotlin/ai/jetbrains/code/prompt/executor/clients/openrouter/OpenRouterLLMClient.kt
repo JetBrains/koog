@@ -175,8 +175,7 @@ public class OpenRouterLLMClient(
 
     private fun createOpenRouterRequest(
         prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>,
+       model: LLModel, tools: List<ToolDescriptor>,
         stream: Boolean
     ): OpenRouterRequest {
         val messages = mutableListOf<OpenRouterMessage>()
@@ -306,6 +305,19 @@ public class OpenRouterLLMClient(
                 put("items", buildJsonObject {
                     fillOpenRouterParamType(type.itemsType)
                 })
+            }
+
+            is ToolParameterType.Object -> {
+                put("type", JsonPrimitive("object"))
+                put("properties", buildJsonObject {
+                    type.properties.forEach { property ->
+                        put(property.name, buildJsonObject {
+                            fillOpenRouterParamType(property.type)
+                            put("description", property.description)
+                        })
+                    }
+                }
+                )
             }
         }
     }

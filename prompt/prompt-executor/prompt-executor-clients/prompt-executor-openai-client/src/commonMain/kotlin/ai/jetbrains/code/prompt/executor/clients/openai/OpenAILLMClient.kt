@@ -305,6 +305,19 @@ public open class OpenAILLMClient(
                     fillOpenAIParamType(type.itemsType)
                 })
             }
+
+            is ToolParameterType.Object -> {
+                put("type", JsonPrimitive("object"))
+                put("properties", buildJsonObject {
+                    type.properties.forEach { property ->
+                        put(property.name, buildJsonObject {
+                            fillOpenAIParamType(property.type)
+                            put("description", property.description)
+                        })
+                    }
+                }
+                )
+            }
         }
     }
 
