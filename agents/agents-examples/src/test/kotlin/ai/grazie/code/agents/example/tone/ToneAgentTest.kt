@@ -16,6 +16,7 @@ import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.llm.LLModel
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -27,6 +28,7 @@ class ToneAgentTest {
      * Test that imitates the agent calls of corresponding ToneTools based on the input text
      */
     @Test
+    @Disabled("Requires a working LLM API key")
     fun testToneAgent() = runTest {
         // Create a list to track tool calls
         val toolCalls = mutableListOf<String>()
