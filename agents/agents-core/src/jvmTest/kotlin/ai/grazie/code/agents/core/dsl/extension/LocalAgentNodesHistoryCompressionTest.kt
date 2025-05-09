@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
@@ -56,7 +56,7 @@ class LocalAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = KotlinAIAgent(
+        val runner = AIAgentBase(
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
@@ -110,7 +110,7 @@ class LocalAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = KotlinAIAgent(
+        val runner = AIAgentBase(
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
@@ -167,7 +167,7 @@ class LocalAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = KotlinAIAgent(
+        val runner = AIAgentBase(
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())

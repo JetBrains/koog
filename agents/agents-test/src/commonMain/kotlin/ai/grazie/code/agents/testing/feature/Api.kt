@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.testing.feature
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent.FeatureContext
+import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
 
 fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
     enableGraphTesting = true

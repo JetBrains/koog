@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.example.memory
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -51,7 +51,7 @@ fun createProjectAnalyzerAgent(
     featureName: String? = null,
     productName: String? = null,
     organizationName: String? = null,
-): KotlinAIAgent {
+): AIAgentBase {
     // Memory concepts
     val environmentInfoConcept = Concept(
         keyword = "environment-info",
@@ -203,7 +203,7 @@ fun createProjectAnalyzerAgent(
     }
 
     // Create and configure the agent runner
-    return KotlinAIAgent(
+    return AIAgentBase(
         toolRegistry = ToolRegistry {
             stage("gather-information") {
                 tool(bashTool)

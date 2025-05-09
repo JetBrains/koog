@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.testing.feature
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -69,7 +69,7 @@ class GraphTestingFeatureTest {
 
         val basePrompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {}
 
-        KotlinAIAgent(
+        AIAgentBase(
             toolRegistry = toolRegistry,
             strategy = strategy,
             eventHandler = EventHandler {},

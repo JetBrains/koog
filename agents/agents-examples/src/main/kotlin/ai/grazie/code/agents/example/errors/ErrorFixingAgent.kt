@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.example.errors
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -118,7 +118,7 @@ fun main() = runBlocking {
     )
 
     // Create the runner
-    val agent = KotlinAIAgent(
+    val agent = AIAgentBase(
         toolRegistry = toolRegistry,
         strategy = strategy,
         eventHandler = eventHandler,

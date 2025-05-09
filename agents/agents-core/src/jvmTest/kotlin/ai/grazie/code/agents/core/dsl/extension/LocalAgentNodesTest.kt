@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
@@ -42,7 +42,7 @@ class LocalAgentNodesTest {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
-        val runner = KotlinAIAgent(
+        val runner = AIAgentBase(
             promptExecutor = testExecutor,
             toolRegistry = ToolRegistry {
                 stage("default") {

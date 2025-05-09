@@ -2,7 +2,7 @@ package ai.grazie.code.agents.example.structureddata
 
 import ai.grazie.code.agents.core.tools.SimpleToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
@@ -56,7 +56,7 @@ fun main() = runBlocking {
         """.trimIndent()
     )
 
-    val runner = KotlinAIAgent(
+    val runner = AIAgentBase(
         promptExecutor = executor,
         toolRegistry = toolRegistry, // no tools needed for this example
         strategy = agentStrategy,

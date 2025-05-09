@@ -6,7 +6,7 @@ import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.ToneTool
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.api.SayToUser
 import ai.grazie.code.agents.testing.feature.withTesting
@@ -123,7 +123,7 @@ class ToneAgentTest {
         )
 
         // Create the agent
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             promptExecutor = mockLLMApi,
             toolRegistry = toolRegistry,
             strategy = strategy,

@@ -10,7 +10,7 @@ import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.Dele
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.LSDirectoriesTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.ReadFileTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.RunCommand
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
@@ -67,7 +67,7 @@ fun main() {
         println("       (possible example: Generate an online book store in Java/Gradle with Spring Framework and PostgreSQL database. Language: Java, Framework: Spring, Database)")
         val userRequest = readln()
 
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             toolRegistry = toolRegistry,
             strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
             agentConfig = LocalAgentConfig(

@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy.*
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
@@ -147,7 +147,7 @@ class LLMHistoryTransitionPolicyTest {
         )
     }
 
-    private fun createRunnableAgent(strategy: LocalAgentStrategy): KotlinAIAgent = KotlinAIAgent(
+    private fun createRunnableAgent(strategy: LocalAgentStrategy): AIAgentBase = AIAgentBase(
         promptExecutor = mockLLMExecutor,
         toolRegistry = emptyToolRegistry,
         strategy = strategy,

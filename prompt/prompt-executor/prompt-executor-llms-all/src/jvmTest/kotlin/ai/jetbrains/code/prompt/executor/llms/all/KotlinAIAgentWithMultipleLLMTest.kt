@@ -1,6 +1,6 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -391,7 +391,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         fs: MockFileSystem,
         eventHandler: EventHandler,
         maxAgentIterations: Int
-    ): KotlinAIAgent {
+    ): AIAgentBase {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
@@ -472,7 +472,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
 
         // Create the agent
-        return KotlinAIAgent(
+        return AIAgentBase(
             toolRegistry = tools,
             strategy = strategy,
             eventHandler = eventHandler,
@@ -556,7 +556,7 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             toolRegistry = tools,
             strategy = strategy,
             eventHandler = EventHandler {
@@ -639,7 +639,7 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             toolRegistry = tools,
             strategy = strategy,
             eventHandler = EventHandler {
@@ -721,7 +721,7 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             toolRegistry = tools,
             strategy = strategy,
             eventHandler = EventHandler {
@@ -847,7 +847,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             }
         }
 
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             toolRegistry = tools,
             strategy = strategy,
             eventHandler = EventHandler {

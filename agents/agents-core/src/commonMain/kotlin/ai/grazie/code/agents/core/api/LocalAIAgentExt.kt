@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.api
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
@@ -34,7 +34,7 @@ fun simpleChatAgent(
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry? = null,
     maxIterations: Int = 50,
-    ): KotlinAIAgent {
+    ): AIAgentBase {
 
     val agentConfig = LocalAgentConfig(
         prompt = prompt(llmModel, "chat", params = LLMParams(temperature = temperature)) {
@@ -56,7 +56,7 @@ fun simpleChatAgent(
             }
         } with toolRegistry
 
-    return KotlinAIAgent(
+    return AIAgentBase(
         toolRegistry = resultingToolRegistry,
         strategy = chatAgentStrategy(),
         eventHandler = eventHandler,
@@ -89,8 +89,8 @@ fun simpleSingleRunAgent(
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
-    installFeatures: suspend KotlinAIAgent.FeatureContext.() -> Unit= {}
-): KotlinAIAgent {
+    installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit= {}
+): AIAgentBase {
 
     val agentConfig = LocalAgentConfig(
         prompt = prompt(llmModel, "chat", params = LLMParams(temperature = temperature)) {
@@ -99,7 +99,7 @@ fun simpleSingleRunAgent(
         maxAgentIterations = maxIterations,
     )
 
-    return KotlinAIAgent(
+    return AIAgentBase(
         toolRegistry = toolRegistry,
         strategy = singleRunStrategy(),
         eventHandler = eventHandler,

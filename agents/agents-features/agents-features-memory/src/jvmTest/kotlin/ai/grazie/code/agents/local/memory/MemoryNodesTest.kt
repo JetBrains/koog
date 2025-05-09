@@ -2,7 +2,7 @@ package ai.grazie.code.agents.local.memory
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -133,7 +133,7 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             promptExecutor = createMockExecutor(),
             toolRegistry = ToolRegistry {
                 stage {
@@ -194,7 +194,7 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             promptExecutor = createMockExecutor(),
             toolRegistry = ToolRegistry {
                 stage("default") {
