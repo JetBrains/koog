@@ -30,7 +30,7 @@ class KotlinAIAgent(
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     agentConfig: LocalAgentConfig,
     val promptExecutor: CodePromptExecutor,
-    private val cs: CoroutineScope,
+    cs: CoroutineScope,
     installFeatures: suspend FeatureContext.() -> Unit = {}
 ) : AIAgent<LocalAgentStrategy, LocalAgentConfig>(
     strategy = strategy,
