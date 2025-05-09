@@ -10,8 +10,14 @@ import kotlinx.serialization.json.Json
 
 fun AIAgent.asTool(
     agentDescription: String,
+    name: String? = null,
     requestDescription: String = "Input for the task"
-) = AIAgentTool(this, requestDescription, agentDescription)
+) = AIAgentTool(
+    agent = this,
+    agentName = name ?: this::class.simpleName!!.lowercase(),
+    requestDescription = requestDescription,
+    agentDescription = agentDescription
+)
 
 
 class AIAgentTool(
