@@ -37,8 +37,12 @@ internal suspend fun LocalAgentStageContext.promptWithTLDR(
 /**
  * The result which subgraphs can return.
  */
-@Serializable
-sealed interface SubgraphResult : Tool.Args, ToolResult
+interface SubgraphResult : Tool.Args, ToolResult
+
+/**
+ * The result which subgraphs can return.
+ */
+interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> : Tool.Args, ToolResult.JSONSerializable<T>
 
 @Serializable
 data class VerifiedSubgraphResult(
