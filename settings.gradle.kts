@@ -17,11 +17,13 @@ pluginManagement {
 
 include(":agents:agents-core")
 include(":agents:agents-tools")
-include(":agents:agents-examples")
 include(":agents:agents-features:agents-features-common")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-test")
+
+include(":examples")
+
 include(":prompt:prompt-agents")
 include(":prompt:prompt-cache:prompt-cache-files")
 include(":prompt:prompt-cache:prompt-cache-model")

@@ -448,8 +448,8 @@ instead of specifying it manually!
 ## Examples
 
 Code examples of how to write your own agent from start to finish are contained in the
-[agents-examples](agents-examples) module.
-Remember to copy [env.template.properties](./agents-examples/env.template.properties) 
+[examples](examples) module.
+Remember to copy [env.template.properties](./examples/env.template.properties) 
 and specify required parameters.
 Then use `runExample...` Gradle tasks to run them.
 
