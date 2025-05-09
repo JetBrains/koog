@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.exception.*
 import kotlinx.serialization.Serializable
 
 @Serializable
-enum class AIAgentServiceErrorType {
+enum class AgentServiceErrorType {
     UNEXPECTED_MESSAGE_TYPE,
     MALFORMED_MESSAGE,
     AGENT_NOT_FOUND,
@@ -12,16 +12,16 @@ enum class AIAgentServiceErrorType {
 }
 
 @Serializable
-data class AIAgentServiceError(
-    val type: AIAgentServiceErrorType,
+data class AgentServiceError(
+    val type: AgentServiceErrorType,
     val message: String,
 ) {
-    fun asException(): AIAgentEngineException {
+    fun asException(): AgentEngineException {
         return when (type) {
-            AIAgentServiceErrorType.UNEXPECTED_ERROR -> UnexpectedServerException(message)
-            AIAgentServiceErrorType.UNEXPECTED_MESSAGE_TYPE -> UnexpectedMessageTypeException(message)
-            AIAgentServiceErrorType.MALFORMED_MESSAGE -> MalformedMessageException(message)
-            AIAgentServiceErrorType.AGENT_NOT_FOUND -> AgentNotFoundException(message)
+            AgentServiceErrorType.UNEXPECTED_ERROR -> UnexpectedServerException(message)
+            AgentServiceErrorType.UNEXPECTED_MESSAGE_TYPE -> UnexpectedMessageTypeException(message)
+            AgentServiceErrorType.MALFORMED_MESSAGE -> MalformedMessageException(message)
+            AgentServiceErrorType.AGENT_NOT_FOUND -> AgentNotFoundException(message)
         }
     }
 }

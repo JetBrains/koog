@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.model.message
 
-import ai.grazie.code.agents.core.model.AIAgentServiceError
+import ai.grazie.code.agents.core.model.AgentServiceError
 import ai.grazie.utils.mpp.UUID
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -70,17 +70,17 @@ data class AgentToolCallsToEnvironmentMessage(
 data class AgentTerminationToEnvironmentMessage(
     override val sessionUuid: UUID,
     val content: AgentToolCallToEnvironmentContent? = null,
-    val error: AIAgentServiceError? = null,
+    val error: AgentServiceError? = null,
 ) : AgentToEnvironmentMessage
 
 /**
  * Represents an error response from the server.
  * These may occur for several reasons:
  *
- * - [Sending unsupported types of messages][ai.grazie.code.agents.core.model.AIAgentServiceErrorType.UNEXPECTED_MESSAGE_TYPE];
- * - [Sending incorrect or incomplete messages][ai.grazie.code.agents.core.model.AIAgentServiceErrorType.MALFORMED_MESSAGE];
- * - [Trying to use an agent that is not available][ai.grazie.code.agents.core.model.AIAgentServiceErrorType.AGENT_NOT_FOUND];
- * - [Other, unexpected errors][ai.grazie.code.agents.core.model.AIAgentServiceErrorType.UNEXPECTED_ERROR].
+ * - [Sending unsupported types of messages][ai.grazie.code.agents.core.model.AgentServiceErrorType.UNEXPECTED_MESSAGE_TYPE];
+ * - [Sending incorrect or incomplete messages][ai.grazie.code.agents.core.model.AgentServiceErrorType.MALFORMED_MESSAGE];
+ * - [Trying to use an agent that is not available][ai.grazie.code.agents.core.model.AgentServiceErrorType.AGENT_NOT_FOUND];
+ * - [Other, unexpected errors][ai.grazie.code.agents.core.model.AgentServiceErrorType.UNEXPECTED_ERROR].
  *
  * @property sessionUuid Unique identifier for the session.
  * @property error Error details.
@@ -89,5 +89,5 @@ data class AgentTerminationToEnvironmentMessage(
 @SerialName("ERROR")
 data class AgentErrorToEnvironmentMessage(
     override val sessionUuid: UUID,
-    val error: AIAgentServiceError
+    val error: AgentServiceError
 ) : AgentToEnvironmentMessage
