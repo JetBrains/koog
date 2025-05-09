@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.feature.handler
 
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
 import ai.grazie.code.agents.core.environment.AgentEnvironment
@@ -128,7 +128,7 @@ fun interface StrategyStartedHandler<FeatureT : Any> {
 
 class AgentCreateContext<FeatureT>(
     val strategy: LocalAgentStrategy,
-    val agent: KotlinAIAgent,
+    val agent: AIAgentBase,
     val feature: FeatureT
 ) {
     suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {

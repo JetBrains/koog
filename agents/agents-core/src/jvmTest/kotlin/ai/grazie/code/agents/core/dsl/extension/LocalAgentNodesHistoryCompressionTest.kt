@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
@@ -56,17 +56,17 @@ class LocalAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = KotlinAIAgent(
+        val runner = AIAgentBase(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = agentStrategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            promptExecutor = testExecutor,
-            cs = this
+            eventHandler = eventHandler
         )
 
         runner.run("")
@@ -110,17 +110,17 @@ class LocalAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = KotlinAIAgent(
+        val runner = AIAgentBase(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = agentStrategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            promptExecutor = testExecutor,
-            cs = this
+            eventHandler = eventHandler
         )
 
         runner.run("")
@@ -167,17 +167,17 @@ class LocalAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = KotlinAIAgent(
+        val runner = AIAgentBase(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = agentStrategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            promptExecutor = testExecutor,
-            cs = this
+            eventHandler = eventHandler
         )
 
         runner.run("")

@@ -2,23 +2,34 @@
 
 package ai.grazie.code.agents.core.agent
 
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.api.AIAgent
+import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.environment.AgentEnvironmentUtils.mapToToolResult
+import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.event.AgentHandlerContext
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.exception.AIAgentEngineException
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.feature.config.FeatureConfig
 import ai.grazie.code.agents.core.model.AIAgentServiceError
-import ai.grazie.code.agents.core.model.agent.AIAgentConfig
-import ai.grazie.code.agents.core.model.agent.AIAgentStrategy
+import ai.grazie.code.agents.core.model.AIAgentServiceErrorType
 import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tool.tools.TerminationTool
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.utils.mpp.LoggerFactory
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.supervisorScope
+import ai.grazie.utils.mpp.SuitableForIO
+import ai.grazie.utils.mpp.UUID
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
+import ai.jetbrains.code.prompt.message.Message
+import ai.jetbrains.code.prompt.text.TextContentBuilder
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -29,122 +40,167 @@ private class AllowDirectToolCallsContext(val toolEnabler: DirectToolCallsEnable
 private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCallsContext.() -> T) =
     AllowDirectToolCallsContext(DirectToolCallsEnablerImpl()).block()
 
-/**
- * Base class for managing and running an AI agent through its lifecycle, including tool calls, error handling,
- * and termination processes. This class is designed to handle interactions between an AI agent and its environment.
- * This class is **NOT thread-safe**.
- * This runner is designed to be per-agent.
- * State preservation between [run] calls is not guaranteed.
- *
- * @param strategy The agent to be managed and executed.
- * @param toolRegistry A registry managing tools and their associated stages available to the agent.
- * @param eventHandler An event handler that listens for and processes various agent-related events.
- */
-abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentConfig>(
-    protected val strategy: TStrategy,
-    val toolRegistry: ToolRegistry,
-    private val eventHandler: EventHandler,
-    val agentConfig: TConfig,
-) : AIAgent {
-
-    private companion object {
-        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.${AIAgentBase::class.simpleName!!}")
-
+open class AIAgentBase(
+    val promptExecutor: PromptExecutor,
+    private val strategy: LocalAgentStrategy,
+    cs: CoroutineScope,
+    val agentConfig: LocalAgentConfig,
+    val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
+    private val eventHandler: EventHandler = EventHandler.Companion.NO_HANDLER,
+    private val installFeatures: suspend FeatureContext.() -> Unit = {}
+) : AIAgent, AgentEnvironment {
+    companion object {
+        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.agent.${AIAgentBase::class.simpleName}")
         private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
-
         private const val NO_CONTENT = "Could not find \"content\", but \"error\" is also absent!"
-
         private const val NO_RESULT = "Required tool argument value not found: \"${TerminationTool.ARG}\"!"
+    }
 
-        private const val CONNECTION_REQUIRED = "Can not send messages without a connection to Agentic Engine!"
+    /**
+     * The context for adding and configuring features in a Kotlin AI Agent instance.
+     *
+     * Note: The method is used to hide internal install() method from a public API to prevent
+     *       calls in an [KotlinAIAgent] instance, like `agent.install(MyFeature) { ... }`.
+     *       This makes the API a bit stricter and clear.
+     */
+    class FeatureContext internal constructor(val agent: AIAgentBase) {
+        suspend fun <Config : FeatureConfig, Feature : Any> install(
+            feature: KotlinAIAgentFeature<Config, Feature>,
+            configure: Config.() -> Unit = {}
+        ) {
+            agent.install(feature, configure)
+        }
+    }
+
+    private val pipeline = AIAgentPipeline()
+
+    init {
+        cs.launch(context = Dispatchers.SuitableForIO, start = CoroutineStart.UNDISPATCHED) {
+            FeatureContext(this@AIAgentBase).installFeatures()
+            pipeline.onAgentCreated(strategy, this@AIAgentBase)
+        }
+    }
+
+    private suspend fun <Config : FeatureConfig, Feature : Any> install(
+        feature: KotlinAIAgentFeature<Config, Feature>,
+        configure: Config.() -> Unit
+    ) {
+        pipeline.install(feature, configure)
     }
 
     private var isRunning = false
+    private var sessionUuid: UUID? = null
     private val runningMutex = Mutex()
-
     private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
 
-    protected abstract suspend fun init(prompt: String): AgentToEnvironmentMessage
-
-    protected abstract suspend fun toolResult(
-        toolCallId: String?,
-        toolName: String,
-        agentId: String,
-        message: String,
-        result: ToolResult? = null
-    ): EnvironmentToolResultToAgentContent
-
-    protected abstract suspend fun sendToAgent(message: EnvironmentToAgentMessage): AgentToEnvironmentMessage
-
-    /**
-     * Executes the main agent lifecycle, handling messages between the agent and its environment.
-     * This method is allowed to be called several times, but only one execution will be active at a time.
-     *
-     * @param prompt The initial input string to start the agent execution process.
-     */
     override suspend fun run(prompt: String) {
         runningMutex.withLock {
-            if (isRunning) throw IllegalStateException("Agent is already running!")
+            if (isRunning) {
+                throw IllegalStateException("Agent is already running")
+            }
+
             isRunning = true
+            sessionUuid = UUID.random()
         }
 
-        var currentMessage: AgentToEnvironmentMessage? = init(prompt)
-        while (isRunning) {
-            when (currentMessage) {
-                is AgentToolCallSingleToEnvironmentMessage -> {
-                    currentMessage = sendToAgent(processToolCallSingle(currentMessage))
-                }
+        strategy.run(
+            sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),
+            userInput = prompt,
+            toolRegistry = toolRegistry,
+            promptExecutor = promptExecutor,
+            environment = this,
+            config = agentConfig,
+            pipeline = pipeline
+        )
 
-                is AgentToolCallMultipleToEnvironmentMessage -> {
-                    currentMessage = sendToAgent(processToolCallMultiple(currentMessage))
-                }
-
-                is AgentErrorToEnvironmentMessage -> {
-                    processError(currentMessage.error)
-                    currentMessage = null
-                }
-
-                is AgentTerminationToEnvironmentMessage -> {
-                    terminate(currentMessage)
-                    currentMessage = null
-                }
-
-                null -> {
-                    // If execution is stopped by an error (and we didn't throw an exception up to this point),
-                    // let's complete the deferred with null to unblock any awaiting coroutines.
-                    if (!agentResultDeferred.isCompleted) {
-                        agentResultDeferred.complete(null)
-                    }
-                    logger.debug { "Agent execution completed. Stopping..." }
-                    runningMutex.withLock {
-                        isRunning = false
-                    }
-                }
+        runningMutex.withLock {
+            isRunning = false
+            sessionUuid = null
+            if (!agentResultDeferred.isCompleted) {
+                agentResultDeferred.complete(null)
             }
         }
     }
 
-    /**
-     * Runs the agent with the given user input and retrieves the final result after the agent's execution.
-     *
-     * @param userPrompt The input string used to initialize and run the agent.
-     * @return A string containing the result of the agent's execution, or null if the result could not be retrieved.
-     */
     override suspend fun runAndGetResult(userPrompt: String): String? {
         run(userPrompt)
-        return agentResultDeferred.await()
+        agentResultDeferred.await()
+        return agentResultDeferred.getCompleted()
     }
 
-    //region Private Methods
+    private fun toolResult(
+        toolCallId: String?,
+        toolName: String,
+        agentId: String,
+        message: String,
+        result: ToolResult?
+    ): EnvironmentToolResultToAgentContent = LocalAgentEnvironmentToolResultToAgentContent(
+        toolCallId = toolCallId,
+        toolName = toolName,
+        agentId = agentId,
+        message = message,
+        toolResult = result
+    )
 
-    private suspend fun processToolCallSingle(message: AgentToolCallSingleToEnvironmentMessage): EnvironmentToolResultSingleToAgentMessage {
-        return EnvironmentToolResultSingleToAgentMessage(
-            sessionUuid = message.sessionUuid,
-            content = processToolCall(message.content)
+    suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
+        pipeline.awaitFeaturesStreamProvidersReady()
+
+        val prompt = TextContentBuilder().apply { this.builder() }.build()
+        run(prompt = prompt)
+
+        pipeline.closeFeaturesStreamProviders()
+    }
+
+    private fun formatLog(message: String): String =
+        "$message [${strategy.name}, ${sessionUuid?.text ?: throw IllegalStateException("Session UUID is null")}]"
+
+    override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
+        logger.info { formatLog("Executing tools '$toolCalls'") }
+        pipeline.onBeforeToolCalls(toolCalls)
+
+        val message = AgentToolCallsToEnvironmentMessage(
+            sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),
+            content = toolCalls.map { call ->
+                AgentToolCallToEnvironmentContent(
+                    agentId = strategy.name,
+                    toolCallId = call.id,
+                    toolName = call.tool,
+                    toolArgs = call.contentJson
+                )
+            }
+        )
+
+        val results = processToolCallMultiple(message).mapToToolResult()
+        pipeline.onAfterToolCalls(results)
+        return results
+    }
+
+    override suspend fun reportProblem(exception: Throwable) {
+        logger.error(exception) { formatLog("Reporting problem: ${exception.message}") }
+        processError(
+            AIAgentServiceError(
+                type = AIAgentServiceErrorType.UNEXPECTED_ERROR,
+                message = exception.message ?: "unknown error"
+            )
         )
     }
 
-    private suspend fun processToolCallMultiple(message: AgentToolCallMultipleToEnvironmentMessage): EnvironmentToolResultMultipleToAgentMessage {
+    override suspend fun sendTermination(result: String?) {
+        logger.info { formatLog("Sending final result") }
+        val message = AgentTerminationToEnvironmentMessage(
+            sessionUuid ?: throw IllegalStateException("Session UUID is null"),
+            content = AgentToolCallToEnvironmentContent(
+                agentId = strategy.name,
+                toolCallId = null,
+                toolName = TerminationTool.NAME,
+                toolArgs = JsonObject(mapOf(TerminationTool.ARG to JsonPrimitive(result)))
+            )
+        )
+
+        terminate(message)
+    }
+
+    protected suspend fun processToolCallMultiple(message: AgentToolCallsToEnvironmentMessage): EnvironmentToolResultMultipleToAgentMessage {
         // call tools in parallel and return results
         val results = supervisorScope {
             message.content
@@ -164,7 +220,7 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
 
             val stage = content.toolArgs[ToolStage.STAGE_PARAM_NAME]?.jsonPrimitive?.contentOrNull
                 ?.let { stageArg -> toolRegistry.getStageByName(stageArg) }
-            // If the tool appears in different stages, the first one will be returned
+                // If the tool appears in different stages, the first one will be returned
                 ?: toolRegistry.getStageByToolOrNull(content.toolName)
                 ?: toolRegistry.getStageByName(ToolStage.DEFAULT_STAGE_NAME)
 
@@ -177,7 +233,8 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
                     message = "Tool \"${content.toolName}\" not found!",
                     toolCallId = content.toolCallId,
                     toolName = content.toolName,
-                    agentId = this@AIAgentBase.strategy.name,
+                    agentId = strategy.name,
+                    result = null
                 )
             }
 
@@ -190,6 +247,7 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
                     toolCallId = content.toolCallId,
                     toolName = content.toolName,
                     agentId = strategy.name,
+                    result = null
                 )
             }
 
@@ -211,6 +269,7 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
                     toolCallId = content.toolCallId,
                     toolName = content.toolName,
                     agentId = strategy.name,
+                    result = null
                 )
             } catch (e: Exception) {
                 with(eventHandler.toolExceptionListener) {
@@ -222,6 +281,7 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
                     toolCallId = content.toolCallId,
                     toolName = content.toolName,
                     agentId = strategy.name,
+                    result = null
                 )
             }
 
@@ -241,18 +301,6 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
                 result = result
             )
         }
-
-    private suspend fun processError(error: AIAgentServiceError) {
-        try {
-            throw error.asException()
-        } catch (e: AIAgentEngineException) {
-            logger.error(e) { "Execution exception reported by server!" }
-
-            with(eventHandler.errorHandler) {
-                if (!AgentHandlerContext(strategy.name).handle(e)) throw e
-            }
-        }
-    }
 
     private suspend fun terminate(message: AgentTerminationToEnvironmentMessage) {
         val messageContent = message.content
@@ -279,5 +327,15 @@ abstract class AIAgentBase<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAge
         }
     }
 
-    //endregion Private Methods
+    private suspend fun processError(error: AIAgentServiceError) {
+        try {
+            throw error.asException()
+        } catch (e: AIAgentEngineException) {
+            logger.error(e) { "Execution exception reported by server!" }
+
+            with(eventHandler.errorHandler) {
+                if (!AgentHandlerContext(strategy.name).handle(e)) throw e
+            }
+        }
+    }
 }

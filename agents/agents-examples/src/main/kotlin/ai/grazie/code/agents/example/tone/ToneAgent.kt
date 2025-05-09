@@ -6,7 +6,7 @@ import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.api.SayToUser
 import ai.jetbrains.code.prompt.dsl.prompt
@@ -80,13 +80,13 @@ fun main() {
         val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
 
         // Create the agent
-        val agent = KotlinAIAgent(
-            toolRegistry = toolRegistry,
-            strategy = strategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
+        val agent = AIAgentBase(
             promptExecutor = executor,
-            cs = this
+            strategy = strategy,
+            cs = this,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+            eventHandler = eventHandler
         )
 
         agent.run(userRequest)

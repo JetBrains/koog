@@ -2,21 +2,20 @@ package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolArgs
 import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolResult
-import ai.grazie.code.agents.core.model.agent.AIAgentConfig
-import ai.grazie.code.agents.core.model.agent.AIAgentStrategy
+import ai.grazie.code.agents.core.api.AIAgent
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-fun <TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentConfig> AIAgentBase<TStrategy, TConfig>.asTool(
+fun AIAgent.asTool(
     agentDescription: String,
     requestDescription: String = "Input for the task"
-) = AIAgentTool<TStrategy, TConfig>(this, requestDescription, agentDescription)
+) = AIAgentTool(this, requestDescription, agentDescription)
 
 
-class AIAgentTool<TStrategy : AIAgentStrategy<TConfig>, TConfig : AIAgentConfig>(
-    val agent: AIAgentBase<TStrategy, TConfig>,
+class AIAgentTool(
+    val agent: AIAgent,
     agentName: String,
     agentDescription: String,
     requestDescription: String = "Input for the task"

@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.feature
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
@@ -87,7 +87,7 @@ class AIAgentPipeline {
      * Run registered features' handlers on the event - agent created.
      */
     @OptIn(InternalAgentsApi::class)
-    suspend fun onAgentCreated(strategy: LocalAgentStrategy, agent: KotlinAIAgent) {
+    suspend fun onAgentCreated(strategy: LocalAgentStrategy, agent: AIAgentBase) {
         agentHandlers.values.forEach { handler ->
             val updateContext = AgentCreateContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.handleAgentCreatedUnsafe(updateContext)
@@ -107,7 +107,7 @@ class AIAgentPipeline {
 
     fun transformEnvironment(
         strategy: LocalAgentStrategy,
-        agent: KotlinAIAgent,
+        agent: AIAgentBase,
         baseEnvironment: AgentEnvironment
     ): AgentEnvironment {
         return agentHandlers.values.fold(baseEnvironment) { env, handler ->

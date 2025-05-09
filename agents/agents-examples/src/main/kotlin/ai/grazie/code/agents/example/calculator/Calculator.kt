@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.example.calculator
 
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.api.AskUser
 import ai.grazie.code.agents.core.api.SayToUser
@@ -107,13 +107,13 @@ fun main() = runBlocking {
     )
 
     // Create the runner
-    val agent = KotlinAIAgent(
-        toolRegistry = toolRegistry,
-        strategy = strategy,
-        eventHandler = eventHandler,
+    val agent = AIAgentBase(
         promptExecutor = executor,
+        strategy = strategy,
+        cs = this,
         agentConfig = agentConfig,
-        cs = this
+        toolRegistry = toolRegistry,
+        eventHandler = eventHandler
     )
 
     runBlocking {

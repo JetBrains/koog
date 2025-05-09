@@ -2,8 +2,8 @@ package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
-import ai.grazie.code.agents.core.agent.KotlinAIAgent.FeatureContext
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.calculator.CalculatorChatExecutor
@@ -273,7 +273,7 @@ class AIAgentPipelineTest {
         toolRegistry: ToolRegistry? = null,
         promptExecutor: PromptExecutor? = null,
         installFeatures: suspend FeatureContext.() -> Unit = {}
-    ): KotlinAIAgent {
+    ): AIAgentBase {
 
         val agentConfig = LocalAgentConfig(
             prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
@@ -289,17 +289,17 @@ class AIAgentPipelineTest {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
-        return KotlinAIAgent(
+        return AIAgentBase(
+            promptExecutor = promptExecutor ?: testExecutor,
+            strategy = strategy,
+            cs = coroutineScope,
+            agentConfig = agentConfig,
             toolRegistry = toolRegistry ?: ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = strategy,
             eventHandler = EventHandler { },
-            agentConfig = agentConfig,
-            promptExecutor = promptExecutor ?: testExecutor,
-            cs = coroutineScope,
             installFeatures = installFeatures,
         )
     }

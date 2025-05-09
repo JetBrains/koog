@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.calculator
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.KotlinAIAgent
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -75,13 +75,13 @@ class CalculatorTest {
         )
 
         // Create the runner
-        val agent = KotlinAIAgent(
+        val agent = AIAgentBase(
             promptExecutor = CalculatorChatExecutor,
-            toolRegistry = tools,
             strategy = strategy,
-            eventHandler = eventHandler,
+            cs = this,
             agentConfig = agentConfig,
-            cs = this
+            toolRegistry = tools,
+            eventHandler = eventHandler
         )
 
         // Run calculations
