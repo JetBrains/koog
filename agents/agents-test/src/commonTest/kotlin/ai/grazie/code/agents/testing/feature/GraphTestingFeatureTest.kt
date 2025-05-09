@@ -70,12 +70,12 @@ class GraphTestingFeatureTest {
         val basePrompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {}
 
         AIAgentBase(
-            toolRegistry = toolRegistry,
-            strategy = strategy,
-            eventHandler = EventHandler {},
-            agentConfig = LocalAgentConfig(prompt = basePrompt, maxAgentIterations = 100),
             promptExecutor = mockLLMApi,
-            cs = this@runTest
+            strategy = strategy,
+            cs = this@runTest,
+            agentConfig = LocalAgentConfig(prompt = basePrompt, maxAgentIterations = 100),
+            toolRegistry = toolRegistry,
+            eventHandler = EventHandler {}
         ) {
             testGraph {
                 assertStagesOrder("first", "second")

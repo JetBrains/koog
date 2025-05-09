@@ -58,10 +58,10 @@ fun main() = runBlocking {
 
     val runner = AIAgentBase(
         promptExecutor = executor,
-        toolRegistry = toolRegistry, // no tools needed for this example
-        strategy = agentStrategy,
-        agentConfig = agentConfig,
+        strategy = agentStrategy, // no tools needed for this example
         cs = this,
+        agentConfig = agentConfig,
+        toolRegistry = toolRegistry,
     )
 
     runner.run("Please provide a list of the top 10 books in the world.")

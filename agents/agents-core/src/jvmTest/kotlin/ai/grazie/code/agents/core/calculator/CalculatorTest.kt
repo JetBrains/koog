@@ -77,11 +77,11 @@ class CalculatorTest {
         // Create the runner
         val agent = AIAgentBase(
             promptExecutor = CalculatorChatExecutor,
-            toolRegistry = tools,
             strategy = strategy,
-            eventHandler = eventHandler,
+            cs = this,
             agentConfig = agentConfig,
-            cs = this
+            toolRegistry = tools,
+            eventHandler = eventHandler
         )
 
         // Run calculations

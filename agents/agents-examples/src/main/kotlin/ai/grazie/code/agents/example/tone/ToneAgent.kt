@@ -81,12 +81,12 @@ fun main() {
 
         // Create the agent
         val agent = AIAgentBase(
-            toolRegistry = toolRegistry,
-            strategy = strategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
             promptExecutor = executor,
-            cs = this
+            strategy = strategy,
+            cs = this,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+            eventHandler = eventHandler
         )
 
         agent.run(userRequest)

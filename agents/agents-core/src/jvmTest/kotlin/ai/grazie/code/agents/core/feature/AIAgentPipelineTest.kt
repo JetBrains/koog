@@ -290,16 +290,16 @@ class AIAgentPipelineTest {
         }
 
         return AIAgentBase(
+            promptExecutor = promptExecutor ?: testExecutor,
+            strategy = strategy,
+            cs = coroutineScope,
+            agentConfig = agentConfig,
             toolRegistry = toolRegistry ?: ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = strategy,
             eventHandler = EventHandler { },
-            agentConfig = agentConfig,
-            promptExecutor = promptExecutor ?: testExecutor,
-            cs = coroutineScope,
             installFeatures = installFeatures,
         )
     }

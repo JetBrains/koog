@@ -24,16 +24,16 @@ fun createAgent(
     )
 
     return AIAgentBase(
+        promptExecutor = TestLLMExecutor(),
+        strategy = strategy,
+        cs = scope,
+        agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
             stage("default") {
                 tool(DummyTool())
             }
         },
-        strategy = strategy,
         eventHandler = EventHandler { },
-        agentConfig = agentConfig,
-        promptExecutor = TestLLMExecutor(),
-        cs = scope,
         installFeatures = installFeatures,
     )
 }

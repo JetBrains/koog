@@ -204,6 +204,10 @@ fun createProjectAnalyzerAgent(
 
     // Create and configure the agent runner
     return AIAgentBase(
+        promptExecutor = promptExecutor,
+        strategy = strategy,
+        cs = cs,
+        agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
             stage("gather-information") {
                 tool(bashTool)
@@ -211,11 +215,7 @@ fun createProjectAnalyzerAgent(
                 tool(codeAnalysisTool)
             }
         },
-        strategy = strategy,
-        eventHandler = EventHandler {},
-        agentConfig = agentConfig,
-        cs = cs,
-        promptExecutor = promptExecutor
+        eventHandler = EventHandler {}
     ) {
         install(MemoryFeature) {
             this.memoryProvider = memoryProvider

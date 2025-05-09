@@ -68,8 +68,9 @@ fun main() {
         val userRequest = readln()
 
         val agent = AIAgentBase(
-            toolRegistry = toolRegistry,
+            promptExecutor = simpleAnthropicExecutor(TokenService.anthropicToken),
             strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
+            cs = CoroutineScope(coroutineContext),
             agentConfig = LocalAgentConfig(
                 prompt = prompt(
                     AnthropicModels.Sonnet_3_7, "chat",
@@ -77,8 +78,7 @@ fun main() {
                 ) {},
                 maxAgentIterations = 200
             ),
-            promptExecutor = simpleAnthropicExecutor(TokenService.anthropicToken),
-            cs = CoroutineScope(coroutineContext),
+            toolRegistry = toolRegistry,
         )
 
         agent.run(userRequest)

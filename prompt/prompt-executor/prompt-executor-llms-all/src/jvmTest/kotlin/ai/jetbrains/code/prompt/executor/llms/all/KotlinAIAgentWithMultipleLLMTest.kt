@@ -473,12 +473,12 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         // Create the agent
         return AIAgentBase(
-            toolRegistry = tools,
-            strategy = strategy,
-            eventHandler = eventHandler,
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, maxAgentIterations),
             promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, maxAgentIterations),
+            toolRegistry = tools,
+            eventHandler = eventHandler
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -557,8 +557,11 @@ class KotlinAIAgentWithMultipleLLMTest {
         val tools = ToolRegistry {}
 
         val agent = AIAgentBase(
-            toolRegistry = tools,
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -571,10 +574,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -640,8 +640,11 @@ class KotlinAIAgentWithMultipleLLMTest {
         val tools = ToolRegistry {}
 
         val agent = AIAgentBase(
-            toolRegistry = tools,
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -654,10 +657,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -722,8 +722,11 @@ class KotlinAIAgentWithMultipleLLMTest {
         val tools = ToolRegistry {}
 
         val agent = AIAgentBase(
-            toolRegistry = tools,
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(AnthropicModels.Sonnet_3_7, "test") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -736,10 +739,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(AnthropicModels.Sonnet_3_7, "test") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -848,8 +848,11 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
 
         val agent = AIAgentBase(
-            toolRegistry = tools,
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test-tools") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -862,10 +865,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test-tools") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())

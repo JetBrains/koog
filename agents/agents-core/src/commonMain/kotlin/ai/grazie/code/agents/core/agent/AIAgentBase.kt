@@ -41,12 +41,12 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
     AllowDirectToolCallsContext(DirectToolCallsEnablerImpl()).block()
 
 open class AIAgentBase(
-    val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
-    private val strategy: LocalAgentStrategy,
-    private val eventHandler: EventHandler = EventHandler.Companion.NO_HANDLER,
-    val agentConfig: LocalAgentConfig,
     val promptExecutor: PromptExecutor,
+    private val strategy: LocalAgentStrategy,
     cs: CoroutineScope,
+    val agentConfig: LocalAgentConfig,
+    val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
+    private val eventHandler: EventHandler = EventHandler.Companion.NO_HANDLER,
     private val installFeatures: suspend FeatureContext.() -> Unit = {}
 ) : AIAgent, AgentEnvironment {
     companion object {
@@ -128,7 +128,7 @@ open class AIAgentBase(
         return agentResultDeferred.getCompleted()
     }
 
-    fun toolResult(
+    private fun toolResult(
         toolCallId: String?,
         toolName: String,
         agentId: String,

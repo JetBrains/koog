@@ -230,12 +230,12 @@ suspend fun planWork(
     }
 
     AIAgentBase(
-        toolRegistry = observingTools,
-        strategy = planner,
-        eventHandler = eventHandler,
-        agentConfig = config,
         promptExecutor = promptExecutor,
-        cs = coroutineScope
+        strategy = planner,
+        cs = coroutineScope,
+        agentConfig = config,
+        toolRegistry = observingTools,
+        eventHandler = eventHandler
     ).run(initialTaskDescription)
 
     return result.await()

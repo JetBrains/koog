@@ -127,11 +127,11 @@ class ToneAgentTest {
         // Create the agent
         val agent = AIAgentBase(
             promptExecutor = mockLLMApi,
-            toolRegistry = toolRegistry,
             strategy = strategy,
-            eventHandler = eventHandler,
+            cs = this,
             agentConfig = agentConfig,
-            cs = this
+            toolRegistry = toolRegistry,
+            eventHandler = eventHandler
         ) {
             withTesting()
         }

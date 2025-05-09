@@ -57,12 +57,12 @@ fun simpleChatAgent(
         } with toolRegistry
 
     return AIAgentBase(
-        toolRegistry = resultingToolRegistry,
-        strategy = chatAgentStrategy(),
-        eventHandler = eventHandler,
-        agentConfig = agentConfig,
         promptExecutor = executor,
-        cs = cs
+        strategy = chatAgentStrategy(),
+        cs = cs,
+        agentConfig = agentConfig,
+        toolRegistry = resultingToolRegistry,
+        eventHandler = eventHandler
     )
 }
 
@@ -100,12 +100,12 @@ fun simpleSingleRunAgent(
     )
 
     return AIAgentBase(
-        toolRegistry = toolRegistry,
-        strategy = singleRunStrategy(),
-        eventHandler = eventHandler,
-        agentConfig = agentConfig,
         promptExecutor = executor,
+        strategy = singleRunStrategy(),
         cs = cs,
+        agentConfig = agentConfig,
+        toolRegistry = toolRegistry,
+        eventHandler = eventHandler,
         installFeatures = installFeatures
     )
 }

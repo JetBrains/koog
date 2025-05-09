@@ -44,15 +44,15 @@ class LocalAgentNodesTest {
 
         val runner = AIAgentBase(
             promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = agentStrategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            cs = this
+            eventHandler = eventHandler
         )
 
         runner.run("")

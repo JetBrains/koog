@@ -171,12 +171,12 @@ fun main() = runBlocking {
 
     // Create the agent
     val agent = AIAgentBase(
-        toolRegistry = toolRegistry,
-        strategy = strategy,
-        eventHandler = eventHandler,
         promptExecutor = executor,
+        strategy = strategy,
+        cs = this,
         agentConfig = agentConfig,
-        cs = this
+        toolRegistry = toolRegistry,
+        eventHandler = eventHandler
     )
 
     // Run the agent

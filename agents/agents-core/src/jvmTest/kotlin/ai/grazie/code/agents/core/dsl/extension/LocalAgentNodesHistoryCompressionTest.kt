@@ -57,16 +57,16 @@ class LocalAgentNodesHistoryCompressionTest {
         )
 
         val runner = AIAgentBase(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = agentStrategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            promptExecutor = testExecutor,
-            cs = this
+            eventHandler = eventHandler
         )
 
         runner.run("")
@@ -111,16 +111,16 @@ class LocalAgentNodesHistoryCompressionTest {
         )
 
         val runner = AIAgentBase(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = agentStrategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            promptExecutor = testExecutor,
-            cs = this
+            eventHandler = eventHandler
         )
 
         runner.run("")
@@ -168,16 +168,16 @@ class LocalAgentNodesHistoryCompressionTest {
         )
 
         val runner = AIAgentBase(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = agentStrategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            promptExecutor = testExecutor,
-            cs = this
+            eventHandler = eventHandler
         )
 
         runner.run("")

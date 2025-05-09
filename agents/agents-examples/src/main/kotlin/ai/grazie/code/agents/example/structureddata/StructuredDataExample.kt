@@ -261,11 +261,11 @@ fun main(): Unit = runBlocking {
             LLMProvider.OpenAI to OpenAIDirectLLMClient(TokenService.openAIToken),
             LLMProvider.Anthropic to AnthropicDirectLLMClient(TokenService.anthropicToken),
         ),
-        toolRegistry = ToolRegistry.EMPTY, // no tools needed for this example
-        strategy = agentStrategy,
-        eventHandler = eventHandler,
-        agentConfig = agentConfig,
+        strategy = agentStrategy, // no tools needed for this example
         cs = this,
+        agentConfig = agentConfig,
+        toolRegistry = ToolRegistry.EMPTY,
+        eventHandler = eventHandler,
     )
 
     println(

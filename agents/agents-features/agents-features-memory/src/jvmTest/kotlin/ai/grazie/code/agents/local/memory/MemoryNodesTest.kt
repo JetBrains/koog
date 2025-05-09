@@ -135,15 +135,15 @@ class MemoryNodesTest {
 
         val agent = AIAgentBase(
             promptExecutor = createMockExecutor(),
+            strategy = strategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage {
                     tool(DummyTool())
                 }
             },
-            strategy = strategy,
-            eventHandler = EventHandler {},
-            agentConfig = agentConfig,
-            cs = this
+            eventHandler = EventHandler {}
         ) {
             install(MemoryFeature) {
                 memoryProvider = TestMemoryProvider()
@@ -196,15 +196,15 @@ class MemoryNodesTest {
 
         val agent = AIAgentBase(
             promptExecutor = createMockExecutor(),
+            strategy = strategy,
+            cs = this,
+            agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
                     tool(DummyTool())
                 }
             },
-            strategy = strategy,
-            eventHandler = eventHandler,
-            agentConfig = agentConfig,
-            cs = this
+            eventHandler = eventHandler
         ) {
             install(MemoryFeature) {
                 memoryProvider = memory
