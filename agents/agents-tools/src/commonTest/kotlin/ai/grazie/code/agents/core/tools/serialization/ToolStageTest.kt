@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.tools.serialization
 
-import ai.grazie.code.agents.core.tools.StageToolListTool
-import ai.grazie.code.agents.core.tools.ToolStage
+import ai.grazie.code.agents.core.tools.tools.CollectToolsForStageTool
+import ai.grazie.code.agents.core.tools.tools.StageTool
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -14,7 +14,7 @@ class ToolStageTest {
 
     @Test
     fun testBuilderBuildsValidStage() {
-        val descriptors = ToolStage(stage, toolListName) {
+        val descriptors = StageTool(stage, toolListName) {
             tool(tool1)
             tool(tool2)
         }.tools.map { it.descriptor }
@@ -23,7 +23,7 @@ class ToolStageTest {
             expected = listOf(
                 tool1,
                 tool2,
-                StageToolListTool(toolListName, listOf(tool1, tool2).map { it.descriptor })
+                CollectToolsForStageTool(toolListName, listOf(tool1, tool2).map { it.descriptor })
             ).map { it.descriptor },
             actual = descriptors,
         )
@@ -32,14 +32,14 @@ class ToolStageTest {
     @Test
     fun testBuilderFailsOnEmpty() {
         assertFailsWith<IllegalArgumentException> {
-            ToolStage(stage, toolListName) {}
+            StageTool(stage, toolListName) {}
         }
     }
 
     @Test
     fun testBuilderFailsOnDuplicatedTools() {
         assertFailsWith<IllegalArgumentException> {
-            ToolStage(stage, toolListName) {
+            StageTool(stage, toolListName) {
                 tool(tool1)
                 tool(tool1)
             }

@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.tool.tools
+package ai.grazie.code.agents.core.environment
 
 object TerminationTool {
     const val NAME = "__terminate__"

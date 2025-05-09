@@ -1,12 +1,10 @@
 package ai.grazie.code.agents.core.tools.reflect
 
-import ai.grazie.code.agents.core.tools.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolResult
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerializationException
+import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
+import kotlinx.serialization.*
 import kotlinx.serialization.builtins.NothingSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
@@ -14,8 +12,6 @@ import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.serializer
-import kotlinx.serialization.serializerOrNull
 import kotlin.reflect.KCallable
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType

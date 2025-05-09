@@ -1,8 +1,8 @@
-package ai.grazie.code.agents.core.tools
+package ai.grazie.code.agents.core.tools.tools
 
-import ai.grazie.code.agents.core.tools.serialization.serializeToolDescriptorsToJsonString
+import ai.grazie.code.agents.core.tools.Tool
 
-class ToolStage(
+class StageTool(
     val name: String,
     val tools: List<Tool<*, *>>,
 ) {
@@ -29,12 +29,12 @@ class ToolStage(
 
         fun tools(tools: List<Tool<*, *>>) = tools.forEach { tool(it) }
 
-        internal fun build(): ToolStage {
+        internal fun build(): StageTool {
             require(tools.isNotEmpty()) { "No tools defined" }
 
-            return ToolStage(
+            return StageTool(
                 name = stageName,
-                tools = tools + StageToolListTool(toolListName, tools.map { it.descriptor })
+                tools = tools + CollectToolsForStageTool(toolListName, tools.map { it.descriptor })
             )
         }
     }
@@ -48,24 +48,7 @@ class ToolStage(
             stageName: String = DEFAULT_STAGE_NAME,
             toolListName: String = DEFAULT_TOOL_LIST_NAME,
             init: Builder.() -> Unit
-        ): ToolStage = Builder(stageName, toolListName).apply(init).build()
+        ): StageTool = Builder(stageName, toolListName).apply(init).build()
     }
 }
 
-class StageToolListTool internal constructor(
-    name: String,
-    toolDescriptors: List<ToolDescriptor>
-) : SimpleTool<Tool.EmptyArgs>() {
-    override val argsSerializer = EmptyArgs.serializer()
-
-    override val descriptor = ToolDescriptor(
-        name = name,
-        description = "Service tool. Returns a list of available tools for a given stage."
-    )
-
-    private val toolDescriptorsJson by lazy { serializeToolDescriptorsToJsonString(toolDescriptors) }
-
-    override suspend fun doExecute(args: EmptyArgs): String {
-        return toolDescriptorsJson
-    }
-}

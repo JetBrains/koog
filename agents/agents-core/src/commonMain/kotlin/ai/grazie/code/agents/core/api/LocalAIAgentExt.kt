@@ -3,6 +3,8 @@ package ai.grazie.code.agents.core.api
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.event.EventHandler
+import ai.grazie.code.agents.core.tools.tools.AskUser
+import ai.grazie.code.agents.core.tools.tools.ExitTool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels

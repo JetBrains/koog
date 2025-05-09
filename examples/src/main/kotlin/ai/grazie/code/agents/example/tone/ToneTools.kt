@@ -1,6 +1,7 @@
 package ai.grazie.code.agents.example.tone
 
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.tools.StageTool
 import ai.grazie.code.agents.example.TokenService
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
@@ -92,7 +93,7 @@ object ToneTools {
     /**
      * Helper function to add all tone tools to a ToolStage.Builder.
      */
-    fun ToolStage.Builder.tools() {
+    fun StageTool.Builder.tools() {
         tool(PositiveToneTool)
         tool(NegativeToneTool)
         tool(NeutralToneTool)

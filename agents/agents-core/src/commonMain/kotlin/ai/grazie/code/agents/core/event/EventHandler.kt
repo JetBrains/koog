@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.event
 
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.tools.ToolStage
+import ai.grazie.code.agents.core.tools.tools.StageTool
 
 /**
  * Handles various events and delegates actions based on internal handlers.
@@ -154,11 +154,11 @@ fun interface ErrorHandler {
 }
 
 fun interface ToolValidationFailureListener {
-    suspend fun AgentHandlerContext.handle(stage: ToolStage, tool: Tool<*, *>, args: Tool.Args, value: String)
+    suspend fun AgentHandlerContext.handle(stage: StageTool, tool: Tool<*, *>, args: Tool.Args, value: String)
 }
 
 fun interface ToolExceptionListener {
-    suspend fun AgentHandlerContext.handle(stage: ToolStage, tool: Tool<*, *>, args: Tool.Args, exception: Exception)
+    suspend fun AgentHandlerContext.handle(stage: StageTool, tool: Tool<*, *>, args: Tool.Args, exception: Exception)
 }
 
 fun interface InitHandler {
@@ -170,9 +170,9 @@ fun interface ResultHandler {
 }
 
 fun interface ToolCallListener {
-    suspend fun call(stage: ToolStage, tool: Tool<*, *>, args: Tool.Args)
+    suspend fun call(stage: StageTool, tool: Tool<*, *>, args: Tool.Args)
 }
 
 fun interface ToolResultListener {
-    suspend fun result(stage: ToolStage, tool: Tool<*, *>, args: Tool.Args, result: ToolResult?)
+    suspend fun result(stage: StageTool, tool: Tool<*, *>, args: Tool.Args, result: ToolResult?)
 }
