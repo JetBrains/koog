@@ -9,12 +9,12 @@ import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.environment.TerminationTool
 import ai.grazie.code.agents.core.event.AgentHandlerContext
 import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.exception.AIAgentEngineException
+import ai.grazie.code.agents.core.exception.AgentEngineException
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.core.feature.config.FeatureConfig
-import ai.grazie.code.agents.core.model.AIAgentServiceError
-import ai.grazie.code.agents.core.model.AIAgentServiceErrorType
+import ai.grazie.code.agents.core.model.AgentServiceError
+import ai.grazie.code.agents.core.model.AgentServiceErrorType
 import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
@@ -181,8 +181,8 @@ open class AIAgentBase(
     override suspend fun reportProblem(exception: Throwable) {
         logger.error(exception) { formatLog("Reporting problem: ${exception.message}") }
         processError(
-            AIAgentServiceError(
-                type = AIAgentServiceErrorType.UNEXPECTED_ERROR,
+            AgentServiceError(
+                type = AgentServiceErrorType.UNEXPECTED_ERROR,
                 message = exception.message ?: "unknown error"
             )
         )
@@ -331,10 +331,10 @@ open class AIAgentBase(
         }
     }
 
-    private suspend fun processError(error: AIAgentServiceError) {
+    private suspend fun processError(error: AgentServiceError) {
         try {
             throw error.asException()
-        } catch (e: AIAgentEngineException) {
+        } catch (e: AgentEngineException) {
             logger.error(e) { "Execution exception reported by server!" }
 
             with(eventHandler.errorHandler) {

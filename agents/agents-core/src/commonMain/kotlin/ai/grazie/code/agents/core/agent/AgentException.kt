@@ -2,19 +2,20 @@ package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 
-
-open class LocalAgentException(problem: String) : Exception("Local AI Agent has run into a problem: $problem")
+open class AgentException(problem: String, throwable: Throwable? = null) :
+    Throwable("AI Agent has run into a problem: $problem", throwable)
 
 class AgentStuckInTheNodeException(node: LocalAgentNode<*, *>, output: Any?) :
-    LocalAgentException(
-        "when executing agent graph, stuck in node ${node.name} " +
+    AgentException(
+        "When executing agent graph, stuck in node ${node.name} " +
                 "because output $output doesn't match any condition on available edges."
     )
 
 class AgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
-    LocalAgentException(
-        "agent couldn't finish in given number of steps ($maxNumberOfIterations). " +
+    AgentException(
+        "Agent couldn't finish in given number of steps ($maxNumberOfIterations). " +
                 "Please, consider increasing `maxAgentIterations` value in agent's configuration"
     )
 
-class AgentTerminationByClientException(message: String) : LocalAgentException("agent was canceled by the client ($message)")
+class AgentTerminationByClientException(message: String) :
+    AgentException("Agent was canceled by the client ($message)")

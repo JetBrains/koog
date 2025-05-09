@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.model.message
 
-import ai.grazie.code.agents.core.model.AIAgentServiceError
+import ai.grazie.code.agents.core.model.AgentServiceError
 import ai.grazie.utils.mpp.UUID
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
@@ -117,7 +117,7 @@ data class EnvironmentToAgentTerminationContent(
 data class EnvironmentToAgentTerminationMessage(
     val sessionUuid: UUID,
     val content: EnvironmentToAgentTerminationContent? = null,
-    val error: AIAgentServiceError? = null,
+    val error: AgentServiceError? = null,
 ) : EnvironmentToAgentMessage
 
 /**
@@ -133,5 +133,5 @@ data class EnvironmentToAgentTerminationMessage(
 @SerialName("ERROR")
 data class EnvironmentToAgentErrorMessage(
     val sessionUuid: UUID,
-    val error: AIAgentServiceError,
+    val error: AgentServiceError,
 ) : EnvironmentToAgentMessage
