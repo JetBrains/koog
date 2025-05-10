@@ -12,6 +12,7 @@ internal val ToolJson = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
     explicitNulls = false
+    decodeEnumsCaseInsensitive = true
 }
 
 @Serializable

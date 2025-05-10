@@ -363,20 +363,7 @@ open class AnthropicDirectLLMClient(
                 val typeMap = getTypeMapForParameter(param.type)
 
                 properties[param.name] = JsonObject(
-                    mapOf("description" to JsonPrimitive(param.description)) +
-                            typeMap.mapValues {
-                                when (val value = it.value) {
-                                    is List<*> -> JsonArray(value.map { item -> JsonPrimitive(item.toString()) })
-                                    is Map<*, *> -> {
-                                        val jsonMap = value.entries.associate { entry ->
-                                            entry.key.toString() to JsonPrimitive(entry.value.toString())
-                                        }
-                                        JsonObject(jsonMap)
-                                    }
-
-                                    else -> JsonPrimitive(value.toString())
-                                }
-                            }
+                    mapOf("description" to JsonPrimitive(param.description)) + typeMap
                 )
             }
 
@@ -435,14 +422,25 @@ open class AnthropicDirectLLMClient(
     /**
      * Helper function to get the type map for a parameter type without using smart casting
      */
-    private fun getTypeMapForParameter(type: ToolParameterType): Map<String, Any> {
+    private fun getTypeMapForParameter(type: ToolParameterType): JsonObject {
         return when (type) {
-            ToolParameterType.Boolean -> mapOf("type" to "boolean")
-            ToolParameterType.Float -> mapOf("type" to "number")
-            ToolParameterType.Integer -> mapOf("type" to "integer")
-            ToolParameterType.String -> mapOf("type" to "string")
-            is ToolParameterType.Enum -> mapOf("type" to "string", "enum" to type.entries)
-            is ToolParameterType.List -> mapOf("type" to "array", "items" to getTypeMapForParameter(type.itemsType))
+            ToolParameterType.Boolean -> JsonObject(mapOf("type" to JsonPrimitive("boolean")))
+            ToolParameterType.Float -> JsonObject(mapOf("type" to JsonPrimitive("number")))
+            ToolParameterType.Integer -> JsonObject(mapOf("type" to JsonPrimitive("integer")))
+            ToolParameterType.String -> JsonObject(mapOf("type" to JsonPrimitive("string")))
+            is ToolParameterType.Enum -> JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("string"),
+                    "enum" to JsonArray(type.entries.map { JsonPrimitive(it.lowercase()) })
+                )
+            )
+
+            is ToolParameterType.List -> JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("array"),
+                    "items" to getTypeMapForParameter(type.itemsType)
+                )
+            )
         }
     }
 }
