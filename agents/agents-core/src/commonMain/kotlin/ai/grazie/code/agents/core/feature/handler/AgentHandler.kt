@@ -18,21 +18,25 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
      * The handler for agent creation events.
      * Can be set outside the class.
      */
-    var agentCreatedHandler: AgentCreatedHandler<FeatureT> = AgentCreatedHandler { context -> }
-
-    /**
-     * Handler invoked when a strategy is started. This can be used to perform custom logic
-     * related to strategy initiation for a specific feature.
-     */
-    var strategyStartedHandler: StrategyStartedHandler<FeatureT> = StrategyStartedHandler { context -> }
+    var agentCreatedHandler: AgentCreatedHandler<FeatureT> =
+        AgentCreatedHandler { context -> }
 
     /**
      * Configurable transformer used to manipulate or modify an instance of AgentEnvironment.
      * Allows customization of the environment during agent creation or updates by applying
      * the provided transformation logic.
      */
-    var environmentTransformer: AgentEnvironmentTransformer<FeatureT> = AgentEnvironmentTransformer { _, it -> it }
+    var environmentTransformer: AgentEnvironmentTransformer<FeatureT> =
+        AgentEnvironmentTransformer { _, it -> it }
 
+    var agentStartedHandler: AgentStartedHandler =
+        AgentStartedHandler { _ -> }
+
+    var agentFinishedHandler: AgentFinishedHandler =
+        AgentFinishedHandler { _, _ -> }
+
+    var agentRunErrorHandler: AgentRunErrorHandler =
+        AgentRunErrorHandler { _, _ -> }
 
     /**
      * Handle agent creates events by delegating to the handler.
@@ -69,25 +73,6 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
     @InternalAgentsApi
     suspend fun handleAgentCreatedUnsafe(context: AgentCreateContext<*>) =
         handleAgentCreated(context as AgentCreateContext<FeatureT>)
-
-    /**
-     * Handles strategy starts events by delegating to the handler.
-     *
-     * @param context The context for updating the agent with the feature
-     */
-    suspend fun handleStrategyStarted(context: StrategyUpdateContext<FeatureT>) {
-        strategyStartedHandler.handle(context)
-    }
-
-    /**
-     * Internal API for handling strategy start events with type casting.
-     *
-     * @param context The context for updating the agent
-     */
-    @Suppress("UNCHECKED_CAST")
-    suspend fun handleStrategyStartedUnsafe(context: StrategyUpdateContext<*>) {
-        handleStrategyStarted(context as StrategyUpdateContext<FeatureT>)
-    }
 }
 
 /**
@@ -122,8 +107,16 @@ fun interface AgentEnvironmentTransformer<FeatureT : Any> {
     fun transform(context: AgentCreateContext<FeatureT>, environment: AgentEnvironment): AgentEnvironment
 }
 
-fun interface StrategyStartedHandler<FeatureT : Any> {
-    suspend fun handle(context: StrategyUpdateContext<FeatureT>)
+fun interface AgentStartedHandler {
+    suspend fun handle(strategyName: String)
+}
+
+fun interface AgentFinishedHandler {
+    suspend fun handle(strategyName: String, result: String?)
+}
+
+fun interface AgentRunErrorHandler {
+    suspend fun handle(strategyName: String, throwable: Throwable)
 }
 
 class AgentCreateContext<FeatureT>(
@@ -144,3 +137,5 @@ class StrategyUpdateContext<FeatureT>(
         block(strategy.stages)
     }
 }
+
+

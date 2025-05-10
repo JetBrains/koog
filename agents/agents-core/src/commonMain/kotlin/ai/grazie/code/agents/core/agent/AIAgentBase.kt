@@ -7,7 +7,6 @@ import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.AgentEnvironmentUtils.mapToToolResult
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.environment.TerminationTool
-import ai.grazie.code.agents.core.event.AgentHandlerContext
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.exception.AgentEngineException
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
@@ -52,6 +51,7 @@ open class AIAgentBase(
     private val eventHandler: EventHandler = EventHandler.Companion.NO_HANDLER,
     private val installFeatures: suspend FeatureContext.() -> Unit = {}
 ) : AIAgent, AgentEnvironment {
+
     companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.core.agent.${AIAgentBase::class.simpleName}")
         private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
@@ -75,6 +75,14 @@ open class AIAgentBase(
         }
     }
 
+    private var isRunning = false
+
+    private var sessionUuid: UUID? = null
+
+    private val runningMutex = Mutex()
+
+    private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
+
     private val pipeline = AIAgentPipeline()
 
     init {
@@ -84,19 +92,9 @@ open class AIAgentBase(
         }
     }
 
-    private suspend fun <Config : FeatureConfig, Feature : Any> install(
-        feature: KotlinAIAgentFeature<Config, Feature>,
-        configure: Config.() -> Unit
-    ) {
-        pipeline.install(feature, configure)
-    }
-
-    private var isRunning = false
-    private var sessionUuid: UUID? = null
-    private val runningMutex = Mutex()
-    private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
-
     override suspend fun run(prompt: String) {
+        pipeline.awaitFeaturesStreamProvidersReady()
+
         runningMutex.withLock {
             if (isRunning) {
                 throw IllegalStateException("Agent is already running")
@@ -105,6 +103,8 @@ open class AIAgentBase(
             isRunning = true
             sessionUuid = UUID.random()
         }
+
+        pipeline.onAgentStarted(strategyName = strategy.name)
 
         strategy.run(
             sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),
@@ -116,6 +116,8 @@ open class AIAgentBase(
             pipeline = pipeline
         )
 
+        pipeline.closeFeaturesStreamProviders()
+
         runningMutex.withLock {
             isRunning = false
             sessionUuid = null
@@ -125,37 +127,16 @@ open class AIAgentBase(
         }
     }
 
+    suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
+        val prompt = TextContentBuilder().apply { this.builder() }.build()
+        run(prompt = prompt)
+    }
+
     override suspend fun runAndGetResult(userPrompt: String): String? {
         run(userPrompt)
         agentResultDeferred.await()
         return agentResultDeferred.getCompleted()
     }
-
-    private fun toolResult(
-        toolCallId: String?,
-        toolName: String,
-        agentId: String,
-        message: String,
-        result: ToolResult?
-    ): EnvironmentToolResultToAgentContent = LocalAgentEnvironmentToolResultToAgentContent(
-        toolCallId = toolCallId,
-        toolName = toolName,
-        agentId = agentId,
-        message = message,
-        toolResult = result
-    )
-
-    suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
-        pipeline.awaitFeaturesStreamProvidersReady()
-
-        val prompt = TextContentBuilder().apply { this.builder() }.build()
-        run(prompt = prompt)
-
-        pipeline.closeFeaturesStreamProviders()
-    }
-
-    private fun formatLog(message: String): String =
-        "$message [${strategy.name}, ${sessionUuid?.text ?: throw IllegalStateException("Session UUID is null")}]"
 
     override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
         logger.info { formatLog("Executing tools '$toolCalls'") }
@@ -203,18 +184,13 @@ open class AIAgentBase(
         terminate(message)
     }
 
-    protected suspend fun processToolCallMultiple(message: AgentToolCallsToEnvironmentMessage): EnvironmentToolResultMultipleToAgentMessage {
-        // call tools in parallel and return results
-        val results = supervisorScope {
-            message.content
-                .map { call -> async { processToolCall(call) } }
-                .awaitAll()
-        }
+    //region Private Methods
 
-        return EnvironmentToolResultMultipleToAgentMessage(
-            sessionUuid = message.sessionUuid,
-            content = results
-        )
+    private suspend fun <Config : FeatureConfig, Feature : Any> install(
+        feature: KotlinAIAgentFeature<Config, Feature>,
+        configure: Config.() -> Unit
+    ) {
+        pipeline.install(feature, configure)
     }
 
     @OptIn(InternalAgentToolsApi::class)
@@ -228,11 +204,10 @@ open class AIAgentBase(
                 ?: toolRegistry.getStageByToolOrNull(content.toolName)
                 ?: toolRegistry.getStageByName(ToolStage.DEFAULT_STAGE_NAME)
 
+            // Tool
             val tool = stage.getToolOrNull(content.toolName)
-
             if (tool == null) {
                 logger.warning { "Tool \"${content.toolName}\" not found in stage \"${stage.name}\"!" }
-
                 return toolResult(
                     message = "Tool \"${content.toolName}\" not found!",
                     toolCallId = content.toolCallId,
@@ -242,9 +217,11 @@ open class AIAgentBase(
                 )
             }
 
-            val args = try {
+            // Tool Args
+            val toolArgs = try {
                 tool.decodeArgs(content.toolArgs)
-            } catch (e: Exception) {
+            }
+            catch (e: Exception) {
                 logger.error(e) { "Tool \"${tool.name}\" failed to parse arguments: ${content.toolArgs}" }
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to parse arguments because of ${e.message}!",
@@ -255,19 +232,17 @@ open class AIAgentBase(
                 )
             }
 
-            try {
-                eventHandler.toolCallListener.call(stage, tool, args)
-            } catch (e: Exception) {
-                logger.error(e) { "Tool \"${tool.name}\" failed to run call handler with arguments: ${content.toolArgs}" }
-            }
+            pipeline.onToolCall(stage = stage, tool = tool, toolArgs = toolArgs)
 
-            val (result, serializedResult) = try {
+            // Tool Execution
+            val (toolResult, serializedResult) = try {
                 @Suppress("UNCHECKED_CAST")
-                (tool as Tool<Tool.Args, ToolResult>).executeAndSerialize(args, toolEnabler)
-            } catch (e: ToolException) {
-                with(eventHandler.toolValidationFailureListener) {
-                    AgentHandlerContext(strategy.name).handle(stage, tool, args, e.message)
-                }
+                (tool as Tool<Tool.Args, ToolResult>).executeAndSerialize(toolArgs, toolEnabler)
+            }
+            catch (e: ToolException) {
+
+                pipeline.onToolValidationError(stage = stage, tool = tool, toolArgs = toolArgs, value = e.message)
+
                 return toolResult(
                     message = e.message,
                     toolCallId = content.toolCallId,
@@ -275,11 +250,13 @@ open class AIAgentBase(
                     agentId = strategy.name,
                     result = null
                 )
-            } catch (e: Exception) {
-                with(eventHandler.toolExceptionListener) {
-                    AgentHandlerContext(strategy.name).handle(stage, tool, args, e)
-                }
+            }
+            catch (e: Exception) {
+
                 logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
+
+                pipeline.onToolCallFailure(stage = stage, tool = tool, toolArgs = toolArgs, throwable = e)
+
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to execute because of ${e.message}!",
                     toolCallId = content.toolCallId,
@@ -289,22 +266,47 @@ open class AIAgentBase(
                 )
             }
 
-            try {
-                eventHandler.toolResultListener.result(stage, tool, args, result)
-            } catch (e: Exception) {
-                logger.error(e) { "Tool \"${tool.name}\" failed to run result handler with arguments: ${content.toolArgs}" }
-            }
+            // Tool Finished with Result
+            pipeline.onToolCallResult(stage = stage, tool = tool, toolArgs = toolArgs, result = toolResult)
 
-            logger.debug { "[${stage.name}] - Completed execution of ${content.toolName} with result: $result" }
+            logger.debug { "[${stage.name}] - Completed execution of ${content.toolName} with result: $toolResult" }
 
             return toolResult(
                 toolCallId = content.toolCallId,
                 toolName = content.toolName,
                 agentId = strategy.name,
                 message = serializedResult,
-                result = result
+                result = toolResult
             )
         }
+
+    private suspend fun processToolCallMultiple(message: AgentToolCallsToEnvironmentMessage): EnvironmentToolResultMultipleToAgentMessage {
+        // call tools in parallel and return results
+        val results = supervisorScope {
+            message.content
+                .map { call -> async { processToolCall(call) } }
+                .awaitAll()
+        }
+
+        return EnvironmentToolResultMultipleToAgentMessage(
+            sessionUuid = message.sessionUuid,
+            content = results
+        )
+    }
+
+    private fun toolResult(
+        toolCallId: String?,
+        toolName: String,
+        agentId: String,
+        message: String,
+        result: ToolResult?
+    ): EnvironmentToolResultToAgentContent = LocalAgentEnvironmentToolResultToAgentContent(
+        toolCallId = toolCallId,
+        toolName = toolName,
+        agentId = agentId,
+        message = message,
+        toolResult = result
+    )
 
     private suspend fun terminate(message: AgentTerminationToEnvironmentMessage) {
         val messageContent = message.content
@@ -322,11 +324,11 @@ open class AIAgentBase(
             val result = element.jsonPrimitive.contentOrNull
 
             logger.debug { "Final result sent by server: $result" }
-            with(eventHandler.resultHandler) {
-                AgentHandlerContext(strategy.name).handle(result)
-            }
+
+            pipeline.onAgentFinished(strategyName = strategy.name, result = result)
             agentResultDeferred.complete(result)
-        } else {
+        }
+        else {
             processError(messageError)
         }
     }
@@ -334,12 +336,15 @@ open class AIAgentBase(
     private suspend fun processError(error: AgentServiceError) {
         try {
             throw error.asException()
-        } catch (e: AgentEngineException) {
+        }
+        catch (e: AgentEngineException) {
             logger.error(e) { "Execution exception reported by server!" }
-
-            with(eventHandler.errorHandler) {
-                if (!AgentHandlerContext(strategy.name).handle(e)) throw e
-            }
+            pipeline.onAgentRunError(strategyName = strategy.name, throwable = e)
         }
     }
+
+    private fun formatLog(message: String): String =
+        "$message [${strategy.name}, ${sessionUuid?.text ?: throw IllegalStateException("Session UUID is null")}]"
+
+    //endregion Private Methods
 }

@@ -208,7 +208,10 @@ class LocalAgentStrategy(
                 currentModel = context.llm.readSession { model }
             }
 
+            pipeline.onStrategyFinished(strategyName = name, result = currentStageInput)
+
             currentStageInput
+
         }.onSuccess {
             environment.sendTermination(it)
         }.onFailure {
