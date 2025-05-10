@@ -1,23 +1,20 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.feature.config.FeatureConfig
-import ai.grazie.code.agents.core.feature.handler.AgentCreateContext
-import ai.grazie.code.agents.core.feature.handler.AgentHandler
-import ai.grazie.code.agents.core.feature.handler.ExecuteLLMHandler
-import ai.grazie.code.agents.core.feature.handler.ExecuteNodeHandler
-import ai.grazie.code.agents.core.feature.handler.ExecuteToolHandler
-import ai.grazie.code.agents.core.feature.handler.StageContextHandler
-import ai.grazie.code.agents.core.feature.handler.StrategyUpdateContext
-import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.feature.handler.*
+import ai.grazie.code.agents.core.tools.Tool
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.core.tools.ToolStage
+import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.awaitAll
@@ -38,9 +35,15 @@ import kotlinx.coroutines.awaitAll
  */
 class AIAgentPipeline {
 
+    companion object {
+        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.pipeline.AIAgentPipeline")
+    }
+
     private val registeredFeatures: MutableMap<LocalAgentStorageKey<*>, FeatureConfig> = mutableMapOf()
 
     private val agentHandlers: MutableMap<LocalAgentStorageKey<*>, AgentHandler<*>> = mutableMapOf()
+
+    private val strategyHandlers: MutableMap<LocalAgentStorageKey<*>, StrategyHandler<*>> = mutableMapOf()
 
     private val stageContextHandler: MutableMap<LocalAgentStorageKey<*>, StageContextHandler<*>> = mutableMapOf()
 
@@ -81,7 +84,7 @@ class AIAgentPipeline {
         registeredFeatures.values.forEach { config -> config.messageProcessor.forEach { provider -> provider.close() } }
     }
 
-    //region Trigger Strategy Handlers
+    //region Trigger Agent Handlers
 
     /**
      * Run registered features' handlers on the event - agent created.
@@ -94,16 +97,17 @@ class AIAgentPipeline {
         }
     }
 
-    /**
-     * Run registered features' handlers on agent strategy started event.
-     */
-    suspend fun onStrategyStarted(strategy: LocalAgentStrategy) {
-        agentHandlers.values.forEach { handler ->
-            val updateContext = StrategyUpdateContext(strategy, handler.feature)
-            handler.handleStrategyStartedUnsafe(updateContext)
-        }
+    suspend fun onAgentStarted(strategyName: String) {
+        agentHandlers.values.forEach { handler -> handler.agentStartedHandler.handle(strategyName) }
     }
 
+    suspend fun onAgentFinished(strategyName: String, result: String?) {
+        agentHandlers.values.forEach { handler -> handler.agentFinishedHandler.handle(strategyName, result) }
+    }
+
+    suspend fun onAgentRunError(strategyName: String, throwable: Throwable) {
+        agentHandlers.values.forEach { handler -> handler.agentRunErrorHandler.handle(strategyName, throwable) }
+    }
 
     fun transformEnvironment(
         strategy: LocalAgentStrategy,
@@ -114,6 +118,24 @@ class AIAgentPipeline {
             val context = AgentCreateContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.transformEnvironmentUnsafe(context, env)
         }
+    }
+
+    //endregion Trigger Agent Handlers
+
+    //region Trigger Strategy Handlers
+
+    /**
+     * Run registered features' handlers on agent strategy started event.
+     */
+    suspend fun onStrategyStarted(strategy: LocalAgentStrategy) {
+        strategyHandlers.values.forEach { handler ->
+            val updateContext = StrategyUpdateContext(strategy, handler.feature)
+            handler.handleStrategyStartedUnsafe(updateContext)
+        }
+    }
+
+    suspend fun onStrategyFinished(strategyName: String, result: String) {
+        strategyHandlers.values.forEach { handler -> handler.strategyFinishedHandler.handle(strategyName, result) }
     }
 
     //endregion Trigger Strategy Handlers
@@ -220,6 +242,22 @@ class AIAgentPipeline {
         executeToolHandlers.values.forEach { handler -> handler.afterToolCallsHandler.handle(results) }
     }
 
+    suspend fun onToolCall(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) {
+        executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(stage, tool, toolArgs) }
+    }
+
+    suspend fun onToolValidationError(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String) {
+        executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(stage, tool, toolArgs, value) }
+    }
+
+    suspend fun onToolCallFailure(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
+        executeToolHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(stage, tool, toolArgs,  throwable) }
+    }
+
+    suspend fun onToolCallResult(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
+        executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(stage, tool, toolArgs, result) }
+    }
+
     //endregion Trigger Tool Call Handlers
 
     //region Interceptors
@@ -286,6 +324,42 @@ class AIAgentPipeline {
         existingHandler.environmentTransformer = AgentEnvironmentTransformer { context, env -> context.transform(env) }
     }
 
+    fun <TFeature: Any> interceptAgentStarted(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(strategyName: String) -> Unit
+    ) {
+        val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
+
+        existingHandler.agentStartedHandler = AgentStartedHandler { strategyName ->
+            with(featureImpl) { handle(strategyName) }
+        }
+    }
+
+    fun <TFeature: Any> interceptAgentFinished(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(strategyName: String, result: String?) -> Unit
+    ) {
+        val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
+
+        existingHandler.agentFinishedHandler = AgentFinishedHandler { strategyName, result ->
+            with(featureImpl) { handle(strategyName, result) }
+        }
+    }
+
+    fun <TFeature: Any> interceptAgentRunError(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(agentName: String, throwable: Throwable) -> Unit
+    ) {
+        val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
+
+        existingHandler.agentRunErrorHandler = AgentRunErrorHandler { strategyName, throwable ->
+            with(featureImpl) { handle(strategyName, throwable) }
+        }
+    }
+
     /**
      * Intercepts strategy started event to perform actions when an agent strategy begins execution.
      *
@@ -307,11 +381,32 @@ class AIAgentPipeline {
         featureImpl: TFeature,
         handle: suspend StrategyUpdateContext<TFeature>.() -> Unit
     ) {
-        @Suppress("UNCHECKED_CAST")
-        val existingHandler: AgentHandler<TFeature> =
-            agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) } as? AgentHandler<TFeature> ?: return
+        val existingHandler = strategyHandlers.getOrPut(feature.key) { StrategyHandler(featureImpl) }
 
-        existingHandler.strategyStartedHandler = StrategyStartedHandler { handle(it) }
+        @Suppress("UNCHECKED_CAST")
+        if (existingHandler as? StrategyHandler<TFeature> == null) {
+            logger.debug {
+                "Expected to get an agent handler for feature of type <${featureImpl::class}>, but get a handler of type <${feature.key}> instead. " +
+                    "Skipping adding strategy started interceptor for feature."
+            }
+            return
+        }
+
+        existingHandler.strategyStartedHandler = StrategyStartedHandler { updateContext ->
+            handle(updateContext)
+        }
+    }
+
+    fun <TFeature : Any> interceptStrategyFinished(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(strategyName: String, result: String) -> Unit
+    ) {
+        val existingHandler = strategyHandlers.getOrPut(feature.key) { StrategyHandler(featureImpl) }
+
+        existingHandler.strategyFinishedHandler = StrategyFinishedHandler { strategyName, result ->
+            with(featureImpl) { handle(strategyName, result) }
+        }
     }
 
     /**
@@ -532,6 +627,54 @@ class AIAgentPipeline {
 
         existingHandler.afterToolCallsHandler = AfterToolCallsHandler { results ->
             with(featureImpl) { handle(results) }
+        }
+    }
+
+    fun <TFeature: Any> interceptToolCall(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolCallHandler = ToolCallHandler { stage, tool, toolArgs ->
+            with(featureImpl) { handle(stage, tool, toolArgs) }
+        }
+    }
+
+    fun <TFeature: Any> interceptToolValidationError(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolValidationErrorHandler = ToolValidationErrorHandler { stage, tool, toolArgs, value ->
+            with(featureImpl) { handle(stage, tool, toolArgs, value) }
+        }
+    }
+
+    fun <TFeature: Any> interceptToolCallFailure(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolCallFailureHandler = ToolCallFailureHandler { stage, tool, toolArgs, throwable ->
+            with(featureImpl) { handle(stage, tool, toolArgs, throwable) }
+        }
+    }
+
+    fun <TFeature: Any> interceptToolCallResult(
+        feature: KotlinAIAgentFeature<*, TFeature>,
+        featureImpl: TFeature,
+        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolCallResultHandler = ToolCallResultHandler { stage, tool, toolArgs, result ->
+            with(featureImpl) { handle(stage, tool, toolArgs, result) }
         }
     }
 
