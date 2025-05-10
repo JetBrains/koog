@@ -119,3 +119,5 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrou
 //include(":code-vcs:code-vcs-model")
 //include(":jpms")
 //include(":project-configuration")
+include(":embeddings:embeddings-base")
+include(":embeddings:embeddings-local")
