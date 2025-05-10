@@ -132,7 +132,7 @@ class AnthropicSuspendableDirectClientTest {
         if (response.first() is Message.Tool.Call) {
             val toolCall = response.first() as Message.Tool.Call
             assertEquals("calculator", toolCall.tool, "Tool name should be 'calculator'")
-            assertTrue(toolCall.content.contains("ADD"), "Tool call should use 'ADD' operation")
+            assertTrue(toolCall.content.contains("add"), "Tool call should use 'ADD' operation")
             assertTrue(toolCall.content.contains("123"), "Tool call should include first number")
             assertTrue(toolCall.content.contains("456"), "Tool call should include second number")
         } else {

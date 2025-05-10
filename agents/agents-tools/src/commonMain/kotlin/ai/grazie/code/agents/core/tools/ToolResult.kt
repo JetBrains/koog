@@ -44,6 +44,11 @@ interface ToolResult {
         override fun toStringDefault(): String = result.toString()
     }
 
+    @JvmInline
+    value class Number(val result: kotlin.Number) : ToolResult {
+        override fun toStringDefault(): String = result.toString()
+    }
+
     interface JSONSerializable<T : JSONSerializable<T>> : ToolResult {
         fun getSerializer(): KSerializer<T>
 
