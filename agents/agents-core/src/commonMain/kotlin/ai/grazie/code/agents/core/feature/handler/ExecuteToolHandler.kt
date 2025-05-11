@@ -3,7 +3,7 @@ package ai.grazie.code.agents.core.feature.handler
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.tools.ToolStage
+import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.jetbrains.code.prompt.message.Message
 
 class ExecuteToolHandler {

@@ -18,6 +18,7 @@ pluginManagement {
 include(":agents:agents-core")
 include(":agents:agents-tools")
 include(":agents:agents-features:agents-features-common")
+include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-test")
