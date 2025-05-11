@@ -146,7 +146,7 @@ fun main() = runBlocking {
     }
 
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "red-code-fixing") {
+        prompt = prompt("red-code-fixing") {
             system(
                 """
                 You are a senior software engineer with expertise in fixing compilation errors in Kotlin code.
@@ -166,6 +166,7 @@ fun main() = runBlocking {
                 """.trimIndent()
             )
         },
+        model = OllamaModels.Meta.LLAMA_3_2,
         maxAgentIterations = 100
     )
 

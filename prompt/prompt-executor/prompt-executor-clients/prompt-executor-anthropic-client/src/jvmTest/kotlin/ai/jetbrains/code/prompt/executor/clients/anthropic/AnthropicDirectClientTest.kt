@@ -14,7 +14,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 fun readTestAnthropicKeyFromEnv(): String {
-    return System.getenv("ANTHROPIC_API_TEST_KEY") ?: error("ERROR: environment variable ANTHROPIC_API_TEST_KEY not set")
+    return System.getenv("ANTHROPIC_API_TEST_KEY")
+        ?: error("ERROR: environment variable ANTHROPIC_API_TEST_KEY not set")
 }
 
 class AnthropicSuspendableDirectClientTest {
@@ -38,12 +39,12 @@ class AnthropicSuspendableDirectClientTest {
 
         val client = AnthropicDirectLLMClient(apiKey)
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-prompt") {
+        val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
 
-        val response = client.execute(prompt)
+        val response = client.execute(prompt, AnthropicModels.Sonnet_3_7)
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -61,12 +62,12 @@ class AnthropicSuspendableDirectClientTest {
 
         val client = AnthropicDirectLLMClient(apiKey)
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-streaming") {
+        val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = client.executeStreaming(prompt).toList()
+        val responseChunks = client.executeStreaming(prompt, AnthropicModels.Sonnet_3_7).toList()
 
         assertNotNull(responseChunks, "Response chunks should not be null")
         assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -118,12 +119,12 @@ class AnthropicSuspendableDirectClientTest {
             )
         )
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-tools") {
+        val prompt = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
 
-        val response = client.execute(prompt, listOf(calculatorTool))
+        val response = client.execute(prompt, AnthropicModels.Sonnet_3_7, listOf(calculatorTool))
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -150,12 +151,12 @@ class AnthropicSuspendableDirectClientTest {
 
         val client = AnthropicDirectLLMClient(apiKey)
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_5, "test-code") {
+        val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
             user("Write a simple Kotlin function to calculate the factorial of a number.")
         }
 
-        val response = client.execute(prompt)
+        val response = client.execute(prompt, AnthropicModels.Sonnet_3_5)
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")

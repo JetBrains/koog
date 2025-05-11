@@ -10,6 +10,7 @@ import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
 import ai.jetbrains.code.prompt.llm.LLMCapability
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -163,10 +164,10 @@ open class OpenAIDirectLLMClient(
         val tool_calls: List<OpenAIToolCall>? = null
     )
 
-    override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools" }
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
-        val request = createOpenAIRequest(prompt, tools, false)
+        val request = createOpenAIRequest(prompt, tools, model, false)
         val requestBody = json.encodeToString(request)
 
         return withContext(Dispatchers.SuitableForIO) {
@@ -187,10 +188,10 @@ open class OpenAIDirectLLMClient(
         }
     }
 
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> {
-        logger.debug { "Executing streaming prompt: $prompt" }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
-        val request = createOpenAIRequest(prompt, emptyList(), true)
+        val request = createOpenAIRequest(prompt, emptyList(), model, true)
         val requestBody = json.encodeToString(request)
 
         return callbackFlow {
@@ -239,7 +240,7 @@ open class OpenAIDirectLLMClient(
         }
     }
 
-    private fun createOpenAIRequest(prompt: Prompt, tools: List<ToolDescriptor>, stream: Boolean): OpenAIRequest {
+    private fun createOpenAIRequest(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, stream: Boolean): OpenAIRequest {
         val messages = mutableListOf<OpenAIMessage>()
         val pendingCalls = mutableListOf<OpenAIToolCall>()
 
@@ -334,9 +335,9 @@ open class OpenAIDirectLLMClient(
         }
 
         return OpenAIRequest(
-            model = prompt.model.id,
+            model = model.id,
             messages = messages,
-            temperature = if (prompt.model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
             stream = stream
         )

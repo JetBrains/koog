@@ -59,7 +59,7 @@ class CalculatorTest {
 
         // Create agent config with proper prompt
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(OpenAIModels.GPT4o, "test") {
+            prompt = prompt("test") {
                 system(
                     """
                     You are an question answering agent with access to the calculator tools.
@@ -71,6 +71,7 @@ class CalculatorTest {
                 """.trimIndent()
                 )
             },
+            model = OpenAIModels.GPT4o,
             maxAgentIterations = 10
         )
 

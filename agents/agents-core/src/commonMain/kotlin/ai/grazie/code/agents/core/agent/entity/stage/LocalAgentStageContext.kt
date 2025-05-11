@@ -1,6 +1,7 @@
 @file:OptIn(InternalAgentsApi::class)
 
 package ai.grazie.code.agents.core.agent.entity.stage
+
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
@@ -46,6 +47,7 @@ interface LocalAgentStageContext {
      * It is used throughout the agent's lifecycle to facilitate actions and handle outcomes.
      */
     val environment: AgentEnvironment
+
     /**
      * Represents the input provided to the current stage in the agent's execution context.
      *
@@ -55,6 +57,7 @@ interface LocalAgentStageContext {
      * relevant to the current stage of processing.
      */
     val stageInput: String
+
     /**
      * Represents the configuration for a local agent within the current stage context.
      *
@@ -63,6 +66,7 @@ interface LocalAgentStageContext {
      * the agent's prompt configuration.
      */
     val config: LocalAgentConfig
+
     /**
      * Represents the local agent's LLM context within the stage, providing mechanisms for managing tools, prompts,
      * and interaction with the execution environment. It ensures thread safety during concurrent read and write
@@ -72,6 +76,7 @@ interface LocalAgentStageContext {
      * behavior during different stages of the agent's lifecycle.
      */
     val llm: LocalAgentLLMContext
+
     /**
      * Manages and tracks the state of a local agent within the context of its execution.
      *
@@ -86,17 +91,20 @@ interface LocalAgentStageContext {
      * of the agent during execution.
      */
     val stateManager: LocalAgentStateManager
+
     /**
      * Concurrent-safe key-value storage for an agent, used to manage and persist data within the context of
      * a local agent stage execution. The `storage` property provides a thread-safe mechanism for sharing
      * and storing data specific to the agent's operation.
      */
     val storage: LocalAgentStorage
+
     /**
      * A unique identifier for the current session associated with the local agent stage context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
     val sessionUuid: UUID
+
     /**
      * Represents the unique identifier for the strategy being used in the current local agent stage context.
      *
@@ -105,6 +113,7 @@ interface LocalAgentStageContext {
      * for logging, debugging, and switching between different strategies dynamically.
      */
     val strategyId: String
+
     /**
      * Represents the name of the current execution stage in the local agent's context.
      *
@@ -305,6 +314,7 @@ class LocalAgentStageContextImpl constructor(
  * @property tools A list of tool descriptors available for the context.
  * @property toolRegistry A registry that contains metadata about tools and their organization across stages.
  * @property prompt The current LLM prompt being used or updated in write sessions.
+ * @property model The current LLM model being used or updated in write sessions.
  * @property promptExecutor The executor responsible for performing operations based on the current prompt.
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  */
@@ -312,6 +322,7 @@ data class LocalAgentLLMContext(
     internal var tools: List<ToolDescriptor>,
     val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private var prompt: Prompt,
+    private var model: LLModel,
     internal val promptExecutor: PromptExecutor,
     private val environment: AgentEnvironment,
     private val config: LocalAgentConfig,
@@ -325,7 +336,7 @@ data class LocalAgentLLMContext(
      */
     @OptIn(ExperimentalStdlibApi::class)
     suspend fun <T> writeSession(block: suspend LocalAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
-        val session = LocalAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, config)
+        val session = LocalAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config)
 
         session.use {
             val result = it.block()
@@ -344,7 +355,7 @@ data class LocalAgentLLMContext(
      */
     @OptIn(ExperimentalStdlibApi::class)
     suspend fun <T> readSession(block: suspend LocalAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
-        val session = LocalAgentLLMReadSession(tools, promptExecutor, prompt, config)
+        val session = LocalAgentLLMReadSession(tools, promptExecutor, prompt, model, config)
 
         session.use { block(it) }
     }
@@ -366,6 +377,7 @@ sealed class LocalAgentLLMSession(
     protected val executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     prompt: Prompt,
+    model: LLModel,
     protected val config: LocalAgentConfig,
 ) : AutoCloseable {
     /**
@@ -387,6 +399,7 @@ sealed class LocalAgentLLMSession(
      * - [requestLLMStructuredOneShot]
      */
     open val prompt: Prompt by ActiveProperty(prompt) { isActive }
+
     /**
      * Provides a list of tools based on the current active state.
      *
@@ -400,6 +413,19 @@ sealed class LocalAgentLLMSession(
      */
     open val tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
 
+
+    /**
+     * Represents the active language model used within the session.
+     *
+     * This property is backed by a delegate that ensures it can only be accessed
+     * while the session is active, as determined by the `isActive` property.
+     *
+     * The model defines the language generation capabilities available for executing prompts
+     * and tool interactions within the session's context.
+     *
+     * Usage of this property when the session is inactive will result in an exception.
+     */
+    open val model: LLModel by ActiveProperty(model) { isActive }
 
     /**
      * A flag indicating whether the session is currently active.
@@ -429,7 +455,7 @@ sealed class LocalAgentLLMSession(
 
     protected suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.execute(preparedPrompt, tools)
+        return executor.execute(preparedPrompt, model, tools)
     }
 
     protected suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =
@@ -438,32 +464,24 @@ sealed class LocalAgentLLMSession(
 
     open suspend fun requestLLMWithoutTools(): Message.Response {
         validateSession()
-        val promptWithDisabledTools = prompt.copy(
-            params = prompt.params.copy(
-                toolChoice = null
-            )
-        )
+        val promptWithDisabledTools = prompt.withUpdatedParams { toolChoice = null }
         return executeSingle(promptWithDisabledTools, emptyList())
     }
 
     open suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
-        val promptWithOnlyCallingTools = prompt.copy(
-            params = prompt.params.copy(
-                toolChoice = LLMParams.ToolChoice.Required
-            )
-        )
+        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
+            toolChoice = LLMParams.ToolChoice.Required
+        }
         return executeSingle(promptWithOnlyCallingTools, tools)
     }
 
     open suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
-        val promptWithForcingOneTool = prompt.copy(
-            params = prompt.params.copy(
-                toolChoice = LLMParams.ToolChoice.Named(tool.name)
-            )
-        )
+        val promptWithForcingOneTool = prompt.withUpdatedParams {
+            toolChoice = LLMParams.ToolChoice.Named(tool.name)
+        }
         return executeSingle(promptWithForcingOneTool, tools)
     }
 
@@ -509,7 +527,7 @@ sealed class LocalAgentLLMSession(
     ): StructuredResponse<T> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.executeStructured(preparedPrompt, structure, retries, fixingModel)
+        return executor.executeStructured(preparedPrompt, model, structure, retries, fixingModel)
     }
 
     /**
@@ -521,7 +539,7 @@ sealed class LocalAgentLLMSession(
     open suspend fun <T> requestLLMStructuredOneShot(structure: StructuredData<T>): StructuredResponse<T> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.executeStructuredOneShot(preparedPrompt, structure)
+        return executor.executeStructuredOneShot(preparedPrompt, model, structure)
     }
 
     final override fun close() {
@@ -546,8 +564,9 @@ class LocalAgentLLMWriteSession internal constructor(
     tools: List<ToolDescriptor>,
     val toolRegistry: ToolRegistry,
     prompt: Prompt,
+    model: LLModel,
     config: LocalAgentConfig,
-) : LocalAgentLLMSession(executor, tools, prompt, config) {
+) : LocalAgentLLMSession(executor, tools, prompt, model, config) {
     /**
      * Represents the prompt object used within the session. The prompt can be accessed or
      * modified only when the session is in an active state, as determined by the `isActive` predicate.
@@ -556,6 +575,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * active state before any read or write operations.
      */
     override var prompt: Prompt by ActiveProperty(prompt) { isActive }
+
     /**
      * Represents a collection of tools that are available for the session.
      * The tools can be accessed or modified only if the session is in an active state.
@@ -568,6 +588,16 @@ class LocalAgentLLMWriteSession internal constructor(
      */
     override var tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
 
+
+    /**
+     * Represents an override property `model` of type `LLModel`.
+     * This property is backed by an `ActiveProperty`, which ensures the property value is dynamically updated
+     * based on the active state determined by the `isActive` parameter.
+     *
+     * This implementation allows for reactive behavior, ensuring that the `model` value is updated or resolved
+     * only when the `isActive` condition changes.
+     */
+    override var model: LLModel by ActiveProperty(model) { isActive }
 
     /**
      * Executes the specified tool with the given arguments and returns the result within a `SafeTool.Result` wrapper.
@@ -820,8 +850,8 @@ class LocalAgentLLMWriteSession internal constructor(
      *
      * @param newModel The new LLModel to replace the existing model in the prompt.
      */
-    fun changeModel(newModel: LLModel) = rewritePrompt {
-        prompt.copy(model = newModel)
+    fun changeModel(newModel: LLModel) {
+        model = newModel
     }
 
     /**
@@ -830,7 +860,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param newParams The new set of LLMParams to replace the existing parameters in the prompt.
      */
     fun changeLLMParams(newParams: LLMParams) = rewritePrompt {
-        prompt.copy(params = newParams)
+        prompt.withParams(newParams)
     }
 
     /**
@@ -941,7 +971,7 @@ class LocalAgentLLMWriteSession internal constructor(
             this.prompt = prompt
         }
 
-        return executor.executeStreaming(prompt)
+        return executor.executeStreaming(prompt, model)
     }
 
     /**
@@ -964,5 +994,6 @@ class LocalAgentLLMReadSession internal constructor(
     tools: List<ToolDescriptor>,
     executor: PromptExecutor,
     prompt: Prompt,
+    model: LLModel,
     config: LocalAgentConfig,
-) : LocalAgentLLMSession(executor, tools, prompt, config)
+) : LocalAgentLLMSession(executor, tools, prompt, model, config)

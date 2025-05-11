@@ -811,6 +811,7 @@ class Testing {
                                     LocalAgentLLMContext(
                                         tools = agent.toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                                         prompt = agent.agentConfig.prompt,
+                                        model = agent.agentConfig.model,
                                         promptExecutor = PromptExecutorProxy(agent.promptExecutor, pipeline),
                                         environment = environment,
                                         config = agent.agentConfig

@@ -100,9 +100,10 @@ fun main() = runBlocking {
 
     // Create agent config with proper prompt
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OpenAIModels.GPT4o, "test") {
+        prompt = prompt("test") {
             system("You are a calculator.")
         },
+        model = OpenAIModels.GPT4o,
         maxAgentIterations = 50
     )
 

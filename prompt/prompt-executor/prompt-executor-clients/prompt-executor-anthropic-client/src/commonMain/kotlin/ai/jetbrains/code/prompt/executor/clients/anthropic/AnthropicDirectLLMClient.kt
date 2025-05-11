@@ -184,10 +184,10 @@ open class AnthropicDirectLLMClient(
         val tool_use: AnthropicResponseContent.ToolUse? = null
     )
 
-    override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools" }
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
-        val request = createAnthropicRequest(prompt, tools, false)
+        val request = createAnthropicRequest(prompt, tools, model, false)
         val requestBody = json.encodeToString(request)
 
         return withContext(Dispatchers.SuitableForIO) {
@@ -209,10 +209,10 @@ open class AnthropicDirectLLMClient(
         }
     }
 
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> {
-        logger.debug { "Executing streaming prompt: $prompt without tools" }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        logger.debug { "Executing streaming prompt: $prompt with model: $model without tools" }
 
-        val request = createAnthropicRequest(prompt, emptyList(), true)
+        val request = createAnthropicRequest(prompt, emptyList(), model, true)
         val requestBody = json.encodeToString(request)
 
         return callbackFlow {
@@ -263,6 +263,7 @@ open class AnthropicDirectLLMClient(
     private fun createAnthropicRequest(
         prompt: Prompt,
         tools: List<ToolDescriptor>,
+        model: LLModel,
         stream: Boolean
     ): AnthropicMessageRequest {
         var systemMessage: String? = null
@@ -379,8 +380,8 @@ open class AnthropicDirectLLMClient(
 
         // Always include max_tokens as it's required by the API
         return AnthropicMessageRequest(
-            model = settings.modelVersionsMap[prompt.model]
-                ?: throw IllegalArgumentException("Unsupported model: ${prompt.model}"),
+            model = settings.modelVersionsMap[model]
+                ?: throw IllegalArgumentException("Unsupported model: ${model}"),
             messages = messages,
             max_tokens = 2048, // This is required by the API
             temperature = prompt.params.temperature ?: 0.7, // Default temperature if not provided

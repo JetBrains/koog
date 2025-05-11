@@ -10,6 +10,7 @@ import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
 import ai.jetbrains.code.prompt.llm.LLMCapability
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -163,10 +164,10 @@ open class OpenRouterDirectLLMClient(
         val tool_calls: List<OpenRouterToolCall>? = null
     )
 
-    override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools" }
 
-        val request = createOpenRouterRequest(prompt, tools, false)
+        val request = createOpenRouterRequest(prompt, model, tools, false)
         val requestBody = json.encodeToString(request)
 
         return withContext(Dispatchers.SuitableForIO) {
@@ -191,10 +192,10 @@ open class OpenRouterDirectLLMClient(
         }
     }
 
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> {
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt" }
 
-        val request = createOpenRouterRequest(prompt, emptyList(), true)
+        val request = createOpenRouterRequest(prompt, model, emptyList(), true)
         val requestBody = json.encodeToString(request)
 
         return callbackFlow {
@@ -247,7 +248,12 @@ open class OpenRouterDirectLLMClient(
         }
     }
 
-    private fun createOpenRouterRequest(prompt: Prompt, tools: List<ToolDescriptor>, stream: Boolean): OpenRouterRequest {
+    private fun createOpenRouterRequest(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        stream: Boolean
+    ): OpenRouterRequest {
         val messages = mutableListOf<OpenRouterMessage>()
         val pendingCalls = mutableListOf<OpenRouterToolCall>()
 
@@ -342,9 +348,9 @@ open class OpenRouterDirectLLMClient(
         }
 
         return OpenRouterRequest(
-            model = prompt.model.id,
+            model = model.id,
             messages = messages,
-            temperature = if (prompt.model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             tools = if (tools.isNotEmpty()) openRouterTools else null,
             stream = stream
         )

@@ -242,7 +242,7 @@ internal suspend fun LocalAgentLLMWriteSession.retrieveFactsFromHistory(
     // Remove the fact extraction messages if not preserving them
     if (!preserveQuestionsInLLMChat) {
         rewritePrompt { oldPrompt ->
-            oldPrompt.copy(messages = oldPrompt.messages.dropLast(2))
+            oldPrompt.withUpdatedMessages { dropLast(2) }
         }
     }
     return facts

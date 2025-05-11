@@ -13,7 +13,7 @@ class PromptTest {
 
     @Test
     fun testDSLBuilding() {
-        val prompt = Prompt.build(OllamaModels.Meta.LLAMA_3_2, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant")
             user("Hello")
             assistant("Hi! How can I help you?")
@@ -41,7 +41,7 @@ class PromptTest {
 
     @Test
     fun testSerialization() {
-        val prompt = Prompt.build(OllamaModels.Meta.LLAMA_3_2, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant")
             user("Hello")
         }

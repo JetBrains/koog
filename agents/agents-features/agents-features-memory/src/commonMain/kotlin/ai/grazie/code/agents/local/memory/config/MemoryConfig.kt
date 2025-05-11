@@ -1,20 +1,7 @@
 package ai.grazie.code.agents.local.memory.config
 
 import ai.grazie.code.agents.local.memory.model.MemoryScope
-import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
-import ai.grazie.code.agents.local.memory.providers.NoMemory
-import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
-
-/**
- * Configuration for memory-related features in LocalAIAgents
- */
-@Serializable
-data class MemoryConfig(
-    @Contextual
-    val feature: AgentMemoryProvider = NoMemory,
-    val scopesProfile: MemoryScopesProfile = MemoryScopesProfile()
-)
 
 @Serializable
 enum class MemoryScopeType {

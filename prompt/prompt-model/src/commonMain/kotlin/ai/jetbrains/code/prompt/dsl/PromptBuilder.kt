@@ -6,12 +6,11 @@ import ai.jetbrains.code.prompt.params.LLMParams
 import ai.jetbrains.code.prompt.text.TextContentBuilder
 
 @PromptDSL
-class PromptBuilder internal constructor(private val model: LLModel, private val id: String, val params: LLMParams = LLMParams()) {
+class PromptBuilder internal constructor(private val id: String, val params: LLMParams = LLMParams()) {
     private val messages = mutableListOf<Message>()
 
     companion object {
         fun from(prompt: Prompt) = PromptBuilder(
-            prompt.model,
             prompt.id,
             prompt.params
         ).apply {
@@ -68,5 +67,5 @@ class PromptBuilder internal constructor(private val model: LLModel, private val
         tool.init()
     }
 
-    internal fun build(): Prompt = Prompt(messages.toList(), id, model, params)
+    internal fun build(): Prompt = Prompt(messages.toList(), id, params)
 }

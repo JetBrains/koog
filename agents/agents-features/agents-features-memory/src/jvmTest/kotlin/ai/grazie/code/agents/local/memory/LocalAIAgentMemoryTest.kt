@@ -55,7 +55,7 @@ class LocalAIAgentMemoryTest {
         every { response.content } returns "Test fact"
 
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
         coEvery {
@@ -64,10 +64,11 @@ class LocalAIAgentMemoryTest {
 
         val llmContext = LocalAgentLLMContext(
             tools = emptyList(),
-            prompt = prompt(testModel, "test") { },
+            prompt = prompt("test") { },
+            model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, 100),
+            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(
@@ -148,15 +149,16 @@ class LocalAIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
         val llmContext = LocalAgentLLMContext(
             tools = emptyList(),
-            prompt = prompt(testModel, "test") { },
+            prompt = prompt("test") { },
+            model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, 100),
+            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(
@@ -264,7 +266,7 @@ class LocalAIAgentMemoryTest {
         val response = mockk<Message.Response>()
         every { response.content } returns "Test fact"
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
         // Mock memory feature to capture saved facts
@@ -274,10 +276,11 @@ class LocalAIAgentMemoryTest {
 
         val llmContext = LocalAgentLLMContext(
             tools = emptyList(),
-            prompt = prompt(testModel, "test") { },
+            prompt = prompt("test") { },
+            model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, 100),
+            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(
@@ -338,15 +341,16 @@ class LocalAIAgentMemoryTest {
         every { response.content } returns "OK"
 
         coEvery {
-            promptExecutor.execute(any(), any())
+            promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
         val llmContext = LocalAgentLLMContext(
             tools = emptyList(),
-            prompt = prompt(testModel, "test") { },
+            prompt = prompt("test") { },
+            model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, 100),
+            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(

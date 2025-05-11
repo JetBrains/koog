@@ -4,18 +4,18 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
 import ai.jetbrains.code.prompt.params.LLMParams
 
 fun LocalAgentLLMWriteSession.clearHistory() {
-    prompt = prompt.copy(messages = emptyList())
+    prompt = prompt.withMessages(emptyList())
 }
 
 fun LocalAgentLLMWriteSession.leaveLastNMessages(n: Int) {
-    prompt = prompt.copy(messages = prompt.messages.takeLast(n))
+    prompt = prompt.withUpdatedMessages { takeLast(n) }
 }
 
 /**
  * Sets the [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice] for this LLM session.
  */
 fun LocalAgentLLMWriteSession.setToolChoice(toolChoice: LLMParams.ToolChoice?) {
-    prompt = prompt.copy(params = prompt.params.copy(toolChoice = toolChoice))
+    prompt = prompt.withUpdatedParams { this.toolChoice = toolChoice }
 }
 
 /**

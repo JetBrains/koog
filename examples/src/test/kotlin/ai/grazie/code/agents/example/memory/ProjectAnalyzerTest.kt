@@ -8,6 +8,7 @@ import ai.grazie.code.agents.local.memory.model.*
 import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -83,11 +84,11 @@ class ProjectAnalyzerTest {
 
         val toolCallsCount: Int get() = bashToolCallsCount + fileSearchToolCallsCount + codeAnalysisToolCallsCount
 
-        override suspend fun execute(prompt: Prompt): String {
+        override suspend fun execute(prompt: Prompt, model: LLModel): String {
             return handlePrompt(prompt).content
         }
 
-        override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+        override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
             val messages = prompt.messages.map { it.content }
 
             // If we should use a tool, return a tool call
@@ -211,7 +212,7 @@ class ProjectAnalyzerTest {
             return result
         }
 
-        override suspend fun executeStreaming(prompt: Prompt): Flow<String> {
+        override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             return flow {
                 emit(this@MockLLMExecutor.handlePrompt(prompt).content)
             }

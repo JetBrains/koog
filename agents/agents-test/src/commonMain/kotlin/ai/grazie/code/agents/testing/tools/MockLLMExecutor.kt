@@ -7,6 +7,7 @@ import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -22,21 +23,21 @@ internal class MockLLMExecutor(
     val toolActions: List<ToolCondition<*, *>> = emptyList()
 ) : PromptExecutor {
     // Executing just prompt
-    override suspend fun execute(prompt: Prompt): String {
+    override suspend fun execute(prompt: Prompt, model: LLModel): String {
         logger.debug { "Executing prompt without tools, prompt: $prompt" }
         return handlePrompt(prompt).content
     }
 
     // Executing a tool call
-    override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
 
         val response = handlePrompt(prompt)
         return listOf(response)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> {
-        return flowOf(execute(prompt))
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        return flowOf(execute(prompt, model))
     }
 
     suspend fun handlePrompt(prompt: Prompt): Message.Response {

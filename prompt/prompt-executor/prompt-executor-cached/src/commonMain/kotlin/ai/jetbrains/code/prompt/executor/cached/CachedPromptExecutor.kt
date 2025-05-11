@@ -4,6 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.cache.model.PromptCache
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -19,29 +20,31 @@ class CachedPromptExecutor(
     private val nested: PromptExecutor
 ) : PromptExecutor {
 
-    override suspend fun execute(prompt: Prompt): String {
-        return getOrPut(prompt).content
+    override suspend fun execute(prompt: Prompt, model: LLModel): String {
+        return getOrPut(prompt, model).content
     }
 
     override suspend fun execute(
         prompt: Prompt,
+        model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        return getOrPut(prompt, tools)
+        return getOrPut(prompt, tools, model)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> = flow { emit(getOrPut(prompt).content) }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
+        flow { emit(getOrPut(prompt, model).content) }
 
-    private suspend fun getOrPut(prompt: Prompt): Message.Assistant {
+    private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {
         return cache.get(prompt)
             ?.first() as Message.Assistant?
             ?: nested
-                .execute(prompt)
+                .execute(prompt, model)
                 .let { Message.Assistant(it) }
                 .also { cache.put(prompt, emptyList(), listOf(it)) }
     }
 
-    private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
-        return cache.get(prompt, tools) ?: nested.execute(prompt, tools).also { cache.put(prompt, tools, it) }
+    private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): List<Message.Response> {
+        return cache.get(prompt, tools) ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
     }
 }

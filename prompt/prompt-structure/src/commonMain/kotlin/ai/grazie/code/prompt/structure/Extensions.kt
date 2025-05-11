@@ -34,8 +34,12 @@ data class StructuredResponse<T>(val structure: T, val raw: String)
  * for interpreting the raw response from the execution.
  * @return A [StructuredResponse] containing both parsed structure and raw text
  */
-suspend fun <T> PromptExecutor.executeStructuredOneShot(prompt: Prompt, structure: StructuredData<T>): StructuredResponse<T> {
-    val text = execute(prompt)
+suspend fun <T> PromptExecutor.executeStructuredOneShot(
+    prompt: Prompt,
+    model: LLModel,
+    structure: StructuredData<T>
+): StructuredResponse<T> {
+    val text = execute(prompt, model)
     return StructuredResponse(structure = structure.parse(text), raw = text)
 }
 
@@ -53,6 +57,7 @@ suspend fun <T> PromptExecutor.executeStructuredOneShot(prompt: Prompt, structur
  *
  * @param structure The structured data definition with schema and parsing logic
  * @param prompt The prompt to execute
+ * @param mainModel The main model to execute prompt
  * @param retries Number of parsing attempts before giving up
  * @param fixingModel LLM used for output coercion (transforming malformed outputs)
  * @return A [StructuredResponse] containing both parsed structure and raw text
@@ -60,6 +65,7 @@ suspend fun <T> PromptExecutor.executeStructuredOneShot(prompt: Prompt, structur
 */
 suspend fun <T> PromptExecutor.executeStructured(
     prompt: Prompt,
+    mainModel: LLModel,
     structure: StructuredData<T>,
     retries: Int = 1,
     fixingModel: LLModel = OpenAIModels.GPT4o
@@ -75,7 +81,7 @@ suspend fun <T> PromptExecutor.executeStructured(
     val structureParser = StructureParser(this, fixingModel)
 
     for (i in 0 until retries) {
-        val text = execute(prompt)
+        val text = execute(prompt, mainModel)
         try {
             return StructuredResponse<T>(
                 structure = structureParser.parse(structure, text),

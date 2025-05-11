@@ -103,22 +103,24 @@ open class MultiLLMPromptExecutor(
     }
 
     /**
-     * Executes a given prompt using the specified tools and returns a list of response messages.
+     * Executes a given prompt using the specified tools and model, and returns a list of response messages.
      *
-     * @param prompt The `Prompt` to be executed, containing the input messages, model, and parameters.
+     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @param model The LLM model to use for execution.
      * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
-     * @throws IllegalArgumentException If no client is found for the prompt's model provider and no fallback settings are configured.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
      */
-    override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools" }
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
 
-        val provider = prompt.model.provider
+        val provider = model.provider
 
         val response = when {
-            provider in llmClients -> llmClients[provider]!!.execute(prompt, tools)
+            provider in llmClients -> llmClients[provider]!!.execute(prompt, model, tools)
             fallback != null -> fallbackClient!!.execute(
-                prompt.copy(model = fallback.fallbackModel),
+                prompt,
+                fallback.fallbackModel,
                 tools
             )
             else -> throw IllegalArgumentException("No client found for provider: $provider")
@@ -130,17 +132,18 @@ open class MultiLLMPromptExecutor(
     }
 
     /**
-     * Executes the given prompt and streams the response in chunks as a flow.
+     * Executes the given prompt with the specified model and streams the response in chunks as a flow.
      *
-     * @param prompt The prompt to execute, containing the model, messages, and parameters.
+     * @param prompt The prompt to execute, containing the messages and parameters.
+     * @param model The LLM model to use for execution.
      **/
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> = flow {
-        logger.debug { "Executing streaming prompt: $prompt" }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+        logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
-        val provider = prompt.model.provider
+        val provider = model.provider
         val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
 
-        val responseFlow = client.executeStreaming(prompt)
+        val responseFlow = client.executeStreaming(prompt, model)
 
         responseFlow.collect { chunk ->
             emit(chunk)

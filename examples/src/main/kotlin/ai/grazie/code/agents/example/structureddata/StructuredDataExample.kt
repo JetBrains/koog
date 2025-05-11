@@ -245,7 +245,7 @@ fun main(): Unit = runBlocking {
     }
 
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(AnthropicModels.Sonnet_3_7, "weather-forecast") {
+        prompt = prompt("weather-forecast") {
             system(
                 """
                 You are a weather forecasting assistant.
@@ -253,6 +253,7 @@ fun main(): Unit = runBlocking {
             """.trimIndent()
             )
         },
+        model = AnthropicModels.Sonnet_3_7,
         maxAgentIterations = 5
     )
 

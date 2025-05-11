@@ -38,12 +38,12 @@ class OpenAISuspendableDirectClientTest {
     fun testExecuteSimplePrompt_GPT4o() = runTest {
         val client = OpenAIDirectLLMClient(apiKey)
 
-        val prompt = Prompt.build(OpenAIModels.GPT4o, "test-prompt") {
+        val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
 
-        val response = client.execute(prompt)
+        val response = client.execute(prompt, OpenAIModels.GPT4o)
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -62,12 +62,12 @@ class OpenAISuspendableDirectClientTest {
 
         val client = OpenAIDirectLLMClient(apiKey)
 
-        val prompt = Prompt.build(OpenAIModels.O3Mini, "test-streaming") {
+        val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = client.executeStreaming(prompt).toList()
+        val responseChunks = client.executeStreaming(prompt, OpenAIModels.O3Mini).toList()
 
         assertNotNull(responseChunks, "Response chunks should not be null")
         assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -120,12 +120,12 @@ class OpenAISuspendableDirectClientTest {
             )
         )
 
-        val prompt = Prompt.build(OpenAIModels.GPT4oMini, "test-tools") {
+        val prompt = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
 
-        val response = client.execute(prompt, listOf(calculatorTool))
+        val response = client.execute(prompt, OpenAIModels.GPT4oMini, listOf(calculatorTool))
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -154,12 +154,12 @@ class OpenAISuspendableDirectClientTest {
 
         val client = OpenAIDirectLLMClient(apiKey)
 
-        val prompt = Prompt.build(OpenAIModels.GPT4oMini, "test-code") {
+        val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
             user("Write a simple Kotlin function to calculate the factorial of a number.")
         }
 
-        val response = client.execute(prompt)
+        val response = client.execute(prompt, OpenAIModels.GPT4oMini)
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")

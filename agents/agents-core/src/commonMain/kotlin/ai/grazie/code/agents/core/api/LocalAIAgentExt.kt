@@ -36,12 +36,13 @@ fun simpleChatAgent(
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry? = null,
     maxIterations: Int = 50,
-    ): AIAgentBase {
+): AIAgentBase {
 
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(llmModel, "chat", params = LLMParams(temperature = temperature)) {
+        prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
             system(systemPrompt)
         },
+        model = llmModel,
         maxAgentIterations = maxIterations,
     )
 
@@ -91,13 +92,14 @@ fun simpleSingleRunAgent(
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
-    installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit= {}
+    installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit = {}
 ): AIAgentBase {
 
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(llmModel, "chat", params = LLMParams(temperature = temperature)) {
+        prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
             system(systemPrompt)
         },
+        model = llmModel,
         maxAgentIterations = maxIterations,
     )
 

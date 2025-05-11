@@ -20,6 +20,7 @@ import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.ReportingLLMLLMClient.Event
 import ai.jetbrains.code.prompt.llm.LLMProvider
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -45,7 +46,8 @@ internal class ReportingLLMLLMClient(
             val llmClient: String,
             val method: String,
             val prompt: Prompt,
-            val tools: List<String>
+            val tools: List<String>,
+            val model: LLModel
         ) : Event
 
         data object Termination : Event
@@ -53,7 +55,8 @@ internal class ReportingLLMLLMClient(
 
     override suspend fun execute(
         prompt: Prompt,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor>,
+        model: LLModel
     ): List<Message.Response> {
         CoroutineScope(coroutineContext).launch {
             eventsChannel.send(
@@ -61,25 +64,27 @@ internal class ReportingLLMLLMClient(
                     llmClient = underlyingClient::class.simpleName ?: "null",
                     method = "execute",
                     prompt = prompt,
-                    tools = tools.map { it.name }
+                    tools = tools.map { it.name },
+                    model = model
                 )
             )
         }
-        return underlyingClient.execute(prompt, tools)
+        return underlyingClient.execute(prompt, model, tools)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> {
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         CoroutineScope(coroutineContext).launch {
             eventsChannel.send(
                 Event.Message(
                     llmClient = underlyingClient::class.simpleName ?: "null",
                     method = "execute",
                     prompt = prompt,
-                    tools = emptyList()
+                    tools = emptyList(),
+                    model = model
                 )
             )
         }
-        return underlyingClient.executeStreaming(prompt)
+        return underlyingClient.executeStreaming(prompt, model)
     }
 }
 
@@ -336,14 +341,14 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertTrue(
             messages
                 .filter { it.llmClient == "AnthropicDirectLLMClient" }
-                .all { it.prompt.model.provider == LLMProvider.Anthropic },
+                .all { it.model.provider == LLMProvider.Anthropic },
             "All prompts with Anthropic model must be delegated to Anthropic client"
         )
 
         assertTrue(
             messages
                 .filter { it.llmClient == "OpenAIDirectLLMClient" }
-                .all { it.prompt.model.provider == LLMProvider.OpenAI },
+                .all { it.model.provider == LLMProvider.OpenAI },
             "All prompts with OpenAI model must be delegated to OpenAI client"
         )
     }
@@ -409,8 +414,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_7
                         rewritePrompt {
-                            prompt(AnthropicModels.Sonnet_3_7, "test") { //JetBrainsAIModels.Anthropic.Sonnet_3_7
+                            prompt("test") {
                                 system("You are a helpful assistant. You need to solve my task. CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!")
                             }
                         }
@@ -433,8 +439,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
+                        model = OpenAIModels.GPT4o
                         rewritePrompt {
-                            prompt(OpenAIModels.GPT4o, "test") { //  JetBrainsAIModels.OpenAI.GPT4o
+                            prompt("test") {
                                 system(
                                     "You are a helpful assistant. You need to verify that the task is solved correctly. " +
                                             "Please analyze the whole produced solution, and check that it is valid." +
@@ -478,7 +485,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, maxAgentIterations),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.GPT4o, maxAgentIterations),
             toolRegistry = tools,
             eventHandler = eventHandler
         ) {
@@ -502,8 +509,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_7
                         rewritePrompt {
-                            prompt(AnthropicModels.Sonnet_3_7, "test") {
+                            prompt("test") {
                                 system("You are a helpful assistant. You need to solve my task.")
                             }
                         }
@@ -520,8 +528,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
+                        model = OpenAIModels.GPT4o
                         rewritePrompt {
-                            prompt(OpenAIModels.GPT4o, "test") {
+                            prompt("test") {
                                 system(
                                     "You are a helpful assistant. You need to verify that the task is solved correctly. " + "Please analyze the whole produced solution, and check that it is valid." + "Write concise verification result."
                                 )
@@ -539,8 +548,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_7
                         rewritePrompt {
-                            prompt(AnthropicModels.Sonnet_3_7, "test") {
+                            prompt("test") {
                                 system("Add some joke at the end of the solution.")
                             }
                         }
@@ -562,7 +572,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
@@ -603,8 +613,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_initial") {
                 val defineInitialPrompt by node<Unit, Unit> {
                     llm.writeSession {
+                        model = OpenAIModels.O3Mini
                         rewritePrompt {
-                            prompt(OpenAIModels.O3Mini, "test") {
+                            prompt("test") {
                                 system("You are a helpful assistant. You need to solve my task.")
                             }
                         }
@@ -621,8 +632,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_judge") {
                 val defineLLMasAJudgePrompt by node<Unit, Unit> {
                     llm.writeSession {
+                        model = OpenAIModels.GPT4o
                         rewritePrompt {
-                            prompt(OpenAIModels.GPT4o, "test") {
+                            prompt("test") {
                                 system(
                                     "You are a helpful assistant. You need to verify that the task is solved correctly. " + "Please analyze the whole produced solution, and check that it is valid." + "Write concise verification result."
                                 )
@@ -645,7 +657,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
@@ -685,8 +697,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_initial") {
                 val defineInitialPrompt by node<Unit, Unit> {
                     llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_5
                         rewritePrompt {
-                            prompt(AnthropicModels.Sonnet_3_5, "test") {
+                            prompt("test") {
                                 system("You are a helpful assistant. You need to solve my task.")
                             }
                         }
@@ -703,8 +716,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_judge") {
                 val defineLLMasAJudgePrompt by node<Unit, Unit> {
                     llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_7
                         rewritePrompt {
-                            prompt(AnthropicModels.Sonnet_3_7, "test") {
+                            prompt("test") {
                                 system(
                                     "You are a helpful assistant. You need to verify that the task is solved correctly. " + "Please analyze the whole produced solution, and check that it is valid." + "Write concise verification result."
                                 )
@@ -727,7 +741,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt(AnthropicModels.Sonnet_3_7, "test") {}, 15),
+            agentConfig = LocalAgentConfig(prompt("test") {}, AnthropicModels.Sonnet_3_7, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
@@ -769,8 +783,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("anthropic-calculator") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_7
                         rewritePrompt {
-                            prompt(AnthropicModels.Sonnet_3_7, "test-tools") {
+                            prompt("test-tools") {
                                 system("You are a helpful assistant. You need to solve a math problem using the calculator tool.")
                             }
                         }
@@ -791,8 +806,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai-color-picker") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
+                        model = OpenAIModels.GPT4o
                         rewritePrompt {
-                            prompt(OpenAIModels.GPT4o, "test-tools") {
+                            prompt("test-tools") {
                                 system(
                                     "You are a helpful assistant. You need to pick some colors using the colorPicker tool. " +
                                             "Please pick at least 3 colors."
@@ -816,8 +832,9 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("anthropic-summary") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_7
                         rewritePrompt {
-                            prompt(AnthropicModels.Sonnet_3_7, "test-tools") {
+                            prompt("test-tools") {
                                 system("Summarize the results of the previous operations and add a joke at the end.")
                             }
                         }
@@ -853,7 +870,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test-tools") {}, 15),
+            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->

@@ -58,7 +58,7 @@ fun main() {
 
         // Create agent config with a proper prompt
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(OpenAIModels.GPT4o, "tone_analysis") {
+            prompt = prompt("tone_analysis") {
                 system(
                     """
                     You are an question answering agent with access to the tone analysis tools.
@@ -70,6 +70,7 @@ fun main() {
                     """.trimIndent()
                 )
             },
+            model = OpenAIModels.GPT4o,
             maxAgentIterations = 10
         )
 

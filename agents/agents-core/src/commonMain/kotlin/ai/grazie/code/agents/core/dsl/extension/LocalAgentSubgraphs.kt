@@ -22,12 +22,12 @@ internal suspend fun LocalAgentStageContext.promptWithTLDR(
     llm.writeSession {
         if (shouldTLDRHistory) replaceHistoryWithTLDR()
         rewritePrompt { prompt ->
-            prompt.copy(
-                messages = prompt.messages.filterNot { it is Message.System },
-                model = model ?: prompt.model,
-                params = params ?: prompt.params,
-            )
+            prompt
+                .withUpdatedMessages { filterNot { it is Message.System } }
+                .withParams(params ?: prompt.params)
         }
+        if (model != null) changeModel(model)
+
         updatePrompt {
             system(systemMessage)
         }

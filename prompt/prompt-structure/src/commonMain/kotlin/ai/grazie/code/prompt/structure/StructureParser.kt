@@ -50,7 +50,6 @@ class StructureParser(
         structure: StructuredData<T>
     ): T {
         val prompt = prompt(
-            fixingModel,
             "code-engine-structure-fixing",
             LLMParams(
                 schema = structure.schema
@@ -91,7 +90,7 @@ class StructureParser(
         }
 
         return try {
-            val fixed = executor.executeStructuredOneShot(prompt, structure).structure
+            val fixed = executor.executeStructuredOneShot(prompt, fixingModel, structure).structure
             logger.info { "Fixed the structure into: $fixed" }
             fixed
         } catch (e: SerializationException) {
