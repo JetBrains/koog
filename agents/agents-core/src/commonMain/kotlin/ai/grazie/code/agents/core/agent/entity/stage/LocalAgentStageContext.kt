@@ -523,7 +523,7 @@ sealed class LocalAgentLLMSession(
     open suspend fun <T> requestLLMStructured(
         structure: StructuredData<T>,
         retries: Int = 1,
-        fixingModel: LLModel = OpenAIModels.GPT4o
+        fixingModel: LLModel = OpenAIModels.General.GPT4o
     ): StructuredResponse<T> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)

@@ -1,5 +1,7 @@
 package ai.jetbrains.embeddings.local
 
+import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.embeddings.base.Embedder
 import ai.jetbrains.embeddings.base.Vector
 
@@ -8,7 +10,7 @@ import ai.jetbrains.embeddings.base.Vector
  *
  * @property client The Ollama model client to use for embedding text.
  */
-class OllamaEmbedder(private val client: OllamaEmbedderClient) : Embedder {
+class OllamaEmbedder(private val client: OllamaClient, private val model: LLModel) : Embedder {
     /**
      * Embeds the given text using the Ollama model.
      *
@@ -16,7 +18,7 @@ class OllamaEmbedder(private val client: OllamaEmbedderClient) : Embedder {
      * @return A vector representation of the text.
      */
     override suspend fun embed(text: String): Vector {
-        return client.embed(text)
+        return Vector(client.embed(text, model))
     }
 
     /**

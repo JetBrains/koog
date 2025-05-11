@@ -48,3 +48,4 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthrop
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
 include(":embeddings:embeddings-base")
 include(":embeddings:embeddings-local")
+include(":embeddings:embeddings-llm-remote")

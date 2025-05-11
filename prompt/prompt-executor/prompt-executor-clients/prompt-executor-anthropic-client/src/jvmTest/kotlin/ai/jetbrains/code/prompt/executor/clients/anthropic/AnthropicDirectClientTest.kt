@@ -4,10 +4,12 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.jetbrains.code.prompt.dsl.Prompt
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -23,21 +25,34 @@ class AnthropicSuspendableDirectClientTest {
     // API key for testing
     private val apiKey: String get() = readTestAnthropicKeyFromEnv()
 
+    // TODO add parametrized test
+    val allModels = listOf(
+        AnthropicModels.Sonnet_3_7,
+        AnthropicModels.Sonnet_3_5,
+        AnthropicModels.Sonnet_3,
+        AnthropicModels.Opus,
+        AnthropicModels.Haiku_3,
+        AnthropicModels.Haiku_3_5
+    )
+
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun testCreateClient() {
-        // TODO: pass the `ANTHROPIC_API_TEST_KEY`
-        return
-
-        val client = AnthropicDirectLLMClient(apiKey)
+        val client = AnthropicLLMClient(apiKey)
         assertNotNull(client, "Client should be created successfully")
     }
 
-    @Test
-    fun testExecuteSimplePrompt() = runTest {
-        // TODO: pass the `ANTHROPIC_API_TEST_KEY`
-        return@runTest
+    fun testWithAllModels(test: suspend (model: LLModel) -> Unit) {
+        allModels.forEach { model ->
+            println("Testing with model: $model")
+            runTest { test(model) }
+        }
+    }
 
-        val client = AnthropicDirectLLMClient(apiKey)
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
+    @Test
+    fun testExecuteSimplePrompt() = testWithAllModels { model ->
+        val client = AnthropicLLMClient(apiKey)
 
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
@@ -55,14 +70,12 @@ class AnthropicSuspendableDirectClientTest {
         )
     }
 
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testExecuteStreamingPrompt() = runTest {
-        // TODO: pass the `ANTHROPIC_API_TEST_KEY`
-        return@runTest
+    fun testExecuteStreamingPrompt() = testWithAllModels { model ->
+        val client = AnthropicLLMClient(apiKey)
 
-        val client = AnthropicDirectLLMClient(apiKey)
-
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = Prompt.build( "test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
@@ -89,12 +102,10 @@ class AnthropicSuspendableDirectClientTest {
         ADD, SUBTRACT, MULTIPLY, DIVIDE
     }
 
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testExecuteWithTools() = runTest {
-        // TODO: pass the `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val client = AnthropicDirectLLMClient(apiKey)
+    fun testExecuteWithTools() = testWithAllModels { model ->
+        val client = AnthropicLLMClient(apiKey)
 
         // Define a simple calculator tool
         val calculatorTool = ToolDescriptor(
@@ -144,12 +155,10 @@ class AnthropicSuspendableDirectClientTest {
         }
     }
 
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testCodeGeneration() = runTest {
-        // TODO: pass the `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val client = AnthropicDirectLLMClient(apiKey)
+    fun testCodeGeneration() = testWithAllModels { model ->
+        val client = AnthropicLLMClient(apiKey)
 
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")

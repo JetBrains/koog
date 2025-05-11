@@ -3,7 +3,7 @@ package ai.jetbrains.code.prompt.executor.llms
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
@@ -15,13 +15,13 @@ import kotlinx.coroutines.flow.flow
  *
  * This class provides functionality to execute prompts with optional tools and retrieve either a list of responses
  * or a streaming flow of response chunks from the LLM provider. It delegates the actual LLM interaction to the provided
- * implementation of `DirectLLMClient`.
+ * implementation of `LLMClient`.
  *
  * @constructor Creates an instance of `LLMPromptExecutor`.
  * @param llmClient The client used for direct communication with the LLM provider.
  */
 open class SingleLLMPromptExecutor(
-    private val llmClient: DirectLLMClient,
+    private val llmClient: LLMClient,
 ) : PromptExecutor {
     companion object {
         private val logger = LoggerFactory.create("ai.jetbrains.code.prompt.executor.llms.LLMPromptExecutor")

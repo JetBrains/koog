@@ -19,7 +19,7 @@ import kotlinx.serialization.SerializationException
  */
 class StructureParser(
     val executor: PromptExecutor,
-    val fixingModel: LLModel = OpenAIModels.GPT4o,
+    val fixingModel: LLModel = OpenAIModels.General.GPT4o,
 ) {
     companion object {
         private val logger =

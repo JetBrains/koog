@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
  * Common interface for direct communication with LLM providers.
  * This interface defines methods for executing prompts and streaming responses.
  */
-interface DirectLLMClient {
+interface LLMClient {
     /**
      * Executes a prompt and returns a list of response messages.
      *
@@ -33,6 +33,22 @@ interface DirectLLMClient {
      * @return Flow of response chunks
      */
     suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
+}
+
+/**
+ * Extension of the LLMClient interface which includes functionality for generating text embeddings
+ * in addition to executing prompts and streaming outputs.
+ */
+interface LLMClientWithEmbeddings: LLMClient {
+    /**
+     * Embeds the given text using into a vector of double-precision numbers.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the Embed capability.
+     * @return A list of floating-point values representing the embedding.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
+    suspend fun embed(text: String, model: LLModel): List<Double>
 }
 
 

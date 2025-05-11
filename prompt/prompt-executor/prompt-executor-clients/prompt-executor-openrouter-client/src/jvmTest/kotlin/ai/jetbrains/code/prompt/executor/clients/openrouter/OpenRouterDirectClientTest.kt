@@ -35,14 +35,14 @@ class OpenRouterDirectClientTest {
     @Test
     @Ignore("This test is ignored because it requires a valid API key.")
     fun testCreateClient() {
-        val client = OpenRouterDirectLLMClient(apiKey)
+        val client = OpenRouterLLMClient(apiKey)
         assertNotNull(client, "Client should be created successfully")
     }
 
     @Test
     @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteSimplePrompt() = runTest {
-        val client = OpenRouterDirectLLMClient(apiKey)
+        val client = OpenRouterLLMClient(apiKey)
 
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
@@ -63,7 +63,7 @@ class OpenRouterDirectClientTest {
     @Test
     @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteStreamingPrompt() = runTest {
-        val client = OpenRouterDirectLLMClient(apiKey)
+        val client = OpenRouterLLMClient(apiKey)
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
@@ -95,7 +95,7 @@ class OpenRouterDirectClientTest {
     @Test
     @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteWithTools() = runTest {
-        val client = OpenRouterDirectLLMClient(apiKey)
+        val client = OpenRouterLLMClient(apiKey)
 
         // Define a simple calculator tool
         val calculatorTool = ToolDescriptor(
@@ -149,7 +149,7 @@ class OpenRouterDirectClientTest {
     @Test
     @Ignore("This test is ignored because it requires a valid API key.")
     fun testCodeGeneration() = runTest {
-        val client = OpenRouterDirectLLMClient(apiKey)
+        val client = OpenRouterLLMClient(apiKey)
 
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")

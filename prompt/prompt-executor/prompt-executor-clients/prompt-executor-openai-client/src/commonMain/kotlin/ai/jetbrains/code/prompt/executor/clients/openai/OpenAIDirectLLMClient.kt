@@ -8,7 +8,8 @@ import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig
-import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClientWithEmbeddings
 import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
@@ -38,17 +39,17 @@ class OpenAIClientSettings(
 )
 
 /**
- * Implementation of [DirectLLMClient] for OpenAI API.
+ * Implementation of [LLMClient] for OpenAI API.
  * Uses Ktor HttpClient to communicate with the OpenAI API.
  *
  * @param apiKey The API key for the OpenAI API
  * @param settings The base URL and timeouts for the OpenAI API, defaults to "https://api.openai.com/v1" and 900 s
  */
-open class OpenAIDirectLLMClient(
+open class OpenAILLMClient(
     private val apiKey: String,
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     baseClient: HttpClient = HttpClient(engineFactoryProvider())
-) : DirectLLMClient {
+) : LLMClientWithEmbeddings {
 
     companion object {
         private val logger =
@@ -73,99 +74,14 @@ open class OpenAIDirectLLMClient(
         }
     }
 
-    @Serializable
-    private data class OpenAIRequest(
-        val model: String,
-        val messages: List<OpenAIMessage>,
-        val temperature: Double? = null,
-        val tools: List<OpenAITool>? = null,
-        val stream: Boolean = false
-    )
-
-    @Serializable
-    private data class OpenAIMessage(
-        val role: String,
-        val content: String? = "",
-        val tool_calls: List<OpenAIToolCall>? = null,
-        val name: String? = null,
-        val tool_call_id: String? = null
-    )
-
-    @Serializable
-    private data class OpenAIToolCall(
-        val id: String,
-        val type: String = "function",
-        val function: OpenAIFunction
-    )
-
-    @Serializable
-    private data class OpenAIFunction(
-        val name: String,
-        val arguments: String
-    )
-
-    @Serializable
-    private data class OpenAITool(
-        val type: String = "function",
-        val function: OpenAIToolFunction
-    )
-
-    @Serializable
-    private data class OpenAIToolFunction(
-        val name: String,
-        val description: String,
-        val parameters: JsonObject
-    )
-
-    @Serializable
-    private data class OpenAIResponse(
-        val id: String,
-        @SerialName("object") val objectType: String,
-        val created: Long,
-        val model: String,
-        val choices: List<OpenAIChoice>,
-        val usage: OpenAIUsage? = null
-    )
-
-    @Serializable
-    private data class OpenAIChoice(
-        val index: Int,
-        val message: OpenAIMessage,
-        val finish_reason: String? = null
-    )
-
-    @Serializable
-    private data class OpenAIUsage(
-        val prompt_tokens: Int,
-        val completion_tokens: Int,
-        val total_tokens: Int
-    )
-
-    @Serializable
-    private data class OpenAIStreamResponse(
-        val id: String,
-        @SerialName("object") val objectType: String,
-        val created: Long,
-        val model: String,
-        val choices: List<OpenAIStreamChoice>
-    )
-
-    @Serializable
-    private data class OpenAIStreamChoice(
-        val index: Int,
-        val delta: OpenAIStreamDelta,
-        val finish_reason: String? = null
-    )
-
-    @Serializable
-    private data class OpenAIStreamDelta(
-        val role: String? = null,
-        val content: String? = null,
-        val tool_calls: List<OpenAIToolCall>? = null
-    )
-
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        if (!prompt.model.capabilities.contains(LLMCapability.Tools) && tools.isNotEmpty()) {
+            throw IllegalArgumentException("Model ${prompt.model.id} does not support tools")
+        }
+        if (!prompt.model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${prompt.model.id} does not support chat completions")
+        }
 
         val request = createOpenAIRequest(prompt, tools, model, false)
         val requestBody = json.encodeToString(request)
@@ -190,6 +106,9 @@ open class OpenAIDirectLLMClient(
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
+        if (!prompt.model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${prompt.model.id} does not support chat completions")
+        }
 
         val request = createOpenAIRequest(prompt, emptyList(), model, true)
         val requestBody = json.encodeToString(request)
@@ -398,6 +317,50 @@ open class OpenAIDirectLLMClient(
             else -> {
                 logger.error { "Unexpected response from OpenAI: no tool calls and no content" }
                 throw IllegalStateException("Unexpected response from OpenAI: no tool calls and no content")
+            }
+        }
+    }
+
+    /**
+     * Embeds the given text using the OpenAI embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the Embed capability.
+     * @return A list of floating-point values representing the embedding.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
+        if (!model.capabilities.contains(LLMCapability.Embed)) {
+            throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
+        }
+
+        logger.debug { "Embedding text with model: ${model.id}" }
+
+        val request = OpenAIEmbeddingRequest(
+            model = model.id,
+            input = text
+        )
+        val requestBody = json.encodeToString(request)
+
+        return withContext(Dispatchers.SuitableForIO) {
+            val response = httpClient.post("${settings.baseUrl}/embeddings") {
+                contentType(ContentType.Application.Json)
+                header("Authorization", "Bearer $apiKey")
+                setBody(requestBody)
+            }
+
+            if (response.status.isSuccess()) {
+                val openAIResponse = response.body<OpenAIEmbeddingResponse>()
+                if (openAIResponse.data.isNotEmpty()) {
+                    openAIResponse.data.first().embedding
+                } else {
+                    logger.error { "Empty data in OpenAI embedding response" }
+                    throw IllegalStateException("Empty data in OpenAI embedding response")
+                }
+            } else {
+                val errorBody = response.bodyAsText()
+                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
+                throw IllegalStateException("Error from OpenAI API: ${response.status}: $errorBody")
             }
         }
     }

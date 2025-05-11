@@ -1,22 +1,22 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
-import ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
+import ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.jetbrains.code.prompt.executor.llms.SingleLLMPromptExecutor
 
-fun simpleOpenAIExecutor(apiToken: String) = SingleLLMPromptExecutor(OpenAIDirectLLMClient(apiToken))
+fun simpleOpenAIExecutor(apiToken: String) = SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
 
 /**
- * Creates an instance of `SingleLLMPromptExecutor` with an `AnthropicDirectLLMClient`.
+ * Creates an instance of `SingleLLMPromptExecutor` with an `AnthropicLLMClient`.
  *
  * @param apiToken The API token used for authentication with the Anthropic LLM client.
  */
-fun simpleAnthropicExecutor(apiToken: String) = SingleLLMPromptExecutor(AnthropicDirectLLMClient(apiToken))
+fun simpleAnthropicExecutor(apiToken: String) = SingleLLMPromptExecutor(AnthropicLLMClient(apiToken))
 
 /**
- * Creates an instance of `SingleLLMPromptExecutor` with an `OpenRouterDirectLLMClient`.
+ * Creates an instance of `SingleLLMPromptExecutor` with an `OpenRouterLLMClient`.
  *
  * @param apiToken The API token used for authentication with the OpenRouter API.
  */
-fun simpleOpenRouterExecutor(apiToken: String) = SingleLLMPromptExecutor(OpenRouterDirectLLMClient(apiToken))
+fun simpleOpenRouterExecutor(apiToken: String) = SingleLLMPromptExecutor(OpenRouterLLMClient(apiToken))
