@@ -1,5 +1,4 @@
 import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
-import org.gradle.kotlin.dsl.project
 
 group = "${rootProject.group}.agents"
 version = rootProject.version
@@ -13,6 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
 
                 implementation(libs.ai.grazie.model.auth)

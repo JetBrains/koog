@@ -13,7 +13,7 @@ class EventHandlerFeature {
     companion object Feature : KotlinAIAgentFeature<EventHandlerFeatureConfig, EventHandlerFeature> {
 
         private val logger: MPPLogger =
-            LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.feature.EventHandlerFeature")
+            LoggerFactory.create("ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature")
 
         override val key: LocalAgentStorageKey<EventHandlerFeature> =
             LocalAgentStorageKey("agents-features-event-handler")

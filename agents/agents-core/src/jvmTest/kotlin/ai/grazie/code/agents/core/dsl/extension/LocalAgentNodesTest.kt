@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.core.dsl.extension
 
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
@@ -27,9 +27,6 @@ class LocalAgentNodesTest {
         }
 
         val results = mutableListOf<String?>()
-        val eventHandler = EventHandler {
-            handleResult { results += it }
-        }
 
         val agentConfig = LocalAgentConfig(
             prompt = prompt("test-agent") {},
@@ -52,9 +49,12 @@ class LocalAgentNodesTest {
                 stage("default") {
                     tool(DummyTool())
                 }
-            },
-            eventHandler = eventHandler
-        )
+            }
+        ) {
+            install(EventHandlerFeature) {
+                onAgentFinished = { _, result -> results += result }
+            }
+        }
 
         runner.run("")
 

@@ -2,9 +2,10 @@ package ai.grazie.code.agents.test
 
 import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +20,7 @@ class SimpleAgentIntegrationTest {
             You MUST use tools to communicate to the user.
             You MUST NOT communicate to the user without tools.
         """.trimIndent()
-    val apiToken = System.getenv("USER_STGN_JWT_TOKEN")
+    private val apiToken = System.getenv("USER_STGN_JWT_TOKEN")
 
     private fun runBlockingWithToken(block: suspend CoroutineScope.(token: String) -> Unit) = runBlocking {
         if (apiToken.isNullOrBlank() || apiToken == "null") {
@@ -28,18 +29,18 @@ class SimpleAgentIntegrationTest {
         block(apiToken)
     }
 
-    val eventHandler = EventHandler {
-        onToolCall { stage, tool, args ->
+    val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+        onToolCall = { stage, tool, args ->
             println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
             actualToolCalls.add(tool.name)
         }
 
-        handleError {
-            errors.add(it)
+        onAgentRunError = { strategyName, throwable ->
+            errors.add(throwable)
         }
 
-        handleResult {
-            results.add(it)
+        onAgentFinished = { strategyName, result ->
+            results.add(result)
         }
     }
 
@@ -63,8 +64,8 @@ class SimpleAgentIntegrationTest {
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Chat.GPT4o,
             temperature = 1.0,
-            eventHandler = eventHandler,
             maxIterations = 10,
+            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
         )
 
         agent.run("Please exit.")
@@ -85,9 +86,9 @@ class SimpleAgentIntegrationTest {
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
-            eventHandler = eventHandler,
             maxIterations = 10,
             toolRegistry = toolRegistry,
+            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
         )
 
         agent.run("Hello, how are you?")
@@ -104,8 +105,8 @@ class SimpleAgentIntegrationTest {
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
-            eventHandler = eventHandler,
             maxIterations = 10,
+            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
         )
 
         agent.run("Repeat what I say: hello, I'm good.")
@@ -128,9 +129,9 @@ class SimpleAgentIntegrationTest {
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
-            eventHandler = eventHandler,
             toolRegistry = toolRegistry,
             maxIterations = 10,
+            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
         )
 
         agent.run("Write a Kotlin function to calculate factorial.")

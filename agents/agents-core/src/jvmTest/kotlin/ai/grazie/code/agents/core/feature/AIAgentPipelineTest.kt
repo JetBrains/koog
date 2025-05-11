@@ -1,16 +1,15 @@
 package ai.grazie.code.agents.core.feature
 
-import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.CalculatorChatExecutor
+import ai.grazie.code.agents.core.CalculatorTools
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.calculator.CalculatorChatExecutor
-import ai.grazie.code.agents.core.calculator.CalculatorTools.PlusTool
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.*
+import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
@@ -110,7 +109,7 @@ class AIAgentPipelineTest {
         // Use custom tool registry with plus tool to be called
         val toolRegistry = ToolRegistry {
             stage("default") {
-                tool(PlusTool)
+                tool(CalculatorTools.PlusTool)
             }
         }
 
@@ -300,7 +299,6 @@ class AIAgentPipelineTest {
                     tool(DummyTool())
                 }
             },
-            eventHandler = EventHandler { },
             installFeatures = installFeatures,
         )
     }

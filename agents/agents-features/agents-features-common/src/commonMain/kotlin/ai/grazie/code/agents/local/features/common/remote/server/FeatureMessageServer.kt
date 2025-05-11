@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.features.common.remote.server
 
-import ai.grazie.code.agents.core.feature.message.Closeable
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.Closeable
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 
 /**
  * Represents a server responsible for managing and facilitating communication of feature messages.
@@ -13,7 +13,7 @@ import ai.grazie.code.agents.core.feature.message.FeatureMessage
  * Please see description for a client in [ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient].
  *
  * Features:
- *   - Send SSE events [FeatureMessage] during agent execution, e.g. [ai.grazie.code.agents.local.features.common.model.AgentCreateEvent];
+ *   - Send SSE events [FeatureMessage] during agent execution, e.g. [ai.grazie.code.agents.core.feature.model.AgentCreateEvent];
  *   - Process incoming messages from a client;
  *   - Respond to client's health check requests to verify connection state.
  */

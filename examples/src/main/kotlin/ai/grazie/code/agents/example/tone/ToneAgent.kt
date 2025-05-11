@@ -2,13 +2,15 @@ package ai.grazie.code.agents.example.tone
 
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.event.EventHandler
+import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
+import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -40,22 +42,6 @@ fun main() {
         println("I am agent that can answer question and analyze tone. Enter your sentence: ")
         val userRequest = readln()
 
-        // Create an event handler for logging
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, args ->
-                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
-            }
-
-            handleError {
-                println("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-                true
-            }
-
-            handleResult {
-                println("Result: $it")
-            }
-        }
-
         // Create agent config with a proper prompt
         val agentConfig = LocalAgentConfig(
             prompt = prompt("tone_analysis") {
@@ -83,9 +69,22 @@ fun main() {
             strategy = strategy,
             cs = this,
             agentConfig = agentConfig,
-            toolRegistry = toolRegistry,
-            eventHandler = eventHandler
-        )
+            toolRegistry = toolRegistry
+        ) {
+            install(EventHandlerFeature) {
+                onToolCall = { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args ->
+                    println("Tool called: stage ${stage.name}, tool ${tool.name}, args $toolArgs")
+                }
+
+                onAgentRunError = { strategyName: String, throwable: Throwable ->
+                    println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+                }
+
+                onAgentFinished = { strategyName: String, result: String? ->
+                    println("Result: $result")
+                }
+            }
+        }
 
         agent.run(userRequest)
     }

@@ -1,6 +1,5 @@
 package ai.grazie.code.agents.testing.tools
 
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.utils.mpp.LoggerFactory
@@ -17,7 +16,6 @@ internal class MockLLMExecutor(
     private val exactMatches: Map<String, Message.Response>? = null,
     private val conditional: Map<(String) -> Boolean, String>? = null,
     private val defaultResponse: String = "",
-    private val eventHandler: EventHandler? = null,
     private val toolRegistry: ToolRegistry? = null,
     private val logger: MPPLogger = LoggerFactory.create(MockLLMExecutor::class.simpleName!!),
     val toolActions: List<ToolCondition<*, *>> = emptyList()

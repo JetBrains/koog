@@ -7,8 +7,9 @@ import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
 import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
@@ -292,8 +293,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, arguments ->
+        val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+            onToolCall = { stage, tool, arguments ->
                 println(
                     "[$stage] Calling tool ${tool.name} with arguments ${
                         arguments.toString().lines().first().take(100)
@@ -301,11 +302,11 @@ class KotlinAIAgentWithMultipleLLMTest {
                 )
             }
 
-            handleResult {
+            onAgentFinished = { _, _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
-        val agent = createTestAgent(eventsChannel, fs, eventHandler, maxAgentIterations = 42)
+        val agent = createTestAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
 
         val result = agent.runAndGetResult(
             "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
@@ -356,8 +357,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         var errorMessage: String? = null
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, arguments ->
+        val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+            onToolCall = { stage, tool, arguments ->
                 println(
                     "[$stage] Calling tool ${tool.name} with arguments ${
                         arguments.toString().lines().first().take(100)
@@ -365,17 +366,17 @@ class KotlinAIAgentWithMultipleLLMTest {
                 )
             }
 
-            handleResult {
+            onAgentFinished = { _, _ ->
                 eventsChannel.send(Event.Termination)
             }
 
-            handleError {
-                errorMessage = it.message
+            onAgentRunError = { _, throwable ->
+                errorMessage = throwable.message
                 true
             }
         }
         val steps = 10
-        val agent = createTestAgent(eventsChannel, fs, eventHandler, maxAgentIterations = steps)
+        val agent = createTestAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = steps)
 
         val result = agent.runAndGetResult(
             "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
@@ -392,7 +393,7 @@ class KotlinAIAgentWithMultipleLLMTest {
     private fun createTestAgent(
         eventsChannel: Channel<Event>,
         fs: MockFileSystem,
-        eventHandler: EventHandler,
+        eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit,
         maxAgentIterations: Int
     ): AIAgentBase {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
@@ -483,11 +484,12 @@ class KotlinAIAgentWithMultipleLLMTest {
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
-            eventHandler = eventHandler
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
             }
+
+            install(EventHandlerFeature, eventHandlerConfig)
         }
     }
 
@@ -570,8 +572,13 @@ class KotlinAIAgentWithMultipleLLMTest {
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
-            eventHandler = EventHandler {
-                onToolCall { stage, tool, arguments ->
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+
+            install(EventHandlerFeature) {
+                onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
                             arguments.toString().lines().first().take(100)
@@ -579,13 +586,9 @@ class KotlinAIAgentWithMultipleLLMTest {
                     )
                 }
 
-                handleResult {
+                onAgentFinished = { _, _ ->
                     println(Event.Termination)
                 }
-            }
-        ) {
-            install(TraceFeature) {
-                addMessageProcessor(TestLogPrinter())
             }
         }
 
@@ -654,9 +657,14 @@ class KotlinAIAgentWithMultipleLLMTest {
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
-            toolRegistry = tools,
-            eventHandler = EventHandler {
-                onToolCall { stage, tool, arguments ->
+            toolRegistry = tools
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+
+            install(EventHandlerFeature) {
+                onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
                             arguments.toString().lines().first().take(100)
@@ -664,13 +672,9 @@ class KotlinAIAgentWithMultipleLLMTest {
                     )
                 }
 
-                handleResult {
+                onAgentFinished = { _, _ ->
                     println(Event.Termination)
                 }
-            }
-        ) {
-            install(TraceFeature) {
-                addMessageProcessor(TestLogPrinter())
             }
         }
 
@@ -738,9 +742,14 @@ class KotlinAIAgentWithMultipleLLMTest {
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = LocalAgentConfig(prompt("test") {}, AnthropicModels.Sonnet_3_7, 15),
-            toolRegistry = tools,
-            eventHandler = EventHandler {
-                onToolCall { stage, tool, arguments ->
+            toolRegistry = tools
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+
+            install(EventHandlerFeature) {
+                onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
                             arguments.toString().lines().first().take(100)
@@ -748,13 +757,9 @@ class KotlinAIAgentWithMultipleLLMTest {
                     )
                 }
 
-                handleResult {
+                onAgentFinished = { _, _ ->
                     println(Event.Termination)
                 }
-            }
-        ) {
-            install(TraceFeature) {
-                addMessageProcessor(TestLogPrinter())
             }
         }
 
@@ -867,9 +872,14 @@ class KotlinAIAgentWithMultipleLLMTest {
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
-            toolRegistry = tools,
-            eventHandler = EventHandler {
-                onToolCall { stage, tool, arguments ->
+            toolRegistry = tools
+        ) {
+            install(TraceFeature) {
+                addMessageProcessor(TestLogPrinter())
+            }
+
+            install(EventHandlerFeature) {
+                onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
                             arguments.toString().lines().first().take(100)
@@ -877,13 +887,9 @@ class KotlinAIAgentWithMultipleLLMTest {
                     )
                 }
 
-                handleResult {
+                onAgentFinished = { _, _ ->
                     println(Event.Termination)
                 }
-            }
-        ) {
-            install(TraceFeature) {
-                addMessageProcessor(TestLogPrinter())
             }
         }
 
@@ -948,17 +954,19 @@ class KotlinAIAgentWithMultipleLLMTest {
                 toolRegistry = SimpleToolRegistry {
                     tool(CalculatorTool)
                 },
-                eventHandler = EventHandler {
-                    handleError { e ->
-                        println("error: ${e.javaClass.simpleName}(${e.message})\n${e.stackTraceToString()}")
-                        true
-                    }
-                    onToolCall { stage, tool, arguments ->
-                        println(
-                            "[${stage.name}] Calling tool ${tool.name} with arguments ${
-                                arguments.toString().lines().first().take(100)
-                            }"
-                        )
+                installFeatures = {
+                    install(EventHandlerFeature) {
+                        onAgentRunError = { _, e ->
+                            println("error: ${e.javaClass.simpleName}(${e.message})\n${e.stackTraceToString()}")
+                            true
+                        }
+                        onToolCall = { stage, tool, arguments ->
+                            println(
+                                "[${stage.name}] Calling tool ${tool.name} with arguments ${
+                                    arguments.toString().lines().first().take(100)
+                                }"
+                            )
+                        }
                     }
                 }
             )

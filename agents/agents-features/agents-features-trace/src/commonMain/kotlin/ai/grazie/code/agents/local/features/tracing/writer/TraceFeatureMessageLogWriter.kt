@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.local.features.tracing.writer
 
-import ai.grazie.code.agents.local.features.common.model.*
+import ai.grazie.code.agents.core.feature.model.*
+import ai.grazie.code.agents.local.features.common.message.FeatureEvent
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import ai.grazie.code.agents.local.features.common.writer.FeatureMessageLogWriter
-import ai.grazie.code.agents.core.feature.message.FeatureEvent
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
-import ai.grazie.code.agents.core.feature.message.FeatureStringMessage
 import ai.grazie.utils.mpp.MPPLogger
 
 class TraceFeatureMessageLogWriter(

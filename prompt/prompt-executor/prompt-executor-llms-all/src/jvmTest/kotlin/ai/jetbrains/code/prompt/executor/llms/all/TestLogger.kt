@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
-import ai.grazie.code.agents.core.feature.message.FeatureMessageProcessor
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
 
 
 class TestLogPrinter : FeatureMessageProcessor() {

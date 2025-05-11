@@ -1,21 +1,22 @@
-package ai.grazie.code.agents.core.calculator
+package ai.grazie.code.agents.example.calculator
 
-import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
 import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
 import ai.grazie.code.agents.core.dsl.extension.onToolCall
-import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import kotlin.collections.plusAssign
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -37,25 +38,6 @@ class CalculatorTest {
         val results = mutableListOf<String?>()
         val toolCalls = mutableListOf<String>()
         val errors = mutableListOf<String>()
-
-        // Create event handler for logging
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, arguments ->
-                println("[DEBUG_LOG] Tool `${tool.name}` was called with arguments $arguments")
-                toolCalls.add(tool.name)
-            }
-
-            handleError { exception ->
-                println("[DEBUG_LOG] Error happened: ${exception.message}")
-                errors.add(exception.message ?: "Unknown error")
-                true
-            }
-
-            handleResult {
-                results += it
-            }
-        }
-
 
         // Create agent config with proper prompt
         val agentConfig = LocalAgentConfig(
@@ -82,8 +64,23 @@ class CalculatorTest {
             cs = this,
             agentConfig = agentConfig,
             toolRegistry = tools,
-            eventHandler = eventHandler
-        )
+        ) {
+            install(EventHandlerFeature) {
+                onToolCall = { stage, tool, arguments ->
+                    println("[DEBUG_LOG] Tool `${tool.name}` was called with arguments $arguments")
+                    toolCalls.add(tool.name)
+                }
+
+                onAgentRunError = { strategyName, exception ->
+                    println("[DEBUG_LOG] Error happened: ${exception.message}")
+                    errors.add(exception.message ?: "Unknown error")
+                }
+
+                onAgentFinished = { strategyName, result ->
+                    results += result
+                }
+            }
+        }
 
         // Run calculations
         agent.run("add 2 and 2")

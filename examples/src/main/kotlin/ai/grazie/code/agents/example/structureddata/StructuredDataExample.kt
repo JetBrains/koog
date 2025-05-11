@@ -1,14 +1,14 @@
 package ai.grazie.code.agents.example.structureddata
 
-import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.annotations.LLMDescription
-import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
+import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.jetbrains.code.prompt.dsl.prompt
@@ -233,17 +233,6 @@ fun main(): Unit = runBlocking {
         }
     }
 
-    val eventHandler = EventHandler {
-        handleError {
-            println("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-            true
-        }
-
-        handleResult {
-            println("Result:\n$it")
-        }
-    }
-
     val agentConfig = LocalAgentConfig(
         prompt = prompt("weather-forecast") {
             system(
@@ -265,9 +254,18 @@ fun main(): Unit = runBlocking {
         strategy = agentStrategy, // no tools needed for this example
         cs = this,
         agentConfig = agentConfig,
-        toolRegistry = ToolRegistry.EMPTY,
-        eventHandler = eventHandler,
-    )
+        toolRegistry = ToolRegistry.EMPTY
+    ) {
+        install(EventHandlerFeature) {
+            onAgentRunError = { strategyName: String, throwable: Throwable ->
+                println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+            }
+
+            onAgentFinished = { strategyName: String, result: String? ->
+                println("Result: $result")
+            }
+        }
+    }
 
     println(
         """

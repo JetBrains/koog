@@ -9,10 +9,12 @@ import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
 import ai.grazie.code.agents.core.dsl.extension.onToolCall
-import ai.grazie.code.agents.core.event.EventHandler
+import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.annotations.ExperimentalAPI
@@ -129,22 +131,6 @@ fun main() = runBlocking {
         }
     }
 
-    // Create event handler for logging
-    val eventHandler = EventHandler {
-        onToolCall { stage, tool, args ->
-            println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
-        }
-
-        handleError {
-            println("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-            true
-        }
-
-        handleResult {
-            println("Result: $it")
-        }
-    }
-
     val agentConfig = LocalAgentConfig(
         prompt = prompt("red-code-fixing") {
             system(
@@ -177,8 +163,21 @@ fun main() = runBlocking {
         cs = this,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,
-        eventHandler = eventHandler
-    )
+    ) {
+        install(EventHandlerFeature) {
+            onToolCall = { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args ->
+                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $toolArgs")
+            }
+
+            onAgentRunError = { strategyName: String, throwable: Throwable ->
+                println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+            }
+
+            onAgentFinished = { strategyName: String, result: String? ->
+                println("Result: $result")
+            }
+        }
+    }
 
     // Run the agent
     val result = agent.run("Fix all compilation errors in the project")

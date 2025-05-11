@@ -1,5 +1,10 @@
 package ai.grazie.code.agents.core.feature.message
 
+import ai.grazie.code.agents.local.features.common.message.FeatureEvent
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
+import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
+import ai.grazie.code.agents.local.features.common.message.use
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlin.test.*

@@ -1,12 +1,8 @@
 package ai.grazie.code.agents.example.memory
 
-import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy.*
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy.*
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentStrategyBuilder
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -14,6 +10,10 @@ import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
@@ -129,7 +129,6 @@ class LLMHistoryTransitionPolicyTest {
     private lateinit var mockLLMExecutor: MockLLMExecutor
     private lateinit var testEnvironment: TestAgentEnvironment
     private lateinit var emptyToolRegistry: ToolRegistry
-    private lateinit var dummyEventHandler: EventHandler
     private lateinit var dummyAgentConfig: LocalAgentConfig
     private lateinit var testScope: TestScope
     private lateinit var result: CompletableDeferred<String?>
@@ -141,11 +140,6 @@ class LLMHistoryTransitionPolicyTest {
         testScope = TestScope()
         emptyToolRegistry = ToolRegistry {}
         result = CompletableDeferred()
-        dummyEventHandler = EventHandler {
-            handleResult {
-                result.complete(it)
-            }
-        }
         dummyAgentConfig = LocalAgentConfig(
             prompt = prompt("test-agent") {},
             model = OllamaModels.Meta.LLAMA_3_2,
@@ -159,8 +153,11 @@ class LLMHistoryTransitionPolicyTest {
         cs = testScope,
         agentConfig = dummyAgentConfig,
         toolRegistry = emptyToolRegistry,
-        eventHandler = dummyEventHandler
-    )
+    ) {
+        install(EventHandlerFeature) {
+            onAgentFinished = { _, agentResult -> result.complete(agentResult) }
+        }
+    }
 
     /**
      * Creates a simple stage for testing.

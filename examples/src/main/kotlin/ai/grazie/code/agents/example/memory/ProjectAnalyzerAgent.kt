@@ -5,7 +5,6 @@ import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.memory.tools.*
@@ -215,8 +214,7 @@ fun createProjectAnalyzerAgent(
                 tool(fileSearchTool)
                 tool(codeAnalysisTool)
             }
-        },
-        eventHandler = EventHandler {}
+        }
     ) {
         install(MemoryFeature) {
             this.memoryProvider = memoryProvider
