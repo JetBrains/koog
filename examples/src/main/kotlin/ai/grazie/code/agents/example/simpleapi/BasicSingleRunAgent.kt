@@ -1,8 +1,9 @@
 package ai.grazie.code.agents.example.simpleapi
 
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
@@ -11,16 +12,16 @@ import kotlinx.coroutines.runBlocking
  * The agent processes a single input and provides a response.
  */
 fun main() = runBlocking {
-    var result = ""
-    val handler = EventHandler {
-        handleResult { result = it!! }
+    var result: String? = null
+    val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+        onAgentFinished = { _, agentResult -> result = agentResult }
     }
     // Create a single-run agent with a system prompt
     val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
         cs = this,
-        eventHandler = handler,
-        systemPrompt = "You are a code assistant. Provide concise code examples."
+        systemPrompt = "You are a code assistant. Provide concise code examples.",
+        installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
     )
 
     println("Single-run agent started. Enter your request:")

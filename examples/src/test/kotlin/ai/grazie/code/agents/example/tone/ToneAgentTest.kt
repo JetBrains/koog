@@ -2,13 +2,14 @@ package ai.grazie.code.agents.example.tone
 
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.ToneTool
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
 import ai.grazie.code.agents.testing.feature.withTesting
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
@@ -16,7 +17,6 @@ import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.llm.LLModel
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -49,20 +49,19 @@ class ToneAgentTest {
         }
 
         // Create an event handler
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, args ->
+        val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+            onToolCall = { stage, tool, args ->
                 println("[DEBUG_LOG] Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
                 toolCalls.add(tool.name)
             }
 
-            handleError {
-                println("[DEBUG_LOG] An error occurred: ${it.message}\n${it.stackTraceToString()}")
-                true
+            onAgentRunError = { strategyName, throwable ->
+                println("[DEBUG_LOG] An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
             }
 
-            handleResult {
-                println("[DEBUG_LOG] Result: $it")
-                result = it
+            onAgentFinished = { strategyName, agentResult ->
+                println("[DEBUG_LOG] Result: $agentResult")
+                result = agentResult
             }
         }
 
@@ -74,13 +73,13 @@ class ToneAgentTest {
         val negativeResponse = "The text has a negative tone."
         val neutralResponse = "The text has a neutral tone."
 
-        val mockLLMApi = getMockExecutor(toolRegistry, eventHandler) {
+        val mockLLMApi = getMockExecutor(toolRegistry) {
             // Set up LLM responses for different input texts
             mockLLMToolCall(NeutralToneTool, ToneTool.Args(defaultText)) onRequestEquals defaultText
             mockLLMToolCall(PositiveToneTool, ToneTool.Args(positiveText)) onRequestEquals positiveText
             mockLLMToolCall(NegativeToneTool, ToneTool.Args(negativeText)) onRequestEquals negativeText
 
-            // Mock the behaviour that LLM responds just tool responses once the tools returned smth.
+            // Mock the behavior that LLM responds just tool responses once the tools returned smth.
             mockLLMAnswer(positiveResponse) onRequestContains positiveResponse
             mockLLMAnswer(negativeResponse) onRequestContains negativeResponse
             mockLLMAnswer(neutralResponse) onRequestContains neutralResponse
@@ -133,9 +132,9 @@ class ToneAgentTest {
             cs = this,
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
-            eventHandler = eventHandler
         ) {
             withTesting()
+            install(EventHandlerFeature, eventHandlerConfig)
         }
 
         // Test positive text

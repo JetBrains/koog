@@ -6,7 +6,6 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
@@ -74,8 +73,7 @@ class GraphTestingFeatureTest {
             strategy = strategy,
             cs = this@runTest,
             agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
-            toolRegistry = toolRegistry,
-            eventHandler = EventHandler {}
+            toolRegistry = toolRegistry
         ) {
             testGraph {
                 assertStagesOrder("first", "second")

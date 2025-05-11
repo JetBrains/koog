@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.features.writer
 
-import ai.grazie.code.agents.core.feature.message.FeatureEvent
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureEvent
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 

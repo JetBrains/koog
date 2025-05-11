@@ -15,6 +15,7 @@ application {
 }
 
 dependencies {
+    implementation(project(":agents:agents-features:agents-features-event-handler"))
     implementation(project(":agents:agents-features:agents-features-memory"))
     implementation("ai.jetbrains.code.exec:code-exec-jvm:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.exec:code-exec-tools:1.0.0-beta.55+0.4.45")

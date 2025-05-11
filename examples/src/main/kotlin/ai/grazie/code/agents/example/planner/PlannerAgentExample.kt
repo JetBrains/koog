@@ -8,7 +8,6 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
@@ -86,7 +85,6 @@ suspend fun planWork(
     subAgents: List<AgentDescriptor>,
     observingTools: ToolRegistry,
     promptExecutor: PromptExecutor,
-    eventHandler: EventHandler,
     config: LocalAgentConfig,
     coroutineScope: CoroutineScope
 ): PlannerNode {
@@ -234,8 +232,7 @@ suspend fun planWork(
         strategy = planner,
         cs = coroutineScope,
         agentConfig = config,
-        toolRegistry = observingTools,
-        eventHandler = eventHandler
+        toolRegistry = observingTools
     ).run(initialTaskDescription)
 
     return result.await()

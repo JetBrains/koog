@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
-import ai.grazie.code.agents.core.feature.config.FeatureConfig
+import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.core.feature.handler.AfterToolCallsHandler
 import ai.grazie.code.agents.core.feature.handler.BeforeNodeHandler
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent

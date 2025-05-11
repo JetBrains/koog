@@ -3,11 +3,11 @@ package ai.grazie.code.agents.local.features.tracing.writer
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
-import ai.grazie.code.agents.local.features.common.model.*
-import ai.grazie.code.agents.core.feature.message.FeatureEvent
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
-import ai.grazie.code.agents.core.feature.message.FeatureStringMessage
-import ai.grazie.code.agents.core.feature.message.use
+import ai.grazie.code.agents.core.feature.model.*
+import ai.grazie.code.agents.local.features.common.message.FeatureEvent
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
+import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
 import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking

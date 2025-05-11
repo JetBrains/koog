@@ -1,6 +1,5 @@
 package ai.grazie.code.agents.testing.tools
 
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
@@ -32,7 +31,6 @@ class MockLLMBuilder {
     private val toolCallPartialMatches = mutableMapOf<String, Message.Tool.Call>()
     private var defaultResponse: String = ""
     private var toolRegistry: ToolRegistry? = null
-    private var eventHandler: EventHandler? = null
     private var toolActions: MutableList<ToolCondition<*, *>> = mutableListOf()
 
     companion object {
@@ -45,10 +43,6 @@ class MockLLMBuilder {
 
     fun setToolRegistry(registry: ToolRegistry) {
         toolRegistry = registry
-    }
-
-    fun setEventHandler(handler: EventHandler) {
-        eventHandler = handler
     }
 
     fun <Args : Tool.Args> addLLMAnswerExactPattern(llmAnswer: String, tool: Tool<Args, *>, args: Args) {
@@ -156,7 +150,6 @@ class MockLLMBuilder {
             exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
             conditional = conditional.takeIf { it.isNotEmpty() },
             defaultResponse = defaultResponse,
-            eventHandler = eventHandler,
             toolRegistry = toolRegistry,
             toolActions = toolActions
         )
@@ -219,7 +212,6 @@ class DefaultResponseReceiver(val response: String) {
 
 fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
-    eventHandler: EventHandler? = null,
     init: MockLLMBuilder.() -> Unit
 ): PromptExecutor {
 
@@ -229,7 +221,6 @@ fun getMockExecutor(
     // Call MockLLMBuilder and apply toolRegistry, eventHandler and set currentBuilder to this (to add mocked tool calls)
     val builder = MockLLMBuilder().apply {
         toolRegistry?.let { setToolRegistry(it) }
-        eventHandler?.let { setEventHandler(it) }
         MockLLMBuilder.currentBuilder = this
         init()
         MockLLMBuilder.currentBuilder = null

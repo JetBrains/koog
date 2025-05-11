@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.feature.message
+package ai.grazie.code.agents.local.features.common.message
 
 import kotlinx.coroutines.CompletableDeferred
 

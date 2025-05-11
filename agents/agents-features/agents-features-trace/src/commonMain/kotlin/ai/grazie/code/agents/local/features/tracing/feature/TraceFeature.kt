@@ -1,12 +1,12 @@
 package ai.grazie.code.agents.local.features.tracing.feature
 
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
-import ai.grazie.code.agents.local.features.common.model.*
-import ai.grazie.code.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.feature.model.*
+import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import ai.jetbrains.code.prompt.message.Message

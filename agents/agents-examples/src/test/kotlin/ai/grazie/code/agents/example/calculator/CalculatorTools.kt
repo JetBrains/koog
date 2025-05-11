@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.calculator
+package ai.grazie.code.agents.example.calculator
 
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.tools.ToolStage

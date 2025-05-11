@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.features.common.remote.client
 
-import ai.grazie.code.agents.core.feature.message.Closeable
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.Closeable
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 
 /**
  * An interface representing a client to interact with a feature messaging system.

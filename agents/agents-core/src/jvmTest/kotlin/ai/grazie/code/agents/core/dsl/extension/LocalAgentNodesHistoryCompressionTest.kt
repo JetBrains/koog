@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.core.dsl.extension
 
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.llm.OllamaModels
@@ -46,9 +46,6 @@ class LocalAgentNodesHistoryCompressionTest {
         }
 
         val results = mutableListOf<String?>()
-        val eventHandler = EventHandler {
-            handleResult { results += it }
-        }
 
         // Create a prompt with 15 message pairs
         val agentConfig = LocalAgentConfig(
@@ -66,9 +63,12 @@ class LocalAgentNodesHistoryCompressionTest {
                 stage("default") {
                     tool(DummyTool())
                 }
-            },
-            eventHandler = eventHandler
-        )
+            }
+        ) {
+            install(EventHandlerFeature) {
+                onAgentFinished = { _, result -> results += result }
+            }
+        }
 
         runner.run("")
 
@@ -101,9 +101,6 @@ class LocalAgentNodesHistoryCompressionTest {
         }
 
         val results = mutableListOf<String?>()
-        val eventHandler = EventHandler {
-            handleResult { results += it }
-        }
 
         // Create a prompt with 15 message pairs
         val agentConfig = LocalAgentConfig(
@@ -121,9 +118,12 @@ class LocalAgentNodesHistoryCompressionTest {
                 stage("default") {
                     tool(DummyTool())
                 }
-            },
-            eventHandler = eventHandler
-        )
+            }
+        ) {
+            install(EventHandlerFeature) {
+                onAgentFinished = { _, result -> results += result }
+            }
+        }
 
         runner.run("")
 
@@ -158,9 +158,6 @@ class LocalAgentNodesHistoryCompressionTest {
         }
 
         val results = mutableListOf<String?>()
-        val eventHandler = EventHandler {
-            handleResult { results += it }
-        }
 
         // Create a prompt with 15 message pairs (30 messages total)
         val messageCount = 15
@@ -179,9 +176,12 @@ class LocalAgentNodesHistoryCompressionTest {
                 stage("default") {
                     tool(DummyTool())
                 }
-            },
-            eventHandler = eventHandler
-        )
+            }
+        ) {
+            install(EventHandlerFeature) {
+                onAgentFinished = { _, result -> results += result }
+            }
+        }
 
         runner.run("")
 

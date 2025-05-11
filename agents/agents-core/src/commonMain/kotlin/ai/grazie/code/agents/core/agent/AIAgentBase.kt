@@ -7,17 +7,16 @@ import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.AgentEnvironmentUtils.mapToToolResult
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.environment.TerminationTool
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.exception.AgentEngineException
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
-import ai.grazie.code.agents.core.feature.config.FeatureConfig
 import ai.grazie.code.agents.core.model.AgentServiceError
 import ai.grazie.code.agents.core.model.AgentServiceErrorType
 import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.tools.ToolStage
+import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
@@ -48,7 +47,6 @@ open class AIAgentBase(
     cs: CoroutineScope,
     val agentConfig: LocalAgentConfig,
     val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
-    private val eventHandler: EventHandler = EventHandler.Companion.NO_HANDLER,
     private val installFeatures: suspend FeatureContext.() -> Unit = {}
 ) : AIAgent, AgentEnvironment {
 

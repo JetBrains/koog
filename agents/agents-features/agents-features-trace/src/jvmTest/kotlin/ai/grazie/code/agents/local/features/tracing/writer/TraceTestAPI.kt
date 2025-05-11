@@ -1,6 +1,5 @@
 package ai.grazie.code.agents.local.features.tracing.writer
 
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
@@ -34,7 +33,6 @@ fun createAgent(
                 tool(DummyTool())
             }
         },
-        eventHandler = EventHandler { },
         installFeatures = installFeatures,
     )
 }

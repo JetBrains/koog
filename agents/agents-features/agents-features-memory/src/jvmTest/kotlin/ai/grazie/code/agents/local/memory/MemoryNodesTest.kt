@@ -1,6 +1,5 @@
 package ai.grazie.code.agents.local.memory
 
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
@@ -143,8 +142,7 @@ class MemoryNodesTest {
                 stage {
                     tool(DummyTool())
                 }
-            },
-            eventHandler = EventHandler {}
+            }
         ) {
             install(MemoryFeature) {
                 memoryProvider = TestMemoryProvider()
@@ -180,8 +178,6 @@ class MemoryNodesTest {
             }
         }
 
-        val eventHandler = EventHandler {}
-
         val memory = TestMemoryProvider()
 
         val agentConfig = LocalAgentConfig(
@@ -205,8 +201,7 @@ class MemoryNodesTest {
                 stage("default") {
                     tool(DummyTool())
                 }
-            },
-            eventHandler = eventHandler
+            }
         ) {
             install(MemoryFeature) {
                 memoryProvider = memory

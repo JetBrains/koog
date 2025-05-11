@@ -1,10 +1,9 @@
 package ai.grazie.code.agents.local.features.common.remote
 
-import ai.grazie.code.agents.local.features.common.model.*
-import ai.grazie.code.agents.core.feature.message.FeatureEvent
-import ai.grazie.code.agents.core.feature.message.FeatureEventMessage
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
-import ai.grazie.code.agents.core.feature.message.FeatureStringMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureEvent
+import ai.grazie.code.agents.local.features.common.message.FeatureEventMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import io.ktor.utils.io.*
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
@@ -23,51 +22,18 @@ private val defaultFeatureMessageJsonConfig: Json
         encodeDefaults = true
         isLenient = true
         explicitNulls = false
-        serializersModule = SerializersModule {
+        serializersModule = defaultFeatureMessageSerializersModule
+    }
 
-            polymorphic(FeatureMessage::class) {
-                subclass(FeatureStringMessage::class, FeatureStringMessage.serializer())
-                subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
+private val defaultFeatureMessageSerializersModule: SerializersModule
+    get() = SerializersModule {
+        polymorphic(FeatureMessage::class) {
+            subclass(FeatureStringMessage::class, FeatureStringMessage.serializer())
+            subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
+        }
 
-                subclass(AgentCreateEvent::class, AgentCreateEvent.serializer())
-                subclass(StrategyStartEvent::class, StrategyStartEvent.serializer())
-                subclass(NodeExecutionStartEvent::class, NodeExecutionStartEvent.serializer())
-                subclass(NodeExecutionEndEvent::class, NodeExecutionEndEvent.serializer())
-                subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
-                subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
-                subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
-                subclass(ToolCallsStartEvent::class, ToolCallsStartEvent.serializer())
-                subclass(ToolCallsEndEvent::class, ToolCallsEndEvent.serializer())
-            }
-
-            polymorphic(FeatureEvent::class) {
-                subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
-
-                subclass(AgentCreateEvent::class, AgentCreateEvent.serializer())
-                subclass(StrategyStartEvent::class, StrategyStartEvent.serializer())
-                subclass(NodeExecutionStartEvent::class, NodeExecutionStartEvent.serializer())
-                subclass(NodeExecutionEndEvent::class, NodeExecutionEndEvent.serializer())
-                subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
-                subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
-                subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
-                subclass(ToolCallsStartEvent::class, ToolCallsStartEvent.serializer())
-                subclass(ToolCallsEndEvent::class, ToolCallsEndEvent.serializer())
-            }
-
-            polymorphic(DefinedFeatureEvent::class) {
-                subclass(AgentCreateEvent::class, AgentCreateEvent.serializer())
-                subclass(StrategyStartEvent::class, StrategyStartEvent.serializer())
-                subclass(NodeExecutionStartEvent::class, NodeExecutionStartEvent.serializer())
-                subclass(NodeExecutionEndEvent::class, NodeExecutionEndEvent.serializer())
-                subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
-                subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
-                subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
-                subclass(ToolCallsStartEvent::class, ToolCallsStartEvent.serializer())
-                subclass(ToolCallsEndEvent::class, ToolCallsEndEvent.serializer())
-            }
+        polymorphic(FeatureEvent::class) {
+            subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
         }
     }
 

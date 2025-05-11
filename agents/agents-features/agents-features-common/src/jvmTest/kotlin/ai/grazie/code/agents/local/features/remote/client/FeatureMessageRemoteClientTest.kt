@@ -1,13 +1,13 @@
 package ai.grazie.code.agents.local.features.remote.client
 
 import ai.grazie.code.agents.local.features.NetUtil.findAvailablePort
+import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
+import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.common.remote.client.ClientConnectionConfig
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.common.remote.server.FeatureMessageRemoteServer
 import ai.grazie.code.agents.local.features.common.remote.server.ServerConnectionConfig
-import ai.grazie.code.agents.core.feature.message.FeatureMessage
-import ai.grazie.code.agents.core.feature.message.FeatureStringMessage
-import ai.grazie.code.agents.core.feature.message.use
 import ai.grazie.code.agents.local.features.writer.TestFeatureEventMessage
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger

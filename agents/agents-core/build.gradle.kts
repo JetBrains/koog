@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-tools"))
+                api(project(":agents:agents-features:agents-features-common"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-structure"))
@@ -42,6 +43,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
+                api(project(":agents:agents-features:agents-features-event-handler"))
 
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.mockk)

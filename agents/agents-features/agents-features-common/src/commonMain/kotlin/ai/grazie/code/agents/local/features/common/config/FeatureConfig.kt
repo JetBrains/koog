@@ -1,6 +1,6 @@
-package ai.grazie.code.agents.core.feature.config
+package ai.grazie.code.agents.local.features.common.config
 
-import ai.grazie.code.agents.core.feature.message.FeatureMessageProcessor
+import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
 
 /**
  * Abstract base class for configuring features with stream providers.
