@@ -40,8 +40,7 @@ class FilePromptCacheTest {
     private fun createTestPrompt(content: String): Prompt {
         return Prompt(
             messages = listOf(Message.User(content)),
-            id = "test-id-${content.hashCode()}",
-            model = OllamaModels.Meta.LLAMA_3_2
+            id = "test-id-${content.hashCode()}"
         )
     }
     
