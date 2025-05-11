@@ -13,7 +13,7 @@ import ai.grazie.code.agents.core.feature.handler.*
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.tools.ToolStage
+import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
