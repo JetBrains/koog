@@ -24,6 +24,7 @@ dependencies {
     implementation("ai.jetbrains.code.files:code-files-tools:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.files:code-files-vfs:1.0.0-beta.55+0.4.45")
 
+
     implementation(project(":prompt:prompt-markdown"))
     implementation(project(":prompt:prompt-structure"))
     implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
@@ -34,6 +35,7 @@ dependencies {
     implementation(libs.ai.grazie.api.gateway.client)
     implementation(libs.ai.grazie.client.ktor)
     implementation(libs.logback.classic)
+    implementation(libs.kotlinx.datetime)
 
     testImplementation(kotlin("test"))
     testImplementation(project(":agents:agents-test"))
