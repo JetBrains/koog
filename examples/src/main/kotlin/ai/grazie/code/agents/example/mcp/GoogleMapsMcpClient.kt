@@ -8,10 +8,16 @@ import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
 /**
- * Example of using MCPToolRegistry.
- * This example starts a Docker container with the Google Maps MCP server,
- * creates an MCPToolRegistry that connects to the server,
- * and creates a ToolRegistry with tools from the MCP server.
+ * Example of using the MCP (Model Context Protocol) integration with Google Maps.
+ * 
+ * This example demonstrates how to:
+ * 1. Start a Docker container with the Google Maps MCP server
+ * 2. Connect to the MCP server using the McpToolRegistryProvider
+ * 3. Create a ToolRegistry with tools from the MCP server
+ * 4. Use the tools in an AI agent to answer a question about geographic data
+ * 
+ * The example specifically shows how to get the elevation of the JetBrains office in Munich
+ * by using the maps_geocode and maps_elevation tools provided by the MCP server.
  */
 fun main() {
     // Get the API key from environment variables

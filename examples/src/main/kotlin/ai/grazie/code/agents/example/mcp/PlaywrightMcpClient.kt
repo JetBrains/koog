@@ -8,13 +8,16 @@ import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
 /**
- * Example of using MCPToolRegistry with Playwright MCP server.
- * This example connects to a Playwright MCP server running on port 8931,
- * creates an MCPToolRegistry that connects to the server,
- * and creates a ToolRegistry with tools from the MCP server.
- *
- * This example uses curl to connect to the Playwright MCP server via HTTP.
- * The MCP SDK doesn't support HTTP/SSE directly, so we use curl as a bridge.
+ * Example of using the MCP (Model Context Protocol) integration with Playwright.
+ * 
+ * This example demonstrates how to:
+ * 1. Start a Playwright MCP server on port 8931
+ * 2. Connect to the MCP server using the McpToolRegistryProvider's SSE client
+ * 3. Create a ToolRegistry with tools from the MCP server
+ * 4. Use the tools in an AI agent to automate browser interactions
+ * 
+ * The example specifically shows how to open a browser and navigate to jetbrains.com
+ * using the Playwright tools provided by the MCP server.
  */
 fun main() {
     // Get the API key from environment variables
@@ -36,6 +39,7 @@ fun main() {
                 val toolRegistry = McpToolRegistryProvider().fromSseClient("http://localhost:8931")
                 println("Successfully connected to Playwright MCP server")
 
+
                 // Create the runner
                 val agent = simpleSingleRunAgent(
                     executor = simpleOpenAIExecutor(openAIApiToken),
@@ -47,7 +51,7 @@ fun main() {
                         }
 
                         handleError {
-                            println("An error occurred during agent execution: ${it.message}\n${it.stackTraceToString()}")
+                            println("An error occurred: ${it.message}\n${it.stackTraceToString()}")
                             true
                         }
 
@@ -57,7 +61,7 @@ fun main() {
                     },
                     cs = this
                 )
-                val request = "Open a browser, navigate to jetbrains.com, and take a screenshot"
+                val request = "Open a browser, navigate to jetbrains.com, accept all cookies, click AI in toolbar"
                 println("Sending request: $request")
                 agent.run(
                     request +
