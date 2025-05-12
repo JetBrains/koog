@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 plugins {
     kotlin("multiplatform")
     id("ai.kotlin.configuration")
+    id("ai.kotlin.dokka")
 }
 
 kotlin {

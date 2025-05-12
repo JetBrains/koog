@@ -5,6 +5,7 @@ import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 plugins {
     kotlin("jvm")
     id("ai.kotlin.configuration")
+    id("ai.kotlin.dokka")
 }
 
 for (testType in TestType.values()) {

@@ -45,6 +45,7 @@ version = run {
 
 plugins {
     alias(libs.plugins.grazie)
+    id("ai.kotlin.dokka")
 }
 
 allprojects {
@@ -186,4 +187,33 @@ task("notifyAgentsReleaseToSlack") {
                 .waitFor()
         }
     }
+}
+
+dependencies {
+    dokka(project(":agents:agents-core"))
+    dokka(project(":agents:agents-features:agents-features-common"))
+    dokka(project(":agents:agents-features:agents-features-memory"))
+    dokka(project(":agents:agents-features:agents-features-trace"))
+    dokka(project(":agents:agents-test"))
+    dokka(project(":agents:agents-tools"))
+    dokka(project(":embeddings:embeddings-base"))
+    dokka(project(":embeddings:embeddings-local"))
+    dokka(project(":prompt:prompt-agents"))
+    dokka(project(":prompt:prompt-cache:prompt-cache-files"))
+    dokka(project(":prompt:prompt-cache:prompt-cache-model"))
+    dokka(project(":prompt:prompt-cache:prompt-cache-redis"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-cached"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-model"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-ollama"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-tools"))
+    dokka(project(":prompt:prompt-llm"))
+    dokka(project(":prompt:prompt-markdown"))
+    dokka(project(":prompt:prompt-model"))
+    dokka(project(":prompt:prompt-structure"))
+    dokka(project(":prompt:prompt-xml"))
 }

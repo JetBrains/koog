@@ -17,6 +17,7 @@ logback = "1.5.13"
 mockk = "1.13.8"
 shadow = "8.1.1"
 slf4j = "2.0.16"
+dokka = "2.0.0"
 
 [libraries]
 ai-grazie-api-gateway-client = { module = "ai.grazie.api:api-gateway-client", version.ref = "grazie-platform" }
@@ -57,6 +58,7 @@ lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 
 [plugins]
 compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
