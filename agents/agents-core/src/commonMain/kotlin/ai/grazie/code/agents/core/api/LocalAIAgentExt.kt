@@ -19,7 +19,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param apiToken The API token used for authentication with the LLM system.
  * @param cs The coroutine scope within which the agent will operate.
  * @param systemPrompt System-level instructions provided to the agent (default is an empty string).
- * @param llmModel The language model to be used by the agent (default is OpenAIModels.General.GPT4o).
+ * @param llmModel The language model to be used by the agent (default is `OpenAIModels.Chat.GPT4o`).
  * @param temperature A value between 0.0 and 1.0 controlling the randomness of the responses (default is 1.0).
  * @param eventHandler Optional event handler for managing results, errors, and tool-specific events (default is null).
  * @param toolRegistry Optional registry of tools available to the agent (default includes basic tools such as AskUser and ExitTool).
@@ -75,7 +75,7 @@ fun simpleChatAgent(
  * @param executor The `PromptExecutor` responsible for executing the prompts.
  * @param cs The `CoroutineScope` used to manage coroutine operations.
  * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
- * @param llmModel The language model to be used by the agent. Default is `OpenAIModels.General.GPT4o`.
+ * @param llmModel The language model to be used by the agent. Default is `OpenAIModels.Chat.GPT4o`.
  * @param temperature The sampling temperature for the language model, controlling randomness. Default is 1.0.
  * @param eventHandler The `EventHandler` to handle events such as initialization, results, and errors. Default is `EventHandler.NO_HANDLER`.
  * @param toolRegistry The `ToolRegistry` containing tools available to the agent. Default is `ToolRegistry.EMPTY`.
