@@ -529,7 +529,7 @@ sealed class LocalAgentLLMSession(
         structure: StructuredData<T>,
         retries: Int = 1,
         fixingModel: LLModel = OpenAIModels.Chat.GPT4o
-    ): StructuredResponse<T> {
+    ): Result<StructuredResponse<T>> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeStructured(preparedPrompt, model, structure, retries, fixingModel)
@@ -950,10 +950,12 @@ class LocalAgentLLMWriteSession internal constructor(
         structure: StructuredData<T>,
         retries: Int,
         fixingModel: LLModel
-    ): StructuredResponse<T> {
-        return super.requestLLMStructured(structure, retries, fixingModel).also { response ->
-            updatePrompt {
-                assistant(response.raw)
+    ): Result<StructuredResponse<T>> {
+        return super.requestLLMStructured(structure, retries, fixingModel).also {
+            it.onSuccess { response ->
+                updatePrompt {
+                    assistant(response.raw)
+                }
             }
         }
     }

@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.core.dsl.extension.subgraphWithTask
+import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.SimpleToolRegistry
 import ai.grazie.code.agents.core.tools.reflect.asTools
 import ai.grazie.code.agents.core.tools.reflect.toolsFrom
@@ -14,6 +14,8 @@ import ai.grazie.code.agents.example.banking.tools.MoneyTransferTools
 import ai.grazie.code.agents.example.banking.tools.TransactionAnalysisTools
 import ai.grazie.code.agents.example.banking.tools.bankingAssistantSystemPrompt
 import ai.grazie.code.agents.example.banking.tools.transactionAnalysisPrompt
+import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
+import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -30,29 +32,56 @@ fun main() = runBlocking {
 
     val strategy = strategy("banking assistant") {
         stage {
-            val classifyRequest by subgraphWithTask<ClassifiedBankRequest, String>(
-                tools = listOf(AskUser),
-                shouldTLDRHistory = false,
-                finishTool = ProvideClassifiedRequest,
-            ) { input ->
-                """
-                    Classify the user's request and provide a classification result.
-                    If you are not sure, please ask the user.
-                    
-                    If the user request relates to money transfers, classify it as Transfer. 
-                    If the user request relates to transaction analytics, classify it as Analytics.
-                    
-                    When you are done, call the finish tool named "provide_classified_request" to provide your classification result.
-                     
-                    User's request: $input.
-                """.trimIndent()
+            val classifyRequest by subgraph<String, ClassifiedBankRequest>(
+                tools = listOf(AskUser)
+            ) {
+                val requestClassification by nodeLLMRequestStructured(
+                    structure = JsonStructuredData.createJsonStructure<ClassifiedBankRequest>(
+                        // some models don't work well with json schema, so you may try simple, but it has more limitations (no polymorphism!)
+                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                        examples = listOf(
+                            ClassifiedBankRequest(
+                                requestType = RequestType.Transfer,
+                                userRequest = "Send 25 euros to Daniel for dinner at the restaurant."
+                            ),
+                            ClassifiedBankRequest(
+                                requestType = RequestType.Analytics,
+                                userRequest = "Provide transaction overview for the last month"
+                            )
+                        ),
+                        schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
+                    ),
+                    retries = 2,
+                    fixingModel = OpenAIModels.GPT4oMini
+                )
+
+                val callLLM by nodeLLMRequest()
+                val askUser by nodeExecuteTool()
+
+                edge(nodeStart forwardTo requestClassification transformed { stageInput })
+                edge(
+                    requestClassification forwardTo nodeFinish
+                            onCondition { it.isSuccess }
+                            transformed { it.getOrThrow().structure }
+                )
+                edge(
+                    requestClassification forwardTo callLLM
+                            onCondition { it.isFailure }
+                            transformed { "Failed to understand the user's intent" }
+                )
+                edge(callLLM forwardTo askUser onToolCall { true })
+                edge(callLLM forwardTo callLLM onAssistantMessage { true }
+                        transformed { "Please call `${AskUser.name}` tool instead of chatting" })
+                edge(askUser forwardTo requestClassification transformed { it.result.toString() })
             }
+
+
             val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
                 tools = MoneyTransferTools().asTools() + AskUser,
-                shouldTLDRHistory = false
+                shouldTLDRHistory = true
             ) { request ->
                 """
-                    $bankingAssistantSystemPrompt
+                    ${bankingAssistantSystemPrompt}
                     Specifically, you need to help with the following request:
                     ${request.userRequest}
                 """.trimIndent()
@@ -63,8 +92,8 @@ fun main() = runBlocking {
                 shouldTLDRHistory = false
             ) { request ->
                 """
-                    $bankingAssistantSystemPrompt
-                    $transactionAnalysisPrompt
+                    ${bankingAssistantSystemPrompt}
+                    ${transactionAnalysisPrompt}
                     Specifically, you need to help with the following request:
                     ${request.userRequest}
                 """.trimIndent()

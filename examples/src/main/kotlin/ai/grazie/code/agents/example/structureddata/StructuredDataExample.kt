@@ -218,7 +218,7 @@ fun main(): Unit = runBlocking {
                         structure = weatherForecastStructure,
                         // the model that would handle coercion if the output does not conform to the requested structure
                         fixingModel = OpenAIModels.Reasoning.GPT4oMini,
-                    )
+                    ).getOrThrow()
                 }
 
                 """

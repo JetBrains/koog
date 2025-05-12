@@ -124,7 +124,7 @@ object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraphResult>
  * @property defineTask A block which defines the task. It may just return a system prompt for the task,
  * but may also alter agent context, prompt, storage, etc.
  */
-fun <ProvidedResult : SubgraphResult, Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
@@ -176,7 +176,7 @@ fun <ProvidedResult : SubgraphResult, Input> LocalAgentSubgraphBuilderBase<*, *>
 }
 
 @Suppress("unused")
-fun <ProvidedResult : SubgraphResult, Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
