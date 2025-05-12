@@ -1,13 +1,13 @@
 package ai.grazie.code.agents.testing.feature
 
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.*
+import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
-import ai.grazie.code.agents.local.dsl.extensions.*
-import ai.grazie.code.agents.local.environment.ReceivedToolResult
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.jetbrains.code.prompt.dsl.prompt
@@ -69,13 +69,13 @@ class GraphTestingFeatureTest {
 
         val basePrompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {}
 
-        KotlinAIAgent(
-            toolRegistry = toolRegistry,
-            strategy = strategy,
-            eventHandler = EventHandler {},
-            agentConfig = LocalAgentConfig(prompt = basePrompt, maxAgentIterations = 100),
+        AIAgentBase(
             promptExecutor = mockLLMApi,
-            cs = this@runTest
+            strategy = strategy,
+            cs = this@runTest,
+            agentConfig = LocalAgentConfig(prompt = basePrompt, maxAgentIterations = 100),
+            toolRegistry = toolRegistry,
+            eventHandler = EventHandler {}
         ) {
             testGraph {
                 assertStagesOrder("first", "second")

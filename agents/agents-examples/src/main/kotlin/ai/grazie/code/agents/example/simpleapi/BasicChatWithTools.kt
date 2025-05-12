@@ -2,7 +2,7 @@ package ai.grazie.code.agents.example.simpleapi
 
 import ai.grazie.code.agents.core.tools.SimpleToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.simpleApi.simpleChatAgent
+import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 

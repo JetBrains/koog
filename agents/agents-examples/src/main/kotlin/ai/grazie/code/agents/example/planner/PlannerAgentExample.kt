@@ -1,15 +1,15 @@
 package ai.grazie.code.agents.example.planner
 
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.entity.createStorageKey
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.agent.createStorageKey
-import ai.grazie.code.agents.local.agent.stage.LocalAgentStageContext
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
-import ai.grazie.code.agents.local.dsl.extensions.*
-import ai.grazie.code.agents.local.graph.LocalAgentNode
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.CompletableDeferred
@@ -59,17 +59,17 @@ class SequentialNode(override val children: List<PlannerNode>) : IntermediatePla
     class Builder(override val subtaskDescription: String) : IntermediatePlannerNode.Builder(mutableListOf())
 }
 
-class DelegateNode(val agent: KotlinAIAgent, val input: String) : PlannerNode {
+class DelegateNode(val agent: AIAgentBase, val input: String) : PlannerNode {
     override suspend fun execute(dispatcher: CoroutineDispatcher) {
         agent.run(input)
     }
 
-    class Builder(override val subtaskDescription: String, val agent: KotlinAIAgent) : PlannerNode.Builder {
+    class Builder(override val subtaskDescription: String, val agent: AIAgentBase) : PlannerNode.Builder {
         override fun build() = DelegateNode(agent, subtaskDescription)
     }
 }
 
-data class AgentDescriptor(val agent: KotlinAIAgent, val description: String)
+data class AgentDescriptor(val agent: AIAgentBase, val description: String)
 
 interface ParsedMessage
 
@@ -229,13 +229,13 @@ suspend fun planWork(
         }
     }
 
-    KotlinAIAgent(
-        toolRegistry = observingTools,
-        strategy = planner,
-        eventHandler = eventHandler,
-        agentConfig = config,
+    AIAgentBase(
         promptExecutor = promptExecutor,
-        cs = coroutineScope
+        strategy = planner,
+        cs = coroutineScope,
+        agentConfig = config,
+        toolRegistry = observingTools,
+        eventHandler = eventHandler
     ).run(initialTaskDescription)
 
     return result.await()

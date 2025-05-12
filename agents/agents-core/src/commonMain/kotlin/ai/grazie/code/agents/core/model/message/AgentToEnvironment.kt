@@ -41,20 +41,6 @@ data class AgentToolCallToEnvironmentContent(
 )
 
 /**
- * Represents a single tool call message sent from an agent to the environment.
- * Used when the agent requests a specific tool to be invoked within the environment.
- *
- * @property sessionUuid A unique identifier for the session this message is associated with.
- * @property content The content of the tool call, including details about the tool and its arguments.
- */
-@Serializable
-@SerialName("ACTION") // it's called ACTION for compatibility with IdeFormer
-data class AgentToolCallSingleToEnvironmentMessage(
-    override val sessionUuid: UUID,
-    val content: AgentToolCallToEnvironmentContent,
-) : AgentToolCallToEnvironmentMessage
-
-/**
  * Represents a message sent from the server to the environment to perform multiple tool calls.
  *
  * @property sessionUuid Unique identifier for the session.
@@ -63,7 +49,7 @@ data class AgentToolCallSingleToEnvironmentMessage(
  */
 @Serializable
 @SerialName("ACTION_MULTIPLE")
-data class AgentToolCallMultipleToEnvironmentMessage(
+data class AgentToolCallsToEnvironmentMessage(
     override val sessionUuid: UUID,
     val content: List<AgentToolCallToEnvironmentContent>
 ) : AgentToolCallToEnvironmentMessage

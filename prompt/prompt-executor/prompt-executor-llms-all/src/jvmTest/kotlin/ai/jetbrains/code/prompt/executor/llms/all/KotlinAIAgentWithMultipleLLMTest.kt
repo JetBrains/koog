@@ -1,13 +1,14 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.api.simpleSingleRunAgent
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.ContextTransitionPolicy
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
-import ai.grazie.code.agents.local.dsl.extensions.*
 import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
@@ -26,15 +27,12 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.newFixedThreadPoolContext
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
 import kotlin.coroutines.coroutineContext
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
 
 internal class ReportingLLMLLMClient(
@@ -395,7 +393,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         fs: MockFileSystem,
         eventHandler: EventHandler,
         maxAgentIterations: Int
-    ): KotlinAIAgent {
+    ): AIAgentBase {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
@@ -476,13 +474,13 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
 
         // Create the agent
-        return KotlinAIAgent(
-            toolRegistry = tools,
-            strategy = strategy,
-            eventHandler = eventHandler,
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, maxAgentIterations),
+        return AIAgentBase(
             promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, maxAgentIterations),
+            toolRegistry = tools,
+            eventHandler = eventHandler
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -560,9 +558,12 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = KotlinAIAgent(
-            toolRegistry = tools,
+        val agent = AIAgentBase(
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -575,10 +576,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -643,9 +641,12 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = KotlinAIAgent(
-            toolRegistry = tools,
+        val agent = AIAgentBase(
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -658,10 +659,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -725,9 +723,12 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = KotlinAIAgent(
-            toolRegistry = tools,
+        val agent = AIAgentBase(
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(AnthropicModels.Sonnet_3_7, "test") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -740,10 +741,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(AnthropicModels.Sonnet_3_7, "test") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -851,9 +849,12 @@ class KotlinAIAgentWithMultipleLLMTest {
             }
         }
 
-        val agent = KotlinAIAgent(
-            toolRegistry = tools,
+        val agent = AIAgentBase(
+            promptExecutor = executor,
             strategy = strategy,
+            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
+            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test-tools") {}, 15),
+            toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
                     println(
@@ -866,10 +867,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 handleResult {
                     println(Event.Termination)
                 }
-            },
-            agentConfig = LocalAgentConfig(prompt(OpenAIModels.GPT4o, "test-tools") {}, 15),
-            promptExecutor = executor,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent"))
+            }
         ) {
             install(TraceFeature) {
                 addMessageProcessor(TestLogPrinter())
@@ -881,5 +879,81 @@ class KotlinAIAgentWithMultipleLLMTest {
         )
 
         assertNotNull(result)
+    }
+
+    @Serializable
+    enum class CalculatorOperation {
+        ADD, SUBTRACT, MULTIPLY, DIVIDE
+    }
+
+    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
+        @Serializable
+        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : Tool.Args
+
+        override val argsSerializer = Args.serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operation",
+                    description = "The operation to perform.",
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor(
+                    name = "a",
+                    description = "The first argument (number)",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "b",
+                    description = "The second argument (number)",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+
+        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
+            CalculatorOperation.ADD -> args.a + args.b
+            CalculatorOperation.SUBTRACT -> args.a - args.b
+            CalculatorOperation.MULTIPLY -> args.a * args.b
+            CalculatorOperation.DIVIDE -> args.a / args.b
+        }.let(ToolResult::Number)
+    }
+
+    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
+    @Disabled("This test requires valid API keys")
+    @Test
+    fun `test enum serialization in agents for Anthropic`() {
+        runBlocking {
+            val a = simpleSingleRunAgent(
+                executor = simpleAnthropicExecutor(anthropicApiKey),
+                llmModel = AnthropicModels.Sonnet_3_7,
+                cs = CoroutineScope(coroutineContext),
+                systemPrompt = "You are a calculator with access to the calculator tools. Please call tools!!!",
+                toolRegistry = SimpleToolRegistry {
+                    tool(CalculatorTool)
+                },
+                eventHandler = EventHandler {
+                    handleError { e ->
+                        println("error: ${e.javaClass.simpleName}(${e.message})\n${e.stackTraceToString()}")
+                        true
+                    }
+                    onToolCall { stage, tool, arguments ->
+                        println(
+                            "[${stage.name}] Calling tool ${tool.name} with arguments ${
+                                arguments.toString().lines().first().take(100)
+                            }"
+                        )
+                    }
+                }
+            )
+
+            val result = a.runAndGetResult("calculate 10 plus 15, and then subtract 8")
+            println("result = $result")
+            assertNotNull(result)
+            assertContains(result, "17")
+        }
     }
 }

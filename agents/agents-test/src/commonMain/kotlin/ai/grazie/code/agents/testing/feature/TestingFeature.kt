@@ -1,23 +1,27 @@
 package ai.grazie.code.agents.testing.feature
 
+import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
+import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.entity.createStorageKey
+import ai.grazie.code.agents.core.agent.entity.FinishNode
+import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.annotation.InternalAgentsApi
+import ai.grazie.code.agents.core.dsl.builder.BaseBuilder
+import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.environment.ReceivedToolResult
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.feature.PromptExecutorProxy
+import ai.grazie.code.agents.core.feature.config.FeatureConfig
 import ai.grazie.code.agents.core.tools.SimpleTool
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.local.InternalAgentsApi
-import ai.grazie.code.agents.local.KotlinAIAgent.FeatureContext
-import ai.grazie.code.agents.local.agent.*
-import ai.grazie.code.agents.local.agent.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.local.agent.stage.LocalAgentStage
-import ai.grazie.code.agents.local.agent.stage.LocalAgentStageContext
-import ai.grazie.code.agents.local.dsl.builders.BaseBuilder
-import ai.grazie.code.agents.local.environment.AgentEnvironment
-import ai.grazie.code.agents.local.environment.ReceivedToolResult
-import ai.grazie.code.agents.local.features.AIAgentPipeline
-import ai.grazie.code.agents.local.features.KotlinAIAgentFeature
-import ai.grazie.code.agents.local.features.PromptExecutorProxy
-import ai.grazie.code.agents.local.features.config.FeatureConfig
-import ai.grazie.code.agents.local.graph.FinishNode
-import ai.grazie.code.agents.local.graph.LocalAgentNode
 import ai.grazie.code.agents.testing.tools.MockEnvironment
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.message.Message
@@ -163,8 +167,6 @@ class LocalAgentStageContextMockBuilder() : LocalAgentStageContextMockBuilderBas
                     return this === other
                 }
 
-                override fun hashCode(): Int = super.hashCode()
-
                 @Suppress("UNUSED_PARAMETER")
                 operator fun get(propertyName: String): Any? {
                     error("Unimplemented property access: $name.$propertyName")
@@ -181,7 +183,7 @@ class LocalAgentStageContextMockBuilder() : LocalAgentStageContextMockBuilderBas
 
 
 @TestOnly
-sealed abstract class NodeReference<Input, Output> {
+sealed class NodeReference<Input, Output> {
     abstract fun resolve(stage: LocalAgentStage): LocalAgentNode<Input, Output>
 
     object Start : NodeReference<Unit, Unit>() {

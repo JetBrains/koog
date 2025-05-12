@@ -1,15 +1,18 @@
 package ai.grazie.code.agents.example.redcode
 
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
+import ai.grazie.code.agents.core.dsl.extension.onToolCall
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
-import ai.grazie.code.agents.local.dsl.extensions.*
-import ai.grazie.code.agents.local.graph.ToolSelectionStrategy
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.annotations.ExperimentalAPI
@@ -167,13 +170,13 @@ fun main() = runBlocking {
     )
 
     // Create the agent
-    val agent = KotlinAIAgent(
-        toolRegistry = toolRegistry,
-        strategy = strategy,
-        eventHandler = eventHandler,
+    val agent = AIAgentBase(
         promptExecutor = executor,
+        strategy = strategy,
+        cs = this,
         agentConfig = agentConfig,
-        cs = this
+        toolRegistry = toolRegistry,
+        eventHandler = eventHandler
     )
 
     // Run the agent

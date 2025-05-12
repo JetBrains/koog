@@ -8,6 +8,7 @@ import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -32,12 +33,14 @@ class OpenRouterDirectClientTest {
     private val testModel = OpenRouterModels.Phi4Reasoning
 
     @Test
+    @Ignore("This test is ignored because it requires a valid API key.")
     fun testCreateClient() {
         val client = OpenRouterDirectLLMClient(apiKey)
         assertNotNull(client, "Client should be created successfully")
     }
 
     @Test
+    @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteSimplePrompt() = runTest {
         val client = OpenRouterDirectLLMClient(apiKey)
 
@@ -58,6 +61,7 @@ class OpenRouterDirectClientTest {
     }
 
     @Test
+    @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteStreamingPrompt() = runTest {
         val client = OpenRouterDirectLLMClient(apiKey)
 
@@ -89,6 +93,7 @@ class OpenRouterDirectClientTest {
     }
 
     @Test
+    @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteWithTools() = runTest {
         val client = OpenRouterDirectLLMClient(apiKey)
 
@@ -142,6 +147,7 @@ class OpenRouterDirectClientTest {
     }
 
     @Test
+    @Ignore("This test is ignored because it requires a valid API key.")
     fun testCodeGeneration() = runTest {
         val client = OpenRouterDirectLLMClient(apiKey)
 

@@ -2,10 +2,10 @@ package ai.grazie.code.agents.example.structureddata
 
 import ai.grazie.code.agents.core.tools.SimpleToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.simpleStrategy
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.flow.collect
@@ -56,12 +56,12 @@ fun main() = runBlocking {
         """.trimIndent()
     )
 
-    val runner = KotlinAIAgent(
+    val runner = AIAgentBase(
         promptExecutor = executor,
-        toolRegistry = toolRegistry, // no tools needed for this example
-        strategy = agentStrategy,
-        agentConfig = agentConfig,
+        strategy = agentStrategy, // no tools needed for this example
         cs = this,
+        agentConfig = agentConfig,
+        toolRegistry = toolRegistry,
     )
 
     runner.run("Please provide a list of the top 10 books in the world.")

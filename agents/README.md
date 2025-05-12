@@ -63,7 +63,7 @@ To start working with IdeFormer in your project, you will need:
 
 - `ai.jetbrains.code.agents`
     - [agents-core](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-core)
-    - [agents-core-tools](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-core-tools)
+    - [agents-tools](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.agents/agents-tools)
 - `ai.jetbrains.code.files`
     - [code-files-jvm](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.files/code-files-jvm)
     - [code-files-model](https://jetbrains.team/p/grazi/packages/maven/grazie-platform-public/ai.jetbrains.code.files/code-files-model)

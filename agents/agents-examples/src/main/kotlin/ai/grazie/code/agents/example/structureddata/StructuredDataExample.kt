@@ -4,11 +4,11 @@ import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
-import ai.grazie.code.agents.local.dsl.extensions.nodeLLMSendStageInput
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.jetbrains.code.prompt.dsl.prompt
@@ -256,16 +256,16 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 5
     )
 
-    val runner = KotlinAIAgent(
+    val runner = AIAgentBase(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAIDirectLLMClient(TokenService.openAIToken),
             LLMProvider.Anthropic to AnthropicDirectLLMClient(TokenService.anthropicToken),
         ),
-        toolRegistry = ToolRegistry.EMPTY, // no tools needed for this example
-        strategy = agentStrategy,
-        eventHandler = eventHandler,
-        agentConfig = agentConfig,
+        strategy = agentStrategy, // no tools needed for this example
         cs = this,
+        agentConfig = agentConfig,
+        toolRegistry = ToolRegistry.EMPTY,
+        eventHandler = eventHandler,
     )
 
     println(

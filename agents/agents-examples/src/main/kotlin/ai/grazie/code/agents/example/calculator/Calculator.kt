@@ -1,16 +1,16 @@
 package ai.grazie.code.agents.example.calculator
 
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.api.AskUser
+import ai.grazie.code.agents.core.api.SayToUser
+import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.*
+import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
-import ai.grazie.code.agents.local.dsl.builders.forwardTo
-import ai.grazie.code.agents.local.dsl.builders.strategy
-import ai.grazie.code.agents.local.dsl.extensions.*
-import ai.grazie.code.agents.local.environment.ReceivedToolResult
-import ai.grazie.code.agents.local.simpleApi.AskUser
-import ai.grazie.code.agents.local.simpleApi.SayToUser
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -48,12 +48,12 @@ fun main() = runBlocking {
             edge(
                 (nodeSendInput forwardTo nodeFinish)
                         transformed { it.first() }
-                        onAssistantMessage { true }
+                    onAssistantMessage { true }
             )
 
             edge(
                 (nodeSendInput forwardTo nodeExecuteToolMultiple)
-                        onMultipleToolCalls { true }
+                    onMultipleToolCalls { true }
             )
 
             edge(
@@ -107,13 +107,13 @@ fun main() = runBlocking {
     )
 
     // Create the runner
-    val agent = KotlinAIAgent(
-        toolRegistry = toolRegistry,
-        strategy = strategy,
-        eventHandler = eventHandler,
+    val agent = AIAgentBase(
         promptExecutor = executor,
+        strategy = strategy,
+        cs = this,
         agentConfig = agentConfig,
-        cs = this
+        toolRegistry = toolRegistry,
+        eventHandler = eventHandler
     )
 
     runBlocking {

@@ -2,16 +2,16 @@ package ai.grazie.code.agents.test
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.local.simpleApi.SayToUser
-import ai.grazie.code.agents.local.simpleApi.simpleChatAgent
-import ai.grazie.code.agents.local.simpleApi.simpleSingleRunAgent
+import ai.grazie.code.agents.core.api.SayToUser
+import ai.grazie.code.agents.core.api.simpleChatAgent
+import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import kotlin.test.AfterTest
 import kotlin.test.assertTrue
-import kotlin.test.junit5.JUnit5Asserter
 
 class SimpleAgentIntegrationTest {
     val systemPrompt = """
@@ -27,179 +27,115 @@ class SimpleAgentIntegrationTest {
         }
         block(apiToken)
     }
-    
+
+    val eventHandler = EventHandler {
+        onToolCall { stage, tool, args ->
+            println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
+            actualToolCalls.add(tool.name)
+        }
+
+        handleError {
+            errors.add(it)
+        }
+
+        handleResult {
+            results.add(it)
+        }
+    }
+
+    val actualToolCalls = mutableListOf<String>()
+    val errors = mutableListOf<Throwable>()
+    val results = mutableListOf<String?>()
+
+    @AfterTest
+    fun teardown() {
+        actualToolCalls.clear()
+        errors.clear()
+        results.clear()
+    }
+
 
     @Test
     fun `simpleChatAgent should call default tools`() = runBlockingWithToken {
-        val actualToolCalls = mutableListOf<String>()
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, args ->
-                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
-                actualToolCalls.add(tool.name)
-            }
+        val agent = simpleChatAgent(
+            executor = simpleOpenAIExecutor(apiToken),
+            cs = this,
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.GPT4o,
+            temperature = 1.0,
+            eventHandler = eventHandler,
+            maxIterations = 10,
+        )
 
-            handleError {
-                JUnit5Asserter.fail("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-            }
-
-            handleResult {
-                println("Agent result: $it")
-            }
-        }
-
-        try {
-            actualToolCalls.clear()
-
-            val agent = simpleChatAgent(
-                executor = simpleOpenAIExecutor(apiToken),
-                cs = this,
-                systemPrompt = systemPrompt,
-                llmModel = OpenAIModels.GPT4o,
-                temperature = 1.0,
-                eventHandler = eventHandler,
-                maxIterations = 10,
-            )
-
-            agent.run("Please exit.")
-            assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-        } catch (e: Exception) {
-            println("An error occurred: ${e.message}\n${e.stackTraceToString()}")
-        }
+        agent.run("Please exit.")
+        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
     }
 
     @Test
     fun `simpleChatAgent should call a custom tool`() = runBlockingWithToken {
-        val actualToolCalls = mutableListOf<String>()
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, args ->
-                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
-                actualToolCalls.add(tool.name)
-            }
-
-            handleError {
-                JUnit5Asserter.fail("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-            }
-
-            handleResult {
-                println("Agent result: $it")
-            }
-        }
-
         val toolRegistry = ToolRegistry {
             stage {
                 tool(SayToUser)
             }
         }
 
-        try {
-            actualToolCalls.clear()
+        val agent = simpleChatAgent(
+            executor = simpleOpenAIExecutor(apiToken),
+            cs = this,
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.GPT4oMini,
+            temperature = 1.0,
+            eventHandler = eventHandler,
+            maxIterations = 10,
+            toolRegistry = toolRegistry,
+        )
 
-            val agent = simpleChatAgent(
-                executor = simpleOpenAIExecutor(apiToken),
-                cs = this,
-                systemPrompt = systemPrompt,
-                llmModel = OpenAIModels.GPT4oMini,
-                temperature = 1.0,
-                eventHandler = eventHandler,
-                maxIterations = 10,
-                toolRegistry = toolRegistry,
-            )
+        agent.run("Hello, how are you?")
 
-            agent.run("Hello, how are you?")
-
-            assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-            assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
-        } catch (e: Exception) {
-            JUnit5Asserter.fail("An error occurred: ${e.message}\n${e.stackTraceToString()}")
-        }
+        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
+        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
     }
 
     @Test
     fun `simpleSingleRunAgent should not call tools by default`() = runBlockingWithToken {
-        val actualToolCalls = mutableListOf<String>()
+        val agent = simpleSingleRunAgent(
+            executor = simpleOpenAIExecutor(apiToken),
+            cs = this,
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.GPT4oMini,
+            temperature = 1.0,
+            eventHandler = eventHandler,
+            maxIterations = 10,
+        )
 
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, args ->
-                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
-                actualToolCalls.add(tool.name)
-            }
+        agent.run("Repeat what I say: hello, I'm good.")
 
-            handleError {
-                JUnit5Asserter.fail("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-            }
-
-            handleResult {
-                println("Agent result: $it")
-            }
-        }
-
-        try {
-            actualToolCalls.clear()
-
-            val agent = simpleSingleRunAgent(
-                executor = simpleOpenAIExecutor(apiToken),
-                cs = this,
-                systemPrompt = systemPrompt,
-                llmModel = OpenAIModels.GPT4oMini,
-                temperature = 1.0,
-                eventHandler = eventHandler,
-                maxIterations = 10,
-            )
-
-            agent.run("Repeat what I say: hello, I'm good.")
-
-            // by default, simpleSingleRunAgent has no tools underneath
-            assertTrue(actualToolCalls.isEmpty(), "No tools should be called")
-        } catch (e: Exception) {
-            JUnit5Asserter.fail("An error occurred: ${e.message}\n${e.stackTraceToString()}")
-        }
+        // by default, simpleSingleRunAgent has no tools underneath
+        assertTrue(actualToolCalls.isEmpty(), "No tools should be called")
     }
 
     @Test
     fun `simpleSingleRunAgent should call a custom tool`() = runBlockingWithToken {
-        val actualToolCalls = mutableListOf<String>()
-
-        val eventHandler = EventHandler {
-            onToolCall { stage, tool, args ->
-                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
-                actualToolCalls.add(tool.name)
-            }
-
-            handleError {
-                JUnit5Asserter.fail("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-            }
-
-            handleResult {
-                println("Agent result: $it")
-            }
-        }
-
         val toolRegistry = ToolRegistry {
             stage {
                 tool(SayToUser)
             }
         }
 
-        try {
-            actualToolCalls.clear()
+        val agent = simpleSingleRunAgent(
+            executor = simpleOpenAIExecutor(apiToken),
+            cs = this,
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.GPT4oMini,
+            temperature = 1.0,
+            eventHandler = eventHandler,
+            toolRegistry = toolRegistry,
+            maxIterations = 10,
+        )
 
-            val agent = simpleSingleRunAgent(
-                executor = simpleOpenAIExecutor(apiToken),
-                cs = this,
-                systemPrompt = systemPrompt,
-                llmModel = OpenAIModels.GPT4oMini,
-                temperature = 1.0,
-                eventHandler = eventHandler,
-                toolRegistry = toolRegistry,
-                maxIterations = 10,
-            )
+        agent.run("Write a Kotlin function to calculate factorial.")
 
-            agent.run("Write a Kotlin function to calculate factorial.")
-
-            assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-            assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
-        } catch (e: Exception) {
-            JUnit5Asserter.fail("An error occurred: ${e.message}\n${e.stackTraceToString()}")
-        }
+        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
+        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
     }
 }

@@ -7,7 +7,7 @@ import ai.grazie.code.agents.core.tools.ToolStage
 /**
  * Handles various events and delegates actions based on internal handlers.
  * Handler methods are called on the same context as the calling agent,
- * see [ai.grazie.code.agents.core.AIAgent] **run** method.
+ * see [ai.grazie.code.agents.core.agent.AIAgentBase] **run** method.
  *
  * @property resultHandler Handler for processing successful results.
  * @property toolCallListener Listener to notify the tool invocation.

@@ -10,8 +10,8 @@ import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.Dele
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.LSDirectoriesTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.ReadFileTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.RunCommand
-import ai.grazie.code.agents.local.KotlinAIAgent
-import ai.grazie.code.agents.local.agent.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -67,9 +67,10 @@ fun main() {
         println("       (possible example: Generate an online book store in Java/Gradle with Spring Framework and PostgreSQL database. Language: Java, Framework: Spring, Database)")
         val userRequest = readln()
 
-        val agent = KotlinAIAgent(
-            toolRegistry = toolRegistry,
+        val agent = AIAgentBase(
+            promptExecutor = simpleAnthropicExecutor(TokenService.anthropicToken),
             strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
+            cs = CoroutineScope(coroutineContext),
             agentConfig = LocalAgentConfig(
                 prompt = prompt(
                     AnthropicModels.Sonnet_3_7, "chat",
@@ -77,8 +78,7 @@ fun main() {
                 ) {},
                 maxAgentIterations = 200
             ),
-            promptExecutor = simpleAnthropicExecutor(TokenService.anthropicToken),
-            cs = CoroutineScope(coroutineContext),
+            toolRegistry = toolRegistry,
         )
 
         agent.run(userRequest)
