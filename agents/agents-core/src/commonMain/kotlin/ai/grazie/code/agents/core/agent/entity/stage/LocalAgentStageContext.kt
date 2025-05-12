@@ -2,10 +2,10 @@
 
 package ai.grazie.code.agents.core.agent.entity.stage
 
+import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.SafeTool
@@ -587,7 +587,6 @@ class LocalAgentLLMWriteSession internal constructor(
      * names, descriptions, and parameter requirements.
      */
     override var tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
-
 
     /**
      * Represents an override property `model` of type `LLModel`.
