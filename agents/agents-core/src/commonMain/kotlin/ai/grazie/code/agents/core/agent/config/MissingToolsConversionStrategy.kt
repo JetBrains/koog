@@ -30,7 +30,7 @@ abstract class MissingToolsConversionStrategy(val format: ToolCallDescriber) {
      */
     class All(format: ToolCallDescriber) : MissingToolsConversionStrategy(format) {
         override fun convertPrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
-            return prompt.copy(messages = prompt.messages.map { convertMessage(it) })
+            return prompt.withUpdatedMessages { map { convertMessage(it) } }
         }
     }
 
@@ -42,14 +42,16 @@ abstract class MissingToolsConversionStrategy(val format: ToolCallDescriber) {
     class Missing(format: ToolCallDescriber) : MissingToolsConversionStrategy(format) {
         override fun convertPrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
             val toolNames = tools.map { it.name }
-            return prompt.copy(messages = prompt.messages.map { message ->
-                if (message is Message.Tool) {
-                    if (message.tool !in toolNames) {
-                        return@map convertMessage(message)
+            return prompt.withUpdatedMessages {
+                map { message ->
+                    if (message is Message.Tool) {
+                        if (message.tool !in toolNames) {
+                            return@map convertMessage(message)
+                        }
                     }
+                    return@map message
                 }
-                return@map message
-            })
+            }
         }
     }
 }

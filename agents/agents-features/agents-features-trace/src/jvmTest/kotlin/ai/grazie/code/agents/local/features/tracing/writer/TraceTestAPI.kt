@@ -15,11 +15,12 @@ fun createAgent(
     installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit = { }
 ): AIAgentBase {
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OpenAIModels.GPT4o, "test") {
+        prompt = prompt("test") {
             system("Test system message")
             user("Test user message")
             assistant("Test assistant response")
         },
+        model = OpenAIModels.GPT4o,
         maxAgentIterations = 10
     )
 

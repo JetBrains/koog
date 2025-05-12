@@ -32,7 +32,8 @@ class LocalAgentNodesTest {
         }
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test-agent") {},
+            prompt = prompt("test-agent") {},
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 

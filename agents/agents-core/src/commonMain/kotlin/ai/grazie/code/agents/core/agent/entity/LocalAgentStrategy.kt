@@ -172,6 +172,7 @@ class LocalAgentStrategy(
         val storage = LocalAgentStorage()
         var currentStageInput: String = userInput
         var currentPrompt = config.prompt
+        var currentModel = config.model
 
         runCatchingCancellable {
 
@@ -182,6 +183,7 @@ class LocalAgentStrategy(
                     toolRegistry = toolRegistry,
                     tools = toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                     prompt = currentPrompt,
+                    model = currentModel,
                     promptExecutor = PromptExecutorProxy(promptExecutor, pipeline),
                     environment = environment,
                     config = config,
@@ -203,6 +205,7 @@ class LocalAgentStrategy(
                 currentStageInput = stage.execute(context)
                 // Passing prompt (full LLM history) to the next stage
                 currentPrompt = context.llm.readSession { prompt }
+                currentModel = context.llm.readSession { model }
             }
 
             currentStageInput

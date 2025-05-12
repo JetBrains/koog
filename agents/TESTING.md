@@ -361,7 +361,7 @@ fun testToneAgent() = runTest {
 
     // Create agent config
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(mockk<LLModel>(relaxed = true), "test-agent") {
+        prompt = prompt("test-agent") {
             system(
                 """
                 You are an question answering agent with access to the tone analysis tools.
@@ -372,6 +372,7 @@ fun testToneAgent() = runTest {
             """.trimIndent()
             )
         },
+        model = mockk<LLModel>(relaxed = true),
         maxAgentIterations = 10
     )
 
@@ -452,13 +453,13 @@ fun testMultiStageAgentStructure() = runBlocking {
         mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
     }
 
-    val basePrompt = prompt(OpenAIModels.GPT4o, "test") {}
+    val basePrompt = prompt("test") {}
 
     KotlinAIAgent(
         toolRegistry = toolRegistry,
         strategy = strategy,
         eventHandler = EventHandler {},
-        agentConfig = LocalAgentConfig(prompt = basePrompt, maxAgentIterations = 100),
+        agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.GPT4o, maxAgentIterations = 100),
         promptExecutor = mockLLMApi,
         cs = this
     ) {

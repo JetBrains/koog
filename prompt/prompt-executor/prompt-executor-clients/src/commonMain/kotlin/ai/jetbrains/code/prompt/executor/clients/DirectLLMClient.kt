@@ -2,6 +2,7 @@ package ai.jetbrains.code.prompt.executor.clients
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.dsl.Prompt
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 
@@ -15,17 +16,23 @@ interface DirectLLMClient {
      *
      * @param prompt The prompt to execute
      * @param tools Optional list of tools that can be used by the LLM
+     * @param model The LLM model to use
      * @return List of response messages
      */
-    suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor> = emptyList()): List<Message.Response>
+    suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor> = emptyList()
+    ): List<Message.Response>
 
     /**
      * Executes a prompt and returns a streaming flow of response chunks.
      *
      * @param prompt The prompt to execute
+     * @param model The LLM model to use
      * @return Flow of response chunks
      */
-    suspend fun executeStreaming(prompt: Prompt): Flow<String>
+    suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
 }
 
 

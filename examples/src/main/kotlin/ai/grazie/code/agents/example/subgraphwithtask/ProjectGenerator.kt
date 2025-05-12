@@ -73,9 +73,10 @@ fun main() {
             cs = CoroutineScope(coroutineContext),
             agentConfig = LocalAgentConfig(
                 prompt = prompt(
-                    AnthropicModels.Sonnet_3_7, "chat",
+                    "chat",
                     params = LLMParams()
                 ) {},
+                model = AnthropicModels.Sonnet_3_7,
                 maxAgentIterations = 200
             ),
             toolRegistry = toolRegistry,

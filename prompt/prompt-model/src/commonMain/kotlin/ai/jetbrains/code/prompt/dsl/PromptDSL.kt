@@ -8,12 +8,11 @@ annotation class PromptDSL
 
 @PromptDSL
 fun prompt(
-    llm: LLModel,
     id: String,
     params: LLMParams = LLMParams(),
     build: PromptBuilder.() -> Unit
 ): Prompt {
-    return Prompt.build(llm, id, params, build)
+    return Prompt.build(id, params, build)
 }
 
 fun prompt(existing: Prompt, build: PromptBuilder.() -> Unit): Prompt {

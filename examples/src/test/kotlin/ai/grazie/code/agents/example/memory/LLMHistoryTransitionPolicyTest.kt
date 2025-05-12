@@ -17,6 +17,7 @@ import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.CompletableDeferred
@@ -40,11 +41,15 @@ class LLMHistoryTransitionPolicyTest {
     class MockLLMExecutor : PromptExecutor {
         val messageHistory = mutableListOf<String>()
 
-        override suspend fun execute(prompt: Prompt): String {
-            return execute(prompt, emptyList()).first().content
+        override suspend fun execute(prompt: Prompt, model: LLModel): String {
+            return execute(prompt, model, emptyList()).first().content
         }
 
-        override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): List<Message.Response> {
             handlePrompt(prompt)
 
             val lastMessage = prompt.messages.last()
@@ -83,8 +88,8 @@ class LLMHistoryTransitionPolicyTest {
                 .let { listOf(it) }
         }
 
-        override suspend fun executeStreaming(prompt: Prompt): Flow<String> = flow {
-            emit(execute(prompt))
+        override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+            emit(execute(prompt, model))
         }
 
         private fun handlePrompt(prompt: Prompt) {
@@ -142,7 +147,8 @@ class LLMHistoryTransitionPolicyTest {
             }
         }
         dummyAgentConfig = LocalAgentConfig(
-            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test-agent") {},
+            prompt = prompt("test-agent") {},
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 30
         )
     }

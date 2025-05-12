@@ -36,12 +36,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val prompt = Prompt.build(OpenAIModels.GPT4o, "test-prompt") {
+        val model = OpenAIModels.GPT4o
+        val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, emptyList())
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -62,12 +63,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-prompt") {
+        val model = AnthropicModels.Sonnet_3_7
+        val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, emptyList())
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -88,12 +90,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val prompt = Prompt.build(OpenAIModels.GPT4o, "test-streaming") {
+        val model = OpenAIModels.GPT4o
+        val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = executor.executeStreaming(prompt).toList()
+        val responseChunks = executor.executeStreaming(prompt, model).toList()
 
         assertNotNull(responseChunks, "Response chunks should not be null")
         assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -120,12 +123,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-streaming") {
+        val model = AnthropicModels.Sonnet_3_7
+        val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = executor.executeStreaming(prompt).toList()
+        val responseChunks = executor.executeStreaming(prompt, model).toList()
 
         assertNotNull(responseChunks, "Response chunks should not be null")
         assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -152,12 +156,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val prompt = Prompt.build(OpenAIModels.GPT4o, "test-code") {
+        val model = OpenAIModels.GPT4o
+        val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
             user("Write a simple Kotlin function to calculate the factorial of a number.")
         }
 
-        val response = executor.execute(prompt, emptyList())
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -178,12 +183,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-code") {
+        val model = AnthropicModels.Sonnet_3_7
+        val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
             user("Write a simple Kotlin function to calculate the factorial of a number.")
         }
 
-        val response = executor.execute(prompt, emptyList())
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -222,12 +228,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val promptOpenAI = Prompt.build(OpenAIModels.GPT4oMini, "test-tools") {
+        val modelOpenAI = OpenAIModels.GPT4oMini
+        val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
 
-        val promptAnthropic = Prompt.build(AnthropicModels.Sonnet_3_7, "test-tools") {
+        val modelAnthropic = AnthropicModels.Sonnet_3_7
+        val promptAnthropic = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
@@ -235,8 +243,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool))
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool))
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -276,12 +284,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val promptOpenAI = Prompt.build(OpenAIModels.GPT4oMini, "test-tools") {
+        val modelOpenAI = OpenAIModels.GPT4oMini
+        val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool. ALWAYS CALL TOOL FIRST.")
             user("What is 12,3 + 45,,6?")
         }
 
-        val promptAnthropic = Prompt.build(AnthropicModels.Sonnet_3_7, "test-tools") {
+        val modelAnthropic = AnthropicModels.Sonnet_3_7
+        val promptAnthropic = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST.")
             user("What is 1 23 + 456,.1?")
         }
@@ -289,8 +299,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool))
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool))
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -328,12 +338,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val promptOpenAI = Prompt.build(OpenAIModels.GPT4oMini, "test-tools") {
+        val modelOpenAI = OpenAIModels.GPT4oMini
+        val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
 
-        val promptAnthropic = Prompt.build(AnthropicModels.Sonnet_3_7, "test-tools") {
+        val modelAnthropic = AnthropicModels.Sonnet_3_7
+        val promptAnthropic = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool. Don't use optional params if possible.")
             user("What is 123 + 456?")
         }
@@ -342,8 +354,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool))
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool))
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -366,12 +378,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
             optionalParameters = emptyList()
         )
 
-        val promptOpenAI = Prompt.build(OpenAIModels.GPT4oMini, "test-tools") {
+        val modelOpenAI = OpenAIModels.GPT4oMini
+        val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to calculator tools. Use the best one.")
             user("What is 123 + 456?")
         }
 
-        val promptAnthropic = Prompt.build(AnthropicModels.Sonnet_3_7, "test-tools") {
+        val modelAnthropic = AnthropicModels.Sonnet_3_7
+        val promptAnthropic = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to calculator tools. Use the best one.")
             user("What is 123 + 456?")
         }
@@ -379,8 +393,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool, calculatorToolBetter))
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool, calculatorToolBetter))
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool, calculatorToolBetter))
+        val responseAnthropic =
+            executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool, calculatorToolBetter))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -404,12 +419,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val promptOpenAI = Prompt.build(OpenAIModels.GPT4o, "test-tools") {
+        val modelOpenAI = OpenAIModels.GPT4o
+        val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
             user("Pick me a color!")
         }
 
-        val promptAnthropic = Prompt.build(AnthropicModels.Sonnet_3_7, "test-tools") {
+        val modelAnthropic = AnthropicModels.Sonnet_3_7
+        val promptAnthropic = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
             user("Pick me a color!")
         }
@@ -417,8 +434,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(colorPickerTool))
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(colorPickerTool))
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(colorPickerTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(colorPickerTool))
 
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
@@ -442,12 +459,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val promptOpenAI = Prompt.build(OpenAIModels.GPT4o, "test-tools") {
+        val modelOpenAI = OpenAIModels.GPT4o
+        val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
             user("Pick me lottery winners and losers! 5 of each")
         }
 
-        val promptAnthropic = Prompt.build(AnthropicModels.Sonnet_3_7, "test-tools") {
+        val modelAnthropic = AnthropicModels.Sonnet_3_7
+        val promptAnthropic = Prompt.build("test-tools") {
             system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
             user("Pick me lottery winners and losers! 5 of each")
         }
@@ -455,9 +474,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(lotteryPickerTool))
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(lotteryPickerTool))
         println(responseOpenAI)
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(lotteryPickerTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(lotteryPickerTool))
         println(responseAnthropic)
 
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
@@ -469,13 +488,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun `test openai client with streaming API raw string`() = runTest(timeout = 600.seconds) {
         val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
 
-        val prompt = Prompt.build(OpenAIModels.GPT4o, "test-streaming") {
+        val model = OpenAIModels.GPT4o
+        val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Please provide information about 200 countries.")
         }
 
         val responseChunks = mutableListOf<String>()
-        openAIClient.executeStreaming(prompt).collect { chunk ->
+        openAIClient.executeStreaming(prompt, model).collect { chunk ->
             responseChunks.add(chunk)
             println("Received chunk: $chunk")
         }
@@ -498,13 +518,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun `test anthropic client with streaming API raw string`() = runTest(timeout = 600.seconds) {
         val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-streaming") {
+        val model = AnthropicModels.Sonnet_3_7
+        val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Please provide information about 200 countries.")
         }
 
         val responseChunks = mutableListOf<String>()
-        anthropicClient.executeStreaming(prompt).collect { chunk ->
+        anthropicClient.executeStreaming(prompt, model).collect { chunk ->
             responseChunks.add(chunk)
             println("Received chunk: $chunk")
         }
@@ -530,7 +551,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()
 
-        val prompt = Prompt.build(OpenAIModels.GPT4o, "test-structured-streaming") {
+        val model = OpenAIModels.GPT4o
+        val prompt = Prompt.build("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
                 """
@@ -543,7 +565,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         }
 
-        val markdownStream = openAIClient.executeStreaming(prompt)
+        val markdownStream = openAIClient.executeStreaming(prompt, model)
 
         TestUtils().parseMarkdownStreamToCountries(markdownStream).collect { country ->
             countries.add(country)
@@ -567,7 +589,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()
 
-        val prompt = Prompt.build(AnthropicModels.Sonnet_3_7, "test-structured-streaming") {
+        val model = AnthropicModels.Sonnet_3_7
+        val prompt = Prompt.build("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
                 """
@@ -580,7 +603,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         }
 
-        val markdownStream = anthropicClient.executeStreaming(prompt)
+        val markdownStream = anthropicClient.executeStreaming(prompt, model)
 
         TestUtils().parseMarkdownStreamToCountries(markdownStream).collect { country ->
             countries.add(country)

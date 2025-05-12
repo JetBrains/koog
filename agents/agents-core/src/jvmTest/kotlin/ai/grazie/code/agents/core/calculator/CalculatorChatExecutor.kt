@@ -4,6 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.json.JSON
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -16,7 +17,7 @@ object CalculatorChatExecutor : PromptExecutor {
     private val multiplyAliases = listOf("multiply", "times")
     private val divideAliases = listOf("divide")
 
-    override suspend fun execute(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val input = prompt.messages.filterIsInstance<Message.User>().joinToString("\n") { it.content }
         val numbers = input.split(Regex("[^0-9.]")).filter { it.isNotEmpty() }.map { it.toFloat() }
         val result = when {
@@ -77,5 +78,5 @@ object CalculatorChatExecutor : PromptExecutor {
         return listOf(result)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt): Flow<String> = flow { emit(execute(prompt)) }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow { emit(execute(prompt, model)) }
 }

@@ -20,7 +20,7 @@ class LocalAgentNodesHistoryCompressionTest {
     /**
      * Helper function to create a prompt with the specified number of message pairs
      */
-    private fun createPromptWithMessages(count: Int) = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
+    private fun createPromptWithMessages(count: Int) = prompt("test") {
         system("Test system message")
 
         // Add the specified number of user/assistant message pairs
@@ -53,6 +53,7 @@ class LocalAgentNodesHistoryCompressionTest {
         // Create a prompt with 15 message pairs
         val agentConfig = LocalAgentConfig(
             prompt = createPromptWithMessages(15),
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 
@@ -107,6 +108,7 @@ class LocalAgentNodesHistoryCompressionTest {
         // Create a prompt with 15 message pairs
         val agentConfig = LocalAgentConfig(
             prompt = createPromptWithMessages(15),
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 
@@ -164,6 +166,7 @@ class LocalAgentNodesHistoryCompressionTest {
         val messageCount = 15
         val agentConfig = LocalAgentConfig(
             prompt = createPromptWithMessages(messageCount),
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 

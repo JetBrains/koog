@@ -107,7 +107,8 @@ fun createProjectAnalyzerAgent(
 
     // Agent configuration
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(AnthropicModels.Sonnet_3_7, "project-analyzer") {},
+        prompt = prompt("project-analyzer") {},
+        model = AnthropicModels.Sonnet_3_7,
         maxAgentIterations = maxAgentIterations
     )
 

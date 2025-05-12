@@ -19,6 +19,7 @@ import ai.jetbrains.code.prompt.llm.LLModel
  */
 open class LocalAgentConfig(
     val prompt: Prompt,
+    val model: LLModel,
     val maxAgentIterations: Int,
     val missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
@@ -32,9 +33,10 @@ open class LocalAgentConfig(
             maxAgentIterations: Int = 3,
         ): LocalAgentConfig {
             return LocalAgentConfig(
-                prompt = prompt(llm, id) {
+                prompt = prompt(id) {
                     system(prompt)
                 },
+                model = llm,
                 maxAgentIterations = maxAgentIterations
             )
         }

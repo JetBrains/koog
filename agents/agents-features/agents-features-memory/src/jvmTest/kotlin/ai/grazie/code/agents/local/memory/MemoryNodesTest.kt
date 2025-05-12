@@ -125,11 +125,12 @@ class MemoryNodesTest {
         }
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
+            prompt = prompt("test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
                 assistant("I'll remember that you prefer Python for data analysis tasks")
             },
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 
@@ -184,13 +185,14 @@ class MemoryNodesTest {
         val memory = TestMemoryProvider()
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
+            prompt = prompt("test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
                 assistant("I'll remember that you prefer Python for data analysis tasks")
                 user("Our project requires Java 11 or higher")
                 assistant("Noted about the Java version requirement")
             },
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 

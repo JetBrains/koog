@@ -39,7 +39,7 @@ object ToneTools {
             val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
             // Create a prompt to analyze the tone
-            val prompt = prompt(OpenAIModels.GPT4o, "analyze_tone") {
+            val prompt = prompt("analyze_tone") {
                 system(
                     "You are a helpful assistant that analyzes the tone of text. " +
                             "Determine if the text has a $toneType tone. " +
@@ -49,7 +49,7 @@ object ToneTools {
             }
 
             // Execute the prompt and get the response
-            val response = executor.execute(prompt)
+            val response = executor.execute(prompt, OpenAIModels.GPT4o)
 
             // Process the response
             val answer = response.trim().lowercase()

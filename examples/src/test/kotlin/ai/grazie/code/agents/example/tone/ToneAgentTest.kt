@@ -111,7 +111,7 @@ class ToneAgentTest {
 
         // Create agent config
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(mockk<LLModel>(relaxed = true), "test-agent") {
+            prompt = prompt("test-agent") {
                 system(
                     """
                     You are an question answering agent with access to the tone analysis tools.
@@ -122,6 +122,7 @@ class ToneAgentTest {
                 """.trimIndent()
                 )
             },
+            model = mockk<LLModel>(relaxed = true),
             maxAgentIterations = 10
         )
 

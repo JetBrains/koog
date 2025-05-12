@@ -33,7 +33,7 @@ abstract class HistoryCompressionStrategy {
      */
     protected suspend fun compressPromptIntoTLDR(llmSession: LocalAgentLLMWriteSession): List<Message.Response> {
         return with(llmSession) {
-            prompt = prompt.copy(prompt.messages.dropLastWhile { it is Message.Tool.Call })
+            prompt = prompt.withUpdatedMessages { dropLastWhile { it is Message.Tool.Call } }
             updatePrompt {
                 user {
                     summarizeInTLDR()
@@ -62,11 +62,11 @@ abstract class HistoryCompressionStrategy {
             val systemMessages = prompt.messages.filterIsInstance<Message.System>()
             val firstUserMessage = prompt.messages.firstOrNull { it is Message.User }
 
-            prompt = prompt.copy(messages = buildList {
+            prompt = prompt.withMessages(buildList {
                 addAll(systemMessages)
                 // Restore memory messages if needed
                 if (preserveMemory && memoryMessages.isNotEmpty()) {
-                    prompt = prompt.copy(messages = prompt.messages + memoryMessages)
+                    prompt = prompt.withUpdatedMessages { addAll(memoryMessages) }
                 }
 
                 if (firstUserMessage != null) add(firstUserMessage)
@@ -157,7 +157,7 @@ abstract class HistoryCompressionStrategy {
             val chunkedTLDR = llmSession.prompt.messages.chunked(chunkSize).flatMap { chunk ->
                 llmSession.clearHistory()
 
-                llmSession.prompt = llmSession.prompt.copy(messages = chunk)
+                llmSession.prompt = llmSession.prompt.withMessages(chunk)
 
                 compressPromptIntoTLDR(llmSession)
             }

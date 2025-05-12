@@ -276,11 +276,12 @@ class AIAgentPipelineTest {
     ): AIAgentBase {
 
         val agentConfig = LocalAgentConfig(
-            prompt = prompt(OllamaModels.Meta.LLAMA_3_2, "test") {
+            prompt = prompt("test") {
                 system(systemPrompt ?: "Test system message")
                 user(userPrompt ?: "Test user message")
                 assistant(assistantPrompt ?: "Test assistant response")
             },
+            model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 

@@ -228,26 +228,6 @@ val secureStorage = EncryptedStorage(
 
 Once you're comfortable with the basics, you can explore:
 
-### Remote Shared Storage
-Imagine, you (as a user) open your IDE, work with some agents on your project, then close your laptop. Your colleague can open his laptop and start working with JetBrains IDE that already knows about your project! 
-Then you open YouTrack and start working with AI agents on moving your tasks to the "IN REVIEW" state -- and it already knows what tasks you've been working on, and already remember your preferences in regards to the messaging style that you expect from the LLM.
-
-You can achieve that by using `SharedRemoteMemoryProvider`:
-```kotlin
-// Example of remote storage setup
-val remoteProvider = SharedRemoteMemoryProvider(
-    config = SharedRemoteMemoryConfig(
-        clientConfig = RemoteMemoryClientConfig(
-            connection = RemoteMemoryConnectionConfig(
-                protocol = URLProtocol.HTTPS,
-                host = "memory.example.com",
-                port = 443
-            )
-        )
-    )
-)
-```
-
 # Memory in Agents
 ## Adding Memory Feature to Agents
 Just use `install(MemoryFeature)` and configure it as you like when creating the agent:

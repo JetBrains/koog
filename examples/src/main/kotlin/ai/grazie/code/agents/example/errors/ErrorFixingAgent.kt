@@ -106,7 +106,7 @@ fun main() = runBlocking {
     }
 
     val agentConfig = LocalAgentConfig(
-        prompt = prompt(OpenAIModels.GPT4o, "test") {
+        prompt = prompt("test") {
             system(
                 """
                 You are a senior software engineer with 10 years of experience in Kotlin.
@@ -114,6 +114,7 @@ fun main() = runBlocking {
             """.trimIndent()
             )
         },
+        model = OpenAIModels.GPT4o,
         maxAgentIterations = 50
     )
 

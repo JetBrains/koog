@@ -15,14 +15,6 @@ object MemoryPrompts {
                 "Each fact should fit into a single line!\n" +
                 "ONLY reply with the list of facts on separate lines. Don't write any explanations or any polite answers to my question!"
 
-    val ChunkContent = """
-        You are agent responsible for converting a provided content into structured memory chunks.
-
-        ## PROCESS
-        You have to analyze provided content and suggest best chunking of it into structured memory chunks.
-        Think deeply about the tags, they should represent the main information and the context of the content, while being concise.
-    """.trimIndent()
-
     fun autoDetectFacts(subjects: List<MemorySubject>): String = """
         Analyze the conversation history and identify important facts about:
         ${
