@@ -1,9 +1,9 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
 import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
+import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -55,8 +55,8 @@ internal class ReportingLLMLLMClient(
 
     override suspend fun execute(
         prompt: Prompt,
-        tools: List<ToolDescriptor>,
-        model: LLModel
+        model: LLModel,
+        tools: List<ToolDescriptor>
     ): List<Message.Response> {
         CoroutineScope(coroutineContext).launch {
             eventsChannel.send(

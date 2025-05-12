@@ -42,7 +42,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, emptyList(), model)
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -69,7 +69,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, emptyList(), model)
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -162,7 +162,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user("Write a simple Kotlin function to calculate the factorial of a number.")
         }
 
-        val response = executor.execute(prompt, emptyList(), model)
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -189,7 +189,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user("Write a simple Kotlin function to calculate the factorial of a number.")
         }
 
-        val response = executor.execute(prompt, emptyList(), model)
+        val response = executor.execute(prompt, model, emptyList())
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -243,8 +243,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool), modelOpenAI)
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool), modelAnthropic)
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -299,8 +299,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool), modelOpenAI)
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool), modelAnthropic)
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -354,8 +354,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool), modelOpenAI)
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool), modelAnthropic)
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -393,8 +393,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(calculatorTool, calculatorToolBetter), modelOpenAI)
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(calculatorTool, calculatorToolBetter), modelAnthropic)
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(calculatorTool, calculatorToolBetter))
+        val responseAnthropic =
+            executor.execute(promptAnthropic, modelAnthropic, listOf(calculatorTool, calculatorToolBetter))
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
@@ -433,8 +434,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(colorPickerTool), modelOpenAI)
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(colorPickerTool), modelAnthropic)
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(colorPickerTool))
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(colorPickerTool))
 
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
@@ -473,9 +474,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
         )
-        val responseOpenAI = executor.execute(promptOpenAI, listOf(lotteryPickerTool), modelOpenAI)
+        val responseOpenAI = executor.execute(promptOpenAI, modelOpenAI, listOf(lotteryPickerTool))
         println(responseOpenAI)
-        val responseAnthropic = executor.execute(promptAnthropic, listOf(lotteryPickerTool), modelAnthropic)
+        val responseAnthropic = executor.execute(promptAnthropic, modelAnthropic, listOf(lotteryPickerTool))
         println(responseAnthropic)
 
         assertTrue(responseOpenAI.isNotEmpty(), "Response should not be empty")

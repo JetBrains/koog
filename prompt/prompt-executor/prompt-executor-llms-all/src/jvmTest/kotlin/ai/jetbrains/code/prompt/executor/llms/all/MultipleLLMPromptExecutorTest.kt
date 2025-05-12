@@ -21,8 +21,8 @@ class MultipleLLMPromptExecutorTest {
     private class MockOpenAILLMClient : OpenAIDirectLLMClient("fake-key") {
         override suspend fun execute(
             prompt: Prompt,
-            tools: List<ToolDescriptor>,
-            model: LLModel
+            model: LLModel,
+            tools: List<ToolDescriptor>
         ): List<Message.Response> {
             return listOf(Message.Assistant("OpenAI response"))
         }
@@ -36,8 +36,8 @@ class MultipleLLMPromptExecutorTest {
     private class MockAnthropicLLMClient : AnthropicDirectLLMClient("fake-key") {
         override suspend fun execute(
             prompt: Prompt,
-            tools: List<ToolDescriptor>,
-            model: LLModel
+            model: LLModel,
+            tools: List<ToolDescriptor>
         ): List<Message.Response> {
             return listOf(Message.Assistant("Anthropic response"))
         }
