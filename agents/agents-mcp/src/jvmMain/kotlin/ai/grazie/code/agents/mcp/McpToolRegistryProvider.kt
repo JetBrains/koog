@@ -5,8 +5,11 @@ import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.StageTool
+import io.ktor.client.*
+import io.ktor.client.plugins.sse.*
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
+import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
@@ -20,7 +23,7 @@ import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 /**
  * A tool registry that connects to an MCP server, retrieves tools, and transforms them to the Tool<*, *> framework interface.
  */
-class MCPToolRegistryProvider {
+class McpToolRegistryProvider {
 
     companion object {
         const val DEFAULT_MCP_CLIENT_NAME = "mcp-client-cli"
@@ -32,36 +35,60 @@ class MCPToolRegistryProvider {
      */
     fun fromClient(mcpClient: Client, stageName: String = StageTool.DEFAULT_STAGE_NAME): ToolRegistry {
         val sdkTools = runBlocking { mcpClient.listTools() }?.tools ?: emptyList()
-        println(sdkTools)
         return ToolRegistry {
             stage(stageName) {
                 sdkTools.forEach { sdkTool ->
+                    println(sdkTool)
                     val toolDescriptor = parseToolDescriptor(sdkTool)
-                    tool(MCPTool(mcpClient, toolDescriptor))
+                    println(toolDescriptor)
+                    tool(McpTool(mcpClient, toolDescriptor))
                 }
             }
         }
     }
 
-    suspend fun fromProcess(
+    suspend fun fromStdioClient(
         process: Process,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
         stageName: String = StageTool.DEFAULT_STAGE_NAME
     ): ToolRegistry {
-        // Create the MCP client
-        val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
-
         // Setup I/O transport using the process streams
         val transport = StdioClientTransport(
             input = process.inputStream.asSource().buffered(),
             output = process.outputStream.asSink().buffered()
         )
 
+        // Create the MCP client
+        val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
+
         mcpClient.connect(transport)
 
         return fromClient(mcpClient, stageName)
     }
+
+    suspend fun fromSseClient(
+        urlString: String,
+        name: String = DEFAULT_MCP_CLIENT_NAME,
+        version: String = DEFAULT_MCP_CLIENT_VERSION,
+        stageName: String = StageTool.DEFAULT_STAGE_NAME
+    ): ToolRegistry {
+
+        val transport = SseClientTransport(
+            client = HttpClient { 
+                install(SSE)
+            },
+            urlString = urlString,
+        )
+
+        // Create the MCP client
+        val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
+
+        mcpClient.connect(transport)
+
+        return fromClient(mcpClient, stageName)
+    }
+
 
     private fun parseParameterType(element: JsonObject): ToolParameterType? {
         val typeStr = if ("type" in element) {

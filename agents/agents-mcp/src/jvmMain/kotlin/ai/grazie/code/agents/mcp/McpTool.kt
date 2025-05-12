@@ -19,9 +19,9 @@ import kotlinx.serialization.json.JsonObject
 /**
  * A Tool implementation that calls an MCP tool.
  */
-class MCPTool(
+class McpTool(
     private val mcpClient: Client, override val descriptor: ToolDescriptor
-) : Tool<MCPTool.Args, MCPTool.Result>() {
+) : Tool<McpTool.Args, McpTool.Result>() {
 
     @Serializable(with = ArgsSerializer::class)
     data class Args(val arguments: JsonObject) : Tool.Args

@@ -2,7 +2,7 @@ package ai.grazie.code.agents.example.mcp
 
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.mcp.MCPToolRegistryProvider
+import ai.grazie.code.agents.mcp.McpToolRegistryProvider
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -15,12 +15,13 @@ import kotlinx.coroutines.runBlocking
  */
 fun main() {
     // Get the API key from environment variables
-    val apiKey = System.getenv("GOOGLE_MAPS_API_KEY")
+    val googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY")
+    val openAIApiToken = System.getenv("OPEN_AI_TOKEN")
 
     // Start the Docker container with the Google Maps MCP server
     val process = ProcessBuilder(
         "docker", "run", "-i",
-        "-e", "GOOGLE_MAPS_API_KEY=$apiKey",
+        "-e", "GOOGLE_MAPS_API_KEY=$googleMapsApiKey",
         "mcp/google-maps"
     ).start()
 
@@ -30,11 +31,11 @@ fun main() {
     try {
         runBlocking {
             // Create the ToolRegistry with tools from the MCP server
-            val toolRegistry = MCPToolRegistryProvider().fromProcess(process)
+            val toolRegistry = McpToolRegistryProvider().fromStdioClient(process)
 
             // Create the runner
             val agent = simpleSingleRunAgent(
-                executor = simpleOpenAIExecutor(System.getenv("OPEN_AI_TOKEN")),
+                executor = simpleOpenAIExecutor(openAIApiToken),
                 llmModel = OpenAIModels.GPT4o,
                 toolRegistry = toolRegistry,
                 eventHandler = EventHandler {

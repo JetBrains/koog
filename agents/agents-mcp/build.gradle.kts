@@ -17,6 +17,8 @@ kotlin {
                 implementation(libs.kotlinx.io.core)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.client.sse)
                 implementation(project(":agents:agents-tools"))
                 implementation(project(":agents:agents-core"))
                 implementation(project(":prompt:prompt-model"))
