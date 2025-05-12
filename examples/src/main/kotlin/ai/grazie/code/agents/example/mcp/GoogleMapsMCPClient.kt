@@ -1,16 +1,11 @@
-package ai.grazie.agents.mcp
+package ai.grazie.code.agents.example.mcp
 
+import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.event.EventHandler
-import ai.grazie.code.agents.local.simpleApi.simpleSingleRunAgent
+import ai.grazie.code.agents.mcp.MCPToolRegistryProvider
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
-import io.modelcontextprotocol.kotlin.sdk.Implementation
-import io.modelcontextprotocol.kotlin.sdk.client.Client
-import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
 import kotlinx.coroutines.runBlocking
-import kotlinx.io.asSink
-import kotlinx.io.asSource
-import kotlinx.io.buffered
 
 /**
  * Example of using MCPToolRegistry.
@@ -33,21 +28,9 @@ fun main() {
     Thread.sleep(2000)
 
     try {
-        // Create the MCP client
-        val mcp = Client(clientInfo = Implementation(name = "mcp-client-cli", version = "1.0.0"))
-
-        // Setup I/O transport using the process streams
-        val transport = StdioClientTransport(
-            input = process.inputStream.asSource().buffered(),
-            output = process.outputStream.asSink().buffered()
-        )
-
         runBlocking {
-            // Connect the MCP client to the server using the transport
-            mcp.connect(transport)
-
             // Create the ToolRegistry with tools from the MCP server
-            val toolRegistry = MCPToolRegistryProvider().fromClient(mcp)
+            val toolRegistry = MCPToolRegistryProvider().fromProcess(process)
 
             // Create the runner
             val agent = simpleSingleRunAgent(

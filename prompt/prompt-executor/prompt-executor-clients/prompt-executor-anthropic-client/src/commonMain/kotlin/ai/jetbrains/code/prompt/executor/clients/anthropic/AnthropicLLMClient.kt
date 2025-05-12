@@ -354,14 +354,19 @@ public open class AnthropicLLMClient(
                     "items" to getTypeMapForParameter(type.itemsType)
                 )
             )
-            is ToolParameterType.Object -> mapOf(
-                "type" to "object",
-                "properties" to type.properties.associate {
-                    it.name to mapOf(
-                        "type" to getTypeMapForParameter(it.type),
-                        "description" to it.description
-                    )
-                }
+
+            is ToolParameterType.Object -> JsonObject(
+                mapOf(
+                    "type" to JsonPrimitive("object"),
+                    "properties" to JsonObject(type.properties.associate {
+                        it.name to JsonObject(
+                            mapOf(
+                                "type" to getTypeMapForParameter(it.type),
+                                "description" to JsonPrimitive(it.description)
+                            )
+                        )
+                    })
+                )
             )
         }
     }

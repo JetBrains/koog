@@ -1,26 +1,36 @@
-package ai.grazie.agents.mcp
+package ai.grazie.code.agents.mcp
 
-import ai.grazie.code.agents.core.tools.*
-import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterType
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.tools.StageTool
+import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
+import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.*
+import kotlinx.io.asSink
+import kotlinx.io.asSource
+import kotlinx.io.buffered
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 
 /**
  * A tool registry that connects to an MCP server, retrieves tools, and transforms them to the Tool<*, *> framework interface.
  */
 class MCPToolRegistryProvider {
+
+    companion object {
+        const val DEFAULT_MCP_CLIENT_NAME = "mcp-client-cli"
+        const val DEFAULT_MCP_CLIENT_VERSION = "1.0.0"
+    }
+
     /**
      * Creates a ToolRegistry with tools from the MCP server.
      */
-    fun fromClient(mcpClient: Client, stageName: String = ToolStage.DEFAULT_STAGE_NAME): ToolRegistry {
+    fun fromClient(mcpClient: Client, stageName: String = StageTool.DEFAULT_STAGE_NAME): ToolRegistry {
         val sdkTools = runBlocking { mcpClient.listTools() }?.tools ?: emptyList()
         println(sdkTools)
         return ToolRegistry {
@@ -31,6 +41,26 @@ class MCPToolRegistryProvider {
                 }
             }
         }
+    }
+
+    suspend fun fromProcess(
+        process: Process,
+        name: String = DEFAULT_MCP_CLIENT_NAME,
+        version: String = DEFAULT_MCP_CLIENT_VERSION,
+        stageName: String = StageTool.DEFAULT_STAGE_NAME
+    ): ToolRegistry {
+        // Create the MCP client
+        val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
+
+        // Setup I/O transport using the process streams
+        val transport = StdioClientTransport(
+            input = process.inputStream.asSource().buffered(),
+            output = process.outputStream.asSink().buffered()
+        )
+
+        mcpClient.connect(transport)
+
+        return fromClient(mcpClient, stageName)
     }
 
     private fun parseParameterType(element: JsonObject): ToolParameterType? {
@@ -107,64 +137,5 @@ class MCPToolRegistryProvider {
             requiredParameters = parameters.filter { requiredParameters.contains(it.name) },
             optionalParameters = parameters.filter { !requiredParameters.contains(it.name) },
         )
-    }
-}
-
-/**
- * A Tool implementation that calls an MCP tool.
- */
-private class MCPTool(
-    private val mcpClient: Client, override val descriptor: ToolDescriptor
-) : Tool<MCPTool.Args, MCPTool.Result>() {
-
-    @Serializable(with = ArgsSerializer::class)
-    data class Args(val arguments: JsonObject) : Tool.Args
-
-    class ArgsSerializer : KSerializer<Args> {
-        override val descriptor: SerialDescriptor = buildClassSerialDescriptor("ai.grazie.agents.mcp.MCPTool.Args") {
-            element("arguments", JsonObject.serializer().descriptor)
-        }
-
-        override fun serialize(encoder: Encoder, value: Args) {
-            when (encoder) {
-                is JsonEncoder -> {
-                    value.arguments
-                }
-
-                else -> {
-                    val jsonString = Json.encodeToString(JsonObject.serializer(), value.arguments)
-                    encoder.encodeString(jsonString)
-                }
-            }
-        }
-
-        override fun deserialize(decoder: Decoder): Args {
-            return when (decoder) {
-                is JsonDecoder -> {
-                    val jsonElement = decoder.decodeJsonElement()
-                    Args(jsonElement as JsonObject)
-                }
-
-                else -> {
-                    val jsonString = decoder.decodeString()
-                    val jsonObject = Json.decodeFromString(JsonObject.serializer(), jsonString)
-                    Args(jsonObject)
-                }
-            }
-        }
-    }
-
-    class Result(val promptMessageContents: List<PromptMessageContent>) : ToolResult {
-        // TODO: Decide on how to dump to string different types of content
-        override fun toStringDefault(): String = promptMessageContents.toString()
-    }
-
-    override val argsSerializer: KSerializer<Args> = ArgsSerializer()
-
-    override suspend fun execute(args: Args): Result {
-        val result = mcpClient.callTool(
-            name = descriptor.name, arguments = args.arguments
-        )
-        return Result(result?.content ?: emptyList())
     }
 }
