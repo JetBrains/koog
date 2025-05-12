@@ -19,6 +19,7 @@ shadow = "8.1.1"
 slf4j = "2.0.16"
 mcp = "0.5.0"
 dokka = "2.0.0"
+bcv = "0.17.0"
 
 [libraries]
 ai-grazie-api-gateway-client = { module = "ai.grazie.api:api-gateway-client", version.ref = "grazie-platform" }
@@ -69,3 +70,4 @@ compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+binary-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "bcv" }

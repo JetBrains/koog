@@ -1,5 +1,6 @@
 import ai.grazie.gradle.fixups.DisableDistTasks.disableDistTasks
 import ai.grazie.gradle.publish.maven.graziePublic
+import kotlinx.validation.ExperimentalBCVApi
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
 val graziePlatformVersion = libs.versions.grazie.platform.get()
@@ -44,6 +45,7 @@ version = run {
 
 plugins {
     alias(libs.plugins.grazie)
+    alias(libs.plugins.binary.compatibility.validator)
     id("ai.kotlin.dokka")
 }
 
@@ -125,6 +127,16 @@ task("printConfigForLocalCodeEngine") {
             }
             .also { println(it) }
     }
+}
+
+@OptIn(ExperimentalBCVApi::class)
+apiValidation {
+    ignoredProjects.addAll(listOf(
+        "examples",
+    ))
+    klib.enabled = true
+    // Disable validation for now
+    validationDisabled = true
 }
 
 dependencies {
