@@ -88,11 +88,11 @@ open class AnthropicLLMClient(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        if (!prompt.model.capabilities.contains(LLMCapability.Completion)) {
-            throw IllegalArgumentException("Model ${prompt.model.id} does not support chat completions")
+        if (!model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
         }
-        if (!prompt.model.capabilities.contains(LLMCapability.Tools) && tools.isNotEmpty()) {
-            throw IllegalArgumentException("Model ${prompt.model.id} does not support tools")
+        if (!model.capabilities.contains(LLMCapability.Tools) && tools.isNotEmpty()) {
+            throw IllegalArgumentException("Model ${model.id} does not support tools")
         }
 
         val request = createAnthropicRequest(prompt, tools, model, false)
@@ -119,8 +119,8 @@ open class AnthropicLLMClient(
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model without tools" }
-        if (!prompt.model.capabilities.contains(LLMCapability.Completion)) {
-            throw IllegalArgumentException("Model ${prompt.model.id} does not support chat completions")
+        if (!model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
         }
 
         val request = createAnthropicRequest(prompt, emptyList(), model, true)

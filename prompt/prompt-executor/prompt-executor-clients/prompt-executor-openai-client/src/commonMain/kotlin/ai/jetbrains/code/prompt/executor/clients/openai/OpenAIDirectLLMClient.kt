@@ -76,11 +76,11 @@ open class OpenAILLMClient(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        if (!prompt.model.capabilities.contains(LLMCapability.Tools) && tools.isNotEmpty()) {
-            throw IllegalArgumentException("Model ${prompt.model.id} does not support tools")
+        if (!model.capabilities.contains(LLMCapability.Tools) && tools.isNotEmpty()) {
+            throw IllegalArgumentException("Model ${model.id} does not support tools")
         }
-        if (!prompt.model.capabilities.contains(LLMCapability.Completion)) {
-            throw IllegalArgumentException("Model ${prompt.model.id} does not support chat completions")
+        if (!model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
         }
 
         val request = createOpenAIRequest(prompt, tools, model, false)
@@ -106,8 +106,8 @@ open class OpenAILLMClient(
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-        if (!prompt.model.capabilities.contains(LLMCapability.Completion)) {
-            throw IllegalArgumentException("Model ${prompt.model.id} does not support chat completions")
+        if (!model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
         }
 
         val request = createOpenAIRequest(prompt, emptyList(), model, true)

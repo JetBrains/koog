@@ -73,7 +73,7 @@ class GraphTestingFeatureTest {
             promptExecutor = mockLLMApi,
             strategy = strategy,
             cs = this@runTest,
-            agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.GPT4o, maxAgentIterations = 100),
+            agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.General.GPT4o, maxAgentIterations = 100),
             toolRegistry = toolRegistry,
             eventHandler = EventHandler {}
         ) {

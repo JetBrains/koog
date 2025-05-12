@@ -70,7 +70,7 @@ fun main() {
                     """.trimIndent()
                 )
             },
-            model = OpenAIModels.GPT4o,
+            model = OpenAIModels.General.GPT4o,
             maxAgentIterations = 10
         )
 

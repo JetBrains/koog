@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 class OpenAIEmbeddingTest {
 
     // API key for testing
-    private val apiKey: String = readTestOpenAIKeyFromEnv()
+    private val apiKey: String get() = readTestOpenAIKeyFromEnv()
 
     @Disabled("TODO: pass the `OPENAI_API_TEST_KEY`")
     @Test

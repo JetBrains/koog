@@ -48,7 +48,7 @@ class LLMPromptExecutorTest {
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.General.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -83,7 +83,7 @@ val model = AnthropicModels.Sonnet_3_5
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.General.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")

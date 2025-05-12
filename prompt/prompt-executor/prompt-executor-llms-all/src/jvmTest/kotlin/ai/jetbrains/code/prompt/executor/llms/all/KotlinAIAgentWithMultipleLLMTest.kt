@@ -4,7 +4,6 @@ import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
-import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -436,7 +435,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.General.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -525,7 +524,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.General.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -610,7 +609,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_initial") {
                 val defineInitialPrompt by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.O3Mini
+                        model = OpenAIModels.General.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system("You are a helpful assistant. You need to solve my task.")
@@ -629,7 +628,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_judge") {
                 val defineLLMasAJudgePrompt by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.General.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -803,7 +802,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai-color-picker") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.General.GPT4o
                         rewritePrompt {
                             prompt("test-tools") {
                                 system(
@@ -867,7 +866,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.GPT4o, 15),
+            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.General.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->

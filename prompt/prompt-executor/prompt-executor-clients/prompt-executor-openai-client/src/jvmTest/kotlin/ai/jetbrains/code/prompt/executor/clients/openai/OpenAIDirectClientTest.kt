@@ -70,7 +70,7 @@ class OpenAISuspendableDirectClientTest {
                 user("What is the capital of France?")
             }
 
-            val response = client.execute(prompt, OpenAIModels.GPT4o)
+            val response = client.execute(prompt, OpenAIModels.General.GPT4o)
 
             assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -150,7 +150,7 @@ class OpenAISuspendableDirectClientTest {
                 user("What is 123 + 456?")
             }
 
-            val response = client.execute(prompt, OpenAIModels.GPT4oMini, listOf(calculatorTool))
+            val response = client.execute(prompt, OpenAIModels.General.GPT4o, listOf(calculatorTool))
 
             assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -183,7 +183,7 @@ class OpenAISuspendableDirectClientTest {
                 user("Write a simple Kotlin function to calculate the factorial of a number.")
             }
 
-            val response = client.execute(prompt, OpenAIModels.GPT4oMini)
+            val response = client.execute(prompt, OpenAIModels.General.GPT4o)
 
             assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")
