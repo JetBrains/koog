@@ -10,14 +10,14 @@ import kotlin.math.sqrt
  * @property values The floating-point values that make up the vector.
  */
 @Serializable
-data class Vector(val values: List<Double>) {
+public data class Vector(val values: List<Double>) {
     /**
      * Returns the dimension (size) of the vector.
      */
-    val dimension: Int
+    public val dimension: Int
         get() = values.size
 
-    companion object {
+    private companion object {
         /**
          * Implements the Kahan summation algorithm for more accurate summation of floating-point numbers.
          * This algorithm significantly reduces numerical errors when adding many floating-point values.
@@ -41,11 +41,11 @@ data class Vector(val values: List<Double>) {
         }
     }
 
-    fun isNull(): Boolean = values.all { it == 0.0 }
+    public fun isNull(): Boolean = values.all { it == 0.0 }
 
-    fun magnitude(): Double = sqrt(kahanSum(values) { it * it.toDouble() })
+    public fun magnitude(): Double = sqrt(kahanSum(values) { it * it })
 
-    infix fun dotProduct(other: Vector): Double = kahanSum(values.zip(other.values)) { (a, b) -> a * b.toDouble() }
+    public infix fun dotProduct(other: Vector): Double = kahanSum(values.zip(other.values)) { (a, b) -> a * b }
 
     /**
      * Calculates the cosine similarity between this vector and another vector.
@@ -56,7 +56,7 @@ data class Vector(val values: List<Double>) {
      * @return The cosine similarity between the two vectors.
      * @throws IllegalArgumentException if the vectors have different dimensions.
      */
-    fun cosineSimilarity(other: Vector): Double {
+    public fun cosineSimilarity(other: Vector): Double {
         require(this.dimension == other.dimension) { "Vectors must have the same dimension" }
 
         if (this.isNull() || other.isNull()) return 0.0
@@ -72,10 +72,9 @@ data class Vector(val values: List<Double>) {
      * @return The Euclidean distance between the two vectors.
      * @throws IllegalArgumentException if the vectors have different dimensions.
      */
-    fun euclideanDistance(other: Vector): Double {
+    public fun euclideanDistance(other: Vector): Double {
         require(dimension == other.dimension) { "Vectors must have the same dimension" }
 
-        return kahanSum(values.zip(other.values)) { (a, b) -> (a - b).toDouble().let { it * it } }
-            .let { sqrt(it) }
+        return sqrt(kahanSum(values.zip(other.values)) { (a, b) -> (a - b).let { it * it } })
     }
 }

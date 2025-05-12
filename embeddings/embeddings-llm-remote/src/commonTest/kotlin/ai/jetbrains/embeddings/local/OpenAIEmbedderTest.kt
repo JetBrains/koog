@@ -4,13 +4,13 @@ import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.embeddings.base.Vector
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class OpenAIEmbedderTest {
     @Test
-    fun testEmbed() = runBlocking {
+    fun testEmbed() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
         val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
 
@@ -23,7 +23,7 @@ class OpenAIEmbedderTest {
     }
 
     @Test
-    fun testDiff_identicalVectors() = runBlocking {
+    fun testDiff_identicalVectors() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
         val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
 
@@ -35,7 +35,7 @@ class OpenAIEmbedderTest {
     }
 
     @Test
-    fun testDiff_differentVectors() = runBlocking {
+    fun testDiff_differentVectors() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
         val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
 
@@ -47,7 +47,7 @@ class OpenAIEmbedderTest {
     }
 
     @Test
-    fun testDiff_oppositeVectors() = runBlocking {
+    fun testDiff_oppositeVectors() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
         val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
 
@@ -68,6 +68,5 @@ class OpenAIEmbedderTest {
         override suspend fun embed(text: String, model: LLModel): List<Double> {
             return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
         }
-
     }
 }
