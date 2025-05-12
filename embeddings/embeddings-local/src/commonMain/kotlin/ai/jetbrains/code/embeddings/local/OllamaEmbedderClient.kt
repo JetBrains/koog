@@ -64,9 +64,27 @@ open class OllamaEmbedderClient(
 
     @Serializable
     private data class EmbeddingResponse(
-        val embedding: List<Double>,
+        val embedding: DoubleArray,
         @SerialName("model") val modelId: String? = null
-    )
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (other == null || this::class != other::class) return false
+
+            other as EmbeddingResponse
+
+            if (!embedding.contentEquals(other.embedding)) return false
+            if (modelId != other.modelId) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = embedding.contentHashCode()
+            result = 31 * result + (modelId?.hashCode() ?: 0)
+            return result
+        }
+    }
 }
 
 expect fun engineFactoryProvider(): HttpClientEngineFactory<*>
