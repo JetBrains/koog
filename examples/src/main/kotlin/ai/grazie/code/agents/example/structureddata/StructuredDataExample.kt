@@ -12,9 +12,9 @@ import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.llm.LLMProvider
@@ -217,7 +217,7 @@ fun main(): Unit = runBlocking {
                     this.requestLLMStructured(
                         structure = weatherForecastStructure,
                         // the model that would handle coercion if the output does not conform to the requested structure
-                        fixingModel = OpenAIModels.GPT4oMini,
+                        fixingModel = OpenAIModels.Reasoning.GPT4oMini,
                     )
                 }
 
@@ -259,8 +259,8 @@ fun main(): Unit = runBlocking {
 
     val runner = AIAgentBase(
         promptExecutor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to OpenAIDirectLLMClient(TokenService.openAIToken),
-            LLMProvider.Anthropic to AnthropicDirectLLMClient(TokenService.anthropicToken),
+            LLMProvider.OpenAI to OpenAILLMClient(TokenService.openAIToken),
+            LLMProvider.Anthropic to AnthropicLLMClient(TokenService.anthropicToken),
         ),
         strategy = agentStrategy, // no tools needed for this example
         cs = this,

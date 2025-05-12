@@ -3,7 +3,7 @@ package ai.jetbrains.code.prompt.executor.llms
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
@@ -18,11 +18,11 @@ import kotlinx.coroutines.flow.flow
  * for the requested provider.
  *
  * @constructor Constructs an executor instance with a map of LLM providers associated with their respective clients.
- * @param llmClients A map containing LLM providers associated with their respective [DirectLLMClient]s.
+ * @param llmClients A map containing LLM providers associated with their respective [LLMClient]s.
  * @param fallback Optional settings to configure the fallback mechanism in case a specific provider is not directly available.
  */
 open class MultiLLMPromptExecutor(
-    private val llmClients: Map<LLMProvider, DirectLLMClient>,
+    private val llmClients: Map<LLMProvider, LLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
 ) : PromptExecutor {
     /**
@@ -53,14 +53,14 @@ open class MultiLLMPromptExecutor(
      * Initializes a new instance of the `MultiLLMPromptExecutor` class with multiple LLM clients.
      *
      * Allows specifying a variable number of client-provider pairs, where each pair links a specific
-     * `LLMProvider` with a corresponding implementation of `DirectLLMClient`. All provided pairs are
+     * `LLMProvider` with a corresponding implementation of `LLMClient`. All provided pairs are
      * internally converted into a map for efficient access and management of clients by their associated
      * providers.
      *
      * @param llmClients Variable number of pairs, where each pair consists of an `LLMProvider` representing
-     *                   the provider and a `DirectLLMClient` for communication with that provider.
+     *                   the provider and a `LLMClient` for communication with that provider.
      */
-    constructor(vararg llmClients: Pair<LLMProvider, DirectLLMClient>) : this(mapOf(*llmClients))
+    constructor(vararg llmClients: Pair<LLMProvider, LLMClient>) : this(mapOf(*llmClients))
 
     /**
      * Companion object for `MultiLLMPromptExecutor` class.
@@ -87,12 +87,12 @@ open class MultiLLMPromptExecutor(
      * Lazily initialized fallback client for interacting with a fallback LLM provider.
      *
      * Utilizes the fallback provider specified in the `fallbackSettings` to retrieve a corresponding
-     * `DirectLLMClient` from the `llmClients` collection, if available. This client is intended to
+     * `LLMClient` from the `llmClients` collection, if available. This client is intended to
      * handle cases where no specific provider is matched during prompt execution.
      *
      * Returns `null` if `fallbackSettings` or its `fallbackProvider` is not specified.
      */
-    private val fallbackClient: DirectLLMClient? by lazy { fallback?.fallbackProvider?.let(llmClients::get) }
+    private val fallbackClient: LLMClient? by lazy { fallback?.fallbackProvider?.let(llmClients::get) }
 
     init {
         if (fallback != null) {

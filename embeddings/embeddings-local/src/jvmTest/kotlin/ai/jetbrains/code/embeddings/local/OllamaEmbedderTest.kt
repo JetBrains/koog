@@ -1,5 +1,8 @@
 package ai.jetbrains.embeddings.local
 
+import ai.jetbrains.code.embeddings.local.OllamaEmbeddingModels
+import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.embeddings.base.Vector
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -9,7 +12,7 @@ class OllamaEmbedderTest {
     @Test
     fun testEmbed() = runBlocking {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient)
+        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val text = "Hello, world!"
         val expectedVector = Vector(listOf(0.1, 0.2, 0.3))
@@ -22,7 +25,7 @@ class OllamaEmbedderTest {
     @Test
     fun testDiff_identicalVectors() = runBlocking {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient)
+        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val vector1 = Vector(listOf(1.0, 2.0, 3.0))
         val vector2 = Vector(listOf(1.0, 2.0, 3.0))
@@ -34,7 +37,7 @@ class OllamaEmbedderTest {
     @Test
     fun testDiff_differentVectors() = runBlocking {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient)
+        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val vector1 = Vector(listOf(1.0, 0.0, 0.0))
         val vector2 = Vector(listOf(0.0, 1.0, 0.0))
@@ -46,7 +49,7 @@ class OllamaEmbedderTest {
     @Test
     fun testDiff_oppositeVectors() = runBlocking {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient)
+        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val vector1 = Vector(listOf(1.0, 2.0, 3.0))
         val vector2 = Vector(listOf(-1.0, -2.0, -3.0))
@@ -55,19 +58,16 @@ class OllamaEmbedderTest {
         assertEquals(2.0, result, 0.0001)
     }
 
-    class MockOllamaEmbedderClient : OllamaEmbedderClient("", OllamaEmbeddingModel.NOMIC_EMBED_TEXT) {
+    class MockOllamaEmbedderClient : OllamaClient("") {
         private val embeddings = mutableMapOf<String, Vector>()
 
         fun mockEmbedding(text: String, vector: Vector) {
             embeddings[text] = vector
         }
 
-        override suspend fun embed(text: String): Vector {
-            return embeddings[text] ?: throw IllegalArgumentException("No mock embedding for text: $text")
+        override suspend fun embed(text: String, model: LLModel): List<Double> {
+            return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
         }
 
-        override fun close() {
-            // Do nothing
-        }
     }
 }

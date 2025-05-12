@@ -2,8 +2,8 @@ package ai.jetbrains.code.prompt.executor.llms.all
 
 import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
+import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -12,23 +12,19 @@ import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.ReportingLLMLLMClient.Event
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
@@ -39,8 +35,8 @@ import kotlin.time.Duration.Companion.seconds
 internal class ReportingLLMLLMClient(
     private val eventsChannel: Channel<Event>,
     private val underlyingClient
-    : DirectLLMClient
-) : DirectLLMClient {
+    : LLMClient
+) : LLMClient {
     sealed interface Event {
         data class Message(
             val llmClient: String,
@@ -88,7 +84,7 @@ internal class ReportingLLMLLMClient(
     }
 }
 
-internal fun DirectLLMClient.reportingTo(
+internal fun LLMClient.reportingTo(
     eventsChannel: Channel<Event>
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
@@ -329,25 +325,25 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
 
         assertTrue(
-            messages.any { it.llmClient == "AnthropicDirectLLMClient" },
+            messages.any { it.llmClient == "AnthropicLLMClient" },
             "At least one message must be delegated to Anthropic client"
         )
 
         assertTrue(
-            messages.any { it.llmClient == "OpenAIDirectLLMClient" },
+            messages.any { it.llmClient == "OpenAILLMClient" },
             "At least one message must be delegated to OpenAI client"
         )
 
         assertTrue(
             messages
-                .filter { it.llmClient == "AnthropicDirectLLMClient" }
+                .filter { it.llmClient == "AnthropicLLMClient" }
                 .all { it.model.provider == LLMProvider.Anthropic },
             "All prompts with Anthropic model must be delegated to Anthropic client"
         )
 
         assertTrue(
             messages
-                .filter { it.llmClient == "OpenAIDirectLLMClient" }
+                .filter { it.llmClient == "OpenAILLMClient" }
                 .all { it.model.provider == LLMProvider.OpenAI },
             "All prompts with OpenAI model must be delegated to OpenAI client"
         )
@@ -399,8 +395,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         eventHandler: EventHandler,
         maxAgentIterations: Int
     ): AIAgentBase {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey).reportingTo(eventsChannel)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey).reportingTo(eventsChannel)
+        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
         // Create the executor
         val executor = //grazieExecutor
@@ -439,7 +435,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -485,7 +481,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.GPT4o, maxAgentIterations),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
             eventHandler = eventHandler
         ) {
@@ -498,8 +494,8 @@ class KotlinAIAgentWithMultipleLLMTest {
     @Disabled
     @Test
     fun `test agent with openAI and Anthropic clients`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
@@ -528,7 +524,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -572,7 +568,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.GPT4o, 15),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
@@ -603,7 +599,7 @@ class KotlinAIAgentWithMultipleLLMTest {
     @Disabled
     @Test
     fun `test agent with openAI client only`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
 
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient
@@ -613,7 +609,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_initial") {
                 val defineInitialPrompt by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.O3Mini
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system("You are a helpful assistant. You need to solve my task.")
@@ -632,7 +628,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_judge") {
                 val defineLLMasAJudgePrompt by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -657,7 +653,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.GPT4o, 15),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
@@ -688,7 +684,7 @@ class KotlinAIAgentWithMultipleLLMTest {
     @Disabled
     @Test
     fun `test agent with Anthropic client only`() = runTest {
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
         val executor = MultiLLMPromptExecutor(
             LLMProvider.Anthropic to anthropicClient
         )
@@ -772,8 +768,8 @@ class KotlinAIAgentWithMultipleLLMTest {
     @Disabled
     @Test
     fun `test agent with openAI and Anthropic with tools`() = runTest(timeout = 300.seconds) {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
@@ -806,7 +802,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai-color-picker") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test-tools") {
                                 system(
@@ -870,7 +866,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.GPT4o, 15),
+            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->

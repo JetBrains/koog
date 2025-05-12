@@ -114,7 +114,7 @@ fun main() = runBlocking {
             """.trimIndent()
             )
         },
-        model = OpenAIModels.GPT4o,
+        model = OpenAIModels.Chat.GPT4o,
         maxAgentIterations = 50
     )
 

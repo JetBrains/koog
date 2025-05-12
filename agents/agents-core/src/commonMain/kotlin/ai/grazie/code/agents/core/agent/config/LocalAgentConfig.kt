@@ -28,7 +28,7 @@ open class LocalAgentConfig(
     companion object {
         fun withSystemPrompt(
             prompt: String,
-            llm: LLModel = OpenAIModels.GPT4o,
+            llm: LLModel = OpenAIModels.Chat.GPT4o,
             id: String = "code-engine-agents",
             maxAgentIterations: Int = 3,
         ): LocalAgentConfig {

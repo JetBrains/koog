@@ -8,7 +8,7 @@ import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig
-import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
 import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
@@ -27,8 +27,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 
@@ -38,21 +36,21 @@ class OpenRouterClientSettings(
 )
 
 /**
- * Implementation of [DirectLLMClient] for OpenRouter API.
+ * Implementation of [LLMClient] for OpenRouter API.
  * OpenRouter is an API that routes requests to multiple LLM providers.
  *
  * @param apiKey The API key for the OpenRouter API
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai/api/v1" and 900s
  */
-open class OpenRouterDirectLLMClient(
+open class OpenRouterLLMClient(
     private val apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
     baseClient: HttpClient = HttpClient(engineFactoryProvider())
-) : DirectLLMClient {
+) : LLMClient {
 
     companion object {
         private val logger =
-            LoggerFactory.create("ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterDirectLLMClient")
+            LoggerFactory.create("ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterLLMClient")
     }
 
     private val json = Json {
@@ -72,97 +70,6 @@ open class OpenRouterDirectLLMClient(
             socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
         }
     }
-
-    @Serializable
-    private data class OpenRouterRequest(
-        val model: String,
-        val messages: List<OpenRouterMessage>,
-        val temperature: Double? = null,
-        val tools: List<OpenRouterTool>? = null,
-        val stream: Boolean = false
-    )
-
-    @Serializable
-    private data class OpenRouterMessage(
-        val role: String,
-        val content: String? = "",
-        val tool_calls: List<OpenRouterToolCall>? = null,
-        val name: String? = null,
-        val tool_call_id: String? = null
-    )
-
-    @Serializable
-    private data class OpenRouterToolCall(
-        val id: String,
-        val type: String = "function",
-        val function: OpenRouterFunction
-    )
-
-    @Serializable
-    private data class OpenRouterFunction(
-        val name: String,
-        val arguments: String
-    )
-
-    @Serializable
-    private data class OpenRouterTool(
-        val type: String = "function",
-        val function: OpenRouterToolFunction
-    )
-
-    @Serializable
-    private data class OpenRouterToolFunction(
-        val name: String,
-        val description: String,
-        val parameters: JsonObject
-    )
-
-    @Serializable
-    private data class OpenRouterResponse(
-        val id: String,
-        @SerialName("object") val objectType: String,
-        val created: Long,
-        val model: String,
-        val choices: List<OpenRouterChoice>,
-        val usage: OpenRouterUsage? = null
-    )
-
-    @Serializable
-    private data class OpenRouterChoice(
-        val index: Int,
-        val message: OpenRouterMessage,
-        val finish_reason: String? = null
-    )
-
-    @Serializable
-    private data class OpenRouterUsage(
-        val prompt_tokens: Int,
-        val completion_tokens: Int,
-        val total_tokens: Int
-    )
-
-    @Serializable
-    private data class OpenRouterStreamResponse(
-        val id: String,
-        @SerialName("object") val objectType: String,
-        val created: Long,
-        val model: String,
-        val choices: List<OpenRouterStreamChoice>
-    )
-
-    @Serializable
-    private data class OpenRouterStreamChoice(
-        val index: Int,
-        val delta: OpenRouterStreamDelta,
-        val finish_reason: String? = null
-    )
-
-    @Serializable
-    private data class OpenRouterStreamDelta(
-        val role: String? = null,
-        val content: String? = null,
-        val tool_calls: List<OpenRouterToolCall>? = null
-    )
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools" }

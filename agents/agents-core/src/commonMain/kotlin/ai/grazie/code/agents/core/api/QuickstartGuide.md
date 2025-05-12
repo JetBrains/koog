@@ -69,7 +69,7 @@ Both `simpleChatAgent` and `simpleSingleRunAgent` accept the following parameter
 - `apiToken` (required): Your JetBrains AI API token
 - `cs` (required): CoroutineScope for running the agent
 - `systemPrompt`: Initial system prompt for the agent (default: empty string)
-- `llmModel`: LLM model to use (default: OpenAIModels.GPT4o)
+- `llmModel`: LLM model to use (default: OpenAIModels.Chat.GPT4o)
 - `temperature`: Temperature for LLM generation (default: 1.0)
 - `eventHandler`: Custom event handler (default: empty handler)
 - `toolRegistry`: Custom tool registry (default: built-in tools for chat agent, empty for single-run agent)

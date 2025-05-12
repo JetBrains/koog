@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.llm.LLMProvider
 
@@ -12,8 +12,8 @@ import ai.jetbrains.code.prompt.llm.LLMProvider
  * @param anthropicClient The Anthropic client
  */
 class DefaultMultiLLMPromptExecutor(
-    openAIClient: OpenAIDirectLLMClient,
-    anthropicClient: AnthropicDirectLLMClient
+    openAIClient: OpenAILLMClient,
+    anthropicClient: AnthropicLLMClient
 ) : MultiLLMPromptExecutor(
     LLMProvider.OpenAI to openAIClient,
     LLMProvider.Anthropic to anthropicClient

@@ -5,9 +5,9 @@ import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.message.Message
@@ -26,17 +26,15 @@ class MultipleLLMPromptExecutorIntegrationTest {
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
 
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun testExecuteWithOpenAI() = runTest {
-        // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -53,13 +51,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun testExecuteWithAnthropic() = runTest {
-        // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
@@ -80,17 +76,15 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun testExecuteStreamingWithOpenAI() = runTest {
-        // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
@@ -113,13 +107,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun testExecuteStreamingWithAnthropic() = runTest {
-        // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
@@ -146,17 +138,15 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun testCodeGenerationWithOpenAI() = runTest {
-        // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
             user("Write a simple Kotlin function to calculate the factorial of a number.")
@@ -173,13 +163,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(content.contains("return"), "Response should contain a return statement")
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun testCodeGenerationWithAnthropic() = runTest {
-        // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-        return@runTest
-
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
@@ -200,11 +188,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(content.contains("return"), "Response should contain a return statement")
     }
 
-    @Disabled
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
     fun `test execute tools with required parameters`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val calculatorTool = ToolDescriptor(
             name = "calculator",
@@ -228,7 +216,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.GPT4oMini
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
@@ -252,8 +240,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test execute tools with required and optional parameters`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val calculatorTool = ToolDescriptor(
             name = "calculator",
@@ -284,7 +272,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.GPT4oMini
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool. ALWAYS CALL TOOL FIRST.")
             user("What is 12,3 + 45,,6?")
@@ -308,8 +296,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test execute tools with optional parameters`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val calculatorTool = ToolDescriptor(
             name = "calculator",
@@ -338,7 +326,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.GPT4oMini
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
@@ -363,8 +351,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test execute tools with no parameters`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val calculatorTool = ToolDescriptor(
             name = "calculator",
@@ -378,7 +366,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             optionalParameters = emptyList()
         )
 
-        val modelOpenAI = OpenAIModels.GPT4oMini
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to calculator tools. Use the best one.")
             user("What is 123 + 456?")
@@ -403,8 +391,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test execute tools with list enum parameter`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val colorPickerTool = ToolDescriptor(
             name = "colorPicker",
@@ -419,7 +407,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
             user("Pick me a color!")
@@ -444,8 +432,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test execute tools with list of lists parameter`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val lotteryPickerTool = ToolDescriptor(
             name = "lotteryPicker",
@@ -459,7 +447,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
             user("Pick me lottery winners and losers! 5 of each")
@@ -486,9 +474,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test openai client with streaming API raw string`() = runTest(timeout = 600.seconds) {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Please provide information about 200 countries.")
@@ -516,7 +504,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test anthropic client with streaming API raw string`() = runTest(timeout = 600.seconds) {
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val model = AnthropicModels.Sonnet_3_7
         val prompt = Prompt.build("test-streaming") {
@@ -547,11 +535,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test openai client with streaming API structured data`() = runTest {
-        val openAIClient = OpenAIDirectLLMClient(openAIApiKey)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
@@ -585,7 +573,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Disabled
     @Test
     fun `test anthropic client with streaming API structured data`() = runTest {
-        val anthropicClient = AnthropicDirectLLMClient(anthropicApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()
 

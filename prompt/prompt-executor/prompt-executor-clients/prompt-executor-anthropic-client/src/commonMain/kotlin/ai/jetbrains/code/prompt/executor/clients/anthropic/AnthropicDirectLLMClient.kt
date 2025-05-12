@@ -7,7 +7,8 @@ import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig
-import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
+import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import io.ktor.client.*
@@ -57,11 +58,11 @@ class AnthropicClientSettings(
  * @param settings Configurable settings for the Anthropic client, which include the base URL and other options.
  * @param baseClient An optional custom configuration for the underlying HTTP client, defaulting to a Ktor client.
  */
-open class AnthropicDirectLLMClient(
+open class AnthropicLLMClient(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
     baseClient: HttpClient = HttpClient(engineFactoryProvider())
-) : DirectLLMClient {
+) : LLMClient {
 
     companion object {
         private val logger =
@@ -85,107 +86,14 @@ open class AnthropicDirectLLMClient(
         }
     }
 
-    @Serializable
-    private data class AnthropicMessageRequest(
-        val model: String,
-        val messages: List<AnthropicMessage>,
-        val max_tokens: Int = 2048,
-        val temperature: Double? = null,
-        val system: String? = null,
-        val tools: List<AnthropicTool>? = null,
-        val stream: Boolean = false
-    )
-
-    @Serializable
-    private data class AnthropicMessage(
-        val role: String,
-        val content: List<AnthropicContent>
-    )
-
-    @Serializable
-    private sealed class AnthropicContent {
-        @Serializable
-        @SerialName("text")
-        data class Text(val text: String) : AnthropicContent()
-
-        @Serializable
-        @SerialName("tool_use")
-        data class ToolUse(
-            val id: String,
-            val name: String,
-            val input: JsonObject
-        ) : AnthropicContent()
-
-        @Serializable
-        @SerialName("tool_result")
-        data class ToolResult(
-            val tool_use_id: String,
-            val content: String
-        ) : AnthropicContent()
-    }
-
-    @Serializable
-    private data class AnthropicTool(
-        val name: String,
-        val description: String,
-        val input_schema: AnthropicToolSchema
-    )
-
-    @Serializable
-    private data class AnthropicToolSchema(
-        val type: String = "object",
-        val properties: JsonObject,
-        val required: List<String>
-    )
-
-    @Serializable
-    private data class AnthropicResponse(
-        val id: String,
-        val type: String,
-        val role: String,
-        val content: List<AnthropicResponseContent>,
-        val model: String,
-        val stop_reason: String? = null,
-        val usage: AnthropicUsage? = null
-    )
-
-    @Serializable
-    private sealed class AnthropicResponseContent {
-        @Serializable
-        @SerialName("text")
-        data class Text(val text: String) : AnthropicResponseContent()
-
-        @Serializable
-        @SerialName("tool_use")
-        data class ToolUse(
-            val id: String,
-            val name: String,
-            val input: JsonObject
-        ) : AnthropicResponseContent()
-    }
-
-    @Serializable
-    private data class AnthropicUsage(
-        val input_tokens: Int,
-        val output_tokens: Int
-    )
-
-    @Serializable
-    private data class AnthropicStreamResponse(
-        val type: String,
-        val delta: AnthropicStreamDelta? = null,
-        val message: AnthropicResponse? = null
-    )
-
-    @Serializable
-    private data class AnthropicStreamDelta(
-        val type: String,
-        val text: String? = null,
-        val tool_use: AnthropicResponseContent.ToolUse? = null
-    )
-
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        if (!model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
+        }
+        if (!model.capabilities.contains(LLMCapability.Tools) && tools.isNotEmpty()) {
+            throw IllegalArgumentException("Model ${model.id} does not support tools")
+        }
 
         val request = createAnthropicRequest(prompt, tools, model, false)
         val requestBody = json.encodeToString(request)
@@ -211,6 +119,9 @@ open class AnthropicDirectLLMClient(
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model without tools" }
+        if (!model.capabilities.contains(LLMCapability.Completion)) {
+            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
+        }
 
         val request = createAnthropicRequest(prompt, emptyList(), model, true)
         val requestBody = json.encodeToString(request)

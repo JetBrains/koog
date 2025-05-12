@@ -2,9 +2,9 @@ package ai.jetbrains.code.prompt.executor.llms.all
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIDirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 class MultipleLLMPromptExecutorTest {
 
     // Mock client for OpenAI
-    private class MockOpenAILLMClient : OpenAIDirectLLMClient("fake-key") {
+    private class MockOpenAILLMClient : OpenAILLMClient("fake-key") {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
@@ -33,7 +33,7 @@ class MultipleLLMPromptExecutorTest {
     }
 
     // Mock client for Anthropic
-    private class MockAnthropicLLMClient : AnthropicDirectLLMClient("fake-key") {
+    private class MockAnthropicLLMClient : AnthropicLLMClient("fake-key") {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
@@ -59,7 +59,7 @@ class MultipleLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, OpenAIModels.GPT4o)
+        val response = executor.execute(prompt, OpenAIModels.Chat.GPT4o)
 
         assertEquals("OpenAI response", response, "Response should be from OpenAI client")
     }
@@ -93,7 +93,7 @@ class MultipleLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, OpenAIModels.GPT4o).toList()
+        val responseChunks = executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o).toList()
 
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(

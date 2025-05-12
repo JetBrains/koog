@@ -49,7 +49,7 @@ object ToneTools {
             }
 
             // Execute the prompt and get the response
-            val response = executor.execute(prompt, OpenAIModels.GPT4o)
+            val response = executor.execute(prompt, OpenAIModels.Chat.GPT4o)
 
             // Process the response
             val answer = response.trim().lowercase()

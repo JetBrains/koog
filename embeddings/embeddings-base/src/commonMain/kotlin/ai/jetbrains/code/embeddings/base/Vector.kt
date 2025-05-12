@@ -17,11 +17,35 @@ data class Vector(val values: List<Double>) {
     val dimension: Int
         get() = values.size
 
+    companion object {
+        /**
+         * Implements the Kahan summation algorithm for more accurate summation of floating-point numbers.
+         * This algorithm significantly reduces numerical errors when adding many floating-point values.
+         *
+         * @param values The collection of values to sum
+         * @param valueSelector A function that extracts or transforms the value before summation
+         * @return The sum with improved precision
+         */
+        private inline fun <T> kahanSum(values: Collection<T>, valueSelector: (T) -> Double): Double {
+            var sum = 0.0
+            var compensation = 0.0 // Compensation for lost low-order bits
+
+            for (value in values) {
+                val y = valueSelector(value) - compensation // Compensated value
+                val t = sum + y // Next sum
+                compensation = (t - sum) - y // Compute the error
+                sum = t // Store the result
+            }
+
+            return sum
+        }
+    }
+
     fun isNull(): Boolean = values.all { it == 0.0 }
 
-    fun magnitude(): Double = sqrt(values.sumOf { it * it.toDouble() })
+    fun magnitude(): Double = sqrt(kahanSum(values) { it * it.toDouble() })
 
-    infix fun dotProduct(other: Vector): Double = values.zip(other.values).sumOf { (a, b) -> a * b.toDouble() }
+    infix fun dotProduct(other: Vector): Double = kahanSum(values.zip(other.values)) { (a, b) -> a * b.toDouble() }
 
     /**
      * Calculates the cosine similarity between this vector and another vector.
@@ -51,8 +75,7 @@ data class Vector(val values: List<Double>) {
     fun euclideanDistance(other: Vector): Double {
         require(dimension == other.dimension) { "Vectors must have the same dimension" }
 
-        return values.zip(other.values)
-            .sumOf { (a, b) -> (a - b).toDouble().let { it * it } }
+        return kahanSum(values.zip(other.values)) { (a, b) -> (a - b).toDouble().let { it * it } }
             .let { sqrt(it) }
     }
 }

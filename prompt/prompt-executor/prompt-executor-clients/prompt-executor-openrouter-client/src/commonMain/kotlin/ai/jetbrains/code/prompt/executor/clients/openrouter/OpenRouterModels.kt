@@ -13,7 +13,8 @@ object OpenRouterModels {
         LLMCapability.Temperature,
         LLMCapability.Schema.JSON.Full,
         LLMCapability.Speculation,
-        LLMCapability.Tools
+        LLMCapability.Tools,
+        LLMCapability.Completion
     )
 
     /**

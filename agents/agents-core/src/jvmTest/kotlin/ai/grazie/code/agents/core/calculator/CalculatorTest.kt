@@ -71,7 +71,7 @@ class CalculatorTest {
                 """.trimIndent()
                 )
             },
-            model = OpenAIModels.GPT4o,
+            model = OpenAIModels.Chat.GPT4o,
             maxAgentIterations = 10
         )
 

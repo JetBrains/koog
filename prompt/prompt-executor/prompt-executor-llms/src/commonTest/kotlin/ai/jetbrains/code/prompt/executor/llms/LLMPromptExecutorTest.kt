@@ -2,8 +2,7 @@ package ai.jetbrains.code.prompt.executor.llms
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.clients.DirectLLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.llm.LLMProvider
@@ -20,7 +19,7 @@ import kotlin.test.assertFailsWith
 class LLMPromptExecutorTest {
 
     // Mock client for OpenAI
-    private class MockOpenAILLMClient : DirectLLMClient {
+    private class MockOpenAILLMClient : LLMClient {
         override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
             return listOf(Message.Assistant("OpenAI response"))
         }
@@ -31,7 +30,7 @@ class LLMPromptExecutorTest {
     }
 
     // Mock client for Anthropic
-    private class MockAnthropicLLMClient : DirectLLMClient {
+    private class MockAnthropicLLMClient : LLMClient {
         override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
             return listOf(Message.Assistant("Anthropic response"))
         }
@@ -48,7 +47,7 @@ class LLMPromptExecutorTest {
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -65,8 +64,7 @@ class LLMPromptExecutorTest {
             LLMProvider.OpenAI to MockOpenAILLMClient(),
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
-
-        val model = AnthropicModels.Sonnet_3_5
+val model = AnthropicModels.Sonnet_3_5
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -84,16 +82,19 @@ class LLMPromptExecutorTest {
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
 
-        val model = OpenAIModels.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
 
         val responseChunks = executor.executeStreaming(prompt, model).toList()
-
         assertEquals(3, responseChunks.size, "Response should have three chunks")
-        assertEquals("OpenAI streaming response", responseChunks.joinToString(""), "Response should be from OpenAI client")
+        assertEquals(
+            "OpenAI streaming response",
+            responseChunks.joinToString(""),
+            "Response should be from OpenAI client"
+        )
     }
 
     @Test
@@ -110,9 +111,12 @@ class LLMPromptExecutorTest {
         }
 
         val responseChunks = executor.executeStreaming(prompt, model).toList()
-
         assertEquals(3, responseChunks.size, "Response should have three chunks")
-        assertEquals("Anthropic streaming response", responseChunks.joinToString(""), "Response should be from Anthropic client")
+        assertEquals(
+            "Anthropic streaming response",
+            responseChunks.joinToString(""),
+            "Response should be from Anthropic client"
+        )
     }
 
     @Test
@@ -133,8 +137,7 @@ class LLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithUnsupportedProvider() = runTest {
         val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient())
-
-        val model = AnthropicModels.Sonnet_3_7
+val model = AnthropicModels.Sonnet_3_7
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
