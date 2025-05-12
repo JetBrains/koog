@@ -18,7 +18,7 @@ import ai.grazie.code.agents.core.model.AgentServiceErrorType
 import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.grazie.code.agents.core.tools.tools.StageTool
+import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
@@ -222,11 +222,11 @@ open class AIAgentBase(
         allowToolCalls {
             logger.debug { "Handling tool call sent by server..." }
 
-            val stage = content.toolArgs[StageTool.STAGE_PARAM_NAME]?.jsonPrimitive?.contentOrNull
+            val stage = content.toolArgs[ToolStage.STAGE_PARAM_NAME]?.jsonPrimitive?.contentOrNull
                 ?.let { stageArg -> toolRegistry.getStageByName(stageArg) }
                 // If the tool appears in different stages, the first one will be returned
                 ?: toolRegistry.getStageByToolOrNull(content.toolName)
-                ?: toolRegistry.getStageByName(StageTool.DEFAULT_STAGE_NAME)
+                ?: toolRegistry.getStageByName(ToolStage.DEFAULT_STAGE_NAME)
 
             val tool = stage.getToolOrNull(content.toolName)
 

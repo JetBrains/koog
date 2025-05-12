@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.tools.tools
 
 import ai.grazie.code.agents.core.tools.Tool
 
-class StageTool(
+class ToolStage(
     val name: String,
     val tools: List<Tool<*, *>>,
 ) {
@@ -29,10 +29,10 @@ class StageTool(
 
         fun tools(tools: List<Tool<*, *>>) = tools.forEach { tool(it) }
 
-        internal fun build(): StageTool {
+        internal fun build(): ToolStage {
             require(tools.isNotEmpty()) { "No tools defined" }
 
-            return StageTool(
+            return ToolStage(
                 name = stageName,
                 tools = tools + CollectToolsForStageTool(toolListName, tools.map { it.descriptor })
             )
@@ -48,7 +48,7 @@ class StageTool(
             stageName: String = DEFAULT_STAGE_NAME,
             toolListName: String = DEFAULT_TOOL_LIST_NAME,
             init: Builder.() -> Unit
-        ): StageTool = Builder(stageName, toolListName).apply(init).build()
+        ): ToolStage = Builder(stageName, toolListName).apply(init).build()
     }
 }
 
