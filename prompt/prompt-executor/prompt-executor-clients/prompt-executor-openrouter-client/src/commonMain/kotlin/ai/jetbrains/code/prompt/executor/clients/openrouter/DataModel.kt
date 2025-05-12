@@ -17,9 +17,9 @@ internal data class OpenRouterRequest(
 internal data class OpenRouterMessage(
     val role: String,
     val content: String? = "",
-    val tool_calls: List<OpenRouterToolCall>? = null,
+    val toolCalls: List<OpenRouterToolCall>? = null,
     val name: String? = null,
-    val tool_call_id: String? = null
+    val toolCallId: String? = null
 )
 
 @Serializable
@@ -62,14 +62,14 @@ internal data class OpenRouterResponse(
 internal data class OpenRouterChoice(
     val index: Int,
     val message: OpenRouterMessage,
-    val finish_reason: String? = null
+    val finishReason: String? = null
 )
 
 @Serializable
 internal data class OpenRouterUsage(
-    val prompt_tokens: Int,
-    val completion_tokens: Int,
-    val total_tokens: Int
+    val promptTokens: Int,
+    val completionTokens: Int,
+    val totalTokens: Int
 )
 
 @Serializable
@@ -85,12 +85,12 @@ internal data class OpenRouterStreamResponse(
 internal data class OpenRouterStreamChoice(
     val index: Int,
     val delta: OpenRouterStreamDelta,
-    val finish_reason: String? = null
+    val finishReason: String? = null
 )
 
 @Serializable
 internal data class OpenRouterStreamDelta(
     val role: String? = null,
     val content: String? = null,
-    val tool_calls: List<OpenRouterToolCall>? = null
+    val toolCalls: List<OpenRouterToolCall>? = null
 )

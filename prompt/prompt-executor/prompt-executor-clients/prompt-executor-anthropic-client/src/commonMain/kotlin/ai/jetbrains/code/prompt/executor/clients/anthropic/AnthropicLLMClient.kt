@@ -11,25 +11,37 @@ import ai.jetbrains.code.prompt.executor.clients.LLMClient
 import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.utils.io.readUTF8Line
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.accept
+import io.ktor.client.request.header
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 
 /**
  * Represents the settings for configuring an Anthropic client, including model mapping, base URL, and API version.
@@ -61,21 +73,31 @@ class AnthropicClientSettings(
 open class AnthropicLLMClient(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
-    baseClient: HttpClient = HttpClient(engineFactoryProvider())
+    baseClient: HttpClient = HttpClient()
 ) : LLMClient {
 
     companion object {
         private val logger =
             LoggerFactory.create("ai.jetbrains.code.prompt.executor.clients.anthropic.HTTPBasedAnthropicSuspendableDirectClient")
+
+        private const val DEFAULT_MESSAGE_PATH = "v1/messages"
     }
 
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true // Ensure default values are included in serialization
+        namingStrategy = JsonNamingStrategy.SnakeCase
     }
 
     private val httpClient = baseClient.config {
+        defaultRequest {
+            url(settings.baseUrl)
+            contentType(ContentType.Application.Json)
+            header("x-api-key", apiKey)
+            header("anthropic-version", settings.apiVersion)
+        }
+        install(SSE)
         install(ContentNegotiation) {
             json(json)
         }
@@ -88,22 +110,18 @@ open class AnthropicLLMClient(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        if (!model.capabilities.contains(LLMCapability.Completion)) {
-            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
         }
-        if (!model.capabilities.contains(LLMCapability.Tools) && tools.isNotEmpty()) {
-            throw IllegalArgumentException("Model ${model.id} does not support tools")
+        require(model.capabilities.contains(LLMCapability.Tools)) {
+            "Model ${model.id} does not support tools"
         }
 
         val request = createAnthropicRequest(prompt, tools, model, false)
-        val requestBody = json.encodeToString(request)
 
         return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post("${settings.baseUrl}/v1/messages") {
-                contentType(ContentType.Application.Json)
-                header("x-api-key", apiKey)
-                header("anthropic-version", settings.apiVersion)
-                setBody(requestBody)
+            val response = httpClient.post(DEFAULT_MESSAGE_PATH) {
+                setBody(request)
             }
 
             if (response.status.isSuccess()) {
@@ -112,62 +130,49 @@ open class AnthropicLLMClient(
             } else {
                 val errorBody = response.bodyAsText()
                 logger.error { "Error from Anthropic API: ${response.status}: $errorBody" }
-                throw IllegalStateException("Error from Anthropic API: ${response.status}: $errorBody")
+                error("Error from Anthropic API: ${response.status}: $errorBody")
             }
         }
     }
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model without tools" }
-        if (!model.capabilities.contains(LLMCapability.Completion)) {
-            throw IllegalArgumentException("Model ${model.id} does not support chat completions")
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
         }
 
         val request = createAnthropicRequest(prompt, emptyList(), model, true)
-        val requestBody = json.encodeToString(request)
 
-        return callbackFlow {
-            withContext(Dispatchers.SuitableForIO) {
-                try {
-                    httpClient.preparePost("${settings.baseUrl}/v1/messages") {
-                        contentType(ContentType.Application.Json)
-                        header("x-api-key", apiKey)
-                        header("anthropic-version", settings.apiVersion)
-                        setBody(requestBody)
-                    }.execute { response ->
-                        if (response.status.isSuccess()) {
-                            val channel = response.bodyAsChannel()
-
-                            while (!channel.isClosedForRead) {
-                                val line = channel.readUTF8Line() ?: continue
-
-                                if (line.startsWith("data: ") && line != "data: [DONE]") {
-                                    val jsonData = line.substring(6)
-                                    try {
-                                        val streamResponse = json.decodeFromString<AnthropicStreamResponse>(jsonData)
-                                        streamResponse.delta?.text?.let { text ->
-                                            trySend(text)
-                                        }
-                                    } catch (e: Exception) {
-                                        logger.error { "Error parsing stream response: $e" }
-                                    }
-                                }
-                            }
-                        } else {
-                            val errorBody = response.bodyAsText()
-                            logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
-                            throw IllegalStateException("Error from OpenAI API: ${response.status}: $errorBody")
+        return flow {
+            try {
+                httpClient.sse(
+                    urlString = DEFAULT_MESSAGE_PATH,
+                    request = {
+                        method = HttpMethod.Post
+                        accept(ContentType.Text.EventStream)
+                        headers {
+                            append(HttpHeaders.CacheControl, "no-cache")
+                            append(HttpHeaders.Connection, "keep-alive")
                         }
+                        setBody(request)
                     }
-                } catch (e: Exception) {
-                    logger.error { "Exception during streaming: $e" }
-                    close(e)
-                } finally {
-                    close()
+                ) {
+                    incoming.collect { event ->
+                        event
+                            .takeIf { it.event == "content_block_delta" }
+                            ?.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+                            ?.delta?.text?.let { emit(it) }
+                    }
                 }
+            } catch (e: SSEClientException) {
+                e.response?.let { response ->
+                    logger.error { "Error from Anthropic API: ${response.status}: ${e.message}" }
+                    error("Error from Anthropic API: ${response.status}: ${e.message}")
+                }
+            } catch (e: Exception) {
+                logger.error { "Exception during streaming: $e" }
+                error(e.message ?: "Unknown error during streaming")
             }
-
-            awaitClose { }
         }
     }
 
@@ -177,17 +182,13 @@ open class AnthropicLLMClient(
         model: LLModel,
         stream: Boolean
     ): AnthropicMessageRequest {
-        var systemMessage: String? = null
+        val systemMessage = mutableListOf<SystemAnthropicMessage>()
         val messages = mutableListOf<AnthropicMessage>()
 
         for (message in prompt.messages) {
             when (message) {
                 is Message.System -> {
-                    // TODO: figure out how to make Anthropic accept > 1 system messages.
-                    if (systemMessage != null) {
-                        error("Only one system message is allowed for Anthropic client")
-                    }
-                    systemMessage = message.content
+                    systemMessage.add(SystemAnthropicMessage(message.content))
                 }
 
                 is Message.User -> {
@@ -215,7 +216,7 @@ open class AnthropicLLMClient(
                         val newContent = lastMessage.content.toMutableList()
                         newContent.add(
                             AnthropicContent.ToolResult(
-                                tool_use_id = message.id ?: "",
+                                toolUseId = message.id ?: "",
                                 content = message.content
                             )
                         )
@@ -227,7 +228,7 @@ open class AnthropicLLMClient(
                                 role = "user",
                                 content = listOf(
                                     AnthropicContent.ToolResult(
-                                        tool_use_id = message.id ?: "",
+                                        toolUseId = message.id ?: "",
                                         content = message.content
                                     )
                                 )
@@ -282,7 +283,7 @@ open class AnthropicLLMClient(
             AnthropicTool(
                 name = tool.name,
                 description = tool.description,
-                input_schema = AnthropicToolSchema(
+                inputSchema = AnthropicToolSchema(
                     properties = JsonObject(properties),
                     required = tool.requiredParameters.map { it.name }
                 )
@@ -292,9 +293,9 @@ open class AnthropicLLMClient(
         // Always include max_tokens as it's required by the API
         return AnthropicMessageRequest(
             model = settings.modelVersionsMap[model]
-                ?: throw IllegalArgumentException("Unsupported model: ${model}"),
+                ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
-            max_tokens = 2048, // This is required by the API
+            maxTokens = 2048, // This is required by the API
             temperature = prompt.params.temperature ?: 0.7, // Default temperature if not provided
             system = systemMessage,
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
@@ -356,11 +357,3 @@ open class AnthropicLLMClient(
         }
     }
 }
-
-/**
- * Platform-specific HTTP client engine factory provider.
- * Each platform (JVM, Native, JS) implements this function to provide appropriate HTTP client engine.
- *
- * @return HTTP client engine factory for the current platform
- */
-internal expect fun engineFactoryProvider(): HttpClientEngineFactory<*>
