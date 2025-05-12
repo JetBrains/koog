@@ -37,7 +37,6 @@ fun main() = runBlocking {
             ) {
                 val requestClassification by nodeLLMRequestStructured(
                     structure = JsonStructuredData.createJsonStructure<ClassifiedBankRequest>(
-                        // some models don't work well with json schema, so you may try simple, but it has more limitations (no polymorphism!)
                         schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
                         examples = listOf(
                             ClassifiedBankRequest(
@@ -56,7 +55,7 @@ fun main() = runBlocking {
                 )
 
                 val callLLM by nodeLLMRequest()
-                val askUser by nodeExecuteTool()
+                val callAskUserTool by nodeExecuteTool()
 
                 edge(nodeStart forwardTo requestClassification transformed { stageInput })
                 edge(
@@ -69,16 +68,17 @@ fun main() = runBlocking {
                             onCondition { it.isFailure }
                             transformed { "Failed to understand the user's intent" }
                 )
-                edge(callLLM forwardTo askUser onToolCall { true })
+                edge(callLLM forwardTo callAskUserTool onToolCall { true })
                 edge(callLLM forwardTo callLLM onAssistantMessage { true }
                         transformed { "Please call `${AskUser.name}` tool instead of chatting" })
-                edge(askUser forwardTo requestClassification transformed { it.result.toString() })
+                edge(callAskUserTool forwardTo requestClassification transformed { it.result.toString() })
             }
 
 
             val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
                 tools = MoneyTransferTools().asTools() + AskUser,
-                shouldTLDRHistory = true
+                shouldTLDRHistory = true,
+                model = OpenAIModels.GPT4o
             ) { request ->
                 """
                     ${bankingAssistantSystemPrompt}
