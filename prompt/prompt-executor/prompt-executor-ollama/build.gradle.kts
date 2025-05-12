@@ -1,4 +1,5 @@
 import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
+import org.gradle.kotlin.dsl.testImplementation
 
 group = "${rootProject.group}.prompt"
 version = rootProject.version
@@ -54,6 +55,15 @@ kotlin {
             }
         }
     }
+    implementation(libs.ai.grazie.utils.common)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    testImplementation(kotlin("test"))
+    testImplementation(project(":agents:agents-test"))
+    testImplementation(libs.kotlinx.coroutines.test)
 }
 
 publishToGraziePublicMaven()
