@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.dsl.builder
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.grazie.code.agents.core.tools.tools.StageTool
+import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 
@@ -13,7 +13,7 @@ class LocalAgentStrategyBuilder(
     private var stageBuilders = mutableListOf<LocalAgentStageBuilder>()
 
     fun stage(
-        name: String = StageTool.DEFAULT_STAGE_NAME,
+        name: String = ToolStage.DEFAULT_STAGE_NAME,
         requiredTools: List<ToolDescriptor>? = null,
         init: LocalAgentStageBuilder.() -> Unit
     ) {
