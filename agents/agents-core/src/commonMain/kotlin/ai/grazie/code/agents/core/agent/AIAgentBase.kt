@@ -8,7 +8,7 @@ import ai.grazie.code.agents.core.environment.AgentEnvironmentUtils.mapToToolRes
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.environment.TerminationTool
 import ai.grazie.code.agents.core.exception.AgentEngineException
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.core.model.AgentServiceError
 import ai.grazie.code.agents.core.model.AgentServiceErrorType
@@ -81,7 +81,7 @@ open class AIAgentBase(
 
     private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
 
-    private val pipeline = AIAgentPipeline()
+    private val pipeline = AgentPipeline()
 
     init {
         cs.launch(context = Dispatchers.SuitableForIO, start = CoroutineStart.UNDISPATCHED) {
@@ -138,7 +138,7 @@ open class AIAgentBase(
 
     override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
         logger.info { formatLog("Executing tools '$toolCalls'") }
-        pipeline.onBeforeToolCalls(toolCalls)
+        pipeline.onBeforeToolCalls(tools = toolCalls)
 
         val message = AgentToolCallsToEnvironmentMessage(
             sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),
@@ -153,7 +153,7 @@ open class AIAgentBase(
         )
 
         val results = processToolCallMultiple(message).mapToToolResult()
-        pipeline.onAfterToolCalls(results)
+        pipeline.onAfterToolCalls(tools = toolCalls, results)
         return results
     }
 
@@ -239,7 +239,7 @@ open class AIAgentBase(
             }
             catch (e: ToolException) {
 
-                pipeline.onToolValidationError(stage = stage, tool = tool, toolArgs = toolArgs, value = e.message)
+                pipeline.onToolValidationError(stage = stage, tool = tool, toolArgs = toolArgs, error = e.message)
 
                 return toolResult(
                     message = e.message,

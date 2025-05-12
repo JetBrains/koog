@@ -11,7 +11,7 @@ class ExecuteToolHandler {
         BeforeToolCallsHandler { _ -> }
 
     var afterToolCallsHandler: AfterToolCallsHandler =
-        AfterToolCallsHandler { _ -> }
+        AfterToolCallsHandler { _, _ -> }
 
     var toolCallHandler: ToolCallHandler =
         ToolCallHandler { _, _, _ -> }
@@ -31,7 +31,7 @@ fun interface BeforeToolCallsHandler {
 }
 
 fun interface AfterToolCallsHandler {
-    suspend fun handle(results: List<ReceivedToolResult>)
+    suspend fun handle(tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>)
 }
 
 fun interface ToolCallHandler {
@@ -39,7 +39,7 @@ fun interface ToolCallHandler {
 }
 
 fun interface ToolValidationErrorHandler {
-    suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String)
+    suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String)
 }
 
 fun interface ToolCallFailureHandler {

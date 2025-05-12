@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.agent.entity.createStorageKey
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
@@ -68,7 +68,7 @@ class MemoryFeature(
 
         override fun createInitialConfig(): Config = Config()
 
-        override fun install(config: Config, pipeline: AIAgentPipeline) {
+        override fun install(config: Config, pipeline: AgentPipeline) {
             pipeline.interceptContextStageFeature(this) { stageContext ->
                 config.agentName = stageContext.strategyId
 

@@ -22,7 +22,7 @@ class TestFeature(val events: MutableList<String>) {
 
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AgentPipeline
         ) {
             val feature = TestFeature(events = config.events ?: mutableListOf())
 
@@ -63,7 +63,7 @@ class TestFeature(val events: MutableList<String>) {
                 feature.events += "Tool: start tool calls $tools"
             }
 
-            pipeline.interceptAfterToolCall(this, feature) { results ->
+            pipeline.interceptAfterToolCall(this, feature) { tools, results ->
                 feature.events += "Tool: finish tool calls ${results.map { it.toMessage() }}"
             }
 

@@ -72,8 +72,8 @@ class EventHandlerFeatureConfig : FeatureConfig() {
     var onBeforeToolCalls: suspend (tools: List<Message.Tool.Call>) -> Unit =
         { tools: List<Message.Tool.Call> -> }
 
-    var onAfterToolCalls: suspend (results: List<ReceivedToolResult>) -> Unit =
-        { results: List<ReceivedToolResult> -> }
+    var onAfterToolCalls: suspend (tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>) -> Unit =
+        { tools: List<Message.Tool.Call>, results: List<ReceivedToolResult> -> }
 
     var onToolCall: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit =
         { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args -> }

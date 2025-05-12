@@ -15,7 +15,7 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.extension.clearHistory
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.grazie.code.agents.core.environment.AgentEnvironment
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.PromptExecutorProxy
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
@@ -166,7 +166,7 @@ class LocalAgentStrategy(
         promptExecutor: PromptExecutor,
         environment: AgentEnvironment,
         config: LocalAgentConfig,
-        pipeline: AIAgentPipeline,
+        pipeline: AgentPipeline,
     ) {
         val stateManager = LocalAgentStateManager()
         val storage = LocalAgentStorage()

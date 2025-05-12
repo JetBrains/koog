@@ -4,10 +4,10 @@ import ai.grazie.code.agents.local.features.NetUtil.findAvailablePort
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import ai.grazie.code.agents.local.features.common.message.use
-import ai.grazie.code.agents.local.features.common.remote.client.ClientConnectionConfig
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
+import ai.grazie.code.agents.local.features.common.remote.client.config.DefaultClientConnectionConfig
 import ai.grazie.code.agents.local.features.common.remote.server.FeatureMessageRemoteServer
-import ai.grazie.code.agents.local.features.common.remote.server.ServerConnectionConfig
+import ai.grazie.code.agents.local.features.common.remote.server.config.DefaultServerConnectionConfig
 import ai.grazie.code.agents.local.features.writer.TestFeatureEventMessage
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
@@ -27,7 +27,7 @@ class FeatureMessageRemoteClientTest {
 
     companion object {
         private val logger: MPPLogger =
-            LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.server.FeatureMessageRemoteClientTest")
+            LoggerFactory.create("ai.grazie.code.agents.local.features.remote.client.FeatureMessageRemoteClientTest")
 
         private val defaultClientServerTimeout = 500.seconds
     }
@@ -37,8 +37,8 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test client connect to running server`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -81,8 +81,8 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test already connected client connect again`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -125,7 +125,7 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test client connect to stopped server`() = runBlocking {
         val port = findAvailablePort()
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
             logger.info { "Client connecting to remote server: ${client.connectionConfig.url}" }
@@ -147,8 +147,8 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test stop connected client`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -191,7 +191,7 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test stop not connected client`() = runBlocking {
         val port = findAvailablePort()
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val client = FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this)
         assertFalse(client.isConnected)
@@ -208,8 +208,8 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test server send get response to a client`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -256,8 +256,8 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test client send a valid message to a server`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -323,8 +323,8 @@ class FeatureMessageRemoteClientTest {
             }
         }
 
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig("127.0.0.1", port, HttpProtocolVersion.HTTP_2_0.name).apply {
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig("127.0.0.1", port, HttpProtocolVersion.HTTP_2_0.name).apply {
             appendSerializersModule(customSerializersModule)
         }
 
