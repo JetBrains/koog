@@ -93,7 +93,7 @@ class OpenAISuspendableDirectClientTest {
                 user("Count from 1 to 5.")
             }
 
-            val responseChunks = client.executeStreaming(prompt, OpenAIModels.O3Mini).toList()
+            val responseChunks = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o).toList()
 
             assertNotNull(responseChunks, "Response chunks should not be null")
             assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
