@@ -435,7 +435,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.General.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -481,7 +481,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.General.GPT4o, maxAgentIterations),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
             eventHandler = eventHandler
         ) {
@@ -524,7 +524,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.General.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -568,7 +568,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.General.GPT4o, 15),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
@@ -609,7 +609,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_initial") {
                 val defineInitialPrompt by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.General.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system("You are a helpful assistant. You need to solve my task.")
@@ -628,7 +628,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai_judge") {
                 val defineLLMasAJudgePrompt by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.General.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -653,7 +653,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.General.GPT4o, 15),
+            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->
@@ -802,7 +802,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             stage("openai-color-picker") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.General.GPT4o
+                        model = OpenAIModels.Chat.GPT4o
                         rewritePrompt {
                             prompt("test-tools") {
                                 system(
@@ -866,7 +866,7 @@ class KotlinAIAgentWithMultipleLLMTest {
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.General.GPT4o, 15),
+            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
             eventHandler = EventHandler {
                 onToolCall { stage, tool, arguments ->

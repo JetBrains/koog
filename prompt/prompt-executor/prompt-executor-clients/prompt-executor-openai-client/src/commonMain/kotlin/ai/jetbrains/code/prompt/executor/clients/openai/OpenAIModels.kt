@@ -103,7 +103,7 @@ object OpenAIModels {
         )
     }
 
-    object General {
+    object Chat {
         /**
          * GGPT-4o (“o” for “omni”) is a versatile, high-intelligence flagship model.
          * It accepts both text and image inputs, and produces text outputs (including Structured Outputs).

@@ -19,7 +19,7 @@ fun customWizardStrategy(
     stage("generate-verify-and-fix") {
         val generate by subgraphWithTask<Unit>(
             generateTools,
-            model = OpenAIModels.General.GPT4o,
+            model = OpenAIModels.Chat.GPT4o,
         ) { input ->
             """
             You are an AI agent that can create files and folders inside some empty project repository.

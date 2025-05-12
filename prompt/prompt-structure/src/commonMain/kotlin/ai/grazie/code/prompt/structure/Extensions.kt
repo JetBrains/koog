@@ -68,7 +68,7 @@ suspend fun <T> PromptExecutor.executeStructured(
     mainModel: LLModel,
     structure: StructuredData<T>,
     retries: Int = 1,
-    fixingModel: LLModel = OpenAIModels.General.GPT4o
+    fixingModel: LLModel = OpenAIModels.Chat.GPT4o
 ): StructuredResponse<T> {
     val prompt = prompt(prompt) {
         user {

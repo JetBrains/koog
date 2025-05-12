@@ -2,7 +2,6 @@ package ai.jetbrains.code.prompt.executor.llms
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.LLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
@@ -48,7 +47,7 @@ class LLMPromptExecutorTest {
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
 
-        val model = OpenAIModels.General.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -83,7 +82,7 @@ val model = AnthropicModels.Sonnet_3_5
             LLMProvider.Anthropic to MockAnthropicLLMClient()
         )
 
-        val model = OpenAIModels.General.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")

@@ -459,7 +459,7 @@ fun testMultiStageAgentStructure() = runBlocking {
         toolRegistry = toolRegistry,
         strategy = strategy,
         eventHandler = EventHandler {},
-        agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.General.GPT4o, maxAgentIterations = 100),
+        agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
         promptExecutor = mockLLMApi,
         cs = this
     ) {

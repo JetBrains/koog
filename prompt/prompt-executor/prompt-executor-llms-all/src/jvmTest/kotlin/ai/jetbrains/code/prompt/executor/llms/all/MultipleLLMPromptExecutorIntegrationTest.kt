@@ -34,7 +34,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val model = OpenAIModels.General.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -84,7 +84,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val model = OpenAIModels.General.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
@@ -146,7 +146,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
 
-        val model = OpenAIModels.General.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
             user("Write a simple Kotlin function to calculate the factorial of a number.")
@@ -216,7 +216,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.General.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
@@ -272,7 +272,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.General.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool. ALWAYS CALL TOOL FIRST.")
             user("What is 12,3 + 45,,6?")
@@ -326,7 +326,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.General.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
@@ -366,7 +366,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             optionalParameters = emptyList()
         )
 
-        val modelOpenAI = OpenAIModels.General.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to calculator tools. Use the best one.")
             user("What is 123 + 456?")
@@ -407,7 +407,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.General.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
             user("Pick me a color!")
@@ -447,7 +447,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val modelOpenAI = OpenAIModels.General.GPT4o
+        val modelOpenAI = OpenAIModels.Chat.GPT4o
         val promptOpenAI = Prompt.build("test-tools") {
             system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
             user("Pick me lottery winners and losers! 5 of each")
@@ -476,7 +476,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun `test openai client with streaming API raw string`() = runTest(timeout = 600.seconds) {
         val openAIClient = OpenAILLMClient(openAIApiKey)
 
-        val model = OpenAIModels.General.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Please provide information about 200 countries.")
@@ -539,7 +539,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()
 
-        val model = OpenAIModels.General.GPT4o
+        val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(

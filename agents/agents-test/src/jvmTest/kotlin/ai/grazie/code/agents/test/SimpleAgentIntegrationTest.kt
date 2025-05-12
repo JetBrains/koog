@@ -61,7 +61,7 @@ class SimpleAgentIntegrationTest {
             executor = simpleOpenAIExecutor(apiToken),
             cs = this,
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.General.GPT4o,
+            llmModel = OpenAIModels.Chat.GPT4o,
             temperature = 1.0,
             eventHandler = eventHandler,
             maxIterations = 10,

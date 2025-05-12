@@ -59,7 +59,7 @@ class MultipleLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, OpenAIModels.General.GPT4o)
+        val response = executor.execute(prompt, OpenAIModels.Chat.GPT4o)
 
         assertEquals("OpenAI response", response, "Response should be from OpenAI client")
     }
@@ -93,7 +93,7 @@ class MultipleLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, OpenAIModels.General.GPT4o).toList()
+        val responseChunks = executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o).toList()
 
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
