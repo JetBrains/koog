@@ -22,7 +22,7 @@ import kotlinx.serialization.json.Json
  * @property baseUrl The base URL of the Ollama API server.
  * @property baseClient The HTTP client used for making requests.
  */
-open class OllamaClient(
+public open class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
 ) {
@@ -40,13 +40,14 @@ open class OllamaClient(
         }
     }
 
+    // TODO: reconsider request and response classnames
     /**
      * Generate a chat completion for a given set of messages with a provided model.
      *
      * @param request The chat request parameters.
      * @return A flow of chat responses.
      */
-    open suspend fun chat(request: OllamaChatRequestDTO): OllamaChatResponseDTO {
+    public open suspend fun chat(request: OllamaChatRequestDTO): OllamaChatResponseDTO {
         val response = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
             setBody(request)
@@ -57,6 +58,7 @@ open class OllamaClient(
         return result
     }
 
+    // TODO: reconsider it's openness
     /**
      * Embeds the given text using the Ollama model.
      *
@@ -65,7 +67,7 @@ open class OllamaClient(
      * @return A vector representation of the text.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
-    open suspend fun embed(text: String, model: LLModel): List<Double> {
+    public open suspend fun embed(text: String, model: LLModel): List<Double> {
         if (!model.capabilities.contains(LLMCapability.Embed)) {
             throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
         }
@@ -81,4 +83,4 @@ open class OllamaClient(
 
 }
 
-expect fun engineFactoryProvider(): HttpClientEngineFactory<*>
+internal expect fun engineFactoryProvider(): HttpClientEngineFactory<*>

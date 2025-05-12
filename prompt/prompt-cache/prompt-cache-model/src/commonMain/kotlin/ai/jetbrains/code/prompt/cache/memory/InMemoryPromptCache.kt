@@ -12,8 +12,8 @@ import kotlin.math.absoluteValue
  * In-memory implementation of [PromptCache].
  * This implementation stores cache entries in memory.
  */
-class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
-    companion object : PromptCache.Factory.Named("memory") {
+public class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
+    public companion object : PromptCache.Factory.Named("memory") {
         override fun create(config: String): PromptCache {
             val parts = elements(config)
             require(parts[0] == "memory") { "Invalid cache type: ${parts[0]}. Expected 'memory'." }

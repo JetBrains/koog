@@ -1,6 +1,7 @@
 package ai.jetbrains.code.prompt.text
 
-fun spaces(count: Int): String = " ".repeat(count)
+// TODO: should the library provide such a function?
+// fun spaces(count: Int): String = " ".repeat(count)
 
 /**
  * Extension function for [TextContentBuilder] that adds line numbering to the content.
@@ -9,7 +10,7 @@ fun spaces(count: Int): String = " ".repeat(count)
  * @param body The content builder function
  * @return The [TextContentBuilder] instance with numbered lines
  */
-fun TextContentBuilder.numbered(startLineNumber: Int = 1, body: TextContentBuilder.() -> Unit): TextContentBuilder {
+public fun TextContentBuilder.numbered(startLineNumber: Int = 1, body: TextContentBuilder.() -> Unit): TextContentBuilder {
     // Create a temporary builder to capture the content
     val tempBuilder = TextContentBuilder()
     tempBuilder.body()

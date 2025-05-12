@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import kotlinx.serialization.json.*
 
-fun ToolDescriptor.toJSONSchema(): JsonObject {
+public fun ToolDescriptor.toJSONSchema(): JsonObject {
     /**
      * Helper function to convert a ToolParameterDescriptor into JSON schema.
      *

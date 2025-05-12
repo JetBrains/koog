@@ -8,38 +8,38 @@ import kotlinx.serialization.Serializable
 
 
 @Serializable
-data class Prompt(
+public data class Prompt(
     val messages: List<Message>,
     val id: String,
     val params: LLMParams = LLMParams()
 ) {
 
-    companion object {
-        val Empty = Prompt(emptyList(), "")
+    public companion object {
+        public val Empty: Prompt = Prompt(emptyList(), "")
 
-        fun build(id: String, params: LLMParams = LLMParams(), init: PromptBuilder.() -> Unit): Prompt {
+        public fun build(id: String, params: LLMParams = LLMParams(), init: PromptBuilder.() -> Unit): Prompt {
             val builder = PromptBuilder(id, params)
             builder.init()
             return builder.build()
         }
 
-        fun build(prompt: Prompt, init: PromptBuilder.() -> Unit): Prompt {
+        public fun build(prompt: Prompt, init: PromptBuilder.() -> Unit): Prompt {
             return PromptBuilder.from(prompt).also(init).build()
         }
     }
 
-    fun withMessages(newMessages: List<Message>): Prompt = copy(messages = newMessages)
+    public fun withMessages(newMessages: List<Message>): Prompt = copy(messages = newMessages)
 
-    fun withUpdatedMessages(update: MutableList<Message>.() -> Unit): Prompt =
+    public fun withUpdatedMessages(update: MutableList<Message>.() -> Unit): Prompt =
         this.copy(messages = messages.toMutableList().apply { update() })
 
-    fun withParams(newParams: LLMParams): Prompt = copy(params = newParams)
+    public fun withParams(newParams: LLMParams): Prompt = copy(params = newParams)
 
-    class LLMParamsUpdateContext internal constructor(
-        var temperature: Double?,
-        var speculation: String?,
-        var schema: Schema?,
-        var toolChoice: ToolChoice?,
+    public class LLMParamsUpdateContext internal constructor(
+        public var temperature: Double?,
+        public var speculation: String?,
+        public var schema: Schema?,
+        public var toolChoice: ToolChoice?,
     ) {
         internal constructor(params: LLMParams) : this(
             params.temperature,
@@ -48,7 +48,7 @@ data class Prompt(
             params.toolChoice
         )
 
-        fun toParams(): LLMParams = LLMParams(
+        public fun toParams(): LLMParams = LLMParams(
             temperature = temperature,
             speculation = speculation,
             schema = schema,
@@ -56,6 +56,6 @@ data class Prompt(
         )
     }
 
-    fun withUpdatedParams(update: LLMParamsUpdateContext.() -> Unit): Prompt =
+    public fun withUpdatedParams(update: LLMParamsUpdateContext.() -> Unit): Prompt =
         copy(params = LLMParamsUpdateContext(params).apply { update() }.toParams())
 }

@@ -12,10 +12,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 
 
-/**
- * Annotation to provide description for fields in structured output classes.
- * @param description The description of the field for LLM.
- */
+
 
 
 /**
@@ -29,7 +26,7 @@ import kotlinx.serialization.serializer
  * @property schema Schema of this structure
  * @property schema Schema guideline for LLM to directly ask LLM API for a structured output.
  */
-class JsonStructuredData<TStruct>(
+public class JsonStructuredData<TStruct>(
     id: String,
     private val serializer: KSerializer<TStruct>,
     private val structureLanguage: JsonStructureLanguage,
@@ -37,14 +34,14 @@ class JsonStructuredData<TStruct>(
     private val jsonSchema: LLMParams.Schema.JSON
 ): StructuredData<TStruct>(id, examples, jsonSchema) {
 
-    enum class JsonSchemaType {
+    public enum class JsonSchemaType {
         FULL, SIMPLE
     }
 
     override fun parse(text: String): TStruct = structureLanguage.parse(text, serializer)
     override fun pretty(value: TStruct): String = structureLanguage.pretty(value, serializer)
 
-    override fun definition(builder: TextContentBuilder) = builder.apply {
+    override fun definition(builder: TextContentBuilder): TextContentBuilder = builder.apply {
         +"DEFINITION OF $id"
         +"The $id format is defined only and solely with JSON, without any additional characters, backticks or anything similar."
         newline()
@@ -59,11 +56,12 @@ class JsonStructuredData<TStruct>(
         newline()
     }
 
-    companion object {
+    public companion object {
+        // TODO: Class.simpleName is the only reason to make the function inline, perhaps we can hide most of the implementation
         /**
          * Factory method to create JSON structure with auto-generated JSON schema.
          */
-        inline fun <reified T> createJsonStructure(
+        public inline fun <reified T> createJsonStructure(
             id: String = T::class.simpleName ?: error("Class name is required for JSON structure"),
             serializer: KSerializer<T> = serializer<T>(),
             json: Json = JsonStructureLanguage.defaultJson,
@@ -97,7 +95,8 @@ class JsonStructuredData<TStruct>(
             )
         }
 
-        inline fun <reified T> getDescriptionMetadata(serializer: KSerializer<T>): DescriptionMetadata? {
+        @PublishedApi
+        internal fun <T> getDescriptionMetadata(serializer: KSerializer<T>): DescriptionMetadata? {
             // Try to find the class in the registry
             val className = serializer.descriptor.serialName
 

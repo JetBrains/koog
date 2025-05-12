@@ -2,12 +2,11 @@ package ai.grazie.code.prompt.structure
 
 import ai.jetbrains.code.prompt.params.LLMParams
 
-
-abstract class StructuredData<TStruct>(
-    val id: String,
-    val examples: List<TStruct>,
-    val schema: LLMParams.Schema
+public abstract class StructuredData<TStruct>(
+    public val id: String,
+    public val examples: List<TStruct>,
+    public val schema: LLMParams.Schema
 ) : StructuredDataDefinition {
-    abstract fun parse(text: String): TStruct
-    abstract fun pretty(value: TStruct): String
+    public abstract fun parse(text: String): TStruct
+    public abstract fun pretty(value: TStruct): String
 }

@@ -5,20 +5,19 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
-
 @Serializable
-sealed interface Message {
-    val content: String
-    val role: Role
+public sealed interface Message {
+    public val content: String
+    public val role: Role
 
     @Serializable
-    sealed interface Request : Message
+    public sealed interface Request : Message
     @Serializable
-    sealed interface Response : Message
+    public sealed interface Response : Message
 
 
     @Serializable
-    enum class Role {
+    public enum class Role {
         System,
         User,
         Assistant,
@@ -26,27 +25,27 @@ sealed interface Message {
     }
 
     @Serializable
-    data class User(
+    public data class User(
         override val content: String
     ) : Request {
         override val role: Role = Role.User
     }
 
     @Serializable
-    data class Assistant(
+    public data class Assistant(
         override val content: String
     ) : Response {
         override val role: Role = Role.Assistant
     }
 
     @Serializable
-    sealed interface Tool : Message {
+    public sealed interface Tool : Message {
         // Not all LLM backends support tool call ids for now
-        val id: String?
-        val tool: String
+        public val id: String?
+        public val tool: String
 
         @Serializable
-        data class Call(
+        public data class Call(
             override val id: String?,
             override val tool: String,
             override val content: String
@@ -59,7 +58,7 @@ sealed interface Message {
         }
 
         @Serializable
-        data class Result(
+        public data class Result(
             override val id: String?,
             override val tool: String,
             override val content: String
@@ -69,7 +68,7 @@ sealed interface Message {
     }
 
     @Serializable
-    data class System(
+    public data class System(
         override val content: String
     ) : Request {
         override val role: Role = Role.System

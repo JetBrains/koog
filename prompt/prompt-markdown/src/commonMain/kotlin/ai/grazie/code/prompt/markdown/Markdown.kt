@@ -6,8 +6,8 @@ import ai.jetbrains.code.prompt.text.TextContentBuilder
  * A dedicated builder for creating markdown content.
  * Wraps TextContentBuilder and provides markdown-specific functionality.
  */
-class MarkdownContentBuilder : TextContentBuilder() {
-    companion object {
+public class MarkdownContentBuilder : TextContentBuilder() {
+    private companion object {
         private val INDENTATION_ITEM = " ".repeat(2)
     }
 
@@ -16,7 +16,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * @param level The header level (1-6)
      * @param text The header text
      */
-    fun header(level: Int, text: String) {
+    public fun header(level: Int, text: String) {
         require(level in 1..6) { "Header level must be between 1 and 6" }
         val prefix = "#".repeat(level)
         +"$prefix $text"
@@ -26,43 +26,43 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * Adds a level 1 header (# Header) to the content.
      * @param text The header text
      */
-    fun h1(text: String) = header(1, text)
+    public fun h1(text: String): Unit = header(1, text)
 
     /**
      * Adds a level 2 header (## Header) to the content.
      * @param text The header text
      */
-    fun h2(text: String) = header(2, text)
+    public fun h2(text: String): Unit = header(2, text)
 
     /**
      * Adds a level 3 header (### Header) to the content.
      * @param text The header text
      */
-    fun h3(text: String) = header(3, text)
+    public fun h3(text: String): Unit = header(3, text)
 
     /**
      * Adds a level 4 header (#### Header) to the content.
      * @param text The header text
      */
-    fun h4(text: String) = header(4, text)
+    public fun h4(text: String): Unit = header(4, text)
 
     /**
      * Adds a level 5 header (##### Header) to the content.
      * @param text The header text
      */
-    fun h5(text: String) = header(5, text)
+    public fun h5(text: String): Unit = header(5, text)
 
     /**
      * Adds a level 6 header (###### Header) to the content.
      * @param text The header text
      */
-    fun h6(text: String) = header(6, text)
+    public fun h6(text: String): Unit = header(6, text)
 
     /**
      * Adds a bold text (**text**) to the content.
      * @param text The text to make bold
      */
-    fun bold(text: String) {
+    public fun bold(text: String) {
         +"**$text**"
     }
 
@@ -70,7 +70,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * Adds an italic text (*text*) to the content.
      * @param text The text to make italic
      */
-    fun italic(text: String) {
+    public fun italic(text: String) {
         +"*$text*"
     }
 
@@ -78,7 +78,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * Adds a strikethrough text (~~text~~) to the content.
      * @param text The text to strikethrough
      */
-    fun strikethrough(text: String) {
+    public fun strikethrough(text: String) {
         +"~~$text~~"
     }
 
@@ -86,7 +86,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * Adds a code span (`code`) to the content.
      * @param code The code to add
      */
-    fun code(code: String) {
+    public fun code(code: String) {
         +"`$code`"
     }
 
@@ -98,7 +98,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * @param code The code to add
      * @param language The language for syntax highlighting (optional)
      */
-    fun codeblock(code: String, language: String = "") {
+    public fun codeblock(code: String, language: String = "") {
         +"```$language"
         +code
         +"```"
@@ -109,7 +109,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * @param text The link text
      * @param url The link URL
      */
-    fun link(text: String, url: String) {
+    public fun link(text: String, url: String) {
         +"[$text]($url)"
     }
 
@@ -118,14 +118,14 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * @param alt The image alt text
      * @param url The image URL
      */
-    fun image(alt: String, url: String) {
+    public fun image(alt: String, url: String) {
         +"![$alt]($url)"
     }
 
     /**
      * Adds a horizontal rule (---) to the content.
      */
-    fun horizontalRule() {
+    public fun horizontalRule() {
         +"---"
     }
 
@@ -133,13 +133,13 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * Adds a blockquote to the content.
      * @param text The text to quote
      */
-    fun blockquote(text: String) {
+    public fun blockquote(text: String) {
         text.split("\n").forEach {
             +"> $it"
         }
     }
 
-    fun line(block: LineContext.() -> Unit) {
+    public fun line(block: LineContext.() -> Unit) {
         val text = LineContext().apply(block).builder.build()
         if (text.isNotBlank()) {
             +text
@@ -153,7 +153,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * @param rows The table rows, each row is a list of cells
      * @param alignments The column alignments (optional)
      */
-    fun table(
+    public fun table(
         headers: List<String>,
         rows: List<List<String>>,
         alignments: List<TableAlignment> = List(headers.size) { TableAlignment.LEFT }
@@ -181,43 +181,44 @@ class MarkdownContentBuilder : TextContentBuilder() {
         }
     }
 
-    class LineContext(val builder: TextContentBuilder = TextContentBuilder()) {
-        fun space(): LineContext {
+    // TODO: LineContext has fluent API, but ListContext has not.
+    public class LineContext(internal val builder: TextContentBuilder = TextContentBuilder()) {
+        public fun space(): LineContext {
             builder.text(" ")
             return this
         }
 
-        fun text(text: String): LineContext {
+        public fun text(text: String): LineContext {
             builder.text(text)
             return this
         }
 
-        fun bold(text: String): LineContext {
+        public fun bold(text: String): LineContext {
             builder.text("**$text**")
             return this
         }
 
-        fun italic(text: String): LineContext {
+        public fun italic(text: String): LineContext {
             builder.text("*$text*")
             return this
         }
 
-        fun strikethrough(text: String): LineContext {
+        public fun strikethrough(text: String): LineContext {
             builder.text("~~$text~~")
             return this
         }
 
-        fun code(code: String): LineContext {
+        public fun code(code: String): LineContext {
             builder.text("`$code`")
             return this
         }
 
-        fun link(text: String, url: String): LineContext {
+        public fun link(text: String, url: String): LineContext {
             builder.text("[$text]($url)")
             return this
         }
 
-        fun image(alt: String, url: String): LineContext {
+        public fun image(alt: String, url: String): LineContext {
             builder.text("![$alt]($url)")
             return this
         }
@@ -226,13 +227,13 @@ class MarkdownContentBuilder : TextContentBuilder() {
     /**
      * Context for building bulleted lists.
      */
-    inner class ListContext(val bullet: (counter: Int) -> String) {
+    public inner class ListContext(private val bullet: (counter: Int) -> String) {
         private var counter = 0
 
         /**
          * Adds a bulleted list item.
          */
-        fun item(text: String) {
+        public fun item(text: String) {
             val bullet = bullet(counter++)
             for ((index, line) in text.split("\n").withIndex()) {
                 val lineText = when {
@@ -247,11 +248,11 @@ class MarkdownContentBuilder : TextContentBuilder() {
         /**
          * Adds a bulleted list item with a block of content for nested items.
          */
-        fun item(block: MarkdownContentBuilder.() -> Unit) {
+        public fun item(block: MarkdownContentBuilder.() -> Unit) {
             item(MarkdownContentBuilder().apply(block).build())
         }
 
-        fun item(title: String, block: MarkdownContentBuilder.() -> Unit) {
+        public fun item(title: String, block: MarkdownContentBuilder.() -> Unit) {
             item(
                 "$title\n" + MarkdownContentBuilder().apply(block).build()
             )
@@ -263,7 +264,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * Adds a bulleted list with a block structure.
      * @param block The list content builder
      */
-    fun bulleted(block: ListContext.() -> Unit) {
+    public fun bulleted(block: ListContext.() -> Unit) {
         val context = ListContext { "- " }
         context.block()
     }
@@ -272,7 +273,7 @@ class MarkdownContentBuilder : TextContentBuilder() {
      * Adds a numbered list with a block structure.
      * @param block The list content builder
      */
-    fun numbered(block: ListContext.() -> Unit) {
+    public fun numbered(block: ListContext.() -> Unit) {
         val context = ListContext { "${it + 1}. " }
         context.block()
     }
@@ -281,16 +282,16 @@ class MarkdownContentBuilder : TextContentBuilder() {
 /**
  * Enum for table column alignments.
  */
-enum class TableAlignment {
+public enum class TableAlignment {
     LEFT, CENTER, RIGHT
 }
 
 // ... (markdown extension functions remain the same) ...
-inline fun StringBuilder.markdown(init: MarkdownContentBuilder.() -> Unit) {
+public inline fun StringBuilder.markdown(init: MarkdownContentBuilder.() -> Unit) {
     append(MarkdownContentBuilder().apply(init).build())
 }
 
-inline fun TextContentBuilder.markdown(init: MarkdownContentBuilder.() -> Unit) {
+public inline fun TextContentBuilder.markdown(init: MarkdownContentBuilder.() -> Unit) {
     text(MarkdownContentBuilder().apply(init).build())
 }
 
@@ -299,6 +300,6 @@ inline fun TextContentBuilder.markdown(init: MarkdownContentBuilder.() -> Unit) 
  * @param init The content builder
  * @return The markdown document as a string
  */
-fun markdown(init: MarkdownContentBuilder.() -> Unit): String {
+public fun markdown(init: MarkdownContentBuilder.() -> Unit): String {
     return MarkdownContentBuilder().apply(init).build()
 }

@@ -17,11 +17,11 @@ import kotlinx.serialization.SerializationException
  * @property executor A `PromptExecutor` instance responsible for executing language model prompts.
  * @property fixingModel The language model to use for processing and attempting to fix format. Defaults to the `GPT4o` model in the `OpenAIModels`.
  */
-class StructureParser(
-    val executor: PromptExecutor,
-    val fixingModel: LLModel = OpenAIModels.Chat.GPT4o,
+public class StructureParser(
+    private val executor: PromptExecutor,
+    private val fixingModel: LLModel = OpenAIModels.Chat.GPT4o,
 ) {
-    companion object {
+    private companion object {
         private val logger =
             LoggerFactory.create("ai.grazie.code.prompt.structure.${StructureParser::class.simpleName}")
     }
@@ -35,7 +35,7 @@ class StructureParser(
      * @return An instance of the parsed data type.
      * @throws SerializationException If parsing fails both initially and after attempting to fix the content.
      */
-    suspend fun <T> parse(structure: StructuredData<T>, content: String): T {
+    public suspend fun <T> parse(structure: StructuredData<T>, content: String): T {
         return try {
             structure.parse(content)
         } catch (e: SerializationException) {

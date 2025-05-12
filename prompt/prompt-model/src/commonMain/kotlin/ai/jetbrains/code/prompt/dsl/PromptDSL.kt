@@ -1,13 +1,12 @@
 package ai.jetbrains.code.prompt.dsl
 
-import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.params.LLMParams
 
 @DslMarker
-annotation class PromptDSL
+public annotation class PromptDSL
 
 @PromptDSL
-fun prompt(
+public fun prompt(
     id: String,
     params: LLMParams = LLMParams(),
     build: PromptBuilder.() -> Unit
@@ -15,6 +14,6 @@ fun prompt(
     return Prompt.build(id, params, build)
 }
 
-fun prompt(existing: Prompt, build: PromptBuilder.() -> Unit): Prompt {
+public fun prompt(existing: Prompt, build: PromptBuilder.() -> Unit): Prompt {
     return Prompt.build(existing, build)
 }

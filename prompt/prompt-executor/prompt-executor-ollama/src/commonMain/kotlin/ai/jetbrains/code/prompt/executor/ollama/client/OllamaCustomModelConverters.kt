@@ -5,13 +5,13 @@ import ai.grazie.utils.mpp.LoggerFactory
 /**
  * Custom converters for specific Ollama models.
  */
-object OllamaCustomModelConverters {
+public object OllamaCustomModelConverters {
     private val logger = LoggerFactory.create(OllamaCustomModelConverters::class.simpleName!!)
 
     /**
      * Processes responses from the QWQ model by removing any content between <think> and </think> tags.
      */
-    fun qwq(response: String): String {
+    public fun qwq(response: String): String {
         val thinkingStart = response.indexOf("<think>")
         val thinkingEnd = response.indexOf("</think>")
         if (thinkingStart == -1 || thinkingEnd == -1) return response

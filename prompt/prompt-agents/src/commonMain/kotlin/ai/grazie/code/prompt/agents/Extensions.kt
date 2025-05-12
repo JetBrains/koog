@@ -3,7 +3,7 @@ package ai.grazie.code.prompt.agents
 import ai.grazie.code.prompt.markdown.MarkdownContentBuilder
 
 
-fun MarkdownContentBuilder.trajectory(trajectory: AgentTrajectory) {
+public fun MarkdownContentBuilder.trajectory(trajectory: AgentTrajectory) {
     +"Request: ${trajectory.request}"
     newline()
     +"Trajectory"

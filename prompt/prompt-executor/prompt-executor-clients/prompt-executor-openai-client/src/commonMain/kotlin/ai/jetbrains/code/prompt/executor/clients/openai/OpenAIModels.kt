@@ -4,9 +4,9 @@ import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 
-object OpenAIModels {
+public object OpenAIModels {
     // TODO: support thinking tokens
-    object Reasoning {
+    public object Reasoning {
         /**
          * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
          * more cost-effective. It's designed for tasks that don't require the full capabilities of GPT-4o.
@@ -17,7 +17,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">
          */
-        val GPT4oMini = LLModel(
+        public val GPT4oMini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4o-mini", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
                 LLMCapability.Tools, LLMCapability.Vision, LLMCapability.Completion
@@ -37,7 +37,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/o3-mini">
          */
-        val O3Mini = LLModel(
+        public val O3Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o3-mini", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
@@ -57,7 +57,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/o1-mini">
          */
-        val O1Mini = LLModel(
+        public val O1Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o1-mini", capabilities = listOf(
                 LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
@@ -77,7 +77,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/o3">
          */
-        val O3 = LLModel(
+        public val O3: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o3", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
@@ -96,7 +96,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/o1">
          */
-        val O1 = LLModel(
+        public val O1: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o1", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
@@ -104,7 +104,7 @@ object OpenAIModels {
         )
     }
 
-    object Chat {
+    public object Chat {
         /**
          * GGPT-4o (“o” for “omni”) is a versatile, high-intelligence flagship model.
          * It accepts both text and image inputs, and produces text outputs (including Structured Outputs).
@@ -118,7 +118,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-4o">
          */
-        val GPT4o = LLModel(
+        public val GPT4o: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4o", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
                 LLMCapability.Tools, LLMCapability.Vision, LLMCapability.Completion
@@ -136,7 +136,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-4.1">
          */
-        val GPT4_1 = LLModel(
+        public val GPT4_1: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
                 LLMCapability.Tools, LLMCapability.Vision, LLMCapability.Completion
@@ -144,7 +144,7 @@ object OpenAIModels {
         )
     }
 
-    object CostOptimized {
+    public object CostOptimized {
         /**
          * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being
          * more cost-effective. It's optimized for fast, effective reasoning with exceptionally efficient
@@ -158,7 +158,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/o4-mini">
          */
-        val O4Mini = LLModel(
+        public val O4Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o4-mini", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
                 LLMCapability.Tools, LLMCapability.Vision, LLMCapability.Completion
@@ -175,7 +175,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-nano">
          */
-        val GPT4_1Nano = LLModel(
+        public val GPT4_1Nano: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1-nano", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
                 LLMCapability.Tools, LLMCapability.Vision, LLMCapability.Completion
@@ -193,7 +193,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-mini">
          */
-        val GPT4_1Mini = LLModel(
+        public val GPT4_1Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1-mini", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
                 LLMCapability.Tools, LLMCapability.Vision, LLMCapability.Completion
@@ -203,17 +203,17 @@ object OpenAIModels {
         /**
          * See [Reasoning.GPT4oMini]
          */
-        val GPT4oMini: LLModel get() = Reasoning.GPT4oMini
+        public val GPT4oMini: LLModel get() = Reasoning.GPT4oMini
 
         /**
          * See [Reasoning.O1Mini]
          */
-        val O1Mini: LLModel get() = Reasoning.O1Mini
+        public val O1Mini: LLModel get() = Reasoning.O1Mini
 
         /**
          * See [Reasoning.O3Mini]
          */
-        val O3Mini: LLModel get() = Reasoning.O3Mini
+        public val O3Mini: LLModel get() = Reasoning.O3Mini
     }
 
     /**
@@ -221,7 +221,7 @@ object OpenAIModels {
      *
      * It is NOT recommended to use these models for other tasks other than for computing embeddings.
      * */
-    object Embeddings {
+    public object Embeddings {
         /**
          * text-embedding-3-small is an improved, more performant version of the ada embedding model.
          *
@@ -238,7 +238,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-small">
          */
-        val TextEmbeddingAda3Small = LLModel(
+        public val TextEmbeddingAda3Small: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "text-embedding-3-small", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             )
@@ -263,7 +263,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-large">
          */
-        val TextEmbeddingAda3Large = LLModel(
+        public val TextEmbeddingAda3Large: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "text-embedding-3-large", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             )
@@ -286,7 +286,7 @@ object OpenAIModels {
          *
          * @see <a href="https://platform.openai.com/docs/models/text-embedding-ada-002">
          */
-        val TextEmbeddingAda002 = LLModel(
+        public val TextEmbeddingAda002: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "text-embedding-ada-002", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             )

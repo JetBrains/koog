@@ -8,10 +8,10 @@ import ai.jetbrains.code.prompt.message.Message
  * Interface for caching prompt execution results.
  * Implementations should provide a way to store and retrieve prompt execution results.
  */
-interface PromptCache {
-    interface Factory {
-        class Aggregated(val factories: List<Factory.Named>) : Factory {
-            constructor(vararg factories: Factory.Named) : this(factories.toList())
+public interface PromptCache {
+    public interface Factory {
+        public class Aggregated(private val factories: List<Named>) : Factory {
+            public constructor(vararg factories: Named) : this(factories.toList())
 
             override fun create(config: String): PromptCache {
                 for (factory in factories) {
@@ -21,13 +21,13 @@ interface PromptCache {
             }
         }
 
-        abstract class Named(val name: String) : Factory {
-            fun supports(config: String): Boolean = name == elements(config).firstOrNull()
+        public abstract class Named(public val name: String) : Factory {
+            public fun supports(config: String): Boolean = name == elements(config).firstOrNull()
         }
 
-        fun create(config: String): PromptCache
+        public fun create(config: String): PromptCache
 
-        fun elements(config: String): List<String> {
+        public fun elements(config: String): List<String> {
             val result = mutableListOf<String>()
             var current = StringBuilder()
             var braceCount = 0
@@ -68,7 +68,7 @@ interface PromptCache {
      * @param tools The tools used with the prompt
      * @return The cached response, or null if not cached
      */
-    suspend fun get(prompt: Prompt, tools: List<ToolDescriptor> = emptyList()): List<Message.Response>?
+    public suspend fun get(prompt: Prompt, tools: List<ToolDescriptor> = emptyList()): List<Message.Response>?
 
     /**
      * Put a response in the cache for a prompt with tools.
@@ -77,5 +77,5 @@ interface PromptCache {
      * @param tools The tools used with the prompt
      * @param response The response to cache
      */
-    suspend fun put(prompt: Prompt, tools: List<ToolDescriptor> = emptyList(), response: List<Message.Response>)
+    public suspend fun put(prompt: Prompt, tools: List<ToolDescriptor> = emptyList(), response: List<Message.Response>)
 }

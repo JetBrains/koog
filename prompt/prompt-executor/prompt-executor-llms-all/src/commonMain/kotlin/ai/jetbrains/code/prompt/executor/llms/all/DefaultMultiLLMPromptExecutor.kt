@@ -11,7 +11,7 @@ import ai.jetbrains.code.prompt.llm.LLMProvider
  * @param openAIClient The OpenAI client
  * @param anthropicClient The Anthropic client
  */
-class DefaultMultiLLMPromptExecutor(
+public class DefaultMultiLLMPromptExecutor(
     openAIClient: OpenAILLMClient,
     anthropicClient: AnthropicLLMClient
 ) : MultiLLMPromptExecutor(

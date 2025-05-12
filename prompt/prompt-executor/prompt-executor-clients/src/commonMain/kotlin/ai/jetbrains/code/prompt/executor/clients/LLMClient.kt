@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
  * Common interface for direct communication with LLM providers.
  * This interface defines methods for executing prompts and streaming responses.
  */
-interface LLMClient {
+public interface LLMClient {
     /**
      * Executes a prompt and returns a list of response messages.
      *
@@ -19,7 +19,7 @@ interface LLMClient {
      * @param model The LLM model to use
      * @return List of response messages
      */
-    suspend fun execute(
+    public suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
@@ -32,14 +32,14 @@ interface LLMClient {
      * @param model The LLM model to use
      * @return Flow of response chunks
      */
-    suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
+    public suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
 }
 
 /**
  * Extension of the LLMClient interface which includes functionality for generating text embeddings
  * in addition to executing prompts and streaming outputs.
  */
-interface LLMClientWithEmbeddings: LLMClient {
+public interface LLMClientWithEmbeddings: LLMClient {
     /**
      * Embeds the given text using into a vector of double-precision numbers.
      *
@@ -48,11 +48,11 @@ interface LLMClientWithEmbeddings: LLMClient {
      * @return A list of floating-point values representing the embedding.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
-    suspend fun embed(text: String, model: LLModel): List<Double>
+    public suspend fun embed(text: String, model: LLModel): List<Double>
 }
 
 
-data class ConnectionTimeoutConfig(
+public data class ConnectionTimeoutConfig(
     val requestTimeoutMillis: Long = DEFAULT_TIMEOUT_MS,
     val connectTimeoutMillis: Long = DEFAULT_CONNECT_TIMEOUT_MS,
     val socketTimeoutMillis: Long = DEFAULT_TIMEOUT_MS,

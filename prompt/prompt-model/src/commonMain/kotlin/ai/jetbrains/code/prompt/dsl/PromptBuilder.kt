@@ -1,16 +1,15 @@
 package ai.jetbrains.code.prompt.dsl
 
-import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.params.LLMParams
 import ai.jetbrains.code.prompt.text.TextContentBuilder
 
 @PromptDSL
-class PromptBuilder internal constructor(private val id: String, val params: LLMParams = LLMParams()) {
+public class PromptBuilder internal constructor(private val id: String, private val params: LLMParams = LLMParams()) {
     private val messages = mutableListOf<Message>()
 
-    companion object {
-        fun from(prompt: Prompt) = PromptBuilder(
+    internal companion object {
+        internal fun from(prompt: Prompt): PromptBuilder = PromptBuilder(
             prompt.id,
             prompt.params
         ).apply {
@@ -18,52 +17,51 @@ class PromptBuilder internal constructor(private val id: String, val params: LLM
         }
     }
 
-
-    fun system(content: String) {
+    public fun system(content: String) {
         messages.add(Message.System(content))
     }
 
-    fun system(init: TextContentBuilder.() -> Unit) {
+    public fun system(init: TextContentBuilder.() -> Unit) {
         system(TextContentBuilder().apply(init).build())
     }
 
-    fun user(content: String) {
+    public fun user(content: String) {
         messages.add(Message.User(content))
     }
 
-    fun user(init: TextContentBuilder.() -> Unit) {
+    public fun user(init: TextContentBuilder.() -> Unit) {
         user(TextContentBuilder().apply(init).build())
     }
 
-    fun assistant(content: String) {
+    public fun assistant(content: String) {
         messages.add(Message.Assistant(content))
     }
 
-    fun assistant(init: TextContentBuilder.() -> Unit) {
+    public fun assistant(init: TextContentBuilder.() -> Unit) {
         assistant(TextContentBuilder().apply(init).build())
     }
 
-    fun message(message: Message) {
+    public fun message(message: Message) {
         messages.add(message)
     }
 
-    fun messages(messages: List<Message>) {
+    public fun messages(messages: List<Message>) {
         this.messages.addAll(messages)
     }
 
-    inner class ToolMessageBuilder() {
-        fun call(call: Message.Tool.Call) {
+    public inner class ToolMessageBuilder() {
+        public fun call(call: Message.Tool.Call) {
             messages.add(call)
         }
 
-        fun result(result: Message.Tool.Result) {
+        public fun result(result: Message.Tool.Result) {
             messages.add(result)
         }
     }
 
-    val tool = ToolMessageBuilder()
+    private val tool = ToolMessageBuilder()
 
-    fun tool(init: ToolMessageBuilder.() -> Unit) {
+    public fun tool(init: ToolMessageBuilder.() -> Unit) {
         tool.init()
     }
 

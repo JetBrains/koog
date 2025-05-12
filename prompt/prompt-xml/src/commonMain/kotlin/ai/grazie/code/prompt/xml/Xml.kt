@@ -6,8 +6,8 @@ import ai.jetbrains.code.prompt.text.TextContentBuilder
  * A dedicated builder for creating XML content.
  * Wraps TextContentBuilder and provides XML-specific functionality.
  */
-class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
-    companion object {
+public class XmlContentBuilder(private val indented: Boolean) : TextContentBuilder() {
+    private companion object {
         private val INDENTATION_ITEM = " ".repeat(2)
     }
 
@@ -19,14 +19,13 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
         textWithNewLine(this)
     }
 
-
     /**
      * Creates an XML tag with the given name, attributes, and content.
      * @param name The tag name
      * @param attributes The tag attributes as key-value pairs
      * @param block The content builder
      */
-    fun tag(
+    public fun tag(
         name: String,
         attributes: LinkedHashMap<String, String> = linkedMapOf(),
         block: XmlContentBuilder.() -> Unit = {}
@@ -76,7 +75,7 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
      * @param name The tag name
      * @param attributes The tag attributes as key-value pairs
      */
-    fun selfClosingTag(name: String, attributes: LinkedHashMap<String, String> = linkedMapOf()) {
+    public fun selfClosingTag(name: String, attributes: LinkedHashMap<String, String> = linkedMapOf()) {
         val attributesString =
             if (attributes.isEmpty()) "" else attributes.entries.joinToString(" ") { "${it.key}=\"${it.value}\"" }
 
@@ -93,7 +92,7 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
      * @param encoding The character encoding (default is "UTF-8")
      * @param standalone Whether the document is standalone (default is null, which means the attribute is not included)
      */
-    fun xmlDeclaration(version: String = "1.0", encoding: String = "UTF-8", standalone: Boolean? = null) {
+    public fun xmlDeclaration(version: String = "1.0", encoding: String = "UTF-8", standalone: Boolean? = null) {
         val standaloneAttr = standalone?.let { " standalone=\"${if (it) "yes" else "no"}\"" } ?: ""
         +("<?xml version=\"$version\" encoding=\"$encoding\"$standaloneAttr?>")
         newline()
@@ -103,7 +102,7 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
      * Adds a CDATA section to the content.
      * @param content The content to be wrapped in CDATA
      */
-    fun cdata(content: String) {
+    public fun cdata(content: String) {
         +("<![CDATA[$content]]>")
     }
 
@@ -111,7 +110,7 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
      * Adds an XML comment to the content.
      * @param comment The comment text
      */
-    fun comment(comment: String) {
+    public fun comment(comment: String) {
         +("<!-- $comment -->")
     }
 
@@ -120,7 +119,7 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
      * @param target The processing instruction target
      * @param data The processing instruction data
      */
-    fun processingInstruction(target: String, data: String) {
+    public fun processingInstruction(target: String, data: String) {
         +("<?$target $data?>")
     }
 
@@ -130,7 +129,7 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
      * @param publicId The public identifier (optional)
      * @param systemId The system identifier (optional)
      */
-    fun doctype(rootElement: String, publicId: String? = null, systemId: String? = null) {
+    public fun doctype(rootElement: String, publicId: String? = null, systemId: String? = null) {
         if (publicId != null && systemId != null) {
             +("<!DOCTYPE $rootElement PUBLIC \"$publicId\" \"$systemId\">")
         } else if (systemId != null) {
@@ -145,7 +144,7 @@ class XmlContentBuilder(val indented: Boolean) : TextContentBuilder() {
  * Extension function to add XML content to a StringBuilder.
  * @param init The XML content builder
  */
-inline fun StringBuilder.xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit) {
+public inline fun StringBuilder.xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit) {
     append(XmlContentBuilder(indented).apply(init).build())
 }
 
@@ -153,7 +152,7 @@ inline fun StringBuilder.xml(indented: Boolean = true, init: XmlContentBuilder.(
  * Extension function to add XML content to a TextContentBuilder.
  * @param init The XML content builder
  */
-inline fun TextContentBuilder.xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit) {
+public inline fun TextContentBuilder.xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit) {
     text(XmlContentBuilder(indented).apply(init).build())
 }
 
@@ -162,6 +161,6 @@ inline fun TextContentBuilder.xml(indented: Boolean = true, init: XmlContentBuil
  * @param init The content builder
  * @return The XML document as a string
  */
-fun xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit): String {
+public fun xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit): String {
     return XmlContentBuilder(indented).apply(init).build()
 }

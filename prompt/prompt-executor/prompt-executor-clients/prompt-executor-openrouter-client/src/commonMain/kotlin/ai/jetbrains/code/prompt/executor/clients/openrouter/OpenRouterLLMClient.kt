@@ -45,11 +45,12 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 
-class OpenRouterClientSettings(
-    val baseUrl: String = "https://openrouter.ai",
-    val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+public class OpenRouterClientSettings(
+    public val baseUrl: String = "https://openrouter.ai",
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
+// TODO: why its open?
 /**
  * Implementation of [LLMClient] for OpenRouter API.
  * OpenRouter is an API that routes requests to multiple LLM providers.
@@ -57,13 +58,13 @@ class OpenRouterClientSettings(
  * @param apiKey The API key for the OpenRouter API
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
  */
-open class OpenRouterLLMClient(
+public open class OpenRouterLLMClient(
     private val apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
     baseClient: HttpClient = HttpClient()
 ) : LLMClient {
 
-    companion object {
+    private companion object {
         private val logger =
             LoggerFactory.create("ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterLLMClient")
 
