@@ -15,7 +15,7 @@ import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.dsl.builder.BaseBuilder
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.core.feature.PromptExecutorProxy
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
@@ -71,7 +71,7 @@ class DummyAgentStageContext(
             ?: throw NotImplementedError("Stage name is not mocked")
 
     @InternalAgentsApi
-    override val pipeline: AIAgentPipeline = AIAgentPipeline()
+    override val pipeline: AgentPipeline = AgentPipeline()
 
     override fun <Feature : Any> feature(key: LocalAgentStorageKey<Feature>): Feature? =
         throw NotImplementedError("feature() getting in runtime is not supported for mock")
@@ -89,7 +89,7 @@ class DummyAgentStageContext(
         sessionUuid: UUID?,
         strategyId: String?,
         stageName: String?,
-        pipeline: AIAgentPipeline?
+        pipeline: AgentPipeline?
     ): LocalAgentStageContext = DummyAgentStageContext(
         builder.copy().apply {
             environment?.let { this.environment = it }
@@ -745,7 +745,7 @@ class Testing {
         @OptIn(InternalAgentsApi::class)
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AgentPipeline
         ) {
             val feature = Testing()
 

@@ -4,7 +4,8 @@ import ai.grazie.code.agents.local.features.common.MutexCheck.withLockCheck
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
 import ai.grazie.code.agents.local.features.common.remote.server.FeatureMessageRemoteServer
-import ai.grazie.code.agents.local.features.common.remote.server.ServerConnectionConfig
+import ai.grazie.code.agents.local.features.common.remote.server.config.DefaultServerConnectionConfig
+import ai.grazie.code.agents.local.features.common.remote.server.config.ServerConnectionConfig
 import kotlinx.coroutines.sync.Mutex
 
 /**
@@ -25,7 +26,7 @@ abstract class FeatureMessageRemoteWriter(
         get() = _isOpen
 
     internal val server: FeatureMessageRemoteServer =
-        FeatureMessageRemoteServer(connectionConfig = connectionConfig ?: ServerConnectionConfig())
+        FeatureMessageRemoteServer(connectionConfig = connectionConfig ?: DefaultServerConnectionConfig())
 
     override suspend fun initialize() {
         withLockEnsureClosed {

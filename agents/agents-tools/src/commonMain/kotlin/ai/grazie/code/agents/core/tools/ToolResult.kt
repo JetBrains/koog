@@ -20,7 +20,7 @@ interface ToolResult {
     /**
      * Result implementation representing a simple tool result, just a string.
      */
-    @kotlinx.serialization.Serializable
+    @Serializable
     @JvmInline
     value class Text(val text: String) : ToolResult.JSONSerializable<Text> {
         override fun getSerializer(): KSerializer<Text> = serializer()

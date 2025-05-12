@@ -1,6 +1,7 @@
 package ai.grazie.code.agents.local.features.common.remote.client
 
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.local.features.common.remote.client.config.ClientConnectionConfig
 import ai.grazie.model.cloud.GrazieHeaders
 import ai.grazie.utils.mpp.LoggerFactory
 import io.ktor.client.*

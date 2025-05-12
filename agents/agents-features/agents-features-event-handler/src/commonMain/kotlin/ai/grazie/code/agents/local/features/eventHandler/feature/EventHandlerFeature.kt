@@ -3,7 +3,7 @@ package ai.grazie.code.agents.local.features.eventHandler.feature
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
@@ -22,12 +22,11 @@ class EventHandlerFeature {
 
         override fun install(
             config: EventHandlerFeatureConfig,
-            pipeline: AIAgentPipeline,
+            pipeline: AgentPipeline,
         ) {
             logger.info { "Start installing feature: ${EventHandlerFeature::class.simpleName}" }
 
             val featureImpl = EventHandlerFeature()
-
 
             //region Intercept Agent Events
 
@@ -105,8 +104,8 @@ class EventHandlerFeature {
                 config.onBeforeToolCalls(tools)
             }
 
-            pipeline.interceptAfterToolCall(this, featureImpl) intercept@{ results ->
-                config.onAfterToolCalls(results)
+            pipeline.interceptAfterToolCall(this, featureImpl) intercept@{ tools, results ->
+                config.onAfterToolCalls(tools, results)
             }
 
             pipeline.interceptToolCall(this, featureImpl) intercept@{ stage, tool, toolArgs ->
@@ -126,7 +125,6 @@ class EventHandlerFeature {
             }
 
             //endregion Intercept Tool Call Events
-
         }
     }
 }

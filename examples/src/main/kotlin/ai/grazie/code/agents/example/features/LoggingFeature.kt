@@ -3,7 +3,7 @@ package ai.grazie.code.agents.example.features
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.core.feature.handler.AfterToolCallsHandler
@@ -50,7 +50,7 @@ class LoggingFeature(val logger: Logger) {
          */
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AgentPipeline
         ) {
             val logging = LoggingFeature(LoggerFactory.getLogger(config.loggerName))
 
@@ -87,11 +87,11 @@ class LoggingFeature(val logger: Logger) {
             }
 
             pipeline.interceptBeforeToolCall(this, logging) { tools ->
-                logger.info("Before tools call: $tools")
+                logger.info("Before tools call: [${tools.joinToString(", ") { it.tool }}]")
             }
 
-            pipeline.interceptAfterToolCall(this, logging) { results ->
-                logger.info("After tool call: $results")
+            pipeline.interceptAfterToolCall(this, logging) { tools, results ->
+                logger.info("After tools call (tools: ${tools.joinToString(", ") { it.tool }}, results: [${results.joinToString(", ") { it.content }}]")
             }
         }
     }

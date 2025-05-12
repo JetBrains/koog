@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.local.features.common.remote.client
+package ai.grazie.code.agents.local.features.common.remote.client.config
 
 import ai.grazie.code.agents.local.features.common.remote.ConnectionConfig
 import kotlin.time.Duration
@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
  * @property healthCheckUrl A computed property that constructs the URL endpoint for health check requests.
  * @property messageUrl A computed property that constructs the URL endpoint for sending or receiving messages.
  */
-data class ClientConnectionConfig(
+abstract class ClientConnectionConfig(
     val host: String,
     val port: Int,
     val protocol: String = "https",

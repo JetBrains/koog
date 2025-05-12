@@ -24,14 +24,14 @@ interface KotlinAIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
     fun createInitialConfig(): Config
 
     /**
-     * Installs the feature into the specified [AIAgentPipeline].
+     * Installs the feature into the specified [AgentPipeline].
      */
-    fun install(config: Config, pipeline: AIAgentPipeline)
+    fun install(config: Config, pipeline: AgentPipeline)
 
     /**
-     * Installs the feature into the specified [AIAgentPipeline] using an unsafe configuration type cast.
+     * Installs the feature into the specified [AgentPipeline] using an unsafe configuration type cast.
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    fun installUnsafe(config: Any?, pipeline: AIAgentPipeline) = install(config as Config, pipeline)
+    fun installUnsafe(config: Any?, pipeline: AgentPipeline) = install(config as Config, pipeline)
 }

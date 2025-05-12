@@ -18,7 +18,7 @@ class TraceFeatureMessageLogWriter(
             get() = "Feature message"
 
         val FeatureEvent.featureEvent
-            get() = "Feature event (eventId: ${this.eventId})"
+            get() = "Feature message"
 
         val FeatureStringMessage.featureStringMessage
             get() = "Feature string message (message: ${this.message})"
@@ -26,8 +26,20 @@ class TraceFeatureMessageLogWriter(
         val AgentCreateEvent.agentCreateEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName})"
 
+        val AgentStartedEvent.agentStartedEventFormat
+            get() = "${this.eventId} (strategy name: ${this.strategyName})"
+
+        val AgentFinishedEvent.agentFinishedEventFormat
+            get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
+
+        val AgentRunErrorEvent.agentRunErrorEventFormat
+            get() = "${this.eventId} (strategy name: ${this.strategyName}, error: ${this.error.message})"
+
         val StrategyStartEvent.strategyStartEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName})"
+
+        val StrategyFinishedEvent.strategyFinishedEventFormat
+            get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
 
         val LLMCallStartEvent.llmCallStartEventFormat
             get() = "${this.eventId} (prompt: ${this.prompt})"
@@ -42,10 +54,22 @@ class TraceFeatureMessageLogWriter(
             get() = "${this.eventId} (responses: ${this.responses}, tools: [${this.tools.joinToString(", ")}])"
 
         val ToolCallsStartEvent.toolCallsStartEventFormat
-            get() = "${this.eventId} (tools: [${tools.joinToString(", ")}])"
+            get() = "${this.eventId} (tools: [${tools.joinToString(", ") { it.tool }}])"
 
         val ToolCallsEndEvent.toolCallsEndEventFormat
-            get() = "${this.eventId} (results: $results)"
+            get() = "${this.eventId} (tools: [${tools.joinToString(", ") { it.tool }}], results: [${results.joinToString(", ") { it.content }}])"
+
+        val ToolCallEvent.toolCallEventFormat
+            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs})"
+
+        val ToolValidationErrorEvent.toolValidationErrorEventFormat
+            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs}, validation error: ${this.errorMessage})"
+
+        val ToolCallFailureEvent.toolCallFailureEventFormat
+            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs}, error: ${this.error.message})"
+
+        val ToolCallResultEvent.toolCallResultEventFormat
+            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs}, result: ${this.result})"
 
         val NodeExecutionStartEvent.nodeExecutionStartEventFormat
             get() = "${this.eventId} (stage: ${this.stageName}, node: ${this.nodeName}, input: ${this.input})"
@@ -61,13 +85,21 @@ class TraceFeatureMessageLogWriter(
 
         return when (this) {
             is AgentCreateEvent           -> { this.agentCreateEventFormat }
+            is AgentStartedEvent          -> { this.agentStartedEventFormat }
+            is AgentFinishedEvent         -> { this.agentFinishedEventFormat }
+            is AgentRunErrorEvent         -> { this.agentRunErrorEventFormat}
             is StrategyStartEvent         -> { this.strategyStartEventFormat }
+            is StrategyFinishedEvent      -> { this.strategyFinishedEventFormat }
             is LLMCallStartEvent          -> { this.llmCallStartEventFormat}
             is LLMCallEndEvent            -> { this.llmCallEndEventFormat}
             is LLMCallWithToolsStartEvent -> { this.llmCallWithToolsStartEventFormat }
             is LLMCallWithToolsEndEvent   -> { this.llmCallWithToolsEndEventFormat }
             is ToolCallsStartEvent        -> { this.toolCallsStartEventFormat }
             is ToolCallsEndEvent          -> { this.toolCallsEndEventFormat }
+            is ToolCallEvent              -> { this.toolCallEventFormat }
+            is ToolValidationErrorEvent   -> { this.toolValidationErrorEventFormat }
+            is ToolCallFailureEvent       -> { this.toolCallFailureEventFormat }
+            is ToolCallResultEvent        -> { this.toolCallResultEventFormat }
             is NodeExecutionStartEvent    -> { this.nodeExecutionStartEventFormat }
             is NodeExecutionEndEvent      -> { this.nodeExecutionEndEventFormat }
             is FeatureStringMessage       -> { this.featureStringMessage }

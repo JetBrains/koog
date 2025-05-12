@@ -50,6 +50,7 @@ class TraceFeatureMessageFileWriterTest {
 
             val expectedMessages = listOf(
                 "${AgentCreateEvent::class.simpleName} (strategy name: $strategyName)",
+                "${AgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
                 "${StrategyStartEvent::class.simpleName} (strategy name: $strategyName)",
                 "${NodeExecutionStartEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit)",
                 "${NodeExecutionEndEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit, output: kotlin.Unit)",
@@ -60,7 +61,9 @@ class TraceFeatureMessageFileWriterTest {
                 "${NodeExecutionStartEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt)",
                 "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy, __tools_list__])",
                 "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy, __tools_list__])",
-                "${NodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response))"
+                "${NodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response))",
+                "${StrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
+                "${AgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
             )
 
             val actualMessages = writer.targetPath.readLines()
@@ -111,6 +114,7 @@ class TraceFeatureMessageFileWriterTest {
 
         val expectedEvents = listOf(
             "CUSTOM. ${AgentCreateEvent::class.simpleName}",
+            "CUSTOM. ${AgentStartedEvent::class.simpleName}",
             "CUSTOM. ${StrategyStartEvent::class.simpleName}",
             "CUSTOM. ${NodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${NodeExecutionEndEvent::class.simpleName}",
@@ -122,6 +126,8 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM. ${LLMCallWithToolsStartEvent::class.simpleName}",
             "CUSTOM. ${LLMCallWithToolsEndEvent::class.simpleName}",
             "CUSTOM. ${NodeExecutionEndEvent::class.simpleName}",
+            "CUSTOM. ${StrategyFinishedEvent::class.simpleName}",
+            "CUSTOM. ${AgentFinishedEvent::class.simpleName}",
         )
 
         TraceFeatureMessageFileWriter(fs = JVMFileSystemProvider.ReadWrite, path = tempDir, format = customFormat).use { writer ->

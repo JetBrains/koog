@@ -33,7 +33,7 @@ import kotlinx.coroutines.awaitAll
  * through a flexible interception system. Features can be installed with custom configurations
  * and can hook into different stages of the agent's execution lifecycle.
  */
-class AIAgentPipeline {
+class AgentPipeline {
 
     companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.core.pipeline.AIAgentPipeline")
@@ -124,9 +124,6 @@ class AIAgentPipeline {
 
     //region Trigger Strategy Handlers
 
-    /**
-     * Run registered features' handlers on agent strategy started event.
-     */
     suspend fun onStrategyStarted(strategy: LocalAgentStrategy) {
         strategyHandlers.values.forEach { handler ->
             val updateContext = StrategyUpdateContext(strategy, handler.feature)
@@ -156,25 +153,10 @@ class AIAgentPipeline {
 
     //region Trigger Node Handlers
 
-    /**
-     * Run registered features' handlers on before node execution.
-     *
-     * @param node The node that has been executed;
-     * @param context The stage context in which the node was executed;
-     * @param input The input data provided to the node during its execution.
-     */
     suspend fun onBeforeNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(node, context, input) }
     }
 
-    /**
-     * Run registered features' handlers on after node execution.
-     *
-     * @param node The node that has been executed;
-     * @param context The stage context in which the node was executed;
-     * @param input The input data provided to the node during its execution;
-     * @param output The output data produced by the node after execution.
-     */
     suspend fun onAfterNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(node, context, input, output) }
     }
@@ -183,39 +165,18 @@ class AIAgentPipeline {
 
     //region Trigger LLM Call Handlers
 
-    /**
-     * Run registered features' handler on before making a call to the LLM.
-     *
-     * @param prompt The prompt containing input parameters and messages to be sent to the model.
-     */
     suspend fun onBeforeLLMCall(prompt: Prompt) {
         executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt) }
     }
 
-    /**
-     * Run registered features' handler on before making a call with a list of tools to the LLM.
-     *
-     * @param prompt The prompt containing input parameters and messages to be sent to the model;
-     * @param tools A list of tool descriptors that are included in the context of the LLM call.
-     */
     suspend fun onBeforeLLMWithToolsCall(prompt: Prompt, tools: List<ToolDescriptor>) {
         executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallWithToolsHandler.handle(prompt, tools) }
     }
 
-    /**
-     * Run registered features' handler on after making a call to the LLM.
-     *
-     * @param response The response received from the LLM call.
-     */
     suspend fun onAfterLLMCall(response: String) {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(response) }
     }
 
-    /**
-     * Run registered features' handler on after making a call with a list of tools to the LLM.
-     *
-     * @param response The response object received from the LLM call, containing the content and role.
-     */
     suspend fun onAfterLLMWithToolsCall(response: List<Message.Response>, tools: List<ToolDescriptor>) {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallWithToolsHandler.handle(response, tools) }
     }
@@ -224,30 +185,20 @@ class AIAgentPipeline {
 
     //region Trigger Tool Call Handlers
 
-    /**
-     * Run registered features' handler on before tool call.
-     *
-     * @param tools The signature of the tool being called, including its name and parameters.
-     */
     suspend fun onBeforeToolCalls(tools: List<Message.Tool.Call>) {
         executeToolHandlers.values.forEach { handler -> handler.beforeToolCallsHandler.handle(tools) }
     }
 
-    /**
-     * Run registered features' handler on after tool call.
-     *
-     * @param results The result object of the tool call, containing the tool name and its output content.
-     */
-    suspend fun onAfterToolCalls(results: List<ReceivedToolResult>) {
-        executeToolHandlers.values.forEach { handler -> handler.afterToolCallsHandler.handle(results) }
+    suspend fun onAfterToolCalls(tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>) {
+        executeToolHandlers.values.forEach { handler -> handler.afterToolCallsHandler.handle(tools, results) }
     }
 
     suspend fun onToolCall(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(stage, tool, toolArgs) }
     }
 
-    suspend fun onToolValidationError(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String) {
-        executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(stage, tool, toolArgs, value) }
+    suspend fun onToolValidationError(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
+        executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(stage, tool, toolArgs, error) }
     }
 
     suspend fun onToolCallFailure(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
@@ -265,8 +216,6 @@ class AIAgentPipeline {
     /**
      * Set feature handler for Context Stage events
      *
-     * @param TFeature The type of the feature being handled
-     * @param feature The feature to be intercepted in the stage context
      * @param handler The handler responsible for processing the feature within the stage context
      *
      * Example:
@@ -286,9 +235,6 @@ class AIAgentPipeline {
     /**
      * Intercepts agent creation to modify or enhance the agent.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes agent creation events
      *
      * Example:
@@ -324,6 +270,20 @@ class AIAgentPipeline {
         existingHandler.environmentTransformer = AgentEnvironmentTransformer { context, env -> context.transform(env) }
     }
 
+    /**
+     * Intercepts the agent's start event and binds a custom handler to execute specific behavior
+     * when the agent starts operating with a given strategy.
+     *
+     * @param handle A suspend function providing custom logic to execute when the agent starts,
+     *               with the active strategy name as a parameter.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptAgentStarted(MyFeature, myFeatureImpl) { strategyName ->
+     *     // Handle the agent starting here, using the active strategy name.
+     * }
+     * ```
+     */
     fun <TFeature: Any> interceptAgentStarted(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
@@ -336,6 +296,18 @@ class AIAgentPipeline {
         }
     }
 
+    /**
+     * Intercepts the completion of an agent's operation and assigns a custom handler to process the result.
+     *
+     * @param handle A suspend function providing custom logic to execute when the agent completes,
+     *
+     * Example:
+     * ```
+     * pipeline.interceptAgentFinished(MyFeature, myFeatureImpl) { strategyName, result ->
+     *     // Handle the completion result here, using the strategy name and the result.
+     * }
+     * ```
+     */
     fun <TFeature: Any> interceptAgentFinished(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
@@ -348,10 +320,22 @@ class AIAgentPipeline {
         }
     }
 
+    /**
+     * Intercepts and handles errors occurring during the execution of an AI agent's strategy.
+     *
+     * @param handle A suspend function providing custom logic to execute when an error occurs,
+     *
+     * Example:
+     * ```
+     * pipeline.interceptAgentRunError(MyFeature, myFeatureImpl) { strategyName, throwable ->
+     *     // Handle the error here, using the strategy name and the exception that occurred.
+     * }
+     * ```
+     */
     fun <TFeature: Any> interceptAgentRunError(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(agentName: String, throwable: Throwable) -> Unit
+        handle: suspend TFeature.(strategyName: String, throwable: Throwable) -> Unit
     ) {
         val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
 
@@ -363,10 +347,7 @@ class AIAgentPipeline {
     /**
      * Intercepts strategy started event to perform actions when an agent strategy begins execution.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
-     * @param handle The handler that processes strategy started events
+     * @param handle A suspend function that processes the start of a strategy, accepting the strategy context
      *
      * Example:
      * ```
@@ -397,6 +378,19 @@ class AIAgentPipeline {
         }
     }
 
+    /**
+     * Sets up an interceptor to handle the completion of a strategy for the given feature.
+     *
+     * @param handle A suspend function that processes the completion of a strategy, accepting the strategy name
+     *               and its result as parameters.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptStrategyFinished(MyFeature, myFeatureImpl) { strategyName, result ->
+     *     // Handle the completion of the strategy here
+     * }
+     * ```
+     */
     fun <TFeature : Any> interceptStrategyFinished(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
@@ -412,9 +406,6 @@ class AIAgentPipeline {
     /**
      * Intercepts node execution before it starts.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes before-node events
      *
      * Example:
@@ -439,9 +430,6 @@ class AIAgentPipeline {
     /**
      * Intercepts node execution after it completes.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes after-node events
      *
      * Example:
@@ -471,9 +459,6 @@ class AIAgentPipeline {
     /**
      * Intercepts LLM calls before they are made to modify or log the prompt.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes before-LLM-call events
      *
      * Example:
@@ -498,9 +483,6 @@ class AIAgentPipeline {
     /**
      * Intercepts LLM calls with tools before they are made to modify or log the prompt and tools.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes before-LLM-call-with-tools events
      *
      * Example:
@@ -525,9 +507,6 @@ class AIAgentPipeline {
     /**
      * Intercepts LLM calls after they are made to process or log the response.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes after-LLM-call events
      *
      * Example:
@@ -552,9 +531,6 @@ class AIAgentPipeline {
     /**
      * Intercepts LLM calls with tools after they are made to process or log the structured response.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes after-LLM-call-with-tools events
      *
      * Example:
@@ -579,9 +555,6 @@ class AIAgentPipeline {
     /**
      * Intercepts tool calls before they are made to modify or log the tool signature.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes before-tool-call events
      *
      * Example:
@@ -606,14 +579,11 @@ class AIAgentPipeline {
     /**
      * Intercepts tool calls after they are made to process or log the tool result.
      *
-     * @param TFeature The type of feature being installed
-     * @param feature The feature definition
-     * @param featureImpl The feature implementation instance
      * @param handle The handler that processes after-tool-call events
      *
      * Example:
      * ```
-     * pipeline.interceptAfterToolCall(MyFeature, myFeatureImpl) { result ->
+     * pipeline.interceptAfterToolCall(MyFeature, myFeatureImpl) { tools, result ->
      *     // Process or analyze the tool execution result
      * }
      * ```
@@ -621,15 +591,28 @@ class AIAgentPipeline {
     fun <TFeature : Any> interceptAfterToolCall(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(results: List<ReceivedToolResult>) -> Unit
+        handle: suspend TFeature.(tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
 
-        existingHandler.afterToolCallsHandler = AfterToolCallsHandler { results ->
-            with(featureImpl) { handle(results) }
+        existingHandler.afterToolCallsHandler = AfterToolCallsHandler { toolCalls, results ->
+            with(featureImpl) { handle(toolCalls, results) }
         }
     }
 
+    /**
+     * Intercepts and handles tool calls for the specified feature and its implementation.
+     * Updates the tool call handler for the given feature key with a custom handler.
+     *
+     * @param handle A suspend lambda function that processes tool calls, taking the current stage, the tool, and its arguments as parameters.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptToolCall(MyFeature, myFeatureImpl) { stage, tool, toolArgs ->
+     *    // Process or log the tool call
+     * }
+     * ```
+     */
     fun <TFeature: Any> interceptToolCall(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
@@ -642,6 +625,19 @@ class AIAgentPipeline {
         }
     }
 
+    /**
+     * Intercepts validation errors encountered during the execution of tools associated with the specified feature.
+     *
+     * @param handle A suspendable lambda function that will be invoked when a tool validation error occurs.
+     *        The lambda provides the tool's stage, tool instance, tool arguments, and the value that caused the validation error.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptToolValidationError(MyFeature, myFeatureImpl) { stage, tool, toolArgs, value ->
+     *     // Handle the tool validation error here
+     * }
+     * ```
+     */
     fun <TFeature: Any> interceptToolValidationError(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
@@ -654,6 +650,19 @@ class AIAgentPipeline {
         }
     }
 
+    /**
+     * Sets up an interception mechanism to handle tool call failures for a specific feature.
+     *
+     * @param handle A suspend function that is invoked when a tool call fails. It provides the stage,
+     *               the tool, the tool arguments, and the throwable that caused the failure.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptToolCallFailure(MyFeature, myFeatureImpl) { stage, tool, toolArgs, throwable ->
+     *     // Handle the tool call failure here
+     * }
+     * ```
+     */
     fun <TFeature: Any> interceptToolCallFailure(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
@@ -666,6 +675,20 @@ class AIAgentPipeline {
         }
     }
 
+    /**
+     * Intercepts the result of a tool call with a custom handler for a specific feature.
+     *
+     * @param handle A suspending function that defines the behavior to execute when a tool call result is intercepted.
+     * The function takes as parameters the stage of the tool call, the tool being called, its arguments,
+     * and the result of the tool call if available.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptToolCallResult(MyFeature, myFeatureImpl) { stage, tool, toolArgs, result ->
+     *     // Handle the tool call result here
+     * }
+     * ```
+     */
     fun <TFeature: Any> interceptToolCallResult(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,

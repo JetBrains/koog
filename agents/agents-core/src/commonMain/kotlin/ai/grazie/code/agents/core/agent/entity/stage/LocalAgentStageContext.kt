@@ -9,7 +9,7 @@ import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.SafeTool
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
@@ -134,7 +134,7 @@ interface LocalAgentStageContext {
      * it is subject to changes or alterations in future releases.
      */
     @InternalAgentsApi
-    val pipeline: AIAgentPipeline
+    val pipeline: AgentPipeline
 
     /**
      * Retrieves a feature from the local agent's storage using the specified key.
@@ -191,7 +191,7 @@ interface LocalAgentStageContext {
         sessionUuid: UUID? = null,
         strategyId: String? = null,
         stageName: String? = null,
-        pipeline: AIAgentPipeline? = null,
+        pipeline: AgentPipeline? = null,
     ): LocalAgentStageContext
 }
 
@@ -223,7 +223,7 @@ class LocalAgentStageContextImpl constructor(
     override val sessionUuid: UUID,
     override val strategyId: String,
     override val stageName: String,
-    override val pipeline: AIAgentPipeline,
+    override val pipeline: AgentPipeline,
 ) : LocalAgentStageContext {
     /**
      * A map storing features associated with the current stage context.
@@ -291,7 +291,7 @@ class LocalAgentStageContextImpl constructor(
         sessionUuid: UUID?,
         strategyId: String?,
         stageName: String?,
-        pipeline: AIAgentPipeline?,
+        pipeline: AgentPipeline?,
     ) = LocalAgentStageContextImpl(
         environment = environment ?: this.environment,
         stageInput = stageInput ?: this.stageInput,

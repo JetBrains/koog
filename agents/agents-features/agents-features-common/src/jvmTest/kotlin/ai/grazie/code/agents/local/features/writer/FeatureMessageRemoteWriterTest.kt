@@ -4,9 +4,10 @@ import ai.grazie.code.agents.local.features.NetUtil.findAvailablePort
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import ai.grazie.code.agents.local.features.common.message.use
-import ai.grazie.code.agents.local.features.common.remote.client.ClientConnectionConfig
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
-import ai.grazie.code.agents.local.features.common.remote.server.ServerConnectionConfig
+import ai.grazie.code.agents.local.features.common.remote.client.config.DefaultClientConnectionConfig
+import ai.grazie.code.agents.local.features.common.remote.server.config.DefaultServerConnectionConfig
+import ai.grazie.code.agents.local.features.common.remote.server.config.ServerConnectionConfig
 import ai.grazie.code.agents.local.features.common.writer.FeatureMessageRemoteWriter
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
@@ -38,7 +39,7 @@ class FeatureMessageRemoteWriterTest {
     @Test
     fun `test base state for non-initialized writer`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
 
         val writer = TestFeatureMessageRemoteWriter(serverConfig)
         assertFalse(writer.isOpen)
@@ -48,7 +49,7 @@ class FeatureMessageRemoteWriterTest {
     @Test
     fun `test get target path using non-initialized writer`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
 
         val writer = TestFeatureMessageRemoteWriter(serverConfig)
         val throwable = assertThrows<IllegalStateException> {
@@ -63,7 +64,7 @@ class FeatureMessageRemoteWriterTest {
     @Test
     fun `test base state for initialized writer`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
 
         TestFeatureMessageRemoteWriter(serverConfig).use { writer ->
             writer.initialize()
@@ -76,7 +77,7 @@ class FeatureMessageRemoteWriterTest {
     @Test
     fun `test initialize twice from same thread`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
 
         TestFeatureMessageRemoteWriter(serverConfig).use { writer ->
             writer.initialize()
@@ -97,8 +98,8 @@ class FeatureMessageRemoteWriterTest {
     fun `test client make health check with get request`() = runBlocking {
 
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -150,8 +151,8 @@ class FeatureMessageRemoteWriterTest {
     fun `test string sse message received from a server`() = runBlocking {
 
         val port = findAvailablePort()
-        val serverConfig = ServerConnectionConfig(port = port)
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val serverConfig = DefaultServerConnectionConfig(port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -214,8 +215,8 @@ class FeatureMessageRemoteWriterTest {
             }
         }
 
-        val serverConfig = ServerConnectionConfig(port = port).apply { appendSerializersModule(customSerializersModule) }
-        val clientConfig = ClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name).apply {
+        val serverConfig = DefaultServerConnectionConfig(port = port).apply { appendSerializersModule(customSerializersModule) }
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name).apply {
             appendSerializersModule(customSerializersModule)
         }
 

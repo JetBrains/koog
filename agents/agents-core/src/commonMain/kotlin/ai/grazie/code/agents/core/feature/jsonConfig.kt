@@ -1,6 +1,8 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.feature.model.AgentCreateEvent
+import ai.grazie.code.agents.core.feature.model.AgentFinishedEvent
+import ai.grazie.code.agents.core.feature.model.AgentStartedEvent
 import ai.grazie.code.agents.core.feature.model.DefinedFeatureEvent
 import ai.grazie.code.agents.core.feature.model.LLMCallEndEvent
 import ai.grazie.code.agents.core.feature.model.LLMCallStartEvent
@@ -8,6 +10,7 @@ import ai.grazie.code.agents.core.feature.model.LLMCallWithToolsEndEvent
 import ai.grazie.code.agents.core.feature.model.LLMCallWithToolsStartEvent
 import ai.grazie.code.agents.core.feature.model.NodeExecutionEndEvent
 import ai.grazie.code.agents.core.feature.model.NodeExecutionStartEvent
+import ai.grazie.code.agents.core.feature.model.StrategyFinishedEvent
 import ai.grazie.code.agents.core.feature.model.StrategyStartEvent
 import ai.grazie.code.agents.core.feature.model.ToolCallsEndEvent
 import ai.grazie.code.agents.core.feature.model.ToolCallsStartEvent
@@ -20,7 +23,10 @@ val agentFeatureMessageSerializersModule: SerializersModule
     get() = SerializersModule {
             polymorphic(FeatureMessage::class) {
                 subclass(AgentCreateEvent::class, AgentCreateEvent.serializer())
+                subclass(AgentStartedEvent::class, AgentStartedEvent.serializer())
+                subclass(AgentFinishedEvent::class, AgentFinishedEvent.serializer())
                 subclass(StrategyStartEvent::class, StrategyStartEvent.serializer())
+                subclass(StrategyFinishedEvent::class, StrategyFinishedEvent.serializer())
                 subclass(NodeExecutionStartEvent::class, NodeExecutionStartEvent.serializer())
                 subclass(NodeExecutionEndEvent::class, NodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
@@ -33,7 +39,10 @@ val agentFeatureMessageSerializersModule: SerializersModule
 
             polymorphic(FeatureEvent::class) {
                 subclass(AgentCreateEvent::class, AgentCreateEvent.serializer())
+                subclass(AgentStartedEvent::class, AgentStartedEvent.serializer())
+                subclass(AgentFinishedEvent::class, AgentFinishedEvent.serializer())
                 subclass(StrategyStartEvent::class, StrategyStartEvent.serializer())
+                subclass(StrategyFinishedEvent::class, StrategyFinishedEvent.serializer())
                 subclass(NodeExecutionStartEvent::class, NodeExecutionStartEvent.serializer())
                 subclass(NodeExecutionEndEvent::class, NodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
@@ -46,7 +55,10 @@ val agentFeatureMessageSerializersModule: SerializersModule
 
             polymorphic(DefinedFeatureEvent::class) {
                 subclass(AgentCreateEvent::class, AgentCreateEvent.serializer())
+                subclass(AgentStartedEvent::class, AgentStartedEvent.serializer())
+                subclass(AgentFinishedEvent::class, AgentFinishedEvent.serializer())
                 subclass(StrategyStartEvent::class, StrategyStartEvent.serializer())
+                subclass(StrategyFinishedEvent::class, StrategyFinishedEvent.serializer())
                 subclass(NodeExecutionStartEvent::class, NodeExecutionStartEvent.serializer())
                 subclass(NodeExecutionEndEvent::class, NodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
