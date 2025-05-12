@@ -5,6 +5,7 @@ import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 
 object OpenAIModels {
+    // TODO: support thinking tokens
     object Reasoning {
         /**
          * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
