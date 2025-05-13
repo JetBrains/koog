@@ -12,13 +12,13 @@ import ai.grazie.code.agents.core.environment.AgentEnvironment
  * @param FeatureT The type of feature
  * @property feature The feature instance
  */
-class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
+public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
 
     /**
      * The handler for agent creation events.
      * Can be set outside the class.
      */
-    var agentCreatedHandler: AgentCreatedHandler<FeatureT> =
+    public var agentCreatedHandler: AgentCreatedHandler<FeatureT> =
         AgentCreatedHandler { context -> }
 
     /**
@@ -26,16 +26,16 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
      * Allows customization of the environment during agent creation or updates by applying
      * the provided transformation logic.
      */
-    var environmentTransformer: AgentEnvironmentTransformer<FeatureT> =
+    public var environmentTransformer: AgentEnvironmentTransformer<FeatureT> =
         AgentEnvironmentTransformer { _, it -> it }
 
-    var agentStartedHandler: AgentStartedHandler =
+    public var agentStartedHandler: AgentStartedHandler =
         AgentStartedHandler { _ -> }
 
-    var agentFinishedHandler: AgentFinishedHandler =
+    public var agentFinishedHandler: AgentFinishedHandler =
         AgentFinishedHandler { _, _ -> }
 
-    var agentRunErrorHandler: AgentRunErrorHandler =
+    public var agentRunErrorHandler: AgentRunErrorHandler =
         AgentRunErrorHandler { _, _ -> }
 
     /**
@@ -43,7 +43,7 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
      *
      * @param context The context for updating the agent with the feature
      */
-    suspend fun handleAgentCreated(context: AgentCreateContext<FeatureT>) {
+    public suspend fun handleAgentCreated(context: AgentCreateContext<FeatureT>) {
         agentCreatedHandler.handle(context)
     }
 
@@ -52,7 +52,7 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
      *
      * @param environment The AgentEnvironment to be transformed
      */
-    fun transformEnvironment(context: AgentCreateContext<FeatureT>, environment: AgentEnvironment) =
+    public fun transformEnvironment(context: AgentCreateContext<FeatureT>, environment: AgentEnvironment): AgentEnvironment =
         environmentTransformer.transform(context, environment)
 
     /**
@@ -73,7 +73,7 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    suspend fun handleAgentCreatedUnsafe(context: AgentCreateContext<*>) =
+    public suspend fun handleAgentCreatedUnsafe(context: AgentCreateContext<*>): Unit =
         handleAgentCreated(context as AgentCreateContext<FeatureT>)
 }
 
@@ -82,13 +82,13 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
  *
  * @param FeatureT The type of feature being handled
  */
-fun interface AgentCreatedHandler<FeatureT : Any> {
+public fun interface AgentCreatedHandler<FeatureT : Any> {
     /**
      * Called when an agent is created.
      *
      * @param context The context for updating the agent with the feature
      */
-    suspend fun handle(context: AgentCreateContext<FeatureT>)
+    public suspend fun handle(context: AgentCreateContext<FeatureT>)
 }
 
 /**
@@ -98,7 +98,7 @@ fun interface AgentCreatedHandler<FeatureT : Any> {
  *
  * @param FeatureT The type of the feature associated with the agent.
  */
-fun interface AgentEnvironmentTransformer<FeatureT : Any> {
+public fun interface AgentEnvironmentTransformer<FeatureT : Any> {
     /**
      * Transforms the provided agent environment based on the given context.
      *
@@ -106,36 +106,36 @@ fun interface AgentEnvironmentTransformer<FeatureT : Any> {
      * @param environment The current agent environment to be transformed
      * @return The transformed agent environment
      */
-    fun transform(context: AgentCreateContext<FeatureT>, environment: AgentEnvironment): AgentEnvironment
+    public fun transform(context: AgentCreateContext<FeatureT>, environment: AgentEnvironment): AgentEnvironment
 }
 
-fun interface AgentStartedHandler {
-    suspend fun handle(strategyName: String)
+public fun interface AgentStartedHandler {
+    public suspend fun handle(strategyName: String)
 }
 
-fun interface AgentFinishedHandler {
-    suspend fun handle(strategyName: String, result: String?)
+public fun interface AgentFinishedHandler {
+    public suspend fun handle(strategyName: String, result: String?)
 }
 
-fun interface AgentRunErrorHandler {
-    suspend fun handle(strategyName: String, throwable: Throwable)
+public fun interface AgentRunErrorHandler {
+    public suspend fun handle(strategyName: String, throwable: Throwable)
 }
 
-class AgentCreateContext<FeatureT>(
-    val strategy: LocalAgentStrategy,
-    val agent: AIAgentBase,
-    val feature: FeatureT
+public class AgentCreateContext<FeatureT>(
+    public val strategy: LocalAgentStrategy,
+    public val agent: AIAgentBase,
+    public val feature: FeatureT
 ) {
-    suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
+    public suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
         block(strategy.stages)
     }
 }
 
-class StrategyUpdateContext<FeatureT>(
-    val strategy: LocalAgentStrategy,
-    val feature: FeatureT
+public class StrategyUpdateContext<FeatureT>(
+    public val strategy: LocalAgentStrategy,
+    public val feature: FeatureT
 ) {
-    suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
+    public suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
         block(strategy.stages)
     }
 }

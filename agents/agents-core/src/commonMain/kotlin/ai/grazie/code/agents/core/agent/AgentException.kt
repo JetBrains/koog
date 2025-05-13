@@ -14,7 +14,7 @@ import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
  * @param throwable Optional cause of the exception, which can provide additional
  * context about the error.
  */
-open class AgentException(problem: String, throwable: Throwable? = null) :
+public open class AgentException(problem: String, throwable: Throwable? = null) :
     Throwable("AI Agent has run into a problem: $problem", throwable)
 
 /**
@@ -25,7 +25,7 @@ open class AgentException(problem: String, throwable: Throwable? = null) :
  * @param node The node in which the agent becomes stuck.
  * @param output The output produced by the node that doesn't match any edge conditions.
  */
-class AgentStuckInTheNodeException(node: LocalAgentNode<*, *>, output: Any?) :
+public class AgentStuckInTheNodeException(node: LocalAgentNode<*, *>, output: Any?) :
     AgentException(
         "When executing agent graph, stuck in node ${node.name} " +
                 "because output $output doesn't match any condition on available edges."
@@ -42,7 +42,7 @@ class AgentStuckInTheNodeException(node: LocalAgentNode<*, *>, output: Any?) :
  * @constructor Creates an instance of this exception with the specified maximum number of iterations.
  * @param maxNumberOfIterations The maximum number of iterations allowed for the agent before the exception is triggered.
  */
-class AgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
+public class AgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
     AgentException(
         "Agent couldn't finish in given number of steps ($maxNumberOfIterations). " +
                 "Please, consider increasing `maxAgentIterations` value in agent's configuration"
@@ -55,5 +55,5 @@ class AgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
  *
  * @param message A descriptive message explaining the reason for termination.
  */
-class AgentTerminationByClientException(message: String) :
+public class AgentTerminationByClientException(message: String) :
     AgentException("Agent was canceled by the client ($message)")

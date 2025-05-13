@@ -14,15 +14,15 @@ import kotlinx.serialization.json.JsonObject
  * @property sessionUuid A unique identifier for the session associated with the message.
  */
 @Serializable
-sealed interface AgentToEnvironmentMessage {
-    val sessionUuid: UUID
+public sealed interface AgentToEnvironmentMessage {
+    public val sessionUuid: UUID
 }
 
 /**
  * Marker interface for tool calls (single and multiple)
  */
 @Serializable
-sealed interface AgentToolCallToEnvironmentMessage : AgentToEnvironmentMessage
+public sealed interface AgentToolCallToEnvironmentMessage : AgentToEnvironmentMessage
 
 /**
  * Content of tool call messages sent from the agent.
@@ -34,7 +34,7 @@ sealed interface AgentToolCallToEnvironmentMessage : AgentToEnvironmentMessage
  * Not all implementations support it, it will be `null` in this case.
  */
 @Serializable
-data class AgentToolCallToEnvironmentContent(
+public data class AgentToolCallToEnvironmentContent(
     val agentId: String,
     val toolCallId: String?,
     val toolName: String,
@@ -50,7 +50,7 @@ data class AgentToolCallToEnvironmentContent(
  */
 @Serializable
 @SerialName("ACTION_MULTIPLE")
-data class AgentToolCallsToEnvironmentMessage(
+public data class AgentToolCallsToEnvironmentMessage(
     override val sessionUuid: UUID,
     val content: List<AgentToolCallToEnvironmentContent>
 ) : AgentToolCallToEnvironmentMessage
@@ -68,7 +68,7 @@ data class AgentToolCallsToEnvironmentMessage(
  */
 @Serializable
 @SerialName("TERMINATION")
-data class AgentTerminationToEnvironmentMessage(
+public data class AgentTerminationToEnvironmentMessage(
     override val sessionUuid: UUID,
     val content: AgentToolCallToEnvironmentContent? = null,
     val error: AgentServiceError? = null,
@@ -88,7 +88,7 @@ data class AgentTerminationToEnvironmentMessage(
  */
 @Serializable
 @SerialName("ERROR")
-data class AgentErrorToEnvironmentMessage(
+public data class AgentErrorToEnvironmentMessage(
     override val sessionUuid: UUID,
     val error: AgentServiceError
 ) : AgentToEnvironmentMessage

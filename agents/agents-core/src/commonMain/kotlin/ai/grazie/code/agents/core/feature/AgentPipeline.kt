@@ -32,12 +32,12 @@ import kotlinx.coroutines.awaitAll
  * through a flexible interception system. Features can be installed with custom configurations
  * and can hook into different stages of the agent's execution lifecycle.
  */
-class AgentPipeline {
+public class AgentPipeline {
 
     /**
      * Companion object for the AgentPipeline class.
      */
-    companion object {
+    private companion object {
         /**
          * Logger instance for the AgentPipeline class.
          */
@@ -97,7 +97,7 @@ class AgentPipeline {
      * @param feature The feature implementation to be installed
      * @param configure A lambda to customize the feature configuration
      */
-    suspend fun <Config : FeatureConfig, Feature : Any> install(
+    public suspend fun <Config : FeatureConfig, Feature : Any> install(
         feature: KotlinAIAgentFeature<Config, Feature>,
         configure: Config.() -> Unit
     ) {
@@ -113,7 +113,7 @@ class AgentPipeline {
 
     /**
      * Waits for all feature stream providers to be ready.
-     * 
+     *
      * This internal method ensures that all message processors of registered features
      * are fully initialized and ready to process messages.
      */
@@ -124,7 +124,7 @@ class AgentPipeline {
 
     /**
      * Closes all feature stream providers.
-     * 
+     *
      * This internal method properly shuts down all message processors of registered features,
      * ensuring resources are released appropriately.
      */
@@ -144,7 +144,7 @@ class AgentPipeline {
      * @param agent The newly created agent instance
      */
     @OptIn(InternalAgentsApi::class)
-    suspend fun onAgentCreated(strategy: LocalAgentStrategy, agent: AIAgentBase) {
+    public suspend fun onAgentCreated(strategy: LocalAgentStrategy, agent: AIAgentBase) {
         agentHandlers.values.forEach { handler ->
             val updateContext = AgentCreateContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.handleAgentCreatedUnsafe(updateContext)
@@ -156,7 +156,7 @@ class AgentPipeline {
      *
      * @param strategyName The name of the strategy being executed by the agent
      */
-    suspend fun onAgentStarted(strategyName: String) {
+    public suspend fun onAgentStarted(strategyName: String) {
         agentHandlers.values.forEach { handler -> handler.agentStartedHandler.handle(strategyName) }
     }
 
@@ -166,7 +166,7 @@ class AgentPipeline {
      * @param strategyName The name of the strategy that was executed
      * @param result The result produced by the agent, or null if no result was produced
      */
-    suspend fun onAgentFinished(strategyName: String, result: String?) {
+    public suspend fun onAgentFinished(strategyName: String, result: String?) {
         agentHandlers.values.forEach { handler -> handler.agentFinishedHandler.handle(strategyName, result) }
     }
 
@@ -176,7 +176,7 @@ class AgentPipeline {
      * @param strategyName The name of the strategy during which the error occurred
      * @param throwable The exception that was thrown during agent execution
      */
-    suspend fun onAgentRunError(strategyName: String, throwable: Throwable) {
+    public suspend fun onAgentRunError(strategyName: String, throwable: Throwable) {
         agentHandlers.values.forEach { handler -> handler.agentRunErrorHandler.handle(strategyName, throwable) }
     }
 
@@ -191,7 +191,7 @@ class AgentPipeline {
      * @param baseEnvironment The initial environment to be transformed
      * @return The transformed environment after all handlers have been applied
      */
-    fun transformEnvironment(
+    public fun transformEnvironment(
         strategy: LocalAgentStrategy,
         agent: AIAgentBase,
         baseEnvironment: AgentEnvironment
@@ -211,7 +211,7 @@ class AgentPipeline {
      *
      * @param strategy The strategy that has started execution
      */
-    suspend fun onStrategyStarted(strategy: LocalAgentStrategy) {
+    public suspend fun onStrategyStarted(strategy: LocalAgentStrategy) {
         strategyHandlers.values.forEach { handler ->
             val updateContext = StrategyUpdateContext(strategy, handler.feature)
             handler.handleStrategyStartedUnsafe(updateContext)
@@ -224,7 +224,7 @@ class AgentPipeline {
      * @param strategyName The name of the strategy that has finished
      * @param result The result produced by the strategy execution
      */
-    suspend fun onStrategyFinished(strategyName: String, result: String) {
+    public suspend fun onStrategyFinished(strategyName: String, result: String) {
         strategyHandlers.values.forEach { handler -> handler.strategyFinishedHandler.handle(strategyName, result) }
     }
 
@@ -241,7 +241,7 @@ class AgentPipeline {
      * @param context The stage context for which to retrieve features
      * @return A map of feature keys to their corresponding feature instances
      */
-    fun getStageFeatures(context: LocalAgentStageContext): Map<LocalAgentStorageKey<*>, Any> {
+    public fun getStageFeatures(context: LocalAgentStageContext): Map<LocalAgentStorageKey<*>, Any> {
         return stageContextHandler.mapValues { (_, featureProvider) ->
             featureProvider.handle(context)
         }
@@ -258,7 +258,7 @@ class AgentPipeline {
      * @param context The stage context in which the node is being executed
      * @param input The input data for the node execution
      */
-    suspend fun onBeforeNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) {
+    public suspend fun onBeforeNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(node, context, input) }
     }
 
@@ -270,7 +270,7 @@ class AgentPipeline {
      * @param input The input data that was provided to the node
      * @param output The output data produced by the node execution
      */
-    suspend fun onAfterNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any?) {
+    public suspend fun onAfterNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(node, context, input, output) }
     }
 
@@ -283,7 +283,7 @@ class AgentPipeline {
      *
      * @param prompt The prompt that will be sent to the language model
      */
-    suspend fun onBeforeLLMCall(prompt: Prompt) {
+    public suspend fun onBeforeLLMCall(prompt: Prompt) {
         executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt) }
     }
 
@@ -293,7 +293,7 @@ class AgentPipeline {
      * @param prompt The prompt that will be sent to the language model
      * @param tools The list of tools that will be available to the language model
      */
-    suspend fun onBeforeLLMWithToolsCall(prompt: Prompt, tools: List<ToolDescriptor>) {
+    public suspend fun onBeforeLLMWithToolsCall(prompt: Prompt, tools: List<ToolDescriptor>) {
         executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallWithToolsHandler.handle(prompt, tools) }
     }
 
@@ -302,7 +302,7 @@ class AgentPipeline {
      *
      * @param response The text response received from the language model
      */
-    suspend fun onAfterLLMCall(response: String) {
+    public suspend fun onAfterLLMCall(response: String) {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(response) }
     }
 
@@ -312,7 +312,7 @@ class AgentPipeline {
      * @param response The structured responses received from the language model
      * @param tools The list of tools that were available to the language model
      */
-    suspend fun onAfterLLMWithToolsCall(response: List<Message.Response>, tools: List<ToolDescriptor>) {
+    public suspend fun onAfterLLMWithToolsCall(response: List<Message.Response>, tools: List<ToolDescriptor>) {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallWithToolsHandler.handle(response, tools) }
     }
 
@@ -327,7 +327,7 @@ class AgentPipeline {
      * @param tool The tool that is being called
      * @param toolArgs The arguments provided to the tool
      */
-    suspend fun onToolCall(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) {
+    public suspend fun onToolCall(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(stage, tool, toolArgs) }
     }
 
@@ -339,7 +339,7 @@ class AgentPipeline {
      * @param toolArgs The arguments that failed validation
      * @param error The validation error message
      */
-    suspend fun onToolValidationError(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
+    public suspend fun onToolValidationError(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
         executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(stage, tool, toolArgs, error) }
     }
 
@@ -351,7 +351,7 @@ class AgentPipeline {
      * @param toolArgs The arguments provided to the tool
      * @param throwable The exception that caused the failure
      */
-    suspend fun onToolCallFailure(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
+    public suspend fun onToolCallFailure(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(stage, tool, toolArgs,  throwable) }
     }
 
@@ -363,7 +363,7 @@ class AgentPipeline {
      * @param toolArgs The arguments that were provided to the tool
      * @param result The result produced by the tool, or null if no result was produced
      */
-    suspend fun onToolCallResult(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
+    public suspend fun onToolCallResult(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(stage, tool, toolArgs, result) }
     }
 
@@ -383,7 +383,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptContextStageFeature(
+    public fun <TFeature : Any> interceptContextStageFeature(
         feature: KotlinAIAgentFeature<*, TFeature>,
         handler: StageContextHandler<TFeature>,
     ) {
@@ -404,7 +404,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptAgentCreated(
+    public fun <TFeature : Any> interceptAgentCreated(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend AgentCreateContext<TFeature>.() -> Unit
@@ -436,7 +436,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptEnvironmentCreated(
+    public fun <TFeature : Any> interceptEnvironmentCreated(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         transform: AgentCreateContext<TFeature>.(AgentEnvironment) -> AgentEnvironment
@@ -462,7 +462,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature: Any> interceptAgentStarted(
+    public fun <TFeature: Any> interceptAgentStarted(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(strategyName: String) -> Unit
@@ -486,7 +486,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature: Any> interceptAgentFinished(
+    public fun <TFeature: Any> interceptAgentFinished(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(strategyName: String, result: String?) -> Unit
@@ -510,7 +510,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature: Any> interceptAgentRunError(
+    public fun <TFeature: Any> interceptAgentRunError(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(strategyName: String, throwable: Throwable) -> Unit
@@ -535,7 +535,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptStrategyStarted(
+    public fun <TFeature : Any> interceptStrategyStarted(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend StrategyUpdateContext<TFeature>.() -> Unit
@@ -569,7 +569,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptStrategyFinished(
+    public fun <TFeature : Any> interceptStrategyFinished(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(strategyName: String, result: String) -> Unit
@@ -593,7 +593,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptBeforeNode(
+    public fun <TFeature : Any> interceptBeforeNode(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) -> Unit
@@ -617,7 +617,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptAfterNode(
+    public fun <TFeature : Any> interceptAfterNode(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(
@@ -646,7 +646,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptBeforeLLMCall(
+    public fun <TFeature : Any> interceptBeforeLLMCall(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(prompt: Prompt) -> Unit
@@ -670,7 +670,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptBeforeLLMCallWithTools(
+    public fun <TFeature : Any> interceptBeforeLLMCallWithTools(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>) -> Unit
@@ -694,7 +694,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptAfterLLMCall(
+    public fun <TFeature : Any> interceptAfterLLMCall(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(response: String) -> Unit
@@ -718,7 +718,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature : Any> interceptAfterLLMCallWithTools(
+    public fun <TFeature : Any> interceptAfterLLMCallWithTools(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(responses: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit
@@ -743,7 +743,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature: Any> interceptToolCall(
+    public fun <TFeature: Any> interceptToolCall(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit
@@ -768,7 +768,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature: Any> interceptToolValidationError(
+    public fun <TFeature: Any> interceptToolValidationError(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit
@@ -793,7 +793,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature: Any> interceptToolCallFailure(
+    public fun <TFeature: Any> interceptToolCallFailure(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit
@@ -819,7 +819,7 @@ class AgentPipeline {
      * }
      * ```
      */
-    fun <TFeature: Any> interceptToolCallResult(
+    public fun <TFeature: Any> interceptToolCallResult(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit

@@ -35,7 +35,7 @@ import kotlinx.coroutines.CompletableDeferred
  * - [CLEAR_LLM_HISTORY]: Completely clears the conversation history between stages.
  *   Useful when stages are independent and previous context might confuse the next stage.
  */
-enum class ContextTransitionPolicy {
+public enum class ContextTransitionPolicy {
     PERSIST_LLM_HISTORY, COMPRESS_LLM_HISTORY, CLEAR_LLM_HISTORY
 }
 
@@ -53,7 +53,7 @@ enum class ContextTransitionPolicy {
  *        - [ContextTransitionPolicy.COMPRESS_LLM_HISTORY]: Compresses the history between stages to reduce token usage.
  *        - [ContextTransitionPolicy.CLEAR_LLM_HISTORY]: Clears the history between stages for independent processing.
  */
-class LocalAgentStrategy(
+public class LocalAgentStrategy(
     override val name: String,
     stages: List<LocalAgentStage>,
     llmHistoryTransitionPolicy: ContextTransitionPolicy = PERSIST_LLM_HISTORY,
@@ -158,7 +158,7 @@ class LocalAgentStrategy(
      * @param config The configuration for this agent execution
      */
     @OptIn(InternalAgentsApi::class)
-    suspend fun run(
+    public suspend fun run(
         sessionUuid: UUID,
         userInput: String,
         toolRegistry: ToolRegistry,
@@ -256,7 +256,7 @@ class LocalAgentStrategy(
  *
  * @property baseEnvironment The underlying environment to delegate operations to
  */
-class SubAgentEnvironment(
+public class SubAgentEnvironment(
     private val baseEnvironment: AgentEnvironment
 ) : AgentEnvironment by baseEnvironment {
     private val resultDeferred = CompletableDeferred<String?>()
@@ -278,5 +278,5 @@ class SubAgentEnvironment(
      *
      * @return The result of the agent execution, or null if no result was produced
      */
-    suspend fun awaitResult(): String? = resultDeferred.await()
+    public suspend fun awaitResult(): String? = resultDeferred.await()
 }

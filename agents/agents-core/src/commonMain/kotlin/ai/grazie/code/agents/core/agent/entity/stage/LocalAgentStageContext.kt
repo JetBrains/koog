@@ -36,7 +36,7 @@ import kotlin.reflect.KClass
  * metadata necessary for the operation of the agent stage. Additionally, it supports features for custom
  * workflows and extensibility.
  */
-interface LocalAgentStageContext {
+public interface LocalAgentStageContext {
     /**
      * Represents the environment in which the agent operates.
      *
@@ -44,7 +44,7 @@ interface LocalAgentStageContext {
      * including interaction with tools, error reporting, and sending termination signals.
      * It is used throughout the agent's lifecycle to facilitate actions and handle outcomes.
      */
-    val environment: AgentEnvironment
+    public val environment: AgentEnvironment
 
     /**
      * Represents the input provided to the current stage in the agent's execution context.
@@ -54,7 +54,7 @@ interface LocalAgentStageContext {
      * set or modified as part of the execution flow to provide context or additional information
      * relevant to the current stage of processing.
      */
-    val stageInput: String
+    public val stageInput: String
 
     /**
      * Represents the configuration for a local agent within the current stage context.
@@ -63,7 +63,7 @@ interface LocalAgentStageContext {
      * such as the maximum number of iterations an agent can perform, as well as providing
      * the agent's prompt configuration.
      */
-    val config: LocalAgentConfig
+    public val config: LocalAgentConfig
 
     /**
      * Represents the local agent's LLM context within the stage, providing mechanisms for managing tools, prompts,
@@ -73,7 +73,7 @@ interface LocalAgentStageContext {
      * This context plays a foundational role in defining and manipulating tools, prompt execution, and overall
      * behavior during different stages of the agent's lifecycle.
      */
-    val llm: LocalAgentLLMContext
+    public val llm: LocalAgentLLMContext
 
     /**
      * Manages and tracks the state of a local agent within the context of its execution.
@@ -88,20 +88,21 @@ interface LocalAgentStageContext {
      * or conditions. This aids in maintaining predictable and controlled behavior
      * of the agent during execution.
      */
-    val stateManager: LocalAgentStateManager
+    public val stateManager: LocalAgentStateManager
 
     /**
      * Concurrent-safe key-value storage for an agent, used to manage and persist data within the context of
      * a local agent stage execution. The `storage` property provides a thread-safe mechanism for sharing
      * and storing data specific to the agent's operation.
      */
-    val storage: LocalAgentStorage
+    public val storage: LocalAgentStorage
 
+    // TODO: use Uuid?
     /**
      * A unique identifier for the current session associated with the local agent stage context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
-    val sessionUuid: UUID
+    public val sessionUuid: UUID
 
     /**
      * Represents the unique identifier for the strategy being used in the current local agent stage context.
@@ -110,7 +111,7 @@ interface LocalAgentStageContext {
      * employed during the execution pipeline of an AI agent and its stages. It can be used
      * for logging, debugging, and switching between different strategies dynamically.
      */
-    val strategyId: String
+    public val strategyId: String
 
     /**
      * Represents the name of the current execution stage in the local agent's context.
@@ -119,7 +120,7 @@ interface LocalAgentStageContext {
      * the execution pipeline, aiding in debugging, logging, and ensuring proper flow
      * control during the agent's tasks.
      */
-    val stageName: String
+    public val stageName: String
 
     /**
      * Represents the AI agent pipeline used within a `LocalAgentStageContext`.
@@ -134,7 +135,7 @@ interface LocalAgentStageContext {
      * @suppress
      */
     @InternalAgentsApi
-    val pipeline: AgentPipeline
+    public val pipeline: AgentPipeline
 
     /**
      * Retrieves a feature from the local agent's storage using the specified key.
@@ -142,8 +143,7 @@ interface LocalAgentStageContext {
      * @param key A uniquely identifying key of type `LocalAgentStorageKey` used to fetch the corresponding feature.
      * @return The feature associated with the provided key, or null if no matching feature is found.
      */
-    @Suppress("UNCHECKED_CAST")
-    fun <Feature : Any> feature(key: LocalAgentStorageKey<Feature>): Feature?
+    public fun <Feature : Any> feature(key: LocalAgentStorageKey<Feature>): Feature?
 
     /**
      * Retrieves a feature of the specified type from the current context.
@@ -152,7 +152,7 @@ interface LocalAgentStageContext {
      *                This parameter defines the configuration and unique identity of the feature.
      * @return The feature instance of type [Feature], or null if the feature is not available in the context.
      */
-    fun <Feature : Any> feature(feature: KotlinAIAgentFeature<*, Feature>): Feature?
+    public fun <Feature : Any> feature(feature: KotlinAIAgentFeature<*, Feature>): Feature?
 
     /**
      * Creates a new instance of `LocalAgentStageContext` with updated tools, while preserving the other properties
@@ -164,7 +164,7 @@ interface LocalAgentStageContext {
      * @suppress
      */
     @InternalAgentsApi
-    fun copyWithTools(tools: List<ToolDescriptor>): LocalAgentStageContext {
+    public fun copyWithTools(tools: List<ToolDescriptor>): LocalAgentStageContext {
         return this.copy(llm = llm.copy(tools = tools))
     }
 
@@ -183,7 +183,7 @@ interface LocalAgentStageContext {
      * @param pipeline The AI agent pipeline, or null to retain the current pipeline.
      * @return A new instance of `LocalAgentStageContext` with the specified overrides.
      */
-    fun copy(
+    public fun copy(
         environment: AgentEnvironment? = null,
         stageInput: String? = null,
         config: LocalAgentConfig? = null,
@@ -215,7 +215,7 @@ interface LocalAgentStageContext {
  * @param stageName The name of the stage associated with this context.
  * @param pipeline The AI agent pipeline responsible for coordinating stage execution and processing.
  */
-class LocalAgentStageContextImpl constructor(
+public class LocalAgentStageContextImpl constructor(
     override val environment: AgentEnvironment,
     override val stageInput: String,
     override val config: LocalAgentConfig,
@@ -297,7 +297,7 @@ class LocalAgentStageContextImpl constructor(
         strategyId: String?,
         stageName: String?,
         pipeline: AgentPipeline?,
-    ) = LocalAgentStageContextImpl(
+    ): LocalAgentStageContext = LocalAgentStageContextImpl(
         environment = environment ?: this.environment,
         stageInput = stageInput ?: this.stageInput,
         config = config ?: this.config,
@@ -323,7 +323,7 @@ class LocalAgentStageContextImpl constructor(
  * @property promptExecutor The executor responsible for performing operations based on the current prompt.
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  */
-data class LocalAgentLLMContext(
+public data class LocalAgentLLMContext(
     internal var tools: List<ToolDescriptor>,
     val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private var prompt: Prompt,
@@ -340,7 +340,7 @@ data class LocalAgentLLMContext(
      * before initiating the write session.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    suspend fun <T> writeSession(block: suspend LocalAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
+    public suspend fun <T> writeSession(block: suspend LocalAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
         val session = LocalAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config)
 
         session.use {
@@ -359,7 +359,7 @@ data class LocalAgentLLMContext(
      * with active write session and other read sessions.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    suspend fun <T> readSession(block: suspend LocalAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
+    public suspend fun <T> readSession(block: suspend LocalAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
         val session = LocalAgentLLMReadSession(tools, promptExecutor, prompt, model, config)
 
         session.use { block(it) }
@@ -378,7 +378,7 @@ data class LocalAgentLLMContext(
  * @constructor Creates an instance of a LocalAgentLLMSession with an executor, a list of tools, and a prompt.
  */
 @OptIn(ExperimentalStdlibApi::class)
-sealed class LocalAgentLLMSession(
+public sealed class LocalAgentLLMSession(
     protected val executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     prompt: Prompt,
@@ -403,7 +403,7 @@ sealed class LocalAgentLLMSession(
      * - [requestLLMStructured]
      * - [requestLLMStructuredOneShot]
      */
-    open val prompt: Prompt by ActiveProperty(prompt) { isActive }
+    public open val prompt: Prompt by ActiveProperty(prompt) { isActive }
 
     /**
      * Provides a list of tools based on the current active state.
@@ -416,7 +416,7 @@ sealed class LocalAgentLLMSession(
      * Accessing this property when the session is inactive will raise an exception, ensuring consistency
      * and preventing misuse of tools outside a valid context.
      */
-    open val tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
+    public open val tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
 
 
     /**
@@ -430,7 +430,7 @@ sealed class LocalAgentLLMSession(
      *
      * Usage of this property when the session is inactive will result in an exception.
      */
-    open val model: LLModel by ActiveProperty(model) { isActive }
+    public open val model: LLModel by ActiveProperty(model) { isActive }
 
     /**
      * A flag indicating whether the session is currently active.
@@ -438,7 +438,7 @@ sealed class LocalAgentLLMSession(
      * This variable is used to ensure that the session operations are only performed when the session is active.
      * Once the session is closed, this flag is set to `false` to prevent further usage.
      */
-    protected var isActive = true
+    protected var isActive: Boolean = true
 
     /**
      * Ensures that the session is active before allowing further operations.
@@ -467,13 +467,13 @@ sealed class LocalAgentLLMSession(
         executeMultiple(prompt, tools).first()
 
 
-    open suspend fun requestLLMWithoutTools(): Message.Response {
+    public open suspend fun requestLLMWithoutTools(): Message.Response {
         validateSession()
         val promptWithDisabledTools = prompt.withUpdatedParams { toolChoice = null }
         return executeSingle(promptWithDisabledTools, emptyList())
     }
 
-    open suspend fun requestLLMOnlyCallingTools(): Message.Response {
+    public open suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Required
@@ -481,7 +481,7 @@ sealed class LocalAgentLLMSession(
         return executeSingle(promptWithOnlyCallingTools, tools)
     }
 
-    open suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
+    public open suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
         val promptWithForcingOneTool = prompt.withUpdatedParams {
@@ -490,10 +490,9 @@ sealed class LocalAgentLLMSession(
         return executeSingle(promptWithForcingOneTool, tools)
     }
 
-    open suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
+    public open suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
         return requestLLMForceOneTool(tool.descriptor)
     }
-
 
     /**
      * Sends a request to the underlying LLM and returns the first response.
@@ -501,7 +500,7 @@ sealed class LocalAgentLLMSession(
      *
      * @return The first response message from the LLM after executing the request.
      */
-    open suspend fun requestLLM(): Message.Response {
+    public open suspend fun requestLLM(): Message.Response {
         validateSession()
         return executeSingle(prompt, tools)
     }
@@ -515,7 +514,7 @@ sealed class LocalAgentLLMSession(
      *
      * @return a list of responses from the language model
      */
-    open suspend fun requestLLMMultiple(): List<Message.Response> {
+    public open suspend fun requestLLMMultiple(): List<Message.Response> {
         validateSession()
         return executeMultiple(prompt, tools)
     }
@@ -525,7 +524,7 @@ sealed class LocalAgentLLMSession(
      *
      * @see [executeStructured]
      */
-    open suspend fun <T> requestLLMStructured(
+    public open suspend fun <T> requestLLMStructured(
         structure: StructuredData<T>,
         retries: Int = 1,
         fixingModel: LLModel = OpenAIModels.Chat.GPT4o
@@ -541,7 +540,7 @@ sealed class LocalAgentLLMSession(
      *
      * @see [executeStructuredOneShot]
      */
-    open suspend fun <T> requestLLMStructuredOneShot(structure: StructuredData<T>): StructuredResponse<T> {
+    public open suspend fun <T> requestLLMStructuredOneShot(structure: StructuredData<T>): StructuredResponse<T> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)
         return executor.executeStructuredOneShot(preparedPrompt, model, structure)
@@ -562,12 +561,11 @@ sealed class LocalAgentLLMSession(
  * and error handling capabilities.
  * @property toolRegistry The registry containing tools available for use within the session.
  */
-@Suppress("unused")
-class LocalAgentLLMWriteSession internal constructor(
-    val environment: AgentEnvironment,
+public class LocalAgentLLMWriteSession internal constructor(
+    @PublishedApi internal val environment: AgentEnvironment,
     executor: PromptExecutor,
     tools: List<ToolDescriptor>,
-    val toolRegistry: ToolRegistry,
+    @PublishedApi internal val toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
     config: LocalAgentConfig,
@@ -612,7 +610,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args the arguments required to execute the tool.
      * @return a `SafeTool.Result` containing the tool's execution result of type `TResult`.
      */
-    suspend inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> callTool(
+    public suspend inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> callTool(
         tool: Tool<TArgs, TResult>,
         args: TArgs
     ): SafeTool.Result<TResult> {
@@ -626,7 +624,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The arguments required to execute the tool, which must be a subtype of [Tool.Args].
      * @return A [SafeTool.Result] containing the result of the tool execution, which is a subtype of [ToolResult].
      */
-    suspend inline fun <reified TArgs : Tool.Args> callTool(
+    public suspend inline fun <reified TArgs : Tool.Args> callTool(
         toolName: String,
         args: TArgs
     ): SafeTool.Result<out ToolResult> {
@@ -640,7 +638,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The arguments to be passed to the tool, conforming to the [Tool.Args] type.
      * @return The raw result of the tool's execution as a String.
      */
-    suspend inline fun <reified TArgs : Tool.Args> callToolRaw(
+    public suspend inline fun <reified TArgs : Tool.Args> callToolRaw(
         toolName: String,
         args: TArgs
     ): String {
@@ -656,7 +654,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The arguments to be passed to the tool for its execution.
      * @return A result wrapper containing either the successful result of the tool's execution or an error.
      */
-    suspend inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> callTool(
+    public suspend inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> callTool(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         args: TArgs
     ): SafeTool.Result<TResult> {
@@ -673,7 +671,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @return A SafeTool instance wrapping the found tool and its environment.
      * @throws IllegalArgumentException if the specified tool is not found in the tool registry.
      */
-    inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult> {
+    public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult> {
         @Suppress("UNCHECKED_CAST")
         val tool = (toolRegistry.stages.first().tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool with type ${toolClass.simpleName} is not defined"))
@@ -687,7 +685,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param args The input arguments required for the tool execution, represented as an instance of `Tool.Args`.
      * @return A `SafeTool.Result` containing the outcome of the tool's execution, which may be of any type that extends `ToolResult`.
      */
-    suspend inline fun <reified ToolT : Tool<*, *>> callTool(
+    public suspend inline fun <reified ToolT : Tool<*, *>> callTool(
         args: Tool.Args
     ): SafeTool.Result<out ToolResult> {
         val tool = findTool<ToolT>()
@@ -701,7 +699,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @return An instance of SafeTool wrapping the tool of the specified type and the current environment.
      * @throws IllegalArgumentException if a tool of the given type is not defined in the tool registry.
      */
-    inline fun <reified ToolT : Tool<*, *>> findTool(): SafeTool<*, *> {
+    public inline fun <reified ToolT : Tool<*, *>> findTool(): SafeTool<*, *> {
         val tool = toolRegistry.stages.first().tools.find(ToolT::class::isInstance) as? ToolT
             ?: throw IllegalArgumentException("Tool with type ${ToolT::class.simpleName} is not defined")
 
@@ -717,7 +715,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency the maximum number of parallel executions allowed. Defaults to 16.
      * @return a flow of results wrapped in SafeTool.Result for each input argument.
      */
-    inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
+    public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
         safeTool: SafeTool<TArgs, TResult>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> = flatMapMerge(concurrency) { args ->
@@ -734,7 +732,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of parallel calls to the tool. Default is 16.
      * @return A flow of string results derived from executing the tool's raw method.
      */
-    inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCallsRaw(
+    public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCallsRaw(
         safeTool: SafeTool<TArgs, TResult>,
         concurrency: Int = 16
     ): Flow<String> = flatMapMerge(concurrency) { args ->
@@ -752,7 +750,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of concurrent executions. Default value is 16.
      * @return A flow emitting the results of the tool executions wrapped in a SafeTool.Result object.
      */
-    inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
+    public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
         tool: Tool<TArgs, TResult>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> = flatMapMerge(concurrency) { args ->
@@ -771,7 +769,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of parallel executions allowed. Default is 16.
      * @return A Flow containing the results of the tool executions, wrapped in `SafeTool.Result`.
      */
-    inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
+    public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> {
@@ -788,7 +786,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param concurrency the number of concurrent tool calls to be executed. Defaults to 16.
      * @return a flow of raw string results from the parallel tool calls.
      */
-    inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCallsRaw(
+    public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCallsRaw(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int = 16
     ): Flow<String> {
@@ -807,7 +805,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @return the tool that matches the specified name and types
      * @throws IllegalArgumentException if the tool is not defined or the types are incompatible
      */
-    inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> findToolByNameAndArgs(toolName: String): Tool<TArgs, TResult> =
+    public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> findToolByNameAndArgs(toolName: String): Tool<TArgs, TResult> =
         @Suppress("UNCHECKED_CAST")
         (toolRegistry.getTool(toolName) as? Tool<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments"))
@@ -820,7 +818,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @throws IllegalArgumentException If the tool with the specified name is not defined or its arguments
      * are incompatible with the expected type.
      */
-    inline fun <reified TArgs : Tool.Args> findToolByName(toolName: String): SafeTool<TArgs, *> {
+    public inline fun <reified TArgs : Tool.Args> findToolByName(toolName: String): SafeTool<TArgs, *> {
         @Suppress("UNCHECKED_CAST")
         val tool = (toolRegistry.getTool(toolName) as? Tool<TArgs, *>
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments"))
@@ -836,7 +834,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * @param body A lambda with a receiver of type `PromptBuilder` that defines
      *             the modifications to be applied to the current prompt.
      */
-    fun updatePrompt(body: PromptBuilder.() -> Unit) {
+    public fun updatePrompt(body: PromptBuilder.() -> Unit) {
         prompt = prompt(prompt, body)
     }
 
@@ -845,7 +843,7 @@ class LocalAgentLLMWriteSession internal constructor(
      *
      * @param body A lambda function that receives the current prompt and returns a modified prompt.
      */
-    fun rewritePrompt(body: (prompt: Prompt) -> Prompt) {
+    public fun rewritePrompt(body: (prompt: Prompt) -> Prompt) {
         prompt = body(prompt)
     }
 
@@ -854,7 +852,7 @@ class LocalAgentLLMWriteSession internal constructor(
      *
      * @param newModel The new LLModel to replace the existing model in the prompt.
      */
-    fun changeModel(newModel: LLModel) {
+    public fun changeModel(newModel: LLModel) {
         model = newModel
     }
 
@@ -863,7 +861,7 @@ class LocalAgentLLMWriteSession internal constructor(
      *
      * @param newParams The new set of LLMParams to replace the existing parameters in the prompt.
      */
-    fun changeLLMParams(newParams: LLMParams) = rewritePrompt {
+    public fun changeLLMParams(newParams: LLMParams): Unit = rewritePrompt {
         prompt.withParams(newParams)
     }
 
@@ -967,7 +965,7 @@ class LocalAgentLLMWriteSession internal constructor(
      * in constructing the prompt for the language model request.
      * @return a flow of strings that streams the responses from the language model.
      */
-    suspend fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
+    public suspend fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
         if (definition != null) {
             val prompt = prompt(prompt) {
                 user {
@@ -996,7 +994,7 @@ class LocalAgentLLMWriteSession internal constructor(
     }
 }
 
-class LocalAgentLLMReadSession internal constructor(
+public class LocalAgentLLMReadSession internal constructor(
     tools: List<ToolDescriptor>,
     executor: PromptExecutor,
     prompt: Prompt,

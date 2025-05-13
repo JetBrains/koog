@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  * are associated with a specific session.
  */
 @Serializable
-sealed interface EnvironmentToAgentMessage
+public sealed interface EnvironmentToAgentMessage
 
 /**
  * Represents the content of messages sent from the environment.
@@ -21,9 +21,9 @@ sealed interface EnvironmentToAgentMessage
  * @property message Textual representation of environment changes, or user's prompt that initiates the conversation.
  */
 @Serializable
-sealed interface EnvironmentToAgentContent {
-    val agentId: String
-    val message: String
+public sealed interface EnvironmentToAgentContent {
+    public val agentId: String
+    public val message: String
 }
 
 /**
@@ -36,7 +36,7 @@ sealed interface EnvironmentToAgentContent {
  * @property message A message providing context or details relevant to the initialization process.
  */
 @Serializable
-abstract class EnvironmentInitializeToAgentContent : EnvironmentToAgentContent {
+public abstract class EnvironmentInitializeToAgentContent : EnvironmentToAgentContent {
     /**
      * Unique identifier for the agent receiving the message.
      *
@@ -65,8 +65,8 @@ abstract class EnvironmentInitializeToAgentContent : EnvironmentToAgentContent {
  * needed for the agent to be initialized. This includes agent-specific configurations or metadata.
  */
 @Serializable
-abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMessage {
-    abstract val content: EnvironmentInitializeToAgentContent
+public abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMessage {
+    public abstract val content: EnvironmentInitializeToAgentContent
 }
 
 /**
@@ -80,10 +80,9 @@ abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMessage {
  * to a specific session within which the tool results are relevant.
  */
 @Serializable
-sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgentMessage {
-    val sessionUuid: UUID
+public sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgentMessage {
+    public val sessionUuid: UUID
 }
-
 
 /**
  * Content of tool call result messages sent to the agent.
@@ -93,9 +92,9 @@ sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgentMessage
  * @property toolCallId Id to identify tool call when calling multiple tools at once.
  */
 @Serializable
-abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentContent {
-    abstract val toolCallId: String?
-    abstract val toolName: String
+public abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentContent {
+    public abstract val toolCallId: String?
+    public abstract val toolName: String
     abstract override val agentId: String
     abstract override val message: String
 }
@@ -110,7 +109,7 @@ abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentContent {
  */
 @Serializable
 @SerialName("OBSERVATION")
-data class EnvironmentToolResultSingleToAgentMessage(
+public data class EnvironmentToolResultSingleToAgentMessage(
     override val sessionUuid: UUID,
     val content: EnvironmentToolResultToAgentContent,
 ) : EnvironmentToolResultToAgentMessage
@@ -124,7 +123,7 @@ data class EnvironmentToolResultSingleToAgentMessage(
  */
 @Serializable
 @SerialName("OBSERVATIONS_MULTIPLE")
-data class EnvironmentToolResultMultipleToAgentMessage(
+public data class EnvironmentToolResultMultipleToAgentMessage(
     override val sessionUuid: UUID,
     val content: List<EnvironmentToolResultToAgentContent>,
 ) : EnvironmentToolResultToAgentMessage
@@ -136,7 +135,7 @@ data class EnvironmentToolResultMultipleToAgentMessage(
  * @property message Textual representation of the environment changes.
  */
 @Serializable
-data class EnvironmentToAgentTerminationContent(
+public data class EnvironmentToAgentTerminationContent(
     override val agentId: String,
     @EncodeDefault(EncodeDefault.Mode.ALWAYS)
     override val message: String = "Terminating on client behalf",
@@ -152,7 +151,7 @@ data class EnvironmentToAgentTerminationContent(
  */
 @Serializable
 @SerialName("TERMINATION")
-data class EnvironmentToAgentTerminationMessage(
+public data class EnvironmentToAgentTerminationMessage(
     val sessionUuid: UUID,
     val content: EnvironmentToAgentTerminationContent? = null,
     val error: AgentServiceError? = null,
@@ -169,7 +168,7 @@ data class EnvironmentToAgentTerminationMessage(
  */
 @Serializable
 @SerialName("ERROR")
-data class EnvironmentToAgentErrorMessage(
+public data class EnvironmentToAgentErrorMessage(
     val sessionUuid: UUID,
     val error: AgentServiceError,
 ) : EnvironmentToAgentMessage

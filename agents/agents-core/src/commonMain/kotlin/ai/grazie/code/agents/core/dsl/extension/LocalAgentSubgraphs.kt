@@ -6,9 +6,11 @@ import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphDelegate
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
+import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphDelegateBase
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.params.LLMParams
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmInline
@@ -37,32 +39,31 @@ internal suspend fun LocalAgentStageContext.promptWithTLDR(
 /**
  * The result which subgraphs can return.
  */
-interface SubgraphResult : Tool.Args, ToolResult
+public interface SubgraphResult : Tool.Args, ToolResult
 
 /**
  * The result which subgraphs can return.
  */
-interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> : Tool.Args, ToolResult.JSONSerializable<T>
+public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> : Tool.Args, ToolResult.JSONSerializable<T>
 
 @Serializable
-data class VerifiedSubgraphResult(
+public data class VerifiedSubgraphResult(
     val correct: Boolean,
     val message: String,
 ) : SubgraphResult {
-    override fun toStringDefault() = Json.encodeToString(serializer(), this)
+    override fun toStringDefault(): String = Json.encodeToString(serializer(), this)
 }
 
 @JvmInline
 @Serializable
-value class StringSubgraphResult(val result: String) : SubgraphResult {
-    override fun toStringDefault() = Json.encodeToString(serializer(), this)
+public value class StringSubgraphResult(public val result: String) : SubgraphResult {
+    override fun toStringDefault(): String = Json.encodeToString(serializer(), this)
 }
 
+public abstract class ProvideSubgraphResult<FinalResult : SubgraphResult> : Tool<FinalResult, FinalResult>()
 
-abstract class ProvideSubgraphResult<FinalResult : SubgraphResult> : Tool<FinalResult, FinalResult>()
-
-object ProvideVerifiedSubgraphResult : ProvideSubgraphResult<VerifiedSubgraphResult>() {
-    override val argsSerializer = VerifiedSubgraphResult.serializer()
+public object ProvideVerifiedSubgraphResult : ProvideSubgraphResult<VerifiedSubgraphResult>() {
+    override val argsSerializer: KSerializer<VerifiedSubgraphResult> = VerifiedSubgraphResult.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "finish_task_execution",
@@ -86,8 +87,8 @@ object ProvideVerifiedSubgraphResult : ProvideSubgraphResult<VerifiedSubgraphRes
     }
 }
 
-object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraphResult>() {
-    override val argsSerializer = StringSubgraphResult.serializer()
+public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraphResult>() {
+    override val argsSerializer: KSerializer<StringSubgraphResult> = StringSubgraphResult.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "finish_task_execution",
@@ -124,14 +125,14 @@ object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraphResult>
  * @property defineTask A block which defines the task. It may just return a system prompt for the task,
  * but may also alter agent context, prompt, storage, etc.
  */
-fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
     defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, ProvidedResult> = subgraph(toolSelectionStrategy = toolSelectionStrategy) {
+): LocalAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraph(toolSelectionStrategy = toolSelectionStrategy) {
     val defineTaskNode by node<Input, Unit> { input ->
         val task = defineTask(input)
 
@@ -176,14 +177,14 @@ fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>
 }
 
 @Suppress("unused")
-fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
     defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-) = subgraphWithTask(
+): LocalAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     finishTool = finishTool,
     model = model,
@@ -196,13 +197,13 @@ fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>
  * [subgraphWithTask] with [StringSubgraphResult] result.
  */
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
     defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-) = subgraphWithTask(
+): LocalAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
     finishTool = ProvideStringSubgraphResult,
     model = model,
@@ -212,13 +213,13 @@ fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
 )
 
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
     defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, StringSubgraphResult> = subgraphWithTask(
+): LocalAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,
     params = params,
@@ -231,13 +232,13 @@ fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  * It verifies if the task was performed correctly or not, and describes the problems if any.
  */
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
     defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithTask(
+): LocalAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithTask(
     finishTool = ProvideVerifiedSubgraphResult,
     toolSelectionStrategy = toolSelectionStrategy,
     model = model,
@@ -247,13 +248,13 @@ fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
 )
 
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
     defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithVerification(
+): LocalAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithVerification(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,
     params = params,

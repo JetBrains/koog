@@ -31,7 +31,7 @@ import kotlinx.serialization.modules.polymorphic
  * This configuration enables proper handling of the diverse event types encountered in the system by ensuring
  * that the polymorphic serialization framework can correctly serialize and deserialize each subclass.
  */
-val agentFeatureMessageSerializersModule: SerializersModule
+public val agentFeatureMessageSerializersModule: SerializersModule
     get() = SerializersModule {
             polymorphic(FeatureMessage::class) {
                 subclass(AgentCreateEvent::class, AgentCreateEvent.serializer())

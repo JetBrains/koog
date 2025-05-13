@@ -3,15 +3,15 @@ package ai.grazie.code.agents.core.feature.model
 import kotlinx.serialization.Serializable
 
 @Serializable
-class AgentError private constructor(
-    val message: String,
-    val stackTrace: String,
-    val cause: String? = null
+public class AgentError private constructor(
+    public val message: String,
+    public val stackTrace: String,
+    public val cause: String? = null
 ) {
-    constructor(throwable: Throwable) : this(
+    public constructor(throwable: Throwable) : this(
         message = throwable.message ?: "Unknown error",
         stackTrace = throwable.stackTraceToString(),
         cause = throwable.cause?.stackTraceToString())
 }
 
-fun Throwable.toAgentError() = AgentError(this)
+public fun Throwable.toAgentError(): AgentError = AgentError(this)

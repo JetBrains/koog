@@ -9,9 +9,9 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.tools.Tool
 import kotlin.reflect.KProperty
 
-abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
-    abstract val nodeStart: StartNode<Input>
-    abstract val nodeFinish: FinishNode<Output>
+public abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
+    public abstract val nodeStart: StartNode<Input>
+    public abstract val nodeFinish: FinishNode<Output>
 
     /**
      * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
@@ -19,30 +19,30 @@ abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
      * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
      * @param execute A suspendable function that defines the node's execution logic.
      */
-    fun <Input, Output> node(
+    public fun <Input, Output> node(
         name: String? = null,
         execute: suspend LocalAgentStageContext.(input: Input) -> Output
-    ): LocalAgentNodeDelegate<Input, Output> {
+    ): LocalAgentNodeDelegateBase<Input, Output> {
         return LocalAgentNodeDelegate(name, LocalAgentNodeBuilder(execute))
     }
 
-    fun <Input, Output> subgraph(
+    public fun <Input, Output> subgraph(
         name: String? = null,
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
-        define: LocalAgentSubgraphBuilder<Input, Output>.() -> Unit
-    ): LocalAgentSubgraphDelegate<Input, Output> {
+        define: LocalAgentSubgraphBuilderBase<Input, Output>.() -> Unit
+    ): LocalAgentSubgraphDelegateBase<Input, Output> {
         return LocalAgentSubgraphBuilder<Input, Output>(name, toolSelectionStrategy).also { it.define() }.build()
     }
 
-    fun <Input, Output> subgraph(
+    public fun <Input, Output> subgraph(
         name: String? = null,
         tools: List<Tool<*, *>>,
-        define: LocalAgentSubgraphBuilder<Input, Output>.() -> Unit
-    ): LocalAgentSubgraphDelegate<Input, Output> {
+        define: LocalAgentSubgraphBuilderBase<Input, Output>.() -> Unit
+    ): LocalAgentSubgraphDelegateBase<Input, Output> {
         return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), define)
     }
 
-    fun <IncomingOutput, OutgoingInput> edge(
+    public fun <IncomingOutput, OutgoingInput> edge(
         edgeIntermediate: LocalAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>
     ) {
         val edge = LocalAgentEdgeBuilder(edgeIntermediate).build()
@@ -63,13 +63,13 @@ abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
     }
 }
 
-class LocalAgentSubgraphBuilder<Input, Output>(
-    val name: String? = null,
+internal class LocalAgentSubgraphBuilder<Input, Output>(
+    public val name: String? = null,
     private val toolSelectionStrategy: ToolSelectionStrategy
 ) : LocalAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<LocalAgentSubgraphDelegate<Input, Output>> {
-    override val nodeStart = StartNode<Input>()
-    override val nodeFinish = FinishNode<Output>()
+    override val nodeStart: StartNode<Input> = StartNode()
+    override val nodeFinish: FinishNode<Output> = FinishNode()
 
     override fun build(): LocalAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
@@ -81,14 +81,14 @@ class LocalAgentSubgraphBuilder<Input, Output>(
 
 }
 
-interface LocalAgentSubgraphDelegateBase<Input, Output> {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentSubgraph<Input, Output>
+public interface LocalAgentSubgraphDelegateBase<Input, Output> {
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentSubgraph<Input, Output>
 }
 
-open class LocalAgentSubgraphDelegate<Input, Output> internal constructor(
+public open class LocalAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
-    val nodeStart: StartNode<Input>,
-    val nodeFinish: FinishNode<Output>,
+    public val nodeStart: StartNode<Input>,
+    public val nodeFinish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy
 ) : LocalAgentSubgraphDelegateBase<Input, Output> {
     private var subgraph: LocalAgentSubgraph<Input, Output>? = null

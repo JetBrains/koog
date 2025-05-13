@@ -3,46 +3,46 @@ package ai.grazie.code.agents.core.dsl.extension
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
 import ai.jetbrains.code.prompt.params.LLMParams
 
-fun LocalAgentLLMWriteSession.clearHistory() {
+public fun LocalAgentLLMWriteSession.clearHistory() {
     prompt = prompt.withMessages(emptyList())
 }
 
-fun LocalAgentLLMWriteSession.leaveLastNMessages(n: Int) {
+public fun LocalAgentLLMWriteSession.leaveLastNMessages(n: Int) {
     prompt = prompt.withUpdatedMessages { takeLast(n) }
 }
 
 /**
  * Sets the [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice] for this LLM session.
  */
-fun LocalAgentLLMWriteSession.setToolChoice(toolChoice: LLMParams.ToolChoice?) {
+public fun LocalAgentLLMWriteSession.setToolChoice(toolChoice: LLMParams.ToolChoice?) {
     prompt = prompt.withUpdatedParams { this.toolChoice = toolChoice }
 }
 
 /**
  * Set the [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice] to [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice.Auto] to make LLM automatically decide between calling tools and generating text
  */
-fun LocalAgentLLMWriteSession.setToolChoiceAuto() {
+public fun LocalAgentLLMWriteSession.setToolChoiceAuto() {
     setToolChoice(LLMParams.ToolChoice.Auto)
 }
 
 /**
  * Set the [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice] to [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice.Required] to make LLM always call tools
  */
-fun LocalAgentLLMWriteSession.setToolChoiceRequired() {
+public fun LocalAgentLLMWriteSession.setToolChoiceRequired() {
     setToolChoice(LLMParams.ToolChoice.Required)
 }
 
 /**
  * Set the [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice] to [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice.None] to make LLM never call tools
  */
-fun LocalAgentLLMWriteSession.setToolChoiceNone() {
+public fun LocalAgentLLMWriteSession.setToolChoiceNone() {
     setToolChoice(LLMParams.ToolChoice.None)
 }
 
 /**
  * Set the [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice] to [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice.None] to make LLM call one specific tool [toolName]
  */
-fun LocalAgentLLMWriteSession.setToolChoiceNamed(toolName: String) {
+public fun LocalAgentLLMWriteSession.setToolChoiceNamed(toolName: String) {
     setToolChoice(LLMParams.ToolChoice.Named(toolName))
 }
 
@@ -50,7 +50,7 @@ fun LocalAgentLLMWriteSession.setToolChoiceNamed(toolName: String) {
  * Unset the [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice].
  * Mostly, if left unspecified, the default value of this parameter is [ai.jetbrains.code.prompt.params.LLMParams.ToolChoice.Auto]
  */
-fun LocalAgentLLMWriteSession.unsetToolChoice() {
+public fun LocalAgentLLMWriteSession.unsetToolChoice() {
     setToolChoice(null)
 }
 
@@ -61,7 +61,7 @@ fun LocalAgentLLMWriteSession.unsetToolChoice() {
  * Default is `null`, which means entire history will be used.
  * @param preserveMemory Whether to preserve memory-related messages in the history.
  */
-suspend fun LocalAgentLLMWriteSession.replaceHistoryWithTLDR(
+public suspend fun LocalAgentLLMWriteSession.replaceHistoryWithTLDR(
     strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
     preserveMemory: Boolean = true
 ) {

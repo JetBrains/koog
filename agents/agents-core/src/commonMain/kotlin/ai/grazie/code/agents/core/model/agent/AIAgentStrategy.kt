@@ -5,6 +5,6 @@ package ai.grazie.code.agents.core.model.agent
  *
  * @param Config Compatible config struct. Used in runners to enforce the correct config struct to be passed.
  */
-interface AIAgentStrategy<Config : AIAgentConfig> {
-    val name: String
+public interface AIAgentStrategy<Config : AIAgentConfig> {
+    public val name: String
 }
