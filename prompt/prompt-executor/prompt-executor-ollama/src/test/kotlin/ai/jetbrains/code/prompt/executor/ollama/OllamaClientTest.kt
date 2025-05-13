@@ -15,6 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@Disabled("Disabled until having a docker image with Ollama running")
 class OllamaClientTest {
     private val model = OllamaModels.Meta.LLAMA_3_2
     val client = OllamaClient()
