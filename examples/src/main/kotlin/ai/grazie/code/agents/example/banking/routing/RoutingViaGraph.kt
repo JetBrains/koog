@@ -50,7 +50,7 @@ fun main() = runBlocking {
                         )
                     ),
                     retries = 2,
-                    fixingModel = OpenAIModels.GPT4oMini
+                    fixingModel = OpenAIModels.CostOptimized.GPT4oMini
                 )
 
                 val callLLM by nodeLLMRequest()
@@ -77,7 +77,7 @@ fun main() = runBlocking {
             val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
                 tools = MoneyTransferTools().asTools() + AskUser,
                 shouldTLDRHistory = true,
-                model = OpenAIModels.GPT4o
+                model = OpenAIModels.Chat.GPT4o
             ) { request ->
                 """
                     ${bankingAssistantSystemPrompt}
@@ -107,12 +107,11 @@ fun main() = runBlocking {
 
     val agentConfig = LocalAgentConfig(
         prompt = prompt(
-            llm = OpenAIModels.GPT4o,
-//            llm = AnthropicModels.Sonnet_3_5,
             id = "banking assistant"
         ) {
             system(bankingAssistantSystemPrompt + transactionAnalysisPrompt)
         },
+        model = OpenAIModels.Chat.GPT4o,
         maxAgentIterations = 50
     )
 
