@@ -1,6 +1,7 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.jetbrains.code.prompt.executor.clients.google.GoogleLLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.jetbrains.code.prompt.executor.llms.SingleLLMPromptExecutor
@@ -20,3 +21,10 @@ public fun simpleAnthropicExecutor(apiToken: String): SingleLLMPromptExecutor = 
  * @param apiToken The API token used for authentication with the OpenRouter API.
  */
 public fun simpleOpenRouterExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenRouterLLMClient(apiToken))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with an `GoogleLLMClient`.
+ *
+ * @param apiToken The API token used for authentication with the Google AI service.
+ */
+public fun simpleGoogleAIExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(GoogleLLMClient(apiToken))

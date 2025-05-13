@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
  * Reads the Gemini API key from environment variables.
  * This is required for live tests against the actual API.
  */
-fun readTestGeminiKeyFromEnv(): String = System.getenv("GEMINI_API_KEY")
+fun readTestGeminiKeyFromEnv(): String = System.getenv("GEMINI_API_TEST_KEY")
     ?: error("ERROR: environment variable GEMINI_API_TEST_KEY not set")
 
 /**

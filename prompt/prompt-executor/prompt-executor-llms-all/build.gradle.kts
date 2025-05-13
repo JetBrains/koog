@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
