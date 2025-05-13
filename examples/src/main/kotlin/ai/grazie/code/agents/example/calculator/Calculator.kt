@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.calculator
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -99,7 +99,7 @@ fun main() = runBlocking {
     }
 
     // Create agent config with proper prompt
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AgentConfig(
         prompt = prompt("test") {
             system("You are a calculator.")
         },
@@ -108,7 +108,7 @@ fun main() = runBlocking {
     )
 
     // Create the runner
-    val agent = AIAgentBase(
+    val agent = Agent(
         promptExecutor = executor,
         strategy = strategy,
         cs = this,

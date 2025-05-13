@@ -4,8 +4,8 @@ package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.agent.AgentMaxNumberOfIterationsReachedException
 import ai.grazie.code.agents.core.agent.AgentStuckInTheNodeException
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.grazie.code.agents.core.prompt.Prompts.selectRelevantTools
@@ -16,52 +16,52 @@ import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.serialization.Serializable
 
-open class StartNode<Input>() : LocalAgentNode<Input, Input>() {
+open class StartNode<Input>() : AgentNode<Input, Input>() {
     var subgraphName: String? = null
         internal set
 
     override val name: String get() = subgraphName?.let { "__start__$it" } ?: "__start__"
 
-    override suspend fun execute(context: LocalAgentStageContext, input: Input) = input
+    override suspend fun execute(context: AgentStageContext, input: Input) = input
 }
 
-open class FinishNode<Output>() : LocalAgentNode<Output, Output>() {
+open class FinishNode<Output>() : AgentNode<Output, Output>() {
     var subgraphName: String? = null
         internal set
 
     override val name: String = subgraphName?.let { "__finish__$it" } ?: "__finish__"
 
-    override fun addEdge(edge: LocalAgentEdge<Output, *>) {
+    override fun addEdge(edge: AgentEdge<Output, *>) {
         throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
     }
 
-    override suspend fun execute(context: LocalAgentStageContext, input: Output) = input
+    override suspend fun execute(context: AgentStageContext, input: Output) = input
 }
 
-open class LocalAgentSubgraph<Input, Output>(
+open class AgentSubgraph<Input, Output>(
     override val name: String,
     val start: StartNode<Input>,
     val finish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
-) : LocalAgentNode<Input, Output>() {
+) : AgentNode<Input, Output>() {
     companion object {
         private val logger =
-            LoggerFactory.create("ai.grazie.code.agents.local.agent.stage.${LocalAgentStage::class.simpleName}")
+            LoggerFactory.create("ai.grazie.code.agents.core.agent.entity.stage.${AgentStage::class.simpleName}")
     }
 
-    override suspend fun execute(context: LocalAgentStageContext, input: Input): Output {
+    override suspend fun execute(context: AgentStageContext, input: Input): Output {
         if (toolSelectionStrategy == ToolSelectionStrategy.ALL) return doExecute(context, input)
 
         return doExecuteWithCustomTools(context, input)
     }
 
-    private fun formatLog(context: LocalAgentStageContext, message: String): String =
+    private fun formatLog(context: AgentStageContext, message: String): String =
         "$message [$name, ${context.strategyId}, ${context.sessionUuid.text}]"
 
     @OptIn(InternalAgentsApi::class)
-    protected suspend fun doExecute(context: LocalAgentStageContext, initialInput: Input): Output {
+    protected suspend fun doExecute(context: AgentStageContext, initialInput: Input): Output {
         logger.info { formatLog(context, "Starting stage($name) execution") }
-        var currentNode: LocalAgentNode<*, *> = start
+        var currentNode: AgentNode<*, *> = start
         var currentInput: Any? = initialInput
 
         while (currentNode != finish) {
@@ -113,7 +113,7 @@ open class LocalAgentSubgraph<Input, Output>(
         val tools: List<String>
     )
 
-    private suspend fun doExecuteWithCustomTools(context: LocalAgentStageContext, input: Input): Output {
+    private suspend fun doExecuteWithCustomTools(context: AgentStageContext, input: Input): Output {
         val innerContext = when (toolSelectionStrategy) {
             ToolSelectionStrategy.ALL -> context
             ToolSelectionStrategy.NONE -> context.copyWithTools(emptyList())
@@ -170,7 +170,7 @@ sealed interface ToolSelectionStrategy {
      * being used, and every tool is considered relevant for execution.
      *
      * Used in contexts where all tools should be provided or included without constraint,
-     * such as within a `LocalAgentSubgraph` or similar constructs.
+     * such as within a `AgentSubgraph` or similar constructs.
      */
     data object ALL : ToolSelectionStrategy
 

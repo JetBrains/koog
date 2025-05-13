@@ -78,7 +78,7 @@ To enable testing mode on an agent, use the `withTesting()` function within the 
 
 ```kotlin
 // Create the agent with testing enabled
-KotlinAIAgent(
+Agent(
     promptExecutor = mockLLMApi,
     toolRegistry = toolRegistry,
     strategy = strategy,
@@ -104,7 +104,7 @@ The `Testing` feature provides a comprehensive way to test your agent's graph st
 Start by validating the fundamental structure of your agent's graph:
 
 ```kotlin
-KotlinAIAgent(
+Agent(
     // constructor arguments
     toolRegistry = toolRegistry,
     strategy = strategy,
@@ -360,7 +360,7 @@ fun testToneAgent() = runTest {
     val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
 
     // Create agent config
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AgentConfig(
         prompt = prompt("test-agent") {
             system(
                 """
@@ -377,7 +377,7 @@ fun testToneAgent() = runTest {
     )
 
     // Create the agent with testing enabled
-    val agent = KotlinAIAgent(
+    val agent = Agent(
         promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         strategy = strategy,

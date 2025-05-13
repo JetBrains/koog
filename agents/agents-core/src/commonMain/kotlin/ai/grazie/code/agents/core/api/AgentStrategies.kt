@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.api
 
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
@@ -11,12 +11,12 @@ import ai.grazie.code.agents.core.dsl.extension.onToolCall
 import ai.jetbrains.code.prompt.message.Message
 
 /**
- * Creates and configures a [LocalAgentStrategy] for executing a chat interaction process.
+ * Creates and configures a [AgentStrategy] for executing a chat interaction process.
  * The agent orchestrates interactions between different stages, nodes, and tools to
  * handle user input, execute tools, and provide responses.
  * Allows the agent to interact with the user in a chat-like manner.
  */
-fun chatAgentStrategy(): LocalAgentStrategy = simpleStrategy("chat") {
+fun chatAgentStrategy(): AgentStrategy = simpleStrategy("chat") {
     val sendInput by nodeLLMSendStageInput("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
@@ -50,7 +50,7 @@ fun chatAgentStrategy(): LocalAgentStrategy = simpleStrategy("chat") {
  * Sometimes, it also called "one-shot" strategy.
  * Useful if you need to run a straightforward process that doesn't require a lot of additional logic.
  */
-fun singleRunStrategy(): LocalAgentStrategy = simpleStrategy("single_run") {
+fun singleRunStrategy(): AgentStrategy = simpleStrategy("single_run") {
     val sendInput by nodeLLMSendStageInput("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")

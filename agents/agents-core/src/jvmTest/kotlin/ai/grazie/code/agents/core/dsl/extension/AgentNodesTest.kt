@@ -2,8 +2,8 @@ package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.testing.tools.DummyTool
@@ -15,7 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class LocalAgentNodesTest {
+class AgentNodesTest {
     @Test
     fun testNodeLLMCompressHistory() = runTest {
         val agentStrategy = simpleStrategy("test") {
@@ -31,7 +31,7 @@ class LocalAgentNodesTest {
             handleResult { results += it }
         }
 
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AgentConfig(
             prompt = prompt("test-agent") {},
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
@@ -43,7 +43,7 @@ class LocalAgentNodesTest {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
-        val runner = AIAgentBase(
+        val runner = Agent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             cs = this,

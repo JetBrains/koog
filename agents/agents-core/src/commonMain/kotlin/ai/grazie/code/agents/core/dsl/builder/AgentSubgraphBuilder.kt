@@ -1,15 +1,15 @@
 package ai.grazie.code.agents.core.dsl.builder
 
 import ai.grazie.code.agents.core.agent.entity.FinishNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentSubgraph
+import ai.grazie.code.agents.core.agent.entity.AgentNode
+import ai.grazie.code.agents.core.agent.entity.AgentSubgraph
 import ai.grazie.code.agents.core.agent.entity.StartNode
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
 import ai.grazie.code.agents.core.tools.Tool
 import kotlin.reflect.KProperty
 
-abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
+abstract class AgentSubgraphBuilderBase<Input, Output> {
     abstract val nodeStart: StartNode<Input>
     abstract val nodeFinish: FinishNode<Output>
 
@@ -21,38 +21,38 @@ abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
      */
     fun <Input, Output> node(
         name: String? = null,
-        execute: suspend LocalAgentStageContext.(input: Input) -> Output
-    ): LocalAgentNodeDelegate<Input, Output> {
-        return LocalAgentNodeDelegate(name, LocalAgentNodeBuilder(execute))
+        execute: suspend AgentStageContext.(input: Input) -> Output
+    ): AgentNodeDelegate<Input, Output> {
+        return AgentNodeDelegate(name, AgentNodeBuilder(execute))
     }
 
     fun <Input, Output> subgraph(
         name: String? = null,
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
-        define: LocalAgentSubgraphBuilder<Input, Output>.() -> Unit
-    ): LocalAgentSubgraphDelegate<Input, Output> {
-        return LocalAgentSubgraphBuilder<Input, Output>(name, toolSelectionStrategy).also { it.define() }.build()
+        define: AgentSubgraphBuilder<Input, Output>.() -> Unit
+    ): AgentSubgraphDelegate<Input, Output> {
+        return AgentSubgraphBuilder<Input, Output>(name, toolSelectionStrategy).also { it.define() }.build()
     }
 
     fun <Input, Output> subgraph(
         name: String? = null,
         tools: List<Tool<*, *>>,
-        define: LocalAgentSubgraphBuilder<Input, Output>.() -> Unit
-    ): LocalAgentSubgraphDelegate<Input, Output> {
+        define: AgentSubgraphBuilder<Input, Output>.() -> Unit
+    ): AgentSubgraphDelegate<Input, Output> {
         return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), define)
     }
 
     fun <IncomingOutput, OutgoingInput> edge(
-        edgeIntermediate: LocalAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>
+        edgeIntermediate: AgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>
     ) {
-        val edge = LocalAgentEdgeBuilder(edgeIntermediate).build()
+        val edge = AgentEdgeBuilder(edgeIntermediate).build()
         edgeIntermediate.fromNode.addEdge(edge)
     }
 
     protected fun isFinishReachable(start: StartNode<Input>): Boolean {
-        val visited = mutableSetOf<LocalAgentNode<*, *>>()
+        val visited = mutableSetOf<AgentNode<*, *>>()
 
-        fun visit(node: LocalAgentNode<*, *>): Boolean {
+        fun visit(node: AgentNode<*, *>): Boolean {
             if (node == nodeFinish) return true
             if (node in visited) return false
             visited.add(node)
@@ -63,42 +63,42 @@ abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
     }
 }
 
-class LocalAgentSubgraphBuilder<Input, Output>(
+class AgentSubgraphBuilder<Input, Output>(
     val name: String? = null,
     private val toolSelectionStrategy: ToolSelectionStrategy
-) : LocalAgentSubgraphBuilderBase<Input, Output>(),
-    BaseBuilder<LocalAgentSubgraphDelegate<Input, Output>> {
+) : AgentSubgraphBuilderBase<Input, Output>(),
+    BaseBuilder<AgentSubgraphDelegate<Input, Output>> {
     override val nodeStart = StartNode<Input>()
     override val nodeFinish = FinishNode<Output>()
 
-    override fun build(): LocalAgentSubgraphDelegate<Input, Output> {
+    override fun build(): AgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
             "FinishSubgraphNode can't be reached from the StartNode of the agent's graph. Please, review how it was defined."
         }
 
-        return LocalAgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy)
+        return AgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy)
     }
 
 }
 
-interface LocalAgentSubgraphDelegateBase<Input, Output> {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentSubgraph<Input, Output>
+interface AgentSubgraphDelegateBase<Input, Output> {
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): AgentSubgraph<Input, Output>
 }
 
-open class LocalAgentSubgraphDelegate<Input, Output> internal constructor(
+open class AgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
     val nodeStart: StartNode<Input>,
     val nodeFinish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy
-) : LocalAgentSubgraphDelegateBase<Input, Output> {
-    private var subgraph: LocalAgentSubgraph<Input, Output>? = null
+) : AgentSubgraphDelegateBase<Input, Output> {
+    private var subgraph: AgentSubgraph<Input, Output>? = null
 
-    override operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentSubgraph<Input, Output> {
+    override operator fun getValue(thisRef: Any?, property: KProperty<*>): AgentSubgraph<Input, Output> {
         if (subgraph == null) {
             // if name is explicitly defined, use it, otherwise use property name as node name
-            val nameOfSubgraph = this@LocalAgentSubgraphDelegate.name ?: property.name
+            val nameOfSubgraph = this@AgentSubgraphDelegate.name ?: property.name
 
-            subgraph = LocalAgentSubgraph<Input, Output>(
+            subgraph = AgentSubgraph<Input, Output>(
                 name = nameOfSubgraph,
                 start = nodeStart.apply { subgraphName = nameOfSubgraph },
                 finish = nodeFinish.apply { subgraphName = nameOfSubgraph },

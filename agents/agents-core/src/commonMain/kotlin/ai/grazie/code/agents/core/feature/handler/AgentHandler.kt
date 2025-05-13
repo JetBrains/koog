@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.core.feature.handler
 
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStage
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 
 /**
@@ -127,20 +127,20 @@ fun interface StrategyStartedHandler<FeatureT : Any> {
 }
 
 class AgentCreateContext<FeatureT>(
-    val strategy: LocalAgentStrategy,
-    val agent: AIAgentBase,
+    val strategy: AgentStrategy,
+    val agent: Agent,
     val feature: FeatureT
 ) {
-    suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
+    suspend fun readStages(block: suspend (List<AgentStage>) -> Unit) {
         block(strategy.stages)
     }
 }
 
 class StrategyUpdateContext<FeatureT>(
-    val strategy: LocalAgentStrategy,
+    val strategy: AgentStrategy,
     val feature: FeatureT
 ) {
-    suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
+    suspend fun readStages(block: suspend (List<AgentStage>) -> Unit) {
         block(strategy.stages)
     }
 }

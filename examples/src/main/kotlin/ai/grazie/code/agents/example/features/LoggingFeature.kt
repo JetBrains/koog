@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.example.features
 
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.AgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.feature.AgentPipeline
+import ai.grazie.code.agents.core.feature.AgentFeature
 import ai.grazie.code.agents.core.feature.config.FeatureConfig
 import ai.grazie.code.agents.core.feature.handler.AfterToolCallsHandler
 import ai.grazie.code.agents.core.feature.handler.BeforeNodeHandler
@@ -33,8 +33,8 @@ class LoggingFeature(val logger: Logger) {
      * This feature supports configuration via the [Config] class,
      * which allows specifying custom logger names.
      */
-    companion object Feature : KotlinAIAgentFeature<Config, LoggingFeature> {
-        override val key: LocalAgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
+    companion object Feature : AgentFeature<Config, LoggingFeature> {
+        override val key: AgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
 
         override fun createInitialConfig(): Config = Config()
 
@@ -50,7 +50,7 @@ class LoggingFeature(val logger: Logger) {
          */
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AgentPipeline
         ) {
             val logging = LoggingFeature(LoggerFactory.getLogger(config.loggerName))
 

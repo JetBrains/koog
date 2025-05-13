@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.api
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.tools.AskUser
 import ai.grazie.code.agents.core.tools.tools.ExitTool
@@ -36,9 +36,9 @@ fun simpleChatAgent(
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry? = null,
     maxIterations: Int = 50,
-): AIAgentBase {
+): Agent {
 
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AgentConfig(
         prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
             system(systemPrompt)
         },
@@ -59,7 +59,7 @@ fun simpleChatAgent(
             }
         } with toolRegistry
 
-    return AIAgentBase(
+    return Agent(
         promptExecutor = executor,
         strategy = chatAgentStrategy(),
         cs = cs,
@@ -92,10 +92,10 @@ fun simpleSingleRunAgent(
     eventHandler: EventHandler = EventHandler.NO_HANDLER,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
-    installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit = {}
-): AIAgentBase {
+    installFeatures: suspend Agent.FeatureContext.() -> Unit = {}
+): Agent {
 
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AgentConfig(
         prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
             system(systemPrompt)
         },
@@ -103,7 +103,7 @@ fun simpleSingleRunAgent(
         maxAgentIterations = maxIterations,
     )
 
-    return AIAgentBase(
+    return Agent(
         promptExecutor = executor,
         strategy = singleRunStrategy(),
         cs = cs,

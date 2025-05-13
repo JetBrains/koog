@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.core.dsl.extension
 
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.stage.AgentLLMWriteSession
 import ai.grazie.code.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.jetbrains.code.prompt.message.Message
 
 /**
- * Represents an abstract strategy for compressing the history of messages in a LocalAgentLLMWriteSession.
+ * Represents an abstract strategy for compressing the history of messages in a AgentLLMWriteSession.
  * Different implementations define specific approaches to reducing the context size while maintaining key information.
  */
 abstract class HistoryCompressionStrategy {
@@ -17,21 +17,21 @@ abstract class HistoryCompressionStrategy {
      * @param memoryMessages A list of messages representing the memory to be compressed.
      */
     abstract suspend fun compress(
-        llmSession: LocalAgentLLMWriteSession,
+        llmSession: AgentLLMWriteSession,
         preserveMemory: Boolean,
         memoryMessages: List<Message>
     )
 
     /**
      * Compresses the current conversation prompt into a concise "TL;DR" summary using the specified
-     * LocalAgentLLMWriteSession. The resulting summary will encapsulate the key details and context of the conversation
+     * AgentLLMWriteSession. The resulting summary will encapsulate the key details and context of the conversation
      * for further processing or continuation.
      *
      * @param llmSession The session used to interact with the language model, providing functionality to update the prompt
      *                   and request a response without utilizing external tools.
      * @return A list of language model responses containing the summarized "TL;DR" of the conversation.
      */
-    protected suspend fun compressPromptIntoTLDR(llmSession: LocalAgentLLMWriteSession): List<Message.Response> {
+    protected suspend fun compressPromptIntoTLDR(llmSession: AgentLLMWriteSession): List<Message.Response> {
         return with(llmSession) {
             prompt = prompt.withUpdatedMessages { dropLastWhile { it is Message.Tool.Call } }
             updatePrompt {
@@ -52,7 +52,7 @@ abstract class HistoryCompressionStrategy {
      * @param memoryMessages A list of memory messages that should be included in the prompt if `preserveMemory` is set to true.
      */
     protected fun composePromptWithRequiredMessages(
-        llmSession: LocalAgentLLMWriteSession,
+        llmSession: AgentLLMWriteSession,
         tldrMessages: List<Message.Response>,
         preserveMemory: Boolean,
         memoryMessages: List<Message>
@@ -83,15 +83,15 @@ abstract class HistoryCompressionStrategy {
      */
     object WholeHistory : HistoryCompressionStrategy() {
         /**
-         * Compresses and adjusts the prompt for the local agent's write session by summarizing and incorporating
+         * Compresses and adjusts the prompt for the agent's write session by summarizing and incorporating
          * memory messages optionally.
          *
-         * @param llmSession The current session of the local agent which allows prompt manipulation and sending requests.
+         * @param llmSession The current session of the agent which allows prompt manipulation and sending requests.
          * @param preserveMemory A flag indicating whether memory messages should be preserved during compression.
          * @param memoryMessages A list of memory messages to be optionally preserved and included in the prompt.
          */
         override suspend fun compress(
-            llmSession: LocalAgentLLMWriteSession,
+            llmSession: AgentLLMWriteSession,
             preserveMemory: Boolean,
             memoryMessages: List<Message>
         ) {
@@ -114,7 +114,7 @@ abstract class HistoryCompressionStrategy {
          * Compresses the conversation history by retaining the last N messages, generating a summary,
          * and composing the resulting prompt with the necessary messages.
          *
-         * @param llmSession the session in which the local language model operates, providing functionalities
+         * @param llmSession the session in which the language model operates, providing functionalities
          *        to manage prompts and request responses.
          * @param preserveMemory a flag indicating whether memory messages should be preserved and included
          *        in the final composed prompt.
@@ -122,7 +122,7 @@ abstract class HistoryCompressionStrategy {
          *        if preserveMemory is true.
          */
         override suspend fun compress(
-            llmSession: LocalAgentLLMWriteSession,
+            llmSession: AgentLLMWriteSession,
             preserveMemory: Boolean,
             memoryMessages: List<Message>
         ) {
@@ -150,7 +150,7 @@ abstract class HistoryCompressionStrategy {
          * @param memoryMessages A list of memory messages to be retained if preserveMemory is true.
          */
         override suspend fun compress(
-            llmSession: LocalAgentLLMWriteSession,
+            llmSession: AgentLLMWriteSession,
             preserveMemory: Boolean,
             memoryMessages: List<Message>
         ) {

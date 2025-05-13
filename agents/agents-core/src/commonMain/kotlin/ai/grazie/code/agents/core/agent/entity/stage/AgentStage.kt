@@ -1,27 +1,27 @@
 package ai.grazie.code.agents.core.agent.entity.stage
 
 import ai.grazie.code.agents.core.agent.entity.FinishAgentNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentSubgraph
+import ai.grazie.code.agents.core.agent.entity.AgentSubgraph
 import ai.grazie.code.agents.core.agent.entity.StartAgentNode
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 
-sealed class LocalAgentStage(name: String, start: StartAgentNode) : LocalAgentSubgraph<Unit, String>(
+sealed class AgentStage(name: String, start: StartAgentNode) : AgentSubgraph<Unit, String>(
     name, start, FinishAgentNode, ToolSelectionStrategy.ALL
 ) {
-    suspend fun execute(context: LocalAgentStageContext): String = execute(context, Unit)
+    suspend fun execute(context: AgentStageContext): String = execute(context, Unit)
 }
 
 /**
  * Stage that expects a set of pre-defined tools.
  */
 // TODO since tools are mutable now, seems like there's no purpose in having this stage type with tools checks?
-class LocalAgentStaticStage internal constructor(
+class AgentStaticStage internal constructor(
     name: String,
     startNode: StartAgentNode,
     private val toolsList: List<ToolDescriptor>
-) : LocalAgentStage(name, startNode) {
-    override suspend fun execute(context: LocalAgentStageContext, input: Unit): String {
+) : AgentStage(name, startNode) {
+    override suspend fun execute(context: AgentStageContext, input: Unit): String {
         context.llm.readSession {
             tools.filterNot { it in toolsList }.let { unexpectedTools ->
                 check(unexpectedTools.isEmpty()) {
@@ -44,11 +44,11 @@ class LocalAgentStaticStage internal constructor(
 /**
  * Stage that does not expect any pre-defined tools, relying on the tools defined in the graph.
  */
-class LocalAgentDynamicStage internal constructor(
+class AgentDynamicStage internal constructor(
     name: String,
     startNode: StartAgentNode,
-) : LocalAgentStage(name, startNode) {
-    override suspend fun execute(context: LocalAgentStageContext, input: Unit): String {
+) : AgentStage(name, startNode) {
+    override suspend fun execute(context: AgentStageContext, input: Unit): String {
         return doExecute(context, Unit)
     }
 }

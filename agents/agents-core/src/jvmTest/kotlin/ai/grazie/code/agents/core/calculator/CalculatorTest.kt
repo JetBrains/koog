@@ -2,9 +2,9 @@ package ai.grazie.code.agents.core.calculator
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
@@ -32,7 +32,7 @@ class CalculatorTest {
         }
     }
 
-    private suspend fun TestScope.runBasicCalculationsWithAgent(strategy: LocalAgentStrategy): AgentResult {
+    private suspend fun TestScope.runBasicCalculationsWithAgent(strategy: AgentStrategy): AgentResult {
         // Store calculation results
         val results = mutableListOf<String?>()
         val toolCalls = mutableListOf<String>()
@@ -58,7 +58,7 @@ class CalculatorTest {
 
 
         // Create agent config with proper prompt
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AgentConfig(
             prompt = prompt("test") {
                 system(
                     """
@@ -76,7 +76,7 @@ class CalculatorTest {
         )
 
         // Create the runner
-        val agent = AIAgentBase(
+        val agent = Agent(
             promptExecutor = CalculatorChatExecutor,
             strategy = strategy,
             cs = this,

@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.example.tone
 
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -10,7 +10,7 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 /**
  * Creates a strategy for the tone analysis agent.
  */
-fun toneStrategy(name: String, toolRegistry: ToolRegistry, toneStageName: String): LocalAgentStrategy {
+fun toneStrategy(name: String, toolRegistry: ToolRegistry, toneStageName: String): AgentStrategy {
     return strategy(name) {
         stage(
             name = toneStageName,

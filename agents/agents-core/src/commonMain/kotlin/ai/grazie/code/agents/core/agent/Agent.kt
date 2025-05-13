@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.core.agent
 
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.api.AIAgent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
+import ai.grazie.code.agents.core.api.BaseAgent
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.AgentEnvironmentUtils.mapToToolResult
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
@@ -10,8 +10,8 @@ import ai.grazie.code.agents.core.environment.TerminationTool
 import ai.grazie.code.agents.core.event.AgentHandlerContext
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.exception.AgentEngineException
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.feature.AgentPipeline
+import ai.grazie.code.agents.core.feature.AgentFeature
 import ai.grazie.code.agents.core.feature.config.FeatureConfig
 import ai.grazie.code.agents.core.model.AgentServiceError
 import ai.grazie.code.agents.core.model.AgentServiceErrorType
@@ -43,17 +43,17 @@ private class AllowDirectToolCallsContext(val toolEnabler: DirectToolCallsEnable
 private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCallsContext.() -> T) =
     AllowDirectToolCallsContext(DirectToolCallsEnablerImpl()).block()
 
-open class AIAgentBase(
+open class Agent(
     val promptExecutor: PromptExecutor,
-    private val strategy: LocalAgentStrategy,
+    private val strategy: AgentStrategy,
     cs: CoroutineScope,
-    val agentConfig: LocalAgentConfig,
+    val agentConfig: AgentConfig,
     val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
     private val eventHandler: EventHandler = EventHandler.Companion.NO_HANDLER,
     private val installFeatures: suspend FeatureContext.() -> Unit = {}
-) : AIAgent, AgentEnvironment {
+) : BaseAgent, AgentEnvironment {
     companion object {
-        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.agent.${AIAgentBase::class.simpleName}")
+        private val logger = LoggerFactory.create("ai.grazie.code.agents.core.agent.${Agent::class.simpleName}")
         private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
         private const val NO_CONTENT = "Could not find \"content\", but \"error\" is also absent!"
         private const val NO_RESULT = "Required tool argument value not found: \"${TerminationTool.ARG}\"!"
@@ -66,26 +66,26 @@ open class AIAgentBase(
      *       calls in an [KotlinAIAgent] instance, like `agent.install(MyFeature) { ... }`.
      *       This makes the API a bit stricter and clear.
      */
-    class FeatureContext internal constructor(val agent: AIAgentBase) {
+    class FeatureContext internal constructor(val agent: Agent) {
         suspend fun <Config : FeatureConfig, Feature : Any> install(
-            feature: KotlinAIAgentFeature<Config, Feature>,
+            feature: AgentFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
         ) {
             agent.install(feature, configure)
         }
     }
 
-    private val pipeline = AIAgentPipeline()
+    private val pipeline = AgentPipeline()
 
     init {
         cs.launch(context = Dispatchers.SuitableForIO, start = CoroutineStart.UNDISPATCHED) {
-            FeatureContext(this@AIAgentBase).installFeatures()
-            pipeline.onAgentCreated(strategy, this@AIAgentBase)
+            FeatureContext(this@Agent).installFeatures()
+            pipeline.onAgentCreated(strategy, this@Agent)
         }
     }
 
     private suspend fun <Config : FeatureConfig, Feature : Any> install(
-        feature: KotlinAIAgentFeature<Config, Feature>,
+        feature: AgentFeature<Config, Feature>,
         configure: Config.() -> Unit
     ) {
         pipeline.install(feature, configure)
@@ -137,7 +137,7 @@ open class AIAgentBase(
         agentId: String,
         message: String,
         result: ToolResult?
-    ): EnvironmentToolResultToAgentContent = LocalAgentEnvironmentToolResultToAgentContent(
+    ): EnvironmentToolResultToAgentContent = AgentEnvironmentToolResultToAgentContent(
         toolCallId = toolCallId,
         toolName = toolName,
         agentId = agentId,

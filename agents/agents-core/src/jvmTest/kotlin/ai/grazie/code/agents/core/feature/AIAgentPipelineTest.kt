@@ -2,10 +2,10 @@ package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.Agent.FeatureContext
+import ai.grazie.code.agents.core.agent.config.AgentConfig
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
 import ai.grazie.code.agents.core.calculator.CalculatorChatExecutor
 import ai.grazie.code.agents.core.calculator.CalculatorTools.PlusTool
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -266,16 +266,16 @@ class AIAgentPipelineTest {
 
     private fun createAgent(
         coroutineScope: CoroutineScope,
-        strategy: LocalAgentStrategy,
+        strategy: AgentStrategy,
         userPrompt: String? = null,
         systemPrompt: String? = null,
         assistantPrompt: String? = null,
         toolRegistry: ToolRegistry? = null,
         promptExecutor: PromptExecutor? = null,
         installFeatures: suspend FeatureContext.() -> Unit = {}
-    ): AIAgentBase {
+    ): Agent {
 
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AgentConfig(
             prompt = prompt("test") {
                 system(systemPrompt ?: "Test system message")
                 user(userPrompt ?: "Test user message")
@@ -290,7 +290,7 @@ class AIAgentPipelineTest {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
-        return AIAgentBase(
+        return Agent(
             promptExecutor = promptExecutor ?: testExecutor,
             strategy = strategy,
             cs = coroutineScope,

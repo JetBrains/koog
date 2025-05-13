@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.environment
 
 import ai.grazie.code.agents.core.model.message.EnvironmentToolResultToAgentContent
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.model.message.LocalAgentEnvironmentToolResultToAgentContent
+import ai.grazie.code.agents.core.model.message.AgentEnvironmentToolResultToAgentContent
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.message.Message
 
@@ -20,15 +20,15 @@ data class ReceivedToolResult(
 }
 
 fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
-    check(this is LocalAgentEnvironmentToolResultToAgentContent) {
-        "Local agen't must receive LocalAgentEnvironmentToolResultToAgentContent," +
+    check(this is AgentEnvironmentToolResultToAgentContent) {
+        "Agent must receive AgentEnvironmentToolResultToAgentContent," +
                 " but ${this::class.simpleName} was received"
     }
 
     return toResult()
 }
 
-fun LocalAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
+fun AgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
     id = toolCallId,
     tool = toolName,
     content = message,

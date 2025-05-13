@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.redcode
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -145,7 +145,7 @@ fun main() = runBlocking {
         }
     }
 
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AgentConfig(
         prompt = prompt("red-code-fixing") {
             system(
                 """
@@ -171,7 +171,7 @@ fun main() = runBlocking {
     )
 
     // Create the agent
-    val agent = AIAgentBase(
+    val agent = Agent(
         promptExecutor = executor,
         strategy = strategy,
         cs = this,

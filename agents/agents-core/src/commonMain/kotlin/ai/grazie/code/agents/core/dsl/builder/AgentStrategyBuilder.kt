@@ -3,29 +3,29 @@ package ai.grazie.code.agents.core.dsl.builder
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
 
-class LocalAgentStrategyBuilder(
+class AgentStrategyBuilder(
     private val name: String,
     private val llmHistoryTransitionPolicy: ContextTransitionPolicy,
-) : BaseBuilder<LocalAgentStrategy> {
+) : BaseBuilder<AgentStrategy> {
 
-    private var stageBuilders = mutableListOf<LocalAgentStageBuilder>()
+    private var stageBuilders = mutableListOf<AgentStageBuilder>()
 
     fun stage(
         name: String = ToolStage.DEFAULT_STAGE_NAME,
         requiredTools: List<ToolDescriptor>? = null,
-        init: LocalAgentStageBuilder.() -> Unit
+        init: AgentStageBuilder.() -> Unit
     ) {
-        stageBuilders += LocalAgentStageBuilder(name, requiredTools).apply(init)
+        stageBuilders += AgentStageBuilder(name, requiredTools).apply(init)
     }
 
-    override fun build(): LocalAgentStrategy {
+    override fun build(): AgentStrategy {
         val stages = stageBuilders.map { it.build() }
 
         require(stages.isNotEmpty()) { "Agent must have at least one stage" }
 
-        return LocalAgentStrategy(
+        return AgentStrategy(
             name = name,
             stages = stages,
             llmHistoryTransitionPolicy = llmHistoryTransitionPolicy
@@ -34,7 +34,7 @@ class LocalAgentStrategyBuilder(
 }
 
 /**
- * Builds a local AI agent that processes user input through a sequence of stages.
+ * Builds an AI agent that processes user input through a sequence of stages.
  *
  * The agent executes a series of stages in sequence, with each stage receiving the output
  * of the previous stage as its input. The agent manages the LLM conversation history between stages
@@ -50,20 +50,20 @@ class LocalAgentStrategyBuilder(
 fun strategy(
     name: String,
     llmHistoryTransitionPolicy: ContextTransitionPolicy = ContextTransitionPolicy.PERSIST_LLM_HISTORY,
-    init: LocalAgentStrategyBuilder.() -> Unit,
-): LocalAgentStrategy {
-    return LocalAgentStrategyBuilder(name, llmHistoryTransitionPolicy).apply(init).build()
+    init: AgentStrategyBuilder.() -> Unit,
+): AgentStrategy {
+    return AgentStrategyBuilder(name, llmHistoryTransitionPolicy).apply(init).build()
 }
 
 /**
- * Builds a local simple AI agent that processes user input through a sequence of stages.
+ * Builds a simple AI agent that processes user input through a sequence of stages.
  *
  * The agent executes a single stage and returns a String result
  */
 fun simpleStrategy(
     name: String,
-    init: LocalAgentStageBuilder.() -> Unit,
-): LocalAgentStrategy {
+    init: AgentStageBuilder.() -> Unit,
+): AgentStrategy {
 
     return strategy(name) {
         stage {

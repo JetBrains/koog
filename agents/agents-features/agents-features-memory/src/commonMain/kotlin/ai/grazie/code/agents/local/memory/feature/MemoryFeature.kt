@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.local.memory.feature
 
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.agent.entity.stage.AgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.AgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
+import ai.grazie.code.agents.core.feature.AgentPipeline
+import ai.grazie.code.agents.core.feature.AgentFeature
 import ai.grazie.code.agents.core.feature.config.FeatureConfig
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.config.MemoryScopesProfile
@@ -23,7 +23,7 @@ import ai.grazie.utils.mpp.MPPLogger
  */
 class MemoryFeature(
     internal val agentMemory: AgentMemoryProvider,
-    internal val llm: LocalAgentLLMContext,
+    internal val llm: AgentLLMContext,
     internal val scopesProfile: MemoryScopesProfile
 ) {
     private val logger: MPPLogger = LoggerFactory.create("ai.grazie.code.agents.local.memory.LocalAIAgentMemory")
@@ -63,12 +63,12 @@ class MemoryFeature(
         }
     }
 
-    companion object Feature : KotlinAIAgentFeature<Config, MemoryFeature> {
+    companion object Feature : AgentFeature<Config, MemoryFeature> {
         override val key = createStorageKey<MemoryFeature>("local-ai-agent-memory-feature")
 
         override fun createInitialConfig(): Config = Config()
 
-        override fun install(config: Config, pipeline: AIAgentPipeline) {
+        override fun install(config: Config, pipeline: AgentPipeline) {
             pipeline.interceptContextStageFeature(this) { stageContext ->
                 config.agentName = stageContext.strategyId
 
@@ -210,7 +210,7 @@ class MemoryFeature(
     }
 }
 
-internal suspend fun LocalAgentLLMWriteSession.retrieveFactsFromHistory(
+internal suspend fun AgentLLMWriteSession.retrieveFactsFromHistory(
     concept: Concept,
     preserveQuestionsInLLMChat: Boolean
 ): Fact {
@@ -250,6 +250,6 @@ internal suspend fun LocalAgentLLMWriteSession.retrieveFactsFromHistory(
 
 private fun String.shortened() = lines().first().take(100) + "..."
 
-fun LocalAgentStageContext.memory(): MemoryFeature = feature(MemoryFeature.Feature)!!
+fun AgentStageContext.memory(): MemoryFeature = feature(MemoryFeature.Feature)!!
 
-suspend fun <T> LocalAgentStageContext.withMemory(action: suspend MemoryFeature.() -> T) = memory().action()
+suspend fun <T> AgentStageContext.withMemory(action: suspend MemoryFeature.() -> T) = memory().action()

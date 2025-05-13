@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.errors
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -105,7 +105,7 @@ fun main() = runBlocking {
         }
     }
 
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AgentConfig(
         prompt = prompt("test") {
             system(
                 """
@@ -119,7 +119,7 @@ fun main() = runBlocking {
     )
 
     // Create the runner
-    val agent = AIAgentBase(
+    val agent = Agent(
         promptExecutor = executor,
         strategy = strategy,
         cs = this,

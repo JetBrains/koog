@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.local.memory
 
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.config.AgentConfig
+import ai.grazie.code.agents.core.agent.entity.stage.AgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.AgentLLMWriteSession
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.config.MemoryScopesProfile
 import ai.grazie.code.agents.local.memory.feature.MemoryFeature
@@ -62,13 +62,13 @@ class LocalAIAgentMemoryTest {
             memoryFeature.save(any(), any(), any())
         } returns Unit
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(
@@ -152,13 +152,13 @@ class LocalAIAgentMemoryTest {
             promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(
@@ -208,14 +208,14 @@ class LocalAIAgentMemoryTest {
         val promptUpdateSlot = slot<PromptBuilder.() -> Unit>()
 
         // Mock LLM context to capture prompt updates
-        mockkConstructor(LocalAgentLLMWriteSession::class)
+        mockkConstructor(AgentLLMWriteSession::class)
 
-        val llmContext = mockk<LocalAgentLLMContext>() {
+        val llmContext = mockk<AgentLLMContext>() {
             coEvery {
-                writeSession<Any?>(any<suspend LocalAgentLLMWriteSession.() -> Any?>())
+                writeSession<Any?>(any<suspend AgentLLMWriteSession.() -> Any?>())
             } coAnswers {
-                val block = firstArg<suspend LocalAgentLLMWriteSession.() -> Any?>()
-                val writeSession = mockk<LocalAgentLLMWriteSession> {
+                val block = firstArg<suspend AgentLLMWriteSession.() -> Any?>()
+                val writeSession = mockk<AgentLLMWriteSession> {
                     every { updatePrompt(capture(promptUpdateSlot)) } answers {
                         println("[DEBUG_LOG] Updating prompt with message containing facts")
                     }
@@ -274,13 +274,13 @@ class LocalAIAgentMemoryTest {
             memoryFeature.save(capture(savedFacts), any(), any())
         } returns Unit
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(
@@ -344,13 +344,13 @@ class LocalAIAgentMemoryTest {
             promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AgentConfig(Prompt.Empty, testModel, 100),
         )
 
         val memory = MemoryFeature(

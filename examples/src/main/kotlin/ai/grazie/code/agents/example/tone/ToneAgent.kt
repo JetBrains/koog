@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.tone
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
@@ -57,7 +57,7 @@ fun main() {
         }
 
         // Create agent config with a proper prompt
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AgentConfig(
             prompt = prompt("tone_analysis") {
                 system(
                     """
@@ -78,7 +78,7 @@ fun main() {
         val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
 
         // Create the agent
-        val agent = AIAgentBase(
+        val agent = Agent(
             promptExecutor = executor,
             strategy = strategy,
             cs = this,

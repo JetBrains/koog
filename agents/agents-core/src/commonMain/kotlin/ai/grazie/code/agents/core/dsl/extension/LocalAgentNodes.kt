@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.dsl.extension
 
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentNodeDelegate
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
+import ai.grazie.code.agents.core.dsl.builder.AgentNodeDelegate
+import ai.grazie.code.agents.core.dsl.builder.AgentSubgraphBuilderBase
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.environment.SafeTool
 import ai.grazie.code.agents.core.environment.executeTool
@@ -18,7 +18,7 @@ import ai.jetbrains.code.prompt.message.Message
  * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
  * @return A delegate for the created node, representing a no-operation transformation where the input is returned as output.
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null): LocalAgentNodeDelegate<T, T> =
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null): AgentNodeDelegate<T, T> =
     node(name) { input -> input }
 
 // ================
@@ -32,10 +32,10 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null):
  * @param body A lambda block specifying the logic to update the prompt using the [ai.jetbrains.code.prompt.dsl.PromptBuilder].
  * @return A delegate that represents the created node, which takes no input and produces no output.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
+fun AgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     name: String? = null,
     body: PromptBuilder.() -> Unit
-): LocalAgentNodeDelegate<Unit, Unit> =
+): AgentNodeDelegate<Unit, Unit> =
     node(name) {
         llm.writeSession {
             updatePrompt {
@@ -50,7 +50,7 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
  * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
  * @return A delegate representing the defined node, which takes no input (Unit) and produces a `Message.Response` from the LLM.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInput(name: String? = null): LocalAgentNodeDelegate<Unit, Message.Response> =
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInput(name: String? = null): AgentNodeDelegate<Unit, Message.Response> =
     node(name) { _ ->
         llm.writeSession {
             updatePrompt {
@@ -66,9 +66,9 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInput(name: String? = nu
  *
  * @param name Optional name for the node.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInputMultiple(
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInputMultiple(
     name: String? = null
-): LocalAgentNodeDelegate<Unit, List<Message.Response>> =
+): AgentNodeDelegate<Unit, List<Message.Response>> =
     node(name) { _ ->
         llm.writeSession {
             updatePrompt {
@@ -85,7 +85,7 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInputMultiple(
  *
  * @param name Optional name for the node.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name: String? = null): LocalAgentNodeDelegate<String, Message.Response> =
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name: String? = null): AgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -103,10 +103,10 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name:
  * @param name Optional name for the node.
  * @param tool Tool that LLM is forced to call.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: ToolDescriptor
-): LocalAgentNodeDelegate<String, Message.Response> =
+): AgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -124,10 +124,10 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
  * @param name Optional name for the node.
  * @param tool Tool that LLM is forced to call.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: Tool<*, *>
-): LocalAgentNodeDelegate<String, Message.Response> =
+): AgentNodeDelegate<String, Message.Response> =
     nodeLLMSendMessageForceOneTool(name, tool.descriptor)
 
 /**
@@ -138,13 +138,13 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
  * property name of the delegate.
  * @param allowToolCalls A flag indicating whether tool calls are permitted during
  * the execution of the LLM process. Defaults to `true`.
- * @return A `LocalAgentNodeDelegate` that delegates the execution of an LLM call,
+ * @return A `AgentNodeDelegate` that delegates the execution of an LLM call,
  * processing an input message and returning a `Message.Response`.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     name: String? = null,
     allowToolCalls: Boolean = true
-): LocalAgentNodeDelegate<String, Message.Response> =
+): AgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -162,7 +162,7 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
  *
  * @param name Optional name for the node.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = null): LocalAgentNodeDelegate<String, List<Message.Response>> =
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = null): AgentNodeDelegate<String, List<Message.Response>> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -179,11 +179,11 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = n
  * @param fromLastN Number of last messages used as a context for TLDR.
  * Default is `null`, which means entire history will be used.
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
     strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
     preserveMemory: Boolean = true
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): AgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
         replaceHistoryWithTLDR(strategy, preserveMemory)
     }
@@ -200,9 +200,9 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
  *
  * @param name Optional name for the node.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
+fun AgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
     name: String? = null
-): LocalAgentNodeDelegate<Message.Tool.Call, ReceivedToolResult> =
+): AgentNodeDelegate<Message.Tool.Call, ReceivedToolResult> =
     node(name) { toolCall ->
         environment.executeTool(toolCall)
     }
@@ -214,9 +214,9 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
  * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
  * @return A delegate representing the node, handling the transformation from `ToolCall.Result` to `Message.Response`.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     name: String? = null
-): LocalAgentNodeDelegate<ReceivedToolResult, Message.Response> =
+): AgentNodeDelegate<ReceivedToolResult, Message.Response> =
     node(name) { result ->
         llm.writeSession {
             updatePrompt {
@@ -235,10 +235,10 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
  * @param name Optional name for the node.
  * @param parallelTools Should tools be called in environment in parallel (`false` by default)
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
+fun AgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     name: String? = null,
     parallelTools: Boolean = false,
-): LocalAgentNodeDelegate<List<Message.Tool.Call>, List<ReceivedToolResult>> =
+): AgentNodeDelegate<List<Message.Tool.Call>, List<ReceivedToolResult>> =
     node(name) { toolCalls ->
         if (parallelTools) {
             environment.executeTools(toolCalls)
@@ -252,9 +252,9 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
  *
  * @param name Optional name for the node.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
+fun AgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
     name: String? = null
-): LocalAgentNodeDelegate<List<ReceivedToolResult>, List<Message.Response>> =
+): AgentNodeDelegate<List<ReceivedToolResult>, List<Message.Response>> =
     node(name) { results ->
         llm.writeSession {
             updatePrompt {
@@ -273,11 +273,11 @@ fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
  * @param name Optional name for the node.
  * @param tool The tool call to execute.
  */
-inline fun <reified ToolArg : Tool.Args, reified TResult : ToolResult> LocalAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
+inline fun <reified ToolArg : Tool.Args, reified TResult : ToolResult> AgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
     name: String? = null,
     tool: Tool<ToolArg, TResult>,
     doUpdatePrompt: Boolean = true
-): LocalAgentNodeDelegate<ToolArg, SafeTool.Result<TResult>> =
+): AgentNodeDelegate<ToolArg, SafeTool.Result<TResult>> =
     node(name) { toolArgs ->
         llm.writeSession {
             if (doUpdatePrompt) {

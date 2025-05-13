@@ -3,7 +3,7 @@ package ai.grazie.code.agents.core.api
 /**
  * Represents a basic interface for AI agent.
  */
-interface AIAgent {
+interface BaseAgent {
 
     /**
      * Initiates the execution of the AI agent based on the provided input prompt.

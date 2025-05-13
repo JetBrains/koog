@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.AgentStorageKey
 import ai.grazie.code.agents.core.feature.config.FeatureConfig
 
 /**
@@ -11,12 +11,12 @@ import ai.grazie.code.agents.core.feature.config.FeatureConfig
  * @param Config The type representing the configuration for this feature.
  * @param FeatureT The type of the feature implementation.
  */
-interface KotlinAIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
+interface AgentFeature<Config : FeatureConfig, FeatureT : Any> {
 
     /**
-     * A key used to uniquely identify a feature of type [FeatureT] within the local agent storage.
+     * A key used to uniquely identify a feature of type [FeatureT] within the agent storage.
      */
-    val key: LocalAgentStorageKey<FeatureT>
+    val key: AgentStorageKey<FeatureT>
 
     /**
      * Creates and returns an initial configuration for the feature.
@@ -24,14 +24,14 @@ interface KotlinAIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
     fun createInitialConfig(): Config
 
     /**
-     * Installs the feature into the specified [AIAgentPipeline].
+     * Installs the feature into the specified [AgentPipeline].
      */
-    fun install(config: Config, pipeline: AIAgentPipeline)
+    fun install(config: Config, pipeline: AgentPipeline)
 
     /**
-     * Installs the feature into the specified [AIAgentPipeline] using an unsafe configuration type cast.
+     * Installs the feature into the specified [AgentPipeline] using an unsafe configuration type cast.
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    fun installUnsafe(config: Any?, pipeline: AIAgentPipeline) = install(config as Config, pipeline)
+    fun installUnsafe(config: Any?, pipeline: AgentPipeline) = install(config as Config, pipeline)
 }

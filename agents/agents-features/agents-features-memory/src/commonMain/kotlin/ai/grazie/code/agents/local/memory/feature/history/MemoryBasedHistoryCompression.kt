@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.local.memory.feature.history
 
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.stage.AgentLLMWriteSession
 import ai.grazie.code.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.grazie.code.agents.local.memory.feature.retrieveFactsFromHistory
 import ai.grazie.code.agents.local.memory.model.Concept
@@ -32,7 +32,7 @@ class RetrieveFactsFromHistory(val concepts: List<Concept>) : HistoryCompression
      * @param memoryMessages A list of existing memory-related messages to be included in the prompt.
      */
     override suspend fun compress(
-        llmSession: LocalAgentLLMWriteSession,
+        llmSession: AgentLLMWriteSession,
         preserveMemory: Boolean,
         memoryMessages: List<Message>
     ) {

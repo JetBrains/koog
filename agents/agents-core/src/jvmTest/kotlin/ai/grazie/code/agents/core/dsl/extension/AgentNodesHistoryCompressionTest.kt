@@ -2,8 +2,8 @@ package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.testing.tools.DummyTool
@@ -15,7 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class LocalAgentNodesHistoryCompressionTest {
+class AgentNodesHistoryCompressionTest {
 
     /**
      * Helper function to create a prompt with the specified number of message pairs
@@ -51,13 +51,13 @@ class LocalAgentNodesHistoryCompressionTest {
         }
 
         // Create a prompt with 15 message pairs
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AgentConfig(
             prompt = createPromptWithMessages(15),
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 
-        val runner = AIAgentBase(
+        val runner = Agent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             cs = this,
@@ -106,13 +106,13 @@ class LocalAgentNodesHistoryCompressionTest {
         }
 
         // Create a prompt with 15 message pairs
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AgentConfig(
             prompt = createPromptWithMessages(15),
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 
-        val runner = AIAgentBase(
+        val runner = Agent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             cs = this,
@@ -164,13 +164,13 @@ class LocalAgentNodesHistoryCompressionTest {
 
         // Create a prompt with 15 message pairs (30 messages total)
         val messageCount = 15
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AgentConfig(
             prompt = createPromptWithMessages(messageCount),
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 10
         )
 
-        val runner = AIAgentBase(
+        val runner = Agent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             cs = this,

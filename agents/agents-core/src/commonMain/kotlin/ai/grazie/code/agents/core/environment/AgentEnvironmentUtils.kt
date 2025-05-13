@@ -8,7 +8,7 @@ import ai.grazie.code.agents.core.model.message.EnvironmentToAgentMessage
 import ai.grazie.code.agents.core.model.message.EnvironmentToAgentTerminationMessage
 import ai.grazie.code.agents.core.model.message.EnvironmentToolResultMultipleToAgentMessage
 import ai.grazie.code.agents.core.model.message.EnvironmentToolResultSingleToAgentMessage
-import ai.grazie.code.agents.core.model.message.LocalAgentEnvironmentToAgentInitializeMessage
+import ai.grazie.code.agents.core.model.message.AgentEnvironmentToAgentInitializeMessage
 
 object AgentEnvironmentUtils {
     fun EnvironmentToAgentMessage.mapToToolResult(): List<ReceivedToolResult> {
@@ -31,7 +31,7 @@ object AgentEnvironmentUtils {
                 )
             }
 
-            is LocalAgentEnvironmentToAgentInitializeMessage -> {
+            is AgentEnvironmentToAgentInitializeMessage -> {
                 throw UnexpectedDoubleInitializationException()
             }
 

@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.core.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.entity.AgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
+import ai.grazie.code.agents.core.agent.entity.AgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
@@ -36,19 +36,19 @@ import kotlinx.coroutines.awaitAll
  * through a flexible interception system. Features can be installed with custom configurations
  * and can hook into different stages of the agent's execution lifecycle.
  */
-class AIAgentPipeline {
+class AgentPipeline {
 
-    private val registeredFeatures: MutableMap<LocalAgentStorageKey<*>, FeatureConfig> = mutableMapOf()
+    private val registeredFeatures: MutableMap<AgentStorageKey<*>, FeatureConfig> = mutableMapOf()
 
-    private val agentHandlers: MutableMap<LocalAgentStorageKey<*>, AgentHandler<*>> = mutableMapOf()
+    private val agentHandlers: MutableMap<AgentStorageKey<*>, AgentHandler<*>> = mutableMapOf()
 
-    private val stageContextHandler: MutableMap<LocalAgentStorageKey<*>, StageContextHandler<*>> = mutableMapOf()
+    private val stageContextHandler: MutableMap<AgentStorageKey<*>, StageContextHandler<*>> = mutableMapOf()
 
-    private val executeNodeHandlers: MutableMap<LocalAgentStorageKey<*>, ExecuteNodeHandler> = mutableMapOf()
+    private val executeNodeHandlers: MutableMap<AgentStorageKey<*>, ExecuteNodeHandler> = mutableMapOf()
 
-    private val executeToolHandlers: MutableMap<LocalAgentStorageKey<*>, ExecuteToolHandler> = mutableMapOf()
+    private val executeToolHandlers: MutableMap<AgentStorageKey<*>, ExecuteToolHandler> = mutableMapOf()
 
-    private val executeLLMHandlers: MutableMap<LocalAgentStorageKey<*>, ExecuteLLMHandler> = mutableMapOf()
+    private val executeLLMHandlers: MutableMap<AgentStorageKey<*>, ExecuteLLMHandler> = mutableMapOf()
 
     /**
      * Installs a feature into the pipeline with the provided configuration.
@@ -59,7 +59,7 @@ class AIAgentPipeline {
      * @param configure A lambda to customize the feature configuration.
      */
     suspend fun <Config : FeatureConfig, Feature : Any> install(
-        feature: KotlinAIAgentFeature<Config, Feature>,
+        feature: AgentFeature<Config, Feature>,
         configure: Config.() -> Unit
     ) {
         val config = feature.createInitialConfig().apply { configure() }
@@ -87,7 +87,7 @@ class AIAgentPipeline {
      * Run registered features' handlers on the event - agent created.
      */
     @OptIn(InternalAgentsApi::class)
-    suspend fun onAgentCreated(strategy: LocalAgentStrategy, agent: AIAgentBase) {
+    suspend fun onAgentCreated(strategy: AgentStrategy, agent: Agent) {
         agentHandlers.values.forEach { handler ->
             val updateContext = AgentCreateContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.handleAgentCreatedUnsafe(updateContext)
@@ -97,7 +97,7 @@ class AIAgentPipeline {
     /**
      * Run registered features' handlers on agent strategy started event.
      */
-    suspend fun onStrategyStarted(strategy: LocalAgentStrategy) {
+    suspend fun onStrategyStarted(strategy: AgentStrategy) {
         agentHandlers.values.forEach { handler ->
             val updateContext = StrategyUpdateContext(strategy, handler.feature)
             handler.handleStrategyStartedUnsafe(updateContext)
@@ -106,8 +106,8 @@ class AIAgentPipeline {
 
 
     fun transformEnvironment(
-        strategy: LocalAgentStrategy,
-        agent: AIAgentBase,
+        strategy: AgentStrategy,
+        agent: Agent,
         baseEnvironment: AgentEnvironment
     ): AgentEnvironment {
         return agentHandlers.values.fold(baseEnvironment) { env, handler ->
@@ -124,7 +124,7 @@ class AIAgentPipeline {
      * Run registered features' handlers on stage execute event.
      * Retrieves the features associated with the current stage context.
      */
-    fun getStageFeatures(context: LocalAgentStageContext): Map<LocalAgentStorageKey<*>, Any> {
+    fun getStageFeatures(context: AgentStageContext): Map<AgentStorageKey<*>, Any> {
         return stageContextHandler.mapValues { (_, featureProvider) ->
             featureProvider.handle(context)
         }
@@ -141,7 +141,7 @@ class AIAgentPipeline {
      * @param context The stage context in which the node was executed;
      * @param input The input data provided to the node during its execution.
      */
-    suspend fun onBeforeNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) {
+    suspend fun onBeforeNode(node: AgentNode<*, *>, context: AgentStageContext, input: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(node, context, input) }
     }
 
@@ -153,7 +153,7 @@ class AIAgentPipeline {
      * @param input The input data provided to the node during its execution;
      * @param output The output data produced by the node after execution.
      */
-    suspend fun onAfterNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any?) {
+    suspend fun onAfterNode(node: AgentNode<*, *>, context: AgentStageContext, input: Any?, output: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(node, context, input, output) }
     }
 
@@ -233,13 +233,13 @@ class AIAgentPipeline {
      *
      * Example:
      * ```
-     * pipeline.interceptContextStageFeature(MyFeature) { stageContext: LocalAgentStageContext ->
+     * pipeline.interceptContextStageFeature(MyFeature) { stageContext: AgentStageContext ->
      *   // Inspect stage context
      * }
      * ```
      */
     fun <TFeature : Any> interceptContextStageFeature(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         handler: StageContextHandler<TFeature>,
     ) {
         stageContextHandler[feature.key] = handler
@@ -263,7 +263,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptAgentCreated(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend AgentCreateContext<TFeature>.() -> Unit
     ) {
@@ -275,7 +275,7 @@ class AIAgentPipeline {
     }
 
     fun <TFeature : Any> interceptEnvironmentCreated(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         transform: AgentCreateContext<TFeature>.(AgentEnvironment) -> AgentEnvironment
     ) {
@@ -303,7 +303,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptStrategyStarted(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend StrategyUpdateContext<TFeature>.() -> Unit
     ) {
@@ -330,9 +330,9 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptBeforeNode(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) -> Unit
+        handle: suspend TFeature.(node: AgentNode<*, *>, context: AgentStageContext, input: Any?) -> Unit
     ) {
         val existingHandler = executeNodeHandlers.getOrPut(feature.key) { ExecuteNodeHandler() }
 
@@ -357,11 +357,11 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptAfterNode(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(
-            node: LocalAgentNode<*, *>,
-            context: LocalAgentStageContext,
+            node: AgentNode<*, *>,
+            context: AgentStageContext,
             input: Any?,
             output: Any?
         ) -> Unit
@@ -389,7 +389,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptBeforeLLMCall(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(prompt: Prompt) -> Unit
     ) {
@@ -416,7 +416,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptBeforeLLMCallWithTools(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>) -> Unit
     ) {
@@ -443,7 +443,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptAfterLLMCall(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(response: String) -> Unit
     ) {
@@ -470,7 +470,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptAfterLLMCallWithTools(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(responses: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit
     ) {
@@ -497,7 +497,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptBeforeToolCall(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(tools: List<Message.Tool.Call>) -> Unit
     ) {
@@ -524,7 +524,7 @@ class AIAgentPipeline {
      * ```
      */
     fun <TFeature : Any> interceptAfterToolCall(
-        feature: KotlinAIAgentFeature<*, TFeature>,
+        feature: AgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(results: List<ReceivedToolResult>) -> Unit
     ) {

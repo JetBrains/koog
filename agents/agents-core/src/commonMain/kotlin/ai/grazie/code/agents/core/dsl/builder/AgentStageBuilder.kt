@@ -1,22 +1,22 @@
 package ai.grazie.code.agents.core.dsl.builder
 
 import ai.grazie.code.agents.core.agent.entity.FinishAgentNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.AgentNode
 import ai.grazie.code.agents.core.agent.entity.StartAgentNode
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentDynamicStage
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStaticStage
+import ai.grazie.code.agents.core.agent.entity.stage.AgentDynamicStage
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStaticStage
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import kotlin.reflect.KProperty
 
-class LocalAgentStageBuilder(
+class AgentStageBuilder(
     private val name: String,
     private val tools: List<ToolDescriptor>?
-) : LocalAgentSubgraphBuilderBase<Unit, String>(), BaseBuilder<LocalAgentStage> {
+) : AgentSubgraphBuilderBase<Unit, String>(), BaseBuilder<AgentStage> {
     override val nodeStart = StartAgentNode()
     override val nodeFinish = FinishAgentNode
 
-    override fun build(): LocalAgentStage {
+    override fun build(): AgentStage {
         require(isFinishReachable(nodeStart)) {
             "FinishNode can't be reached from the StartNode of the agent's graph. Please, review how it was defined."
         }
@@ -24,13 +24,13 @@ class LocalAgentStageBuilder(
         return if (tools != null) {
             require(tools.isNotEmpty()) { "Tools list can't be empty if defined" }
 
-            LocalAgentStaticStage(
+            AgentStaticStage(
                 name = name,
                 startNode = nodeStart,
                 toolsList = tools,
             )
         } else {
-            LocalAgentDynamicStage(
+            AgentDynamicStage(
                 name = name,
                 startNode = nodeStart,
             )
@@ -38,17 +38,17 @@ class LocalAgentStageBuilder(
     }
 }
 
-interface LocalAgentNodeDelegateBase<Input, Output> {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentNode<Input, Output>
+interface AgentNodeDelegateBase<Input, Output> {
+    operator fun getValue(thisRef: Any?, property: KProperty<*>): AgentNode<Input, Output>
 }
 
-open class LocalAgentNodeDelegate<Input, Output> internal constructor(
+open class AgentNodeDelegate<Input, Output> internal constructor(
     private val name: String?,
-    private val nodeBuilder: LocalAgentNodeBuilder<Input, Output>,
-) : LocalAgentNodeDelegateBase<Input, Output> {
-    private var node: LocalAgentNode<Input, Output>? = null
+    private val nodeBuilder: AgentNodeBuilder<Input, Output>,
+) : AgentNodeDelegateBase<Input, Output> {
+    private var node: AgentNode<Input, Output>? = null
 
-    override operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentNode<Input, Output> {
+    override operator fun getValue(thisRef: Any?, property: KProperty<*>): AgentNode<Input, Output> {
         if (node == null) {
             // if name is explicitly defined, use it, otherwise use property name as node name
             node = nodeBuilder.also { it.name = name ?: property.name }.build()

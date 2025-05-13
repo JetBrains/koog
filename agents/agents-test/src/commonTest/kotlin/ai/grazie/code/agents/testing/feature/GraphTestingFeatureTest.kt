@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.testing.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -69,11 +69,11 @@ class GraphTestingFeatureTest {
 
         val basePrompt = prompt("test") {}
 
-        AIAgentBase(
+        Agent(
             promptExecutor = mockLLMApi,
             strategy = strategy,
             cs = this@runTest,
-            agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
+            agentConfig = AgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
             toolRegistry = toolRegistry,
             eventHandler = EventHandler {}
         ) {

@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.example.planner
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.Agent
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.AgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -59,17 +59,17 @@ class SequentialNode(override val children: List<PlannerNode>) : IntermediatePla
     class Builder(override val subtaskDescription: String) : IntermediatePlannerNode.Builder(mutableListOf())
 }
 
-class DelegateNode(val agent: AIAgentBase, val input: String) : PlannerNode {
+class DelegateNode(val agent: Agent, val input: String) : PlannerNode {
     override suspend fun execute(dispatcher: CoroutineDispatcher) {
         agent.run(input)
     }
 
-    class Builder(override val subtaskDescription: String, val agent: AIAgentBase) : PlannerNode.Builder {
+    class Builder(override val subtaskDescription: String, val agent: Agent) : PlannerNode.Builder {
         override fun build() = DelegateNode(agent, subtaskDescription)
     }
 }
 
-data class AgentDescriptor(val agent: AIAgentBase, val description: String)
+data class AgentDescriptor(val agent: Agent, val description: String)
 
 interface ParsedMessage
 
@@ -87,7 +87,7 @@ suspend fun planWork(
     observingTools: ToolRegistry,
     promptExecutor: PromptExecutor,
     eventHandler: EventHandler,
-    config: LocalAgentConfig,
+    config: AgentConfig,
     coroutineScope: CoroutineScope
 ): PlannerNode {
     val unfinishedNodesKey = createStorageKey<MutableList<PlannerNode.Builder.Reference>>("unfinishedNodes")
@@ -97,7 +97,7 @@ suspend fun planWork(
 
     val planner = strategy("planner") {
         stage {
-            suspend fun LocalAgentStageContext.defineTask(inputTask: String, prompt: String): Message.Response {
+            suspend fun AgentStageContext.defineTask(inputTask: String, prompt: String): Message.Response {
                 return llm.writeSession {
                     updatePrompt {
                         system(prompt)
@@ -111,7 +111,7 @@ suspend fun planWork(
 
             val setup by nodeLLMSendStageInput()
 
-            val tryFindingSequentialSubtasks: LocalAgentNode<String, Message.Response> by node { inputTask ->
+            val tryFindingSequentialSubtasks: AgentNode<String, Message.Response> by node { inputTask ->
                 llm.writeSession {
                     replaceHistoryWithTLDR()
                 }
@@ -127,7 +127,7 @@ suspend fun planWork(
                 defineTask(inputTask = inputTask, prompt = DEFINE_CONSECUTIVE_PLANNING_TASK)
             }
 
-            val tryFindingParallelSubtasks: LocalAgentNode<String, Message.Response> by node { inputTask ->
+            val tryFindingParallelSubtasks: AgentNode<String, Message.Response> by node { inputTask ->
                 llm.writeSession {
                     replaceHistoryWithTLDR()
                 }
@@ -148,8 +148,8 @@ suspend fun planWork(
             }
 
             fun <T : FailureMessage> retryPlanning(
-                nextNode: LocalAgentNode<String, Message.Response>
-            ): LocalAgentNode<T, Message.Response> {
+                nextNode: AgentNode<String, Message.Response>
+            ): AgentNode<T, Message.Response> {
                 val result by node<T, Message.Response> { parsedMessage ->
                     nextNode.execute(this, parsedMessage.problemDescription)
                 }
@@ -229,7 +229,7 @@ suspend fun planWork(
         }
     }
 
-    AIAgentBase(
+    Agent(
         promptExecutor = promptExecutor,
         strategy = planner,
         cs = coroutineScope,

@@ -4,11 +4,11 @@ import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.agent.AIAgentBase
+import ai.grazie.code.agents.core.agent.Agent
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy.*
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentStrategyBuilder
+import ai.grazie.code.agents.core.agent.config.AgentConfig
+import ai.grazie.code.agents.core.agent.entity.AgentStrategy
+import ai.grazie.code.agents.core.dsl.builder.AgentStrategyBuilder
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
@@ -130,7 +130,7 @@ class LLMHistoryTransitionPolicyTest {
     private lateinit var testEnvironment: TestAgentEnvironment
     private lateinit var emptyToolRegistry: ToolRegistry
     private lateinit var dummyEventHandler: EventHandler
-    private lateinit var dummyAgentConfig: LocalAgentConfig
+    private lateinit var dummyAgentConfig: AgentConfig
     private lateinit var testScope: TestScope
     private lateinit var result: CompletableDeferred<String?>
 
@@ -146,14 +146,14 @@ class LLMHistoryTransitionPolicyTest {
                 result.complete(it)
             }
         }
-        dummyAgentConfig = LocalAgentConfig(
+        dummyAgentConfig = AgentConfig(
             prompt = prompt("test-agent") {},
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 30
         )
     }
 
-    private fun createRunnableAgent(strategy: LocalAgentStrategy): AIAgentBase = AIAgentBase(
+    private fun createRunnableAgent(strategy: AgentStrategy): Agent = Agent(
         promptExecutor = mockLLMExecutor,
         strategy = strategy,
         cs = testScope,
@@ -168,7 +168,7 @@ class LLMHistoryTransitionPolicyTest {
      * @param name The name of the stage
      * @return A simple LocalAgentStage
      */
-    private fun LocalAgentStrategyBuilder.createTestStage(
+    private fun AgentStrategyBuilder.createTestStage(
         name: String
     ) {
         stage(name) {

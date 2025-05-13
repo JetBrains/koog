@@ -5,7 +5,7 @@ import ai.grazie.utils.mpp.LoggerFactory
 object FeatureMessageProcessorUtil {
 
     private val logger =
-        LoggerFactory.create("ai.grazie.code.agents.local.features.logger.FeatureProviderUtil")
+        LoggerFactory.create("ai.grazie.code.agents.core.feature.message.FeatureMessageProcessorUtil")
 
     suspend fun FeatureMessageProcessor.onMessageSafe(message: FeatureMessage) {
         try {

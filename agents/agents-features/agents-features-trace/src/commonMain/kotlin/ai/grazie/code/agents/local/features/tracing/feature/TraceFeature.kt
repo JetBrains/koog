@@ -1,12 +1,12 @@
 package ai.grazie.code.agents.local.features.tracing.feature
 
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.agent.entity.AgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
+import ai.grazie.code.agents.core.feature.AgentPipeline
+import ai.grazie.code.agents.core.feature.AgentFeature
 import ai.grazie.code.agents.local.features.common.model.*
 import ai.grazie.code.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.AgentNode
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import ai.jetbrains.code.prompt.message.Message
@@ -16,19 +16,19 @@ import ai.jetbrains.code.prompt.message.Message
  */
 class TraceFeature {
 
-    companion object Feature : KotlinAIAgentFeature<TraceFeatureConfig, TraceFeature> {
+    companion object Feature : AgentFeature<TraceFeatureConfig, TraceFeature> {
 
         private val logger: MPPLogger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.feature.TracingFeature")
 
-        override val key: LocalAgentStorageKey<TraceFeature> =
-            LocalAgentStorageKey("agents-features-tracing")
+        override val key: AgentStorageKey<TraceFeature> =
+            AgentStorageKey("agents-features-tracing")
 
         override fun createInitialConfig() = TraceFeatureConfig()
 
         override fun install(
             config: TraceFeatureConfig,
-            pipeline: AIAgentPipeline,
+            pipeline: AgentPipeline,
         ) {
             logger.info { "Start installing feature: ${TraceFeature::class.simpleName}" }
 
@@ -104,7 +104,7 @@ class TraceFeature {
                 config.messageProcessor.onMessageForEachSafe(event)
             }
 
-            pipeline.interceptBeforeNode(this, feature) intercept@{ node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any? ->
+            pipeline.interceptBeforeNode(this, feature) intercept@{ node: AgentNode<*, *>, context: AgentStageContext, input: Any? ->
                 val event = NodeExecutionStartEvent(
                     nodeName = node.name,
                     stageName = context.stageName,
@@ -114,7 +114,7 @@ class TraceFeature {
                 config.messageProcessor.onMessageForEachSafe(event)
             }
 
-            pipeline.interceptAfterNode(this, feature) intercept@{ node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any? ->
+            pipeline.interceptAfterNode(this, feature) intercept@{ node: AgentNode<*, *>, context: AgentStageContext, input: Any?, output: Any? ->
                 val event = NodeExecutionEndEvent(
                     nodeName = node.name,
                     stageName = context.stageName,

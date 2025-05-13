@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphDelegate
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
+import ai.grazie.code.agents.core.dsl.builder.AgentSubgraphBuilderBase
+import ai.grazie.code.agents.core.dsl.builder.AgentSubgraphDelegate
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.jetbrains.code.prompt.llm.LLModel
@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmInline
 
-internal suspend fun LocalAgentStageContext.promptWithTLDR(
+internal suspend fun AgentStageContext.promptWithTLDR(
     systemMessage: String,
     shouldTLDRHistory: Boolean = true,
     model: LLModel? = null,
@@ -124,14 +124,14 @@ object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraphResult>
  * @property defineTask A block which defines the task. It may just return a system prompt for the task,
  * but may also alter agent context, prompt, storage, etc.
  */
-fun <ProvidedResult : SubgraphResult, Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+fun <ProvidedResult : SubgraphResult, Input> AgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, ProvidedResult> = subgraph(toolSelectionStrategy = toolSelectionStrategy) {
+    defineTask: suspend AgentStageContext.(input: Input) -> String
+): AgentSubgraphDelegate<Input, ProvidedResult> = subgraph(toolSelectionStrategy = toolSelectionStrategy) {
     val defineTaskNode by node<Input, Unit> { input ->
         val task = defineTask(input)
 
@@ -176,13 +176,13 @@ fun <ProvidedResult : SubgraphResult, Input> LocalAgentSubgraphBuilderBase<*, *>
 }
 
 @Suppress("unused")
-fun <ProvidedResult : SubgraphResult, Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+fun <ProvidedResult : SubgraphResult, Input> AgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend LocalAgentStageContext.(input: Input) -> String
+    defineTask: suspend AgentStageContext.(input: Input) -> String
 ) = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     finishTool = finishTool,
@@ -196,12 +196,12 @@ fun <ProvidedResult : SubgraphResult, Input> LocalAgentSubgraphBuilderBase<*, *>
  * [subgraphWithTask] with [StringSubgraphResult] result.
  */
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+fun <Input> AgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend LocalAgentStageContext.(input: Input) -> String
+    defineTask: suspend AgentStageContext.(input: Input) -> String
 ) = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
     finishTool = ProvideStringSubgraphResult,
@@ -212,13 +212,13 @@ fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
 )
 
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+fun <Input> AgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, StringSubgraphResult> = subgraphWithTask(
+    defineTask: suspend AgentStageContext.(input: Input) -> String
+): AgentSubgraphDelegate<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,
     params = params,
@@ -231,13 +231,13 @@ fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  * It verifies if the task was performed correctly or not, and describes the problems if any.
  */
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+fun <Input> AgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithTask(
+    defineTask: suspend AgentStageContext.(input: Input) -> String
+): AgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithTask(
     finishTool = ProvideVerifiedSubgraphResult,
     toolSelectionStrategy = toolSelectionStrategy,
     model = model,
@@ -247,13 +247,13 @@ fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
 )
 
 @Suppress("unused")
-fun <Input> LocalAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+fun <Input> AgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend LocalAgentStageContext.(input: Input) -> String
-): LocalAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithVerification(
+    defineTask: suspend AgentStageContext.(input: Input) -> String
+): AgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithVerification(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,
     params = params,

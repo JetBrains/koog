@@ -2,15 +2,15 @@
 
 package ai.grazie.code.agents.core.agent.entity.stage
 
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.config.AgentConfig
+import ai.grazie.code.agents.core.agent.entity.AgentStateManager
+import ai.grazie.code.agents.core.agent.entity.AgentStorage
+import ai.grazie.code.agents.core.agent.entity.AgentStorageKey
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
 import ai.grazie.code.agents.core.environment.SafeTool
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.feature.AgentPipeline
+import ai.grazie.code.agents.core.feature.AgentFeature
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolRegistry
@@ -33,12 +33,12 @@ import kotlinx.coroutines.flow.flow
 import kotlin.reflect.KClass
 
 /**
- * The `LocalAgentStageContext` interface represents the context of a stage in the lifecycle of a local agent.
+ * The `AgentStageContext` interface represents the context of a stage in the lifecycle of an agent.
  * It provides access to the environment, configuration, LLM context, state management, storage, and other
  * metadata necessary for the operation of the agent stage. Additionally, it supports features for custom
  * workflows and extensibility.
  */
-interface LocalAgentStageContext {
+interface AgentStageContext {
     /**
      * Represents the environment in which the agent operates.
      *
@@ -59,54 +59,54 @@ interface LocalAgentStageContext {
     val stageInput: String
 
     /**
-     * Represents the configuration for a local agent within the current stage context.
+     * Represents the configuration for an agent within the current stage context.
      *
      * This configuration is utilized during the execution of the stage to enforce constraints
      * such as the maximum number of iterations an agent can perform, as well as providing
      * the agent's prompt configuration.
      */
-    val config: LocalAgentConfig
+    val config: AgentConfig
 
     /**
-     * Represents the local agent's LLM context within the stage, providing mechanisms for managing tools, prompts,
+     * Represents the agent's LLM context within the stage, providing mechanisms for managing tools, prompts,
      * and interaction with the execution environment. It ensures thread safety during concurrent read and write
      * operations through the use of sessions.
      *
      * This context plays a foundational role in defining and manipulating tools, prompt execution, and overall
      * behavior during different stages of the agent's lifecycle.
      */
-    val llm: LocalAgentLLMContext
+    val llm: AgentLLMContext
 
     /**
-     * Manages and tracks the state of a local agent within the context of its execution.
+     * Manages and tracks the state of an agent within the context of its execution.
      *
      * This variable provides synchronized access to the agent's state to ensure thread safety
      * and consistent state transitions during concurrent operations. It acts as a central
      * mechanism for managing state updates and validations across different stages
-     * or nodes of the local agent's execution flow.
+     * or nodes of the agent's execution flow.
      *
      * The `stateManager` is utilized extensively in coordinating state changes, such as
      * tracking the number of iterations made by the agent and enforcing execution limits
      * or conditions. This aids in maintaining predictable and controlled behavior
      * of the agent during execution.
      */
-    val stateManager: LocalAgentStateManager
+    val stateManager: AgentStateManager
 
     /**
      * Concurrent-safe key-value storage for an agent, used to manage and persist data within the context of
-     * a local agent stage execution. The `storage` property provides a thread-safe mechanism for sharing
+     * an agent stage execution. The `storage` property provides a thread-safe mechanism for sharing
      * and storing data specific to the agent's operation.
      */
-    val storage: LocalAgentStorage
+    val storage: AgentStorage
 
     /**
-     * A unique identifier for the current session associated with the local agent stage context.
+     * A unique identifier for the current session associated with the agent stage context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
     val sessionUuid: UUID
 
     /**
-     * Represents the unique identifier for the strategy being used in the current local agent stage context.
+     * Represents the unique identifier for the strategy being used in the current agent stage context.
      *
      * This identifier allows the system to specify and reference a particular strategy
      * employed during the execution pipeline of an AI agent and its stages. It can be used
@@ -115,7 +115,7 @@ interface LocalAgentStageContext {
     val strategyId: String
 
     /**
-     * Represents the name of the current execution stage in the local agent's context.
+     * Represents the name of the current execution stage in the agent's context.
      *
      * This property is used to identify and track the specific stage of processing within
      * the execution pipeline, aiding in debugging, logging, and ensuring proper flow
@@ -124,7 +124,7 @@ interface LocalAgentStageContext {
     val stageName: String
 
     /**
-     * Represents the AI agent pipeline used within a `LocalAgentStageContext`.
+     * Represents the AI agent pipeline used within a `AgentStageContext`.
      *
      * This pipeline organizes and processes the sequence of operations or stages required
      * for the execution of an AI agent's tasks.
@@ -134,69 +134,69 @@ interface LocalAgentStageContext {
      * it is subject to changes or alterations in future releases.
      */
     @InternalAgentsApi
-    val pipeline: AIAgentPipeline
+    val pipeline: AgentPipeline
 
     /**
-     * Retrieves a feature from the local agent's storage using the specified key.
+     * Retrieves a feature from the agent's storage using the specified key.
      *
-     * @param key A uniquely identifying key of type `LocalAgentStorageKey` used to fetch the corresponding feature.
+     * @param key A uniquely identifying key of type `AgentStorageKey` used to fetch the corresponding feature.
      * @return The feature associated with the provided key, or null if no matching feature is found.
      */
     @Suppress("UNCHECKED_CAST")
-    fun <Feature : Any> feature(key: LocalAgentStorageKey<Feature>): Feature?
+    fun <Feature : Any> feature(key: AgentStorageKey<Feature>): Feature?
 
     /**
      * Retrieves a feature of the specified type from the current context.
      *
-     * @param feature The [KotlinAIAgentFeature] instance representing the feature to retrieve.
+     * @param feature The [AgentFeature] instance representing the feature to retrieve.
      *                This parameter defines the configuration and unique identity of the feature.
      * @return The feature instance of type [Feature], or null if the feature is not available in the context.
      */
-    fun <Feature : Any> feature(feature: KotlinAIAgentFeature<*, Feature>): Feature?
+    fun <Feature : Any> feature(feature: AgentFeature<*, Feature>): Feature?
 
     /**
-     * Creates a new instance of `LocalAgentStageContext` with updated tools, while preserving the other properties
+     * Creates a new instance of `AgentStageContext` with updated tools, while preserving the other properties
      * of the original context.
      *
      * @param tools The new list of `ToolDescriptor` instances to be set in the context.
-     * @return A new `LocalAgentStageContext` instance with the specified tools.
+     * @return A new `AgentStageContext` instance with the specified tools.
      */
     @InternalAgentsApi
-    fun copyWithTools(tools: List<ToolDescriptor>): LocalAgentStageContext {
+    fun copyWithTools(tools: List<ToolDescriptor>): AgentStageContext {
         return this.copy(llm = llm.copy(tools = tools))
     }
 
     /**
-     * Creates a copy of the current `LocalAgentStageContext` with optional overrides for its properties.
+     * Creates a copy of the current `AgentStageContext` with optional overrides for its properties.
      *
      * @param environment The agent environment to be used, or null to retain the current environment.
      * @param stageInput The input for the stage, or null to retain the current stage input.
-     * @param config The local agent configuration, or null to retain the current configuration.
-     * @param llm The local agent LLM context, or null to retain the current LLM context.
-     * @param stateManager The state manager for the local agent, or null to retain the current state manager.
-     * @param storage The local agent's key-value storage, or null to retain the current storage.
+     * @param config The agent configuration, or null to retain the current configuration.
+     * @param llm The agent LLM context, or null to retain the current LLM context.
+     * @param stateManager The state manager for the agent, or null to retain the current state manager.
+     * @param storage The agent's key-value storage, or null to retain the current storage.
      * @param sessionUuid The UUID of the session, or null to retain the current session UUID.
      * @param strategyId The strategy ID, or null to retain the current strategy ID.
      * @param stageName The name of the stage, or null to retain the current stage name.
-     * @param pipeline The AI agent pipeline, or null to retain the current pipeline.
-     * @return A new instance of `LocalAgentStageContext` with the specified overrides.
+     * @param pipeline The agent's pipeline, or null to retain the current pipeline.
+     * @return A new instance of `AgentStageContext` with the specified overrides.
      */
     fun copy(
         environment: AgentEnvironment? = null,
         stageInput: String? = null,
-        config: LocalAgentConfig? = null,
-        llm: LocalAgentLLMContext? = null,
-        stateManager: LocalAgentStateManager? = null,
-        storage: LocalAgentStorage? = null,
+        config: AgentConfig? = null,
+        llm: AgentLLMContext? = null,
+        stateManager: AgentStateManager? = null,
+        storage: AgentStorage? = null,
         sessionUuid: UUID? = null,
         strategyId: String? = null,
         stageName: String? = null,
-        pipeline: AIAgentPipeline? = null,
-    ): LocalAgentStageContext
+        pipeline: AgentPipeline? = null,
+    ): AgentStageContext
 }
 
 /**
- * Implements the `LocalAgentStageContext` interface, providing the context required for a local
+ * Implements the `AgentStageContext` interface, providing the context required for an
  * agent's stage execution. This class encapsulates configurations, the execution pipeline,
  * agent environment, and tools for handling agent lifecycles and interactions.
  *
@@ -204,30 +204,30 @@ interface LocalAgentStageContext {
  *
  * @param environment The agent environment responsible for tool execution and problem reporting.
  * @param stageInput The input provided to the current stage.
- * @param config The configuration settings of the local agent.
- * @param llm The contextual data and execution utilities for the local agent's interaction with LLMs.
- * @param stateManager Manages the internal state of the local agent.
+ * @param config The configuration settings of the agent.
+ * @param llm The contextual data and execution utilities for the agent's interaction with LLMs.
+ * @param stateManager Manages the internal state of the agent.
  * @param storage Concurrent-safe storage for managing key-value data across the agent's lifecycle.
  * @param sessionUuid The unique identifier for the agent session.
  * @param strategyId The identifier for the selected strategy in the agent's lifecycle.
  * @param stageName The name of the stage associated with this context.
  * @param pipeline The AI agent pipeline responsible for coordinating stage execution and processing.
  */
-class LocalAgentStageContextImpl constructor(
+class AgentStageContextImpl constructor(
     override val environment: AgentEnvironment,
     override val stageInput: String,
-    override val config: LocalAgentConfig,
-    override val llm: LocalAgentLLMContext,
-    override val stateManager: LocalAgentStateManager,
-    override val storage: LocalAgentStorage,
+    override val config: AgentConfig,
+    override val llm: AgentLLMContext,
+    override val stateManager: AgentStateManager,
+    override val storage: AgentStorage,
     override val sessionUuid: UUID,
     override val strategyId: String,
     override val stageName: String,
-    override val pipeline: AIAgentPipeline,
-) : LocalAgentStageContext {
+    override val pipeline: AgentPipeline,
+) : AgentStageContext {
     /**
      * A map storing features associated with the current stage context.
-     * The keys represent unique identifiers for specific features, defined as `LocalAgentStorageKey`.
+     * The keys represent unique identifiers for specific features, defined as `AgentStorageKey`.
      * The values are the features themselves, which can be of any type.
      *
      * This map is populated by invoking the `getStageFeatures` method, retrieving features
@@ -235,47 +235,47 @@ class LocalAgentStageContextImpl constructor(
      *
      * Used internally to manage and access features during the execution of a stage within the agent pipeline.
      */
-    private val features: Map<LocalAgentStorageKey<*>, Any> =
+    private val features: Map<AgentStorageKey<*>, Any> =
         pipeline.getStageFeatures(this)
 
     /**
-     * Retrieves a feature associated with the given key from the local agent storage.
+     * Retrieves a feature associated with the given key from the agent storage.
      *
      * @param key The key of the feature to retrieve.
      * @return The feature associated with the specified key, or null if no such feature exists.
      */
     @Suppress("UNCHECKED_CAST")
-    override fun <Feature : Any> feature(key: LocalAgentStorageKey<Feature>): Feature? = features[key] as Feature?
+    override fun <Feature : Any> feature(key: AgentStorageKey<Feature>): Feature? = features[key] as Feature?
 
     /**
-     * Retrieves an instance of the specified feature from the local agent's storage.
+     * Retrieves an instance of the specified feature from the agent's storage.
      *
      * @param feature The feature representation, including its key and configuration details,
      *                for identifying and accessing the associated implementation.
      * @return The feature implementation of the specified type if available, or null if it is not present.
      */
-    override fun <Feature : Any> feature(feature: KotlinAIAgentFeature<*, Feature>): Feature? = feature(feature.key)
+    override fun <Feature : Any> feature(feature: AgentFeature<*, Feature>): Feature? = feature(feature.key)
 
     /**
-     * Creates a new instance of `LocalAgentStageContext` with an updated list of tools, replacing the current tools
+     * Creates a new instance of `AgentStageContext` with an updated list of tools, replacing the current tools
      * in the LLM context with the provided list.
      *
      * @param tools The new list of tools to be used in the LLM context, represented as `ToolDescriptor` objects.
-     * @return A new instance of `LocalAgentStageContext` with the updated tools configuration.
+     * @return A new instance of `AgentStageContext` with the updated tools configuration.
      */
-    override fun copyWithTools(tools: List<ToolDescriptor>): LocalAgentStageContext {
+    override fun copyWithTools(tools: List<ToolDescriptor>): AgentStageContext {
         return this.copy(llm = llm.copy(tools = tools))
     }
 
     /**
-     * Creates a copy of the current `LocalAgentStageContextImpl`, allowing for selective overriding of its properties.
+     * Creates a copy of the current `AgentStageContextImpl`, allowing for selective overriding of its properties.
      *
      * @param environment The `AgentEnvironment` to be used in the new context, or `null` to retain the current one.
      * @param stageInput The input for the stage, or `null` to retain the current value.
-     * @param config The `LocalAgentConfig` for the new context, or `null` to retain the current configuration.
-     * @param llm The `LocalAgentLLMContext` to be used, or `null` to retain the current LLM context.
-     * @param stateManager The `LocalAgentStateManager` to be used, or `null` to retain the current state manager.
-     * @param storage The `LocalAgentStorage` to be used, or `null` to retain the current storage.
+     * @param config The `AgentConfig` for the new context, or `null` to retain the current configuration.
+     * @param llm The `AgentLLMContext` to be used, or `null` to retain the current LLM context.
+     * @param stateManager The `AgentStateManager` to be used, or `null` to retain the current state manager.
+     * @param storage The `AgentStorage` to be used, or `null` to retain the current storage.
      * @param sessionUuid The session UUID, or `null` to retain the current session ID.
      * @param strategyId The strategy identifier, or `null` to retain the current identifier.
      * @param stageName The name of the stage, or `null` to retain the current stage name.
@@ -284,15 +284,15 @@ class LocalAgentStageContextImpl constructor(
     override fun copy(
         environment: AgentEnvironment?,
         stageInput: String?,
-        config: LocalAgentConfig?,
-        llm: LocalAgentLLMContext?,
-        stateManager: LocalAgentStateManager?,
-        storage: LocalAgentStorage?,
+        config: AgentConfig?,
+        llm: AgentLLMContext?,
+        stateManager: AgentStateManager?,
+        storage: AgentStorage?,
         sessionUuid: UUID?,
         strategyId: String?,
         stageName: String?,
-        pipeline: AIAgentPipeline?,
-    ) = LocalAgentStageContextImpl(
+        pipeline: AgentPipeline?,
+    ) = AgentStageContextImpl(
         environment = environment ?: this.environment,
         stageInput = stageInput ?: this.stageInput,
         config = config ?: this.config,
@@ -307,7 +307,7 @@ class LocalAgentStageContextImpl constructor(
 }
 
 /**
- * Represents the context for a local agent LLM, managing tools, prompt handling, and interaction with the
+ * Represents the context for an agent LLM, managing tools, prompt handling, and interaction with the
  * environment and execution layers. It provides mechanisms for concurrent read and write operations
  * through sessions, ensuring thread safety.
  *
@@ -318,25 +318,25 @@ class LocalAgentStageContextImpl constructor(
  * @property promptExecutor The executor responsible for performing operations based on the current prompt.
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  */
-data class LocalAgentLLMContext(
+data class AgentLLMContext(
     internal var tools: List<ToolDescriptor>,
     val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private var prompt: Prompt,
     private var model: LLModel,
     internal val promptExecutor: PromptExecutor,
     private val environment: AgentEnvironment,
-    private val config: LocalAgentConfig,
+    private val config: AgentConfig,
 ) {
 
     private val rwLock = RWLock()
 
     /**
-     * Executes a write session on the LocalAgentLLMContext, ensuring that all active write and read sessions are completed
+     * Executes a write session on the AgentLLMContext, ensuring that all active write and read sessions are completed
      * before initiating the write session.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    suspend fun <T> writeSession(block: suspend LocalAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
-        val session = LocalAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config)
+    suspend fun <T> writeSession(block: suspend AgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
+        val session = AgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config)
 
         session.use {
             val result = it.block()
@@ -350,12 +350,12 @@ data class LocalAgentLLMContext(
     }
 
     /**
-     * Executes a read session within the LocalAgentLLMContext, ensuring concurrent safety
+     * Executes a read session within the AgentLLMContext, ensuring concurrent safety
      * with active write session and other read sessions.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    suspend fun <T> readSession(block: suspend LocalAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
-        val session = LocalAgentLLMReadSession(tools, promptExecutor, prompt, model, config)
+    suspend fun <T> readSession(block: suspend AgentLLMReadSession.() -> T): T = rwLock.withReadLock {
+        val session = AgentLLMReadSession(tools, promptExecutor, prompt, model, config)
 
         session.use { block(it) }
     }
@@ -363,25 +363,25 @@ data class LocalAgentLLMContext(
 }
 
 /**
- * Represents a session for a local agent that interacts with an LLM (Language Learning Model).
+ * Represents a session for an agent that interacts with an LLM (Language Learning Model).
  * The session manages prompt execution, structured outputs, and tools integration.
  *
  * This is a sealed class that provides common behavior and lifecycle management for derived types.
  * It ensures that operations are only performed while the session is active and allows proper cleanup upon closure.
  *
  * @property executor The executor responsible for executing prompts and handling LLM interactions.
- * @constructor Creates an instance of a LocalAgentLLMSession with an executor, a list of tools, and a prompt.
+ * @constructor Creates an instance of a AgentLLMSession with an executor, a list of tools, and a prompt.
  */
 @OptIn(ExperimentalStdlibApi::class)
-sealed class LocalAgentLLMSession(
+sealed class AgentLLMSession(
     protected val executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     prompt: Prompt,
     model: LLModel,
-    protected val config: LocalAgentConfig,
+    protected val config: AgentConfig,
 ) : AutoCloseable {
     /**
-     * Represents the current prompt associated with the local LLM session.
+     * Represents the current prompt associated with the LLM session.
      * The prompt captures the input messages, model configuration, and parameters
      * used for interactions with the underlying language model.
      *
@@ -404,7 +404,7 @@ sealed class LocalAgentLLMSession(
      * Provides a list of tools based on the current active state.
      *
      * This property holds a collection of `ToolDescriptor` instances, which describe the tools available
-     * for use in the local agent session. The tools are dynamically determined and validated based on the
+     * for use in the agent session. The tools are dynamically determined and validated based on the
      * `isActive` state of the session. The property ensures that tools can only be accessed when the session
      * is active, leveraging the `ActiveProperty` delegate for state validation.
      *
@@ -558,15 +558,15 @@ sealed class LocalAgentLLMSession(
  * @property toolRegistry The registry containing tools available for use within the session.
  */
 @Suppress("unused")
-class LocalAgentLLMWriteSession internal constructor(
+class AgentLLMWriteSession internal constructor(
     val environment: AgentEnvironment,
     executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     val toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
-    config: LocalAgentConfig,
-) : LocalAgentLLMSession(executor, tools, prompt, model, config) {
+    config: AgentConfig,
+) : AgentLLMSession(executor, tools, prompt, model, config) {
     /**
      * Represents the prompt object used within the session. The prompt can be accessed or
      * modified only when the session is in an active state, as determined by the `isActive` predicate.
@@ -989,10 +989,10 @@ class LocalAgentLLMWriteSession internal constructor(
     }
 }
 
-class LocalAgentLLMReadSession internal constructor(
+class AgentLLMReadSession internal constructor(
     tools: List<ToolDescriptor>,
     executor: PromptExecutor,
     prompt: Prompt,
     model: LLModel,
-    config: LocalAgentConfig,
-) : LocalAgentLLMSession(executor, tools, prompt, model, config)
+    config: AgentConfig,
+) : AgentLLMSession(executor, tools, prompt, model, config)

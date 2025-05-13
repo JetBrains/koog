@@ -1,25 +1,25 @@
 package ai.grazie.code.agents.core.agent.entity
 
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 
-abstract class LocalAgentNode<Input, Output> internal constructor() {
+abstract class AgentNode<Input, Output> internal constructor() {
     abstract val name: String
 
-    var edges: List<LocalAgentEdge<Output, *>> = emptyList()
+    var edges: List<AgentEdge<Output, *>> = emptyList()
         private set
 
-    open fun addEdge(edge: LocalAgentEdge<Output, *>) {
+    open fun addEdge(edge: AgentEdge<Output, *>) {
         edges = edges + edge
     }
 
 
-    data class ResolvedEdge(val edge: LocalAgentEdge<*, *>, val output: Any?)
+    data class ResolvedEdge(val edge: AgentEdge<*, *>, val output: Any?)
     suspend fun resolveEdge(
-        context: LocalAgentStageContext,
+        context: AgentStageContext,
         nodeOutput: Output
     ): ResolvedEdge? {
-        var edge: LocalAgentEdge<*, *>? = null
+        var edge: AgentEdge<*, *>? = null
 
         for (currentEdge in edges) {
             val output = currentEdge.forwardOutputUnsafe(nodeOutput, context)
@@ -35,14 +35,14 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
 
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    suspend fun resolveEdgeUnsafe(context: LocalAgentStageContext, nodeOutput: Any?) =
+    suspend fun resolveEdgeUnsafe(context: AgentStageContext, nodeOutput: Any?) =
         resolveEdge(context, nodeOutput as Output)
 
-    abstract suspend fun execute(context: LocalAgentStageContext, input: Input): Output
+    abstract suspend fun execute(context: AgentStageContext, input: Input): Output
 
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    suspend fun executeUnsafe(context: LocalAgentStageContext, input: Any?): Any? {
+    suspend fun executeUnsafe(context: AgentStageContext, input: Any?): Any? {
         context.pipeline.onBeforeNode(this, context, input)
         val output = execute(context, input as Input)
         context.pipeline.onAfterNode(this, context, input, output)
@@ -51,11 +51,11 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
     }
 }
 
-class SimpleLocalAgentNode<Input, Output> internal constructor(
+class SimpleAgentNode<Input, Output> internal constructor(
     override val name: String,
-    val execute: suspend LocalAgentStageContext.(input: Input) -> Output
-) : LocalAgentNode<Input, Output>() {
-    override suspend fun execute(context: LocalAgentStageContext, input: Input): Output = context.execute(input)
+    val execute: suspend AgentStageContext.(input: Input) -> Output
+) : AgentNode<Input, Output>() {
+    override suspend fun execute(context: AgentStageContext, input: Input): Output = context.execute(input)
 }
 
 class StartAgentNode internal constructor() : StartNode<Unit>()

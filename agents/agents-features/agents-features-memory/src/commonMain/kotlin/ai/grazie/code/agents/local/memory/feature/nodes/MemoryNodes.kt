@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.memory.feature.nodes
 
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentNodeDelegate
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
+import ai.grazie.code.agents.core.dsl.builder.AgentNodeDelegate
+import ai.grazie.code.agents.core.dsl.builder.AgentSubgraphBuilderBase
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.feature.withMemory
 import ai.grazie.code.agents.local.memory.model.*
@@ -20,12 +20,12 @@ import kotlinx.serialization.json.Json
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concept A concept to load facts for
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     name: String? = null,
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType = MemoryScopeType.AGENT
-): LocalAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope))
+): AgentNodeDelegate<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope))
 
 /**
  * Node that loads facts from memory for a given concept
@@ -34,12 +34,12 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concepts A list of concepts to load facts for
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     name: String? = null,
     concepts: List<Concept>,
     subject: MemorySubject,
     scope: MemoryScopeType = MemoryScopeType.AGENT
-): LocalAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
+): AgentNodeDelegate<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
 
 
 /**
@@ -49,12 +49,12 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
  * @param scopes List of memory scopes (Agent, Feature, etc.). By default all scopes would be chosen
  * @param subjects List of subjects (user, project, organization, etc.) to look for. By default all subjects would be chosen
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     name: String? = null,
     concepts: List<Concept>,
     subjects: List<MemorySubject> = MemorySubject.entries,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): AgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
             loadFactsToAgent(concept, scopes, subjects)
@@ -70,11 +70,11 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
  * @param scopes List of memory scopes (Agent, Feature, etc.). By default only Agent scope would be chosen
  * @param subjects List of subjects (user, project, organization, etc.) to look for.
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
     name: String? = null,
     subjects: List<MemorySubject> = MemorySubject.entries,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): AgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         loadAllFactsToAgent(scopes, subjects)
     }
@@ -89,12 +89,12 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concepts List of concepts to save in memory
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     name: String? = null,
     subject: MemorySubject,
     scope: MemoryScopeType,
     concepts: List<Concept>,
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): AgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
             saveFactsFromHistory(
@@ -116,12 +116,12 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concept The concept to save in memory
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     name: String? = null,
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType,
-): LocalAgentNodeDelegate<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept))
+): AgentNodeDelegate<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept))
 
 /**
  * Node that automatically detects and extracts facts from the chat history and saves them to memory.
@@ -132,11 +132,11 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  * @param subjects List of subjects (user, project, organization, etc.) to look for.
  * By default, all subjects will be included and looked for.
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
+fun <T> AgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),
     subjects: List<MemorySubject> = MemorySubject.entries
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): AgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
         updatePrompt {
             val prompt = MemoryPrompts.autoDetectFacts(subjects)

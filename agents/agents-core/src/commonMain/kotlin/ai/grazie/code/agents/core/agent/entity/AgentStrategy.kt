@@ -1,21 +1,21 @@
 package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy.*
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.config.AgentConfig
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
-import ai.grazie.code.agents.core.model.agent.AIAgentStrategy
+import ai.grazie.code.agents.core.model.agent.BaseAgentStrategy
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.utils.runCatchingCancellable
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContextImpl
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentStageBuilder
+import ai.grazie.code.agents.core.agent.entity.stage.AgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.AgentStageContextImpl
+import ai.grazie.code.agents.core.dsl.builder.AgentStageBuilder
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.extension.clearHistory
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.grazie.code.agents.core.environment.AgentEnvironment
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.PromptExecutorProxy
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
@@ -42,7 +42,7 @@ enum class ContextTransitionPolicy {
 /**
  * Implementation of an AI agent that processes user input through a sequence of stages.
  *
- * The LocalAgent executes a series of stages in sequence, with each stage receiving the output
+ * The Agent executes a series of stages in sequence, with each stage receiving the output
  * of the previous stage as its input. The agent manages the LLM conversation history between stages
  * according to the specified [llmHistoryTransitionPolicy].
  *
@@ -54,11 +54,11 @@ enum class ContextTransitionPolicy {
  *        - [ContextTransitionPolicy.CLEAR_LLM_HISTORY]: Clears the history between stages for independent processing.
  */
 @OptIn(InternalAgentsApi::class)
-class LocalAgentStrategy(
+class AgentStrategy(
     override val name: String,
-    stages: List<LocalAgentStage>,
+    stages: List<AgentStage>,
     llmHistoryTransitionPolicy: ContextTransitionPolicy = PERSIST_LLM_HISTORY,
-) : AIAgentStrategy<LocalAgentConfig>, LocalAgentNode<String, String>() {
+) : BaseAgentStrategy<AgentConfig>, AgentNode<String, String>() {
 
     /**
      * The list of stages that this agent will execute in sequence.
@@ -66,14 +66,14 @@ class LocalAgentStrategy(
      * This list may include intermediate stages for LLM history management,
      * depending on the specified [llmHistoryTransitionPolicy].
      */
-    internal var stages: List<LocalAgentStage> = when (llmHistoryTransitionPolicy) {
+    internal var stages: List<AgentStage> = when (llmHistoryTransitionPolicy) {
         PERSIST_LLM_HISTORY -> stages
         COMPRESS_LLM_HISTORY -> insertIntermediateStage(stages, COMPRESS_HISTORY_STAGE)
         CLEAR_LLM_HISTORY -> insertIntermediateStage(stages, CLEAR_HISTORY_STAGE)
     }
 
     /**
-     * Contains predefined stages and utility functions for the LocalAgent.
+     * Contains predefined stages and utility functions for the Agent.
      */
     internal companion object {
         /**
@@ -83,7 +83,7 @@ class LocalAgentStrategy(
          * compresses the conversation history with the language model, reducing token usage
          * while preserving essential context.
          */
-        val COMPRESS_HISTORY_STAGE: LocalAgentStage = with(LocalAgentStageBuilder("compress-history", tools = null)) {
+        val COMPRESS_HISTORY_STAGE: AgentStage = with(AgentStageBuilder("compress-history", tools = null)) {
             val compressHistory by nodeLLMCompressHistory<Unit>()
 
             edge(nodeStart forwardTo compressHistory)
@@ -98,7 +98,7 @@ class LocalAgentStrategy(
          * This stage creates a node that completely clears the conversation history with
          * the language model, allowing the next stage to start with a clean slate.
          */
-        val CLEAR_HISTORY_STAGE: LocalAgentStage = with(LocalAgentStageBuilder("clear-history", tools = null)) {
+        val CLEAR_HISTORY_STAGE: AgentStage = with(AgentStageBuilder("clear-history", tools = null)) {
             val clearHistory by node<Unit, Unit> {
                 llm.writeSession { clearHistory() }
             }
@@ -135,9 +135,9 @@ class LocalAgentStrategy(
          * @return A new list with the intermediate stage inserted between each original stage
          */
         fun insertIntermediateStage(
-            stages: List<LocalAgentStage>,
-            intermediateStage: LocalAgentStage
-        ): List<LocalAgentStage> = stages.flatMapIndexed { index, stage ->
+            stages: List<AgentStage>,
+            intermediateStage: AgentStage
+        ): List<AgentStage> = stages.flatMapIndexed { index, stage ->
             if (index == stages.lastIndex) listOf(stage)
             else listOf(stage, intermediateStage)
         }
@@ -165,11 +165,11 @@ class LocalAgentStrategy(
         toolRegistry: ToolRegistry,
         promptExecutor: PromptExecutor,
         environment: AgentEnvironment,
-        config: LocalAgentConfig,
-        pipeline: AIAgentPipeline,
+        config: AgentConfig,
+        pipeline: AgentPipeline,
     ) {
-        val stateManager = LocalAgentStateManager()
-        val storage = LocalAgentStorage()
+        val stateManager = AgentStateManager()
+        val storage = AgentStorage()
         var currentStageInput: String = userInput
         var currentPrompt = config.prompt
         var currentModel = config.model
@@ -179,7 +179,7 @@ class LocalAgentStrategy(
             pipeline.onStrategyStarted(this)
 
             stages.forEach { stage ->
-                val llmContext = LocalAgentLLMContext(
+                val llmContext = AgentLLMContext(
                     toolRegistry = toolRegistry,
                     tools = toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                     prompt = currentPrompt,
@@ -189,7 +189,7 @@ class LocalAgentStrategy(
                     config = config,
                 )
 
-                val context = LocalAgentStageContextImpl(
+                val context = AgentStageContextImpl(
                     environment = environment,
                     stageInput = currentStageInput,
                     config = config,
@@ -219,7 +219,7 @@ class LocalAgentStrategy(
     /**
      * Executes this agent as a node within another agent's stage.
      *
-     * This method implements the [LocalAgentNode.execute] method, allowing this agent to be used
+     * This method implements the [AgentNode.execute] method, allowing this agent to be used
      * as a node within another agent's stage. It wraps the provided environment in a [SubAgentEnvironment]
      * to capture the result, runs the agent with the given input, and returns the result.
      *
@@ -227,7 +227,7 @@ class LocalAgentStrategy(
      * @param input The input to this agent
      * @return The output of this agent's execution
      */
-    override suspend fun execute(context: LocalAgentStageContext, input: String): String {
+    override suspend fun execute(context: AgentStageContext, input: String): String {
         val wrappedEnv = SubAgentEnvironment(context.environment)
 
         run(
