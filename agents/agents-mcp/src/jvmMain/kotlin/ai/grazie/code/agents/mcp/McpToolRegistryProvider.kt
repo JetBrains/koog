@@ -1,8 +1,5 @@
 package ai.grazie.code.agents.mcp
 
-import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
-import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.ToolStage.Companion.DEFAULT_STAGE_NAME
 import io.ktor.client.*
@@ -16,10 +13,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 
 /**
  * A provider for creating tool registries that connect to Model Context Protocol (MCP) servers.
@@ -81,12 +74,16 @@ object McpToolRegistryProvider {
      * @param stageName The name of the stage in which to register the tools.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
-    fun fromClient(mcpClient: Client, stageName: String = DEFAULT_STAGE_NAME): ToolRegistry {
+    fun fromClient(
+        mcpClient: Client,
+        mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
+        stageName: String = DEFAULT_STAGE_NAME
+    ): ToolRegistry {
         val sdkTools = runBlocking { mcpClient.listTools() }?.tools.orEmpty()
         return ToolRegistry {
             stage(stageName) {
                 sdkTools.forEach { sdkTool ->
-                    val toolDescriptor = parseToolDescriptor(sdkTool)
+                    val toolDescriptor = mcpToolParser.parse(sdkTool)
                     tool(McpTool(mcpClient, toolDescriptor))
                 }
             }
@@ -107,6 +104,7 @@ object McpToolRegistryProvider {
      */
     suspend fun fromTransport(
         transport: Transport,
+        mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
         stageName: String = DEFAULT_STAGE_NAME
@@ -117,112 +115,6 @@ object McpToolRegistryProvider {
         // Connect to the MCP server
         mcpClient.connect(transport)
 
-        return fromClient(mcpClient, stageName)
-    }
-
-    /**
-     * Parses a JSON object representing a parameter type into a ToolParameterType.
-     *
-     * This method converts JSON Schema type definitions into the corresponding ToolParameterType.
-     * It supports primitive types (string, integer, number, boolean) as well as complex types (array, object).
-     *
-     * @param element The JSON object representing the parameter type.
-     * @return The corresponding ToolParameterType
-     */
-    private fun parseParameterType(element: JsonObject): ToolParameterType {
-        // Extract the type string from the JSON object
-        val typeStr = if ("type" in element) {
-            element.getValue("type").jsonPrimitive.content
-        } else {
-            throw IllegalArgumentException("Parameter type must have type property")
-        }
-
-        // Convert the type string to a ToolParameterType
-        return when (typeStr.lowercase()) {
-            // Primitive types
-            "string" -> ToolParameterType.String
-            "integer" -> ToolParameterType.Integer
-            "number" -> ToolParameterType.Float
-            "boolean" -> ToolParameterType.Boolean
-
-            // Array type
-            "array" -> {
-                val items = if ("items" in element) {
-                    element.getValue("items").jsonObject
-                } else {
-                    throw IllegalArgumentException("Array type parameters must have items property")
-                }
-                val itemType = parseParameterType(items)
-
-                ToolParameterType.List(itemsType = itemType)
-            }
-
-            // Object type
-            "object" -> {
-                val properties = if ("properties" in element) {
-                    element.getValue("properties").jsonObject
-                } else {
-                    throw IllegalArgumentException("Object type parameters must have properties property")
-                }
-
-                ToolParameterType.Object(properties.map { (name, property) ->
-                    val description = element["description"]?.jsonPrimitive?.content.orEmpty()
-                    ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
-                })
-            }
-
-            // Unsupported type
-            else -> throw IllegalArgumentException("Unsupported parameter type: $typeStr")
-        }
-    }
-
-    /**
-     * Parses a JSON object representing a set of parameters into a list of ToolParameterDescriptor objects.
-     *
-     * This method extracts parameter information (name, description, type) from a JSON Schema properties object.
-     *
-     * @param properties The JSON object representing the parameters.
-     * @return A list of ToolParameterDescriptor objects.
-     */
-    private fun parseParameters(properties: JsonObject): List<ToolParameterDescriptor> {
-        return properties.mapNotNull { (name, element) ->
-            require(element is JsonObject) { "Parameter $name must be a JSON object" }
-
-            // Extract description from the element
-            val description = element["description"]?.jsonPrimitive?.content.orEmpty()
-
-            // Parse the parameter type
-            val type = parseParameterType(element)
-
-            // Create a ToolParameterDescriptor
-            ToolParameterDescriptor(
-                name = name, description = description, type = type
-            )
-        }
-    }
-
-    /**
-     * Parses an MCP SDK Tool into a ToolDescriptor.
-     *
-     * This method extracts tool information (name, description, parameters) from an MCP SDK Tool
-     * and converts it into a ToolDescriptor that can be used by the agent framework.
-     *
-     * @param sdkTool The MCP SDK Tool to parse.
-     * @return A ToolDescriptor representing the MCP tool.
-     */
-    private fun parseToolDescriptor(sdkTool: SDKTool): ToolDescriptor {
-        // Parse all parameters from the input schema
-        val parameters = parseParameters(sdkTool.inputSchema.properties)
-
-        // Get the list of required parameters
-        val requiredParameters = sdkTool.inputSchema.required ?: emptyList()
-
-        // Create a ToolDescriptor
-        return ToolDescriptor(
-            name = sdkTool.name,
-            description = sdkTool.description.orEmpty(),
-            requiredParameters = parameters.filter { requiredParameters.contains(it.name) },
-            optionalParameters = parameters.filter { !requiredParameters.contains(it.name) },
-        )
+        return fromClient(mcpClient, mcpToolParser, stageName)
     }
 }
