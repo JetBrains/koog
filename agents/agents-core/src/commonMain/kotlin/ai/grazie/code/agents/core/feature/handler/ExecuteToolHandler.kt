@@ -7,12 +7,6 @@ import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.jetbrains.code.prompt.message.Message
 
 class ExecuteToolHandler {
-    var beforeToolCallsHandler: BeforeToolCallsHandler =
-        BeforeToolCallsHandler { _ -> }
-
-    var afterToolCallsHandler: AfterToolCallsHandler =
-        AfterToolCallsHandler { _, _ -> }
-
     var toolCallHandler: ToolCallHandler =
         ToolCallHandler { _, _, _ -> }
 
@@ -24,14 +18,6 @@ class ExecuteToolHandler {
 
     var toolCallResultHandler: ToolCallResultHandler =
         ToolCallResultHandler { _, _, _, _ -> }
-}
-
-fun interface BeforeToolCallsHandler {
-    suspend fun handle(tools: List<Message.Tool.Call>)
-}
-
-fun interface AfterToolCallsHandler {
-    suspend fun handle(tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>)
 }
 
 fun interface ToolCallHandler {

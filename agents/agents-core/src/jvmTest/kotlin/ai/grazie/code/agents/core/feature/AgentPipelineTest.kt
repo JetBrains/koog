@@ -22,7 +22,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-class AIAgentPipelineTest {
+class AgentPipelineTest {
 
     @Test
     fun `test pipeline interceptors for node events`() = runBlocking {
@@ -127,8 +127,8 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Tool: ") }
         val expectedEvents = listOf(
-            "Tool: start tool calls [Call(id=1, tool=plus, content={\"a\":2.0,\"b\":2.0})]",
-            "Tool: finish tool calls [Result(id=1, tool=plus, content=4.0)]"
+            "Tool: call tool (tool: plus, args: Args(a=2.0, b=2.0))",
+            "Tool: finish tool call with result (tool: plus, result: 4.0)"
         )
 
         assertEquals(

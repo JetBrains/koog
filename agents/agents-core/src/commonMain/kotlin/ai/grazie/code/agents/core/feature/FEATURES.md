@@ -371,20 +371,6 @@ Features can intercept various points in the agent execution pipeline:
     }
     ```
 
-11. **Before Tool Call**: Execute code before a tool is called
-    ```kotlin
-    pipeline.interceptBeforeToolCall(this, feature) { tool ->
-        logger.info("About to call tool: ${tool.name} with args: ${tool.arguments}")
-    }
-    ```
-
-12. **After Tool Call**: Execute code after a tool call completes
-    ```kotlin
-    pipeline.interceptAfterToolCall(this, feature) { result ->
-        logger.info("Tool ${result.name} returned: ${result.content}")
-    }
-    ```
-
 ### Advanced Interceptors
 
 For more advanced use cases, you can combine multiple interceptors to create complex features. Here's an example of a logging feature:
@@ -453,15 +439,6 @@ class LoggingFeature(val logger: Logger) {
 
             pipeline.interceptAfterLLMCallWithTools(this, logging) { response ->
                 logger.info("Received structured LLM response with role: ${response.role}")
-            }
-
-            // Intercept tool calls
-            pipeline.interceptBeforeToolCall(this, logging) { tool ->
-                logger.info("Calling tool: ${tool.name} with args: ${tool.arguments}")
-            }
-
-            pipeline.interceptAfterToolCall(this, logging) { result ->
-                logger.info("Tool ${result.name} returned: ${result.content.take(100)}...")
             }
         }
     }

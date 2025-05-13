@@ -1,14 +1,13 @@
 package ai.grazie.code.agents.example.features
 
-import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
+import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.feature.AgentPipeline
 import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
-import ai.grazie.code.agents.local.features.common.config.FeatureConfig
-import ai.grazie.code.agents.core.feature.handler.AfterToolCallsHandler
 import ai.grazie.code.agents.core.feature.handler.BeforeNodeHandler
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
+import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -43,7 +42,7 @@ class LoggingFeature(val logger: Logger) {
          *
          * The method integrates the feature capabilities into the agent pipeline by setting up interceptors
          * to log information during agent creation, before processing nodes, and after processing nodes by a predefined
-         * hooks, e.g. [BeforeNodeHandler], [AfterToolCallsHandler], etc.
+         * hooks, e.g. [BeforeNodeHandler], etc.
          *
          * @param config The configuration for the LoggingFeature, providing logger details.
          * @param pipeline The agent pipeline where logging functionality will be installed.
@@ -84,14 +83,6 @@ class LoggingFeature(val logger: Logger) {
 
             pipeline.interceptAfterLLMCallWithTools(this, logging) { response, tools ->
                 logger.info("After LLM call with tools. Response: $response, Tools: ${tools.map { it.name }}")
-            }
-
-            pipeline.interceptBeforeToolCall(this, logging) { tools ->
-                logger.info("Before tools call: [${tools.joinToString(", ") { it.tool }}]")
-            }
-
-            pipeline.interceptAfterToolCall(this, logging) { tools, results ->
-                logger.info("After tools call (tools: ${tools.joinToString(", ") { it.tool }}, results: [${results.joinToString(", ") { it.content }}]")
             }
         }
     }

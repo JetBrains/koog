@@ -7,7 +7,6 @@ import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AgentEnvironment
-import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.feature.handler.*
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
@@ -184,14 +183,6 @@ class AgentPipeline {
     //endregion Trigger LLM Call Handlers
 
     //region Trigger Tool Call Handlers
-
-    suspend fun onBeforeToolCalls(tools: List<Message.Tool.Call>) {
-        executeToolHandlers.values.forEach { handler -> handler.beforeToolCallsHandler.handle(tools) }
-    }
-
-    suspend fun onAfterToolCalls(tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>) {
-        executeToolHandlers.values.forEach { handler -> handler.afterToolCallsHandler.handle(tools, results) }
-    }
 
     suspend fun onToolCall(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(stage, tool, toolArgs) }
@@ -549,54 +540,6 @@ class AgentPipeline {
 
         existingHandler.afterLLMCallWithToolsHandler = AfterLLMCallWithToolsHandler { responses, tools ->
             with(featureImpl) { handle(responses, tools) }
-        }
-    }
-
-    /**
-     * Intercepts tool calls before they are made to modify or log the tool signature.
-     *
-     * @param handle The handler that processes before-tool-call events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptBeforeToolCall(MyFeature, myFeatureImpl) { tool ->
-     *     // Validate or modify tool arguments before execution
-     * }
-     * ```
-     */
-    fun <TFeature : Any> interceptBeforeToolCall(
-        feature: KotlinAIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
-        handle: suspend TFeature.(tools: List<Message.Tool.Call>) -> Unit
-    ) {
-        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
-
-        existingHandler.beforeToolCallsHandler = BeforeToolCallsHandler { tools ->
-            with(featureImpl) { handle(tools) }
-        }
-    }
-
-    /**
-     * Intercepts tool calls after they are made to process or log the tool result.
-     *
-     * @param handle The handler that processes after-tool-call events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptAfterToolCall(MyFeature, myFeatureImpl) { tools, result ->
-     *     // Process or analyze the tool execution result
-     * }
-     * ```
-     */
-    fun <TFeature : Any> interceptAfterToolCall(
-        feature: KotlinAIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
-        handle: suspend TFeature.(tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>) -> Unit
-    ) {
-        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
-
-        existingHandler.afterToolCallsHandler = AfterToolCallsHandler { toolCalls, results ->
-            with(featureImpl) { handle(toolCalls, results) }
         }
     }
 

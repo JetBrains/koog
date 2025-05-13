@@ -1,19 +1,6 @@
 package ai.grazie.code.agents.core.feature
 
-import ai.grazie.code.agents.core.feature.model.AgentCreateEvent
-import ai.grazie.code.agents.core.feature.model.AgentFinishedEvent
-import ai.grazie.code.agents.core.feature.model.AgentStartedEvent
-import ai.grazie.code.agents.core.feature.model.DefinedFeatureEvent
-import ai.grazie.code.agents.core.feature.model.LLMCallEndEvent
-import ai.grazie.code.agents.core.feature.model.LLMCallStartEvent
-import ai.grazie.code.agents.core.feature.model.LLMCallWithToolsEndEvent
-import ai.grazie.code.agents.core.feature.model.LLMCallWithToolsStartEvent
-import ai.grazie.code.agents.core.feature.model.NodeExecutionEndEvent
-import ai.grazie.code.agents.core.feature.model.NodeExecutionStartEvent
-import ai.grazie.code.agents.core.feature.model.StrategyFinishedEvent
-import ai.grazie.code.agents.core.feature.model.StrategyStartEvent
-import ai.grazie.code.agents.core.feature.model.ToolCallsEndEvent
-import ai.grazie.code.agents.core.feature.model.ToolCallsStartEvent
+import ai.grazie.code.agents.core.feature.model.*
 import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import kotlinx.serialization.modules.SerializersModule
@@ -33,8 +20,6 @@ val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
                 subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
-                subclass(ToolCallsStartEvent::class, ToolCallsStartEvent.serializer())
-                subclass(ToolCallsEndEvent::class, ToolCallsEndEvent.serializer())
             }
 
             polymorphic(FeatureEvent::class) {
@@ -49,8 +34,6 @@ val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
                 subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
-                subclass(ToolCallsStartEvent::class, ToolCallsStartEvent.serializer())
-                subclass(ToolCallsEndEvent::class, ToolCallsEndEvent.serializer())
             }
 
             polymorphic(DefinedFeatureEvent::class) {
@@ -65,7 +48,5 @@ val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
                 subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
-                subclass(ToolCallsStartEvent::class, ToolCallsStartEvent.serializer())
-                subclass(ToolCallsEndEvent::class, ToolCallsEndEvent.serializer())
             }
         }

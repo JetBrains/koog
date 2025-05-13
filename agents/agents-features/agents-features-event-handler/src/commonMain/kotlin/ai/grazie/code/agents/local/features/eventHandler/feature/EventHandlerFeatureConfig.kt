@@ -69,12 +69,6 @@ class EventHandlerFeatureConfig : FeatureConfig() {
 
     //region Trigger Tool Call Handlers
 
-    var onBeforeToolCalls: suspend (tools: List<Message.Tool.Call>) -> Unit =
-        { tools: List<Message.Tool.Call> -> }
-
-    var onAfterToolCalls: suspend (tools: List<Message.Tool.Call>, results: List<ReceivedToolResult>) -> Unit =
-        { tools: List<Message.Tool.Call>, results: List<ReceivedToolResult> -> }
-
     var onToolCall: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit =
         { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args -> }
 

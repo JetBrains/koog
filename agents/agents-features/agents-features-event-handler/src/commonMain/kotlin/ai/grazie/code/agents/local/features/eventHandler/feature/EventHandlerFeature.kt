@@ -100,14 +100,6 @@ class EventHandlerFeature {
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptBeforeToolCall(this, featureImpl) intercept@{ tools ->
-                config.onBeforeToolCalls(tools)
-            }
-
-            pipeline.interceptAfterToolCall(this, featureImpl) intercept@{ tools, results ->
-                config.onAfterToolCalls(tools, results)
-            }
-
             pipeline.interceptToolCall(this, featureImpl) intercept@{ stage, tool, toolArgs ->
                 config.onToolCall(stage, tool, toolArgs)
             }

@@ -53,12 +53,6 @@ class TraceFeatureMessageLogWriter(
         val LLMCallWithToolsEndEvent.llmCallWithToolsEndEventFormat
             get() = "${this.eventId} (responses: ${this.responses}, tools: [${this.tools.joinToString(", ")}])"
 
-        val ToolCallsStartEvent.toolCallsStartEventFormat
-            get() = "${this.eventId} (tools: [${tools.joinToString(", ") { it.tool }}])"
-
-        val ToolCallsEndEvent.toolCallsEndEventFormat
-            get() = "${this.eventId} (tools: [${tools.joinToString(", ") { it.tool }}], results: [${results.joinToString(", ") { it.content }}])"
-
         val ToolCallEvent.toolCallEventFormat
             get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs})"
 
@@ -94,8 +88,6 @@ class TraceFeatureMessageLogWriter(
             is LLMCallEndEvent            -> { this.llmCallEndEventFormat}
             is LLMCallWithToolsStartEvent -> { this.llmCallWithToolsStartEventFormat }
             is LLMCallWithToolsEndEvent   -> { this.llmCallWithToolsEndEventFormat }
-            is ToolCallsStartEvent        -> { this.toolCallsStartEventFormat }
-            is ToolCallsEndEvent          -> { this.toolCallsEndEventFormat }
             is ToolCallEvent              -> { this.toolCallEventFormat }
             is ToolValidationErrorEvent   -> { this.toolValidationErrorEventFormat }
             is ToolCallFailureEvent       -> { this.toolCallFailureEventFormat }
