@@ -19,10 +19,10 @@ handle complex workflows, and communicate with users.
 
 ## Using in your projects
 
-TODO:
+<!-- TODO:
 - supported targets (JVM and JS)
 - how to use with Gradle
-- how to use with Maven
+- how to use with Maven -->
 
 ## Contributing
 Read the [Contributing Guidelines](CONTRIBUTING.md).
