@@ -1,76 +1,86 @@
-package ai.jetbrains.code.prompt.executor.clients.openrouter
+package ai.jetbrains.code.prompt.executor.clients.anthropic
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.jetbrains.code.prompt.dsl.Prompt
+import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlin.test.Ignore
+import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-fun readTestOpenRouterKeyFromEnv(): String {
-    return System.getenv("OPEN_ROUTER_API_TEST_KEY") ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` not set")
+fun readTestAnthropicKeyFromEnv(): String {
+    return System.getenv("ANTHROPIC_API_TEST_KEY")
+        ?: error("ERROR: environment variable ANTHROPIC_API_TEST_KEY not set")
 }
 
-/**
- * Integration tests for the OpenRouter client.
- * 
- * To run these tests, you need a valid OpenRouter API key set in the OPEN_ROUTER_API_TEST_KEY environment variable.
- * These tests use the free "microsoft/phi-4-reasoning:free" model which is available at no cost.
- */
-class OpenRouterDirectClientTest {
+class AnthropicLLMClientTest {
 
     // API key for testing
-    private val apiKey: String get() = readTestOpenRouterKeyFromEnv()
-    
-    // Free model for testing
-    private val testModel = OpenRouterModels.Phi4Reasoning
+    private val apiKey: String get() = readTestAnthropicKeyFromEnv()
 
+    // TODO add parametrized test
+    val allModels = listOf(
+        AnthropicModels.Sonnet_3_7,
+        AnthropicModels.Sonnet_3_5,
+        AnthropicModels.Sonnet_3,
+        AnthropicModels.Opus,
+        AnthropicModels.Haiku_3,
+        AnthropicModels.Haiku_3_5
+    )
+
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
     fun testCreateClient() {
-        val client = OpenRouterLLMClient(apiKey)
+        val client = AnthropicLLMClient(apiKey)
         assertNotNull(client, "Client should be created successfully")
     }
 
+    fun testWithAllModels(test: suspend (model: LLModel) -> Unit) {
+        allModels.forEach { model ->
+            println("Testing with model: $model")
+            runTest { test(model) }
+        }
+    }
+
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
-    fun testExecuteSimplePrompt() = runTest {
-        val client = OpenRouterLLMClient(apiKey)
+    fun testExecuteSimplePrompt() = testWithAllModels {
+        val client = AnthropicLLMClient(apiKey)
 
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
 
-        val response = client.execute(prompt, testModel)
+        val response = client.execute(prompt, AnthropicModels.Sonnet_3_7)
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
         assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
         assertTrue(
-            (response.first() as Message.Assistant).content.lowercase().contains("paris"),
+            (response.first() as Message.Assistant).content.contains("Paris", ignoreCase = true),
             "Response should contain 'Paris'"
         )
     }
 
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
-    fun testExecuteStreamingPrompt() = runTest {
-        val client = OpenRouterLLMClient(apiKey)
+    fun testExecuteStreamingPrompt() = testWithAllModels {
+        val client = AnthropicLLMClient(apiKey)
 
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = Prompt.build( "test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = client.executeStreaming(prompt, testModel).toList()
+        val responseChunks = client.executeStreaming(prompt, AnthropicModels.Sonnet_3_7).toList()
 
         assertNotNull(responseChunks, "Response chunks should not be null")
         assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -92,10 +102,10 @@ class OpenRouterDirectClientTest {
         ADD, SUBTRACT, MULTIPLY, DIVIDE
     }
 
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
-    fun testExecuteWithTools() = runTest {
-        val client = OpenRouterLLMClient(apiKey)
+    fun testExecuteWithTools() = testWithAllModels {
+        val client = AnthropicLLMClient(apiKey)
 
         // Define a simple calculator tool
         val calculatorTool = ToolDescriptor(
@@ -125,7 +135,7 @@ class OpenRouterDirectClientTest {
             user("What is 123 + 456?")
         }
 
-        val response = client.execute(prompt, testModel, listOf(calculatorTool))
+        val response = client.execute(prompt, AnthropicModels.Sonnet_3_7, listOf(calculatorTool))
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -134,29 +144,28 @@ class OpenRouterDirectClientTest {
         if (response.first() is Message.Tool.Call) {
             val toolCall = response.first() as Message.Tool.Call
             assertEquals("calculator", toolCall.tool, "Tool name should be 'calculator'")
-            assertTrue(toolCall.content.contains("ADD"), "Tool call should use 'ADD' operation")
+            assertTrue(toolCall.content.contains("add"), "Tool call should use 'ADD' operation")
             assertTrue(toolCall.content.contains("123"), "Tool call should include first number")
             assertTrue(toolCall.content.contains("456"), "Tool call should include second number")
         } else {
-            val assistantMessage = response.first() as Message.Assistant
             assertTrue(
-                assistantMessage.content.contains("579"),
-                "Response should contain the correct answer '579' but was '${assistantMessage.content}'"
+                (response.first() as Message.Assistant).content.contains("579"),
+                "Response should contain the correct answer '579'"
             )
         }
     }
 
+    @Disabled("TODO: pass the `ANTHROPIC_API_TEST_KEY`")
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
-    fun testCodeGeneration() = runTest {
-        val client = OpenRouterLLMClient(apiKey)
+    fun testCodeGeneration() = testWithAllModels {
+        val client = AnthropicLLMClient(apiKey)
 
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
             user("Write a simple Kotlin function to calculate the factorial of a number.")
         }
 
-        val response = client.execute(prompt, testModel)
+        val response = client.execute(prompt, AnthropicModels.Sonnet_3_5)
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")

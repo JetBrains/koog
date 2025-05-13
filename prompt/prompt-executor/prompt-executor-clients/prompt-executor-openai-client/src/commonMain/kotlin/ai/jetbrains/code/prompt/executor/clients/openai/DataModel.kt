@@ -17,9 +17,9 @@ internal data class OpenAIRequest(
 internal data class OpenAIMessage(
     val role: String,
     val content: String? = "",
-    val tool_calls: List<OpenAIToolCall>? = null,
+    val toolCalls: List<OpenAIToolCall>? = null,
     val name: String? = null,
-    val tool_call_id: String? = null
+    val toolCallId: String? = null
 )
 
 @Serializable
@@ -62,14 +62,14 @@ internal data class OpenAIResponse(
 internal data class OpenAIChoice(
     val index: Int,
     val message: OpenAIMessage,
-    val finish_reason: String? = null
+    val finishReason: String? = null
 )
 
 @Serializable
 internal data class OpenAIUsage(
-    val prompt_tokens: Int,
-    val completion_tokens: Int? = null,
-    val total_tokens: Int
+    val promptTokens: Int,
+    val completionTokens: Int? = null,
+    val totalTokens: Int
 )
 
 @Serializable
@@ -104,12 +104,12 @@ internal data class OpenAIStreamResponse(
 internal data class OpenAIStreamChoice(
     val index: Int,
     val delta: OpenAIStreamDelta,
-    val finish_reason: String? = null
+    val finishReason: String? = null
 )
 
 @Serializable
 internal data class OpenAIStreamDelta(
     val role: String? = null,
     val content: String? = null,
-    val tool_calls: List<OpenAIToolCall>? = null
+    val toolCalls: List<OpenAIToolCall>? = null
 )
