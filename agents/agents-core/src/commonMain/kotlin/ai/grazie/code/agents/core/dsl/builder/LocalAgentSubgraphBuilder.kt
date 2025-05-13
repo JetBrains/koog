@@ -9,6 +9,7 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.tools.Tool
 import kotlin.reflect.KProperty
 
+// TODO: rename *BuilderBase to *Builder and use specific prefixes (or suffixes) for subclasses
 public abstract class LocalAgentSubgraphBuilderBase<Input, Output> {
     public abstract val nodeStart: StartNode<Input>
     public abstract val nodeFinish: FinishNode<Output>
@@ -85,7 +86,7 @@ public interface LocalAgentSubgraphDelegateBase<Input, Output> {
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentSubgraph<Input, Output>
 }
 
-public open class LocalAgentSubgraphDelegate<Input, Output> internal constructor(
+internal open class LocalAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
     public val nodeStart: StartNode<Input>,
     public val nodeFinish: FinishNode<Output>,

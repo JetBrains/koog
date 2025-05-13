@@ -15,7 +15,7 @@ public class LocalAgentStrategyBuilder(
     public fun stage(
         name: String = ToolStage.DEFAULT_STAGE_NAME,
         requiredTools: List<ToolDescriptor>? = null,
-        init: LocalAgentStageBuilder.() -> Unit
+        init: LocalAgentSubgraphBuilderBase<Unit, String>.() -> Unit
     ) {
         stageBuilders += LocalAgentStageBuilder(name, requiredTools).apply(init)
     }
@@ -62,7 +62,7 @@ public fun strategy(
  */
 public fun simpleStrategy(
     name: String,
-    init: LocalAgentStageBuilder.() -> Unit,
+    init: LocalAgentSubgraphBuilderBase<Unit, String>.() -> Unit,
 ): LocalAgentStrategy {
 
     return strategy(name) {

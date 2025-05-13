@@ -11,7 +11,7 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStaticStage
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import kotlin.reflect.KProperty
 
-public class LocalAgentStageBuilder(
+internal class LocalAgentStageBuilder(
     private val name: String,
     private val tools: List<ToolDescriptor>?
 ) : LocalAgentSubgraphBuilderBase<Unit, String>(), BaseBuilder<LocalAgentStage> {
@@ -44,7 +44,7 @@ public interface LocalAgentNodeDelegateBase<Input, Output> {
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentNode<Input, Output>
 }
 
-public open class LocalAgentNodeDelegate<Input, Output> internal constructor(
+internal open class LocalAgentNodeDelegate<Input, Output> internal constructor(
     private val name: String?,
     private val nodeBuilder: LocalAgentNodeBuilder<Input, Output>,
 ) : LocalAgentNodeDelegateBase<Input, Output> {

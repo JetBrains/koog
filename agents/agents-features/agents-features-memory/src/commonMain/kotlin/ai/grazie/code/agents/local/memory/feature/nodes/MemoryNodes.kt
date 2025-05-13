@@ -1,6 +1,5 @@
 package ai.grazie.code.agents.local.memory.feature.nodes
 
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentNodeDelegate
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentNodeDelegateBase
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
