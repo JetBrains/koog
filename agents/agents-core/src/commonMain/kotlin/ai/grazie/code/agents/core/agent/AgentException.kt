@@ -2,6 +2,8 @@ package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 
+// TODO: why it extends Throwable? Should it be a RuntimeException instead?
+// TODO: how it differs from AgentRuntimeException?
 /**
  * Represents a custom exception class for use in AI Agent-related processes.
  *
@@ -25,7 +27,7 @@ public open class AgentException(problem: String, throwable: Throwable? = null) 
  * @param node The node in which the agent becomes stuck.
  * @param output The output produced by the node that doesn't match any edge conditions.
  */
-public class AgentStuckInTheNodeException(node: LocalAgentNode<*, *>, output: Any?) :
+internal class AgentStuckInTheNodeException(node: LocalAgentNode<*, *>, output: Any?) :
     AgentException(
         "When executing agent graph, stuck in node ${node.name} " +
                 "because output $output doesn't match any condition on available edges."
@@ -42,7 +44,7 @@ public class AgentStuckInTheNodeException(node: LocalAgentNode<*, *>, output: An
  * @constructor Creates an instance of this exception with the specified maximum number of iterations.
  * @param maxNumberOfIterations The maximum number of iterations allowed for the agent before the exception is triggered.
  */
-public class AgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
+internal class AgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
     AgentException(
         "Agent couldn't finish in given number of steps ($maxNumberOfIterations). " +
                 "Please, consider increasing `maxAgentIterations` value in agent's configuration"
@@ -55,5 +57,5 @@ public class AgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: I
  *
  * @param message A descriptive message explaining the reason for termination.
  */
-public class AgentTerminationByClientException(message: String) :
+internal class AgentTerminationByClientException(message: String) :
     AgentException("Agent was canceled by the client ($message)")

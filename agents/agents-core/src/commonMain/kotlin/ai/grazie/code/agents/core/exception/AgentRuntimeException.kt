@@ -1,5 +1,7 @@
 package ai.grazie.code.agents.core.exception
 
+// TODO: do we really need all these exceptions being public?
+
 /**
  * Base class for all agent runtime exceptions.
  */
