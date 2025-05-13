@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.tools.StageTool
+import ai.grazie.code.agents.core.tools.tools.ToolStage.Companion.DEFAULT_STAGE_NAME
 import io.ktor.client.*
 import io.ktor.client.plugins.sse.*
 import io.modelcontextprotocol.kotlin.sdk.Implementation
@@ -53,7 +53,7 @@ class McpToolRegistryProvider {
      * @param stageName The name of the stage in which to register the tools.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
-    fun fromClient(mcpClient: Client, stageName: String = StageTool.DEFAULT_STAGE_NAME): ToolRegistry {
+    fun fromClient(mcpClient: Client, stageName: String = DEFAULT_STAGE_NAME): ToolRegistry {
         val sdkTools = runBlocking { mcpClient.listTools() }?.tools ?: emptyList()
         return ToolRegistry {
             stage(stageName) {
@@ -81,7 +81,7 @@ class McpToolRegistryProvider {
         process: Process,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
-        stageName: String = StageTool.DEFAULT_STAGE_NAME
+        stageName: String = DEFAULT_STAGE_NAME
     ): ToolRegistry {
         // Setup I/O transport using the process streams
         val transport = StdioClientTransport(
@@ -114,7 +114,7 @@ class McpToolRegistryProvider {
         urlString: String,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
-        stageName: String = StageTool.DEFAULT_STAGE_NAME
+        stageName: String = DEFAULT_STAGE_NAME
     ): ToolRegistry {
         // Setup SSE transport using the HTTP client
         val transport = SseClientTransport(

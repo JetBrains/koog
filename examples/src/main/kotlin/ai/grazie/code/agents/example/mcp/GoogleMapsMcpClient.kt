@@ -42,7 +42,7 @@ fun main() {
             // Create the runner
             val agent = simpleSingleRunAgent(
                 executor = simpleOpenAIExecutor(openAIApiToken),
-                llmModel = OpenAIModels.GPT4o,
+                llmModel = OpenAIModels.Chat.GPT4o,
                 toolRegistry = toolRegistry,
                 eventHandler = EventHandler {
                     onToolCall { stage, tool, args ->
