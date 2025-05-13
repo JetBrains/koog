@@ -15,7 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-@Disabled("Disabled until having a docker image with Ollama running")
+ @Disabled("Disabled until having a docker image with Ollama running")
 class OllamaClientTest {
     private val model = OllamaModels.Meta.LLAMA_3_2
     val client = OllamaClient()
@@ -23,12 +23,12 @@ class OllamaClientTest {
 
     @Test
     fun `test execute simple prompt`() = runTest {
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt)
+        val response = executor.execute(prompt, model)
 
         assertTrue(response.isNotEmpty(), "Response should not be empty")
         assertTrue(response.contains("Paris"), "Response should contain 'Paris'")
@@ -53,12 +53,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test-tools") {
+        val prompt = Prompt.build("test-tools") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
 
-        val response = executor.execute(prompt, listOf(searchTool))
+        val response = executor.execute(prompt, model, listOf(searchTool))
         println(response)
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
@@ -84,12 +84,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
 
-        val response = executor.execute(prompt, listOf(searchTool))
+        val response = executor.execute(prompt, model, listOf(searchTool))
         println(response)
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
@@ -114,12 +114,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
 
-        val response = executor.execute(prompt, listOf(searchTool))
+        val response = executor.execute(prompt, model, listOf(searchTool))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -131,12 +131,12 @@ class OllamaClientTest {
             description = "Get the current time"
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("What time is it?")
         }
 
-        val response = executor.execute(prompt, listOf(getTimeTool))
+        val response = executor.execute(prompt, model, listOf(getTimeTool))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -155,12 +155,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the limit to 42")
         }
 
-        val response = executor.execute(prompt, listOf(setLimitTool))
+        val response = executor.execute(prompt, model, listOf(setLimitTool))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -179,12 +179,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("What's the value of 2/3")
         }
 
-        val response = executor.execute(prompt, listOf(printValueTool))
+        val response = executor.execute(prompt, model, listOf(printValueTool))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -203,12 +203,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the name to John")
         }
 
-        val response = executor.execute(prompt, listOf(setNameTool))
+        val response = executor.execute(prompt, model, listOf(setNameTool))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -227,12 +227,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the color to blue")
         }
 
-        val response = executor.execute(prompt, listOf(setColor))
+        val response = executor.execute(prompt, model, listOf(setColor))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -266,12 +266,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
 
-        val response = executor.execute(prompt, listOf(calculatorTool))
+        val response = executor.execute(prompt, model, listOf(calculatorTool))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -290,12 +290,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the tags to important, urgent, and critical")
         }
 
-        val response = executor.execute(prompt, listOf(setTags))
+        val response = executor.execute(prompt, model, listOf(setTags))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -314,12 +314,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the values to 1, 2, and 3")
         }
 
-        val response = executor.execute(prompt, listOf(setValues))
+        val response = executor.execute(prompt, model, listOf(setValues))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -338,12 +338,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the min, the max and the avg values in range from 0 to 1 with a step of 0.01.")
         }
 
-        val response = executor.execute(prompt, listOf(setValues))
+        val response = executor.execute(prompt, model, listOf(setValues))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -371,12 +371,12 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Select two tags of the highest priority.")
         }
 
-        val response = executor.execute(prompt, listOf(setTags))
+        val response = executor.execute(prompt, model, listOf(setTags))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -395,13 +395,13 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Select two tags of the highest priority.")
             user("Then select two tags of the lowest priority.")
         }
 
-        val response = executor.execute(prompt, listOf(setTags))
+        val response = executor.execute(prompt, model, listOf(setTags))
         println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
@@ -409,12 +409,12 @@ class OllamaClientTest {
     @Disabled("JBAI-13854")
     @Test
     fun testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
-        val prompt = Prompt.build(model, "test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words.")
         }
 
-        val flow = executor.executeStreaming(prompt)
+        val flow = executor.executeStreaming(prompt, model)
 
         var totalText = ""
         flow.collect { chunk ->
@@ -576,7 +576,7 @@ class OllamaClientTest {
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
 
-        val prompt = Prompt.build(model, "test-structured-streaming") {
+        val prompt = Prompt.build("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
                 """
@@ -589,7 +589,7 @@ class OllamaClientTest {
             )
         }
 
-        val markdownStream = executor.executeStreaming(prompt)
+        val markdownStream = executor.executeStreaming(prompt, model)
 
         parseMarkdownStreamToCountries(markdownStream).collect { country ->
             countries.add(country)
