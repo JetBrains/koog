@@ -1,4 +1,5 @@
 //import ai.grazie.gradle.tests.setupKarmaConfigs
+import ai.grazie.gradle.publish.maven.configureJvmJarManifest
 import ai.grazie.gradle.tests.configureTests
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
@@ -22,6 +23,8 @@ kotlin {
         configureTests()
     }
 }
+
+configureJvmJarManifest("jvmJar")
 
 //setupKarmaConfigs()
 
