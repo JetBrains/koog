@@ -50,7 +50,6 @@ public class OpenRouterClientSettings(
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
-// TODO: why its open?
 /**
  * Implementation of [LLMClient] for OpenRouter API.
  * OpenRouter is an API that routes requests to multiple LLM providers.
@@ -58,7 +57,7 @@ public class OpenRouterClientSettings(
  * @param apiKey The API key for the OpenRouter API
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
  */
-public open class OpenRouterLLMClient(
+public class OpenRouterLLMClient(
     private val apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
     baseClient: HttpClient = HttpClient()
