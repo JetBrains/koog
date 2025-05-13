@@ -47,8 +47,7 @@ fun main() = runBlocking {
                                 requestType = RequestType.Analytics,
                                 userRequest = "Provide transaction overview for the last month"
                             )
-                        ),
-                        schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
+                        )
                     ),
                     retries = 2,
                     fixingModel = OpenAIModels.GPT4oMini
