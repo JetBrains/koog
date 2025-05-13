@@ -67,14 +67,6 @@ subprojects {
             showExceptions = true
             exceptionFormat = FULL
         }
-        environment.putAll(
-            mapOf(
-                "USER_STGN_JWT_TOKEN" to
-                        (project.properties["grazieUserStgnToken"] ?: System.getenv("USER_STGN_JWT_TOKEN")),
-                "JB_SPACE_CLIENT_ID" to Secrets.Space.Maven.username(project),
-                "JB_SPACE_CLIENT_SECRET" to Secrets.Space.Maven.password(project),
-            )
-        )
     }
 }
 
