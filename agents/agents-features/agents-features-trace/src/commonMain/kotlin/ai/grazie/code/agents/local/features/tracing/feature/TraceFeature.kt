@@ -157,21 +157,6 @@ class TraceFeature {
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptBeforeToolCall(this, featureImpl) intercept@{ tools ->
-                val event = ToolCallsStartEvent(
-                    tools = tools
-                )
-                processMessage(config, event)
-            }
-
-            pipeline.interceptAfterToolCall(this, featureImpl) intercept@{ tools, results ->
-                val event = ToolCallsEndEvent(
-                    tools = tools,
-                    results = results.map { it.toMessage() }
-                )
-                processMessage(config, event)
-            }
-
             pipeline.interceptToolCall(this, featureImpl) intercept@{ stage, tool, toolArgs ->
                 val event = ToolCallEvent(
                     stageName = stage.name,

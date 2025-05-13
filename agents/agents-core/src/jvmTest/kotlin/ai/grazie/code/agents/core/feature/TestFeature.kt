@@ -59,20 +59,20 @@ class TestFeature(val events: MutableList<String>) {
                 feature.events += "LLM + Tools: finish LLM call with tools (responses: '$responses', tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptBeforeToolCall(this, feature) { tools ->
-                feature.events += "Tool: start tool calls $tools"
-            }
-
-            pipeline.interceptAfterToolCall(this, feature) { tools, results ->
-                feature.events += "Tool: finish tool calls ${results.map { it.toMessage() }}"
-            }
-
             pipeline.interceptBeforeNode(this, feature) { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any? ->
                 feature.events += "Node: start node (name: '${node.name}', input: '$input')"
             }
 
             pipeline.interceptAfterNode(this, feature) { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any? ->
                 feature.events += "Node: finish node (name: '${node.name}', input: '$input', output: '$output')"
+            }
+
+            pipeline.interceptToolCall(this, feature) { stage, tool, toolArgs ->
+                feature.events += "Tool: call tool (tool: ${tool.name}, args: $toolArgs)"
+            }
+
+            pipeline.interceptToolCallResult(this, feature) { stage, tool, toolArgs, result ->
+                feature.events += "Tool: finish tool call with result (tool: ${tool.name}, result: ${result?.toStringDefault() ?: "null"})"
             }
         }
     }

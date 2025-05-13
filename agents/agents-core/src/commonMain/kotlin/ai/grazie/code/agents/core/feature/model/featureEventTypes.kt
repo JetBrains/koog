@@ -4,7 +4,6 @@ import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
-import ai.jetbrains.code.prompt.message.Message
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
@@ -113,19 +112,6 @@ data class LLMCallWithToolsEndEvent(
 //endregion LLM Call
 
 //region Tool Call
-
-@Serializable
-data class ToolCallsStartEvent(
-    val tools: List<Message.Tool.Call>,
-    override val eventId: String = ToolCallsStartEvent::class.simpleName!!,
-) : DefinedFeatureEvent()
-
-@Serializable
-data class ToolCallsEndEvent(
-    val tools: List<Message.Tool.Call>,
-    val results: List<Message.Tool.Result>,
-    override val eventId: String = ToolCallsEndEvent::class.simpleName!!,
-) : DefinedFeatureEvent()
 
 @Serializable
 data class ToolCallEvent(

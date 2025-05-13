@@ -7,7 +7,6 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
-import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolResult
@@ -71,14 +70,6 @@ class EventHandlerFeatureTest {
 
         onAfterLLMWithToolsCall = { response: List<Message.Response>, tools: List<ToolDescriptor> ->
             collectedEvents.add("OnAfterLLMWithToolsCall (response: [${response.joinToString(", ") { response -> response.content }}], tools: [${tools.joinToString(", ") { it.name } }])")
-        }
-
-        onBeforeToolCalls = { tools: List<Message.Tool.Call> ->
-            collectedEvents.add("OnBeforeToolCalls (tools: [${tools.joinToString(", ") { it.tool }}])")
-        }
-
-        onAfterToolCalls = { tools: List<Message.Tool.Call>, results: List<ReceivedToolResult> ->
-            collectedEvents.add("OnAfterToolCall (tools: [${tools.joinToString(", ") { it.tool }}], result: [${results.joinToString(", ") { it.content }}])")
         }
 
         onToolCall = { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args ->

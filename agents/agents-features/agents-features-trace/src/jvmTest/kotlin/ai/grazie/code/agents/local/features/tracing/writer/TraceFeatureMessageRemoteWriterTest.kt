@@ -44,7 +44,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isServerStarted = CompletableDeferred<Boolean>()
         val isClientFinished = CompletableDeferred<Boolean>()
@@ -107,7 +107,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
             AgentCreateEvent(strategyName = strategyName),
@@ -206,7 +206,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<FeatureMessage>()
 
@@ -291,11 +291,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(
-            host = "127.0.0.1",
-            port = port,
-            protocol = HttpProtocolVersion.HTTP_2_0.name
-        )
+        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
             LLMCallWithToolsStartEvent("Test user message", listOf("dummy", "__tools_list__")),

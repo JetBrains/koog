@@ -137,8 +137,7 @@ open class AIAgentBase(
     }
 
     override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-        logger.info { formatLog("Executing tools '$toolCalls'") }
-        pipeline.onBeforeToolCalls(tools = toolCalls)
+        logger.info { formatLog("Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]") }
 
         val message = AgentToolCallsToEnvironmentMessage(
             sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),
@@ -153,7 +152,12 @@ open class AIAgentBase(
         )
 
         val results = processToolCallMultiple(message).mapToToolResult()
-        pipeline.onAfterToolCalls(tools = toolCalls, results)
+        logger.debug {
+            "Received results from tools call (" +
+                "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
+                "results: [${results.joinToString(", ") { it.result?.toStringDefault() ?: "null" }}])"
+        }
+
         return results
     }
 
