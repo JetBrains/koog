@@ -1,7 +1,6 @@
 package ai.grazie.code.agents.example.mcp
 
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
-import ai.grazie.code.agents.core.event.EventHandler
 import ai.grazie.code.agents.mcp.McpToolRegistryProvider
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -47,20 +46,6 @@ fun main() {
                     executor = simpleOpenAIExecutor(openAIApiToken),
                     llmModel = OpenAIModels.Chat.GPT4o,
                     toolRegistry = toolRegistry,
-                    eventHandler = EventHandler {
-                        onToolCall { stage, tool, args ->
-                            println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
-                        }
-
-                        handleError {
-                            println("An error occurred: ${it.message}\n${it.stackTraceToString()}")
-                            true
-                        }
-
-                        handleResult {
-                            println("Result: $it")
-                        }
-                    },
                     cs = this
                 )
                 val request = "Open a browser, navigate to jetbrains.com, accept all cookies, click AI in toolbar"
