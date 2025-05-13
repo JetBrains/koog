@@ -82,7 +82,7 @@ object McpToolRegistryProvider {
      * @return A ToolRegistry containing all tools from the MCP server.
      */
     fun fromClient(mcpClient: Client, stageName: String = DEFAULT_STAGE_NAME): ToolRegistry {
-        val sdkTools = runBlocking { mcpClient.listTools() }?.tools ?: emptyList()
+        val sdkTools = runBlocking { mcpClient.listTools() }?.tools.orEmpty()
         return ToolRegistry {
             stage(stageName) {
                 sdkTools.forEach { sdkTool ->
