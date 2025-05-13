@@ -99,7 +99,6 @@ object McpToolRegistryProvider {
      * This method establishes a connection to an MCP server through provided transport.
      * It's typically used when the MCP server is running as a separate process (e.g., a Docker container or a CLI tool).
      *
-     * @param process The process running the MCP server.
      * @param transport The transport to use.
      * @param name The name of the MCP client.
      * @param version The version of the MCP client.
@@ -128,14 +127,14 @@ object McpToolRegistryProvider {
      * It supports primitive types (string, integer, number, boolean) as well as complex types (array, object).
      *
      * @param element The JSON object representing the parameter type.
-     * @return The corresponding ToolParameterType, or null if the type cannot be parsed.
+     * @return The corresponding ToolParameterType
      */
-    private fun parseParameterType(element: JsonObject): ToolParameterType? {
+    private fun parseParameterType(element: JsonObject): ToolParameterType {
         // Extract the type string from the JSON object
         val typeStr = if ("type" in element) {
             element.getValue("type").jsonPrimitive.content
         } else {
-            return null
+            throw IllegalArgumentException("Parameter type must have type property")
         }
 
         // Convert the type string to a ToolParameterType
@@ -151,9 +150,10 @@ object McpToolRegistryProvider {
                 val items = if ("items" in element) {
                     element.getValue("items").jsonObject
                 } else {
-                    error("Array type parameters must have items property")
+                    throw IllegalArgumentException("Array type parameters must have items property")
                 }
-                val itemType = parseParameterType(items) ?: return null
+                val itemType = parseParameterType(items)
+
                 ToolParameterType.List(itemsType = itemType)
             }
 
@@ -162,20 +162,17 @@ object McpToolRegistryProvider {
                 val properties = if ("properties" in element) {
                     element.getValue("properties").jsonObject
                 } else {
-                    error("Object type parameters must have properties property")
+                    throw IllegalArgumentException("Object type parameters must have properties property")
                 }
+
                 ToolParameterType.Object(properties.map { (name, property) ->
-                    val description = if ("description" in element) {
-                        element.getValue("description").jsonPrimitive.content
-                    } else {
-                        ""
-                    }
-                    ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject) ?: return null)
+                    val description = element["description"]?.jsonPrimitive?.content.orEmpty()
+                    ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
                 })
             }
 
             // Unsupported type
-            else -> null
+            else -> throw IllegalArgumentException("Unsupported parameter type: $typeStr")
         }
     }
 
@@ -189,20 +186,13 @@ object McpToolRegistryProvider {
      */
     private fun parseParameters(properties: JsonObject): List<ToolParameterDescriptor> {
         return properties.mapNotNull { (name, element) ->
-            // Skip non-object elements
-            if (element !is JsonObject) {
-                return@mapNotNull null
-            }
+            require(element is JsonObject) { "Parameter $name must be a JSON object" }
 
             // Extract description from the element
-            val description = if ("description" in element) {
-                element.getValue("description").jsonPrimitive.content
-            } else {
-                ""
-            }
+            val description = element["description"]?.jsonPrimitive?.content.orEmpty()
 
             // Parse the parameter type
-            val type = parseParameterType(element) ?: return@mapNotNull null
+            val type = parseParameterType(element)
 
             // Create a ToolParameterDescriptor
             ToolParameterDescriptor(
@@ -230,7 +220,7 @@ object McpToolRegistryProvider {
         // Create a ToolDescriptor
         return ToolDescriptor(
             name = sdkTool.name,
-            description = sdkTool.description ?: "",
+            description = sdkTool.description.orEmpty(),
             requiredParameters = parameters.filter { requiredParameters.contains(it.name) },
             optionalParameters = parameters.filter { !requiredParameters.contains(it.name) },
         )
