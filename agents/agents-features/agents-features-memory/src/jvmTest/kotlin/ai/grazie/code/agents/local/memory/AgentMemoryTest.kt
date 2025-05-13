@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class LocalAIAgentMemoryTest {
+class AgentMemoryTest {
     private val testModel = mockk<LLModel> {
         every { id } returns "test-model"
     }

@@ -23,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-class AIAgentPipelineTest {
+class AgentPipelineTest {
 
     @Test
     fun `test pipeline interceptors for node events`() = runBlocking {
