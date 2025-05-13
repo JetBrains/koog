@@ -11,6 +11,7 @@ import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
+import io.modelcontextprotocol.kotlin.sdk.shared.Transport
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
 import kotlinx.io.asSource
@@ -29,18 +30,45 @@ import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
  * 3. Transforming MCP tools into the agent framework's Tool interface
  * 4. Registering the transformed tools in a ToolRegistry
  */
-class McpToolRegistryProvider {
+object McpToolRegistryProvider {
+    /**
+     * Default name for the MCP client when connecting to an MCP server.
+     */
+    const val DEFAULT_MCP_CLIENT_NAME = "mcp-client-cli"
 
-    companion object {
-        /**
-         * Default name for the MCP client when connecting to an MCP server.
-         */
-        const val DEFAULT_MCP_CLIENT_NAME = "mcp-client-cli"
+    /**
+     * Default version for the MCP client when connecting to an MCP server.
+     */
+    const val DEFAULT_MCP_CLIENT_VERSION = "1.0.0"
 
-        /**
-         * Default version for the MCP client when connecting to an MCP server.
-         */
-        const val DEFAULT_MCP_CLIENT_VERSION = "1.0.0"
+
+    /**
+     * Creates a default standard input/output transport for a provided process.
+     *
+     * @param process The process whose input and output streams will be used for communication.
+     * @return A `StdioClientTransport` configured to communicate with the process using its standard input and output.
+     */
+    fun defaultStdioTransport(process: Process): StdioClientTransport {
+        return StdioClientTransport(
+            input = process.inputStream.asSource().buffered(),
+            output = process.outputStream.asSink().buffered()
+        )
+    }
+
+    /**
+     * Creates a default server-sent events (SSE) transport from a provided URL.
+     *
+     * @param url The URL to be used for establishing an SSE connection.
+     * @return An instance of SseClientTransport configured with the given URL.
+     */
+    fun defaultSseTransport(url: String): SseClientTransport {
+        // Setup SSE transport using the HTTP client
+        return SseClientTransport(
+            client = HttpClient {
+                install(SSE)
+            },
+            urlString = url,
+        )
     }
 
     /**
@@ -66,29 +94,24 @@ class McpToolRegistryProvider {
     }
 
     /**
-     * Creates a ToolRegistry with tools from an MCP server using standard I/O for communication.
+     * Creates a ToolRegistry with tools from an MCP server using provided transport for communication.
      *
-     * This method establishes a connection to an MCP server through a process's standard input and output streams.
+     * This method establishes a connection to an MCP server through provided transport.
      * It's typically used when the MCP server is running as a separate process (e.g., a Docker container or a CLI tool).
      *
      * @param process The process running the MCP server.
+     * @param transport The transport to use.
      * @param name The name of the MCP client.
      * @param version The version of the MCP client.
      * @param stageName The name of the stage in which to register the tools.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
-    suspend fun fromStdioClient(
-        process: Process,
+    suspend fun fromTransport(
+        transport: Transport,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
         stageName: String = DEFAULT_STAGE_NAME
     ): ToolRegistry {
-        // Setup I/O transport using the process streams
-        val transport = StdioClientTransport(
-            input = process.inputStream.asSource().buffered(),
-            output = process.outputStream.asSink().buffered()
-        )
-
         // Create the MCP client
         val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
 
@@ -97,42 +120,6 @@ class McpToolRegistryProvider {
 
         return fromClient(mcpClient, stageName)
     }
-
-    /**
-     * Creates a ToolRegistry with tools from an MCP server using Server-Sent Events (SSE) for communication.
-     *
-     * This method establishes a connection to an MCP server through HTTP using the SSE protocol.
-     * It's typically used when the MCP server is running as a web service.
-     *
-     * @param urlString The URL of the MCP server.
-     * @param name The name of the MCP client.
-     * @param version The version of the MCP client.
-     * @param stageName The name of the stage in which to register the tools.
-     * @return A ToolRegistry containing all tools from the MCP server.
-     */
-    suspend fun fromSseClient(
-        urlString: String,
-        name: String = DEFAULT_MCP_CLIENT_NAME,
-        version: String = DEFAULT_MCP_CLIENT_VERSION,
-        stageName: String = DEFAULT_STAGE_NAME
-    ): ToolRegistry {
-        // Setup SSE transport using the HTTP client
-        val transport = SseClientTransport(
-            client = HttpClient {
-                install(SSE)
-            },
-            urlString = urlString,
-        )
-
-        // Create the MCP client
-        val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
-
-        // Connect to the MCP server
-        mcpClient.connect(transport)
-
-        return fromClient(mcpClient, stageName)
-    }
-
 
     /**
      * Parses a JSON object representing a parameter type into a ToolParameterType.

@@ -37,7 +37,9 @@ fun main() {
     try {
         runBlocking {
             // Create the ToolRegistry with tools from the MCP server
-            val toolRegistry = McpToolRegistryProvider().fromStdioClient(process)
+            val toolRegistry = McpToolRegistryProvider.fromTransport(
+                transport = McpToolRegistryProvider.defaultStdioTransport(process)
+            )
 
             // Create the runner
             val agent = simpleSingleRunAgent(

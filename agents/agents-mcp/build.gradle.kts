@@ -9,11 +9,12 @@ plugins {
 }
 
 
+// FIXME Kotlin MCP SDK only supports JVM target for now, so we only provide JVM target for this module too. Fix later
 kotlin {
     sourceSets {
         jvmMain {
             dependencies {
-                implementation(libs.mcp)
+                api(libs.mcp)
                 implementation(libs.kotlinx.io.core)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)
