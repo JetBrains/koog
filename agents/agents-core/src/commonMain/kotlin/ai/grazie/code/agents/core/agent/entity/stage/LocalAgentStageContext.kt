@@ -215,7 +215,7 @@ public interface LocalAgentStageContext {
  * @param stageName The name of the stage associated with this context.
  * @param pipeline The AI agent pipeline responsible for coordinating stage execution and processing.
  */
-public class LocalAgentStageContextImpl constructor(
+internal class LocalAgentStageContextImpl constructor(
     override val environment: AgentEnvironment,
     override val stageInput: String,
     override val config: LocalAgentConfig,
