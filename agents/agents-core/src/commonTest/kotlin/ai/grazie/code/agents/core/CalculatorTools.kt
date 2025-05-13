@@ -2,6 +2,7 @@ package ai.grazie.code.agents.core
 
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
 
 object CalculatorTools {
 

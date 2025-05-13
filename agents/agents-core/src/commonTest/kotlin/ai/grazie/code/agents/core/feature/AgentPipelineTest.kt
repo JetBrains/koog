@@ -17,15 +17,16 @@ import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class AgentPipelineTest {
 
-    @Test
-    fun `test pipeline interceptors for node events`() = runBlocking {
+    @Test @JsName("testPipelineInterceptorsForNodeEvents")
+    fun `test pipeline interceptors for node events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
 
@@ -57,8 +58,8 @@ class AgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test
-    fun `test pipeline interceptors for llm call events`() = runBlocking {
+    @Test @JsName("testPipelineInterceptorsForLLmCallEvents")
+    fun `test pipeline interceptors for llm call events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
 
@@ -92,8 +93,8 @@ class AgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test
-    fun `test pipeline interceptors for tool call events`() = runBlocking {
+    @Test @JsName("testPipelineInterceptorsForToolCallEvents")
+    fun `test pipeline interceptors for tool call events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
 
@@ -117,7 +118,7 @@ class AgentPipelineTest {
             this,
             strategy,
             toolRegistry = toolRegistry,
-            userPrompt = "add 2 and 2",
+            userPrompt = "add 2.2 and 2.2",
             promptExecutor = CalculatorChatExecutor
         ) {
             install(TestFeature) { events = interceptedEvents }
@@ -127,8 +128,8 @@ class AgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Tool: ") }
         val expectedEvents = listOf(
-            "Tool: call tool (tool: plus, args: Args(a=2.0, b=2.0))",
-            "Tool: finish tool call with result (tool: plus, result: 4.0)"
+            "Tool: call tool (tool: plus, args: Args(a=2.2, b=2.2))",
+            "Tool: finish tool call with result (tool: plus, result: 4.4)"
         )
 
         assertEquals(
@@ -140,8 +141,8 @@ class AgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test
-    fun `test pipeline interceptors for agent create events`() = runBlocking {
+    @Test @JsName("testPipelineInterceptorsForAgentCreateEvents")
+    fun `test pipeline interceptors for agent create events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
 
@@ -167,8 +168,8 @@ class AgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test
-    fun `test pipeline interceptors for strategy started events`() = runBlocking {
+    @Test @JsName("testPipelineInterceptorsForStrategyEvents")
+    fun `test pipeline interceptors for strategy started events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
 
@@ -195,8 +196,8 @@ class AgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test
-    fun `test pipeline interceptors for stage context events`() = runBlocking {
+    @Test @JsName("testPipelineInterceptorsForStageContextEvents")
+    fun `test pipeline interceptors for stage context events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
         val strategy = simpleStrategy("test-interceptors-strategy") {
@@ -221,8 +222,8 @@ class AgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test
-    fun `test several agents share one pipeline`() = runBlocking {
+    @Test @JsName("testSeveralAgentsShareOnePipeline")
+    fun `test several agents share one pipeline`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
 

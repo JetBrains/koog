@@ -5,8 +5,9 @@ import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import ai.grazie.code.agents.local.features.common.message.use
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
+import kotlin.js.JsName
 import kotlin.test.*
 
 class FeatureMessageProcessorTest {
@@ -32,8 +33,8 @@ class FeatureMessageProcessorTest {
         override val messageType: FeatureMessage.Type = FeatureMessage.Type.Event
     }
 
-    @Test
-    fun `test processMessage adds messages to the list`() = runBlocking {
+    @Test @JsName("testProcessMessageAddsMessagesToTheList")
+    fun `test processMessage adds messages to the list`() = runTest {
         val processor = TestFeatureMessageProcessor()
 
         val stringMessage1 = FeatureStringMessage("Test message 1")
@@ -48,8 +49,8 @@ class FeatureMessageProcessorTest {
         assertContentEquals(expectedMessages, processor.processedMessages)
     }
 
-    @Test
-    fun `test close sets isClose flag to true`() = runBlocking {
+    @Test @JsName("testCloseSetsIsCloseFlagToTrue")
+    fun `test close sets isClose flag to true`() = runTest {
         val processor = TestFeatureMessageProcessor()
         assertFalse(processor.isClose)
 
@@ -58,8 +59,8 @@ class FeatureMessageProcessorTest {
         assertTrue(processor.isClose)
     }
 
-    @Test
-    fun `test close method is called with with use method`() = runBlocking {
+    @Test @JsName("testCloseMethodIsCalledWithUseMethod")
+    fun `test close method is called with with use method`() = runTest {
         val processor = TestFeatureMessageProcessor()
         assertFalse(processor.isClose)
         processor.use { processor -> }
@@ -67,14 +68,14 @@ class FeatureMessageProcessorTest {
         assertTrue(processor.isClose)
     }
 
-    @Test
-    fun `test isReady property is initially not completed`() = runBlocking {
+    @Test @JsName("testIsReadyPropertyIsInitiallyNotCompleted")
+    fun `test isReady property is initially not completed`() = runTest {
         val processor = TestFeatureMessageProcessor()
         assertFalse(processor.isReady.isCompleted)
     }
 
-    @Test
-    fun `test isReady property is completed after initialize() call`() = runBlocking {
+    @Test @JsName("testIsReadyPropertyIsCompletedAfterInitializeCall")
+    fun `test isReady property is completed after initialize() call`() = runTest {
         TestFeatureMessageProcessor().use { processor ->
             processor.initialize()
             assertTrue(processor.isReady.isCompleted)
