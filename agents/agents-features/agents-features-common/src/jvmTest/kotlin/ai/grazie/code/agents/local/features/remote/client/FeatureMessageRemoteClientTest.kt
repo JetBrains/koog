@@ -38,7 +38,7 @@ class FeatureMessageRemoteClientTest {
     fun `test client connect to running server`() = runBlocking {
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -82,7 +82,7 @@ class FeatureMessageRemoteClientTest {
     fun `test already connected client connect again`() = runBlocking {
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -125,7 +125,7 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test client connect to stopped server`() = runBlocking {
         val port = findAvailablePort()
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
             logger.info { "Client connecting to remote server: ${client.connectionConfig.url}" }
@@ -148,7 +148,7 @@ class FeatureMessageRemoteClientTest {
     fun `test stop connected client`() = runBlocking {
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -191,7 +191,7 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test stop not connected client`() = runBlocking {
         val port = findAvailablePort()
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val client = FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this)
         assertFalse(client.isConnected)
@@ -209,7 +209,7 @@ class FeatureMessageRemoteClientTest {
     fun `test server send get response to a client`() = runBlocking {
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -257,7 +257,7 @@ class FeatureMessageRemoteClientTest {
     fun `test client send a valid message to a server`() = runBlocking {
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -324,7 +324,7 @@ class FeatureMessageRemoteClientTest {
         }
 
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig("127.0.0.1", port, HttpProtocolVersion.HTTP_2_0.name).apply {
+        val clientConfig = DefaultClientConnectionConfig("127.0.0.1", port, URLProtocol.HTTP).apply {
             appendSerializersModule(customSerializersModule)
         }
 

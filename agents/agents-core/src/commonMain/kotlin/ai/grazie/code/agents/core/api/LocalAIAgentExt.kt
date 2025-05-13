@@ -32,8 +32,8 @@ fun simpleChatAgent(
     temperature: Double = 1.0,
     toolRegistry: ToolRegistry? = null,
     maxIterations: Int = 50,
-installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit = {}
-    ): AIAgentBase {
+    installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit = {}
+): AIAgentBase {
 
     val agentConfig = LocalAgentConfig(
         prompt = prompt("chat", params = LLMParams(temperature = temperature)) {

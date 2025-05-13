@@ -99,7 +99,7 @@ class FeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -152,7 +152,7 @@ class FeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -216,7 +216,7 @@ class FeatureMessageRemoteWriterTest {
         }
 
         val serverConfig = DefaultServerConnectionConfig(port = port).apply { appendSerializersModule(customSerializersModule) }
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name).apply {
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP).apply {
             appendSerializersModule(customSerializersModule)
         }
 

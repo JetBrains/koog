@@ -1,6 +1,7 @@
 package ai.grazie.code.agents.local.features.common.remote.client.config
 
 import ai.grazie.code.agents.local.features.common.remote.ConnectionConfig
+import io.ktor.http.URLProtocol
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -25,16 +26,18 @@ import kotlin.time.Duration.Companion.seconds
  */
 abstract class ClientConnectionConfig(
     val host: String,
-    val port: Int,
-    val protocol: String = "https",
+    port: Int? = null,
+    val protocol: URLProtocol = URLProtocol.HTTPS,
     val headers: Map<String, String> = emptyMap(),
     val reconnectionDelay: Duration? = null,
     val requestTimeout: Duration? = 5.seconds,
     val connectTimeout: Duration? = 15.seconds,
 ) : ConnectionConfig() {
 
+    val port = port ?: protocol.defaultPort
+
     val url: String
-        get() = "$protocol://$host:$port"
+        get() = "${protocol.name}://$host:$port"
 
     val sseUrl: String
         get() = "$url/sse"
