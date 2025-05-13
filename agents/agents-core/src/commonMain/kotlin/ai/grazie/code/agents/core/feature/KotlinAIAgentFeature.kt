@@ -30,6 +30,8 @@ interface KotlinAIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
 
     /**
      * Installs the feature into the specified [AgentPipeline] using an unsafe configuration type cast.
+     *
+     * @suppress
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi

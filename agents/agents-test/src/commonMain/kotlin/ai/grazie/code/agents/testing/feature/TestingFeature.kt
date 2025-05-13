@@ -70,6 +70,9 @@ class DummyAgentStageContext(
         get() = builder.stageName
             ?: throw NotImplementedError("Stage name is not mocked")
 
+    /**
+     * @suppress
+     */
     @InternalAgentsApi
     override val pipeline: AgentPipeline = AgentPipeline()
 
@@ -742,7 +745,6 @@ class Testing {
          * @param config The `Config` object containing setup and assertions for testing the pipeline.
          * @param pipeline The `AIAgentPipeline` instance to install the feature into.
          */
-        @OptIn(InternalAgentsApi::class)
         override fun install(
             config: Config,
             pipeline: AgentPipeline
@@ -818,6 +820,7 @@ class Testing {
                                     )
                                 }
 
+                                @OptIn(InternalAgentsApi::class)
                                 config.assertEquals(
                                     assertion.expectedOutput,
                                     fromNode.executeUnsafe(
@@ -828,6 +831,7 @@ class Testing {
                                 )
                             }
 
+                            @OptIn(InternalAgentsApi::class)
                             // Verify edges using DFS
                             for (assertion in stageConfig.edgeAssertions) {
                                 val fromNode = assertion.node.resolve(stage)

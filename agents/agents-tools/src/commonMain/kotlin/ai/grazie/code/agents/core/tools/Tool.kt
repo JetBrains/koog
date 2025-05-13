@@ -22,6 +22,8 @@ import kotlinx.serialization.json.jsonObject
  * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a
  * `SafeTool`, and then call `execute` on it. This ensures that the tool call is
  * delegated properly to the underlying `environment` object.
+ *
+ * @suppress
  */
 @InternalAgentToolsApi
 interface DirectToolCallsEnabler
@@ -29,7 +31,6 @@ interface DirectToolCallsEnabler
 /**
  * Represents a tool that, when executed, makes changes to the environment.
  */
-@OptIn(InternalAgentToolsApi::class)
 @Suppress("UNCHECKED_CAST", "unused")
 abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
     /**
@@ -107,7 +108,10 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param enabler An instance of `DirectToolCallsEnabler` that authorizes this unsafe execution path. Direct calls without proper enabling are not allowed.
      * @return The result of executing the tool, as an instance of type `TResult`.
      * @throws ClassCastException if the provided arguments cannot be cast to the expected type `TArgs`.
+     *
+     * @suppress
      */
+    @InternalAgentToolsApi
     suspend fun executeUnsafe(args: Any?, enabler: DirectToolCallsEnabler): TResult = execute(args as TArgs)
 
     /**
@@ -128,7 +132,10 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param args The arguments of type TArgs that are required for the execution of the tool.
      * @param enabler An instance of DirectToolCallsEnabler that ensures direct tool calls are controlled within the proper context.
      * @return The result of type TResult produced by executing the tool with the provided arguments.
+     *
+     * @suppress
      */
+    @InternalAgentToolsApi
     suspend fun execute(args: TArgs, enabler: DirectToolCallsEnabler): TResult = execute(args)
 
 
@@ -151,7 +158,10 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param args The input arguments of type TArgs, required for the execution of the tool.
      * @param enabler An instance of DirectToolCallsEnabler that ensures the execution is controlled within the proper context.
      * @return A pair containing the result of the tool's execution as an instance of TResult and its stringified representation.
+     *
+     * @suppress
      */
+    @InternalAgentToolsApi
     suspend fun executeAndSerialize(args: TArgs, enabler: DirectToolCallsEnabler): Pair<TResult, String> {
         val result = execute(args, enabler)
         val stringified = encodeResultToString(result)

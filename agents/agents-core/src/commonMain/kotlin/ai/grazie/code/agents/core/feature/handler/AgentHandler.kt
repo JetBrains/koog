@@ -68,6 +68,8 @@ class AgentHandler<FeatureT : Any>(val feature: FeatureT) {
      * Internal API for handling agent create events with type casting.
      *
      * @param context The context for updating the agent
+     *
+     * @suppress
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi

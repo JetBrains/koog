@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.grazie.code.agents.core.agent.entity.stage
 
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
@@ -132,6 +130,8 @@ interface LocalAgentStageContext {
      * Note: This is an internal API and should not be used directly outside of the intended
      * implementation context. It is annotated with `@InternalAgentsApi` to indicate that
      * it is subject to changes or alterations in future releases.
+     *
+     * @suppress
      */
     @InternalAgentsApi
     val pipeline: AgentPipeline
@@ -160,6 +160,8 @@ interface LocalAgentStageContext {
      *
      * @param tools The new list of `ToolDescriptor` instances to be set in the context.
      * @return A new `LocalAgentStageContext` instance with the specified tools.
+     *
+     * @suppress
      */
     @InternalAgentsApi
     fun copyWithTools(tools: List<ToolDescriptor>): LocalAgentStageContext {
@@ -223,6 +225,7 @@ class LocalAgentStageContextImpl constructor(
     override val sessionUuid: UUID,
     override val strategyId: String,
     override val stageName: String,
+    @OptIn(InternalAgentsApi::class)
     override val pipeline: AgentPipeline,
 ) : LocalAgentStageContext {
     /**
@@ -235,6 +238,7 @@ class LocalAgentStageContextImpl constructor(
      *
      * Used internally to manage and access features during the execution of a stage within the agent pipeline.
      */
+    @OptIn(InternalAgentsApi::class)
     private val features: Map<LocalAgentStorageKey<*>, Any> =
         pipeline.getStageFeatures(this)
 
@@ -263,6 +267,7 @@ class LocalAgentStageContextImpl constructor(
      * @param tools The new list of tools to be used in the LLM context, represented as `ToolDescriptor` objects.
      * @return A new instance of `LocalAgentStageContext` with the updated tools configuration.
      */
+    @InternalAgentsApi
     override fun copyWithTools(tools: List<ToolDescriptor>): LocalAgentStageContext {
         return this.copy(llm = llm.copy(tools = tools))
     }
@@ -302,7 +307,7 @@ class LocalAgentStageContextImpl constructor(
         sessionUuid = sessionUuid ?: this.sessionUuid,
         strategyId = strategyId ?: this.strategyId,
         stageName = stageName ?: this.stageName,
-        pipeline = pipeline ?: this.pipeline,
+        pipeline = pipeline ?: @OptIn(InternalAgentsApi::class) this.pipeline,
     )
 }
 

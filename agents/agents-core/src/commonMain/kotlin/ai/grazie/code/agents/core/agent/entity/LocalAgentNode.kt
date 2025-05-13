@@ -33,6 +33,9 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
         return null
     }
 
+    /**
+     * @suppress
+     */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
     suspend fun resolveEdgeUnsafe(context: LocalAgentStageContext, nodeOutput: Any?) =
@@ -40,6 +43,9 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
 
     abstract suspend fun execute(context: LocalAgentStageContext, input: Input): Output
 
+    /**
+     * @suppress
+     */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
     suspend fun executeUnsafe(context: LocalAgentStageContext, input: Any?): Any? {

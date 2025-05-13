@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.agent.AgentMaxNumberOfIterationsReachedException
@@ -114,6 +112,7 @@ open class LocalAgentSubgraph<Input, Output>(
     )
 
     private suspend fun doExecuteWithCustomTools(context: LocalAgentStageContext, input: Input): Output {
+        @OptIn(InternalAgentsApi::class)
         val innerContext = when (toolSelectionStrategy) {
             ToolSelectionStrategy.ALL -> context
             ToolSelectionStrategy.NONE -> context.copyWithTools(emptyList())
