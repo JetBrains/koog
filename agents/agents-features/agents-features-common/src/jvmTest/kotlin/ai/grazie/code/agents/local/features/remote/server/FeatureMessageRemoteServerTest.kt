@@ -107,7 +107,7 @@ class FeatureMessageRemoteServerTest {
     fun `test server sends a valid message to a client`() = runBlocking {
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val testServerMessage = FeatureStringMessage("test server message")
 
@@ -179,7 +179,7 @@ class FeatureMessageRemoteServerTest {
         }
 
         val serverConfig = DefaultServerConnectionConfig(port = port).apply { appendSerializersModule(customSerializersModule) }
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = HttpProtocolVersion.HTTP_2_0.name)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val testServerMessage = TestFeatureEventMessage("test server message")
 
