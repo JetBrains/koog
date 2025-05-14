@@ -16,6 +16,7 @@ import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.tools.ToolStage
+import ai.grazie.code.agents.core.utils.Closeable
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.SuitableForIO
@@ -63,7 +64,7 @@ public open class AIAgent(
     public val agentConfig: AIAgentConfig,
     public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
     private val installFeatures: suspend FeatureContext.() -> Unit = {}
-) : AIAgentBase, AIAgentEnvironment {
+) : AIAgentBase, AIAgentEnvironment, Closeable {
 
     private companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.core.agent.${AIAgent::class.simpleName}")
@@ -128,8 +129,6 @@ public open class AIAgent(
             config = agentConfig,
             pipeline = pipeline
         )
-
-        pipeline.closeFeaturesStreamProviders()
 
         runningMutex.withLock {
             isRunning = false
@@ -199,6 +198,10 @@ public open class AIAgent(
         )
 
         terminate(message)
+    }
+
+    override suspend fun close() {
+        pipeline.closeFeaturesStreamProviders()
     }
 
     //region Private Methods

@@ -109,11 +109,7 @@ class FeatureMessageRemoteWriterTest {
 
                 logger.info { "Server is started on port: ${writer.server.connectionConfig.port}" }
                 writer.initialize()
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
+                isServerStarted.complete(true)
 
                 isClientFinished.await()
                 logger.info { "Server is finished successfully" }
@@ -163,11 +159,7 @@ class FeatureMessageRemoteWriterTest {
             TestFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 logger.info { "Server is started on port: ${writer.server.connectionConfig.port}" }
                 writer.initialize()
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
+                isServerStarted.complete(true)
 
                 writer.processMessage(testServerMessage)
 
@@ -229,11 +221,7 @@ class FeatureMessageRemoteWriterTest {
             TestFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 logger.info { "Server is started on port: ${writer.server.connectionConfig.port}" }
                 writer.initialize()
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
+                isServerStarted.complete(true)
 
                 writer.processMessage(message = testServerMessage)
 
