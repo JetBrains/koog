@@ -9,7 +9,7 @@
 <!-- TODO: maven central link -->
 
 
-Kotlin AI Agents is a Kotlin-based framework for creating and running AI agents locally without requiring external services. 
+Kotlin AI Agents is a Kotlin-based framework for creating and running AI agents without requiring external services. 
 It provides a pure Kotlin implementation for building intelligent agents that can interact with tools, 
 handle complex workflows, and communicate with users.
 

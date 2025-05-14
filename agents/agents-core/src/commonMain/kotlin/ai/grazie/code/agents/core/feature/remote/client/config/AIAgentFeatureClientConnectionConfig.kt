@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.feature.remote.client.config
 
 import ai.grazie.code.agents.core.feature.agentFeatureMessageSerializersModule
-import ai.grazie.code.agents.local.features.common.remote.client.config.ClientConnectionConfig
+import ai.grazie.code.agents.features.common.remote.client.config.ClientConnectionConfig
 import io.ktor.http.URLProtocol
 
 class AIAgentFeatureClientConnectionConfig(

@@ -6,7 +6,7 @@ import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
 import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.AIAgentFeatureBase
-import ai.grazie.code.agents.local.features.common.config.FeatureConfig
+import ai.grazie.code.agents.features.common.config.FeatureConfig
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.config.MemoryScopesProfile
 import ai.grazie.code.agents.local.memory.model.*

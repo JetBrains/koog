@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.feature.model.*
-import ai.grazie.code.agents.local.features.common.message.FeatureEvent
-import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.features.common.message.FeatureEvent
+import ai.grazie.code.agents.features.common.message.FeatureMessage
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 

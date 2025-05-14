@@ -8,8 +8,8 @@ import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.ToneTool
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.testing.feature.withTesting
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer

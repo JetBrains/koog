@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer

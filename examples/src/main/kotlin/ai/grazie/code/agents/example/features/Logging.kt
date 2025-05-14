@@ -7,7 +7,7 @@ import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.AIAgentFeatureBase
 import ai.grazie.code.agents.core.feature.handler.BeforeNodeHandler
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.features.common.config.FeatureConfig
+import ai.grazie.code.agents.features.common.config.FeatureConfig
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch

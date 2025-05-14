@@ -5,8 +5,8 @@ import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.ExitTool
 import ai.grazie.code.agents.core.tools.tools.SayToUser
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import kotlinx.coroutines.runBlocking

@@ -12,7 +12,7 @@ import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
 import ai.grazie.code.agents.core.dsl.extension.onToolCall
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.ToolStage
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandler
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 import ai.jetbrains.code.prompt.llm.OllamaModels

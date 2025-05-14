@@ -14,7 +14,7 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandler
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.annotations.ExperimentalAPI

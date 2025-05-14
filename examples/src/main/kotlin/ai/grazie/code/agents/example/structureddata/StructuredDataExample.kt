@@ -8,7 +8,7 @@ import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
+import ai.grazie.code.agents.features.eventHandler.feature.handleEvents
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.jetbrains.code.prompt.dsl.prompt

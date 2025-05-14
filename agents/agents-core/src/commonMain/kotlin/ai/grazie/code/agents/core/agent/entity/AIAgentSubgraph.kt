@@ -22,7 +22,7 @@ open class AIAgentSubgraph<Input, Output>(
 ) : AIAgentNodeBase<Input, Output>() {
     companion object {
         private val logger =
-            LoggerFactory.create("ai.grazie.code.agents.local.agent.stage.${AIAgentStage::class.simpleName}")
+            LoggerFactory.create("ai.grazie.code.agents.agent.stage.${AIAgentStage::class.simpleName}")
     }
 
     override suspend fun execute(context: AIAgentStageContextBase, input: Input): Output {

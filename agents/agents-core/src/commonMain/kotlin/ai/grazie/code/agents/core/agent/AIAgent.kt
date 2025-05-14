@@ -16,7 +16,7 @@ import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.tools.ToolStage
-import ai.grazie.code.agents.local.features.common.config.FeatureConfig
+import ai.grazie.code.agents.features.common.config.FeatureConfig
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID

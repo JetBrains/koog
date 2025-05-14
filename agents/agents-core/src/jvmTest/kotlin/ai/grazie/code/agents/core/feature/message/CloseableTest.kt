@@ -1,7 +1,6 @@
 package ai.grazie.code.agents.core.feature.message
 
-import ai.grazie.code.agents.local.features.common.message.Closeable
-import ai.grazie.code.agents.local.features.common.message.use
+import ai.grazie.code.agents.features.common.message.Closeable
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals

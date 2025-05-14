@@ -2,8 +2,8 @@ package ai.grazie.code.agents.core.feature.model
 
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.local.features.common.message.FeatureEvent
-import ai.grazie.code.agents.local.features.common.message.FeatureMessage
+import ai.grazie.code.agents.features.common.message.FeatureEvent
+import ai.grazie.code.agents.features.common.message.FeatureMessage
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 

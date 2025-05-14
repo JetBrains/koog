@@ -10,7 +10,7 @@ import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
-import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
+import ai.grazie.code.agents.features.eventHandler.feature.handleEvents
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor

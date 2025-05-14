@@ -8,9 +8,9 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
-import ai.grazie.code.agents.local.features.tracing.feature.Tracing
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.grazie.code.agents.features.tracing.feature.Tracing
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.LLMClient

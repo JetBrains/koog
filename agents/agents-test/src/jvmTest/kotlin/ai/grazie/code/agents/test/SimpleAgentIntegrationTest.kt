@@ -4,8 +4,8 @@ import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
