@@ -16,29 +16,29 @@ sealed class DefinedFeatureEvent() : FeatureEvent {
 //region Agent
 
 @Serializable
-data class AgentCreateEvent(
+data class AIAgentCreateEvent(
     val strategyName: String,
-    override val eventId: String = AgentCreateEvent::class.simpleName!!,
+    override val eventId: String = AIAgentCreateEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 @Serializable
-data class AgentStartedEvent(
+data class AIAgentStartedEvent(
     val strategyName: String,
-    override val eventId: String = AgentStartedEvent::class.simpleName!!,
+    override val eventId: String = AIAgentStartedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 @Serializable
-data class AgentFinishedEvent(
+data class AIAgentFinishedEvent(
     val strategyName: String,
     val result: String?,
-    override val eventId: String = AgentFinishedEvent::class.simpleName!!,
+    override val eventId: String = AIAgentFinishedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 @Serializable
-data class AgentRunErrorEvent(
+data class AIAgentRunErrorEvent(
     val strategyName: String,
-    val error: AgentError,
-    override val eventId: String = AgentRunErrorEvent::class.simpleName!!,
+    val error: AIAgentError,
+    override val eventId: String = AIAgentRunErrorEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 //endregion Agent
@@ -46,16 +46,16 @@ data class AgentRunErrorEvent(
 //region Strategy
 
 @Serializable
-data class StrategyStartEvent(
+data class AIAgentStrategyStartEvent(
     val strategyName: String,
-    override val eventId: String = StrategyStartEvent::class.simpleName!!
+    override val eventId: String = AIAgentStrategyStartEvent::class.simpleName!!
 ) : DefinedFeatureEvent()
 
 @Serializable
-data class StrategyFinishedEvent(
+data class AIAgentStrategyFinishedEvent(
     val strategyName: String,
     val result: String,
-    override val eventId: String = StrategyFinishedEvent::class.simpleName!!,
+    override val eventId: String = AIAgentStrategyFinishedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 //endregion Strategy
@@ -63,20 +63,20 @@ data class StrategyFinishedEvent(
 //region Node
 
 @Serializable
-data class NodeExecutionStartEvent(
+data class AIAgentNodeExecutionStartEvent(
     val nodeName: String,
     val stageName: String,
     val input: String,
-    override val eventId: String = NodeExecutionStartEvent::class.simpleName!!,
+    override val eventId: String = AIAgentNodeExecutionStartEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 @Serializable
-data class NodeExecutionEndEvent(
+data class AIAgentNodeExecutionEndEvent(
     val nodeName: String,
     val stageName: String,
     val input: String,
     val output: String,
-    override val eventId: String = NodeExecutionEndEvent::class.simpleName!!,
+    override val eventId: String = AIAgentNodeExecutionEndEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 //endregion Node
@@ -135,7 +135,7 @@ data class ToolCallFailureEvent(
     val stageName: String,
     val toolName: String,
     val toolArgs: Tool.Args,
-    val error: AgentError,
+    val error: AIAgentError,
     override val eventId: String = ToolCallFailureEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 

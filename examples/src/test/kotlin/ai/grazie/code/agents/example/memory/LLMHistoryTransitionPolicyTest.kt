@@ -1,14 +1,14 @@
 package ai.grazie.code.agents.example.memory
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy.*
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentStrategyBuilder
+import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
+import ai.grazie.code.agents.core.dsl.builder.AIAgentStrategyBuilder
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
-import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolRegistry
@@ -103,7 +103,7 @@ class LLMHistoryTransitionPolicyTest {
     /**
      * Test environment that captures agent output.
      */
-    class TestAgentEnvironment : AgentEnvironment {
+    class TestAgentEnvironment : AIAgentEnvironment {
         val output = CompletableDeferred<String>()
 
         override suspend fun sendTermination(result: String?) {
@@ -129,7 +129,7 @@ class LLMHistoryTransitionPolicyTest {
     private lateinit var mockLLMExecutor: MockLLMExecutor
     private lateinit var testEnvironment: TestAgentEnvironment
     private lateinit var emptyToolRegistry: ToolRegistry
-    private lateinit var dummyAgentConfig: LocalAgentConfig
+    private lateinit var dummyAgentConfig: AIAgentConfig
     private lateinit var testScope: TestScope
     private lateinit var result: CompletableDeferred<String?>
 
@@ -140,14 +140,14 @@ class LLMHistoryTransitionPolicyTest {
         testScope = TestScope()
         emptyToolRegistry = ToolRegistry {}
         result = CompletableDeferred()
-        dummyAgentConfig = LocalAgentConfig(
+        dummyAgentConfig = AIAgentConfig(
             prompt = prompt("test-agent") {},
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 30
         )
     }
 
-    private fun createRunnableAgent(strategy: LocalAgentStrategy): AIAgentBase = AIAgentBase(
+    private fun createRunnableAgent(strategy: AIAgentStrategy): AIAgent = AIAgent(
         promptExecutor = mockLLMExecutor,
         strategy = strategy,
         cs = testScope,
@@ -165,7 +165,7 @@ class LLMHistoryTransitionPolicyTest {
      * @param name The name of the stage
      * @return A simple LocalAgentStage
      */
-    private fun LocalAgentStrategyBuilder.createTestStage(
+    private fun AIAgentStrategyBuilder.createTestStage(
         name: String
     ) {
         stage(name) {

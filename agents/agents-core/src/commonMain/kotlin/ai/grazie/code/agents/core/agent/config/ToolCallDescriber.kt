@@ -1,7 +1,5 @@
 package ai.grazie.code.agents.core.agent.config
 
-import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.message.Message.Assistant
 import ai.jetbrains.code.prompt.message.Message.User

@@ -13,7 +13,7 @@ import kotlinx.serialization.json.Json
 
 
 /**
- * File-based implementation of [AgentMemoryProvider] that provides persistent storage of agent memory
+ * File-based implementation of [AIAgentMemoryProvider] that provides persistent storage of agent memory
  * using a hierarchical file system structure. This implementation is designed for durability,
  * thread safety, and human readability of stored data.
  *
@@ -84,7 +84,7 @@ data class LocalFileMemoryProvider<Path>(
     private val storage: Storage<Path>,
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
-) : AgentMemoryProvider {
+) : AIAgentMemoryProvider {
     /**
      * Mutex for ensuring thread-safe access to fact storage.
      * This lock prevents race conditions during concurrent read/write operations by:

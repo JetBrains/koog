@@ -65,22 +65,22 @@ class TraceFeatureMessageLogWriter(
         val FeatureStringMessage.featureStringMessage
             get() = "Feature string message (message: ${this.message})"
 
-        val AgentCreateEvent.agentCreateEventFormat
+        val AIAgentCreateEvent.agentCreateEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName})"
 
-        val AgentStartedEvent.agentStartedEventFormat
+        val AIAgentStartedEvent.agentStartedEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName})"
 
-        val AgentFinishedEvent.agentFinishedEventFormat
+        val AIAgentFinishedEvent.agentFinishedEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
 
-        val AgentRunErrorEvent.agentRunErrorEventFormat
+        val AIAgentRunErrorEvent.agentRunErrorEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName}, error: ${this.error.message})"
 
-        val StrategyStartEvent.strategyStartEventFormat
+        val AIAgentStrategyStartEvent.strategyStartEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName})"
 
-        val StrategyFinishedEvent.strategyFinishedEventFormat
+        val AIAgentStrategyFinishedEvent.strategyFinishedEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
 
         val LLMCallStartEvent.llmCallStartEventFormat
@@ -107,10 +107,10 @@ class TraceFeatureMessageLogWriter(
         val ToolCallResultEvent.toolCallResultEventFormat
             get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs}, result: ${this.result})"
 
-        val NodeExecutionStartEvent.nodeExecutionStartEventFormat
+        val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
             get() = "${this.eventId} (stage: ${this.stageName}, node: ${this.nodeName}, input: ${this.input})"
 
-        val NodeExecutionEndEvent.nodeExecutionEndEventFormat
+        val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
             get() = "${this.eventId} (stage: ${this.stageName}, node: ${this.nodeName}, input: ${this.input}, output: ${this.output})"
     }
 
@@ -120,12 +120,12 @@ class TraceFeatureMessageLogWriter(
         }
 
         return when (this) {
-            is AgentCreateEvent           -> { this.agentCreateEventFormat }
-            is AgentStartedEvent          -> { this.agentStartedEventFormat }
-            is AgentFinishedEvent         -> { this.agentFinishedEventFormat }
-            is AgentRunErrorEvent         -> { this.agentRunErrorEventFormat}
-            is StrategyStartEvent         -> { this.strategyStartEventFormat }
-            is StrategyFinishedEvent      -> { this.strategyFinishedEventFormat }
+            is AIAgentCreateEvent           -> { this.agentCreateEventFormat }
+            is AIAgentStartedEvent          -> { this.agentStartedEventFormat }
+            is AIAgentFinishedEvent         -> { this.agentFinishedEventFormat }
+            is AIAgentRunErrorEvent         -> { this.agentRunErrorEventFormat}
+            is AIAgentStrategyStartEvent         -> { this.strategyStartEventFormat }
+            is AIAgentStrategyFinishedEvent      -> { this.strategyFinishedEventFormat }
             is LLMCallStartEvent          -> { this.llmCallStartEventFormat}
             is LLMCallEndEvent            -> { this.llmCallEndEventFormat}
             is LLMCallWithToolsStartEvent -> { this.llmCallWithToolsStartEventFormat }
@@ -134,8 +134,8 @@ class TraceFeatureMessageLogWriter(
             is ToolValidationErrorEvent   -> { this.toolValidationErrorEventFormat }
             is ToolCallFailureEvent       -> { this.toolCallFailureEventFormat }
             is ToolCallResultEvent        -> { this.toolCallResultEventFormat }
-            is NodeExecutionStartEvent    -> { this.nodeExecutionStartEventFormat }
-            is NodeExecutionEndEvent      -> { this.nodeExecutionEndEventFormat }
+            is AIAgentNodeExecutionStartEvent    -> { this.nodeExecutionStartEventFormat }
+            is AIAgentNodeExecutionEndEvent      -> { this.nodeExecutionEndEventFormat }
             is FeatureStringMessage       -> { this.featureStringMessage }
             is FeatureEvent               -> { this.featureEvent }
             else                          -> { this.featureMessage }

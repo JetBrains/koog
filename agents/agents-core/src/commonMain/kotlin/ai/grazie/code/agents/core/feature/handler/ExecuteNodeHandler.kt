@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.feature.handler
 
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 
 /**
  * Container for node execution handlers.
@@ -28,8 +28,8 @@ fun interface BeforeNodeHandler {
      * @param input The input data for the node
      */
     suspend fun handle(
-        node: LocalAgentNode<*, *>,
-        context: LocalAgentStageContext,
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentStageContextBase,
         input: Any?
     )
 }
@@ -47,8 +47,8 @@ fun interface AfterNodeHandler {
      * @param output The output data produced by the node
      */
     suspend fun handle(
-        node: LocalAgentNode<*, *>,
-        context: LocalAgentStageContext,
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentStageContextBase,
         input: Any?,
         output: Any?
     )

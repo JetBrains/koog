@@ -1,8 +1,7 @@
 package ai.grazie.code.agents.core.agent
 
-import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolArgs
-import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolResult
-import ai.grazie.code.agents.core.api.AIAgent
+import ai.grazie.code.agents.core.agent.AIAgentTool.AIAgentToolArgs
+import ai.grazie.code.agents.core.agent.AIAgentTool.AIAgentToolResult
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -25,12 +24,12 @@ class AIAgentTool(
     agentName: String,
     agentDescription: String,
     requestDescription: String = "Input for the task"
-) : Tool<AgentToolArgs, AgentToolResult>() {
+) : Tool<AIAgentToolArgs, AIAgentToolResult>() {
     @Serializable
-    data class AgentToolArgs(val request: String) : Args
+    data class AIAgentToolArgs(val request: String) : Args
 
     @Serializable
-    data class AgentToolResult(
+    data class AIAgentToolResult(
         val successful: Boolean,
         val errorMessage: String? = null,
         val result: String? = null
@@ -38,7 +37,7 @@ class AIAgentTool(
         override fun toStringDefault(): String = Json.encodeToString(serializer(), this)
     }
 
-    override val argsSerializer: KSerializer<AgentToolArgs> = AgentToolArgs.serializer()
+    override val argsSerializer: KSerializer<AIAgentToolArgs> = AIAgentToolArgs.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = agentName,
@@ -52,14 +51,14 @@ class AIAgentTool(
         )
     )
 
-    override suspend fun execute(args: AgentToolArgs): AgentToolResult {
+    override suspend fun execute(args: AIAgentToolArgs): AIAgentToolResult {
         try {
-            return AgentToolResult(
+            return AIAgentToolResult(
                 successful = true,
                 result = agent.runAndGetResult(args.request)
             )
         } catch (e: Throwable) {
-            return AgentToolResult(
+            return AIAgentToolResult(
                 successful = false,
                 errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n" +
                         e.stackTraceToString().take(100)

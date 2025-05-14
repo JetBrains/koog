@@ -1,13 +1,13 @@
 package ai.grazie.code.agents.local.memory
 
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.config.MemoryScopesProfile
-import ai.grazie.code.agents.local.memory.feature.AgentMemory
+import ai.grazie.code.agents.local.memory.feature.AIAgentMemory
 import ai.grazie.code.agents.local.memory.model.*
-import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
+import ai.grazie.code.agents.local.memory.providers.AIAgentMemoryProvider
 import ai.grazie.code.agents.local.memory.providers.NoMemory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
@@ -95,7 +95,7 @@ class LocalAIAgentMemoryTest {
 
     @Test
     fun testSaveFactsFromHistory() = runTest {
-        val memoryProvider = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AIAgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val responseSlot = slot<Message.Response>()
 
@@ -110,16 +110,16 @@ class LocalAIAgentMemoryTest {
             memoryProvider.save(any(), any(), any())
         } returns Unit
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AIAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = AgentMemory(
+        val memory = AIAgentMemory(
             agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile()
@@ -147,7 +147,7 @@ class LocalAIAgentMemoryTest {
 
     @Test
     fun testLoadFactsWithScopeMatching() = runTest {
-        val memoryProvider = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AIAgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val concept = Concept("test", "test description", FactType.SINGLE)
 
@@ -200,16 +200,16 @@ class LocalAIAgentMemoryTest {
             promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AIAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = AgentMemory(
+        val memory = AIAgentMemory(
             agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile(
@@ -240,7 +240,7 @@ class LocalAIAgentMemoryTest {
 
     @Test
     fun testLoadFactsWithOverriding() = runTest {
-        val memoryProvider = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AIAgentMemoryProvider>()
         val concept = Concept("test", "test description", FactType.SINGLE)
         val machineFact = SingleFact(concept = concept, value = "machine fact", timestamp = 1234567890L)
 
@@ -256,14 +256,14 @@ class LocalAIAgentMemoryTest {
         val promptUpdateSlot = slot<PromptBuilder.() -> Unit>()
 
         // Mock LLM context to capture prompt updates
-        mockkConstructor(LocalAgentLLMWriteSession::class)
+        mockkConstructor(AIAgentLLMWriteSession::class)
 
-        val llmContext = mockk<LocalAgentLLMContext>() {
+        val llmContext = mockk<AIAgentLLMContext>() {
             coEvery {
-                writeSession<Any?>(any<suspend LocalAgentLLMWriteSession.() -> Any?>())
+                writeSession<Any?>(any<suspend AIAgentLLMWriteSession.() -> Any?>())
             } coAnswers {
-                val block = firstArg<suspend LocalAgentLLMWriteSession.() -> Any?>()
-                val writeSession = mockk<LocalAgentLLMWriteSession> {
+                val block = firstArg<suspend AIAgentLLMWriteSession.() -> Any?>()
+                val writeSession = mockk<AIAgentLLMWriteSession> {
                     every { updatePrompt(capture(promptUpdateSlot)) } answers {
                         println("[DEBUG_LOG] Updating prompt with message containing facts")
                     }
@@ -272,7 +272,7 @@ class LocalAIAgentMemoryTest {
             }
         }
 
-        val memory = AgentMemory(
+        val memory = AIAgentMemory(
             agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile(MemoryScopeType.AGENT to "test-agent")
@@ -301,7 +301,7 @@ class LocalAIAgentMemoryTest {
 
     @Test
     fun testSequentialTimestamps() = runTest {
-        val memoryProvider = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AIAgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val savedFacts = mutableListOf<SingleFact>()
 
@@ -322,16 +322,16 @@ class LocalAIAgentMemoryTest {
             memoryProvider.save(capture(savedFacts), any(), any())
         } returns Unit
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AIAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = AgentMemory(
+        val memory = AIAgentMemory(
             agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile()
@@ -377,7 +377,7 @@ class LocalAIAgentMemoryTest {
     }
 
     fun testLoadFactsToAgent() = runTest {
-        val memoryProvider = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AIAgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val concept = Concept("test", "test description", FactType.SINGLE)
 
@@ -392,16 +392,16 @@ class LocalAIAgentMemoryTest {
             promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
-        val llmContext = LocalAgentLLMContext(
+        val llmContext = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
-            config = LocalAgentConfig(Prompt.Empty, testModel, 100),
+            config = AIAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = AgentMemory(
+        val memory = AIAgentMemory(
             agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile(

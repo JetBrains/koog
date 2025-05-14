@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.local.features.eventHandler.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolResult
@@ -45,8 +45,8 @@ class EventHandlerConfig : FeatureConfig() {
      * @param strategy The strategy that created the agent
      * @param agent The created agent instance
      */
-    var onAgentCreated: suspend (strategy: LocalAgentStrategy, agent: AIAgentBase) -> Unit =
-        { strategy: LocalAgentStrategy, agent: AIAgentBase -> }
+    var onAgentCreated: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit =
+        { strategy: AIAgentStrategy, agent: AIAgent -> }
 
     /**
      * Handler called when an agent starts execution.
@@ -83,8 +83,8 @@ class EventHandlerConfig : FeatureConfig() {
      *
      * @param strategy The strategy that is starting execution
      */
-    var onStrategyStarted: suspend (strategy: LocalAgentStrategy) -> Unit =
-        { strategy: LocalAgentStrategy -> }
+    var onStrategyStarted: suspend (strategy: AIAgentStrategy) -> Unit =
+        { strategy: AIAgentStrategy -> }
 
     /**
      * Handler called when a strategy finishes execution.
@@ -106,8 +106,8 @@ class EventHandlerConfig : FeatureConfig() {
      * @param context The context of the current stage
      * @param input The input data that will be passed to the node
      */
-    var onBeforeNode: suspend (node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) -> Unit =
-        { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any? -> }
+    var onBeforeNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?) -> Unit =
+        { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? -> }
 
     /**
      * Handler called after a node in the agent's execution graph has been processed.
@@ -117,8 +117,8 @@ class EventHandlerConfig : FeatureConfig() {
      * @param input The input data that was passed to the node
      * @param output The output data produced by the node
      */
-    var onAfterNode: suspend (node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any?) -> Unit =
-        { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any? -> }
+    var onAfterNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any?) -> Unit =
+        { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? -> }
 
     //endregion Trigger Node Handlers
 

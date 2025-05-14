@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.core.environment
 
-import ai.grazie.code.agents.core.model.message.EnvironmentToolResultToAgentContent
+import ai.grazie.code.agents.core.model.message.AIEnvironmentToolResultToAgentContent
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.model.message.LocalAgentEnvironmentToolResultToAgentContent
+import ai.grazie.code.agents.core.model.message.AIAgentEnvironmentToolResultToAgentMessageContent
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.message.Message
 
@@ -19,8 +19,8 @@ data class ReceivedToolResult(
     )
 }
 
-fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
-    check(this is LocalAgentEnvironmentToolResultToAgentContent) {
+fun AIEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
+    check(this is AIAgentEnvironmentToolResultToAgentMessageContent) {
         "Local agen't must receive LocalAgentEnvironmentToolResultToAgentContent," +
                 " but ${this::class.simpleName} was received"
     }
@@ -28,7 +28,7 @@ fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
     return toResult()
 }
 
-fun LocalAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
+fun AIAgentEnvironmentToolResultToAgentMessageContent.toResult(): ReceivedToolResult = ReceivedToolResult(
     id = toolCallId,
     tool = toolName,
     content = message,

@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.calculator
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -12,7 +12,6 @@ import ai.grazie.code.agents.core.tools.tools.AskUser
 import ai.grazie.code.agents.core.tools.tools.SayToUser
 import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
@@ -86,7 +85,7 @@ fun main() = runBlocking {
     }
 
     // Create agent config with proper prompt
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AIAgentConfig(
         prompt = prompt("test") {
             system("You are a calculator.")
         },
@@ -95,7 +94,7 @@ fun main() = runBlocking {
     )
 
     // Create the runner
-    val agent = AIAgentBase(
+    val agent = AIAgent(
         promptExecutor = executor,
         strategy = strategy,
         cs = this,

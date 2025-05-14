@@ -1,15 +1,15 @@
 package ai.grazie.code.agents.local.memory
 
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.local.memory.feature.AgentMemory
+import ai.grazie.code.agents.local.memory.feature.AIAgentMemory
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.grazie.code.agents.local.memory.feature.withMemory
 import ai.grazie.code.agents.local.memory.model.*
-import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
+import ai.grazie.code.agents.local.memory.providers.AIAgentMemoryProvider
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-internal class TestMemoryProvider : AgentMemoryProvider {
+internal class TestMemoryProvider : AIAgentMemoryProvider {
     val facts = mutableMapOf<String, MutableList<Fact>>()
 
     override suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope) {
@@ -170,7 +170,7 @@ class MemoryNodesTest {
             }
         }
 
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AIAgentConfig(
             prompt = prompt("test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
@@ -180,7 +180,7 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = strategy,
             cs = this,
@@ -191,7 +191,7 @@ class MemoryNodesTest {
                 }
             }
         ) {
-            install(AgentMemory) {
+            install(AIAgentMemory) {
                 memoryProvider = TestMemoryProvider()
 
                 featureName = "test-feature"
@@ -227,7 +227,7 @@ class MemoryNodesTest {
 
         val memory = TestMemoryProvider()
 
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AIAgentConfig(
             prompt = prompt("test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
@@ -239,7 +239,7 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = strategy,
             cs = this,
@@ -250,7 +250,7 @@ class MemoryNodesTest {
                 }
             }
         ) {
-            install(AgentMemory) {
+            install(AIAgentMemory) {
                 memoryProvider = memory
             }
         }

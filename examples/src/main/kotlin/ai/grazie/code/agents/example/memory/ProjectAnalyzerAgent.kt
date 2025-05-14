@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.memory
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -9,13 +9,13 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.memory.tools.*
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
-import ai.grazie.code.agents.local.memory.feature.AgentMemory
+import ai.grazie.code.agents.local.memory.feature.AIAgentMemory
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeLoadFromMemory
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeSaveToMemory
 import ai.grazie.code.agents.local.memory.model.Concept
 import ai.grazie.code.agents.local.memory.model.FactType
 import ai.grazie.code.agents.local.memory.model.MemorySubject
-import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
+import ai.grazie.code.agents.local.memory.providers.AIAgentMemoryProvider
 import ai.grazie.code.agents.local.memory.providers.LocalFileMemoryProvider
 import ai.grazie.code.agents.local.memory.providers.LocalMemoryConfig
 import ai.grazie.code.agents.local.memory.storage.Aes256GCMEncryptor
@@ -68,14 +68,14 @@ fun createProjectAnalyzerAgent(
     bashTool: BashTool,
     fileSearchTool: FileSearchTool,
     codeAnalysisTool: CodeAnalysisTool,
-    memoryProvider: AgentMemoryProvider,
+    memoryProvider: AIAgentMemoryProvider,
     cs: CoroutineScope,
     promptExecutor: PromptExecutor,
     maxAgentIterations: Int = 50,
     featureName: String? = null,
     productName: String? = null,
     organizationName: String? = null,
-): AIAgentBase {
+): AIAgent {
     // Memory concepts
     val environmentInfoConcept = Concept(
         keyword = "environment-info",
@@ -130,7 +130,7 @@ fun createProjectAnalyzerAgent(
     )
 
     // Agent configuration
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AIAgentConfig(
         prompt = prompt("project-analyzer") {},
         model = AnthropicModels.Sonnet_3_7,
         maxAgentIterations = maxAgentIterations
@@ -228,7 +228,7 @@ fun createProjectAnalyzerAgent(
     }
 
     // Create and configure the agent runner
-    return AIAgentBase(
+    return AIAgent(
         promptExecutor = promptExecutor,
         strategy = strategy,
         cs = cs,
@@ -241,7 +241,7 @@ fun createProjectAnalyzerAgent(
             }
         }
     ) {
-        install(AgentMemory) {
+        install(AIAgentMemory) {
             this.memoryProvider = memoryProvider
 
             if (featureName != null) this.featureName = featureName

@@ -8,7 +8,7 @@ import ai.jetbrains.code.prompt.message.Message
 
 data class SafeTool<TArgs : Tool.Args, TResult : ToolResult>(
     private val tool: Tool<TArgs, TResult>,
-    private val environment: AgentEnvironment
+    private val environment: AIAgentEnvironment
 ) {
     sealed interface Result<TResult : ToolResult> {
         val content: String

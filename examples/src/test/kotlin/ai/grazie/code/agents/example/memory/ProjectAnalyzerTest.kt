@@ -5,7 +5,7 @@ import ai.grazie.code.agents.example.memory.tools.BashTool
 import ai.grazie.code.agents.example.memory.tools.CodeAnalysisTool
 import ai.grazie.code.agents.example.memory.tools.FileSearchTool
 import ai.grazie.code.agents.local.memory.model.*
-import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
+import ai.grazie.code.agents.local.memory.providers.AIAgentMemoryProvider
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
@@ -77,7 +77,7 @@ class ProjectAnalyzerTest {
     /**
      * Test memory provider that stores facts in memory for testing.
      */
-    class TestMemoryProvider : AgentMemoryProvider {
+    class TestMemoryProvider : AIAgentMemoryProvider {
         val facts = mutableMapOf<String, MutableList<Fact>>()
 
         override suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope) {

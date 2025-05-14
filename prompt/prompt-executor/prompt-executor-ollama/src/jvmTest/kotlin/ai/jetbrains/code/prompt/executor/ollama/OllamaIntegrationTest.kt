@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.executor.ollama
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -101,16 +101,16 @@ class OllamaIntegrationTest {
 
     private fun createAgent(
         executor: OllamaPromptExecutor,
-        strategy: ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy,
+        strategy: ai.grazie.code.agents.core.agent.entity.AIAgentStrategy,
         toolRegistry: ToolRegistry
-    ): AIAgentBase {
+    ): AIAgent {
         val promptsAndResponses = mutableListOf<String>()
 
-        return AIAgentBase(
+        return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test-ollama") {}, model, 15),
+            agentConfig = AIAgentConfig(prompt("test-ollama") {}, model, 15),
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
