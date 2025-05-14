@@ -1,3 +1,4 @@
+// TODO: don't forget to rename it
 rootProject.name = "koan-agents"
 
 pluginManagement {

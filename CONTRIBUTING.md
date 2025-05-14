@@ -6,13 +6,13 @@ One can contribute to the project by reporting issues or submitting changes via 
 
 ## Reporting issues
 
-Please use [GitHub issues](https://github.com/JetBrains/koan-agents/issues) for filing feature requests and bug reports.
+Please use [GitHub issues](https://github.com/JetBrains/koog-agents/issues) for filing feature requests and bug reports.
 
 Questions about usage and general inquiries are better suited for StackOverflow <!-- TODO: are we going to track it? --> or the <!-- TODO: channel name --> channel in KotlinLang Slack.
 
 ## Submitting changes
 
-Submit pull requests [here](https://github.com/JetBrains/koan-agents/pulls).
+Submit pull requests [here](https://github.com/JetBrains/koog-agents/pulls).
 However, please keep in mind that maintainers will have to support the resulting code of the project,
 so do familiarize yourself with the following guidelines.
 
