@@ -9,20 +9,20 @@ import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcess
  * handling outbound feature events or messages (e.g., node started, strategy started). Subclasses may extend this
  * configuration class to define additional settings specific to a feature.
  */
-abstract class FeatureConfig {
+public abstract class FeatureConfig {
 
     private val _messageProcessor = mutableListOf<FeatureMessageProcessor>()
 
     /**
      * Provides a read-only list of `FeatureMessageProcessor` instances registered with the feature configuration.
      */
-    val messageProcessor: List<FeatureMessageProcessor>
+    public val messageProcessor: List<FeatureMessageProcessor>
         get() = _messageProcessor.toList()
 
     /**
      * Adds a message processor to the configuration.
      */
-    fun addMessageProcessor(processor: FeatureMessageProcessor) {
+    public fun addMessageProcessor(processor: FeatureMessageProcessor) {
         _messageProcessor.add(processor)
     }
 }

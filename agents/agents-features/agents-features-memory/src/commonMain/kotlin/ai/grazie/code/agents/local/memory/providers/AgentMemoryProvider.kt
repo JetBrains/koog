@@ -46,7 +46,7 @@ import kotlinx.serialization.Serializable
  * )
  * ```
  */
-interface AgentMemoryProvider {
+public interface AgentMemoryProvider {
     /**
      * Persists a fact in the agent's memory system.
      * This operation ensures:
@@ -59,7 +59,7 @@ interface AgentMemoryProvider {
      * @param scope Visibility boundary (e.g., Agent, Feature)
      * @throws IOException if storage operation fails
      */
-    abstract suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope)
+    public suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope)
 
     /**
      * Retrieves facts associated with a specific concept.
@@ -73,7 +73,7 @@ interface AgentMemoryProvider {
      * @param scope Visibility boundary to consider
      * @return List of matching facts, empty if none found
      */
-    abstract suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact>
+    public  suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact>
 
     /**
      * Retrieves all facts within a specific context.
@@ -86,7 +86,7 @@ interface AgentMemoryProvider {
      * @param scope Visibility boundary to consider
      * @return All available facts in the context
      */
-    abstract suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact>
+    public  suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact>
 
     /**
      * Performs semantic search across stored facts.
@@ -105,7 +105,7 @@ interface AgentMemoryProvider {
      * @param scope Visibility boundary to consider
      * @return Facts matching the semantic query
      */
-    abstract suspend fun loadByDescription(description: String, subject: MemorySubject, scope: MemoryScope): List<Fact>
+    public  suspend fun loadByDescription(description: String, subject: MemorySubject, scope: MemoryScope): List<Fact>
 }
 
 /**
@@ -119,13 +119,13 @@ interface AgentMemoryProvider {
  * - Default scope specification
  */
 @Serializable
-sealed interface MemoryProviderConfig {
+public sealed interface MemoryProviderConfig {
     /**
      * Default visibility scope for stored facts.
      * This setting determines the initial accessibility of stored information
      * when no explicit scope is provided.
      */
-    val defaultScope: MemoryScope
+    public val defaultScope: MemoryScope
 }
 
 /**
@@ -148,7 +148,7 @@ sealed interface MemoryProviderConfig {
  */
 @Serializable
 @SerialName("local")
-data class LocalMemoryConfig(
+public data class LocalMemoryConfig(
     val storageDirectory: String,
     override val defaultScope: MemoryScope = MemoryScope.CrossProduct,
 ) : MemoryProviderConfig

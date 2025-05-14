@@ -11,4 +11,4 @@ import io.ktor.http.DEFAULT_PORT
  *
  * @param port The port number on which the server will listen to. Defaults to 8080.
  */
-class DefaultServerConnectionConfig(port: Int = DEFAULT_PORT) : ServerConnectionConfig(port = port)
+public class DefaultServerConnectionConfig(port: Int = DEFAULT_PORT) : ServerConnectionConfig(port = port)

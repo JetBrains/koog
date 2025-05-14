@@ -14,7 +14,7 @@ package ai.grazie.code.agents.local.memory.model
  * The interface is designed to be simple yet flexible enough to accommodate
  * different platform requirements and time precision needs.
  */
-interface TimeProvider {
+public interface TimeProvider {
     /**
      * Retrieves the current timestamp in milliseconds.
      * This method is used throughout the memory system to:
@@ -24,7 +24,7 @@ interface TimeProvider {
      *
      * @return Current time in milliseconds since the Unix epoch
      */
-    fun getCurrentTimestamp(): Long
+    public fun getCurrentTimestamp(): Long
 }
 
 /**
@@ -35,6 +35,6 @@ interface TimeProvider {
  * Example JVM implementation might use System.currentTimeMillis(),
  * while JS implementation might use Date.now().
  */
-expect object DefaultTimeProvider : TimeProvider {
+public expect object DefaultTimeProvider : TimeProvider {
     override fun getCurrentTimestamp(): Long
 }

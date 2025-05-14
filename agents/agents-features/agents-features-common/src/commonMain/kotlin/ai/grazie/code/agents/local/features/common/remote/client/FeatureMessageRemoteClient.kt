@@ -39,14 +39,14 @@ internal expect fun engineFactoryProvider(): HttpClientEngineFactory<HttpClientE
  * @property scope The coroutine scope used to manage background tasks.
  * @property requestBuilder An optional HTTP request customization builder applied to HTTP requests.
  */
-class FeatureMessageRemoteClient(
-    val connectionConfig: ClientConnectionConfig,
+public class FeatureMessageRemoteClient(
+    public val connectionConfig: ClientConnectionConfig,
     private val scope: CoroutineScope,
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     private val requestBuilder: HttpRequestBuilder.() -> Unit = {}
 ) : FeatureMessageClient {
 
-    companion object {
+    private companion object {
         private val logger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient")
     }
@@ -84,7 +84,7 @@ class FeatureMessageRemoteClient(
      * - During the lifecycle of the client, messages are collected and handled as they arrive.
      * - Closing the channel indicates the termination of the receiving process when the client shuts down.
      */
-    val receivedMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
+    public val receivedMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
 
     //region Connect / Stop
 

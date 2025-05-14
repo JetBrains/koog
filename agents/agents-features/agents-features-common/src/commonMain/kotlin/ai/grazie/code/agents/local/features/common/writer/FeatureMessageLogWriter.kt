@@ -11,12 +11,12 @@ import ai.grazie.utils.mpp.MPPLogger
  *
  * @param targetLogger The [MPPLogger] instance used for feature messages to be streamed into.
  */
-abstract class FeatureMessageLogWriter(
+public abstract class FeatureMessageLogWriter(
     protected val targetLogger: MPPLogger,
     protected val logLevel: LogLevel = LogLevel.INFO
 ) : FeatureMessageProcessor() {
 
-    companion object {
+    private companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.local.features.common.writer.FeatureMessageLogWriter")
     }
 
@@ -33,7 +33,7 @@ abstract class FeatureMessageLogWriter(
      * `DEBUG`: Represents detailed debugging messages used for diagnosing issues
      * or understanding the internal state and behavior of the application.
      */
-    enum class LogLevel { INFO, DEBUG }
+    public enum class LogLevel { INFO, DEBUG }
 
     init {
         if (!isTargetLogLevelEnabled(logLevel, targetLogger)) {
@@ -44,7 +44,7 @@ abstract class FeatureMessageLogWriter(
     /**
      * Converts the incoming [FeatureMessage] into a target logger message.
      */
-    abstract fun FeatureMessage.toLoggerMessage(): String
+    public abstract fun FeatureMessage.toLoggerMessage(): String
 
     override suspend fun processMessage(message: FeatureMessage) {
         val logString = "Received feature message [${message.messageType.value}]: ${message.toLoggerMessage()}"

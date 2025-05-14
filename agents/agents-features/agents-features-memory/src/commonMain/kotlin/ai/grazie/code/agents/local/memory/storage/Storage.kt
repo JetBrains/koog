@@ -26,7 +26,7 @@ import ai.grazie.code.files.model.FileSystemProvider
  * }
  * ```
  */
-interface Encryption {
+public interface Encryption {
     /**
      * Encrypts the given text using the implementation-specific algorithm.
      * Implementations should ensure:
@@ -38,7 +38,7 @@ interface Encryption {
      * @return Encrypted text in a format suitable for storage
      * @throws IllegalArgumentException if text is empty
      */
-    fun encrypt(text: String): String
+    public fun encrypt(text: String): String
 
     /**
      * Decrypts previously encrypted text back to its original form.
@@ -51,7 +51,7 @@ interface Encryption {
      * @return Original decrypted text
      * @throws IllegalArgumentException if text is not properly encrypted
      */
-    fun decrypt(text: String): String
+    public fun decrypt(text: String): String
 }
 
 /**
@@ -79,7 +79,7 @@ interface Encryption {
  *
  * @param Path Platform-specific path type (e.g., java.nio.file.Path for JVM)
  */
-interface Storage<Path> {
+public interface Storage<Path> {
     /**
      * Verifies the existence of a file or directory.
      * This operation is atomic and thread-safe.
@@ -87,7 +87,7 @@ interface Storage<Path> {
      * @param path Target path to check
      * @return true if the path exists and is accessible
      */
-    suspend fun exists(path: Path): Boolean
+    public suspend fun exists(path: Path): Boolean
 
     /**
      * Retrieves the content of a file as a string.
@@ -99,7 +99,7 @@ interface Storage<Path> {
      *         - Path is a directory
      *         - File is not readable
      */
-    suspend fun read(path: Path): String?
+    public suspend fun read(path: Path): String?
 
     /**
      * Writes content to a file, creating it if necessary.
@@ -112,7 +112,7 @@ interface Storage<Path> {
      * @param content String content to write (encoded as UTF-8)
      * @throws IOException if write operation fails
      */
-    suspend fun write(path: Path, content: String)
+    public suspend fun write(path: Path, content: String)
 
     /**
      * Creates a directory and all parent directories if needed.
@@ -121,7 +121,7 @@ interface Storage<Path> {
      * @param path Directory path to create
      * @throws IOException if directory creation fails
      */
-    suspend fun createDirectories(path: Path)
+    public suspend fun createDirectories(path: Path)
 }
 
 /**
@@ -154,7 +154,7 @@ interface Storage<Path> {
  * @param Path Platform-specific path type
  * @param fs File system provider for actual I/O operations
  */
-open class SimpleStorage<Path>(
+public open class SimpleStorage<Path>(
     protected val fs: FileSystemProvider.ReadWrite<Path>
 ) : Storage<Path> {
     /**
@@ -254,7 +254,7 @@ open class SimpleStorage<Path>(
  * @param fs File system provider for I/O operations
  * @param encryption Service for data encryption/decryption
  */
-class EncryptedStorage<Path>(
+public class EncryptedStorage<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val encryption: Encryption
 ) : Storage<Path> {

@@ -29,7 +29,7 @@ import ai.grazie.utils.mpp.MPPLogger
  * }
  * ```
  */
-class EventHandler {
+public class EventHandler {
     /**
      * Implementation of the [AIAgentFeature] interface for the [EventHandler] feature.
      * 
@@ -53,7 +53,7 @@ class EventHandler {
      *     }
      * }
      */
-    companion object Feature : AIAgentFeature<EventHandlerConfig, EventHandler> {
+    public companion object Feature : AIAgentFeature<EventHandlerConfig, EventHandler> {
 
         private val logger: MPPLogger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler")
@@ -61,7 +61,7 @@ class EventHandler {
         override val key: AIAgentStorageKey<EventHandler> =
             AIAgentStorageKey("agents-features-event-handler")
 
-        override fun createInitialConfig() = EventHandlerConfig()
+        override fun createInitialConfig(): EventHandlerConfig = EventHandlerConfig()
 
         override fun install(
             config: EventHandlerConfig,
@@ -185,7 +185,7 @@ class EventHandler {
  * }
  * ```
  */
-fun FeatureContext.handleEvents(configure: EventHandlerConfig.() -> Unit) {
+public fun FeatureContext.handleEvents(configure: EventHandlerConfig.() -> Unit) {
     install(EventHandler) {
         configure()
     }

@@ -7,4 +7,4 @@ package ai.grazie.code.agents.core.tools.annotations
  */
 @Target(AnnotationTarget.FUNCTION)
 @Suppress("unused")
-annotation class Tool(val customName: String = "")
+public annotation class Tool(val customName: String = "")

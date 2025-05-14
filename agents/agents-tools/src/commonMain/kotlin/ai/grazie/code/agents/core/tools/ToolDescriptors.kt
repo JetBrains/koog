@@ -14,7 +14,7 @@ import kotlin.enums.EnumEntries
  * @property requiredParameters A list of ToolParameterDescriptor representing the required parameters for the tool.
  * @property optionalParameters A list of ToolParameterDescriptor representing the optional parameters for the tool.
  */
-data class ToolDescriptor(
+public data class ToolDescriptor(
     val name: String,
     val description: String,
     val requiredParameters: List<ToolParameterDescriptor> = emptyList(),
@@ -34,7 +34,7 @@ data class ToolDescriptor(
  * @property description The description of the tool parameter.
  * @property type The data type of the tool parameter.
  */
-data class ToolParameterDescriptor(
+public data class ToolParameterDescriptor(
     val name: String, val description: String, val type: ToolParameterType
 )
 
@@ -46,34 +46,34 @@ data class ToolParameterDescriptor(
  * @param T The type of data that the tool parameter represents.
  * @property name The name associated with the type of tool parameter.
  */
-sealed class ToolParameterType(val name: kotlin.String) {
+public sealed class ToolParameterType(public val name: kotlin.String) {
 
     /**
      * Represents a string type parameter.
      */
-    data object String : ToolParameterType("STRING")
+    public data object String : ToolParameterType("STRING")
 
     /**
      * Represents an integer type parameter.
      */
-    data object Integer : ToolParameterType("INT")
+    public data object Integer : ToolParameterType("INT")
 
     /**
      * Represents a float type parameter.
      */
-    data object Float : ToolParameterType("FLOAT")
+    public data object Float : ToolParameterType("FLOAT")
 
     /**
      * Represents a boolean type parameter.
      */
-    data object Boolean : ToolParameterType("BOOLEAN")
+    public data object Boolean : ToolParameterType("BOOLEAN")
 
     /**
      * Represents an enum type parameter.
      *
      * @property entries The entries for the enumeration, allowing the parameter to be one of these values.
      */
-    data class Enum(
+    public data class Enum(
         val entries: Array<kotlin.String>,
     ) : ToolParameterType("ENUM")
 
@@ -82,18 +82,18 @@ sealed class ToolParameterType(val name: kotlin.String) {
      *
      * @property itemsType The type definition for the items within the array.
      */
-    data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY")
+    public data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY")
 
     /**
      * Represents an array type parameter.
      *
      * @property properties The properties of the object type.
      */
-    data class Object(val properties: kotlin.collections.List<ToolParameterDescriptor>) : ToolParameterType("OBJECT")
+    public data class Object(val properties: kotlin.collections.List<ToolParameterDescriptor>) : ToolParameterType("OBJECT")
 
-    companion object {
-        fun Enum(entries: EnumEntries<*>): Enum = Enum(entries.map { it.name }.toTypedArray())
-        fun Enum(entries: Array<kotlin.Enum<*>>): Enum = Enum(entries.map { it.name }.toTypedArray())
+    public companion object {
+        public fun Enum(entries: EnumEntries<*>): Enum = Enum(entries.map { it.name }.toTypedArray())
+        public fun Enum(entries: Array<kotlin.Enum<*>>): Enum = Enum(entries.map { it.name }.toTypedArray())
     }
 }
 

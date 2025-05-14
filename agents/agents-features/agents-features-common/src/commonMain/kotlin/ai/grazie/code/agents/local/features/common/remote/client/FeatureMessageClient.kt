@@ -14,7 +14,7 @@ import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.Closeable
  * A client can be used in an IDE to receive remote events from the running agents to present
  * collected agent state traces and show them inside this IDE.
  */
-interface FeatureMessageClient : Closeable {
+public interface FeatureMessageClient : Closeable {
 
     /**
      * Indicates whether the client is currently connected to the remote feature messaging service.
@@ -22,7 +22,7 @@ interface FeatureMessageClient : Closeable {
      * This property reflects the connection state of the client. It is `true` if the client has
      * successfully established a communication link with the remote service and `false` otherwise.
      */
-    val isConnected: Boolean
+    public val isConnected: Boolean
 
     /**
      * Establishes a connection to the remote feature messaging service.
@@ -34,7 +34,7 @@ interface FeatureMessageClient : Closeable {
      * If an attempt to connect fails (e.g., due to networking issues or authentication errors),
      * the method will throw an appropriate exception or error indicating the failure reason.
      */
-    suspend fun connect()
+    public suspend fun connect()
 
     /**
      * Sends a feature-related message to the remote feature messaging service.
@@ -48,7 +48,7 @@ interface FeatureMessageClient : Closeable {
      * @param message The `FeatureMessage` instance that encapsulates the details
      *                of the message to be sent, including its timestamp and type.
      */
-    suspend fun send(message: FeatureMessage)
+    public suspend fun send(message: FeatureMessage)
 
     /**
      * Performs a health check to verify the status of the remote feature messaging service.
@@ -64,5 +64,5 @@ interface FeatureMessageClient : Closeable {
      * It is recommended to perform a health check periodically, especially in scenarios with prolonged
      * idle connections or before critical operations, to guarantee the remote service is in a healthy state.
      */
-    suspend fun healthCheck()
+    public suspend fun healthCheck()
 }

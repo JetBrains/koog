@@ -37,5 +37,5 @@ import ai.grazie.code.agents.local.features.common.writer.FeatureMessageRemoteWr
  * @param connectionConfig Optional configuration for the remote server connection.
  *                         If null, default connection settings will be used.
  */
-class TraceFeatureMessageRemoteWriter(connectionConfig: ServerConnectionConfig? = null)
+public class TraceFeatureMessageRemoteWriter(connectionConfig: ServerConnectionConfig? = null)
     : FeatureMessageRemoteWriter(connectionConfig)

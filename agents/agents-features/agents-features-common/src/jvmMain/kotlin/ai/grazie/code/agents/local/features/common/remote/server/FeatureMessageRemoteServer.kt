@@ -4,6 +4,6 @@ import io.ktor.server.cio.*
 import io.ktor.server.engine.*
 
 @Suppress("UNCHECKED_CAST")
-actual fun engineFactoryProvider(): ApplicationEngineFactory<ApplicationEngine, ApplicationEngine.Configuration> {
+internal actual fun engineFactoryProvider(): ApplicationEngineFactory<ApplicationEngine, ApplicationEngine.Configuration> {
     return CIO as ApplicationEngineFactory<ApplicationEngine, ApplicationEngine.Configuration>
 }

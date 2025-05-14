@@ -9,14 +9,14 @@ import kotlinx.serialization.Serializable
  * This interface serves as a base contract for feature messages that encapsulate
  * information about various system events or updates, such as status changes or interaction events.
  */
-interface FeatureMessage {
+public interface FeatureMessage {
     /**
      * Represents the time, in milliseconds, when the feature message or event was created or occurred.
      *
      * The timestamp is used to track the exact time of the message's creation or event's occurrence,
      * facilitating temporal analysis, ordering, or correlation within the system.
      */
-    val timestamp: Long
+    public val timestamp: Long
     /**
      * Specifies the type of a feature message or event.
      *
@@ -24,7 +24,7 @@ interface FeatureMessage {
      * such as `Message` or `Event`. The type determines how the message should be processed
      * or interpreted by the underlying handlers or processors.
      */
-    val messageType: Type
+    public val messageType: Type
 
     /**
      * Represents the type of a feature message or event.
@@ -34,7 +34,7 @@ interface FeatureMessage {
      *
      * @property value The string representation of the type.
      */
-    enum class Type(val value: String) {
+    public enum class Type(public val value: String) {
         /**
          * Represents a message with a text content.
          *
@@ -69,14 +69,14 @@ interface FeatureMessage {
  * Implementations of this interface are intended to detail specific events in the feature
  * processing workflow.
  */
-interface FeatureEvent : FeatureMessage {
+public interface FeatureEvent : FeatureMessage {
     /**
      * Represents a unique identifier for a feature-related event.
      *
      * This identifier is used to distinguish and track individual events in the system,
      * enabling clear correlation between logged events or processed messages.
      */
-    val eventId: String
+    public val eventId: String
 }
 
 /**
@@ -92,7 +92,7 @@ interface FeatureEvent : FeatureMessage {
  * @property message The textual message content encapsulated by this feature message.
  */
 @Serializable
-data class FeatureStringMessage(val message: String) : FeatureMessage {
+public data class FeatureStringMessage(val message: String) : FeatureMessage {
     /**
      * The timestamp, represented in milliseconds since the epoch, indicating when the
      * feature message was created.
@@ -132,7 +132,7 @@ data class FeatureStringMessage(val message: String) : FeatureMessage {
  *                       This property implements the [FeatureMessage.messageType] from the parent interface.
  */
 @Serializable
-data class FeatureEventMessage(override val eventId: String) : FeatureEvent {
+public data class FeatureEventMessage(override val eventId: String) : FeatureEvent {
     /**
      * Represents the timestamp of when the feature event message was created.
      *

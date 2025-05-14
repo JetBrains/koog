@@ -35,26 +35,26 @@ import ai.jetbrains.code.prompt.message.Message
  * }
  * ```
  */
-class EventHandlerConfig : FeatureConfig() {
+public class EventHandlerConfig : FeatureConfig() {
 
     //region Trigger Agent Handlers
 
     /**
      * Handler called when an agent is created.
      */
-    var onBeforeAgentStarted: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit =
+    public var onBeforeAgentStarted: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit =
         { strategy: AIAgentStrategy, agent: AIAgent -> }
 
     /**
      * Handler called when an agent finishes execution.
      */
-    var onAgentFinished: suspend (strategyName: String, result: String?) -> Unit =
+    public var onAgentFinished: suspend (strategyName: String, result: String?) -> Unit =
         { strategyName: String, result: String? -> }
 
     /**
      * Handler called when an error occurs during agent execution.
      */
-    var onAgentRunError: suspend (strategyName: String, throwable: Throwable) -> Unit =
+    public var onAgentRunError: suspend (strategyName: String, throwable: Throwable) -> Unit =
         { strategyName: String, throwable: Throwable -> }
 
     //endregion Trigger Agent Handlers
@@ -64,13 +64,13 @@ class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called when a strategy starts execution.
      */
-    var onStrategyStarted: suspend (strategy: AIAgentStrategy) -> Unit =
+    public var onStrategyStarted: suspend (strategy: AIAgentStrategy) -> Unit =
         { strategy: AIAgentStrategy -> }
 
     /**
      * Handler called when a strategy finishes execution.
      */
-    var onStrategyFinished: suspend (strategyName: String, result: String) -> Unit =
+    public var onStrategyFinished: suspend (strategyName: String, result: String) -> Unit =
         { strategyName: String, result: String -> }
 
     //endregion Trigger Strategy Handlers
@@ -80,13 +80,13 @@ class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called before a node in the agent's execution graph is processed.
      */
-    var onBeforeNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?) -> Unit =
+    public var onBeforeNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?) -> Unit =
         { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? -> }
 
     /**
      * Handler called after a node in the agent's execution graph has been processed.
      */
-    var onAfterNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any?) -> Unit =
+    public var onAfterNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any?) -> Unit =
         { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? -> }
 
     //endregion Trigger Node Handlers
@@ -96,25 +96,25 @@ class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called before a call is made to the language model.
      */
-    var onBeforeLLMCall: (prompt: Prompt) -> Unit =
+    public var onBeforeLLMCall: (prompt: Prompt) -> Unit =
         { prompt: Prompt -> }
 
     /**
      * Handler called before a call is made to the language model with tools.
      */
-    var onBeforeLLMWithToolsCall: (prompt: Prompt, tools: List<ToolDescriptor>) -> Unit =
+    public var onBeforeLLMWithToolsCall: (prompt: Prompt, tools: List<ToolDescriptor>) -> Unit =
         { prompt: Prompt, tools: List<ToolDescriptor> -> }
 
     /**
      * Handler called after a response is received from the language model.
      */
-    var onAfterLLMCall: (response: String) -> Unit =
+    public var onAfterLLMCall: (response: String) -> Unit =
         { response: String -> }
 
     /**
      * Handler called after a response with tool calls is received from the language model.
      */
-    var onAfterLLMWithToolsCall: (response: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit =
+    public var onAfterLLMWithToolsCall: (response: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit =
         { response: List<Message.Response>, tools: List<ToolDescriptor> -> }
 
     //endregion Trigger LLM Call Handlers
@@ -124,25 +124,25 @@ class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called when a tool is about to be called.
      */
-    var onToolCall: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit =
+    public var onToolCall: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit =
         { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args -> }
 
     /**
      * Handler called when a validation error occurs during a tool call.
      */
-    var onToolValidationError: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit =
+    public var onToolValidationError: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit =
         { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String -> }
 
     /**
      * Handler called when a tool call fails with an exception.
      */
-    var onToolCallFailure: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit =
+    public var onToolCallFailure: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit =
         { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable -> }
 
     /**
      * Handler called when a tool call completes successfully.
      */
-    var onToolCallResult: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit =
+    public var onToolCallResult: suspend (stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit =
         { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? -> }
 
     //endregion Trigger Tool Call Handlers

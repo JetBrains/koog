@@ -19,8 +19,8 @@ import ai.jetbrains.code.prompt.message.Message
  *
  * @param concepts A list of `Concept` objects that define the domains of knowledge for which facts need to be retrieved.
  */
-class RetrieveFactsFromHistory(val concepts: List<Concept>) : HistoryCompressionStrategy() {
-    constructor(vararg concepts: Concept) : this(concepts.toList())
+public class RetrieveFactsFromHistory(public val concepts: List<Concept>) : HistoryCompressionStrategy() {
+    public constructor(vararg concepts: Concept) : this(concepts.toList())
 
     /**
      * Compresses historical memory and retrieves facts about predefined concepts to construct

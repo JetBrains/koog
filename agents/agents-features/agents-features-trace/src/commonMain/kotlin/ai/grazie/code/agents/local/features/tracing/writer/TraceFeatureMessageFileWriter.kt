@@ -45,13 +45,13 @@ import ai.grazie.code.files.model.FileSystemProvider
  * @param path The path where trace events will be written
  * @param format Optional custom formatter for trace events
  */
-class TraceFeatureMessageFileWriter<Path>(
+public class TraceFeatureMessageFileWriter<Path>(
     fs: FileSystemProvider.ReadWrite<Path>,
     path: Path,
     private val format: ((FeatureMessage) -> String)? = null,
 ) : FeatureMessageFileWriter<Path>(fs, path) {
 
-    companion object {
+    internal companion object {
         val FeatureMessage.featureMessage
             get() = "Feature message"
 

@@ -26,13 +26,13 @@ import kotlinx.serialization.json.jsonObject
  * @suppress
  */
 @InternalAgentToolsApi
-interface DirectToolCallsEnabler
+public interface DirectToolCallsEnabler
 
 /**
  * Represents a tool that, when executed, makes changes to the environment.
  */
 @Suppress("UNCHECKED_CAST", "unused")
-abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
+public abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
     /**
      * Serializer responsible for encoding and decoding the arguments required for the tool execution.
      * This abstract property is used to define the specific [KSerializer] corresponding to the type of arguments
@@ -41,7 +41,7 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * The implementation must provide a concrete serializer for the `TArgs` type parameter, which ensures
      * proper serialization and deserialization of the tool arguments.
      */
-    abstract val argsSerializer: KSerializer<TArgs>
+    public abstract val argsSerializer: KSerializer<TArgs>
 
     /**
      * Encodes the given result of type TResult to its string representation for the LLM.s
@@ -49,7 +49,7 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param result The result object of type TResult to be encoded into a string.
      * @return The string representation of the given result.
      */
-    open fun encodeResultToString(result: TResult): String = result.toStringDefault()
+    public open fun encodeResultToString(result: TResult): String = result.toStringDefault()
 
     /**
      * Provides a descriptor detailing the tool's metadata, including its name,
@@ -57,14 +57,14 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * and characteristics of the tool, offering an overview of its functionality
      * and how it should be used.
      */
-    abstract val descriptor: ToolDescriptor
+    public abstract val descriptor: ToolDescriptor
 
     /**
      * Represents the name property of the tool, derived from the tool's descriptor.
      * This property provides an immutable reference to the tool's unique name,
      * which is used for identification within tool stages or registries.
      */
-    val name get() = descriptor.name
+    public val name: String get() = descriptor.name
 
     /**
      * Executes the tool's logic with the provided arguments.
@@ -112,7 +112,7 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @suppress
      */
     @InternalAgentToolsApi
-    suspend fun executeUnsafe(args: Any?, enabler: DirectToolCallsEnabler): TResult = execute(args as TArgs)
+    public suspend fun executeUnsafe(args: Any?, enabler: DirectToolCallsEnabler): TResult = execute(args as TArgs)
 
     /**
      * Executes the tool using the provided arguments and enabler.
@@ -136,7 +136,7 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @suppress
      */
     @InternalAgentToolsApi
-    suspend fun execute(args: TArgs, enabler: DirectToolCallsEnabler): TResult = execute(args)
+    internal suspend fun execute(args: TArgs, enabler: DirectToolCallsEnabler): TResult = execute(args)
 
 
     /**
@@ -162,7 +162,7 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @suppress
      */
     @InternalAgentToolsApi
-    suspend fun executeAndSerialize(args: TArgs, enabler: DirectToolCallsEnabler): Pair<TResult, String> {
+    public suspend fun executeAndSerialize(args: TArgs, enabler: DirectToolCallsEnabler): Pair<TResult, String> {
         val result = execute(args, enabler)
         val stringified = encodeResultToString(result)
         return result to stringified
@@ -174,14 +174,15 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param args The arguments to be encoded.
      * @return A JsonObject representing the encoded arguments.
      */
-    fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(argsSerializer, args).jsonObject
+    public fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(argsSerializer, args).jsonObject
+
     /**
      * Encodes the provided arguments into a JSON string representation using the configured serializer.
      *
      * @param args the arguments to be encoded into a JSON string
      * @return the JSON string representation of the provided arguments
      */
-    fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(argsSerializer, args)
+    public fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(argsSerializer, args)
 
     /**
      * Decodes the provided raw JSON arguments into an instance of the specified arguments type.
@@ -189,14 +190,15 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param rawArgs the raw JSON object that contains the encoded arguments
      * @return the decoded arguments of type TArgs
      */
-    fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(argsSerializer, rawArgs)
+    public fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(argsSerializer, rawArgs)
+
     /**
      * Decodes a raw string representation of arguments into the corresponding object of type TArgs.
      *
      * @param rawArgs The raw string containing the encoded arguments.
      * @return The decoded arguments as an instance of type TArgs.
      */
-    fun decodeArgsFromString(rawArgs: String): TArgs = ToolJson.decodeFromString(argsSerializer, rawArgs)
+    public fun decodeArgsFromString(rawArgs: String): TArgs = ToolJson.decodeFromString(argsSerializer, rawArgs)
 
 
     /**
@@ -209,17 +211,16 @@ abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @param result The result object of type `Tool.Result` to be encoded.
      * @return A JSON string representation of the provided result.
      */
-    fun encodeResultToStringUnsafe(result: ToolResult): String = encodeResultToString(result as TResult)
-
+    public fun encodeResultToStringUnsafe(result: ToolResult): String = encodeResultToString(result as TResult)
 
     /**
      * Base type, representing tool arguments.
      */
-    interface Args
+    public interface Args
 
     /**
      * Args implementation that can be used for tools that expect no arguments.
      */
     @Serializable
-    data object EmptyArgs : Args
+    public data object EmptyArgs : Args
 }

@@ -13,7 +13,7 @@ import kotlinx.serialization.encoding.Encoder
  * This type system helps organize and structure the knowledge representation in the agent's memory.
  */
 @Serializable
-enum class FactType {
+public enum class FactType {
     /**
      * Used when a concept should store exactly one piece of information.
      * Example: Current project's primary programming language or build system type.
@@ -44,7 +44,7 @@ enum class FactType {
  * @property factType Determines whether this concept stores single or multiple facts
  */
 @Serializable
-data class Concept(
+public data class Concept(
     val keyword: String,
     val description: String,
     val factType: FactType
@@ -56,9 +56,9 @@ data class Concept(
  * with their originating concept and creation timestamp for temporal reasoning.
  */
 @Serializable
-sealed interface Fact {
-    val concept: Concept
-    val timestamp: Long
+public sealed interface Fact {
+    public val concept: Concept
+    public val timestamp: Long
 }
 
 /**
@@ -69,7 +69,7 @@ sealed interface Fact {
  * Example: "The project uses Gradle as its build system"
  */
 @Serializable
-data class SingleFact(
+public data class SingleFact(
     override val concept: Concept,
     override val timestamp: Long,
     val value: String
@@ -83,7 +83,7 @@ data class SingleFact(
  * Example: List of project dependencies, coding style rules, or environment variables
  */
 @Serializable
-data class MultipleFacts(
+public data class MultipleFacts(
     override val concept: Concept,
     override val timestamp: Long,
     val values: List<String>
@@ -97,11 +97,11 @@ data class MultipleFacts(
  * that information is accessed at the appropriate level of context.
  */
 @Serializable(with = MemorySubject.Serializer::class)
-abstract class MemorySubject() {
+public abstract class MemorySubject() {
     /**
      * Name of the memory subject (ex: "user", or "project")
      * */
-    abstract val name: String
+    public abstract val name: String
 
     /**
      * Description of what type of information is related to the memory subject, that will be sent to the LLM.
@@ -109,7 +109,7 @@ abstract class MemorySubject() {
      * Ex: for the "user" memory subject it could be:
      *      "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
      * */
-    abstract val promptDescription: String
+    public abstract val promptDescription: String
 
     /**
      * Indicates how important this memory subject is compared to others.
@@ -121,9 +121,9 @@ abstract class MemorySubject() {
      * For example, if a higher-priority memory subject states that the user prefers red,
      * and a lower-priority one says white, red will be chosen as the preferred color.
      */
-    abstract val priorityLevel: Int
+    public abstract val priorityLevel: Int
 
-    companion object {
+    internal companion object {
         val registeredSubjects: MutableList<MemorySubject> = mutableListOf()
     }
 
@@ -164,7 +164,7 @@ abstract class MemorySubject() {
      * or fallback information source is required.
      */
     @Serializable
-    data object Everything : MemorySubject() {
+    public data object Everything : MemorySubject() {
         override val name: String = "everything"
         override val promptDescription: String = "All important information and meaningful facts"
 
@@ -178,32 +178,32 @@ abstract class MemorySubject() {
  * Memory scope determines how information is shared and isolated between
  * different components of the system.
  */
-sealed interface MemoryScope {
+public sealed interface MemoryScope {
     /**
      * Scope for memories specific to a single agent instance
      * Used when information should be isolated to a particular agent's context
      */
     @Serializable
-    data class Agent(val name: String) : MemoryScope
+    public data class Agent(val name: String) : MemoryScope
 
     /**
      * Scope for memories specific to a particular feature
      * Used when information should be shared across agent instances but only within a feature
      */
     @Serializable
-    data class Feature(val id: String) : MemoryScope
+    public data class Feature(val id: String) : MemoryScope
 
     /**
      * Scope for memories shared within a specific product
      * Used when information should be available across features within a product
      */
     @Serializable
-    data class Product(val name: String) : MemoryScope
+    public data class Product(val name: String) : MemoryScope
 
     /**
      * Scope for memories shared across all products
      * Used for global information that should be available everywhere
      */
     @Serializable
-    object CrossProduct : MemoryScope
+    public object CrossProduct : MemoryScope
 }

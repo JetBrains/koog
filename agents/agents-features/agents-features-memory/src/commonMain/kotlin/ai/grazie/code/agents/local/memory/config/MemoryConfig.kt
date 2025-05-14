@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
  * to a specific operational scope for memory sharing and isolation.
  */
 @Serializable
-enum class MemoryScopeType {
+public enum class MemoryScopeType {
     /**
      * Represents a memory scope type associated with a product that populated some memory fact.
      */
@@ -39,16 +39,16 @@ enum class MemoryScopeType {
  * Profile containing scopes for memory operations
  */
 @Serializable
-data class MemoryScopesProfile(
+public data class MemoryScopesProfile(
     val names: MutableMap<MemoryScopeType, String> =  mutableMapOf()
 ) {
-    constructor(vararg scopeNames: Pair<MemoryScopeType, String>) : this(
+    public constructor(vararg scopeNames: Pair<MemoryScopeType, String>) : this(
         scopeNames.toMap().toMutableMap()
     )
 
-    fun nameOf(type: MemoryScopeType): String? = names[type]
+    public fun nameOf(type: MemoryScopeType): String? = names[type]
 
-    fun getScope(type: MemoryScopeType): MemoryScope? {
+    public fun getScope(type: MemoryScopeType): MemoryScope? {
         val name = nameOf(type) ?: return null
         return when (type) {
             MemoryScopeType.PRODUCT -> MemoryScope.Product(name)

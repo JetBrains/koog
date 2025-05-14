@@ -33,18 +33,18 @@ private const val nonSerializableParameterPrefix = "__##nonSerializableParameter
  * @property json A JSON serializer for serializing and deserializing data.
  */
 @OptIn(InternalAgentToolsApi::class)
-class ToolFromCallable(
+public class ToolFromCallable(
     private val callable: KCallable<*>,
     private val thisRef: Any? = null,
     override val descriptor: ToolDescriptor,
     private val json: Json = Json,
 ) : Tool<ToolFromCallable.VarArgs, ToolFromCallable.Result>() {
 
-    data class VarArgs(val args: Map<KParameter, Any?>) : Args {
-        fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) -> parameter.name?.let { it to value } }
+    public data class VarArgs(val args: Map<KParameter, Any?>) : Args {
+        public fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) -> parameter.name?.let { it to value } }
     }
 
-    class Result(val result: Any?, val type: KType, val json: Json) : ToolResult {
+    public class Result(public val result: Any?, public val type: KType, public val json: Json) : ToolResult {
         override fun toStringDefault(): String {
             return json.encodeToString(serializer(type), result)
         }
@@ -88,7 +88,7 @@ class ToolFromCallable(
     override val argsSerializer: KSerializer<VarArgs>
         get() = VarArgsSerializer(callable)
 
-    class VarArgsSerializer(val kCallable: KCallable<*>) : KSerializer<VarArgs> {
+    public class VarArgsSerializer(public val kCallable: KCallable<*>) : KSerializer<VarArgs> {
         @OptIn(InternalSerializationApi::class)
         override val descriptor: SerialDescriptor
             get() = buildClassSerialDescriptor(VarArgs::class.jvmName) {

@@ -24,23 +24,23 @@ import kotlin.time.Duration.Companion.seconds
  * @property healthCheckUrl A computed property that constructs the URL endpoint for health check requests.
  * @property messageUrl A computed property that constructs the URL endpoint for sending or receiving messages.
  */
-abstract class ClientConnectionConfig(
-    val host: String,
+public abstract class ClientConnectionConfig(
+    public val host: String,
     port: Int? = null,
-    val protocol: URLProtocol = URLProtocol.HTTPS,
-    val headers: Map<String, String> = emptyMap(),
-    val reconnectionDelay: Duration? = null,
-    val requestTimeout: Duration? = 5.seconds,
-    val connectTimeout: Duration? = 15.seconds,
+    public val protocol: URLProtocol = URLProtocol.HTTPS,
+    public val headers: Map<String, String> = emptyMap(),
+    public val reconnectionDelay: Duration? = null,
+    public val requestTimeout: Duration? = 5.seconds,
+    public val connectTimeout: Duration? = 15.seconds,
 ) : ConnectionConfig() {
 
-    val port = port ?: protocol.defaultPort
+    public val port: Int = port ?: protocol.defaultPort
 
     /**
      * Provides the base URL for the current connection configuration.
      * Constructs the URL using the protocol, host, and port specified in the connection configuration.
      */
-    val url: String
+    public val url: String
         get() = "${protocol.name}://$host:$port"
 
     /**
@@ -54,7 +54,7 @@ abstract class ClientConnectionConfig(
      * Typical use cases of this property include subscribing to a server's event stream to receive
      * real-time updates or notifications using SSE.
      */
-    val sseUrl: String
+    public val sseUrl: String
         get() = "$url/sse"
 
     /**
@@ -66,7 +66,7 @@ abstract class ClientConnectionConfig(
      * The generated URL is intended to be used for verifying the availability
      * and responsiveness of the remote server or service.
      */
-    val healthCheckUrl: String
+    public val healthCheckUrl: String
         get() = "$url/health"
 
     /**
@@ -79,6 +79,6 @@ abstract class ClientConnectionConfig(
      * Common use cases include sending feature-related messages or retrieving messages from the server
      * as part of a feature messaging system.
      */
-    val messageUrl: String
+    public val messageUrl: String
         get() = "$url/message"
 }

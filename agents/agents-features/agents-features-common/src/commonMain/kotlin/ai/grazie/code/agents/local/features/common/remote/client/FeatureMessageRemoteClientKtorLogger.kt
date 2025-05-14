@@ -10,7 +10,7 @@ import io.ktor.client.plugins.logging.*
  * This logger leverages a custom logger instance to output debug messages and manage
  * logging behavior based on the configured debug state.
  */
-class FeatureMessageRemoteClientKtorLogger : Logger {
+internal class FeatureMessageRemoteClientKtorLogger : Logger {
 
     /**
      * Companion object for the `FeatureMessageRemoteClientKtorLogger` class.
@@ -19,7 +19,7 @@ class FeatureMessageRemoteClientKtorLogger : Logger {
      * `FeatureMessageRemoteClientKtorLogger`. It also aids in centralizing static-like behavior and
      * configurations specific to this logger.
      */
-    companion object {
+    private companion object {
         /**
          * A private logger instance used for logging debug and informational messages.
          *

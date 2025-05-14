@@ -39,6 +39,8 @@ kotlin {
             }
         }
     }
+
+    explicitApi()
 }
 
 publishToGraziePublicMaven()

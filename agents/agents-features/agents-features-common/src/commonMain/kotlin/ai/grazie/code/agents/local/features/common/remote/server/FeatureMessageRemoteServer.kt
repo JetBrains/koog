@@ -33,11 +33,11 @@ internal expect fun engineFactoryProvider(): ApplicationEngineFactory<Applicatio
  *
  * Note: Please make sure you call the [start] method before starting a communication process.
  */
-class FeatureMessageRemoteServer(
-    val connectionConfig: ServerConnectionConfig,
+public class FeatureMessageRemoteServer(
+    public val connectionConfig: ServerConnectionConfig,
 ) : FeatureMessageServer {
 
-    companion object {
+    private companion object {
         private val logger: MPPLogger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.server.KtorTracingServer")
     }
@@ -52,7 +52,7 @@ class FeatureMessageRemoteServer(
     override val isStarted: Boolean
         get() = isInitialized
 
-    val receivedMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
+    public val receivedMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
 
 
     /**
@@ -65,7 +65,7 @@ class FeatureMessageRemoteServer(
      *
      * @return A JSON string representing the serialized form of the [FeatureMessage] instance.
      */
-    fun FeatureMessage.toServerEventData(): String {
+    public fun FeatureMessage.toServerEventData(): String {
         val jsonConfig = connectionConfig.jsonConfig
 
         val serialized = jsonConfig.encodeToString(serializer = jsonConfig.serializersModule.serializer(), value = this@toServerEventData)

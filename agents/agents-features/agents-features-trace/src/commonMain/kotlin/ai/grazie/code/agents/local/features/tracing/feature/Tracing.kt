@@ -61,7 +61,7 @@ import ai.jetbrains.code.prompt.message.Message
  * AgentFinishedEvent (strategy name: my-agent-strategy, result: Success)
  * ```
  */
-class Tracing {
+public class Tracing {
 
     /**
      * Feature implementation for the Tracing functionality.
@@ -80,7 +80,7 @@ class Tracing {
      * }
      * ```
      */
-    companion object Feature : AIAgentFeature<TraceFeatureConfig, Tracing> {
+    public companion object Feature : AIAgentFeature<TraceFeatureConfig, Tracing> {
 
         private val logger: MPPLogger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.feature.TracingFeature")
@@ -88,7 +88,7 @@ class Tracing {
         override val key: AIAgentStorageKey<Tracing> =
             AIAgentStorageKey("agents-features-tracing")
 
-        override fun createInitialConfig() = TraceFeatureConfig()
+        override fun createInitialConfig(): TraceFeatureConfig = TraceFeatureConfig()
 
         override fun install(
             config: TraceFeatureConfig,
