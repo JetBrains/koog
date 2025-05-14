@@ -3,8 +3,7 @@ package ai.koog.agents.local.features.common.remote.server
 import ai.koog.agents.local.features.common.ExceptionExtractor.rootCause
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.remote.server.config.ServerConnectionConfig
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
@@ -38,8 +37,7 @@ public class FeatureMessageRemoteServer(
 ) : FeatureMessageServer {
 
     private companion object {
-        private val logger: MPPLogger =
-            LoggerFactory.create("ai.koog.agents.local.features.tracing.server.KtorTracingServer")
+        private val logger = KotlinLogging.logger {  }
     }
 
     private var isInitialized = false
@@ -79,7 +77,7 @@ public class FeatureMessageRemoteServer(
         logger.info { "Feature Message Remote Server. Starting server on port ${connectionConfig.port}" }
 
         if (isInitialized) {
-            logger.warning { "Feature Message Remote Server. Server is already started! Skip initialization." }
+            logger.warn { "Feature Message Remote Server. Server is already started! Skip initialization." }
             return
         }
 
@@ -93,7 +91,7 @@ public class FeatureMessageRemoteServer(
         logger.info { "Feature Message Remote Server. Starting closing server on port ${connectionConfig.port}" }
 
         if (!isInitialized) {
-            logger.warning { "Feature Message Remote Server. Server is already stopped! Skip stopping." }
+            logger.warn { "Feature Message Remote Server. Server is already stopped! Skip stopping." }
             return
         }
 

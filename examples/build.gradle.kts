@@ -39,8 +39,6 @@ dependencies {
     implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
     implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
-    implementation(libs.ai.grazie.api.gateway.client)
-    implementation(libs.ai.grazie.client.ktor)
     implementation(libs.logback.classic)
 
     testImplementation(kotlin("test"))

@@ -1,10 +1,13 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.core.model.message
 
 import ai.koog.agents.core.model.AgentServiceError
-import ai.grazie.utils.mpp.UUID
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Base class of all messages sent from the environment to the AI agent.
@@ -81,7 +84,7 @@ public abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMe
  */
 @Serializable
 public sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgentMessage {
-    public val sessionUuid: UUID
+    public val sessionUuid: Uuid
 }
 
 /**
@@ -110,7 +113,7 @@ public abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentCo
 @Serializable
 @SerialName("OBSERVATION")
 public data class EnvironmentToolResultSingleToAgentMessage(
-    override val sessionUuid: UUID,
+    override val sessionUuid: Uuid,
     val content: EnvironmentToolResultToAgentContent,
 ) : EnvironmentToolResultToAgentMessage
 
@@ -124,7 +127,7 @@ public data class EnvironmentToolResultSingleToAgentMessage(
 @Serializable
 @SerialName("OBSERVATIONS_MULTIPLE")
 public data class EnvironmentToolResultMultipleToAgentMessage(
-    override val sessionUuid: UUID,
+    override val sessionUuid: Uuid,
     val content: List<EnvironmentToolResultToAgentContent>,
 ) : EnvironmentToolResultToAgentMessage
 
@@ -152,7 +155,7 @@ public data class EnvironmentToAgentTerminationContent(
 @Serializable
 @SerialName("TERMINATION")
 public data class EnvironmentToAgentTerminationMessage(
-    val sessionUuid: UUID,
+    val sessionUuid: Uuid,
     val content: EnvironmentToAgentTerminationContent? = null,
     val error: AgentServiceError? = null,
 ) : EnvironmentToAgentMessage
@@ -169,6 +172,6 @@ public data class EnvironmentToAgentTerminationMessage(
 @Serializable
 @SerialName("ERROR")
 public data class EnvironmentToAgentErrorMessage(
-    val sessionUuid: UUID,
+    val sessionUuid: Uuid,
     val error: AgentServiceError,
 ) : EnvironmentToAgentMessage

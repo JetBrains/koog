@@ -2,12 +2,12 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
@@ -37,7 +37,7 @@ internal class MockLLMExecutor(
     private val conditional: Map<(String) -> Boolean, String>? = null,
     private val defaultResponse: String = "",
     private val toolRegistry: ToolRegistry? = null,
-    private val logger: MPPLogger = LoggerFactory.create(MockLLMExecutor::class.simpleName!!),
+    private val logger: KLogger = KotlinLogging.logger(MockLLMExecutor::class.simpleName!!),
     val toolActions: List<ToolCondition<*, *>> = emptyList()
 ) : PromptExecutor {
     /**

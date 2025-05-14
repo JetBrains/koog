@@ -1,12 +1,12 @@
 package ai.koog.agents.local.features.common
 
-import ai.grazie.utils.mpp.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 internal object MutexCheck {
 
-    private val logger = LoggerFactory.create("ai.koog.agents.local.features.common.provider.WriterLockUtil")
+    private val logger = KotlinLogging.logger {  }
 
     /**
      * Executes the given [action] within a lock provided by the [Mutex]. Before acquiring the lock,

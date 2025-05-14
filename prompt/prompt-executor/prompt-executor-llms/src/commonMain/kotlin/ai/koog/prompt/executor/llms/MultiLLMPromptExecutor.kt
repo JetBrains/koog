@@ -1,13 +1,13 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.grazie.utils.mpp.LoggerFactory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -80,7 +80,7 @@ public open class MultiLLMPromptExecutor(
          * The logger can aid in debugging by capturing detailed information about the state and flow of operations within
          * the respective classes.
          */
-        private val logger = LoggerFactory.create("ai.koog.prompt.executor.llms.LLMPromptExecutor")
+        private val logger = KotlinLogging.logger("ai.koog.prompt.executor.llms.LLMPromptExecutor")
     }
 
     /**

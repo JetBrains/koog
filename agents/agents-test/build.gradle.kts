@@ -19,15 +19,16 @@ kotlin {
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.jetbrains.annotations)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
                 implementation(libs.logback.classic)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
         commonTest {
             dependencies {
-                implementation(libs.ai.grazie.model.auth)
                 implementation(libs.kotlinx.coroutines.test)
             }
         }

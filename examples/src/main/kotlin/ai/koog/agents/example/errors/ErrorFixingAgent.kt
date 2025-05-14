@@ -11,7 +11,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.example.TokenService
 import ai.koog.agents.local.features.eventHandler.feature.handleEvents
-import ai.grazie.utils.annotations.ExperimentalAPI
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -22,8 +21,6 @@ import kotlin.io.path.createTempDirectory
 import kotlin.io.path.name
 import kotlin.io.path.writeText
 
-
-@OptIn(ExperimentalAPI::class)
 fun main() = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 

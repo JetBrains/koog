@@ -1,17 +1,23 @@
 package ai.koog.agents.core
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.grazie.utils.json.JSON
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 object CalculatorChatExecutor : PromptExecutor {
+    private val json = Json {
+        ignoreUnknownKeys = true
+        allowStructuredMapKeys = true
+    }
+
     private val plusAliases = listOf("add", "sum", "plus")
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
@@ -22,7 +28,7 @@ object CalculatorChatExecutor : PromptExecutor {
                 Message.Tool.Call(
                     id = "1",
                     tool = CalculatorTools.PlusTool.name,
-                    content = JSON.Default.string(
+                    content = json.encodeToString(
                         buildJsonObject {
                             put("a", numbers[0])
                             put("b", numbers[1])

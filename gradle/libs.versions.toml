@@ -1,12 +1,9 @@
 [versions]
 annotations = "26.0.1"
-caffeine = "3.1.8"
 grazie-gradle = "0.3.6"
 grazie-platform = "0.4.49"
-jackson = "2.12.3"
-jgit = "7.1.0.202411261347-r"
 junit = "5.8.2"
-kotlin = "2.1.10"
+kotlin = "2.1.21"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
 kotlinx-io = "0.7.0"
@@ -14,29 +11,13 @@ kotlinx-serialization = "1.7.3" # check with IJ
 ktor3 = "3.0.3"
 lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
+oshai-logging = "7.0.7"
 mockk = "1.13.8"
 shadow = "8.1.1"
-slf4j = "2.0.16"
 mcp = "0.5.0"
 dokka = "2.0.0"
 
 [libraries]
-ai-grazie-api-gateway-client = { module = "ai.grazie.api:api-gateway-client", version.ref = "grazie-platform" }
-ai-grazie-client-ktor = { module = "ai.grazie.client:client-ktor", version.ref = "grazie-platform" }
-ai-grazie-model-auth = { module = "ai.grazie.model:model-auth", version.ref = "grazie-platform" }
-ai-grazie-model-common = { module = "ai.grazie.model:model-common", version.ref = "grazie-platform" }
-ai-grazie-model-llm = { module = "ai.grazie.model:model-llm", version.ref = "grazie-platform" }
-ai-grazie-model-nlp = { module = "ai.grazie.model:model-nlp", version.ref = "grazie-platform" }
-ai-grazie-model-task = { module = "ai.grazie.model:model-task", version.ref = "grazie-platform" }
-ai-grazie-model-text = { module = "ai.grazie.model:model-text", version.ref = "grazie-platform" }
-ai-grazie-nlp-common = { module = "ai.grazie.nlp:nlp-common", version.ref = "grazie-platform" }
-ai-grazie-nlp-encoder-starcoder = { module = "ai.grazie.nlp:nlp-encoder-starcoder", version.ref = "grazie-platform" }
-ai-grazie-nlp-tokenizer = { module = "ai.grazie.nlp:nlp-tokenizer", version.ref = "grazie-platform" }
-ai-grazie-tasks-provider-proxy-model = { module = "ai.grazie.tasks.provider.model:tasks-provider-proxy-model", version.ref = "grazie-platform" }
-ai-grazie-utils-common = { module = "ai.grazie.utils:utils-common", version.ref = "grazie-platform" }
-caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version.ref = "caffeine" }
-eclipse-jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
-jackson-annotations = { module = "com.fasterxml.jackson.core:jackson-annotations", version.ref = "jackson" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -45,27 +26,24 @@ kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutin
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
-kotlinx-io-core-jvm = { module = "org.jetbrains.kotlinx:kotlinx-io-core-jvm", version.ref = "kotlinx-io" }
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
-ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor3" }
 ktor-client-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor3" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+oshai-kotlin-logging = { module= "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
-slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
 
 [plugins]
-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }

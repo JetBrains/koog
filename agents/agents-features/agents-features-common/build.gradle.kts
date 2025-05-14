@@ -14,8 +14,6 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-utils"))
 
-                implementation(libs.ai.grazie.model.llm)
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.datetime)
                 implementation(libs.kotlinx.io.core)
                 implementation(libs.kotlinx.serialization.json)
@@ -24,6 +22,7 @@ kotlin {
                 implementation(libs.ktor.client.logging)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.server.sse)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

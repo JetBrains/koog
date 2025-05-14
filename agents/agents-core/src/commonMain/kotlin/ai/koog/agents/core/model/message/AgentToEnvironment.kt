@@ -1,10 +1,13 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.core.model.message
 
-import ai.koog.agents.core.model.AgentServiceError
-import ai.grazie.utils.mpp.UUID
+import ai.grazie.code.agents.core.model.AgentServiceError
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents a message sent from an agent to the environment.
@@ -15,7 +18,7 @@ import kotlinx.serialization.json.JsonObject
  */
 @Serializable
 public sealed interface AgentToEnvironmentMessage {
-    public val sessionUuid: UUID
+    public val sessionUuid: Uuid
 }
 
 /**
@@ -51,7 +54,7 @@ public data class AgentToolCallToEnvironmentContent(
 @Serializable
 @SerialName("ACTION_MULTIPLE")
 public data class AgentToolCallsToEnvironmentMessage(
-    override val sessionUuid: UUID,
+    override val sessionUuid: Uuid,
     val content: List<AgentToolCallToEnvironmentContent>
 ) : AgentToolCallToEnvironmentMessage
 
@@ -69,7 +72,7 @@ public data class AgentToolCallsToEnvironmentMessage(
 @Serializable
 @SerialName("TERMINATION")
 public data class AgentTerminationToEnvironmentMessage(
-    override val sessionUuid: UUID,
+    override val sessionUuid: Uuid,
     val content: AgentToolCallToEnvironmentContent? = null,
     val error: AgentServiceError? = null,
 ) : AgentToEnvironmentMessage
@@ -89,6 +92,6 @@ public data class AgentTerminationToEnvironmentMessage(
 @Serializable
 @SerialName("ERROR")
 public data class AgentErrorToEnvironmentMessage(
-    override val sessionUuid: UUID,
+    override val sessionUuid: Uuid,
     val error: AgentServiceError
 ) : AgentToEnvironmentMessage

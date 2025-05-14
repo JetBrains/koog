@@ -2,15 +2,13 @@ package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.SuitableForIO
-import ai.grazie.utils.mpp.UUID
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
@@ -42,6 +40,8 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents the settings for configuring an Anthropic client, including model mapping, base URL, and API version.
@@ -77,8 +77,7 @@ public open class AnthropicLLMClient(
 ) : LLMClient {
 
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.prompt.executor.clients.anthropic.HTTPBasedAnthropicSuspendableDirectClient")
+        private val logger = KotlinLogging.logger {  }
 
         private const val DEFAULT_MESSAGE_PATH = "v1/messages"
     }
@@ -176,6 +175,7 @@ public open class AnthropicLLMClient(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun createAnthropicRequest(
         prompt: Prompt,
         tools: List<ToolDescriptor>,
@@ -244,7 +244,7 @@ public open class AnthropicLLMClient(
                         val newContent = lastMessage.content.toMutableList()
                         newContent.add(
                             AnthropicContent.ToolUse(
-                                id = message.id ?: UUID.random().toString(),
+                                id = message.id ?: Uuid.random().toString(),
                                 name = message.tool,
                                 input = Json.parseToJsonElement(message.content).jsonObject
                             )
@@ -257,7 +257,7 @@ public open class AnthropicLLMClient(
                                 role = "assistant",
                                 content = listOf(
                                     AnthropicContent.ToolUse(
-                                        id = message.id ?: UUID.random().toString(),
+                                        id = message.id ?: Uuid.random().toString(),
                                         name = message.tool,
                                         input = Json.parseToJsonElement(message.content).jsonObject
                                     )

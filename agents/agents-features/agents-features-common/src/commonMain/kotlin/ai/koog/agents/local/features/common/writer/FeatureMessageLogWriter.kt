@@ -2,22 +2,22 @@ package ai.koog.agents.local.features.common.writer
 
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureMessageProcessor
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * An abstract base class for implementing a stream feature provider that logs incoming feature messages
  * into a provided logger instance.
  *
- * @param targetLogger The [MPPLogger] instance used for feature messages to be streamed into.
+ * @param targetLogger The [KLogger] instance used for feature messages to be streamed into.
  */
 public abstract class FeatureMessageLogWriter(
-    protected val targetLogger: MPPLogger,
+    protected val targetLogger: KLogger,
     protected val logLevel: LogLevel = LogLevel.INFO
 ) : FeatureMessageProcessor() {
 
     private companion object {
-        private val logger = LoggerFactory.create("ai.koog.agents.local.features.common.writer.FeatureMessageLogWriter")
+        private val logger = KotlinLogging.logger {  }
     }
 
     /**
@@ -57,10 +57,10 @@ public abstract class FeatureMessageLogWriter(
 
     override suspend fun close() { }
 
-    private fun isTargetLogLevelEnabled(targetLogLevel: LogLevel, targetLogger: MPPLogger): Boolean {
+    private fun isTargetLogLevelEnabled(targetLogLevel: LogLevel, targetLogger: KLogger): Boolean {
         return when (targetLogLevel) {
-            LogLevel.INFO -> targetLogger.infoEnabled
-            LogLevel.DEBUG -> targetLogger.debugEnabled
+            LogLevel.INFO -> targetLogger.isInfoEnabled()
+            LogLevel.DEBUG -> targetLogger.isDebugEnabled()
         }
     }
 }

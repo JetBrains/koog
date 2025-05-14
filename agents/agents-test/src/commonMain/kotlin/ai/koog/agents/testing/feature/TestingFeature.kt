@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -16,11 +18,12 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.local.features.common.config.FeatureConfig
 import ai.koog.agents.testing.tools.MockEnvironment
-import ai.grazie.utils.mpp.UUID
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 public class DummyAgentContext(
     private val builder: AIAgentContextMockBuilder,
@@ -52,7 +55,7 @@ public class DummyAgentContext(
         get() = builder.storage
             ?: throw NotImplementedError("Storage is not mocked")
 
-    override val sessionUuid: UUID
+    override val sessionUuid: Uuid
         get() = builder.sessionUuid
             ?: throw NotImplementedError("Session UUID is not mocked")
 
@@ -79,7 +82,7 @@ public class DummyAgentContext(
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
-        sessionUuid: UUID?,
+        sessionUuid: Uuid?,
         strategyId: String?,
         pipeline: AIAgentPipeline?
     ): AIAgentContextBase = DummyAgentContext(
@@ -104,7 +107,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
     public var llm: AIAgentLLMContext?
     public var stateManager: AIAgentStateManager?
     public var storage: AIAgentStorage?
-    public var sessionUuid: UUID?
+    public var sessionUuid: Uuid?
     public var strategyId: String?
 
     public fun copy(): AIAgentContextMockBuilderBase
@@ -120,7 +123,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override var llm: AIAgentLLMContext? = null
     override var stateManager: AIAgentStateManager? = null
     override var storage: AIAgentStorage? = null
-    override var sessionUuid: UUID? = null
+    override var sessionUuid: Uuid? = null
     override var strategyId: String? = null
 
     override fun copy(): AIAgentContextMockBuilder {

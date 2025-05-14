@@ -3,9 +3,6 @@ package ai.koog.prompt.executor.clients.openai
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.SuitableForIO
-import ai.grazie.utils.mpp.UUID
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -13,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -27,6 +25,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents the settings for configuring an OpenAI client.
@@ -53,8 +53,7 @@ public open class OpenAILLMClient(
 ) : LLMEmbeddingProvider, LLMClient {
 
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.prompt.executor.clients.openai.HttpBasedOpenAISuspendableDirectClient")
+        private val logger = KotlinLogging.logger {  }
 
         private const val DEFAULT_MESSAGE_PATH = "v1/chat/completions"
         private const val DEFAULT_EMBEDDINGS_PATH = "v1/embeddings"
@@ -153,6 +152,7 @@ public open class OpenAILLMClient(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun createOpenAIRequest(
         prompt: Prompt,
         tools: List<ToolDescriptor>,
@@ -213,7 +213,7 @@ public open class OpenAILLMClient(
                 }
 
                 is Message.Tool.Call -> pendingCalls += OpenAIToolCall(
-                    id = message.id ?: UUID.random().toString(),
+                    id = message.id ?: Uuid.random().toString(),
                     function = OpenAIFunction(message.tool, message.content)
                 )
             }

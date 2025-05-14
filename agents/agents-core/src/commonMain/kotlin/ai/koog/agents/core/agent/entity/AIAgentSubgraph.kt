@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent.entity
 
-import ai.grazie.utils.mpp.LoggerFactory
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.context.AIAgentContextBase
@@ -11,7 +10,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
 
 
 public open class AIAgentSubgraph<Input, Output>(
@@ -21,8 +22,7 @@ public open class AIAgentSubgraph<Input, Output>(
     private val toolSelectionStrategy: ToolSelectionStrategy,
 ) : AIAgentNodeBase<Input, Output>() {
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
+        private val logger = KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
     }
 
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
@@ -31,6 +31,7 @@ public open class AIAgentSubgraph<Input, Output>(
         return doExecuteWithCustomTools(context, input)
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun formatLog(context: AIAgentContextBase, message: String): String =
         "$message [$name, ${context.strategyId}, ${context.sessionUuid.text}]"
 

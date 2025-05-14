@@ -1,12 +1,15 @@
 package ai.koog.agents.local.features.writer
 
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KLoggingEventBuilder
+import io.github.oshai.kotlinlogging.Level
+import io.github.oshai.kotlinlogging.Marker
 
 class TestLogger(
-    val name: String,
-    override val infoEnabled: Boolean = true,
-    override val debugEnabled: Boolean = true
-) : MPPLogger {
+    override val name: String,
+    val infoEnabled: Boolean = true,
+    val debugEnabled: Boolean = true
+) : KLogger {
 
     val messages = mutableListOf<String>()
 
@@ -14,24 +17,28 @@ class TestLogger(
         messages.clear()
     }
 
-    override val errorEnabled: Boolean = true
+    val errorEnabled: Boolean = true
 
-    override val warningEnabled: Boolean = true
+    val warningEnabled: Boolean = true
 
-
-    override fun debug(message: () -> String) {
-        messages.add("[DEBUG] ${message()}")
+    override fun at(
+        level: Level,
+        marker: Marker?,
+        block: KLoggingEventBuilder.() -> Unit
+    ) {
+        messages.add("[${level.name}] ${KLoggingEventBuilder().apply(block).message}")
     }
 
-    override fun error(e: Throwable?, message: () -> String) {
-        messages.add("[ERROR] ${message()}")
-    }
-
-    override fun info(message: () -> String) {
-        messages.add("[INFO] ${message()}")
-    }
-
-    override fun warning(e: Throwable?, message: () -> String) {
-        messages.add("[WARN] ${message()}")
+    override fun isLoggingEnabledFor(
+        level: Level,
+        marker: Marker?
+    ): Boolean {
+        return when (level) {
+            Level.INFO -> infoEnabled
+            Level.DEBUG -> debugEnabled
+            Level.ERROR -> errorEnabled
+            Level.WARN -> warningEnabled
+            else -> false
+        }
     }
 }

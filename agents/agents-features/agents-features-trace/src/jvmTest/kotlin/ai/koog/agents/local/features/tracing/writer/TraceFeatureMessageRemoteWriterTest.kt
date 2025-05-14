@@ -12,8 +12,7 @@ import ai.koog.agents.local.features.common.remote.client.FeatureMessageRemoteCl
 import ai.koog.agents.local.features.tracing.NetUtil.findAvailablePort
 import ai.koog.agents.local.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.create
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
@@ -24,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger = LoggerFactory.create(TraceFeatureMessageRemoteWriterTest::class)
+        private val logger = KotlinLogging.logger {  }
         private val defaultClientServerTimeout = 5.seconds
     }
 

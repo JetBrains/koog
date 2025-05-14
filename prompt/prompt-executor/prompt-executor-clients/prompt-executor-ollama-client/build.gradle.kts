@@ -22,10 +22,10 @@ kotlin {
                 implementation(project(":embeddings:embeddings-base"))
 
                 implementation(libs.ktor.client.logging)
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

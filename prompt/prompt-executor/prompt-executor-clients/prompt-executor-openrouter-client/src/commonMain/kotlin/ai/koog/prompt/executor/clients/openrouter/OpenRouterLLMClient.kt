@@ -3,15 +3,13 @@ package ai.koog.prompt.executor.clients.openrouter
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.SuitableForIO
-import ai.grazie.utils.mpp.UUID
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -26,6 +24,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Configuration settings for connecting to the OpenRouter API.
@@ -52,8 +52,7 @@ public class OpenRouterLLMClient(
 ) : LLMClient {
 
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient")
+        private val logger = KotlinLogging.logger {  }
 
         private const val DEFAULT_MESSAGE_PATH = "api/v1/chat/completions"
     }
@@ -155,6 +154,7 @@ public class OpenRouterLLMClient(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun createOpenRouterRequest(
         prompt: Prompt,
        model: LLModel, tools: List<ToolDescriptor>,
@@ -214,7 +214,7 @@ public class OpenRouterLLMClient(
                 }
 
                 is Message.Tool.Call -> pendingCalls += OpenRouterToolCall(
-                    id = message.id ?: UUID.random().toString(),
+                    id = message.id ?: Uuid.random().toString(),
                     function = OpenRouterFunction(message.tool, message.content)
                 )
             }

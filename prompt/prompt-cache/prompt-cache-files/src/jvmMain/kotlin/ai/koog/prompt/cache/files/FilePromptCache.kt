@@ -1,13 +1,14 @@
 package ai.koog.prompt.cache.files
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.grazie.utils.json.JSON
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -16,6 +17,19 @@ import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.*
 import kotlin.math.absoluteValue
+
+internal val defaultJson = Json {
+    ignoreUnknownKeys = true
+    allowStructuredMapKeys = true
+}
+
+internal val prettyJson = Json {
+    ignoreUnknownKeys = true
+    allowStructuredMapKeys = true
+    prettyPrint = true
+    prettyPrintIndent = "  "
+}
+
 
 /**
  * File-based implementation of [PromptCache].
@@ -70,7 +84,7 @@ public class FilePromptCache(
     @Serializable
     private data class Request(val prompt: Prompt, val tools: List<JsonObject> = emptyList()) {
         val id: String
-            get() = JSON.Pretty.string(this).hashCode().absoluteValue.toString(36)
+            get() = defaultJson.encodeToString(this).hashCode().absoluteValue.toString(36)
     }
 
     override suspend fun get(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response>? {
@@ -108,7 +122,7 @@ public class FilePromptCache(
         requestsDir.createDirectories()
 
         // Write the file
-        file(request).writeText(JSON.Pretty.string(CachedElement(response, request)))
+        file(request).writeText(prettyJson.encodeToString(CachedElement(response, request)))
 
         // Update timestamps
         val now = Instant.now()
@@ -119,7 +133,7 @@ public class FilePromptCache(
         val file = file(request)
         if (!file.exists()) return null
 
-        return JSON.Default.parse<CachedElement>(file.readText()).response
+        return defaultJson.decodeFromString<CachedElement>(file.readText()).response
     }
 
     /**

@@ -1,12 +1,13 @@
 package ai.koog.prompt.executor.ollama.client
 
-import ai.grazie.utils.mpp.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
+
 
 /**
  * Custom converters for specific Ollama models.
  */
 public object OllamaCustomModelConverters {
-    private val logger = LoggerFactory.create(OllamaCustomModelConverters::class.simpleName!!)
+    private val logger = KotlinLogging.logger {  }
 
     /**
      * Processes responses from the QWQ model by removing any content between <think> and </think> tags.

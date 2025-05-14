@@ -6,7 +6,7 @@ import ai.koog.agents.local.features.common.message.FeatureStringMessage
 import ai.koog.agents.local.features.common.writer.FeatureMessageLogWriter
 import ai.koog.agents.local.features.common.writer.FeatureMessageLogWriter.LogLevel
 import ai.koog.agents.utils.use
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -15,7 +15,7 @@ import kotlin.test.assertEquals
 class FeatureMessageLogWriterTest {
 
     class TestFeatureMessageLogWriter(
-        targetLogger: MPPLogger,
+        targetLogger: KLogger,
         logLevel: LogLevel = LogLevel.INFO,
     ) : FeatureMessageLogWriter(targetLogger = targetLogger, logLevel = logLevel) {
         override fun FeatureMessage.toLoggerMessage(): String {
