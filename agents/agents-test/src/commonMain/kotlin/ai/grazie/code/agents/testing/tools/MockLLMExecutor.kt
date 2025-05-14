@@ -11,6 +11,26 @@ import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
+/**
+ * A mock implementation of [PromptExecutor] used for testing.
+ *
+ * This class simulates an LLM by returning predefined responses based on the input prompt.
+ * It supports different types of matching:
+ * 1. Exact matching - Returns a response when the input exactly matches a pattern
+ * 2. Partial matching - Returns a response when the input contains a pattern
+ * 3. Conditional matching - Returns a response when the input satisfies a condition
+ * 4. Default response - Returns a default response when no other matches are found
+ *
+ * It also supports tool calls and can be configured to return specific tool results.
+ *
+ * @property partialMatches Map of patterns to responses for partial matching
+ * @property exactMatches Map of patterns to responses for exact matching
+ * @property conditional Map of conditions to responses for conditional matching
+ * @property defaultResponse Default response to return when no other matches are found
+ * @property toolRegistry Optional tool registry for tool execution
+ * @property logger Logger for debugging
+ * @property toolActions List of tool conditions and their corresponding actions
+ */
 internal class MockLLMExecutor(
     private val partialMatches: Map<String, Message.Response>? = null,
     private val exactMatches: Map<String, Message.Response>? = null,
@@ -20,13 +40,26 @@ internal class MockLLMExecutor(
     private val logger: MPPLogger = LoggerFactory.create(MockLLMExecutor::class.simpleName!!),
     val toolActions: List<ToolCondition<*, *>> = emptyList()
 ) : PromptExecutor {
-    // Executing just prompt
+    /**
+     * Executes a prompt without tools and returns a string response.
+     *
+     * @param prompt The prompt to execute
+     * @param model The LLM model to use (ignored in mock implementation)
+     * @return The content of the response as a string
+     */
     override suspend fun execute(prompt: Prompt, model: LLModel): String {
         logger.debug { "Executing prompt without tools, prompt: $prompt" }
         return handlePrompt(prompt).content
     }
 
-    // Executing a tool call
+    /**
+     * Executes a prompt with tools and returns a list of responses.
+     *
+     * @param prompt The prompt to execute
+     * @param model The LLM model to use (ignored in mock implementation)
+     * @param tools The list of tools available for the execution
+     * @return A list containing a single response
+     */
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt with tools: ${tools.map { it.name }}" }
 
@@ -34,10 +67,31 @@ internal class MockLLMExecutor(
         return listOf(response)
     }
 
+    /**
+     * Executes a prompt and returns a flow of string responses.
+     *
+     * This implementation simply wraps the result of [execute] in a flow.
+     *
+     * @param prompt The prompt to execute
+     * @param model The LLM model to use (ignored in mock implementation)
+     * @return A flow containing a single string response
+     */
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         return flowOf(execute(prompt, model))
     }
 
+    /**
+     * Handles a prompt and returns an appropriate response based on the configured matches.
+     *
+     * This method processes the prompt by:
+     * 1. First checking for exact matches
+     * 2. Then checking for partial matches
+     * 3. Then checking for conditional matches
+     * 4. Finally returning the default response if no matches are found
+     *
+     * @param prompt The prompt to handle
+     * @return The appropriate response based on the configured matches
+     */
     suspend fun handlePrompt(prompt: Prompt): Message.Response {
         logger.debug { "Handling prompt with messages:" }
         prompt.messages.forEach { logger.debug { "Message content: ${it.content.take(300)}..." } }
@@ -81,7 +135,13 @@ internal class MockLLMExecutor(
     Additional helper functions
     */
 
-    // Checking if the user's message partly corresponds to the given pattern
+    /**
+     * Finds a response that matches the message content partially.
+     *
+     * @param message The message to check
+     * @param partialMatches Map of patterns to responses for partial matching
+     * @return The matching response, or null if no match is found
+     */
     private fun findPartialResponse(
         message: Message,
         partialMatches: Map<String, Message.Response>?
@@ -93,7 +153,13 @@ internal class MockLLMExecutor(
         }
     }
 
-    // Checking if the user's message fully equals the given pattern
+    /**
+     * Finds a response that matches the message content exactly.
+     *
+     * @param message The message to check
+     * @param exactMatches Map of patterns to responses for exact matching
+     * @return The matching response, or null if no match is found
+     */
     private fun findExactResponse(message: Message, exactMatches: Map<String, Message.Response>?): Message.Response? {
         return exactMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
             if (message.content == pattern) {

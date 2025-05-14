@@ -13,7 +13,7 @@ import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
@@ -154,7 +154,7 @@ class LLMHistoryTransitionPolicyTest {
         agentConfig = dummyAgentConfig,
         toolRegistry = emptyToolRegistry,
     ) {
-        install(EventHandlerFeature) {
+        install(EventHandler) {
             onAgentFinished = { _, agentResult -> result.complete(agentResult) }
         }
     }

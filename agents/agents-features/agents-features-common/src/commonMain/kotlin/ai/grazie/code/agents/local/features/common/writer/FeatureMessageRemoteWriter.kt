@@ -20,8 +20,27 @@ abstract class FeatureMessageRemoteWriter(
 
     private val writerMutex = Mutex()
 
+    /**
+     * Indicates the internal state of the writer, specifically whether the connection to the remote server
+     * is currently open (`true`) or closed (`false`).
+     *
+     * This variable is used internally for managing the lifecycle of the server connection.
+     * It is updated during server initialization and closure processes, and its state determines
+     * whether certain operations can be performed, such as message processing.
+     *
+     * The value of this property should not be accessed or modified directly outside the class.
+     * Use the public `isOpen` getter for read-only access.
+     */
     private var _isOpen: Boolean = false
 
+    /**
+     * Indicates whether the writer is currently open and initialized.
+     *
+     * A value of `true` means the writer is open and ready to process messages,
+     * while `false` indicates the writer is either not initialized or has been closed.
+     *
+     * This property reflects the internal `_isOpen` state and ensures thread-safe access.
+     */
     val isOpen: Boolean
         get() = _isOpen
 

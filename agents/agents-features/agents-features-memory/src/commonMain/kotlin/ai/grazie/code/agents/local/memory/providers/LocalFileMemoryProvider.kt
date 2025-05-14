@@ -61,14 +61,14 @@ import kotlinx.serialization.json.Json
  * // Store environment information
  * provider.save(
  *     fact = environmentFact,
- *     subject = MemorySubject.MACHINE,
+ *     subject = MemorySubject.Machine,
  *     scope = MemoryScope.Agent("env-analyzer")
  * )
  *
  * // Retrieve project dependencies
  * val dependencies = provider.load(
  *     concept = dependenciesConcept,
- *     subject = MemorySubject.PROJECT,
+ *     subject = MemorySubject.Project,
  *     scope = MemoryScope.Product("my-product")
  * )
  * ```
@@ -193,7 +193,7 @@ data class LocalFileMemoryProvider<Path>(
      *         timestamp = timeProvider.getCurrentTimestamp(),
      *         value = "org.jetbrains.kotlin:kotlin-stdlib:1.8.0"
      *     ),
-     *     subject = MemorySubject.PROJECT,
+     *     subject = MemorySubject.Project,
      *     scope = MemoryScope.Product("my-app")
      * )
      * ```
@@ -225,7 +225,7 @@ data class LocalFileMemoryProvider<Path>(
      * // Load environment information
      * val envFacts = load(
      *     concept = Concept("env-info", "Machine environment details", FactType.SINGLE),
-     *     subject = MemorySubject.MACHINE,
+     *     subject = MemorySubject.Machine,
      *     scope = MemoryScope.Agent("system-analyzer")
      * )
      * ```
@@ -252,7 +252,7 @@ data class LocalFileMemoryProvider<Path>(
      * ```
      * // Load all project-related facts
      * val projectFacts = loadAll(
-     *     subject = MemorySubject.PROJECT,
+     *     subject = MemorySubject.Project,
      *     scope = MemoryScope.Product("my-app")
      * )
      * ```
@@ -278,7 +278,7 @@ data class LocalFileMemoryProvider<Path>(
      * // Find facts about coding style
      * val styleFacts = loadByDescription(
      *     description = "code style rules",
-     *     subject = MemorySubject.PROJECT,
+     *     subject = MemorySubject.Project,
      *     scope = MemoryScope.Organization
      * )
      * ```

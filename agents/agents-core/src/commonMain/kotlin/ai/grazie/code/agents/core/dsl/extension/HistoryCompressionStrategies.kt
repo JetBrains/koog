@@ -7,6 +7,12 @@ import ai.jetbrains.code.prompt.message.Message
 /**
  * Represents an abstract strategy for compressing the history of messages in a LocalAgentLLMWriteSession.
  * Different implementations define specific approaches to reducing the context size while maintaining key information.
+ *
+ * Example implementations:
+ * - [HistoryCompressionStrategy.WholeHistory]
+ * - [HistoryCompressionStrategy.FromLastNMessages]
+ * - [HistoryCompressionStrategy.Chunked]
+ * - [RetrieveFactsFromHistory] (in `agents-features-memory` module)
  */
 abstract class HistoryCompressionStrategy {
     /**

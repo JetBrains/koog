@@ -3,9 +3,36 @@ package ai.grazie.code.agents.local.memory.config
 import ai.grazie.code.agents.local.memory.model.MemoryScope
 import kotlinx.serialization.Serializable
 
+/**
+ * Defines the type of memory scope used for memory operations.
+ * This enum represents different boundaries or contexts within
+ * which memory can be stored and retrieved. Each type corresponds
+ * to a specific operational scope for memory sharing and isolation.
+ */
 @Serializable
 enum class MemoryScopeType {
-    PRODUCT, AGENT, FEATURE, ORGANIZATION
+    /**
+     * Represents a memory scope type associated with a product that populated some memory fact.
+     */
+    PRODUCT,
+
+    /**
+     * Represents a type of memory scope specifically for the "Agent" context.
+     */
+    AGENT,
+
+    /**
+     * Represents a memory scope type associated with a feature of your product (ex: within a scope of some feature
+     * multiple independent agents might populate different facts and store them in the shared memory)
+     */
+    FEATURE,
+
+    /**
+     * Represents a memory scope type associated with the whole organization of yours (ex: within a scope of
+     * your organization multiple products might have multiple features with different agents that populate facts and
+     * store them in a shared memory)
+     */
+    ORGANIZATION
 }
 
 /**

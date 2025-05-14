@@ -1,6 +1,12 @@
 package ai.grazie.code.agents.local.memory.model
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 /**
  * Defines how information should be stored and retrieved for a concept in the memory system.
@@ -90,31 +96,81 @@ data class MultipleFacts(
  * This helps organize memories into logical containers and ensures
  * that information is accessed at the appropriate level of context.
  */
-@Serializable
-enum class MemorySubject {
+@Serializable(with = MemorySubject.Serializer::class)
+abstract class MemorySubject() {
     /**
-     * Information specific to the local machine environment
-     * Examples: Installed tools, SDKs, OS configuration, available commands
-     */
-    MACHINE,
+     * Name of the memory subject (ex: "user", or "project")
+     * */
+    abstract val name: String
 
     /**
-     * Information specific to the current user
-     * Examples: Preferences, settings, authentication tokens
-     */
-    USER,
+     * Description of what type of information is related to the memory subject, that will be sent to the LLM.
+     *
+     * Ex: for the "user" memory subject it could be:
+     *      "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+     * */
+    abstract val promptDescription: String
 
     /**
-     * Information specific to the current project
-     * Examples: Build configuration, dependencies, code style rules
+     * Indicates how important this memory subject is compared to others.
+     * Higher numbers mean lower importance.
+     *
+     * Information from higher-priority subjects
+     * takes precedence over lower-priority ones.
+     *
+     * For example, if a higher-priority memory subject states that the user prefers red,
+     * and a lower-priority one says white, red will be chosen as the preferred color.
      */
-    PROJECT,
+    abstract val priorityLevel: Int
+
+    companion object {
+        val registeredSubjects: MutableList<MemorySubject> = mutableListOf()
+    }
+
+    init {
+        registeredSubjects.add(this)
+    }
+
+    internal object Serializer : KSerializer<MemorySubject> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemorySubject", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: MemorySubject) {
+            encoder.encodeString(value.name)
+        }
+
+        override fun deserialize(decoder: Decoder): MemorySubject {
+            val name = decoder.decodeString()
+            return registeredSubjects.find { it.name == name }
+                ?: throw IllegalArgumentException("No MemorySubject found with name: $name")
+        }
+    }
+
 
     /**
-     * Information shared across an organization
-     * Examples: Coding standards, shared configurations, team practices
+     * Represents a memory subject with the broadest scope, encompassing all important
+     * information and meaningful facts. The purpose of this object is to serve as a
+     * global context for information that doesn't fit within narrower, more specific
+     * memory subjects.
+     *
+     * Key characteristics:
+     * - Name: Identifies the subject as "everything".
+     * - Prompt Description: Provides a description indicating that it contains
+     *   all significant information and meaningful facts.
+     * - Priority Level: Assigned the lowest priority level, indicating that
+     *   information from this subject is considered only when higher-priority
+     *   subjects do not provide the needed context.
+     *
+     * This memory subject can be useful for scenarios where a comprehensive
+     * or fallback information source is required.
      */
-    ORGANIZATION,
+    @Serializable
+    data object Everything : MemorySubject() {
+        override val name: String = "everything"
+        override val promptDescription: String = "All important information and meaningful facts"
+
+        // The highest number means the lowest priority
+        override val priorityLevel: Int = Int.MAX_VALUE
+    }
 }
 
 /**
@@ -122,7 +178,6 @@ enum class MemorySubject {
  * Memory scope determines how information is shared and isolated between
  * different components of the system.
  */
-@Serializable
 sealed interface MemoryScope {
     /**
      * Scope for memories specific to a single agent instance

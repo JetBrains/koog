@@ -14,14 +14,41 @@ import kotlinx.serialization.SerializationException
 
 private val logger = LoggerFactory.create("ai.grazie.code.prompt.structure.Extensions")
 
+/**
+ * Adds a structured representation of the given value to the text content using the specified language.
+ *
+ * The method utilizes the language's formatting capabilities to generate a textual representation
+ * of the input value and appends it to the content being built by the `TextContentBuilder`.
+ *
+ * @param T The type of the value to be structured.
+ * @param language The `JsonStructureLanguage` instance used to format the value into a structured textual representation.
+ * @param value The value of type `T` to be formatted and added to the text content.
+ */
 public inline fun <reified T> TextContentBuilder.structure(language: JsonStructureLanguage, value: T) {
     +language.pretty(value)
 }
 
+/**
+ * Adds a structured JSON representation of the given value to the [TextContentBuilder].
+ *
+ * @param language The [JsonStructureLanguage] instance used for defining the serialization and formatting rules.
+ * @param value The value to be serialized and added to the builder.
+ * @param serializer The [KSerializer] instance used to serialize the value into the structured JSON format.
+ */
 public fun <T> TextContentBuilder.structure(language: JsonStructureLanguage, value: T, serializer: KSerializer<T>) {
     +language.pretty(value, serializer)
 }
 
+/**
+ * Represents a container for structured data parsed from raw text.
+ *
+ * This class is designed to encapsulate both the parsed structured output and the original raw
+ * text as returned from a processing step, such as a language model execution.
+ *
+ * @param T The type of the structured data contained within this response.
+ * @property structure The parsed structured data corresponding to the specific schema.
+ * @property raw The raw string from which the structured data was parsed.
+ */
 public data class StructuredResponse<T>(val structure: T, val raw: String)
 
 /**

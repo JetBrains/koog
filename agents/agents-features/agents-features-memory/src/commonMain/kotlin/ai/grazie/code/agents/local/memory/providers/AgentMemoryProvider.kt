@@ -34,14 +34,14 @@ import kotlinx.serialization.Serializable
  *         timestamp = currentTime,
  *         value = "Gradle 8.0"
  *     ),
- *     subject = MemorySubject.PROJECT,
+ *     subject = MemorySubject.Project,
  *     scope = MemoryScope.Product("my-app")
  * )
  *
  * // Retrieve environment information
  * val envFacts = provider.loadByDescription(
  *     description = "system environment",
- *     subject = MemorySubject.MACHINE,
+ *     subject = MemorySubject.Machine,
  *     scope = MemoryScope.Agent("env-analyzer")
  * )
  * ```
@@ -152,62 +152,3 @@ data class LocalMemoryConfig(
     val storageDirectory: String,
     override val defaultScope: MemoryScope = MemoryScope.CrossProduct,
 ) : MemoryProviderConfig
-
-/**
- * Environment configuration for the Grazie platform integration.
- * This sealed class provides a type-safe way to configure different
- * deployment environments for remote memory service, with predefined
- * configurations and support for custom deployments.
- *
- * Key features:
- * - Type-safe environment selection
- * - Predefined configurations for standard environments
- * - Support for custom deployments
- * - Serialization support for configuration storage
- *
- * @property url Base URL of the Grazie platform environment
- */
-@Serializable
-sealed class GrazieEnvironment(val url: String) {
-
-    /**
-     * Staging environment for pre-production validation.
-     * This environment provides:
-     * - Integration testing capabilities
-     * - Pre-production feature validation
-     * - Staging-specific configurations
-     */
-    @Serializable
-    @SerialName("staging")
-    data object Staging : GrazieEnvironment("https://api.app.stgn.grazie.aws.intellij.net")
-
-    /**
-     * Production environment for live deployments.
-     * This environment ensures:
-     * - High availability
-     * - Production-grade security
-     * - Stable API versions
-     */
-    @Serializable
-    @SerialName("production")
-    data object Production : GrazieEnvironment("https://api.app.prod.grazie.aws.intellij.net")
-
-    /**
-     * Custom environment for specialized deployments.
-     * Use this when you need to:
-     * - Connect to private deployments
-     * - Use custom domain names
-     * - Implement special routing
-     *
-     * @property customUrl The custom URL to use for the Grazie platform
-     */
-    @Serializable
-    @SerialName("custom")
-    data class Custom(val customUrl: String) : GrazieEnvironment(customUrl)
-}
-
-/**
- node {
-    memory.saveToLLM
- }
- * */

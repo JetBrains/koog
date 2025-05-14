@@ -45,6 +45,8 @@ internal data class ToolArrayItemTypeModel(
 
 /**
  * Serializes a list of ToolDescriptor objects into a JSON string representation.
+ *
+ * @param toolDescriptors List of [ToolDescriptor]
  */
 fun serializeToolDescriptorsToJsonString(toolDescriptors: List<ToolDescriptor>): String {
     val toolModels = toolDescriptors.map {

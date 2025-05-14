@@ -8,7 +8,7 @@ import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 
 /**
- * Implementation of MemoryFeature that does nothing and logs that memory feature is not enabled
+ * Implementation of [AgentMemoryProvider] that does nothing and logs that memory feature is not enabled
  */
 object NoMemory : AgentMemoryProvider {
     private val logger: MPPLogger = LoggerFactory.create("ai.grazie.code.agents.local.memory.feature.NoMemory")

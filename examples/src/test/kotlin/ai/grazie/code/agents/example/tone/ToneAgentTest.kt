@@ -8,8 +8,8 @@ import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.ToneTool
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.testing.feature.withTesting
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
@@ -49,7 +49,7 @@ class ToneAgentTest {
         }
 
         // Create an event handler
-        val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall = { stage, tool, args ->
                 println("[DEBUG_LOG] Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
                 toolCalls.add(tool.name)
@@ -134,7 +134,7 @@ class ToneAgentTest {
             toolRegistry = toolRegistry,
         ) {
             withTesting()
-            install(EventHandlerFeature, eventHandlerConfig)
+            install(EventHandler, eventHandlerConfig)
         }
 
         // Test positive text

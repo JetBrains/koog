@@ -15,7 +15,6 @@ kotlin {
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-model"))
                 implementation(project(":agents:agents-tools"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-tools"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-model"))
 
                 implementation(libs.kotlinx.coroutines.core)

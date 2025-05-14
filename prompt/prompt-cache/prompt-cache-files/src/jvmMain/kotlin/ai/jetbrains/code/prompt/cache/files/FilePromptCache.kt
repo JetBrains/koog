@@ -29,6 +29,16 @@ public class FilePromptCache(
     storage: Path,
     private val maxFiles: Int? = 3000
 ) : PromptCache {
+    /**
+     * Factory implementation for creating `FilePromptCache` instances based on the provided configuration.
+     *
+     * This class inherits from `PromptCache.Factory.Named` and is used to build a file-based cache
+     * for storing prompt execution results. The cache location and optional configurations are
+     * derived from the input configuration string.
+     *
+     * @constructor Initializes the factory with a default `Path` to be used when specific configurations are not provided.
+     * @param default The default `Path` for the file cache if none is specified in the configuration.
+     */
     public class Factory(private val default: Path) : PromptCache.Factory.Named("file") {
         override fun create(config: String): PromptCache {
             val parts = elements(config)

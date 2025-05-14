@@ -4,6 +4,16 @@ import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
+/**
+ * An object representing the exit tool, primarily intended for ending conversations upon user request
+ * or based on agent decision. This tool finalizes interactions with a provided message.
+ *
+ * The tool utilizes a structured set of arguments, which includes the final message of the agent
+ * to provide closure to the conversation. It returns the result as a standardized string, signaling
+ * the execution has been completed.
+ *
+ * The descriptor defines the tool's metadata including its name, description, and required parameters.
+ */
 object ExitTool : SimpleTool<ExitTool.Args>() {
     @Serializable
     data class Args(val message: String) : Tool.Args

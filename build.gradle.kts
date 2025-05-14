@@ -131,64 +131,6 @@ task("printConfigForLocalCodeEngine") {
     }
 }
 
-task("notifyAgentsReleaseToSlack") {
-    doLast {
-        val slackAppSecret = System.getenv("SLACK_AGENTS_APP_SECRET")
-            ?: error("Slack APP secret not found. Please set the SLACK_AGENTS_APP_SECRET environment variable.")
-
-        val gitLogCmd = "git log \$(git describe --tags --abbrev=0)..HEAD --pretty=format:%H\\ %s"
-        val gitLog = ProcessBuilder("sh", "-c", gitLogCmd)
-            .directory(project.rootDir)
-            .start()
-            .inputStream
-            .bufferedReader()
-            .readText()
-
-        val agentCommits = gitLog.lines()
-            .asSequence()
-            .filter {
-                it.contains("[agents") || it.contains("(agents") ||
-                        it.contains("ideformer") || it.contains("IdeFormer") || it.contains("JBRes-2755")
-            }
-            .map {
-                it.replace(Regex("""^[a-f0-9]{40}(?=\s)""")) { match ->
-                    "<https://github.com/JetBrains/code-engine/commit/${match.value}|${match.value.take(8)}>"
-                }.replace(Regex("""(JBAI|JBRes)-\d+""")) { match ->
-                    "<https://youtrack.jetbrains.com/issue/${match.value}|${match.value}>"
-                }.replace(Regex("""\(#\d+\)""")) { match ->
-                    val number = match.value.removePrefix("(#").removeSuffix(")")
-                    "<https://github.com/JetBrains/code-engine/pull/$number|#$number>"
-                }
-            }
-            .joinToString(separator = "\n", prefix = "\n") { " - _${it}_" }
-
-        if (agentCommits.isNotEmpty()) {
-            val version = project.version.toString()
-            val message = """
-                <!here>, *Hey, a new release of the Agentic Platform is here!*
-                *new version:* `$version`
-                *changelist:*
-            """.trimIndent() + agentCommits
-
-            val slackPayload = """
-                {
-                    "channel": "ai-agents-ideformer",
-                    "text": ${"\"$message\""}
-                }
-            """.trimIndent()
-
-            ProcessBuilder(
-                "curl", "-X", "POST", "-H", "Content-Type: application/json",
-                "-H", "Authorization: Bearer $slackAppSecret",
-                "-d", slackPayload,
-                "https://slack.com/api/chat.postMessage"
-            )
-                .start()
-                .waitFor()
-        }
-    }
-}
-
 dependencies {
     dokka(project(":agents:agents-core"))
     dokka(project(":agents:agents-features:agents-features-common"))
@@ -198,7 +140,6 @@ dependencies {
     dokka(project(":agents:agents-tools"))
     dokka(project(":embeddings:embeddings-base"))
     dokka(project(":embeddings:embeddings-local"))
-    dokka(project(":prompt:prompt-agents"))
     dokka(project(":prompt:prompt-cache:prompt-cache-files"))
     dokka(project(":prompt:prompt-cache:prompt-cache-model"))
     dokka(project(":prompt:prompt-cache:prompt-cache-redis"))
@@ -210,7 +151,6 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))
     dokka(project(":prompt:prompt-executor:prompt-executor-ollama"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-tools"))
     dokka(project(":prompt:prompt-llm"))
     dokka(project(":prompt:prompt-markdown"))
     dokka(project(":prompt:prompt-model"))

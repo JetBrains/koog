@@ -33,6 +33,31 @@ public class RedisPromptCache(
     private val prefix: String,
     private val ttl: Duration,
 ) : PromptCache {
+
+    /**
+     * Companion object for the RedisPromptCache class, functioning as a factory for creating
+     * Redis-backed implementations of the PromptCache interface.
+     *
+     * This factory is identified by the name "redis" and is responsible for parsing a configuration
+     * string to initialize a RedisPromptCache instance with the specified properties such as
+     * Redis URI, cache key prefix, and cache expiration time-to-live (TTL).
+     *
+     * The companion object extends the PromptCache.Factory.Named class to associate the factory
+     * with the specific name "redis" and implements the create method to generate instances
+     * of RedisPromptCache.
+     *
+     * Constants:
+     * - DEFAULT_URI: Default URI for connecting to Redis, used if no URI is provided in the configuration.
+     * - CACHE_KEY_PREFIX: Default prefix for cache keys, used if no prefix is specified in the configuration.
+     *
+     * Properties:
+     * - logger: Logger instance for logging operations related to the RedisPromptCache.
+     *
+     * Methods:
+     * - create(config: String): Parses the provided configuration string to extract Redis URI, cache key prefix,
+     *   and TTL, and returns a new RedisPromptCache instance initialized with these properties. Throws an
+     *   exception if the cache type is not "redis".
+     */
     public companion object : PromptCache.Factory.Named("redis") {
         private val logger = LoggerFactory.create(RedisPromptCache::class)
 

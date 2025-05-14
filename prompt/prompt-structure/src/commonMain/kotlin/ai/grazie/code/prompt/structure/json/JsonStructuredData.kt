@@ -34,8 +34,20 @@ public class JsonStructuredData<TStruct>(
     private val jsonSchema: LLMParams.Schema.JSON
 ): StructuredData<TStruct>(id, examples, jsonSchema) {
 
+    /**
+     * Represents the type of JSON schema that can be utilized for structured data definition.
+     * This defines the level of detail or complexity included in the schema.
+     */
     public enum class JsonSchemaType {
-        FULL, SIMPLE
+        /**
+         * Represents the complete schema type in the enumeration, typically used to indicate
+         * that the JSON schema should be fully applied or adhered to without simplification.
+         */
+        FULL, /**
+         * Represents a simplified schema type used within the JsonSchemaType enumeration.
+         * This type is typically used for scenarios where a minimal representation of the schema is sufficient.
+         */
+        SIMPLE
     }
 
     override fun parse(text: String): TStruct = structureLanguage.parse(text, serializer)
@@ -95,6 +107,16 @@ public class JsonStructuredData<TStruct>(
             )
         }
 
+        /**
+         * Retrieves description metadata for a given serializer. The metadata includes
+         * a description of the class (if annotated) and descriptions of its fields
+         * based on the presence of the `LLMDescription` annotation.
+         *
+         * @param T The type of the serializer.
+         * @param serializer The serializer for the type T, used to extract metadata.
+         * @return A `DescriptionMetadata` object containing the class and field descriptions,
+         *         or `null` if no descriptions are found.
+         */
         @PublishedApi
         internal fun <T> getDescriptionMetadata(serializer: KSerializer<T>): DescriptionMetadata? {
             // Try to find the class in the registry

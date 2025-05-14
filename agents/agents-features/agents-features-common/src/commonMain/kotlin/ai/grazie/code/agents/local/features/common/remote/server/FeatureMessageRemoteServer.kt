@@ -55,6 +55,16 @@ class FeatureMessageRemoteServer(
     val receivedMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
 
 
+    /**
+     * Serializes the current [FeatureMessage] instance into a JSON string format.
+     *
+     * This method leverages the serialization configuration defined in the `connectionConfig.jsonConfig`
+     * property to convert the [FeatureMessage] object into its corresponding JSON representation.
+     * The serialization process ensures that all the necessary properties and structure of
+     * the [FeatureMessage] are captured for transmission or storage.
+     *
+     * @return A JSON string representing the serialized form of the [FeatureMessage] instance.
+     */
     fun FeatureMessage.toServerEventData(): String {
         val jsonConfig = connectionConfig.jsonConfig
 

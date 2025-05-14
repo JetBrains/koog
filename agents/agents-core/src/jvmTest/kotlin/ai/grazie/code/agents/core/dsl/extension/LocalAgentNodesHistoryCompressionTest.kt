@@ -5,7 +5,8 @@ import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.llm.OllamaModels
@@ -65,7 +66,7 @@ class LocalAgentNodesHistoryCompressionTest {
                 }
             }
         ) {
-            install(EventHandlerFeature) {
+            install(EventHandler) {
                 onAgentFinished = { _, result -> results += result }
             }
         }
@@ -120,7 +121,7 @@ class LocalAgentNodesHistoryCompressionTest {
                 }
             }
         ) {
-            install(EventHandlerFeature) {
+            install(EventHandler) {
                 onAgentFinished = { _, result -> results += result }
             }
         }
@@ -178,7 +179,7 @@ class LocalAgentNodesHistoryCompressionTest {
                 }
             }
         ) {
-            install(EventHandlerFeature) {
+            handleEvents {
                 onAgentFinished = { _, result -> results += result }
             }
         }

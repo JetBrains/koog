@@ -41,6 +41,21 @@ private class AllowDirectToolCallsContext(val toolEnabler: DirectToolCallsEnable
 private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCallsContext.() -> T) =
     AllowDirectToolCallsContext(DirectToolCallsEnablerImpl()).block()
 
+/**
+ * Represents an implementation of an AI agent that provides functionalities to execute prompts,
+ * manage tools, handle agent pipelines, and interact with various configurable strategies and features.
+ *
+ * The agent operates within a coroutine scope and leverages a tool registry and feature context
+ * to enable dynamic additions or configurations during its lifecycle. Its behavior is driven
+ * by a local agent strategy and executed via a prompt executor.
+ *
+ * @property promptExecutor Executor used to manage and execute prompt strings.
+ * @property strategy Strategy defining the local behavior of the agent.
+ * @property agentConfig Configuration details for the local agent that define its operational parameters.
+ * @property toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
+ * @property installFeatures Lambda for installing additional features within the agent environment.
+ * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
+ */
 open class AIAgentBase(
     val promptExecutor: PromptExecutor,
     private val strategy: LocalAgentStrategy,

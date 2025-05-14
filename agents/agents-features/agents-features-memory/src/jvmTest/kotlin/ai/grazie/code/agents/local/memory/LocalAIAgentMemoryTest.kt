@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.config.MemoryScopesProfile
-import ai.grazie.code.agents.local.memory.feature.MemoryFeature
+import ai.grazie.code.agents.local.memory.feature.AgentMemory
 import ai.grazie.code.agents.local.memory.model.*
 import ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider
 import ai.grazie.code.agents.local.memory.providers.NoMemory
@@ -17,11 +17,59 @@ import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+
 class LocalAIAgentMemoryTest {
+    object MemorySubjects {
+        /**
+         * Information specific to the local machine environment
+         * Examples: Installed tools, SDKs, OS configuration, available commands
+         */
+        @Serializable
+        data object Machine : MemorySubject() {
+            override val name: String = "machine"
+            override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
+            override val priorityLevel: Int = 1
+        }
+
+        /**
+         * Information specific to the current user
+         * Examples: Preferences, settings, authentication tokens
+         */
+        @Serializable
+        data object User : MemorySubject() {
+            override val name: String = "user"
+            override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+            override val priorityLevel: Int = 2
+        }
+
+        /**
+         * Information specific to the current project
+         * Examples: Build configuration, dependencies, code style rules
+         */
+        @Serializable
+        data object Project : MemorySubject() {
+            override val name: String = "project"
+            override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+            override val priorityLevel: Int = 3
+        }
+
+        /**
+         * Information shared across an organization
+         * Examples: Coding standards, shared configurations, team practices
+         */
+        @Serializable
+        data object Organization : MemorySubject() {
+            override val name: String = "organization"
+            override val promptDescription: String = "Organization structure and policies"
+            override val priorityLevel: Int = 4
+        }
+    }
+
     private val testModel = mockk<LLModel> {
         every { id } returns "test-model"
     }
@@ -29,7 +77,7 @@ class LocalAIAgentMemoryTest {
     @Test
     fun testNoMemoryLogging() = runTest {
         val concept = Concept("test", "test description", FactType.SINGLE)
-        val subject = MemorySubject.USER
+        val subject = MemorySubjects.User
         val scope = MemoryScope.Agent("test")
 
         // Test save
@@ -47,7 +95,7 @@ class LocalAIAgentMemoryTest {
 
     @Test
     fun testSaveFactsFromHistory() = runTest {
-        val memoryFeature = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val responseSlot = slot<Message.Response>()
 
@@ -59,7 +107,7 @@ class LocalAIAgentMemoryTest {
         } returns listOf(response)
 
         coEvery {
-            memoryFeature.save(any(), any(), any())
+            memoryProvider.save(any(), any(), any())
         } returns Unit
 
         val llmContext = LocalAgentLLMContext(
@@ -71,8 +119,8 @@ class LocalAIAgentMemoryTest {
             config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = MemoryFeature(
-            agentMemory = memoryFeature,
+        val memory = AgentMemory(
+            agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile()
         )
@@ -80,18 +128,18 @@ class LocalAIAgentMemoryTest {
 
         memory.saveFactsFromHistory(
             concept = concept,
-            subject = MemorySubject.USER,
+            subject = MemorySubjects.User,
             scope = MemoryScope.Agent("test")
         )
 
         coVerify {
-            memoryFeature.save(
+            memoryProvider.save(
                 match {
                     it is SingleFact &&
                             it.concept == concept &&
                             it.timestamp > 0 // Verify timestamp is set
                 },
-                MemorySubject.USER,
+                MemorySubjects.User,
                 MemoryScope.Agent("test")
             )
         }
@@ -99,7 +147,7 @@ class LocalAIAgentMemoryTest {
 
     @Test
     fun testLoadFactsWithScopeMatching() = runTest {
-        val memoryFeature = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val concept = Concept("test", "test description", FactType.SINGLE)
 
@@ -109,39 +157,39 @@ class LocalAIAgentMemoryTest {
         val productFact = SingleFact(concept = concept, value = "product fact", timestamp = testTimestamp)
 
         // Mock responses for all subjects for Agent scope
-        MemorySubject.entries.forEach { subject ->
+        MemorySubject.registeredSubjects.forEach { subject ->
             coEvery {
-                memoryFeature.load(concept, subject, MemoryScope.Agent("test-agent"))
+                memoryProvider.load(concept, subject, MemoryScope.Agent("test-agent"))
             } returns when (subject) {
-                MemorySubject.USER -> listOf(agentFact)
+                MemorySubjects.User -> listOf(agentFact)
                 else -> emptyList()
             }
         }
 
         // Mock responses for all subjects for Feature scope
-        MemorySubject.entries.forEach { subject ->
+        MemorySubject.registeredSubjects.forEach { subject ->
             coEvery {
-                memoryFeature.load(concept, subject, MemoryScope.Feature("test-feature"))
+                memoryProvider.load(concept, subject, MemoryScope.Feature("test-feature"))
             } returns when (subject) {
-                MemorySubject.USER -> listOf(featureFact)
+                MemorySubjects.User -> listOf(featureFact)
                 else -> emptyList()
             }
         }
 
         // Mock responses for all subjects for Product scope
-        MemorySubject.entries.forEach { subject ->
+        MemorySubject.registeredSubjects.forEach { subject ->
             coEvery {
-                memoryFeature.load(concept, subject, MemoryScope.Product("test-product"))
+                memoryProvider.load(concept, subject, MemoryScope.Product("test-product"))
             } returns when (subject) {
-                MemorySubject.USER -> listOf(productFact)
+                MemorySubjects.User -> listOf(productFact)
                 else -> emptyList()
             }
         }
 
         // Mock responses for CrossProduct scope
-        MemorySubject.values().forEach { subject ->
+        MemorySubject.registeredSubjects.forEach { subject ->
             coEvery {
-                memoryFeature.load(concept, subject, MemoryScope.CrossProduct)
+                memoryProvider.load(concept, subject, MemoryScope.CrossProduct)
             } returns emptyList()
         }
 
@@ -161,8 +209,8 @@ class LocalAIAgentMemoryTest {
             config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = MemoryFeature(
-            agentMemory = memoryFeature,
+        val memory = AgentMemory(
+            agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile(
                 MemoryScopeType.AGENT to "test-agent",
@@ -172,33 +220,33 @@ class LocalAIAgentMemoryTest {
             )
         )
 
-        memory.loadFactsToAgent(concept, subjects = listOf(MemorySubject.USER))
+        memory.loadFactsToAgent(concept, subjects = listOf(MemorySubjects.User))
 
         coVerify {
-            memoryFeature.load(concept, MemorySubject.USER, MemoryScope.Agent("test-agent"))
-            memoryFeature.load(
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
+            memoryProvider.load(
                 concept,
-                MemorySubject.USER,
+                MemorySubjects.User,
                 MemoryScope.Feature("test-feature")
             )
-            memoryFeature.load(
+            memoryProvider.load(
                 concept,
-                MemorySubject.USER,
+                MemorySubjects.User,
                 MemoryScope.Product("test-product")
             )
-            memoryFeature.load(concept, MemorySubject.USER, MemoryScope.CrossProduct)
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.CrossProduct)
         }
     }
 
     @Test
     fun testLoadFactsWithOverriding() = runTest {
-        val memoryFeature = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AgentMemoryProvider>()
         val concept = Concept("test", "test description", FactType.SINGLE)
         val machineFact = SingleFact(concept = concept, value = "machine fact", timestamp = 1234567890L)
 
         // Mock memory feature to return only machine fact
         coEvery {
-            memoryFeature.load(any(), any(), any())
+            memoryProvider.load(any(), any(), any())
         } answers {
             println("[DEBUG_LOG] Loading facts for subject: ${secondArg<MemorySubject>()}, scope: ${thirdArg<MemoryScope>()}")
             listOf(machineFact)
@@ -224,8 +272,8 @@ class LocalAIAgentMemoryTest {
             }
         }
 
-        val memory = MemoryFeature(
-            agentMemory = memoryFeature,
+        val memory = AgentMemory(
+            agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile(MemoryScopeType.AGENT to "test-agent")
         )
@@ -253,7 +301,7 @@ class LocalAIAgentMemoryTest {
 
     @Test
     fun testSequentialTimestamps() = runTest {
-        val memoryFeature = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val savedFacts = mutableListOf<SingleFact>()
 
@@ -271,7 +319,7 @@ class LocalAIAgentMemoryTest {
 
         // Mock memory feature to capture saved facts
         coEvery {
-            memoryFeature.save(capture(savedFacts), any(), any())
+            memoryProvider.save(capture(savedFacts), any(), any())
         } returns Unit
 
         val llmContext = LocalAgentLLMContext(
@@ -283,14 +331,14 @@ class LocalAIAgentMemoryTest {
             config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = MemoryFeature(
-            agentMemory = memoryFeature,
+        val memory = AgentMemory(
+            agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile()
         )
 
         val concept = Concept("test", "test description", FactType.SINGLE)
-        val subject = MemorySubject.USER
+        val subject = MemorySubjects.User
         val scope = MemoryScope.Agent("test")
 
         // Save multiple facts
@@ -314,10 +362,10 @@ class LocalAIAgentMemoryTest {
 
         // Load facts and verify they maintain order
         coEvery {
-            memoryFeature.load(concept, subject, scope)
+            memoryProvider.load(concept, subject, scope)
         } returns savedFacts
 
-        val loadedFacts = memoryFeature.load(concept, subject, scope)
+        val loadedFacts = memoryProvider.load(concept, subject, scope)
         assertEquals(savedFacts.size, loadedFacts.size, "Should load all saved facts")
 
         // Verify loaded facts maintain timestamp order
@@ -329,12 +377,12 @@ class LocalAIAgentMemoryTest {
     }
 
     fun testLoadFactsToAgent() = runTest {
-        val memoryFeature = mockk<AgentMemoryProvider>()
+        val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val concept = Concept("test", "test description", FactType.SINGLE)
 
         coEvery {
-            memoryFeature.load(any(), any(), any())
+            memoryProvider.load(any(), any(), any())
         } returns listOf(SingleFact(concept = concept, value = "test fact", timestamp = 1234567890L))
 
         val response = mockk<Message.Response>()
@@ -353,8 +401,8 @@ class LocalAIAgentMemoryTest {
             config = LocalAgentConfig(Prompt.Empty, testModel, 100),
         )
 
-        val memory = MemoryFeature(
-            agentMemory = memoryFeature,
+        val memory = AgentMemory(
+            agentMemory = memoryProvider,
             llm = llmContext,
             scopesProfile = MemoryScopesProfile(
                 MemoryScopeType.AGENT to "test-agent",
@@ -364,7 +412,7 @@ class LocalAIAgentMemoryTest {
         memory.loadFactsToAgent(concept)
 
         coVerify {
-            memoryFeature.load(concept, any(), any())
+            memoryProvider.load(concept, any(), any())
         }
     }
 }

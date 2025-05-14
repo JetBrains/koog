@@ -11,7 +11,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcess
 import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.tracing.NetUtil.findAvailablePort
-import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
+import ai.grazie.code.agents.local.features.tracing.feature.Tracing
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.create
 import io.ktor.client.plugins.sse.*
@@ -80,7 +80,7 @@ class TraceFeatureMessageRemoteWriterTest {
                 }
 
                 val agent = createAgent(strategy = strategy, scope = this) {
-                    install(TraceFeature) {
+                    install(Tracing) {
                         messageFilter = { true }
                         addMessageProcessor(writer)
                     }
@@ -154,7 +154,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     strategy = strategy,
                     scope = this,
                 ) {
-                    install(TraceFeature) {
+                    install(Tracing) {
                         messageFilter = { true }
                         addMessageProcessor(writer)
                     }
@@ -235,7 +235,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         strategy = strategy,
                         scope = this,
                     ) {
-                        install(TraceFeature) {
+                        install(Tracing) {
                             messageFilter = { true }
                             addMessageProcessor(fakeWriter)
                         }
@@ -327,7 +327,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     strategy = strategy,
                     scope = this,
                 ) {
-                    install(TraceFeature) {
+                    install(Tracing) {
                         messageFilter = { message ->
                             message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent
                         }

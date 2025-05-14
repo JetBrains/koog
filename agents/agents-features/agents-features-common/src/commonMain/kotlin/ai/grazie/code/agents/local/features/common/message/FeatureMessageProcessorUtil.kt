@@ -2,12 +2,20 @@ package ai.grazie.code.agents.local.features.common.message
 
 import ai.grazie.utils.mpp.LoggerFactory
 
+/**
+ * Utility object providing safe handling and processing of feature messages for collections
+ * and individual `FeatureMessageProcessor` implementations.
+ *
+ * This utility ensures that exceptions thrown during message processing are caught and logged
+ * without interrupting the execution flow. It is particularly useful in scenarios where multiple
+ * processors are involved, and a failing processor shouldn't impact the processing of others.
+ */
 object FeatureMessageProcessorUtil {
 
     private val logger =
         LoggerFactory.create("ai.grazie.code.agents.local.features.logger.FeatureProviderUtil")
 
-    suspend fun FeatureMessageProcessor.onMessageSafe(message: FeatureMessage) {
+    internal suspend fun FeatureMessageProcessor.onMessageSafe(message: FeatureMessage) {
         try {
             this.processMessage(message)
         }
@@ -16,6 +24,16 @@ object FeatureMessageProcessorUtil {
         }
     }
 
+    /**
+     * Safely processes a given feature message using each `FeatureMessageProcessor` in the list.
+     *
+     * This method iterates through each `FeatureMessageProcessor` in the list and calls
+     * their `onMessageSafe` method to process the provided `FeatureMessage`. Any exceptions
+     * that occur during the message processing are caught and logged, ensuring that an error
+     * in one processor does not disrupt the processing of the remaining processors.
+     *
+     * @param message The feature message to be processed by each `FeatureMessageProcessor`.
+     */
     suspend fun List<FeatureMessageProcessor>.onMessageForEachSafe(message: FeatureMessage) {
         this.forEach { provider -> provider.onMessageSafe(message) }
     }

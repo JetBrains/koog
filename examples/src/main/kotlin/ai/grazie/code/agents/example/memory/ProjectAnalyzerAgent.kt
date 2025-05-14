@@ -9,7 +9,7 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.memory.tools.*
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
-import ai.grazie.code.agents.local.memory.feature.MemoryFeature
+import ai.grazie.code.agents.local.memory.feature.AgentMemory
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeLoadFromMemory
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeSaveToMemory
 import ai.grazie.code.agents.local.memory.model.Concept
@@ -27,7 +27,32 @@ import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 import kotlin.io.path.Path
+
+private object MemorySubjects {
+    /**
+     * Information specific to the local machine environment
+     * Examples: Installed tools, SDKs, OS configuration, available commands
+     */
+    @Serializable
+    data object Machine : MemorySubject() {
+        override val name: String = "machine"
+        override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
+        override val priorityLevel: Int = 1
+    }
+
+    /**
+     * Information specific to the current project
+     * Examples: Build configuration, dependencies, code style rules
+     */
+    @Serializable
+    data object Project : MemorySubject() {
+        override val name: String = "project"
+        override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+        override val priorityLevel: Int = 4
+    }
+}
 
 /**
  * Creates and configures a project analyzer agent that demonstrates memory system usage.
@@ -116,25 +141,25 @@ fun createProjectAnalyzerAgent(
         stage("load-memory") {
             val nodeLoadEnvironmentInfo by nodeLoadFromMemory<Unit>(
                 concept = environmentInfoConcept,
-                subject = MemorySubject.MACHINE,
+                subject = MemorySubjects.Machine,
                 scope = MemoryScopeType.PRODUCT
             )
 
             val nodeLoadProjectDependencies by nodeLoadFromMemory<Unit>(
                 concept = projectDependenciesConcept,
-                subject = MemorySubject.PROJECT,
+                subject = MemorySubjects.Project,
                 scope = MemoryScopeType.PRODUCT
             )
 
             val nodeLoadProjectStructure by nodeLoadFromMemory<Unit>(
                 concept = projectStructureConcept,
-                subject = MemorySubject.PROJECT,
+                subject = MemorySubjects.Project,
                 scope = MemoryScopeType.PRODUCT
             )
 
             val nodeLoadCodeStyle by nodeLoadFromMemory<Unit>(
                 concept = codeStyleConcept,
-                subject = MemorySubject.PROJECT,
+                subject = MemorySubjects.Project,
                 scope = MemoryScopeType.PRODUCT
             )
 
@@ -172,25 +197,25 @@ fun createProjectAnalyzerAgent(
         stage("save-to-memory") {
             val nodeSaveEnvironmentInfo by nodeSaveToMemory<Unit>(
                 concept = environmentInfoConcept,
-                subject = MemorySubject.MACHINE,
+                subject = MemorySubjects.Machine,
                 scope = MemoryScopeType.PRODUCT
             )
 
             val nodeSaveProjectDependencies by nodeSaveToMemory<Unit>(
                 concept = projectDependenciesConcept,
-                subject = MemorySubject.PROJECT,
+                subject = MemorySubjects.Project,
                 scope = MemoryScopeType.PRODUCT
             )
 
             val nodeSaveProjectStructure by nodeSaveToMemory<Unit>(
                 concept = projectStructureConcept,
-                subject = MemorySubject.PROJECT,
+                subject = MemorySubjects.Project,
                 scope = MemoryScopeType.PRODUCT
             )
 
             val nodeSaveCodeStyle by nodeSaveToMemory<Unit>(
                 concept = codeStyleConcept,
-                subject = MemorySubject.PROJECT,
+                subject = MemorySubjects.Project,
                 scope = MemoryScopeType.PRODUCT
             )
 
@@ -216,7 +241,7 @@ fun createProjectAnalyzerAgent(
             }
         }
     ) {
-        install(MemoryFeature) {
+        install(AgentMemory) {
             this.memoryProvider = memoryProvider
 
             if (featureName != null) this.featureName = featureName

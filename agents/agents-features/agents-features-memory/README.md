@@ -82,11 +82,22 @@ Facts come in two types:
 Just like organizing files in folders:
 
 #### Subjects (Where to Store)
-Think of subjects as main folders for different types of information:
-- **MACHINE**: Computer-specific info (OS, installed tools)
-- **USER**: Personal preferences and settings
-- **PROJECT**: Project-related information
-- **ORGANIZATION**: Company-wide settings and policies
+Think of subjects as main folders for different types of information. Common examples include:
+- **User**: Personal preferences and settings
+- **Environment**: Information related to the environment of the application
+
+And there is a pre-defined `MemorySubject.Everything` that you may use as a default subject for all facts.
+
+You can define your own custom memory subjects by extending the `MemorySubject` abstract class:
+
+```kotlin
+@Serializable
+data object CustomSubject : MemorySubject() {
+    override val name: String = "custom"
+    override val promptDescription: String = "Custom information specific to my use case"
+    override val priorityLevel: Int = 5  // Lower numbers mean higher priority
+}
+```
 
 #### Scopes (Who Can Access)
 Scopes control who can see and use the stored information:
@@ -99,14 +110,14 @@ Scopes control who can see and use the stored information:
 // Example 1: Storing user-specific IDE theme
 memoryProvider.save(
     fact = themeFact,
-    subject = MemorySubject.USER,        // Personal preference
+    subject = MemorySubjects.User,        // Personal preference
     scope = MemoryScope.Product("my-ide") // Available in this IDE
 )
 
 // Example 2: Storing project build system
 memoryProvider.save(
     fact = buildSystemFact,
-    subject = MemorySubject.PROJECT,      // Project information
+    subject = MemorySubjects.Project,     // Project information
     scope = MemoryScope.Feature("build")  // Only for build-related features
 )
 ```
@@ -128,10 +139,10 @@ val memoryProvider = LocalFileMemoryProvider(
 // Store a simple fact
 memoryProvider.save(
     fact = SingleFact(
-        concept = Concept("greeting", "User's name"),
+        concept = Concept("greeting", "User's name", FactType.SINGLE),
         value = "John"
     ),
-    subject = MemorySubject.USER
+    subject = MemorySubject.User
 )
 ```
 
@@ -140,8 +151,8 @@ memoryProvider.save(
 // Get the stored information
 try {
     val greeting = memoryProvider.load(
-        concept = Concept("greeting", "User's name"),
-        subject = MemorySubject.USER
+        concept = Concept("greeting", "User's name", FactType.SINGLE),
+        subject = MemorySubjects.User
     )
     println("Retrieved: $greeting")
 } catch (e: MemoryNotFoundException) {
@@ -177,29 +188,17 @@ val secureStorage = EncryptedStorage(
 )
 ```
 
-## Common Use Cases 💡
+## Examples 💡
 
 1. **Remembering User Preferences**
    ```kotlin
    // Store user's favorite programming language
    memoryProvider.save(
        fact = SingleFact(
-           concept = Concept("preferred-language"),
+           concept = Concept("preferred-language", "What programming language is preferred by the user?", FactType.SINGLE),
            value = "Kotlin"
        ),
-       subject = MemorySubject.USER
-   )
-   ```
-
-2. **Project Settings**
-   ```kotlin
-   // Store project's build system
-   memoryProvider.save(
-       fact = SingleFact(
-           concept = Concept("build-system"),
-           value = "Gradle"
-       ),
-       subject = MemorySubject.PROJECT
+       subject = MemorySubjects.User
    )
    ```
 
@@ -230,12 +229,12 @@ Once you're comfortable with the basics, you can explore:
 
 # Memory in Agents
 ## Adding Memory Feature to Agents
-Just use `install(MemoryFeature)` and configure it as you like when creating the agent:
+Just use `install(AgentMemory)` and configure it as you like when creating the agent:
 ```kotlin
 val myAgent = LocalAIAgentsRunner(
     ...
 ) {
-    install(MemoryFeature) {
+    install(AgentMemory) {
         memoryProvider = myMemoryProvider // see above how to create one!
 
         /** 
@@ -244,7 +243,7 @@ val myAgent = LocalAIAgentsRunner(
          * `MemoryScope.FEATURE` :
         */
         featureName = "test-feature"
-        
+
         /**
          * `organizationName` will be used to link your agent to
          * others via shared memory when using
@@ -259,15 +258,39 @@ val myAgent = LocalAIAgentsRunner(
 ### Loading facts from memory
 Let's assume that we have the following concepts:
 ```kotlin
-val projectStructureConcept = Concept("project-structure", description = "Structure of the project, including modules, folders, important files with code, etc.")
-val dependenciesConcept = Concept("project-dependencies", description = "Dependencies of the project in build system. Please, output dependencies indicating corresponding project modules, versions, and all the details")
+val projectStructureConcept = Concept("project-structure", description = "Structure of the project, including modules, folders, important files with code, etc.", FactType.MULTIPLE)
+val dependenciesConcept = Concept("project-dependencies", description = "Dependencies of the project in build system. Please, output dependencies indicating corresponding project modules, versions, and all the details", FactType.MULTIPLE)
+```
+and following memory subjects:
+```kotlin
+/**
+ * Information specific to the current user
+ * Examples: Preferences, settings, authentication tokens
+ */
+@Serializable
+data object User : MemorySubject() {
+    override val name: String = "user"
+    override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+    override val priorityLevel: Int = 2
+}
+
+/**
+ * Information specific to the current project
+ * Examples: Build configuration, dependencies, code style rules
+ */
+@Serializable
+data object Project : MemorySubject() {
+    override val name: String = "project"
+    override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+    override val priorityLevel: Int = 3
+}
 ```
 There are some ready-to made nodes available.
 For example, loading from memory (usually when starting your agent) can be done like this:
 ```kotlin
 val loadFromMemory by nodeLoadFromMemory(concepts = listOf(projectStructureConcept, dependenciesConcept))
 ```
-The `nodeLoadFromMemory` would load all the facts about the given concepts from the memory storage (configured for the agent when installing the `MemoryFeature`), and write them into the LLM chat as context.
+The `nodeLoadFromMemory` would load all the facts about the given concepts from the memory storage (configured for the agent when installing the `AgentMemory`), and write them into the LLM chat as context.
 
 Note: when using `nodeLLMCompressHistory()` by default, all memory facts would persist in the history. If you want to also remove them (or compress using the LLM), please provide `preserveMemory` parameter: `nodeLLMCompressHistory(preserveMemory = false)`.
 
@@ -277,13 +300,13 @@ At the end of your agent's execution, you would probably want to save some facts
 ```kotlin
 val saveDependenciesToMemory by nodeSaveToMemory(
     dependenciesConcept, 
-    subject = MemorySubject.PROJECT, 
+    subject = MemorySubjects.Project, 
     scope = MemoryScopeType.ORGANIZATION
 )
 
 val saveProjectStructureToMemory by nodeSaveToMemory(
     projectStructureConcept, 
-    subject = MemorySubject.PROJECT, 
+    subject = MemorySubjects.Project, 
     scope = MemoryScopeType.PRODUCT
 )
 ```
@@ -295,7 +318,7 @@ In the example above:
 You can also ask the LLM to detect all the facts from the agent's history using the `nodeSaveToMemoryAutoDetectFacts` method:
 ```kotlin
 val saveAutoDetect by nodeSaveToMemoryAutoDetectFacts<Unit>(
-    subjects = listOf(MemorySubject.USER, MemorySubject.Project)
+    subjects = listOf(MemorySubjects.User, MemorySubjects.Project)
 )
 ```
 In the example above, LLM would search for the user-related facts and project-related facts, determine the concepts, and save them into memory.
@@ -325,7 +348,7 @@ val saveUserLikesRedColor by node {
                 values = "Red",
                 timestamp = getCurrentTimestamp()
             ),
-            subject = MemorySubject.USER,
+            subject = MemorySubjects.User,
             scope = MemoryScopeType.ORGANIZATION
         )
     }
@@ -337,7 +360,7 @@ val saveUserLikesRedColor by node {
 // Query facts by multiple criteria
 val facts = memoryProvider.query {
     withConcept("build-system")
-    withSubject(MemorySubject.PROJECT)
+    withSubject(MemorySubjects.Project)
     withTimestamp(after = timeProvider.getCurrentTimestamp() - 24.hours)
 }
 ```
