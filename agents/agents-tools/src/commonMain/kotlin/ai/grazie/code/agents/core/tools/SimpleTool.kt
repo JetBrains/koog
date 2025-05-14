@@ -1,5 +1,10 @@
 package ai.grazie.code.agents.core.tools
 
+/**
+ * Represents a simplified tool base class that processes specific arguments and produces a textual result.
+ *
+ * @param TArgs The type of arguments the tool accepts, which must be a subtype of `Tool.Args`.
+ */
 abstract class SimpleTool<TArgs : Tool.Args> : Tool<TArgs, ToolResult.Text>() {
     override fun encodeResultToString(result: ToolResult.Text): String = result.text
 

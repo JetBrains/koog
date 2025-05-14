@@ -6,6 +6,7 @@ import ai.grazie.code.agents.local.memory.storage.EncryptedStorage
 import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import ai.grazie.code.files.model.FileSystemProvider
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
@@ -16,6 +17,12 @@ import kotlin.test.assertTrue
 private typealias FSProvider<Path> = FileSystemProvider.ReadWrite<Path>
 
 class LocalFileMemoryProviderTest {
+    @Serializable
+    data object UserSubject : MemorySubject() {
+        override val name: String = "user"
+        override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+        override val priorityLevel: Int = 2
+    }
     private val testKey = Aes256GCMEncryptor.run {
         keyToString(generateRandomKey())
     }
@@ -32,7 +39,7 @@ class LocalFileMemoryProviderTest {
         val config = LocalMemoryConfig(tempDir.toString())
         val provider = LocalFileMemoryProvider(config, storage, fs, tempDir)
 
-        val subject = MemorySubject.USER
+        val subject = UserSubject
         val concept = Concept(
             keyword = "test-concept",
             description = "Test concept description",
@@ -86,7 +93,7 @@ class LocalFileMemoryProviderTest {
         val config = LocalMemoryConfig(tempDir.toString())
         val provider = LocalFileMemoryProvider(config, storage, fs, tempDir)
 
-        val subject = MemorySubject.USER
+        val subject = UserSubject
         val scope = MemoryScope.Agent("test-agent")
 
         // Test saving and loading multiple facts for the same concept

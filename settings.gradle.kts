@@ -25,7 +25,6 @@ include(":agents:agents-test")
 
 include(":examples")
 
-include(":prompt:prompt-agents")
 include(":prompt:prompt-cache:prompt-cache-files")
 include(":prompt:prompt-cache:prompt-cache-model")
 include(":prompt:prompt-cache:prompt-cache-redis")
@@ -37,7 +36,6 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthrop
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client")
 include(":prompt:prompt-executor:prompt-executor-llms")
 include(":prompt:prompt-executor:prompt-executor-llms-all")
-include(":prompt:prompt-executor:prompt-executor-tools")
 include(":prompt:prompt-llm")
 include(":prompt:prompt-markdown")
 include(":prompt:prompt-model")

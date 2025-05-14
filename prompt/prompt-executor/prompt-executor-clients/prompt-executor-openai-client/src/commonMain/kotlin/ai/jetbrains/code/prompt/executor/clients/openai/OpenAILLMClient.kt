@@ -46,6 +46,12 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 
+/**
+ * Represents the settings for configuring an OpenAI client.
+ *
+ * @property baseUrl The base URL of the OpenAI API. Defaults to "https://api.openai.com/v1".
+ * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ */
 public class OpenAIClientSettings(
     public val baseUrl: String = "https://api.openai.com",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()

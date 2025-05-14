@@ -7,10 +7,11 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Base class for all messages sent from the `IdeFormer` server to the environment.
- * All server messages are associated with a specific session.
+ * Represents a message sent from an agent to the environment.
+ * This is a base interface for all communication from agents to their respective environments.
+ * Each message under this interface is tied to a specific session identified by a universally unique identifier.
  *
- * @property sessionUuid Unique identifier for the session.
+ * @property sessionUuid A unique identifier for the session associated with the message.
  */
 @Serializable
 sealed interface AgentToEnvironmentMessage {

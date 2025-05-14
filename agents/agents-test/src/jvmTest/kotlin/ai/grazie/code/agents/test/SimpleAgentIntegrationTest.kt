@@ -4,8 +4,8 @@ import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +29,7 @@ class SimpleAgentIntegrationTest {
         block(apiToken)
     }
 
-    val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+    val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onToolCall = { stage, tool, args ->
             println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
             actualToolCalls.add(tool.name)
@@ -65,7 +65,7 @@ class SimpleAgentIntegrationTest {
             llmModel = OpenAIModels.Chat.GPT4o,
             temperature = 1.0,
             maxIterations = 10,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Please exit.")
@@ -88,7 +88,7 @@ class SimpleAgentIntegrationTest {
             temperature = 1.0,
             maxIterations = 10,
             toolRegistry = toolRegistry,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Hello, how are you?")
@@ -106,7 +106,7 @@ class SimpleAgentIntegrationTest {
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
             maxIterations = 10,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Repeat what I say: hello, I'm good.")
@@ -131,7 +131,7 @@ class SimpleAgentIntegrationTest {
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Write a Kotlin function to calculate factorial.")

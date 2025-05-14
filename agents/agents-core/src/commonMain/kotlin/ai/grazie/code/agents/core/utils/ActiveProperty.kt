@@ -18,11 +18,20 @@ internal class ActiveProperty<T>(
         check(checkIsActive()) { "Cannot use the property because it is not active anymore" }
     }
 
+    /**
+     **/
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
         validate()
         return value
     }
 
+    /**
+     * Sets the value of the property while ensuring that it satisfies the active state validation.
+     *
+     * @param thisRef The reference to the object this property is part of.
+     * @param property Metadata about the property being accessed.
+     * @param value The new value to assign to the property.
+     */
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
         validate()
         this.value = value

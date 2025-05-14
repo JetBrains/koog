@@ -1,5 +1,6 @@
 package ai.grazie.code.agents.local.features.eventHandler.feature
 
+import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
@@ -8,25 +9,67 @@ import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 
-class EventHandlerFeature {
-
-    companion object Feature : KotlinAIAgentFeature<EventHandlerFeatureConfig, EventHandlerFeature> {
+/**
+ * A feature that allows hooking into various events in the agent's lifecycle.
+ * 
+ * The EventHandler provides a way to register callbacks for different events that occur during
+ * the execution of an agent, such as agent lifecycle events, strategy events, node events,
+ * LLM call events, and tool call events.
+ * 
+ * Example usage:
+ * ```
+ * handleEvents {
+ *     onToolCall = { stage, tool, toolArgs ->
+ *         println("Tool called: ${tool.name} with args $toolArgs")
+ *     }
+ *     
+ *     onAgentFinished = { strategyName, result ->
+ *         println("Agent finished with result: $result")
+ *     }
+ * }
+ * ```
+ */
+class EventHandler {
+    /**
+     * Implementation of the [KotlinAIAgentFeature] interface for the [EventHandler] feature.
+     * 
+     * This companion object provides the necessary functionality to install the [EventHandler]
+     * feature into an agent's pipeline. It intercepts various events in the agent's lifecycle
+     * and forwards them to the appropriate handlers defined in the [EventHandlerConfig].
+     *
+     * The EventHandler provides a way to register callbacks for different events that occur during
+     * the execution of an agent, such as agent lifecycle events, strategy events, node events,
+     * LLM call events, and tool call events.
+     *
+     * Example usage:
+     * ```
+     * handleEvents {
+     *     onToolCall = { stage, tool, toolArgs ->
+     *         println("Tool called: ${tool.name} with args $toolArgs")
+     *     }
+     *
+     *     onAgentFinished = { strategyName, result ->
+     *         println("Agent finished with result: $result")
+     *     }
+     * }
+     */
+    companion object Feature : KotlinAIAgentFeature<EventHandlerConfig, EventHandler> {
 
         private val logger: MPPLogger =
-            LoggerFactory.create("ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature")
+            LoggerFactory.create("ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler")
 
-        override val key: LocalAgentStorageKey<EventHandlerFeature> =
+        override val key: LocalAgentStorageKey<EventHandler> =
             LocalAgentStorageKey("agents-features-event-handler")
 
-        override fun createInitialConfig() = EventHandlerFeatureConfig()
+        override fun createInitialConfig() = EventHandlerConfig()
 
         override fun install(
-            config: EventHandlerFeatureConfig,
+            config: EventHandlerConfig,
             pipeline: AgentPipeline,
         ) {
-            logger.info { "Start installing feature: ${EventHandlerFeature::class.simpleName}" }
+            logger.info { "Start installing feature: ${EventHandler::class.simpleName}" }
 
-            val featureImpl = EventHandlerFeature()
+            val featureImpl = EventHandler()
 
             //region Intercept Agent Events
 
@@ -118,5 +161,36 @@ class EventHandlerFeature {
 
             //endregion Intercept Tool Call Events
         }
+    }
+}
+
+/**
+ * Installs the EventHandler feature and configures event handlers for an agent.
+ *
+ * This extension function provides a convenient way to install the EventHandler feature
+ * and configure various event handlers for an agent. It allows you to define custom
+ * behavior for different events that occur during the agent's execution.
+ *
+ * @param configure A lambda with receiver that configures the EventHandlerConfig.
+ *                  Use this to set up handlers for specific events.
+ *
+ * Example:
+ * ```
+ * handleEvents {
+ *     // Log when tools are called
+ *     onToolCall = { stage, tool, toolArgs ->
+ *         println("Tool called: ${tool.name}")
+ *     }
+ *     
+ *     // Handle errors
+ *     onAgentRunError = { strategyName, throwable ->
+ *         logger.error("Agent error: ${throwable.message}")
+ *     }
+ * }
+ * ```
+ */
+suspend fun FeatureContext.handleEvents(configure: EventHandlerConfig.() -> Unit) {
+    install(EventHandler) {
+        configure
     }
 }

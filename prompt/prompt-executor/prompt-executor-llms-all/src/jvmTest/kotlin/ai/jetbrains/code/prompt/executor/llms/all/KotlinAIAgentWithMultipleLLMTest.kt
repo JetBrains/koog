@@ -8,9 +8,9 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
-import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.grazie.code.agents.local.features.tracing.feature.Tracing
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.LLMClient
@@ -293,7 +293,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall = { stage, tool, arguments ->
                 println(
                     "[$stage] Calling tool ${tool.name} with arguments ${
@@ -357,7 +357,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         var errorMessage: String? = null
-        val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall = { stage, tool, arguments ->
                 println(
                     "[$stage] Calling tool ${tool.name} with arguments ${
@@ -393,7 +393,7 @@ class KotlinAIAgentWithMultipleLLMTest {
     private fun createTestAgent(
         eventsChannel: Channel<Event>,
         fs: MockFileSystem,
-        eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit,
+        eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int
     ): AIAgentBase {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
@@ -485,11 +485,11 @@ class KotlinAIAgentWithMultipleLLMTest {
             agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
         ) {
-            install(TraceFeature) {
+            install(Tracing) {
                 addMessageProcessor(TestLogPrinter())
             }
 
-            install(EventHandlerFeature, eventHandlerConfig)
+            install(EventHandler, eventHandlerConfig)
         }
     }
 
@@ -573,11 +573,11 @@ class KotlinAIAgentWithMultipleLLMTest {
             agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
         ) {
-            install(TraceFeature) {
+            install(Tracing) {
                 addMessageProcessor(TestLogPrinter())
             }
 
-            install(EventHandlerFeature) {
+            install(EventHandler) {
                 onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
@@ -659,11 +659,11 @@ class KotlinAIAgentWithMultipleLLMTest {
             agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools
         ) {
-            install(TraceFeature) {
+            install(Tracing) {
                 addMessageProcessor(TestLogPrinter())
             }
 
-            install(EventHandlerFeature) {
+            install(EventHandler) {
                 onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
@@ -744,11 +744,11 @@ class KotlinAIAgentWithMultipleLLMTest {
             agentConfig = LocalAgentConfig(prompt("test") {}, AnthropicModels.Sonnet_3_7, 15),
             toolRegistry = tools
         ) {
-            install(TraceFeature) {
+            install(Tracing) {
                 addMessageProcessor(TestLogPrinter())
             }
 
-            install(EventHandlerFeature) {
+            install(EventHandler) {
                 onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
@@ -874,11 +874,11 @@ class KotlinAIAgentWithMultipleLLMTest {
             agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools
         ) {
-            install(TraceFeature) {
+            install(Tracing) {
                 addMessageProcessor(TestLogPrinter())
             }
 
-            install(EventHandlerFeature) {
+            install(EventHandler) {
                 onToolCall = { stage, tool, arguments ->
                     println(
                         "[$stage] Calling tool ${tool.name} with arguments ${
@@ -955,7 +955,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                     tool(CalculatorTool)
                 },
                 installFeatures = {
-                    install(EventHandlerFeature) {
+                    install(EventHandler) {
                         onAgentRunError = { _, e ->
                             println("error: ${e.javaClass.simpleName}(${e.message})\n${e.stackTraceToString()}")
                             true

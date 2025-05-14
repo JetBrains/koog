@@ -60,9 +60,30 @@ class FeatureMessageRemoteClient(
     private val client: HttpClient = baseClient.prepare()
 
 
+    /**
+     * Indicates whether the client is currently connected to the remote feature messaging service.
+     *
+     * This property reflects the connection state of the `FeatureMessageRemoteClient`.
+     * It is `true` if the client has successfully established a valid connection with the remote service,
+     * and `false` otherwise. The connectivity is derived from the internal initialization state
+     * of the client.
+     */
     override val isConnected: Boolean
         get() = isInitialized
 
+    /**
+     * A communication channel for receiving feature messages or events.
+     *
+     * This property is an instance of a [Channel] configured with unlimited capacity, ensuring
+     * that it can store any number of incoming `FeatureMessage` instances without blocking the sender.
+     * It is used to facilitate asynchronous communication with the remote feature messaging service
+     * by receiving and managing the lifecycle of feature-related messages.
+     *
+     * Key behaviors:
+     * - Messages received from the remote service are sent through this channel for processing.
+     * - During the lifecycle of the client, messages are collected and handled as they arrive.
+     * - Closing the channel indicates the termination of the receiving process when the client shuts down.
+     */
     val receivedMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
 
     //region Connect / Stop

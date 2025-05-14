@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory
  *
  * @property logger The logger instance used to perform logging operations.
  */
-class LoggingFeature(val logger: Logger) {
+class Logging(val logger: Logger) {
 
     class Config : FeatureConfig() {
         var loggerName: String = "agent-logs"
@@ -32,8 +32,8 @@ class LoggingFeature(val logger: Logger) {
      * This feature supports configuration via the [Config] class,
      * which allows specifying custom logger names.
      */
-    companion object Feature : KotlinAIAgentFeature<Config, LoggingFeature> {
-        override val key: LocalAgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
+    companion object Feature : KotlinAIAgentFeature<Config, Logging> {
+        override val key: LocalAgentStorageKey<Logging> = createStorageKey("logging-feature")
 
         override fun createInitialConfig(): Config = Config()
 
@@ -51,7 +51,7 @@ class LoggingFeature(val logger: Logger) {
             config: Config,
             pipeline: AgentPipeline
         ) {
-            val logging = LoggingFeature(LoggerFactory.getLogger(config.loggerName))
+            val logging = Logging(LoggerFactory.getLogger(config.loggerName))
 
             pipeline.interceptAgentCreated(this, logging) {
                 logging.logger.info("Agent created with strategy: ${strategy.name}.")
@@ -99,7 +99,7 @@ fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs
         cs = coroutineScope,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
-        install(LoggingFeature) {
+        install(Logging) {
             loggerName = logName
         }
     }

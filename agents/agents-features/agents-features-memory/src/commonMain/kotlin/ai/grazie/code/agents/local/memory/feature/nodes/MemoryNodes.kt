@@ -52,7 +52,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
 fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     name: String? = null,
     concepts: List<Concept>,
-    subjects: List<MemorySubject> = MemorySubject.entries,
+    subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
 ): LocalAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
@@ -72,7 +72,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
  */
 fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
     name: String? = null,
-    subjects: List<MemorySubject> = MemorySubject.entries,
+    subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
 ): LocalAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
@@ -135,7 +135,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
 fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),
-    subjects: List<MemorySubject> = MemorySubject.entries
+    subjects: List<MemorySubject> = MemorySubject.registeredSubjects
 ): LocalAgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
         updatePrompt {

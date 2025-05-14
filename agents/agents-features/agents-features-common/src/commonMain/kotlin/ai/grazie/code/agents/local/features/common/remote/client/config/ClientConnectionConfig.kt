@@ -36,15 +36,49 @@ abstract class ClientConnectionConfig(
 
     val port = port ?: protocol.defaultPort
 
+    /**
+     * Provides the base URL for the current connection configuration.
+     * Constructs the URL using the protocol, host, and port specified in the connection configuration.
+     */
     val url: String
         get() = "${protocol.name}://$host:$port"
 
+    /**
+     * Constructs the URL endpoint for Server-Sent Events (SSE) communication.
+     *
+     * This property is a computed value derived from the base `url` property of the connection
+     * configuration. It appends the path `/sse` to the base URL, forming the full URL used for
+     * establishing Server-Sent Events connections. The returned URL conforms to the protocol,
+     * host, and port settings specified in the configuration.
+     *
+     * Typical use cases of this property include subscribing to a server's event stream to receive
+     * real-time updates or notifications using SSE.
+     */
     val sseUrl: String
         get() = "$url/sse"
 
+    /**
+     * A computed property that constructs the URL endpoint for health check requests.
+     *
+     * This property generates the URL by appending the "health" path segment
+     * to the base URL defined by the `url` property within the `ClientConnectionConfig` class.
+     *
+     * The generated URL is intended to be used for verifying the availability
+     * and responsiveness of the remote server or service.
+     */
     val healthCheckUrl: String
         get() = "$url/health"
 
+    /**
+     * Constructs the URL endpoint for sending or receiving messages.
+     *
+     * This property is a computed value that combines the base `url` of the client connection
+     * configuration with the `/message` path segment. It is often used as the target URL
+     * for communication with the message handling endpoint of a remote server.
+     *
+     * Common use cases include sending feature-related messages or retrieving messages from the server
+     * as part of a feature messaging system.
+     */
     val messageUrl: String
         get() = "$url/message"
 }

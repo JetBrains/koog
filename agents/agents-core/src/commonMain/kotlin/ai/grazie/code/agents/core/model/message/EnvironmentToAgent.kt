@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- * Base class of all messages sent from the environment to the `IdeFormer` server.
+ * Base class of all messages sent from the environment to the AI agent.
  * All client messages, except for [init][EnvironmentInitializeToAgentMessage],
  * are associated with a specific session.
  */
@@ -26,19 +26,58 @@ sealed interface EnvironmentToAgentContent {
     val message: String
 }
 
+/**
+ * Represents the abstract base class for the content of environment-to-agent initialization messages.
+ *
+ * This class provides a structure for initializing an agent within the environment and requires
+ * implementations to specify the agent identifier and a contextual message.
+ *
+ * @property agentId Unique identifier for the agent being initialized.
+ * @property message A message providing context or details relevant to the initialization process.
+ */
 @Serializable
 abstract class EnvironmentInitializeToAgentContent : EnvironmentToAgentContent {
+    /**
+     * Unique identifier for the agent receiving the message.
+     *
+     * This property represents the agent's unique ID and is used to route messages or data
+     * to the specific agent. It ensures that each message is associated with the correct
+     * entity in multi-agent systems or when multiple agents operate within the same environment.
+     */
     abstract override val agentId: String
+    /**
+     * A contextual message providing details related to the interaction between the environment
+     * and an agent.
+     *
+     * This property is used to convey information that is relevant to the initialization process,
+     * environment changes, or tool execution results in the communication pipeline between an
+     * environment and an agent.
+     */
     abstract override val message: String
 }
 
+/**
+ * Abstract class representing an initialization message sent from the environment to an AI agent.
+ * This message serves as a starting point for initializing an agent's session or setting up
+ * its operational context. It is part of the communication flow between the environment and the agent.
+ *
+ * @property content The content of the initialization message, defining the details and parameters
+ * needed for the agent to be initialized. This includes agent-specific configurations or metadata.
+ */
 @Serializable
 abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMessage {
     abstract val content: EnvironmentInitializeToAgentContent
 }
 
 /**
- * Marker interface for tool call results
+ * Marker interface for messages sent from the environment to an agent, specifically related to tool results.
+ * These messages convey the outcome of tool executions, including session-specific context.
+ *
+ * This interface extends [EnvironmentToAgentMessage], inheriting the characteristics of environment-to-agent communication.
+ * Implementations of this interface provide additional context, such as single or multiple tool results.
+ *
+ * @property sessionUuid Unique identifier for the session. This ensures that the message is linked
+ * to a specific session within which the tool results are relevant.
  */
 @Serializable
 sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgentMessage {
@@ -69,9 +108,8 @@ abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentContent {
  * @property sessionUuid Unique identifier for the session.
  * @property content Content of the message.
  */
-// FIXME actually is redundant except for compatibility with IdeFormer. Maybe we can get rid of this custom case?
 @Serializable
-@SerialName("OBSERVATION") // it's called OBSERVATION for compatibility with IdeFormer
+@SerialName("OBSERVATION")
 data class EnvironmentToolResultSingleToAgentMessage(
     override val sessionUuid: UUID,
     val content: EnvironmentToolResultToAgentContent,

@@ -45,6 +45,12 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 
+/**
+ * Configuration settings for connecting to the OpenRouter API.
+ *
+ * @property baseUrl The base URL of the OpenRouter API. Default is "https://openrouter.ai/api/v1".
+ * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
+ */
 public class OpenRouterClientSettings(
     public val baseUrl: String = "https://openrouter.ai",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()

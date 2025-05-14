@@ -8,7 +8,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import ai.grazie.code.agents.local.features.common.message.use
-import ai.grazie.code.agents.local.features.tracing.feature.TraceFeature
+import ai.grazie.code.agents.local.features.tracing.feature.Tracing
 import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.io.TempDir
@@ -40,7 +40,7 @@ class TraceFeatureMessageFileWriterTest {
                 strategy = strategy,
                 scope = this,
             ) {
-                install(TraceFeature) {
+                install(Tracing) {
                     messageFilter = { true }
                     addMessageProcessor(writer)
                 }
@@ -146,7 +146,7 @@ class TraceFeatureMessageFileWriterTest {
                 strategy = strategy,
                 scope = this,
             ) {
-                install(TraceFeature) {
+                install(Tracing) {
                     messageFilter = { true }
                     addMessageProcessor(writer)
                 }
@@ -181,7 +181,7 @@ class TraceFeatureMessageFileWriterTest {
                 strategy = strategy,
                 scope = this,
             ) {
-                install(TraceFeature) {
+                install(Tracing) {
                     messageFilter = { true }
                 }
             }
@@ -215,7 +215,7 @@ class TraceFeatureMessageFileWriterTest {
                 strategy = strategy,
                 scope = this,
             ) {
-                install(TraceFeature) {
+                install(Tracing) {
                     messageFilter = { message ->
                         message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent
                     }

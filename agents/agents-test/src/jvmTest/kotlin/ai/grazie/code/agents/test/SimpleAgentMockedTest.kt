@@ -5,8 +5,8 @@ import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.ExitTool
 import ai.grazie.code.agents.core.tools.tools.SayToUser
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeatureConfig
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import kotlinx.coroutines.runBlocking
@@ -31,7 +31,7 @@ class SimpleAgentMockedTest {
         ) onRequestEquals "Write a Kotlin function to calculate factorial."
     }
 
-    val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+    val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onToolCall = { stage, tool, args ->
             println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
             actualToolCalls.add(tool.name)
@@ -65,7 +65,7 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             maxIterations = 10,
             executor = testExecutor,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Please exit.")
@@ -92,7 +92,7 @@ class SimpleAgentMockedTest {
             maxIterations = 10,
             toolRegistry = toolRegistry,
             executor = testExecutor,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Hello, how are you?")
@@ -114,7 +114,7 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             maxIterations = 10,
             executor = testExecutor,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Repeat after me: Hello, I'm good.")
@@ -143,7 +143,7 @@ class SimpleAgentMockedTest {
             toolRegistry = toolRegistry,
             maxIterations = 10,
             executor = testExecutor,
-            installFeatures = { install(EventHandlerFeature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
         agent.run("Write a Kotlin function to calculate factorial.")

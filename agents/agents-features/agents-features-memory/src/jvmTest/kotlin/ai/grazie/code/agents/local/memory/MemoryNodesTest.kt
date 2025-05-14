@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.local.memory.feature.MemoryFeature
+import ai.grazie.code.agents.local.memory.feature.AgentMemory
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.grazie.code.agents.local.memory.feature.withMemory
 import ai.grazie.code.agents.local.memory.model.*
@@ -16,9 +16,56 @@ import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+
+internal object MemorySubjects {
+    /**
+     * Information specific to the local machine environment
+     * Examples: Installed tools, SDKs, OS configuration, available commands
+     */
+    @Serializable
+    data object Machine : MemorySubject() {
+        override val name: String = "machine"
+        override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
+        override val priorityLevel: Int = 1
+    }
+
+    /**
+     * Information specific to the current user
+     * Examples: Preferences, settings, authentication tokens
+     */
+    @Serializable
+    data object User : MemorySubject() {
+        override val name: String = "user"
+        override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+        override val priorityLevel: Int = 2
+    }
+
+    /**
+     * Information specific to the current project
+     * Examples: Build configuration, dependencies, code style rules
+     */
+    @Serializable
+    data object Project : MemorySubject() {
+        override val name: String = "project"
+        override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+        override val priorityLevel: Int = 3
+    }
+
+    /**
+     * Information shared across an organization
+     * Examples: Coding standards, shared configurations, team practices
+     */
+    @Serializable
+    data object Organization : MemorySubject() {
+        override val name: String = "organization"
+        override val promptDescription: String = "Organization structure and policies"
+        override val priorityLevel: Int = 4
+    }
+}
 
 internal class TestMemoryProvider : AgentMemoryProvider {
     val facts = mutableMapOf<String, MutableList<Fact>>()
@@ -101,18 +148,18 @@ class MemoryNodesTest {
         val strategy = strategy("test-agent") {
             stage {
                 val saveAutoDetect by nodeSaveToMemoryAutoDetectFacts<Unit>(
-                    subjects = listOf(MemorySubject.USER)
+                    subjects = listOf(MemorySubjects.User)
                 )
 
                 val saveTestConcept by node<Unit, Unit> {
                     withMemory {
-                        agentMemory.save(fact, MemorySubject.USER, MemoryScope.Agent("test-agent"))
+                        agentMemory.save(fact, MemorySubjects.User, MemoryScope.Agent("test-agent"))
                     }
                 }
 
                 val loadTestConcept by node<Unit, Unit> {
                     result += withMemory {
-                        agentMemory.load(concept, MemorySubject.USER, MemoryScope.Agent("test-agent"))
+                        agentMemory.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
                     }
                 }
 
@@ -144,7 +191,7 @@ class MemoryNodesTest {
                 }
             }
         ) {
-            install(MemoryFeature) {
+            install(AgentMemory) {
                 memoryProvider = TestMemoryProvider()
 
                 featureName = "test-feature"
@@ -170,7 +217,7 @@ class MemoryNodesTest {
         val strategy = strategy("test-agent") {
             stage {
                 val detect by nodeSaveToMemoryAutoDetectFacts<Unit>(
-                    subjects = listOf(MemorySubject.USER, MemorySubject.PROJECT)
+                    subjects = listOf(MemorySubjects.User, MemorySubjects.Project)
                 )
 
                 edge(nodeStart forwardTo detect transformed { })
@@ -203,7 +250,7 @@ class MemoryNodesTest {
                 }
             }
         ) {
-            install(MemoryFeature) {
+            install(AgentMemory) {
                 memoryProvider = memory
             }
         }

@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
@@ -51,7 +51,7 @@ class LocalAgentNodesTest {
                 }
             }
         ) {
-            install(EventHandlerFeature) {
+            install(EventHandler) {
                 onAgentFinished = { _, result -> results += result }
             }
         }

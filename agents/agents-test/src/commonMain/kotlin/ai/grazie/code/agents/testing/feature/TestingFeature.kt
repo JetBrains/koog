@@ -254,28 +254,86 @@ sealed interface AssertionResult {
 
 /**
  * Provides functionality for testing graph-related stages in an AI agent pipeline.
- * Designed as a feature to configure and validate the relationships between nodes,
- * their outputs, and the overall graph structure within different stages.
- * Can validate stage order, node reachability, node outputs, and edge relationships.
+ *
+ * This feature allows you to configure and validate the relationships between nodes,
+ * their outputs, and the overall graph structure within different stages of an agent.
+ * It can validate:
+ * - Stage order
+ * - Node existence and reachability
+ * - Node input/output behavior
+ * - Edge connections between nodes
+ *
+ * The Testing feature is designed to be used with the [testGraph] function, which provides
+ * a clean API for defining and executing graph tests.
+ *
+ * Example usage:
+ * ```kotlin
+ * KotlinAIAgent(
+ *     // constructor arguments
+ * ) {
+ *     testGraph {
+ *         // Assert the order of stages
+ *         assertStagesOrder("first", "second")
+ *
+ *         // Test the first stage
+ *         stage("first") {
+ *             val start = startNode()
+ *             val finish = finishNode()
+ *
+ *             // Assert nodes by name
+ *             val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+ *             val callTool = assertNodeByName<ToolCall.Signature, ToolCall.Result>("executeTool")
+ *
+ *             // Assert node reachability
+ *             assertReachable(start, askLLM)
+ *             assertReachable(askLLM, callTool)
+ *
+ *             // Test node behavior
+ *             assertNodes {
+ *                 askLLM withInput "Hello" outputs Message.Assistant("Hello!")
+ *             }
+ *
+ *             // Test edge connections
+ *             assertEdges {
+ *                 askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
+ *             }
+ *         }
+ *     }
+ * }
+ * ```
+ *
+ * @see testGraph
+ * @see Testing.Config
  */
 @TestOnly
 class Testing {
     /**
      * A mutable list storing `StageAssertions` objects, which define validation
      * criteria for individual stages in the graph testing process.
-     * This list is typically used to configure and verify stages, nodes, edges,
-     * outputs, and reachability assertions during the execution of agent pipelines.
+     *
+     * Each `StageAssertions` object contains information about:
+     * - The stage name
+     * - References to start and finish nodes
+     * - Named node references
+     * - Node output assertions
+     * - Edge assertions
+     * - Reachability assertions
+     *
+     * This list is populated during the configuration phase and used during
+     * the validation phase to verify the agent's graph structure.
      */
     private val stages = mutableListOf<StageAssertions>()
 
     /**
      * Represents an optional list of stage names indicating the desired order in which stages
-     * should be processed. This can be used to verify and enforce the sequence in which stages
-     * are handled during testing or processing workflows.
+     * should be processed.
+     *
+     * When set, this list is used to verify that the agent's stages are defined in the
+     * expected order. This is useful for ensuring that the agent's workflow follows
+     * a specific sequence of stages.
      *
      * Null indicates that no specific order is defined, allowing stages to be handled
-     * without restriction. When set, the list will contain stage names as strings, and
-     * any processing or assertions may take this order into account for validation purposes.
+     * without restriction.
      */
     private var stagesOrder: List<String>? = null
 
@@ -929,10 +987,24 @@ class Testing {
 /**
  * Creates a `Message.Tool.Call` instance for the given tool and its arguments.
  *
+ * This utility function simplifies the creation of tool call messages for testing purposes.
+ * It automatically handles the encoding of arguments into the appropriate string format.
+ *
  * @param tool The tool to be represented in the call message. The `Tool` instance contains metadata
  *             such as the tool's name and utility methods for encoding/decoding arguments.
  * @param args The arguments to be passed to the tool. Must match the type `Args` defined by the tool.
  * @return A `Message.Tool.Call` object representing a call to the specified tool with the encoded arguments.
+ *
+ * Example usage:
+ * ```kotlin
+ * // Create a tool call message for testing
+ * val message = toolCallMessage(CreateTool, CreateTool.Args("solve"))
+ *
+ * // Use in node output assertions
+ * assertNodes {
+ *     askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+ * }
+ * ```
  */
 fun <Args : Tool.Args> toolCallMessage(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
     Message.Tool.Call(null, tool.name, tool.encodeArgsToString(args))
@@ -940,36 +1012,106 @@ fun <Args : Tool.Args> toolCallMessage(tool: Tool<Args, *>, args: Args): Message
 /**
  * Generates a signature object for a given tool and its arguments.
  *
+ * This utility function creates a tool call signature that can be used for testing
+ * tool execution nodes. It's similar to [toolCallMessage] but is used specifically
+ * in the context of testing tool execution.
+ *
  * @param tool The tool for which the signature is being generated. This parameter must be an instance of Tool with the specified argument type.
  * @param args The arguments to be passed to the tool. These arguments must comply with the requirements specified by the tool.
  * @return A signature that encapsulates the tool's name and its encoded arguments.
+ *
+ * Example usage:
+ * ```kotlin
+ * // Create a tool call signature for testing
+ * val signature = toolCallSignature(SolveTool, SolveTool.Args("solve"))
+ *
+ * // Use in node input assertions
+ * assertNodes {
+ *     callTool withInput toolCallSignature(SolveTool, SolveTool.Args("solve")) outputs toolResult(SolveTool, "solved")
+ * }
+ * ```
  */
 fun <Args : Tool.Args> toolCallSignature(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
     Message.Tool.Call(null, tool.name, tool.encodeArgsToString(args))
 
 /**
- * Converts a tool and its corresponding result into a `Message.Tool.Result` object.
+ * Converts a tool and its corresponding result into a `ReceivedToolResult` object.
+ *
+ * This utility function simplifies the creation of tool results for testing purposes.
+ * It automatically handles the encoding of the result into the appropriate string format.
  *
  * @param tool The tool whose result is being processed. The tool provides context for the result.
  * @param result The result produced by the tool, which will be encoded into a string representation.
- * @return A `ToolCall.Result` instance containing the tool's name and the encoded string representation of the result.
+ * @return A `ReceivedToolResult` instance containing the tool's name and the encoded string representation of the result.
+ *
+ * Example usage:
+ * ```kotlin
+ * // Create a tool result for testing
+ * val result = toolResult(AnalyzeTool, AnalyzeTool.Result("Detailed analysis", 0.95))
+ *
+ * // Use in node output assertions
+ * assertNodes {
+ *     callTool withInput toolCallSignature(AnalyzeTool, AnalyzeTool.Args("analyze")) outputs result
+ * }
+ * ```
  */
 fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
     ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), result)
 
 /**
- * Constructs a `ToolCall.Result` object using the provided tool and result string.
+ * Constructs a `ReceivedToolResult` object using the provided tool and result string.
+ *
+ * This is a convenience function for simple tools that return text results.
+ * It wraps the string result in a `ToolResult.Text` object.
  *
  * @param tool The tool for which the result is being created, of type `SimpleTool`.
  * @param result The result content generated by the tool execution as a string.
- * @return An instance of `ToolCall.Result` containing the tool's name and the result string.
+ * @return An instance of `ReceivedToolResult` containing the tool's name and the result string.
+ *
+ * Example usage:
+ * ```kotlin
+ * // Create a simple text tool result for testing
+ * val result = toolResult(SolveTool, "solved")
+ *
+ * // Use in node output assertions
+ * assertNodes {
+ *     callTool withInput toolCallSignature(SolveTool, SolveTool.Args("solve")) outputs result
+ * }
+ * ```
  */
 fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult = toolResult(tool, ToolResult.Text(result))
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.
  *
+ * This function installs the Testing feature with the specified configuration.
+ * It's typically used within the agent constructor block to enable testing capabilities.
+ *
  * @param config A lambda function to configure the Testing feature. The default is an empty configuration.
+ *
+ * Example usage:
+ * ```kotlin
+ * // Create an agent with testing enabled
+ * KotlinAIAgent(
+ *     promptExecutor = mockLLMApi,
+ *     toolRegistry = toolRegistry,
+ *     strategy = strategy,
+ *     eventHandler = eventHandler,
+ *     agentConfig = agentConfig,
+ *     cs = this
+ * ) {
+ *     // Enable testing with custom configuration
+ *     withTesting {
+ *         enableGraphTesting = true
+ *         handleAssertion { assertionResult ->
+ *             // Custom assertion handling
+ *         }
+ *     }
+ * }
+ * ```
+ *
+ * @see Testing
+ * @see Testing.Config
  */
 suspend fun FeatureContext.withTesting(config: Testing.Config.() -> Unit = {}) {
     install(Testing) {

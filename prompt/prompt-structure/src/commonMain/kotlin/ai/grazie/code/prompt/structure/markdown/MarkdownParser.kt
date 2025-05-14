@@ -184,6 +184,16 @@ public class MarkdownParserBuilder {
         }
     }
 
+    /**
+     * Builds and returns a streaming markdown parser.
+     *
+     * This method constructs a `MarkdownStreamingParser` instance using the configuration
+     * setup in the current `MarkdownParserBuilder`. The streaming parser processes markdown
+     * text by consuming chunks of input and invoking the appropriate registered handlers for
+     * headers, bullet points, code blocks, and other elements, as defined in the builder.
+     *
+     * @return A `MarkdownStreamingParser` instance capable of handling streaming markdown input.
+     */
     public fun buildStreaming(): MarkdownStreamingParser = MarkdownStreamingParser(build())
 
     public inner class MarkdownStreamingParser(private val parser: suspend (String) -> Unit) {

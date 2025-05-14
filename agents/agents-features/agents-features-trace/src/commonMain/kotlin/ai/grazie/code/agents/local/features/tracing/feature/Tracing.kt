@@ -15,14 +15,14 @@ import ai.jetbrains.code.prompt.message.Message
 /**
  * Feature that collects tracing data during agent execution and sends it to a feature message processor.
  */
-class TraceFeature {
+class Tracing {
 
-    companion object Feature : KotlinAIAgentFeature<TraceFeatureConfig, TraceFeature> {
+    companion object Feature : KotlinAIAgentFeature<TraceFeatureConfig, Tracing> {
 
         private val logger: MPPLogger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.feature.TracingFeature")
 
-        override val key: LocalAgentStorageKey<TraceFeature> =
+        override val key: LocalAgentStorageKey<Tracing> =
             LocalAgentStorageKey("agents-features-tracing")
 
         override fun createInitialConfig() = TraceFeatureConfig()
@@ -31,13 +31,13 @@ class TraceFeature {
             config: TraceFeatureConfig,
             pipeline: AgentPipeline,
         ) {
-            logger.info { "Start installing feature: ${TraceFeature::class.simpleName}" }
+            logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 
             if (config.messageProcessor.isEmpty()) {
                 logger.warning { "Tracing Feature. No feature out stream providers are defined. Trace streaming has no target." }
             }
 
-            val featureImpl = TraceFeature()
+            val featureImpl = Tracing()
 
             //region Intercept Agent Events
 

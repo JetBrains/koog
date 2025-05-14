@@ -13,12 +13,59 @@ import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
+
+internal object MemorySubjects {
+    /**
+     * Information specific to the local machine environment
+     * Examples: Installed tools, SDKs, OS configuration, available commands
+     */
+    @Serializable
+    data object Machine : MemorySubject() {
+        override val name: String = "machine"
+        override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
+        override val priorityLevel: Int = 1
+    }
+
+    /**
+     * Information specific to the current user
+     * Examples: Preferences, settings, authentication tokens
+     */
+    @Serializable
+    data object User : MemorySubject() {
+        override val name: String = "user"
+        override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+        override val priorityLevel: Int = 2
+    }
+
+    /**
+     * Information specific to the current project
+     * Examples: Build configuration, dependencies, code style rules
+     */
+    @Serializable
+    data object Project : MemorySubject() {
+        override val name: String = "project"
+        override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+        override val priorityLevel: Int = 3
+    }
+
+    /**
+     * Information shared across an organization
+     * Examples: Coding standards, shared configurations, team practices
+     */
+    @Serializable
+    data object Organization : MemorySubject() {
+        override val name: String = "organization"
+        override val promptDescription: String = "Organization structure and policies"
+        override val priorityLevel: Int = 4
+    }
+}
 
 /**
  * Tests for the ProjectAnalyzerAgent.
@@ -398,7 +445,7 @@ class ProjectAnalyzerTest {
         agent.run("")
 
         // Verify that environment facts were stored in memory
-        val machineSubjectFacts = memoryProvider.loadAll(MemorySubject.MACHINE, MemoryScope.Product(TEST_PRODUCT_NAME))
+        val machineSubjectFacts = memoryProvider.loadAll(MemorySubjects.Machine, MemoryScope.Product(TEST_PRODUCT_NAME))
         assertFalse(machineSubjectFacts.isEmpty(), "No facts about the machine environment were stored")
 
         // Verify that at least one fact contains environment information
@@ -432,7 +479,7 @@ class ProjectAnalyzerTest {
         agent.run("")
 
         // Verify that project facts were stored in memory
-        val projectSubjectFacts = memoryProvider.loadAll(MemorySubject.PROJECT, MemoryScope.Product(TEST_PRODUCT_NAME))
+        val projectSubjectFacts = memoryProvider.loadAll(MemorySubjects.Project, MemoryScope.Product(TEST_PRODUCT_NAME))
         assertFalse(projectSubjectFacts.isEmpty(), "No facts about the project were stored")
 
         // Verify that at least one fact contains dependency information
@@ -466,7 +513,7 @@ class ProjectAnalyzerTest {
         agent.run("")
 
         // Verify that project structure facts were stored in memory
-        val projectSubjectFacts = memoryProvider.loadAll(MemorySubject.PROJECT, MemoryScope.Product(TEST_PRODUCT_NAME))
+        val projectSubjectFacts = memoryProvider.loadAll(MemorySubjects.Project, MemoryScope.Product(TEST_PRODUCT_NAME))
 
         // Verify that at least one fact contains structure information
         val structureFacts = projectSubjectFacts.filter {
@@ -507,7 +554,7 @@ class ProjectAnalyzerTest {
         agent.run("")
 
         // Verify that code style facts were stored in memory
-        val projectSubjectFacts = memoryProvider.loadAll(MemorySubject.PROJECT, MemoryScope.Product(TEST_PRODUCT_NAME))
+        val projectSubjectFacts = memoryProvider.loadAll(MemorySubjects.Project, MemoryScope.Product(TEST_PRODUCT_NAME))
 
         // Verify that at least one fact contains code style information
         val codeStyleFacts = projectSubjectFacts.filter {
@@ -543,7 +590,7 @@ class ProjectAnalyzerTest {
 
         // Verify that facts were stored in memory
         val factsBeforeSecondAgent =
-            memoryProvider.loadAll(MemorySubject.PROJECT, MemoryScope.Product(TEST_PRODUCT_NAME))
+            memoryProvider.loadAll(MemorySubjects.Project, MemoryScope.Product(TEST_PRODUCT_NAME))
         assertFalse(factsBeforeSecondAgent.isEmpty(), "No facts were stored by the first agent")
 
         // Create a second agent with the same memory provider
@@ -568,7 +615,7 @@ class ProjectAnalyzerTest {
         // This is implicit in the fact that the second agent ran successfully
         // We could also verify that no duplicate facts were created
         val factsAfterSecondAgent =
-            memoryProvider.loadAll(MemorySubject.PROJECT, MemoryScope.Product(TEST_PRODUCT_NAME))
+            memoryProvider.loadAll(MemorySubjects.Project, MemoryScope.Product(TEST_PRODUCT_NAME))
         assertTrue(
             factsAfterSecondAgent.size >= factsBeforeSecondAgent.size,
             "Second agent should have access to at least as many facts as were stored by the first agent"

@@ -19,11 +19,11 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
-class EventHandlerFeatureTest {
+class EventHandlerTest {
 
     private val collectedEvents = mutableListOf<String>()
 
-    val eventHandlerConfig: EventHandlerFeatureConfig.() -> Unit = {
+    val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onAgentCreated = { strategy: LocalAgentStrategy, agent: AIAgentBase ->
             collectedEvents.add("OnAgentCreated (strategy: ${strategy.name})")
         }
@@ -112,7 +112,7 @@ class EventHandlerFeatureTest {
             strategy = strategy,
             scope = this,
             installFeatures = {
-                install(EventHandlerFeature, eventHandlerConfig)
+                install(EventHandler, eventHandlerConfig)
             }
         )
 

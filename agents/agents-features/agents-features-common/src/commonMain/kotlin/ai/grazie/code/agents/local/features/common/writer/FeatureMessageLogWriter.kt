@@ -20,6 +20,19 @@ abstract class FeatureMessageLogWriter(
         private val logger = LoggerFactory.create("ai.grazie.code.agents.local.features.common.writer.FeatureMessageLogWriter")
     }
 
+    /**
+     * Defines the logging levels supported by the system.
+     *
+     * The `LogLevel` enum is used to specify the level of detail to be logged.
+     * This can be useful for controlling the verbosity of log output and filtering
+     * messages based on their importance or purpose.
+     *
+     * `INFO`: Represents informational messages that highlight the overall
+     * application flow, such as initialization or significant lifecycle events.
+     *
+     * `DEBUG`: Represents detailed debugging messages used for diagnosing issues
+     * or understanding the internal state and behavior of the application.
+     */
     enum class LogLevel { INFO, DEBUG }
 
     init {

@@ -4,8 +4,18 @@ import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 
+/**
+ * Object containing a collection of predefined OpenAI model configurations.
+ * These models span various use cases, including reasoning, chat, and cost-optimized tasks.
+ */
 public object OpenAIModels {
+
     // TODO: support thinking tokens
+    /**
+     * Object containing a set of pre-configured reasoning models with various capabilities and constraints.
+     * These models are designed for tasks ranging from general reasoning to domain-specific applications,
+     * supporting key features like multi-step problem solving, structured outputs, and context-based responses.
+     */
     public object Reasoning {
         /**
          * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
@@ -104,6 +114,11 @@ public object OpenAIModels {
         )
     }
 
+    /**
+     * Object that provides pre-configured instances of advanced GPT models for different use cases.
+     * These instances represent versatile and high-performance large language models capable of handling various tasks like
+     * text completion, image input processing, structured outputs, and interfacing with tools.
+     */
     public object Chat {
         /**
          * GGPT-4o (“o” for “omni”) is a versatile, high-intelligence flagship model.
@@ -144,6 +159,11 @@ public object OpenAIModels {
         )
     }
 
+    /**
+     * The `CostOptimized` object provides a collection of cost-efficient language models
+     * optimized for specific use cases. These models aim to balance quality, performance,
+     * and affordability, catering to various tasks like reasoning, speculation, and tools integration.
+     */
     public object CostOptimized {
         /**
          * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being

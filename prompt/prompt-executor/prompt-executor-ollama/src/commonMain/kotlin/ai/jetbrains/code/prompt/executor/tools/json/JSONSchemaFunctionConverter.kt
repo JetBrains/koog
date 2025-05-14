@@ -4,6 +4,15 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import kotlinx.serialization.json.*
 
+/**
+ * Converts the current ToolDescriptor instance into a JSON Schema representation.
+ *
+ * This function generates a JSON object that conforms to the schema of the tool, including all required and optional
+ * parameters with their respective types and descriptions. The schema defines the tool structure in a JSON-friendly
+ * format for validation or documentation purposes.
+ *
+ * @return A JsonObject representing the JSON Schema for the current ToolDescriptor instance.
+ */
 public fun ToolDescriptor.toJSONSchema(): JsonObject {
     /**
      * Helper function to convert a ToolParameterDescriptor into JSON schema.

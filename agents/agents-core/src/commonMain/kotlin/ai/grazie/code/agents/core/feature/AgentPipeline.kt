@@ -34,31 +34,68 @@ import kotlinx.coroutines.awaitAll
  */
 class AgentPipeline {
 
+    /**
+     * Companion object for the AgentPipeline class.
+     */
     companion object {
+        /**
+         * Logger instance for the AgentPipeline class.
+         */
         private val logger = LoggerFactory.create("ai.grazie.code.agents.core.pipeline.AIAgentPipeline")
     }
 
+    /**
+     * Map of registered features and their configurations.
+     * Keys are feature storage keys, values are feature configurations.
+     */
     private val registeredFeatures: MutableMap<LocalAgentStorageKey<*>, FeatureConfig> = mutableMapOf()
 
+    /**
+     * Map of agent handlers registered for different features.
+     * Keys are feature storage keys, values are agent handlers.
+     */
     private val agentHandlers: MutableMap<LocalAgentStorageKey<*>, AgentHandler<*>> = mutableMapOf()
 
+    /**
+     * Map of strategy handlers registered for different features.
+     * Keys are feature storage keys, values are strategy handlers.
+     */
     private val strategyHandlers: MutableMap<LocalAgentStorageKey<*>, StrategyHandler<*>> = mutableMapOf()
 
+    /**
+     * Map of stage context handlers registered for different features.
+     * Keys are feature storage keys, values are stage context handlers.
+     */
     private val stageContextHandler: MutableMap<LocalAgentStorageKey<*>, StageContextHandler<*>> = mutableMapOf()
 
+    /**
+     * Map of node execution handlers registered for different features.
+     * Keys are feature storage keys, values are node execution handlers.
+     */
     private val executeNodeHandlers: MutableMap<LocalAgentStorageKey<*>, ExecuteNodeHandler> = mutableMapOf()
 
+    /**
+     * Map of tool execution handlers registered for different features.
+     * Keys are feature storage keys, values are tool execution handlers.
+     */
     private val executeToolHandlers: MutableMap<LocalAgentStorageKey<*>, ExecuteToolHandler> = mutableMapOf()
 
+    /**
+     * Map of LLM execution handlers registered for different features.
+     * Keys are feature storage keys, values are LLM execution handlers.
+     */
     private val executeLLMHandlers: MutableMap<LocalAgentStorageKey<*>, ExecuteLLMHandler> = mutableMapOf()
 
     /**
      * Installs a feature into the pipeline with the provided configuration.
      *
-     * @param Config The type of the feature configuration;
-     * @param Feature The type of the feature being installed;
-     * @param feature The feature implementation to be installed;
-     * @param configure A lambda to customize the feature configuration.
+     * This method initializes the feature with a custom configuration and registers it in the pipeline.
+     * The feature's message processors are initialized during installation.
+     *
+     * @param Config The type of the feature configuration
+     * @param Feature The type of the feature being installed
+     * @param feature The feature implementation to be installed
+     * @param configure A lambda to customize the feature configuration
      */
     suspend fun <Config : FeatureConfig, Feature : Any> install(
         feature: KotlinAIAgentFeature<Config, Feature>,
@@ -74,11 +111,23 @@ class AgentPipeline {
         registeredFeatures[feature.key] = config
     }
 
+    /**
+     * Waits for all feature stream providers to be ready.
+     * 
+     * This internal method ensures that all message processors of registered features
+     * are fully initialized and ready to process messages.
+     */
     internal suspend fun awaitFeaturesStreamProvidersReady() {
         registeredFeatures.values.flatMap { config -> config.messageProcessor.map { provider -> provider.isReady } }
             .awaitAll()
     }
 
+    /**
+     * Closes all feature stream providers.
+     * 
+     * This internal method properly shuts down all message processors of registered features,
+     * ensuring resources are released appropriately.
+     */
     internal suspend fun closeFeaturesStreamProviders() {
         registeredFeatures.values.forEach { config -> config.messageProcessor.forEach { provider -> provider.close() } }
     }
@@ -86,7 +135,13 @@ class AgentPipeline {
     //region Trigger Agent Handlers
 
     /**
-     * Run registered features' handlers on the event - agent created.
+     * Triggers all registered agent creation handlers when an agent is created.
+     *
+     * This method notifies all registered features about the creation of a new agent,
+     * allowing them to perform initialization or setup operations.
+     *
+     * @param strategy The strategy associated with the created agent
+     * @param agent The newly created agent instance
      */
     @OptIn(InternalAgentsApi::class)
     suspend fun onAgentCreated(strategy: LocalAgentStrategy, agent: AIAgentBase) {
@@ -96,18 +151,46 @@ class AgentPipeline {
         }
     }
 
+    /**
+     * Notifies all registered handlers that an agent has started execution.
+     *
+     * @param strategyName The name of the strategy being executed by the agent
+     */
     suspend fun onAgentStarted(strategyName: String) {
         agentHandlers.values.forEach { handler -> handler.agentStartedHandler.handle(strategyName) }
     }
 
+    /**
+     * Notifies all registered handlers that an agent has finished execution.
+     *
+     * @param strategyName The name of the strategy that was executed
+     * @param result The result produced by the agent, or null if no result was produced
+     */
     suspend fun onAgentFinished(strategyName: String, result: String?) {
         agentHandlers.values.forEach { handler -> handler.agentFinishedHandler.handle(strategyName, result) }
     }
 
+    /**
+     * Notifies all registered handlers about an error that occurred during agent execution.
+     *
+     * @param strategyName The name of the strategy during which the error occurred
+     * @param throwable The exception that was thrown during agent execution
+     */
     suspend fun onAgentRunError(strategyName: String, throwable: Throwable) {
         agentHandlers.values.forEach { handler -> handler.agentRunErrorHandler.handle(strategyName, throwable) }
     }
 
+    /**
+     * Transforms the agent environment by applying all registered environment transformers.
+     *
+     * This method allows features to modify or enhance the agent's environment before it starts execution.
+     * Each registered handler can apply its own transformations to the environment in sequence.
+     *
+     * @param strategy The strategy associated with the agent
+     * @param agent The agent instance for which the environment is being transformed
+     * @param baseEnvironment The initial environment to be transformed
+     * @return The transformed environment after all handlers have been applied
+     */
     fun transformEnvironment(
         strategy: LocalAgentStrategy,
         agent: AIAgentBase,
@@ -123,6 +206,11 @@ class AgentPipeline {
 
     //region Trigger Strategy Handlers
 
+    /**
+     * Notifies all registered strategy handlers that a strategy has started execution.
+     *
+     * @param strategy The strategy that has started execution
+     */
     suspend fun onStrategyStarted(strategy: LocalAgentStrategy) {
         strategyHandlers.values.forEach { handler ->
             val updateContext = StrategyUpdateContext(strategy, handler.feature)
@@ -130,6 +218,12 @@ class AgentPipeline {
         }
     }
 
+    /**
+     * Notifies all registered strategy handlers that a strategy has finished execution.
+     *
+     * @param strategyName The name of the strategy that has finished
+     * @param result The result produced by the strategy execution
+     */
     suspend fun onStrategyFinished(strategyName: String, result: String) {
         strategyHandlers.values.forEach { handler -> handler.strategyFinishedHandler.handle(strategyName, result) }
     }
@@ -139,8 +233,13 @@ class AgentPipeline {
     //region Trigger Stage Context Handlers
 
     /**
-     * Run registered features' handlers on stage execute event.
-     * Retrieves the features associated with the current stage context.
+     * Retrieves all features associated with the given stage context.
+     *
+     * This method collects features from all registered stage context handlers
+     * that are applicable to the provided context.
+     *
+     * @param context The stage context for which to retrieve features
+     * @return A map of feature keys to their corresponding feature instances
      */
     fun getStageFeatures(context: LocalAgentStageContext): Map<LocalAgentStorageKey<*>, Any> {
         return stageContextHandler.mapValues { (_, featureProvider) ->
@@ -152,10 +251,25 @@ class AgentPipeline {
 
     //region Trigger Node Handlers
 
+    /**
+     * Notifies all registered node handlers before a node is executed.
+     *
+     * @param node The node that is about to be executed
+     * @param context The stage context in which the node is being executed
+     * @param input The input data for the node execution
+     */
     suspend fun onBeforeNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(node, context, input) }
     }
 
+    /**
+     * Notifies all registered node handlers after a node has been executed.
+     *
+     * @param node The node that was executed
+     * @param context The stage context in which the node was executed
+     * @param input The input data that was provided to the node
+     * @param output The output data produced by the node execution
+     */
     suspend fun onAfterNode(node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(node, context, input, output) }
     }
@@ -164,18 +278,40 @@ class AgentPipeline {
 
     //region Trigger LLM Call Handlers
 
+    /**
+     * Notifies all registered LLM handlers before a language model call is made.
+     *
+     * @param prompt The prompt that will be sent to the language model
+     */
     suspend fun onBeforeLLMCall(prompt: Prompt) {
         executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt) }
     }
 
+    /**
+     * Notifies all registered LLM handlers before a language model call with tools is made.
+     *
+     * @param prompt The prompt that will be sent to the language model
+     * @param tools The list of tools that will be available to the language model
+     */
     suspend fun onBeforeLLMWithToolsCall(prompt: Prompt, tools: List<ToolDescriptor>) {
         executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallWithToolsHandler.handle(prompt, tools) }
     }
 
+    /**
+     * Notifies all registered LLM handlers after a language model call has completed.
+     *
+     * @param response The text response received from the language model
+     */
     suspend fun onAfterLLMCall(response: String) {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(response) }
     }
 
+    /**
+     * Notifies all registered LLM handlers after a language model call with tools has completed.
+     *
+     * @param response The structured responses received from the language model
+     * @param tools The list of tools that were available to the language model
+     */
     suspend fun onAfterLLMWithToolsCall(response: List<Message.Response>, tools: List<ToolDescriptor>) {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallWithToolsHandler.handle(response, tools) }
     }
@@ -184,18 +320,49 @@ class AgentPipeline {
 
     //region Trigger Tool Call Handlers
 
+    /**
+     * Notifies all registered tool handlers when a tool is called.
+     *
+     * @param stage The stage in which the tool is being called
+     * @param tool The tool that is being called
+     * @param toolArgs The arguments provided to the tool
+     */
     suspend fun onToolCall(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(stage, tool, toolArgs) }
     }
 
+    /**
+     * Notifies all registered tool handlers when a validation error occurs during a tool call.
+     *
+     * @param stage The stage in which the validation error occurred
+     * @param tool The tool for which validation failed
+     * @param toolArgs The arguments that failed validation
+     * @param error The validation error message
+     */
     suspend fun onToolValidationError(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
         executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(stage, tool, toolArgs, error) }
     }
 
+    /**
+     * Notifies all registered tool handlers when a tool call fails with an exception.
+     *
+     * @param stage The stage in which the tool call failed
+     * @param tool The tool that failed
+     * @param toolArgs The arguments provided to the tool
+     * @param throwable The exception that caused the failure
+     */
     suspend fun onToolCallFailure(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(stage, tool, toolArgs,  throwable) }
     }
 
+    /**
+     * Notifies all registered tool handlers about the result of a tool call.
+     *
+     * @param stage The stage in which the tool was called
+     * @param tool The tool that was called
+     * @param toolArgs The arguments that were provided to the tool
+     * @param result The result produced by the tool, or null if no result was produced
+     */
     suspend fun onToolCallResult(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(stage, tool, toolArgs, result) }
     }
@@ -249,6 +416,26 @@ class AgentPipeline {
         existingHandler.agentCreatedHandler = AgentCreatedHandler { handle(it) }
     }
 
+    /**
+     * Intercepts environment creation to allow features to modify or enhance the agent environment.
+     *
+     * This method registers a transformer function that will be called when an agent environment
+     * is being created, allowing the feature to customize the environment based on the agent context.
+     *
+     * @param feature The feature for which to register the environment transformer
+     * @param featureImpl The implementation of the feature
+     * @param transform A function that transforms the environment, with access to the agent creation context
+     *
+     * Example:
+     * ```
+     * pipeline.interceptEnvironmentCreated(MyFeature, myFeatureImpl) { environment ->
+     *     // Modify the environment based on agent context
+     *     environment.copy(
+     *         variables = environment.variables + mapOf("customVar" to "value")
+     *     )
+     * }
+     * ```
+     */
     fun <TFeature : Any> interceptEnvironmentCreated(
         feature: KotlinAIAgentFeature<*, TFeature>,
         featureImpl: TFeature,

@@ -48,10 +48,33 @@ abstract class FeatureMessageFileWriter<Path>(
     val targetPath: Path
         get() = _targetPath ?: error("Target path is not initialized. Please make sure you call method 'initialize()' before.")
 
+    /**
+     * Indicates whether the writer is currently open and ready for operation.
+     *
+     * This property reflects the state of the writer, which transitions between open and closed
+     * during its lifecycle. For instance, `isOpen` is set to `true` after the writer is successfully
+     * initialized using the `initialize()` method and set to `false` upon closure via the `close()` method.
+     *
+     * The value of this property is used to enforce correct usage of the writer, ensuring that
+     * operations, such as writing or processing messages, are only permitted when the writer is open.
+     *
+     * Accessing this property allows for thread-safe checking of the writer's state, particularly in
+     * scenarios that involve concurrent operations.
+     */
     val isOpen: Boolean
         get() = _isOpen
 
 
+    /**
+     * Converts the `FeatureMessage` instance to its corresponding string representation
+     * suitable for writing to a file.
+     *
+     * This method should handle the serialization or formatting of the feature message,
+     * ensuring that all the necessary attributes are represented in the output string
+     * in a consistent manner.
+     *
+     * @return A string representation of the `FeatureMessage` formatted for file output.
+     */
     abstract fun FeatureMessage.toFileString(): String
 
     override suspend fun processMessage(message: FeatureMessage) {

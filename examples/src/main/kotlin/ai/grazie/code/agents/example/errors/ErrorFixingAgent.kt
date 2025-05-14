@@ -11,7 +11,8 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerFeature
+import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
+import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
 import ai.grazie.utils.annotations.ExperimentalAPI
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
@@ -112,7 +113,7 @@ fun main() = runBlocking {
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,
     ) {
-        install(EventHandlerFeature) {
+        handleEvents {
             onToolCall = { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args ->
                 println("Tool called: stage ${stage.name}, tool ${tool.name}, args $toolArgs")
             }

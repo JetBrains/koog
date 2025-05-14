@@ -17,7 +17,7 @@ This document describes how to use and implement custom features for KotlinAIAge
     - [Pipeline Interceptors](#pipeline-interceptors)
     - [Advanced Interceptors](#advanced-interceptors)
 - [Available Features](#available-features)
-    - [MemoryFeature](#memoryfeature)
+    - [AgentMemory](#agentmemory)
 
 ## Introduction
 
@@ -447,16 +447,16 @@ class LoggingFeature(val logger: Logger) {
 
 ## Available Features
 
-### MemoryFeature
+### AgentMemory
 
-The MemoryFeature provides persistent memory capabilities for agents. It allows agents to store and retrieve information across runs.
+The AgentMemory provides persistent memory capabilities for agents. It allows agents to store and retrieve information across runs.
 
-> **Note**: MemoryFeature is in a separate module and requires a separate dependency. It's defined in the `agents-features/agents-features-memory` module.
+> **Note**: AgentMemory is in a separate module and requires a separate dependency. It's defined in the `agents-features/agents-features-memory` module.
 
 Installation:
 
 ```kotlin
-install(MemoryFeature) {
+install(AgentMemory) {
     memoryProvider = LocalFileMemoryProvider(
         config = LocalMemoryConfig("my-agent-memory"),
         storage = EncryptedStorage(
@@ -481,7 +481,7 @@ context.withMemory {
     // Save facts to memory
     saveFactsFromHistory(
         concept = myConcept,
-        subject = MemorySubject.PROJECT,
+        subject = MemorySubject.Project,
         scope = MemoryScopeType.PRODUCT
     )
 
@@ -489,9 +489,9 @@ context.withMemory {
     loadFactsToAgent(
         concept = myConcept,
         scopes = listOf(MemoryScopeType.PRODUCT),
-        subjects = listOf(MemorySubject.PROJECT)
+        subjects = listOf(MemorySubject.Project)
     )
 }
 ```
 
-For more details on using MemoryFeature, see the examples in the `examples` module.
+For more details on using AgentMemory, see the examples in the `examples` module.
