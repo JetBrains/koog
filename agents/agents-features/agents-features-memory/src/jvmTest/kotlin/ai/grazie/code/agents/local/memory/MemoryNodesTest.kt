@@ -104,7 +104,7 @@ class MemoryNodesTest {
             """
             [
                 {
-                    "subject": "USER",
+                    "subject": "user",
                     "keyword": "test-concept",
                     "description": "Test concept description",
                     "value": "Test fact value"
@@ -116,13 +116,13 @@ class MemoryNodesTest {
             """
             [
                 {
-                    "subject": "USER",
+                    "subject": "user",
                     "keyword": "user-preference-language",
                     "description": "User's preferred programming language",
                     "value": "Python for data analysis"
                 },
                 {
-                    "subject": "PROJECT",
+                    "subject": "project",
                     "keyword": "project-requirement-java",
                     "description": "Project's Java version requirement",
                     "value": "Java 11 or higher"

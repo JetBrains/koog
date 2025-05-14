@@ -1,6 +1,12 @@
 package ai.grazie.code.agents.local.memory.model
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 /**
  * Defines how information should be stored and retrieved for a concept in the memory system.
@@ -90,7 +96,7 @@ data class MultipleFacts(
  * This helps organize memories into logical containers and ensures
  * that information is accessed at the appropriate level of context.
  */
-@Serializable
+@Serializable(with = MemorySubject.Serializer::class)
 abstract class MemorySubject() {
     /**
      * Name of the memory subject (ex: "user", or "project")
@@ -123,6 +129,20 @@ abstract class MemorySubject() {
 
     init {
         registeredSubjects.add(this)
+    }
+
+    internal object Serializer : KSerializer<MemorySubject> {
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("MemorySubject", PrimitiveKind.STRING)
+
+        override fun serialize(encoder: Encoder, value: MemorySubject) {
+            encoder.encodeString(value.name)
+        }
+
+        override fun deserialize(decoder: Decoder): MemorySubject {
+            val name = decoder.decodeString()
+            return registeredSubjects.find { it.name == name }
+                ?: throw IllegalArgumentException("No MemorySubject found with name: $name")
+        }
     }
 
 
