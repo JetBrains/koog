@@ -382,7 +382,7 @@ class LoggingFeature(val logger: Logger) {
     }
 
     companion object Feature: KotlinAIAgentFeature<LoggingFeature.Config, LoggingFeature> {
-        override val key: LocalAgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
+        override val key: AIAgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
 
         override fun createInitialConfig(): Config = Config()
 

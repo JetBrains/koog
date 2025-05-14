@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.local.features.eventHandler.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.feature.AgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
+import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 
@@ -31,7 +31,7 @@ import ai.grazie.utils.mpp.MPPLogger
  */
 class EventHandler {
     /**
-     * Implementation of the [KotlinAIAgentFeature] interface for the [EventHandler] feature.
+     * Implementation of the [AIAgentFeature] interface for the [EventHandler] feature.
      * 
      * This companion object provides the necessary functionality to install the [EventHandler]
      * feature into an agent's pipeline. It intercepts various events in the agent's lifecycle
@@ -53,19 +53,19 @@ class EventHandler {
      *     }
      * }
      */
-    companion object Feature : KotlinAIAgentFeature<EventHandlerConfig, EventHandler> {
+    companion object Feature : AIAgentFeature<EventHandlerConfig, EventHandler> {
 
         private val logger: MPPLogger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler")
 
-        override val key: LocalAgentStorageKey<EventHandler> =
-            LocalAgentStorageKey("agents-features-event-handler")
+        override val key: AIAgentStorageKey<EventHandler> =
+            AIAgentStorageKey("agents-features-event-handler")
 
         override fun createInitialConfig() = EventHandlerConfig()
 
         override fun install(
             config: EventHandlerConfig,
-            pipeline: AgentPipeline,
+            pipeline: AIAgentPipeline,
         ) {
             logger.info { "Start installing feature: ${EventHandler::class.simpleName}" }
 
@@ -108,14 +108,14 @@ class EventHandler {
             pipeline.interceptBeforeNode(
                 this,
                 featureImpl
-            ) intercept@{ node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any? ->
+            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? ->
                 config.onBeforeNode(node, context, input)
             }
 
             pipeline.interceptAfterNode(
                 this,
                 featureImpl
-            ) intercept@{ node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any? ->
+            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? ->
                 config.onAfterNode(node, context, input, output)
             }
 

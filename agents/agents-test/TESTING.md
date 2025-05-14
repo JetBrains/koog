@@ -360,7 +360,7 @@ fun testToneAgent() = runTest {
     val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
 
     // Create agent config
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AIAgentConfig(
         prompt = prompt("test-agent") {
             system(
                 """
@@ -459,7 +459,7 @@ fun testMultiStageAgentStructure() = runBlocking {
         toolRegistry = toolRegistry,
         strategy = strategy,
         eventHandler = EventHandler {},
-        agentConfig = LocalAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
+        agentConfig = AIAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
         promptExecutor = mockLLMApi,
         cs = this
     ) {

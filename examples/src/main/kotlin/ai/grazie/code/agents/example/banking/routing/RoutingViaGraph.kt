@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.banking.routing
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -105,7 +105,7 @@ fun main() = runBlocking {
         }
     }
 
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AIAgentConfig(
         prompt = prompt(
             id = "banking assistant"
         ) {
@@ -115,7 +115,7 @@ fun main() = runBlocking {
         maxAgentIterations = 50
     )
 
-    val agent = AIAgentBase(
+    val agent = AIAgent(
         cs = this,
         toolRegistry = toolRegistry,
         strategy = strategy,

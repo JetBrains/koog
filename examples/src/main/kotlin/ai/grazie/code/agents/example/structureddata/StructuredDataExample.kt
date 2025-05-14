@@ -1,14 +1,13 @@
 package ai.grazie.code.agents.example.structureddata
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
@@ -234,7 +233,7 @@ fun main(): Unit = runBlocking {
         }
     }
 
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AIAgentConfig(
         prompt = prompt("weather-forecast") {
             system(
                 """
@@ -247,7 +246,7 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 5
     )
 
-    val runner = AIAgentBase(
+    val runner = AIAgent(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(TokenService.openAIToken),
             LLMProvider.Anthropic to AnthropicLLMClient(TokenService.anthropicToken),

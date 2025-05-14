@@ -2,13 +2,13 @@ package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolArgs
 import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolResult
-import ai.grazie.code.agents.core.api.AIAgent
+import ai.grazie.code.agents.core.api.AIAgentBase
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-public fun AIAgent.asTool(
+public fun AIAgentBase.asTool(
     agentDescription: String,
     name: String? = null,
     requestDescription: String = "Input for the task"
@@ -21,7 +21,7 @@ public fun AIAgent.asTool(
 
 
 public class AIAgentTool(
-    private val agent: AIAgent,
+    private val agent: AIAgentBase,
     agentName: String,
     agentDescription: String,
     requestDescription: String = "Input for the task"

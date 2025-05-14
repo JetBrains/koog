@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
+import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
 
@@ -15,14 +15,14 @@ class TestFeature(val events: MutableList<String>) {
         var events: MutableList<String>? = null
     }
 
-    companion object Feature : KotlinAIAgentFeature<Config, TestFeature> {
-        override val key: LocalAgentStorageKey<TestFeature> = createStorageKey("test-feature")
+    companion object Feature : AIAgentFeature<Config, TestFeature> {
+        override val key: AIAgentStorageKey<TestFeature> = createStorageKey("test-feature")
 
         override fun createInitialConfig(): Config = Config()
 
         override fun install(
             config: Config,
-            pipeline: AgentPipeline
+            pipeline: AIAgentPipeline
         ) {
             val feature = TestFeature(events = config.events ?: mutableListOf())
 
@@ -38,7 +38,7 @@ class TestFeature(val events: MutableList<String>) {
                 readStages { stages -> feature.events += "Agent: strategy started (strategy name: '${strategy.name}'). read stages (size: ${stages.size})" }
             }
 
-            pipeline.interceptContextStageFeature(this) { stageContext: LocalAgentStageContext ->
+            pipeline.interceptContextStageFeature(this) { stageContext: AIAgentStageContextBase ->
                 feature.events += "Stage Context: request features from stage context (stage name: ${stageContext.stageName})"
                 TestFeature(mutableListOf())
             }
@@ -59,11 +59,11 @@ class TestFeature(val events: MutableList<String>) {
                 feature.events += "LLM + Tools: finish LLM call with tools (responses: '$responses', tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptBeforeNode(this, feature) { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any? ->
+            pipeline.interceptBeforeNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? ->
                 feature.events += "Node: start node (name: '${node.name}', input: '$input')"
             }
 
-            pipeline.interceptAfterNode(this, feature) { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any? ->
+            pipeline.interceptAfterNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? ->
                 feature.events += "Node: finish node (name: '${node.name}', input: '$input', output: '$output')"
             }
 

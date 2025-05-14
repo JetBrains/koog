@@ -1,22 +1,22 @@
 package ai.grazie.code.agents.testing.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStateManager
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorage
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
+import ai.grazie.code.agents.core.agent.entity.AIAgentStateManager
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorage
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.FinishNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.FinishAIAgentNodeBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStage
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.dsl.builder.BaseBuilder
-import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
-import ai.grazie.code.agents.core.feature.AgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.core.feature.PromptExecutorProxy
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.core.tools.SimpleTool
@@ -29,12 +29,12 @@ import org.jetbrains.annotations.TestOnly
 
 
 class DummyAgentStageContext(
-    private val builder: LocalAgentStageContextMockBuilder,
-) : LocalAgentStageContext {
+    private val builder: AIAgentStageContextMockBuilder,
+) : AIAgentStageContextBase {
     val isLLMDefined = builder.llm != null
     val isEnvironmentDefined = builder.environment != null
 
-    override val environment: AgentEnvironment
+    override val environment: AIAgentEnvironment
         get() = builder.environment
             ?: throw NotImplementedError("Environment is not mocked")
 
@@ -42,19 +42,19 @@ class DummyAgentStageContext(
         get() = builder.stageInput
             ?: throw NotImplementedError("Stage input is not mocked")
 
-    override val config: LocalAgentConfig
+    override val config: AIAgentConfig
         get() = builder.config
             ?: throw NotImplementedError("Config is not mocked")
 
-    override val llm: LocalAgentLLMContext
+    override val llm: AIAgentLLMContext
         get() = builder.llm
             ?: throw NotImplementedError("LLM is not mocked")
 
-    override val stateManager: LocalAgentStateManager
+    override val stateManager: AIAgentStateManager
         get() = builder.stateManager
             ?: throw NotImplementedError("State manager is not mocked")
 
-    override val storage: LocalAgentStorage
+    override val storage: AIAgentStorage
         get() = builder.storage
             ?: throw NotImplementedError("Storage is not mocked")
 
@@ -74,26 +74,26 @@ class DummyAgentStageContext(
      * @suppress
      */
     @InternalAgentsApi
-    override val pipeline: AgentPipeline = AgentPipeline()
+    override val pipeline: AIAgentPipeline = AIAgentPipeline()
 
-    override fun <Feature : Any> feature(key: LocalAgentStorageKey<Feature>): Feature? =
+    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? =
         throw NotImplementedError("feature() getting in runtime is not supported for mock")
 
-    override fun <Feature : Any> feature(feature: KotlinAIAgentFeature<*, Feature>): Feature? =
+    override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
         throw NotImplementedError("feature()  getting in runtime is not supported for mock")
 
     override fun copy(
-        environment: AgentEnvironment?,
+        environment: AIAgentEnvironment?,
         stageInput: String?,
-        config: LocalAgentConfig?,
-        llm: LocalAgentLLMContext?,
-        stateManager: LocalAgentStateManager?,
-        storage: LocalAgentStorage?,
+        config: AIAgentConfig?,
+        llm: AIAgentLLMContext?,
+        stateManager: AIAgentStateManager?,
+        storage: AIAgentStorage?,
         sessionUuid: UUID?,
         strategyId: String?,
         stageName: String?,
-        pipeline: AgentPipeline?
-    ): LocalAgentStageContext = DummyAgentStageContext(
+        pipeline: AIAgentPipeline?
+    ): AIAgentStageContextBase = DummyAgentStageContext(
         builder.copy().apply {
             environment?.let { this.environment = it }
             stageInput?.let { this.stageInput = it }
@@ -108,36 +108,36 @@ class DummyAgentStageContext(
 }
 
 @TestOnly
-interface LocalAgentStageContextMockBuilderBase : BaseBuilder<LocalAgentStageContext> {
-    var environment: AgentEnvironment?
+interface AIAgentStageContextMockBuilderBase : BaseBuilder<AIAgentStageContextBase> {
+    var environment: AIAgentEnvironment?
     var stageInput: String?
-    var config: LocalAgentConfig?
-    var llm: LocalAgentLLMContext?
-    var stateManager: LocalAgentStateManager?
-    var storage: LocalAgentStorage?
+    var config: AIAgentConfig?
+    var llm: AIAgentLLMContext?
+    var stateManager: AIAgentStateManager?
+    var storage: AIAgentStorage?
     var sessionUuid: UUID?
     var strategyId: String?
     var stageName: String?
 
-    fun copy(): LocalAgentStageContextMockBuilderBase
+    fun copy(): AIAgentStageContextMockBuilderBase
 
-    override fun build(): LocalAgentStageContext
+    override fun build(): AIAgentStageContextBase
 }
 
 @TestOnly
-class LocalAgentStageContextMockBuilder() : LocalAgentStageContextMockBuilderBase {
-    override var environment: AgentEnvironment? = null
+class AIAgentStageContextMockBuilder() : AIAgentStageContextMockBuilderBase {
+    override var environment: AIAgentEnvironment? = null
     override var stageInput: String? = null
-    override var config: LocalAgentConfig? = null
-    override var llm: LocalAgentLLMContext? = null
-    override var stateManager: LocalAgentStateManager? = null
-    override var storage: LocalAgentStorage? = null
+    override var config: AIAgentConfig? = null
+    override var llm: AIAgentLLMContext? = null
+    override var stateManager: AIAgentStateManager? = null
+    override var storage: AIAgentStorage? = null
     override var sessionUuid: UUID? = null
     override var strategyId: String? = null
     override var stageName: String? = null
 
-    override fun copy(): LocalAgentStageContextMockBuilder {
-        return LocalAgentStageContextMockBuilder().also {
+    override fun copy(): AIAgentStageContextMockBuilder {
+        return AIAgentStageContextMockBuilder().also {
             it.environment = environment
             it.stageInput = stageInput
             it.config = config
@@ -187,24 +187,24 @@ class LocalAgentStageContextMockBuilder() : LocalAgentStageContextMockBuilderBas
 
 @TestOnly
 sealed class NodeReference<Input, Output> {
-    abstract fun resolve(stage: LocalAgentStage): LocalAgentNode<Input, Output>
+    abstract fun resolve(stage: AIAgentStage): AIAgentNodeBase<Input, Output>
 
     object Start : NodeReference<Unit, Unit>() {
-        override fun resolve(stage: LocalAgentStage) = stage.start
+        override fun resolve(stage: AIAgentStage) = stage.start
     }
 
     object Finish : NodeReference<String, String>() {
-        override fun resolve(stage: LocalAgentStage) = stage.finish
+        override fun resolve(stage: AIAgentStage) = stage.finish
     }
 
     class NamedNode<Input, Output>(val name: String) : NodeReference<Input, Output>() {
-        override fun resolve(stage: LocalAgentStage): LocalAgentNode<Input, Output> {
+        override fun resolve(stage: AIAgentStage): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
-            fun visit(node: LocalAgentNode<*, *>): LocalAgentNode<Input, Output>? {
-                if (node is FinishNode) return null
+            fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
+                if (node is FinishAIAgentNodeBase) return null
                 if (visited.contains(node.name)) return null
                 visited.add(node.name)
-                if (node.name == name) return node as? LocalAgentNode<Input, Output>
+                if (node.name == name) return node as? AIAgentNodeBase<Input, Output>
                 return node.edges.firstNotNullOfOrNull { visit(it.toNode) }
             }
 
@@ -238,7 +238,7 @@ data class NodeOutputAssertion<Input, Output>(
 @TestOnly
 data class EdgeAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
-    val context: LocalAgentStageContext,
+    val context: AIAgentStageContextBase,
     val output: Output,
     val expectedNode: NodeReference<*, *>
 )
@@ -539,7 +539,7 @@ class Testing {
              * including node outputs, edge assertions, and reachability assertions.
              * It acts as a centralized resource for contextual test data and stage-related configurations.
              */
-            private val context = LocalAgentStageContextMockBuilder()
+            private val context = AIAgentStageContextMockBuilder()
 
             /**
              * Retrieves the starting node reference of the stage.
@@ -634,8 +634,8 @@ class Testing {
              */
             class NodeOutputAssertionsBuilder(
                 private val stageBuilder: StageAssertionsBuilder,
-                private val context: LocalAgentStageContextMockBuilder = stageBuilder.context.copy()
-            ) : LocalAgentStageContextMockBuilderBase by context {
+                private val context: AIAgentStageContextMockBuilder = stageBuilder.context.copy()
+            ) : AIAgentStageContextMockBuilderBase by context {
 
                 /**
                  * Creates and returns a new copy of the NodeOutputAssertionsBuilder instance.
@@ -709,8 +709,8 @@ class Testing {
              */
             class EdgeAssertionsBuilder(
                 private val stageBuilder: StageAssertionsBuilder,
-                private val context: LocalAgentStageContextMockBuilder = stageBuilder.context.copy()
-            ) : LocalAgentStageContextMockBuilderBase by context {
+                private val context: AIAgentStageContextMockBuilder = stageBuilder.context.copy()
+            ) : AIAgentStageContextMockBuilderBase by context {
 
                 /**
                  * A mutable list that holds all the defined `EdgeAssertion` instances for the current context.
@@ -781,13 +781,13 @@ class Testing {
      * reachability, outputs, and edges within an AI agent pipeline.
      */
     @TestOnly
-    companion object Feature : KotlinAIAgentFeature<Config, Testing> {
+    companion object Feature : AIAgentFeature<Config, Testing> {
         /**
          * A storage key uniquely identifying the `Testing` feature within the local agent's storage.
          * The key is generated using the `createStorageKey` function and associates the
          * `Testing` feature type with its specific storage context.
          */
-        override val key: LocalAgentStorageKey<Testing> = createStorageKey("graph-testing-feature")
+        override val key: AIAgentStorageKey<Testing> = createStorageKey("graph-testing-feature")
 
         /**
          * Creates the initial configuration for the graph testing feature.
@@ -805,7 +805,7 @@ class Testing {
          */
         override fun install(
             config: Config,
-            pipeline: AgentPipeline
+            pipeline: AIAgentPipeline
         ) {
             val feature = Testing()
 
@@ -868,7 +868,7 @@ class Testing {
                                 val llm = if (assertion.context.isLLMDefined) {
                                     assertion.context.llm
                                 } else {
-                                    LocalAgentLLMContext(
+                                    AIAgentLLMContext(
                                         tools = agent.toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
                                         prompt = agent.agentConfig.prompt,
                                         model = agent.agentConfig.model,
@@ -922,10 +922,10 @@ class Testing {
          * @param to The target node to verify reachability to.
          * @param message The error message to include in the assertion error if the target node is not reachable.
          */
-        private fun assertReachable(from: LocalAgentNode<*, *>, to: LocalAgentNode<*, *>, message: String) {
+        private fun assertReachable(from: AIAgentNodeBase<*, *>, to: AIAgentNodeBase<*, *>, message: String) {
             val visited = mutableSetOf<String>()
 
-            fun dfs(node: LocalAgentNode<*, *>): Boolean {
+            fun dfs(node: AIAgentNodeBase<*, *>): Boolean {
                 if (node == to) return true
                 if (visited.contains(node.name)) return false
 

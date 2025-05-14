@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.local.memory.feature
 
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentLLMWriteSession
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.feature.AgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.config.MemoryScopesProfile
@@ -81,7 +81,7 @@ import ai.grazie.utils.mpp.MPPLogger
  */
 class AgentMemory(
     internal val agentMemory: AgentMemoryProvider,
-    internal val llm: LocalAgentLLMContext,
+    internal val llm: AIAgentLLMContext,
     internal val scopesProfile: MemoryScopesProfile
 ) {
     private val logger: MPPLogger = LoggerFactory.create("ai.grazie.code.agents.local.memory.LocalAIAgentMemory")
@@ -159,7 +159,7 @@ class AgentMemory(
     /**
      * Feature companion object that allows installing the [AgentMemory] feature in an agent.
      *
-     * This object implements [KotlinAIAgentFeature] to provide the necessary functionality
+     * This object implements [AIAgentFeature] to provide the necessary functionality
      * for integrating memory capabilities into an agent.
      *
      * To install the AgentMemory feature in your agent:
@@ -202,7 +202,7 @@ class AgentMemory(
      * }
      * ```
      */
-    companion object Feature : KotlinAIAgentFeature<Config, AgentMemory> {
+    companion object Feature : AIAgentFeature<Config, AgentMemory> {
         override val key = createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
         /**
@@ -244,7 +244,7 @@ class AgentMemory(
          * @param config The configuration for the memory feature
          * @param pipeline The agent pipeline to install the feature into
          */
-        override fun install(config: Config, pipeline: AgentPipeline) {
+        override fun install(config: Config, pipeline: AIAgentPipeline) {
             pipeline.interceptContextStageFeature(this) { stageContext ->
                 config.agentName = stageContext.strategyId
 
@@ -459,7 +459,7 @@ class AgentMemory(
  * @param preserveQuestionsInLLMChat If true, keeps the fact extraction messages in the chat history
  * @return A Fact object (either SingleFact or MultipleFacts) containing the extracted information
  */
-internal suspend fun LocalAgentLLMWriteSession.retrieveFactsFromHistory(
+internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     concept: Concept,
     preserveQuestionsInLLMChat: Boolean
 ): Fact {
@@ -504,7 +504,7 @@ internal suspend fun LocalAgentLLMWriteSession.retrieveFactsFromHistory(
 private fun String.shortened() = lines().first().take(100) + "..."
 
 /**
- * Extension function to access the AgentMemory feature from a LocalAgentStageContext.
+ * Extension function to access the AgentMemory feature from a AIAgentStageContext.
  *
  * This provides a convenient way to access memory operations within agent nodes.
  *
@@ -519,10 +519,10 @@ private fun String.shortened() = lines().first().take(100) + "..."
  *
  * @return The AgentMemory instance for this agent context
  */
-fun LocalAgentStageContext.memory(): AgentMemory = feature(AgentMemory.Feature)!!
+fun AIAgentStageContextBase.memory(): AgentMemory = feature(AgentMemory.Feature)!!
 
 /**
- * Extension function to perform memory operations within a LocalAgentStageContext.
+ * Extension function to perform memory operations within a AIAgentStageContext.
  *
  * This provides a convenient way to use memory operations within agent nodes
  * with a more concise syntax using the `withMemory` block.
@@ -543,4 +543,4 @@ fun LocalAgentStageContext.memory(): AgentMemory = feature(AgentMemory.Feature)!
  * @param action The memory operations to perform
  * @return The result of the action
  */
-suspend fun <T> LocalAgentStageContext.withMemory(action: suspend AgentMemory.() -> T) = memory().action()
+suspend fun <T> AIAgentStageContextBase.withMemory(action: suspend AgentMemory.() -> T) = memory().action()
