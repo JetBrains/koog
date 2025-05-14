@@ -45,7 +45,6 @@ fun main() {
                 executor = simpleOpenAIExecutor(openAIApiToken),
                 llmModel = OpenAIModels.Chat.GPT4o,
                 toolRegistry = toolRegistry,
-                cs = this
             )
             val request = "Get elevation of the Jetbrains Office in Munich, Germany?"
             println(request)

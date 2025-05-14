@@ -90,7 +90,7 @@ fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  * }
  * ```
  */
-suspend fun FeatureContext.testGraph(test: Testing.Config.() -> Unit) = withTesting {
+fun FeatureContext.testGraph(test: Testing.Config.() -> Unit) = withTesting {
     graph(test)
 }
 

@@ -43,7 +43,6 @@ class AIAgentNodesTest {
         val runner = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {

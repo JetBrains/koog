@@ -16,7 +16,7 @@ import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.*
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -43,6 +43,8 @@ public class AIAgentPipeline {
          */
         private val logger = LoggerFactory.create("ai.grazie.code.agents.core.pipeline.AIAgentPipeline")
     }
+
+    private val featurePrepareDispatcher = Dispatchers.Default.limitedParallelism(5)
 
     /**
      * Map of registered features and their configurations.
@@ -97,12 +99,11 @@ public class AIAgentPipeline {
      * @param feature The feature implementation to be installed
      * @param configure A lambda to customize the feature configuration
      */
-    public suspend fun <Config : FeatureConfig, Feature : Any> install(
+    public fun <Config : FeatureConfig, Feature : Any> install(
         feature: AIAgentFeature<Config, Feature>,
         configure: Config.() -> Unit
     ) {
         val config = feature.createInitialConfig().apply { configure() }
-        config.messageProcessor.forEach { provider -> provider.initialize() }
         feature.install(
             config = config,
             pipeline = this,
@@ -111,15 +112,14 @@ public class AIAgentPipeline {
         registeredFeatures[feature.key] = config
     }
 
-    /**
-     * Waits for all feature stream providers to be ready.
-     *
-     * This internal method ensures that all message processors of registered features
-     * are fully initialized and ready to process messages.
-     */
-    internal suspend fun awaitFeaturesStreamProvidersReady() {
-        registeredFeatures.values.flatMap { config -> config.messageProcessor.map { provider -> provider.isReady } }
-            .awaitAll()
+    internal suspend fun prepareFeatures() {
+        registeredFeatures.values.forEach { featureConfig ->
+            featureConfig.messageProcessor.map { processor ->
+                withContext(featurePrepareDispatcher) {
+                    launch { processor.initialize() }
+                }
+            }.joinAll()
+        }
     }
 
     /**

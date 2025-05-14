@@ -110,7 +110,6 @@ class EventHandlerTest {
 
         val agent = createAgent(
             strategy = strategy,
-            scope = this,
             installFeatures = {
                 install(EventHandler, eventHandlerConfig)
             }

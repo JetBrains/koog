@@ -183,7 +183,6 @@ class MemoryNodesTest {
         val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = strategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage {
@@ -242,7 +241,6 @@ class MemoryNodesTest {
         val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = strategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {

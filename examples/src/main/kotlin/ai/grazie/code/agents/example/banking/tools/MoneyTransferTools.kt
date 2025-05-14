@@ -171,7 +171,6 @@ fun main() = runBlocking {
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(apiKey),
         systemPrompt = bankingAssistantSystemPrompt,
-        cs = this,
         temperature = 0.0,
         toolRegistry = toolRegistry
     )

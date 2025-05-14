@@ -28,7 +28,6 @@ fun main() = runBlocking {
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
-        cs = this,
         temperature = 0.0,
         toolRegistry = toolRegistry
     )

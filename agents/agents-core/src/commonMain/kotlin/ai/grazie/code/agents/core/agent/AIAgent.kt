@@ -19,7 +19,6 @@ import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.core.utils.Closeable
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.SuitableForIO
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.message.Message
@@ -60,10 +59,9 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
 public open class AIAgent(
     public val promptExecutor: PromptExecutor,
     private val strategy: AIAgentStrategy,
-    cs: CoroutineScope,
     public val agentConfig: AIAgentConfig,
     public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
-    private val installFeatures: suspend FeatureContext.() -> Unit = {}
+    private val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase, AIAgentEnvironment, Closeable {
 
     private companion object {
@@ -81,7 +79,7 @@ public open class AIAgent(
      *       This makes the API a bit stricter and clear.
      */
     public class FeatureContext internal constructor(private val agent: AIAgent) {
-        public suspend fun <Config : FeatureConfig, Feature : Any> install(
+        public fun <Config : FeatureConfig, Feature : Any> install(
             feature: AIAgentFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
         ) {
@@ -100,14 +98,10 @@ public open class AIAgent(
     private val pipeline = AIAgentPipeline()
 
     init {
-        cs.launch(context = Dispatchers.SuitableForIO, start = CoroutineStart.UNDISPATCHED) {
-            FeatureContext(this@AIAgent).installFeatures()
-            pipeline.onAgentCreated(strategy, this@AIAgent)
-        }
+        FeatureContext(this).installFeatures()
     }
 
     override suspend fun run(prompt: String) {
-        pipeline.awaitFeaturesStreamProvidersReady()
 
         runningMutex.withLock {
             if (isRunning) {
@@ -118,6 +112,7 @@ public open class AIAgent(
             sessionUuid = UUID.random()
         }
 
+        pipeline.prepareFeatures()
         pipeline.onAgentStarted(strategyName = strategy.name)
 
         strategy.run(
@@ -206,7 +201,7 @@ public open class AIAgent(
 
     //region Private Methods
 
-    private suspend fun <Config : FeatureConfig, Feature : Any> install(
+    private fun <Config : FeatureConfig, Feature : Any> install(
         feature: AIAgentFeature<Config, Feature>,
         configure: Config.() -> Unit
     ) {

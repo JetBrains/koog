@@ -60,7 +60,6 @@ class SimpleAgentMockedTest {
     @Test
     fun `simpleChatAgent should call default tools`() = runBlocking {
         val agent = simpleChatAgent(
-            cs = this,
             systemPrompt = systemPrompt,
             temperature = 1.0,
             maxIterations = 10,
@@ -86,7 +85,6 @@ class SimpleAgentMockedTest {
         }
 
         val agent = simpleChatAgent(
-            cs = this,
             systemPrompt = systemPrompt,
             temperature = 1.0,
             maxIterations = 10,
@@ -109,7 +107,6 @@ class SimpleAgentMockedTest {
     @Test
     fun `simpleSingleRunAgent should not call tools by default`() = runBlocking {
         val agent = simpleSingleRunAgent(
-            cs = this,
             systemPrompt = systemPrompt,
             temperature = 1.0,
             maxIterations = 10,
@@ -137,7 +134,6 @@ class SimpleAgentMockedTest {
         }
 
         val agent = simpleSingleRunAgent(
-            cs = this,
             systemPrompt = systemPrompt,
             temperature = 1.0,
             toolRegistry = toolRegistry,

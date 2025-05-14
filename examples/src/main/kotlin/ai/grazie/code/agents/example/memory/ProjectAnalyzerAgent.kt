@@ -231,7 +231,6 @@ fun createProjectAnalyzerAgent(
     return AIAgent(
         promptExecutor = promptExecutor,
         strategy = strategy,
-        cs = cs,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
             stage("gather-information") {

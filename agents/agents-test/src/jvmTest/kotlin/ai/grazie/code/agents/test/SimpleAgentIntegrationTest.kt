@@ -60,7 +60,6 @@ class SimpleAgentIntegrationTest {
     fun `simpleChatAgent should call default tools`() = runBlockingWithToken {
         val agent = simpleChatAgent(
             executor = simpleOpenAIExecutor(apiToken),
-            cs = this,
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Chat.GPT4o,
             temperature = 1.0,
@@ -82,7 +81,6 @@ class SimpleAgentIntegrationTest {
 
         val agent = simpleChatAgent(
             executor = simpleOpenAIExecutor(apiToken),
-            cs = this,
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -101,7 +99,6 @@ class SimpleAgentIntegrationTest {
     fun `simpleSingleRunAgent should not call tools by default`() = runBlockingWithToken {
         val agent = simpleSingleRunAgent(
             executor = simpleOpenAIExecutor(apiToken),
-            cs = this,
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -125,7 +122,6 @@ class SimpleAgentIntegrationTest {
 
         val agent = simpleSingleRunAgent(
             executor = simpleOpenAIExecutor(apiToken),
-            cs = this,
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,

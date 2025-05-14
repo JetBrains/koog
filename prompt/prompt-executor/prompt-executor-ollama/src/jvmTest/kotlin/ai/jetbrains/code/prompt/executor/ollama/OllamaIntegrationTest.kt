@@ -12,8 +12,6 @@ import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 import ai.jetbrains.code.prompt.llm.OllamaModels
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
@@ -105,7 +103,6 @@ class OllamaIntegrationTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = AIAgentConfig(prompt("test-ollama") {}, model, 15),
             toolRegistry = toolRegistry
         ) {

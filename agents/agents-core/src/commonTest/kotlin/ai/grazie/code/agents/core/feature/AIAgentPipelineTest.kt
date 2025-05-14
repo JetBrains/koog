@@ -16,7 +16,6 @@ import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.OllamaModels
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import kotlin.js.JsName
 import kotlin.test.Test
@@ -37,7 +36,7 @@ class AIAgentPipelineTest {
             edge(dummyNode forwardTo nodeFinish transformed { "Done" })
         }
 
-        val agent = createAgent(this, strategy) {
+        val agent = createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }
         agent.run("")
@@ -72,7 +71,7 @@ class AIAgentPipelineTest {
             edge(llmCall forwardTo nodeFinish transformed { "Done" })
         }
 
-        val agent = createAgent(this, strategy) {
+        val agent = createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }
         agent.run("")
@@ -115,8 +114,7 @@ class AIAgentPipelineTest {
         }
 
         val agent = createAgent(
-            this,
-            strategy,
+            strategy = strategy,
             toolRegistry = toolRegistry,
             userPrompt = "add 2.2 and 2.2",
             promptExecutor = CalculatorChatExecutor
@@ -150,7 +148,7 @@ class AIAgentPipelineTest {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
-        createAgent(this, strategy) {
+        createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }
 
@@ -177,7 +175,7 @@ class AIAgentPipelineTest {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
-        val agent = createAgent(this, strategy) {
+        val agent = createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }
         agent.run("")
@@ -204,7 +202,7 @@ class AIAgentPipelineTest {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
-        val agent = createAgent(this, strategy) {
+        val agent = createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }
         agent.run("")
@@ -228,7 +226,6 @@ class AIAgentPipelineTest {
         val interceptedEvents = mutableListOf<String>()
 
         val agent1 = createAgent(
-            coroutineScope = this,
             strategy = simpleStrategy("test-interceptors-strategy-1") {
                 edge(nodeStart forwardTo nodeFinish transformed { "Done" })
             }) {
@@ -236,7 +233,6 @@ class AIAgentPipelineTest {
         }
 
         val agent2 = createAgent(
-            coroutineScope = this,
             strategy = simpleStrategy("test-interceptors-strategy-2") {
                 edge(nodeStart forwardTo nodeFinish transformed { "Done" })
             }) {
@@ -265,14 +261,13 @@ class AIAgentPipelineTest {
     //region Private Methods
 
     private fun createAgent(
-        coroutineScope: CoroutineScope,
         strategy: AIAgentStrategy,
         userPrompt: String? = null,
         systemPrompt: String? = null,
         assistantPrompt: String? = null,
         toolRegistry: ToolRegistry? = null,
         promptExecutor: PromptExecutor? = null,
-        installFeatures: suspend FeatureContext.() -> Unit = {}
+        installFeatures: FeatureContext.() -> Unit = {}
     ): AIAgent {
 
         val agentConfig = AIAgentConfig(
@@ -293,7 +288,6 @@ class AIAgentPipelineTest {
         return AIAgent(
             promptExecutor = promptExecutor ?: testExecutor,
             strategy = strategy,
-            cs = coroutineScope,
             agentConfig = agentConfig,
             toolRegistry = toolRegistry ?: ToolRegistry {
                 stage("default") {

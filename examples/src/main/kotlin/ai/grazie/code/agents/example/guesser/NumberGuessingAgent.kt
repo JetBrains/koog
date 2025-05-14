@@ -36,7 +36,6 @@ fun main() = runBlocking {
             
             Be efficient with your guessing strategy. A binary search approach works well.
         """.trimIndent(),
-        cs = this,
         temperature = 0.0,
         toolRegistry = toolRegistry
     )

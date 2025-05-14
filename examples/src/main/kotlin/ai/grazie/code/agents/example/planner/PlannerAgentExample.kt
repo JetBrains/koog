@@ -230,7 +230,6 @@ suspend fun planWork(
     AIAgent(
         promptExecutor = promptExecutor,
         strategy = planner,
-        cs = coroutineScope,
         agentConfig = config,
         toolRegistry = observingTools
     ).run(initialTaskDescription)
