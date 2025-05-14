@@ -1,7 +1,7 @@
-package ai.grazie.code.agents.core.feature.message
+package ai.grazie.code.agents.utils
 
-import ai.grazie.code.agents.local.features.common.message.Closeable
-import ai.grazie.code.agents.local.features.common.message.use
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.Closeable
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import kotlinx.coroutines.test.runTest
 import kotlin.js.JsName
 import kotlin.test.Test

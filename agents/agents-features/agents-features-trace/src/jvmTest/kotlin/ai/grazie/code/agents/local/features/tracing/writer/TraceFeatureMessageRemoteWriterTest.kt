@@ -6,13 +6,12 @@ import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.feature.model.*
 import ai.grazie.code.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
 import ai.grazie.code.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
-import ai.grazie.code.agents.core.utils.use
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
-import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.tracing.NetUtil.findAvailablePort
 import ai.grazie.code.agents.local.features.tracing.feature.Tracing
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.create
 import io.ktor.client.plugins.sse.*
