@@ -12,8 +12,6 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 implementation(project(":agents:agents-tools"))
                 implementation(project(":prompt:prompt-llm"))
@@ -31,6 +29,10 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+                implementation(libs.ktor.client.cio)
             }
         }
     }
