@@ -36,8 +36,7 @@ public data class StructuredResponse<T>(val structure: T, val raw: String)
  */
 public suspend fun <T> PromptExecutor.executeStructuredOneShot(
     prompt: Prompt,
-    model: LLModel,
-    structure: StructuredData<T>
+   model: LLModel, structure: StructuredData<T>
 ): StructuredResponse<T> {
     val text = execute(prompt, model)
     return StructuredResponse(structure = structure.parse(text), raw = text)
@@ -62,14 +61,14 @@ public suspend fun <T> PromptExecutor.executeStructuredOneShot(
  * @param fixingModel LLM used for output coercion (transforming malformed outputs)
  * @return A [StructuredResponse] containing both parsed structure and raw text
  * @throws IllegalStateException if parsing fails after all retries
-*/
+ */
 public suspend fun <T> PromptExecutor.executeStructured(
     prompt: Prompt,
     mainModel: LLModel,
     structure: StructuredData<T>,
     retries: Int = 1,
     fixingModel: LLModel = OpenAIModels.Chat.GPT4o
-): StructuredResponse<T> {
+): Result<StructuredResponse<T>> {
     val prompt = prompt(prompt) {
         user {
             markdown {
@@ -83,14 +82,18 @@ public suspend fun <T> PromptExecutor.executeStructured(
     repeat(retries) {
         val text = execute(prompt, mainModel)
         try {
-            return StructuredResponse(
-                structure = structureParser.parse(structure, text),
-                raw = text,
+            return Result.success(
+                StructuredResponse(
+                    structure = structureParser.parse(structure, text),
+                    raw = text,
+                )
             )
         } catch (e: SerializationException) {
             logger.warning(e) { "Unable to parse structure, retrying: $text" }
         }
     }
 
-    error("Unable to parse structure for $prompt")
+    return Result.failure(LLMStructuredParsingError("Unable to parse structure after $retries retries"))
 }
+
+public class LLMStructuredParsingError(message: String) : Exception(message)

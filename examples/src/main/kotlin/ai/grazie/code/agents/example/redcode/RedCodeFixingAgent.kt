@@ -107,7 +107,7 @@ fun main() = runBlocking {
                             schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
                         ),
                         fixingModel = OllamaModels.Meta.LLAMA_3_2
-                    )
+                    ).getOrThrow()
                 }
                 structuredResponse.structure
             }

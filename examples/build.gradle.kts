@@ -24,6 +24,7 @@ dependencies {
     implementation("ai.jetbrains.code.files:code-files-sandbox:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.files:code-files-tools:1.0.0-beta.55+0.4.45")
     implementation("ai.jetbrains.code.files:code-files-vfs:1.0.0-beta.55+0.4.45")
+    implementation(libs.kotlinx.datetime)
 
     implementation(project(":prompt:prompt-markdown"))
     implementation(project(":prompt:prompt-structure"))

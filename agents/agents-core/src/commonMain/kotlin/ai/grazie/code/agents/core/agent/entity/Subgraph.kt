@@ -134,7 +134,7 @@ open class LocalAgentSubgraph<Input, Output>(
                             examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
                         ),
                         retries = toolSelectionStrategy.maxRetries,
-                    )
+                    ).getOrThrow()
 
                     rewritePrompt { initialPrompt }
 
