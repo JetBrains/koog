@@ -1,17 +1,16 @@
 package ai.grazie.code.agents.core.dsl.extension
 
-import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphDelegate
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
+import ai.grazie.code.agents.core.tools.*
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlin.jvm.JvmInline
 
 internal suspend fun LocalAgentStageContext.promptWithTLDR(
     systemMessage: String,
@@ -52,9 +51,8 @@ data class VerifiedSubgraphResult(
     override fun toStringDefault() = Json.encodeToString(serializer(), this)
 }
 
-@JvmInline
 @Serializable
-value class StringSubgraphResult(val result: String) : SubgraphResult {
+data class StringSubgraphResult(val result: String) : SubgraphResult {
     override fun toStringDefault() = Json.encodeToString(serializer(), this)
 }
 
@@ -144,12 +142,21 @@ fun <Input, ProvidedResult : SubgraphResult> LocalAgentSubgraphBuilderBase<*, *>
         llm.writeSession {
             setToolChoiceRequired()
         }
+        if (finishTool.descriptor !in llm.tools) {
+            llm.tools = llm.tools + finishTool.descriptor
+        }
     }
 
     val preFinish by node<ProvidedResult, ProvidedResult> { input ->
         llm.writeSession {
+            rewritePrompt {
+                prompt.copy(
+                    messages = prompt.messages.take(prompt.messages.size - 1)
+                )
+            }
             unsetToolChoice()
         }
+        llm.tools = llm.tools - finishTool.descriptor
         input
     }
 

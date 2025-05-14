@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.core.dsl.extension
 
-import ai.grazie.code.agents.core.tools.Tool
-import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentEdgeBuilderIntermediate
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.environment.SafeTool
 import ai.grazie.code.agents.core.environment.toSafeResult
+import ai.grazie.code.agents.core.tools.Tool
+import ai.grazie.code.agents.core.tools.ToolResult
 import ai.jetbrains.code.prompt.message.Message
 import kotlin.reflect.KClass
 
@@ -74,9 +74,10 @@ inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : To
     crossinline block: suspend (Args) -> Boolean
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
     return onIsInstance(Message.Tool.Call::class)
+        .onCondition { it.tool == tool.name }
         .onCondition { toolCall ->
             val args = tool.decodeArgs(toolCall.contentJson)
-            toolCall.tool == tool.name && block(args)
+             block(args)
         }
 }
 
