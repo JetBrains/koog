@@ -13,10 +13,73 @@ import ai.grazie.utils.mpp.MPPLogger
 import ai.jetbrains.code.prompt.message.Message
 
 /**
- * Feature that collects tracing data during agent execution and sends it to a feature message processor.
+ * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
+ * 
+ * Tracing is crucial for evaluation and analysis of the working agent, as it captures detailed information about:
+ * - All LLM calls and their responses
+ * - Prompts sent to LLMs
+ * - Tool calls, arguments, and results
+ * - Graph node visits and execution flow
+ * - Agent lifecycle events (creation, start, finish, errors)
+ * - Strategy execution events
+ * 
+ * This data can be used for debugging, performance analysis, auditing, and improving agent behavior.
+ * 
+ * Example of installing tracing to an agent:
+ * ```kotlin
+ * val agent = AIAgentBase(
+ *     promptExecutor = executor,
+ *     strategy = strategy,
+ *     // other parameters...
+ * ) {
+ *     install(Tracing) {
+ *         // Configure message processors to handle trace events
+ *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
+ *         addMessageProcessor(TraceFeatureMessageFileWriter(fileSystem, outputPath))
+ *         
+ *         // Optionally filter messages
+ *         messageFilter = { message -> 
+ *             // Only trace LLM calls and tool calls
+ *             message is LLMCallStartEvent || message is ToolCallEvent 
+ *         }
+ *     }
+ * }
+ * ```
+ * 
+ * Example of logs produced by tracing:
+ * ```
+ * AgentCreateEvent (strategy name: my-agent-strategy)
+ * AgentStartedEvent (strategy name: my-agent-strategy)
+ * StrategyStartEvent (strategy name: my-agent-strategy)
+ * NodeExecutionStartEvent (stage: main, node: definePrompt, input: user query)
+ * NodeExecutionEndEvent (stage: main, node: definePrompt, input: user query, output: processed query)
+ * LLMCallStartEvent (prompt: Please analyze the following code...)
+ * LLMCallEndEvent (response: I've analyzed the code and found...)
+ * ToolCallEvent (stage: main, tool: readFile, tool args: {"path": "src/main.py"})
+ * ToolCallResultEvent (stage: main, tool: readFile, tool args: {"path": "src/main.py"}, result: "def main():...")
+ * StrategyFinishedEvent (strategy name: my-agent-strategy, result: Success)
+ * AgentFinishedEvent (strategy name: my-agent-strategy, result: Success)
+ * ```
  */
 class Tracing {
 
+    /**
+     * Feature implementation for the Tracing functionality.
+     * 
+     * This companion object implements [KotlinAIAgentFeature] and provides methods for creating
+     * an initial configuration and installing the tracing feature in an agent pipeline.
+     * 
+     * To use tracing in your agent, install it during agent creation:
+     * 
+     * ```kotlin
+     * val agent = AIAgentBase(...) {
+     *     install(Tracing) {
+     *         // Configure tracing here
+     *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
+     *     }
+     * }
+     * ```
+     */
     companion object Feature : KotlinAIAgentFeature<TraceFeatureConfig, Tracing> {
 
         private val logger: MPPLogger =

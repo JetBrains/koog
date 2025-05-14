@@ -7,6 +7,44 @@ import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import ai.grazie.code.agents.local.features.common.writer.FeatureMessageFileWriter
 import ai.grazie.code.files.model.FileSystemProvider
 
+/**
+ * A message processor that writes trace events to a file.
+ * 
+ * This writer captures all trace events and writes them to a specified file using the provided file system.
+ * It formats each event type differently to provide clear and readable logs.
+ * 
+ * Tracing to files is particularly useful for:
+ * - Persistent logging that survives application restarts
+ * - Detailed analysis of agent behavior after execution
+ * - Sharing trace logs with other developers or systems
+ * 
+ * Example usage:
+ * ```kotlin
+ * val agent = AIAgentBase(...) {
+ *     install(Tracing) {
+ *         // Write trace events to a file
+ *         addMessageProcessor(TraceFeatureMessageFileWriter(
+ *             fs = fileSystem,
+ *             path = "agent-traces.log"
+ *         ))
+ *         
+ *         // Optionally provide custom formatting
+ *         addMessageProcessor(TraceFeatureMessageFileWriter(
+ *             fs = fileSystem,
+ *             path = "custom-traces.log",
+ *             format = { message -> 
+ *                 "[TRACE] ${message.eventId}: ${message::class.simpleName}"
+ *             }
+ *         ))
+ *     }
+ * }
+ * ```
+ * 
+ * @param Path The type representing file paths in the file system
+ * @param fs The file system provider to use for writing to files
+ * @param path The path where trace events will be written
+ * @param format Optional custom formatter for trace events
+ */
 class TraceFeatureMessageFileWriter<Path>(
     fs: FileSystemProvider.ReadWrite<Path>,
     path: Path,
