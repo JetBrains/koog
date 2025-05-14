@@ -1,5 +1,6 @@
 package ai.grazie.code.agents.example.subgraphwithtask
 
+
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.tools.ToolRegistry
@@ -50,10 +51,8 @@ fun main() {
      * Describe the list of tools for your agent.
      */
     val toolRegistry = ToolRegistry {
-        stage("generate-verify-and-fix") {
-            verifyTools.forEach { tool(it) }
-            fixTools.forEach { tool(it) }
-        }
+        verifyTools.forEach { tool(it) }
+        fixTools.forEach { tool(it) }
     }
 
     runBlocking {

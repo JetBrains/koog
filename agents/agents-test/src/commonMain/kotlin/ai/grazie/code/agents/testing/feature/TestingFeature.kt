@@ -1,46 +1,35 @@
 package ai.grazie.code.agents.testing.feature
 
+import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
-import ai.grazie.code.agents.core.agent.entity.AIAgentStateManager
-import ai.grazie.code.agents.core.agent.entity.AIAgentStorage
-import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.FinishAIAgentNodeBase
-import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStage
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
+import ai.grazie.code.agents.core.agent.entity.*
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.dsl.builder.BaseBuilder
 import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
-import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.AIAgentFeature
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.PromptExecutorProxy
-import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.core.tools.SimpleTool
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
+import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.testing.tools.MockEnvironment
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 
 
-class DummyAgentStageContext(
+class DummyAgentContext(
     private val builder: AIAgentStageContextMockBuilder,
-) : AIAgentStageContextBase {
+) : AIAgentContextBase {
     val isLLMDefined = builder.llm != null
     val isEnvironmentDefined = builder.environment != null
 
     override val environment: AIAgentEnvironment
         get() = builder.environment
             ?: throw NotImplementedError("Environment is not mocked")
-
-    override val stageInput: String
-        get() = builder.stageInput
-            ?: throw NotImplementedError("Stage input is not mocked")
 
     override val config: AIAgentConfig
         get() = builder.config
@@ -66,10 +55,6 @@ class DummyAgentStageContext(
         get() = builder.strategyId
             ?: throw NotImplementedError("Strategy ID is not mocked")
 
-    override val stageName: String
-        get() = builder.stageName
-            ?: throw NotImplementedError("Stage name is not mocked")
-
     /**
      * @suppress
      */
@@ -84,19 +69,16 @@ class DummyAgentStageContext(
 
     override fun copy(
         environment: AIAgentEnvironment?,
-        stageInput: String?,
         config: AIAgentConfig?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
         sessionUuid: UUID?,
         strategyId: String?,
-        stageName: String?,
         pipeline: AIAgentPipeline?
-    ): AIAgentStageContextBase = DummyAgentStageContext(
+    ): AIAgentContextBase = DummyAgentContext(
         builder.copy().apply {
             environment?.let { this.environment = it }
-            stageInput?.let { this.stageInput = it }
             config?.let { this.config = it }
             llm?.let { this.llm = it }
             stateManager?.let { this.stateManager = it }
@@ -108,38 +90,33 @@ class DummyAgentStageContext(
 }
 
 @TestOnly
-interface AIAgentStageContextMockBuilderBase : BaseBuilder<AIAgentStageContextBase> {
+interface AIAgentStageContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
     var environment: AIAgentEnvironment?
-    var stageInput: String?
     var config: AIAgentConfig?
     var llm: AIAgentLLMContext?
     var stateManager: AIAgentStateManager?
     var storage: AIAgentStorage?
     var sessionUuid: UUID?
     var strategyId: String?
-    var stageName: String?
 
     fun copy(): AIAgentStageContextMockBuilderBase
 
-    override fun build(): AIAgentStageContextBase
+    override fun build(): AIAgentContextBase
 }
 
 @TestOnly
 class AIAgentStageContextMockBuilder() : AIAgentStageContextMockBuilderBase {
     override var environment: AIAgentEnvironment? = null
-    override var stageInput: String? = null
     override var config: AIAgentConfig? = null
     override var llm: AIAgentLLMContext? = null
     override var stateManager: AIAgentStateManager? = null
     override var storage: AIAgentStorage? = null
     override var sessionUuid: UUID? = null
     override var strategyId: String? = null
-    override var stageName: String? = null
 
     override fun copy(): AIAgentStageContextMockBuilder {
         return AIAgentStageContextMockBuilder().also {
             it.environment = environment
-            it.stageInput = stageInput
             it.config = config
             it.llm = llm
             it.stateManager = stateManager
@@ -149,8 +126,8 @@ class AIAgentStageContextMockBuilder() : AIAgentStageContextMockBuilderBase {
         }
     }
 
-    override fun build(): DummyAgentStageContext {
-        return DummyAgentStageContext(this.copy())
+    override fun build(): DummyAgentContext {
+        return DummyAgentContext(this.copy())
     }
 
     companion object {
@@ -187,18 +164,22 @@ class AIAgentStageContextMockBuilder() : AIAgentStageContextMockBuilderBase {
 
 @TestOnly
 sealed class NodeReference<Input, Output> {
-    abstract fun resolve(stage: AIAgentStage): AIAgentNodeBase<Input, Output>
+    abstract fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output>
 
-    object Start : NodeReference<Unit, Unit>() {
-        override fun resolve(stage: AIAgentStage) = stage.start
+    class Start<Input> : NodeReference<Input, Input>() {
+        @Suppress("UNCHECKED_CAST")
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>) = subgraph.start as AIAgentNodeBase<Input, Input>
     }
 
-    object Finish : NodeReference<String, String>() {
-        override fun resolve(stage: AIAgentStage) = stage.finish
+    class Finish<Output> : NodeReference<Output, Output>() {
+        @Suppress("UNCHECKED_CAST")
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Output, Output> =
+            subgraph.finish as AIAgentNodeBase<Output, Output>
     }
 
-    class NamedNode<Input, Output>(val name: String) : NodeReference<Input, Output>() {
-        override fun resolve(stage: AIAgentStage): AIAgentNodeBase<Input, Output> {
+    open class NamedNode<Input, Output>(val name: String) : NodeReference<Input, Output>() {
+        @Suppress("UNCHECKED_CAST")
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
             fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
                 if (node is FinishAIAgentNodeBase) return null
@@ -208,29 +189,59 @@ sealed class NodeReference<Input, Output> {
                 return node.edges.firstNotNullOfOrNull { visit(it.toNode) }
             }
 
-            val result = visit(stage.start)
-                ?: throw IllegalArgumentException("Node with name '$name' not found in stage ${stage.name}")
+            val result = visit(subgraph.start).also {
+                println("Visited nodes: ${visited.joinToString()} [${visited.size}]")
+            }
+                ?: throw IllegalArgumentException("Node with name '$name' not found")
 
             return result
+        }
+    }
+
+    open class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentSubgraph<Input, Output> {
+            val result = super.resolve(subgraph)
+
+            if (result !is AIAgentSubgraph<Input, Output>) {
+                throw IllegalArgumentException("Node with name '$name' is not a subgraph")
+            }
+
+            return result
+        }
+    }
+
+    class Strategy(name: String) : SubgraphNode<String, String>(name) {
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy {
+            if (subgraph.name != name) {
+                throw IllegalArgumentException("Strategy with name '$name' was expected")
+            }
+
+            if (subgraph !is AIAgentStrategy) {
+                throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
+            }
+
+            return subgraph
         }
     }
 }
 
 @TestOnly
-internal data class StageAssertions(
+data class GraphAssertions(
     val name: String,
-    val start: NodeReference.Start,
-    val finish: NodeReference.Finish,
+    val start: NodeReference.Start<*>,
+    val finish: NodeReference.Finish<*>,
     val nodes: Map<String, NodeReference<*, *>>,
     val nodeOutputAssertions: List<NodeOutputAssertion<*, *>>,
     val edgeAssertions: List<EdgeAssertion<*, *>>,
-    val reachabilityAssertions: List<ReachabilityAssertion>
+    val unconditionalEdgeAssertions: List<UnconditionalEdgeAssertion>,
+    val reachabilityAssertions: List<ReachabilityAssertion>,
+    val subgraphAssertions: MutableList<SubGraphAssertions>
 )
 
 @TestOnly
 data class NodeOutputAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
-    val context: DummyAgentStageContext,
+    val context: DummyAgentContext,
     val input: Input,
     val expectedOutput: Output
 )
@@ -238,13 +249,22 @@ data class NodeOutputAssertion<Input, Output>(
 @TestOnly
 data class EdgeAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
-    val context: AIAgentStageContextBase,
+    val context: AIAgentContextBase,
     val output: Output,
     val expectedNode: NodeReference<*, *>
 )
 
 @TestOnly
+data class UnconditionalEdgeAssertion(
+    val node: NodeReference<*, *>,
+    val expectedNode: NodeReference<*, *>
+)
+
+@TestOnly
 data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
+
+@TestOnly
+data class SubGraphAssertions(val subgraphRef: NodeReference.SubgraphNode<*, *>, val graphAssertions: GraphAssertions)
 
 @TestOnly
 sealed interface AssertionResult {
@@ -308,34 +328,11 @@ sealed interface AssertionResult {
 @TestOnly
 class Testing {
     /**
-     * A mutable list storing `StageAssertions` objects, which define validation
-     * criteria for individual stages in the graph testing process.
+     * A mutable list storing `GraphAssertions` objects, which define validation
+     * criteria for the graphs.
      *
-     * Each `StageAssertions` object contains information about:
-     * - The stage name
-     * - References to start and finish nodes
-     * - Named node references
-     * - Node output assertions
-     * - Edge assertions
-     * - Reachability assertions
-     *
-     * This list is populated during the configuration phase and used during
-     * the validation phase to verify the agent's graph structure.
      */
-    private val stages = mutableListOf<StageAssertions>()
-
-    /**
-     * Represents an optional list of stage names indicating the desired order in which stages
-     * should be processed.
-     *
-     * When set, this list is used to verify that the agent's stages are defined in the
-     * expected order. This is useful for ensuring that the agent's workflow follows
-     * a specific sequence of stages.
-     *
-     * Null indicates that no specific order is defined, allowing stages to be handled
-     * without restriction.
-     */
-    private var stagesOrder: List<String>? = null
+    private val graphAssertions = mutableListOf<GraphAssertions>()
 
     /**
      * Represents a configuration class responsible for managing assertion handlers and stage configurations.
@@ -361,21 +358,19 @@ class Testing {
         private var assertionHandler: ((AssertionResult) -> Unit)? = null
 
         /**
-         * A mutable list of `StageAssertions` objects used to collect and manage stage-related assertions.
+         * A mutable list of `StrategyAssertions` objects used to collect and manage graph-related assertions.
          *
-         * This property is primarily utilized to store the assertions defined for individual stages in the assertion configuration.
-         * It allows the sequential addition of stage assertions through various methods in the `Config` class.
-         *
-         * Each element in the list represents a specific stage with its associated assertions, such as node outputs,
+         * Each element in the list represents a specific (sub)graph with its associated assertions, such as node outputs,
          * edge connections, and reachability between nodes.
          */
-        private val stages = mutableListOf<StageAssertions>()
+        private var assertions: GraphAssertions? = null
 
         /**
-         * Represents the custom order of stages to be used for assertions or sequence validation.
-         * The list can be null, indicating that no specific order has been defined.
+         * Retrieves the list of graph assertions defined in the configuration.
+         *
+         * @return A list of `GraphAssertions` representing the assertions to be applied for graph testing.
          */
-        private var stagesOrder: List<String>? = null
+        internal fun getAssertions(): GraphAssertions = assertions!!
 
         /**
          * Asserts that two values are equal. If the values are not equal, the specified message will be passed
@@ -418,66 +413,27 @@ class Testing {
         }
 
         /**
-         * Sets the expected order of stages for validation.
+         * Configures and adds a verification strategy using the provided name and assertions.
          *
-         * @param stages A variable number of stage names representing the expected order. Each stage is specified as a separate string argument.
+         * @param name The name of the strategy to be verified.
+         * @param buildAssertions A lambda defining the assertions to be built for the strategy.
          */
-        fun assertStagesOrder(vararg stages: String) {
-            stagesOrder = stages.toList()
+        fun verifyStrategy(name: String, buildAssertions: SubgraphAssertionsBuilder<String, String>.() -> Unit) {
+            assertions = SubgraphAssertionsBuilder(NodeReference.Strategy(name)).apply(buildAssertions).build()
         }
-
-        /**
-         * Defines a new stage within the configuration and allows adding assertions to it.
-         *
-         * @param name The name of the stage to be created.
-         * @param function A lambda with a receiver of type `StageAssertionsBuilder` for defining stage-specific assertions.
-         */
-        fun stage(name: String, function: StageAssertionsBuilder.() -> Unit) {
-            val stageBuilder = StageAssertionsBuilder(name)
-            stageBuilder.function()
-            stages.add(stageBuilder.build())
-        }
-
-        /**
-         * Retrieves a list of stage configurations for assertion handling.
-         *
-         * This method provides the stages configured within the `Config` class, each represented
-         * by a `StageAssertions` object containing detailed information about nodes, reachability,
-         * and assertions related to a specific stage.
-         *
-         * @return A list of `StageAssertions` representing the configured stages.
-         */
-        internal fun getStages(): List<StageAssertions> = stages
-
-        /**
-         * Retrieves the list of stage names in the specified order, if defined.
-         *
-         * @return a list of stage names representing the order of stages, or null if no order is defined.
-         */
-        internal fun getStagesOrder(): List<String>? = stagesOrder
 
         /**
          * Builder class for constructing stage-level assertions.
          * This includes setup for nodes, edges, reachability assertions, and context-related mock setups.
          */
-        class StageAssertionsBuilder(val name: String) {
-            /**
-             * Represents the starting node of the stage in the context of assertions.
-             * This property holds a reference to the initial `Start` node, which is a singleton object of type `NodeReference.Start`.
-             * It is used to identify and interact with the starting point in the graph-based structure of the stage.
-             *
-             * The `start` property is central to defining assertions and logical operations pertaining to the execution
-             * flows that originate from the starting node. It serves as an entry point for other operations
-             * like reachability checks or node input/output validations in the context of stage assertions.
-             */
-            private var start: NodeReference.Start = NodeReference.Start
+        class SubgraphAssertionsBuilder<Input, Output>(
+            private val subgraphRef: NodeReference.SubgraphNode<Input, Output>
+        ) {
 
-            /**
-             * Represents the finish node of the stage.
-             * This variable is of type `NodeReference.Finish`, which defines the ending point of a stage in the node-based structure.
-             * It can be used to declare or reference assertions relating to the finish node of the stage.
-             */
-            private var finish: NodeReference.Finish = NodeReference.Finish
+            private val start: NodeReference.Start<Input> = NodeReference.Start<Input>()
+
+            private val finish: NodeReference.Finish<Output> = NodeReference.Finish<Output>()
+
 
             /**
              * Stores a mapping of node names to their corresponding references.
@@ -524,6 +480,20 @@ class Testing {
             private val edgeAssertions = mutableListOf<EdgeAssertion<*, *>>()
 
             /**
+             * Stores a collection of assertions that represent unconditional and direct relationships
+             * between nodes in the graph. Each assertion describes an expected edge connection
+             * without conditions or additional constraints.
+             *
+             * This property is typically populated during the process of asserting edge connections
+             * within a graph, specifically using the `assertEdges` method or similar graph
+             * assertion configurations.
+             *
+             * It is used internally to track and validate edge connections as part of the
+             * graph testing framework to ensure the graph structure behaves as expected.
+             */
+            private val unconditionalEdgeAssertions = mutableListOf<UnconditionalEdgeAssertion>()
+
+            /**
              * A mutable list of reachability assertions that define expected direct connections between nodes
              * in a stage. Each assertion represents a relationship where one node is reachable from another.
              *
@@ -532,6 +502,8 @@ class Testing {
              * when the stage's configuration is built using the `build` method.
              */
             private val reachabilityAssertions = mutableListOf<ReachabilityAssertion>()
+
+            private val subgraphAssertions = mutableListOf<SubGraphAssertions>()
 
             /**
              * Provides a mock builder for the local agent stage context used within test environments.
@@ -546,7 +518,7 @@ class Testing {
              *
              * @return The starting node reference of type NodeReference.Start, representing the entry point of the stage.
              */
-            fun startNode(): NodeReference.Start {
+            fun startNode(): NodeReference.Start<Input> {
                 return start
             }
 
@@ -555,7 +527,7 @@ class Testing {
              *
              * @return a [NodeReference.Finish] representing the terminal node of the stage.
              */
-            fun finishNode(): NodeReference.Finish {
+            fun finishNode(): NodeReference.Finish<Output> {
                 return finish
             }
 
@@ -567,10 +539,28 @@ class Testing {
              * @param name the name of the node to assert or retrieve.
              * @return a `NodeReference` for the node identified by the given name.
              */
-            fun <I, O> assertNodeByName(name: String): NodeReference<I, O> {
+            fun <I, O> assertNodeByName(name: String): NodeReference.NamedNode<I, O> {
                 val nodeRef = NodeReference.NamedNode<I, O>(name)
                 nodes[name] = nodeRef
                 return nodeRef
+            }
+
+            /**
+             * Asserts the existence of a subgraph by its name*/
+            fun <I, O> assertSubgraphByName(
+                name: String
+            ): NodeReference.SubgraphNode<I, O> {
+                val nodeRef = NodeReference.SubgraphNode<I, O>(name)
+                nodes[name] = nodeRef
+                return nodeRef
+            }
+
+            fun <I, O> verifySubgraph(
+                subgraph: NodeReference.SubgraphNode<I, O>,
+                checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}
+            ) {
+                val assertions = SubgraphAssertionsBuilder(subgraph).apply(checkSubgraph).build()
+                subgraphAssertions.add(SubGraphAssertions(subgraph, assertions))
             }
 
             /**
@@ -605,6 +595,7 @@ class Testing {
                 val builder = EdgeAssertionsBuilder(this)
                 builder.block()
                 edgeAssertions.addAll(builder.assertions)
+                unconditionalEdgeAssertions.addAll(builder.unconditionalEdgeAssertions)
             }
 
             /**
@@ -613,15 +604,17 @@ class Testing {
              * @return A `StageAssertions` instance containing the name, start and finish node references,
              *         map of nodes, node output assertions, edge assertions, and reachability assertions.
              */
-            internal fun build(): StageAssertions {
-                return StageAssertions(
-                    name,
+            internal fun build(): GraphAssertions {
+                return GraphAssertions(
+                    subgraphRef.name,
                     start,
                     finish,
                     nodes,
                     nodeOutputs,
                     edgeAssertions,
-                    reachabilityAssertions
+                    unconditionalEdgeAssertions,
+                    reachabilityAssertions,
+                    subgraphAssertions
                 )
             }
 
@@ -633,7 +626,7 @@ class Testing {
              * @property context A mock builder for the local agent stage context, used to manage and copy state during the assertion process.
              */
             class NodeOutputAssertionsBuilder(
-                private val stageBuilder: StageAssertionsBuilder,
+                private val stageBuilder: SubgraphAssertionsBuilder<*, *>,
                 private val context: AIAgentStageContextMockBuilder = stageBuilder.context.copy()
             ) : AIAgentStageContextMockBuilderBase by context {
 
@@ -708,7 +701,7 @@ class Testing {
              * @property context A local agent stage context mock builder, initialized as a copy of the stage builder's context.
              */
             class EdgeAssertionsBuilder(
-                private val stageBuilder: StageAssertionsBuilder,
+                private val stageBuilder: SubgraphAssertionsBuilder<*, *>,
                 private val context: AIAgentStageContextMockBuilder = stageBuilder.context.copy()
             ) : AIAgentStageContextMockBuilderBase by context {
 
@@ -724,6 +717,16 @@ class Testing {
                  * provided within the builder.
                  */
                 val assertions = mutableListOf<EdgeAssertion<*, *>>()
+
+                /**
+                 * A collection that stores assertions ensuring an unconditional connection
+                 * between nodes in a graph testing context. Each assertion represents
+                 * a defined relationship where a node always leads to a specified target node.
+                 *
+                 * This list is populated by adding instances of [UnconditionalEdgeAssertion] through relevant methods,
+                 * such as when defining relationships or validating graph behavior.
+                 */
+                val unconditionalEdgeAssertions = mutableListOf<UnconditionalEdgeAssertion>()
 
                 /**
                  * Creates a deep copy of the current EdgeAssertionsBuilder instance, duplicating its state and context.
@@ -750,6 +753,15 @@ class Testing {
                  */
                 infix fun <I, O> NodeReference<I, O>.withOutput(output: O): EdgeOutputPair<I, O> {
                     return EdgeOutputPair(this, output)
+                }
+
+                /**
+                 * Creates an assertion to verify that the current node always leads to the given target node.
+                 *
+                 * @param targetNode The target node that the current node output is expected to connect to.
+                 */
+                infix fun NodeReference<*, *>.alwaysGoesTo(targetNode: NodeReference<*, *>) {
+                    unconditionalEdgeAssertions.add(UnconditionalEdgeAssertion(this, targetNode))
                 }
 
                 /**
@@ -814,103 +826,128 @@ class Testing {
             }
 
             if (config.enableGraphTesting) {
-                feature.stages.addAll(config.getStages())
-                feature.stagesOrder = config.getStagesOrder()
+                feature.graphAssertions.add(config.getAssertions())
 
                 pipeline.interceptBeforeAgentStarted(this, feature) {
-                    readStages { stages ->
-                        // Verify stages order if specified
-                        feature.stagesOrder?.let { expectedOrder ->
-                            val actualOrder = stages.map { it.name }
-                            assertListEquals(
-                                expectedOrder,
-                                actualOrder,
-                                "Stages order does not match expected order. Expected: $expectedOrder, Actual: $actualOrder"
-                            )
-                        }
-
-                        // Process each stage
-                        stages.forEach { stage ->
-                            val stageConfig = feature.stages.find { it.name == stage.name }
-                            if (stageConfig == null) {
-                                // Skip stages that are not configured for testing
-                                return@forEach
-                            }
-
-                            // Verify nodes exist
-                            for ((nodeName, nodeRef) in stageConfig.nodes) {
-                                val node = nodeRef.resolve(stage)
-                                assertNotNull(node, "Node with name '$nodeName' not found in stage '${stage.name}'")
-                            }
-
-                            // Verify reachability
-                            for (assertion in stageConfig.reachabilityAssertions) {
-                                assertReachable(
-                                    assertion.from.resolve(stage),
-                                    assertion.to.resolve(stage),
-                                    "Node ${assertion.to.resolve(stage).name} is not reachable from ${
-                                        assertion.from.resolve(
-                                            stage
-                                        ).name
-                                    } in stage '${stage.name}'"
-                                )
-                            }
-
-                            // Verify node outputs using DFS
-                            for (assertion in stageConfig.nodeOutputAssertions) {
-                                val fromNode = assertion.node.resolve(stage)
-
-                                val environment = if (assertion.context.isEnvironmentDefined)
-                                    assertion.context.environment
-                                else
-                                    MockEnvironment(agent.toolRegistry, agent.promptExecutor)
-
-                                val llm = if (assertion.context.isLLMDefined) {
-                                    assertion.context.llm
-                                } else {
-                                    AIAgentLLMContext(
-                                        tools = agent.toolRegistry.stagesToolDescriptors[stage.name] ?: emptyList(),
-                                        prompt = agent.agentConfig.prompt,
-                                        model = agent.agentConfig.model,
-                                        promptExecutor = PromptExecutorProxy(agent.promptExecutor, pipeline),
-                                        environment = environment,
-                                        config = agent.agentConfig
-                                    )
-                                }
-
-                                @OptIn(InternalAgentsApi::class)
-                                config.assertEquals(
-                                    assertion.expectedOutput,
-                                    fromNode.executeUnsafe(
-                                        assertion.context.copy(llm = llm, environment = environment),
-                                        assertion.input
-                                    ),
-                                    "Unexpected output for node ${fromNode.name} with input ${assertion.input} in stage '${stage.name}'"
-                                )
-                            }
-
-                            @OptIn(InternalAgentsApi::class)
-                            // Verify edges using DFS
-                            for (assertion in stageConfig.edgeAssertions) {
-                                val fromNode = assertion.node.resolve(stage)
-                                val toNode = assertion.expectedNode.resolve(stage)
-
-                                val resolvedEdge = fromNode.resolveEdgeUnsafe(assertion.context, assertion.output)
-                                assertNotNull(
-                                    resolvedEdge,
-                                    "Expected to have at least one matching edge from node ${fromNode.name} with output ${assertion.output} "
-                                )
-
-                                config.assertEquals(
-                                    toNode,
-                                    resolvedEdge!!.edge.toNode,
-                                    "Expected `${fromNode.name}` with output ${assertion.output} to go to `${toNode.name}`, " +
-                                            "but it goes to ${resolvedEdge.edge.toNode.name} instead"
-                                )
-                            }
-                        }
+                    readStrategy { strategyGraph ->
+                        val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
+                        config.assert(
+                            strategyAssertions != null,
+                            "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
+                        )
+                        strategyAssertions!!
+                        verifyGraph(agent, strategyAssertions, strategyGraph, pipeline, config)
                     }
                 }
+            }
+        }
+
+        private suspend fun verifyGraph(
+            agent: AIAgent,
+            graphAssertions: GraphAssertions,
+            graph: AIAgentSubgraph<*, *>,
+            pipeline: AIAgentPipeline,
+            config: Config
+        ) {
+            // Verify nodes exist
+            for ((nodeName, nodeRef) in graphAssertions.nodes) {
+                val node = nodeRef.resolve(graph)
+                assertNotNull(
+                    node,
+                    "Node with name '$nodeName' not found in graph '${graph.name}'"
+                )
+            }
+
+            // Verify reachability
+            for (assertion in graphAssertions.reachabilityAssertions) {
+                assertReachable(
+                    assertion.from.resolve(graph),
+                    assertion.to.resolve(graph),
+                    "Node ${assertion.to.resolve(graph).name} is not reachable from ${
+                        assertion.from.resolve(
+                            graph
+                        ).name
+                    } in graph '${graph.name}'"
+                )
+            }
+
+            // Verify node outputs using DFS
+            for (assertion in graphAssertions.nodeOutputAssertions) {
+                val fromNode = assertion.node.resolve(graph)
+
+                val environment = if (assertion.context.isEnvironmentDefined)
+                    assertion.context.environment
+                else
+                    MockEnvironment(agent.toolRegistry, agent.promptExecutor)
+
+                val llm = if (assertion.context.isLLMDefined) {
+                    assertion.context.llm
+                } else {
+                    AIAgentLLMContext(
+                        tools = agent.toolRegistry.tools.map { it.descriptor },
+                        prompt = agent.agentConfig.prompt,
+                        model = agent.agentConfig.model,
+                        promptExecutor = PromptExecutorProxy(agent.promptExecutor, pipeline),
+                        environment = environment,
+                        config = agent.agentConfig
+                    )
+                }
+
+                @OptIn(InternalAgentsApi::class)
+                config.assertEquals(
+                    assertion.expectedOutput,
+                    fromNode.executeUnsafe(
+                        assertion.context.copy(llm = llm, environment = environment),
+                        assertion.input
+                    ),
+                    "Unexpected output for node ${fromNode.name} with input ${assertion.input} " +
+                            "in graph '${graph.name}'"
+                )
+            }
+
+            @OptIn(InternalAgentsApi::class)
+            // Verify edges using DFS
+            for (assertion in graphAssertions.edgeAssertions) {
+                val fromNode = assertion.node.resolve(graph)
+                val toNode = assertion.expectedNode.resolve(graph)
+
+                val resolvedEdge = fromNode.resolveEdgeUnsafe(assertion.context, assertion.output)
+                assertNotNull(
+                    resolvedEdge,
+                    "Expected to have at least one matching edge from node ${fromNode.name} with output ${assertion.output} "
+                )
+
+                config.assertEquals(
+                    toNode,
+                    resolvedEdge!!.edge.toNode,
+                    "Expected `${fromNode.name}` with output ${assertion.output} to go to `${toNode.name}`, " +
+                            "but it goes to ${resolvedEdge.edge.toNode.name} instead"
+                )
+            }
+
+            @OptIn(InternalAgentsApi::class)
+            // Verify edges using DFS
+            for (assertion in graphAssertions.unconditionalEdgeAssertions) {
+                val fromNode = assertion.node.resolve(graph)
+                val toNode = assertion.expectedNode.resolve(graph)
+
+                config.assertEquals(
+                    1, fromNode.edges.size,
+                    "Expected node ${fromNode.name} to have exactly one edge, " +
+                            "but it has ${fromNode.edges.size} edges instead"
+                )
+
+                val actualToNode = fromNode.edges.single().toNode
+
+                config.assertEquals(
+                    toNode, actualToNode,
+                    "Expected that from node ${fromNode.name} the only edge is going to ${toNode}, " +
+                            "but it goes to ${actualToNode} instead"
+                )
+            }
+
+            for (assertion in graphAssertions.subgraphAssertions) {
+                verifyGraph(agent, assertion.graphAssertions, assertion.subgraphRef.resolve(graph), pipeline, config)
             }
         }
 

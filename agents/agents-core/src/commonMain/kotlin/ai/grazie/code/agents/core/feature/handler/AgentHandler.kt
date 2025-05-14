@@ -1,9 +1,8 @@
 package ai.grazie.code.agents.core.feature.handler
 
-import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStage
+import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 
 /**
@@ -36,7 +35,10 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      *
      * @param environment The AgentEnvironment to be transformed
      */
-    public fun transformEnvironment(context: AgentCreateContext<FeatureT>, environment: AIAgentEnvironment): AIAgentEnvironment =
+    public fun transformEnvironment(
+        context: AgentCreateContext<FeatureT>,
+        environment: AIAgentEnvironment
+    ): AIAgentEnvironment =
         environmentTransformer.transform(context, environment)
 
     /**
@@ -94,8 +96,8 @@ public class AgentCreateContext<FeatureT>(
     public val agent: AIAgent,
     public val feature: FeatureT
 ) {
-    public suspend fun readStages(block: suspend (List<AIAgentStage>) -> Unit) {
-        block(strategy.stages)
+    public suspend fun readStrategy(block: suspend (AIAgentStrategy) -> Unit) {
+        block(strategy)
     }
 }
 
@@ -104,8 +106,8 @@ public class AgentStartContext<TFeature>(
     public val agent: AIAgent,
     public val feature: TFeature
 ) {
-    public suspend fun readStages(block: suspend (List<AIAgentStage>) -> Unit) {
-        block(strategy.stages)
+    public suspend fun readStrategy(block: suspend (AIAgentStrategy) -> Unit) {
+        block(strategy)
     }
 }
 
@@ -113,8 +115,8 @@ public class StrategyUpdateContext<FeatureT>(
     public val strategy: AIAgentStrategy,
     public val feature: FeatureT
 ) {
-    public suspend fun readStages(block: suspend (List<AIAgentStage>) -> Unit) {
-        block(strategy.stages)
+    public suspend fun readStrategy(block: suspend (AIAgentStrategy) -> Unit) {
+        block(strategy)
     }
 }
 

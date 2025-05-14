@@ -7,7 +7,7 @@ import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.testing.tools.DummyTool
@@ -30,25 +30,27 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = simpleStrategy("test-interceptors-strategy") {
-            val dummyNode by nodeDoNothing<Unit>("dummy node")
+        val dummyNodeName = "dummy node"
+        val strategy = strategy("test-interceptors-strategy") {
+            val dummyNode by nodeDoNothing<Unit>(dummyNodeName)
 
             edge(nodeStart forwardTo dummyNode transformed { })
             edge(dummyNode forwardTo nodeFinish transformed { "Done" })
         }
 
+        val agentInput = "Hello World!"
         createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }.use { agent ->
-            agent.run("")
+            agent.run("Hello World!")
         }
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Node: ") }
         val expectedEvents = listOf(
-            "Node: start node (name: '__start__', input: 'kotlin.Unit')",
-            "Node: finish node (name: '__start__', input: 'kotlin.Unit', output: 'kotlin.Unit')",
-            "Node: start node (name: 'dummy node', input: 'kotlin.Unit')",
-            "Node: finish node (name: 'dummy node', input: 'kotlin.Unit', output: 'kotlin.Unit')",
+            "Node: start node (name: '__start__', input: '$agentInput')",
+            "Node: finish node (name: '__start__', input: '$agentInput', output: '$agentInput')",
+            "Node: start node (name: '$dummyNodeName', input: 'kotlin.Unit')",
+            "Node: finish node (name: '$dummyNodeName', input: 'kotlin.Unit', output: 'kotlin.Unit')",
         )
 
         assertEquals(
@@ -64,7 +66,7 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = simpleStrategy("test-interceptors-strategy") {
+        val strategy = strategy("test-interceptors-strategy") {
             val llmCallWithoutTools by nodeLLMRequest("test LLM call", allowToolCalls = false)
             val llmCall by nodeLLMRequest("test LLM call with tools")
 
@@ -83,8 +85,8 @@ class AIAgentPipelineTest {
         val expectedEvents = listOf(
             "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [])",
             "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response)]', tools: [])",
-            "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [dummy, __tools_list__])",
-            "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response)]', tools: [dummy, __tools_list__])",
+            "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [dummy])",
+            "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response)]', tools: [dummy])",
         )
 
         assertEquals(
@@ -100,8 +102,8 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = simpleStrategy("test-interceptors-strategy") {
-            val nodeSendInput by nodeLLMSendStageInput()
+        val strategy = strategy("test-interceptors-strategy") {
+            val nodeSendInput by nodeLLMRequest()
             val toolCallNode by nodeExecuteTool("tool call node")
 
             edge(nodeStart forwardTo nodeSendInput)
@@ -111,9 +113,7 @@ class AIAgentPipelineTest {
 
         // Use custom tool registry with plus tool to be called
         val toolRegistry = ToolRegistry {
-            stage("default") {
-                tool(CalculatorTools.PlusTool)
-            }
+            tool(CalculatorTools.PlusTool)
         }
 
         createAgent(
@@ -147,7 +147,7 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = simpleStrategy("test-interceptors-strategy") {
+        val strategy = strategy("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
@@ -159,8 +159,8 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
+            "Agent: before agent started",
             "Agent: before agent started (strategy name: 'test-interceptors-strategy')",
-            "Agent: before agent started (strategy name: 'test-interceptors-strategy'). read stages (size: 1)",
         )
 
         assertEquals(
@@ -176,7 +176,7 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = simpleStrategy("test-interceptors-strategy") {
+        val strategy = strategy("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
@@ -189,7 +189,6 @@ class AIAgentPipelineTest {
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: strategy started") }
         val expectedEvents = listOf(
             "Agent: strategy started (strategy name: 'test-interceptors-strategy')",
-            "Agent: strategy started (strategy name: 'test-interceptors-strategy'). read stages (size: 1)",
         )
 
         assertEquals(
@@ -204,19 +203,20 @@ class AIAgentPipelineTest {
     fun `test pipeline interceptors for stage context events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
-        val strategy = simpleStrategy("test-interceptors-strategy") {
+        val strategy = strategy("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
+        val agentInput = "Hello World!"
         createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }.use { agent ->
-            agent.run("")
+            agent.run(agentInput)
         }
 
-        val actualEvents = interceptedEvents.filter { it.startsWith("Stage Context: ") }
+        val actualEvents = interceptedEvents.filter { it.startsWith("Agent Context: ") }
         val expectedEvents = listOf(
-            "Stage Context: request features from stage context (stage name: default)",
+            "Agent Context: request features from agent context",
         )
 
         assertEquals(
@@ -233,14 +233,14 @@ class AIAgentPipelineTest {
         val interceptedEvents = mutableListOf<String>()
 
         createAgent(
-            strategy = simpleStrategy("test-interceptors-strategy-1") {
+            strategy = strategy("test-interceptors-strategy-1") {
                 edge(nodeStart forwardTo nodeFinish transformed { "Done" })
             }) {
             install(TestFeature) { events = interceptedEvents }
         }.use { agent1 ->
 
             createAgent(
-                strategy = simpleStrategy("test-interceptors-strategy-2") {
+                strategy = strategy("test-interceptors-strategy-2") {
                     edge(nodeStart forwardTo nodeFinish transformed { "Done" })
                 }) {
                 install(TestFeature) { events = interceptedEvents }
@@ -253,10 +253,10 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
+            "Agent: before agent started",
             "Agent: before agent started (strategy name: 'test-interceptors-strategy-1')",
-            "Agent: before agent started (strategy name: 'test-interceptors-strategy-1'). read stages (size: 1)",
+            "Agent: before agent started",
             "Agent: before agent started (strategy name: 'test-interceptors-strategy-2')",
-            "Agent: before agent started (strategy name: 'test-interceptors-strategy-2'). read stages (size: 1)",
         )
 
         assertEquals(
@@ -299,9 +299,7 @@ class AIAgentPipelineTest {
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = toolRegistry ?: ToolRegistry {
-                stage("default") {
-                    tool(DummyTool())
-                }
+                tool(DummyTool())
             },
             installFeatures = installFeatures,
         )

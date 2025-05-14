@@ -1,11 +1,11 @@
 package ai.grazie.code.agents.example.structureddata
 
-import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
@@ -13,12 +13,13 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
 
-    val agentStrategy = simpleStrategy("library-assistant") {
-        val getMdOutput by node<Unit, String> { _ ->
+    val agentStrategy = strategy("library-assistant") {
+        val getMdOutput by node<String, String> { input ->
             val books = mutableListOf<Book>()
             val mdDefinition = markdownBookDefinition()
 
             llm.writeSession {
+                updatePrompt { user(input) }
                 val markdownStream = requestLLMStreaming(mdDefinition)
                 parseMarkdownStreamToBooks(markdownStream).collect { book ->
                     books.add(book)

@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.feature.handler
 
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 
 /**
@@ -29,7 +29,7 @@ public fun interface BeforeNodeHandler {
      */
     public suspend fun handle(
         node: AIAgentNodeBase<*, *>,
-        context: AIAgentStageContextBase,
+        context: AIAgentContextBase,
         input: Any?
     )
 }
@@ -48,7 +48,7 @@ public fun interface AfterNodeHandler {
      */
     public suspend fun handle(
         node: AIAgentNodeBase<*, *>,
-        context: AIAgentStageContextBase,
+        context: AIAgentContextBase,
         input: Any?,
         output: Any?
     )

@@ -2,12 +2,8 @@ package ai.grazie.code.agents.core.api
 
 import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
-import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.grazie.code.agents.core.dsl.extension.onAssistantMessage
-import ai.grazie.code.agents.core.dsl.extension.onToolCall
+import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.dsl.extension.*
 import ai.jetbrains.code.prompt.message.Message
 
 /**
@@ -16,8 +12,8 @@ import ai.jetbrains.code.prompt.message.Message
  * handle user input, execute tools, and provide responses.
  * Allows the agent to interact with the user in a chat-like manner.
  */
-public fun chatAgentStrategy(): AIAgentStrategy = simpleStrategy("chat") {
-    val sendInput by nodeLLMSendStageInput("sendInput")
+public fun chatAgentStrategy(): AIAgentStrategy = strategy("chat") {
+    val nodeCallLLM by nodeLLMRequest("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
 
@@ -31,10 +27,10 @@ public fun chatAgentStrategy(): AIAgentStrategy = simpleStrategy("chat") {
         }
     }
 
-    edge(nodeStart forwardTo sendInput)
+    edge(nodeStart forwardTo nodeCallLLM)
 
-    edge(sendInput forwardTo nodeExecuteTool onToolCall { true })
-    edge(sendInput forwardTo giveFeedbackToCallTools onAssistantMessage { true })
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+    edge(nodeCallLLM forwardTo giveFeedbackToCallTools onAssistantMessage { true })
     edge(giveFeedbackToCallTools forwardTo giveFeedbackToCallTools onAssistantMessage { true })
     edge(giveFeedbackToCallTools forwardTo nodeExecuteTool onToolCall { true })
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
@@ -50,14 +46,14 @@ public fun chatAgentStrategy(): AIAgentStrategy = simpleStrategy("chat") {
  * Sometimes, it also called "one-shot" strategy.
  * Useful if you need to run a straightforward process that doesn't require a lot of additional logic.
  */
-public fun singleRunStrategy(): AIAgentStrategy = simpleStrategy("single_run") {
-    val sendInput by nodeLLMSendStageInput("sendInput")
+public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
+    val nodeCallLLM by nodeLLMRequest("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
 
-    edge(nodeStart forwardTo sendInput)
-    edge(sendInput forwardTo nodeExecuteTool onToolCall { true })
-    edge(sendInput forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeStart forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
     edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })

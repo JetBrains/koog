@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.*
 import ai.grazie.code.agents.core.api.AIAgentBase
 import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
@@ -10,12 +10,12 @@ import ai.grazie.code.agents.core.environment.TerminationTool
 import ai.grazie.code.agents.core.exception.AgentEngineException
 import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.PromptExecutorProxy
 import ai.grazie.code.agents.core.model.AgentServiceError
 import ai.grazie.code.agents.core.model.AgentServiceErrorType
 import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.Closeable
 import ai.grazie.utils.mpp.LoggerFactory
@@ -104,7 +104,7 @@ public open class AIAgent(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun run(prompt: String) {
+    override suspend fun run(agentInput: String) {
 
         runningMutex.withLock {
             if (isRunning) {
@@ -118,15 +118,29 @@ public open class AIAgent(
         pipeline.prepareFeatures()
         pipeline.onBeforeAgentStarted(strategy, this)
 
-        strategy.run(
-            sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),
-            userInput = prompt,
-            toolRegistry = toolRegistry,
-            promptExecutor = promptExecutor,
-            environment = this,
-            config = agentConfig,
-            pipeline = pipeline
+        val stateManager = AIAgentStateManager()
+        val storage = AIAgentStorage()
+
+        val agentContext = AIAgentContext(
+            this,
+            agentConfig,
+            llm = AIAgentLLMContext(
+                toolRegistry.tools.map { it.descriptor },
+                toolRegistry,
+                agentConfig.prompt,
+                agentConfig.model,
+                promptExecutor = PromptExecutorProxy(promptExecutor, pipeline),
+                environment = this,
+                agentConfig
+            ),
+            stateManager = stateManager,
+            storage = storage,
+            sessionUuid = sessionUuid!!,
+            strategyId = strategy.name,
+            pipeline = pipeline,
         )
+
+        strategy.execute(context = agentContext, input = agentInput)
 
         runningMutex.withLock {
             isRunning = false
@@ -138,12 +152,12 @@ public open class AIAgent(
     }
 
     public suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
-        val prompt = TextContentBuilder().apply { this.builder() }.build()
-        run(prompt = prompt)
+        val agentInput = TextContentBuilder().apply { this.builder() }.build()
+        run(agentInput = agentInput)
     }
 
-    override suspend fun runAndGetResult(userPrompt: String): String? {
-        run(userPrompt)
+    override suspend fun runAndGetResult(agentInput: String): String? {
+        run(agentInput)
         agentResultDeferred.await()
         return agentResultDeferred.getCompleted()
     }
@@ -166,8 +180,8 @@ public open class AIAgent(
         val results = processToolCallMultiple(message).mapToToolResult()
         logger.debug {
             "Received results from tools call (" +
-                "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
-                "results: [${results.joinToString(", ") { it.result?.toStringDefault() ?: "null" }}])"
+                    "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
+                    "results: [${results.joinToString(", ") { it.result?.toStringDefault() ?: "null" }}])"
         }
 
         return results
@@ -215,31 +229,11 @@ public open class AIAgent(
     private suspend fun processToolCall(content: AgentToolCallToEnvironmentContent): EnvironmentToolResultToAgentContent =
         allowToolCalls {
             logger.debug { "Handling tool call sent by server..." }
-
-            val stage = content.toolArgs[ToolStage.STAGE_PARAM_NAME]?.jsonPrimitive?.contentOrNull
-                ?.let { stageArg -> toolRegistry.getStageByName(stageArg) }
-                // If the tool appears in different stages, the first one will be returned
-                ?: toolRegistry.getStageByToolOrNull(content.toolName)
-                ?: toolRegistry.getStageByName(ToolStage.DEFAULT_STAGE_NAME)
-
-            // Tool
-            val tool = stage.getToolOrNull(content.toolName)
-            if (tool == null) {
-                logger.warning { "Tool \"${content.toolName}\" not found in stage \"${stage.name}\"!" }
-                return toolResult(
-                    message = "Tool \"${content.toolName}\" not found!",
-                    toolCallId = content.toolCallId,
-                    toolName = content.toolName,
-                    agentId = strategy.name,
-                    result = null
-                )
-            }
-
+            val tool = toolRegistry.getTool(content.toolName)
             // Tool Args
             val toolArgs = try {
                 tool.decodeArgs(content.toolArgs)
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
                 logger.error(e) { "Tool \"${tool.name}\" failed to parse arguments: ${content.toolArgs}" }
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to parse arguments because of ${e.message}!",
@@ -250,16 +244,15 @@ public open class AIAgent(
                 )
             }
 
-            pipeline.onToolCall(stage = stage, tool = tool, toolArgs = toolArgs)
+            pipeline.onToolCall(tool = tool, toolArgs = toolArgs)
 
             // Tool Execution
             val (toolResult, serializedResult) = try {
                 @Suppress("UNCHECKED_CAST")
                 (tool as Tool<Tool.Args, ToolResult>).executeAndSerialize(toolArgs, toolEnabler)
-            }
-            catch (e: ToolException) {
+            } catch (e: ToolException) {
 
-                pipeline.onToolValidationError(stage = stage, tool = tool, toolArgs = toolArgs, error = e.message)
+                pipeline.onToolValidationError(tool = tool, toolArgs = toolArgs, error = e.message)
 
                 return toolResult(
                     message = e.message,
@@ -268,12 +261,11 @@ public open class AIAgent(
                     agentId = strategy.name,
                     result = null
                 )
-            }
-            catch (e: Exception) {
+            } catch (e: Exception) {
 
                 logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
 
-                pipeline.onToolCallFailure(stage = stage, tool = tool, toolArgs = toolArgs, throwable = e)
+                pipeline.onToolCallFailure(tool = tool, toolArgs = toolArgs, throwable = e)
 
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to execute because of ${e.message}!",
@@ -285,9 +277,9 @@ public open class AIAgent(
             }
 
             // Tool Finished with Result
-            pipeline.onToolCallResult(stage = stage, tool = tool, toolArgs = toolArgs, result = toolResult)
+            pipeline.onToolCallResult(tool = tool, toolArgs = toolArgs, result = toolResult)
 
-            logger.debug { "[${stage.name}] - Completed execution of ${content.toolName} with result: $toolResult" }
+            logger.debug { "Completed execution of ${content.toolName} with result: $toolResult" }
 
             return toolResult(
                 toolCallId = content.toolCallId,
@@ -345,8 +337,7 @@ public open class AIAgent(
 
             pipeline.onAgentFinished(strategyName = strategy.name, result = result)
             agentResultDeferred.complete(result)
-        }
-        else {
+        } else {
             processError(messageError)
         }
     }
@@ -354,8 +345,7 @@ public open class AIAgent(
     private suspend fun processError(error: AgentServiceError) {
         try {
             throw error.asException()
-        }
-        catch (e: AgentEngineException) {
+        } catch (e: AgentEngineException) {
             logger.error(e) { "Execution exception reported by server!" }
             pipeline.onAgentRunError(strategyName = strategy.name, throwable = e)
         }

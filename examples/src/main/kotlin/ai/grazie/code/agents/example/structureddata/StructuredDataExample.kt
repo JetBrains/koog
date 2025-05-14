@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendStageInput
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.example.TokenService
@@ -209,28 +209,26 @@ fun main(): Unit = runBlocking {
     )
 
     val agentStrategy = strategy("weather-forecast") {
-        stage("weather") {
-            val setup by nodeLLMSendStageInput()
+        val setup by nodeLLMRequest()
 
-            val getStructuredForecast by node<Message.Response, String> { _ ->
-                val structuredResponse = llm.writeSession {
-                    this.requestLLMStructured(
-                        structure = weatherForecastStructure,
-                        // the model that would handle coercion if the output does not conform to the requested structure
-                        fixingModel = OpenAIModels.Reasoning.GPT4oMini,
-                    ).getOrThrow()
-                }
+        val getStructuredForecast by node<Message.Response, String> { _ ->
+            val structuredResponse = llm.writeSession {
+                this.requestLLMStructured(
+                    structure = weatherForecastStructure,
+                    // the model that would handle coercion if the output does not conform to the requested structure
+                    fixingModel = OpenAIModels.Reasoning.GPT4oMini,
+                ).getOrThrow()
+            }
 
-                """
+            """
                 Response structure:
                 ${structuredResponse.structure}
                 """.trimIndent()
-            }
-
-            edge(nodeStart forwardTo setup)
-            edge(setup forwardTo getStructuredForecast)
-            edge(getStructuredForecast forwardTo nodeFinish)
         }
+
+        edge(nodeStart forwardTo setup)
+        edge(setup forwardTo getStructuredForecast)
+        edge(getStructuredForecast forwardTo nodeFinish)
     }
 
     val agentConfig = AIAgentConfig(

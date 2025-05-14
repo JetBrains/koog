@@ -1,11 +1,6 @@
 package ai.grazie.code.agents.core.dsl.builder
 
-import ai.grazie.code.agents.core.agent.entity.FinishAIAgentNodeBase
-import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
-import ai.grazie.code.agents.core.agent.entity.AIAgentSubgraph
-import ai.grazie.code.agents.core.agent.entity.StartAIAgentNodeBase
-import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
+import ai.grazie.code.agents.core.agent.entity.*
 import ai.grazie.code.agents.core.tools.Tool
 import kotlin.reflect.KProperty
 
@@ -22,7 +17,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      */
     public fun <Input, Output> node(
         name: String? = null,
-        execute: suspend AIAgentStageContextBase.(input: Input) -> Output
+        execute: suspend AIAgentContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegateBase<Input, Output> {
         return AIAgentNodeDelegate(name, AIAgentNodeBuilder(execute))
     }
@@ -41,6 +36,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
     ): AIAgentSubgraphDelegateBase<Input, Output> {
         return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), define)
+    }
+
+    public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
+        edge(this forwardTo nextNode)
+        return nextNode
     }
 
     public fun <IncomingOutput, OutgoingInput> edge(

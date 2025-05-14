@@ -4,7 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
 import ai.grazie.code.agents.testing.tools.DummyTool
@@ -37,7 +37,7 @@ class AIAgentNodesHistoryCompressionTest {
         val testExecutor = TestLLMExecutor()
         testExecutor.reset()
 
-        val agentStrategy = simpleStrategy("test") {
+        val agentStrategy = strategy("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.WholeHistory
             )
@@ -60,9 +60,7 @@ class AIAgentNodesHistoryCompressionTest {
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
-                stage("default") {
-                    tool(DummyTool())
-                }
+                tool(DummyTool())
             }
         ) {
             install(EventHandler) {
@@ -91,7 +89,7 @@ class AIAgentNodesHistoryCompressionTest {
         val testExecutor = TestLLMExecutor()
         testExecutor.reset()
 
-        val agentStrategy = simpleStrategy("test") {
+        val agentStrategy = strategy("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.FromLastNMessages(4)
             )
@@ -114,9 +112,7 @@ class AIAgentNodesHistoryCompressionTest {
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
-                stage("default") {
-                    tool(DummyTool())
-                }
+                tool(DummyTool())
             }
         ) {
             install(EventHandler) {
@@ -147,7 +143,7 @@ class AIAgentNodesHistoryCompressionTest {
 
         // Use a chunk size of 4 (each chunk will have 4 messages)
         val chunkSize = 4
-        val agentStrategy = simpleStrategy("test") {
+        val agentStrategy = strategy("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.Chunked(chunkSize)
             )
@@ -171,9 +167,7 @@ class AIAgentNodesHistoryCompressionTest {
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
-                stage("default") {
-                    tool(DummyTool())
-                }
+                tool(DummyTool())
             }
         ) {
             handleEvents {

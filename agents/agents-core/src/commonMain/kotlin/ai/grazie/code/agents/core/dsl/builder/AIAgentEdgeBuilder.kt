@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.dsl.builder
 
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.utils.Option
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentEdge
 import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 
@@ -19,10 +19,10 @@ public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput> internal construc
 public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal constructor(
     internal val fromNode: AIAgentNodeBase<*, IncomingOutput>,
     internal val toNode: AIAgentNodeBase<OutgoingInput, *>,
-    internal val forwardOutputComposition: suspend (AIAgentStageContextBase, IncomingOutput) -> Option<IntermediateOutput>
+    internal val forwardOutputComposition: suspend (AIAgentContextBase, IncomingOutput) -> Option<IntermediateOutput>
 ) {
     public infix fun onCondition(
-        block: suspend AIAgentStageContextBase.(output: IntermediateOutput) -> Boolean
+        block: suspend AIAgentContextBase.(output: IntermediateOutput) -> Boolean
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
             fromNode = fromNode,
@@ -35,7 +35,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
     }
 
     public infix fun <NewIntermediateOutput> transformed(
-        block: suspend AIAgentStageContextBase.(IntermediateOutput) -> NewIntermediateOutput
+        block: suspend AIAgentContextBase.(IntermediateOutput) -> NewIntermediateOutput
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
             fromNode = fromNode,

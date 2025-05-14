@@ -25,8 +25,8 @@ class SimpleAgentIntegrationTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onToolCall = { stage, tool, args ->
-            println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
+        onToolCall = { tool, args ->
+            println("Tool called: tool ${tool.name}, args $args")
             actualToolCalls.add(tool.name)
         }
 
@@ -70,9 +70,7 @@ class SimpleAgentIntegrationTest {
     @Test
     fun integration_simpleChatAgentShouldCallCustomTools() = runBlocking {
         val toolRegistry = ToolRegistry {
-            stage {
-                tool(SayToUser)
-            }
+            tool(SayToUser)
         }
 
         val agent = simpleChatAgent(
@@ -111,9 +109,7 @@ class SimpleAgentIntegrationTest {
     @Test
     fun integration_simpleSingleRunAgentShouldCallCustomTool() = runBlocking {
         val toolRegistry = ToolRegistry {
-            stage {
-                tool(SayToUser)
-            }
+            tool(SayToUser)
         }
 
         val agent = simpleSingleRunAgent(

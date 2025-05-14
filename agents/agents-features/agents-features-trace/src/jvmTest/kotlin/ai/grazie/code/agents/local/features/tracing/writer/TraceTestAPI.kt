@@ -26,9 +26,7 @@ fun createAgent(
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
-            stage("default") {
-                tool(DummyTool())
-            }
+            tool(DummyTool())
         },
         installFeatures = installFeatures,
     )

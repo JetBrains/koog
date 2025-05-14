@@ -1,9 +1,6 @@
-package ai.grazie.code.agents.core.agent.entity.stage
+package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.AIAgentStateManager
-import ai.grazie.code.agents.core.agent.entity.AIAgentStorage
-import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.environment.SafeTool
@@ -36,7 +33,7 @@ import kotlin.reflect.KClass
  * metadata necessary for the operation of the agent stage. Additionally, it supports features for custom
  * workflows and extensibility.
  */
-public interface AIAgentStageContextBase {
+public interface AIAgentContextBase {
     /**
      * Represents the environment in which the agent operates.
      *
@@ -45,16 +42,6 @@ public interface AIAgentStageContextBase {
      * It is used throughout the agent's lifecycle to facilitate actions and handle outcomes.
      */
     public val environment: AIAgentEnvironment
-
-    /**
-     * Represents the input provided to the current stage in the agent's execution context.
-     *
-     * This value is used to dynamically update the prompt for the large language model (LLM)
-     * and influence the behavior or response of the agent in the current stage. It is typically
-     * set or modified as part of the execution flow to provide context or additional information
-     * relevant to the current stage of processing.
-     */
-    public val stageInput: String
 
     /**
      * Represents the configuration for a local agent within the current stage context.
@@ -114,15 +101,6 @@ public interface AIAgentStageContextBase {
     public val strategyId: String
 
     /**
-     * Represents the name of the current execution stage in the local agent's context.
-     *
-     * This property is used to identify and track the specific stage of processing within
-     * the execution pipeline, aiding in debugging, logging, and ensuring proper flow
-     * control during the agent's tasks.
-     */
-    public val stageName: String
-
-    /**
      * Represents the AI agent pipeline used within a `AIAgentStageContext`.
      *
      * This pipeline organizes and processes the sequence of operations or stages required
@@ -164,70 +142,62 @@ public interface AIAgentStageContextBase {
      * @suppress
      */
     @InternalAgentsApi
-    public fun copyWithTools(tools: List<ToolDescriptor>): AIAgentStageContextBase {
+    public fun copyWithTools(tools: List<ToolDescriptor>): AIAgentContextBase {
         return this.copy(llm = llm.copy(tools = tools))
     }
 
     /**
-     * Creates a copy of the current `AIAgentStageContext` with optional overrides for its properties.
+     * Creates a copy of the current `AIAgentContext` with optional overrides for its properties.
      *
      * @param environment The agent environment to be used, or null to retain the current environment.
-     * @param stageInput The input for the stage, or null to retain the current stage input.
      * @param config The local agent configuration, or null to retain the current configuration.
      * @param llm The local agent LLM context, or null to retain the current LLM context.
      * @param stateManager The state manager for the local agent, or null to retain the current state manager.
      * @param storage The local agent's key-value storage, or null to retain the current storage.
      * @param sessionUuid The UUID of the session, or null to retain the current session UUID.
      * @param strategyId The strategy ID, or null to retain the current strategy ID.
-     * @param stageName The name of the stage, or null to retain the current stage name.
      * @param pipeline The AI agent pipeline, or null to retain the current pipeline.
      * @return A new instance of `AIAgentStageContext` with the specified overrides.
      */
     public fun copy(
         environment: AIAgentEnvironment? = null,
-        stageInput: String? = null,
         config: AIAgentConfig? = null,
         llm: AIAgentLLMContext? = null,
         stateManager: AIAgentStateManager? = null,
         storage: AIAgentStorage? = null,
         sessionUuid: UUID? = null,
         strategyId: String? = null,
-        stageName: String? = null,
         pipeline: AIAgentPipeline? = null,
-    ): AIAgentStageContextBase
+    ): AIAgentContextBase
 }
 
 /**
- * Implements the `AIAgentStageContext` interface, providing the context required for a local
+ * Implements the `AIAgentContext` interface, providing the context required for a local
  * agent's stage execution. This class encapsulates configurations, the execution pipeline,
  * agent environment, and tools for handling agent lifecycles and interactions.
  *
  * @constructor Creates an instance of the context with the given parameters.
  *
  * @param environment The agent environment responsible for tool execution and problem reporting.
- * @param stageInput The input provided to the current stage.
  * @param config The configuration settings of the local agent.
  * @param llm The contextual data and execution utilities for the local agent's interaction with LLMs.
  * @param stateManager Manages the internal state of the local agent.
  * @param storage Concurrent-safe storage for managing key-value data across the agent's lifecycle.
  * @param sessionUuid The unique identifier for the agent session.
  * @param strategyId The identifier for the selected strategy in the agent's lifecycle.
- * @param stageName The name of the stage associated with this context.
  * @param pipeline The AI agent pipeline responsible for coordinating stage execution and processing.
  */
-internal class AIAgentStageContext constructor(
+internal class AIAgentContext constructor(
     override val environment: AIAgentEnvironment,
-    override val stageInput: String,
     override val config: AIAgentConfig,
     override val llm: AIAgentLLMContext,
     override val stateManager: AIAgentStateManager,
     override val storage: AIAgentStorage,
     override val sessionUuid: UUID,
     override val strategyId: String,
-    override val stageName: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
-) : AIAgentStageContextBase {
+) : AIAgentContextBase {
     /**
      * A map storing features associated with the current stage context.
      * The keys represent unique identifiers for specific features, defined as `AIAgentStorageKey`.
@@ -240,7 +210,7 @@ internal class AIAgentStageContext constructor(
      */
     @OptIn(InternalAgentsApi::class)
     private val features: Map<AIAgentStorageKey<*>, Any> =
-        pipeline.getStageFeatures(this)
+        pipeline.getAgentFeatures(this)
 
     /**
      * Retrieves a feature associated with the given key from the local agent storage.
@@ -268,7 +238,7 @@ internal class AIAgentStageContext constructor(
      * @return A new instance of `AIAgentStageContext` with the updated tools configuration.
      */
     @InternalAgentsApi
-    override fun copyWithTools(tools: List<ToolDescriptor>): AIAgentStageContextBase {
+    override fun copyWithTools(tools: List<ToolDescriptor>): AIAgentContextBase {
         return this.copy(llm = llm.copy(tools = tools))
     }
 
@@ -276,37 +246,31 @@ internal class AIAgentStageContext constructor(
      * Creates a copy of the current `AIAgentStageContextImpl`, allowing for selective overriding of its properties.
      *
      * @param environment The `AgentEnvironment` to be used in the new context, or `null` to retain the current one.
-     * @param stageInput The input for the stage, or `null` to retain the current value.
      * @param config The `AIAgentConfig` for the new context, or `null` to retain the current configuration.
      * @param llm The `AIAgentLLMContext` to be used, or `null` to retain the current LLM context.
      * @param stateManager The `AIAgentStateManager` to be used, or `null` to retain the current state manager.
      * @param storage The `AIAgentStorage` to be used, or `null` to retain the current storage.
      * @param sessionUuid The session UUID, or `null` to retain the current session ID.
      * @param strategyId The strategy identifier, or `null` to retain the current identifier.
-     * @param stageName The name of the stage, or `null` to retain the current stage name.
      * @param pipeline The `AIAgentPipeline` to be used, or `null` to retain the current pipeline.
      */
     override fun copy(
         environment: AIAgentEnvironment?,
-        stageInput: String?,
         config: AIAgentConfig?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
         sessionUuid: UUID?,
         strategyId: String?,
-        stageName: String?,
         pipeline: AIAgentPipeline?,
-    ): AIAgentStageContextBase = AIAgentStageContext(
+    ): AIAgentContextBase = AIAgentContext(
         environment = environment ?: this.environment,
-        stageInput = stageInput ?: this.stageInput,
         config = config ?: this.config,
         llm = llm ?: this.llm,
         stateManager = stateManager ?: this.stateManager,
         storage = storage ?: this.storage,
         sessionUuid = sessionUuid ?: this.sessionUuid,
         strategyId = strategyId ?: this.strategyId,
-        stageName = stageName ?: this.stageName,
         pipeline = pipeline ?: @OptIn(InternalAgentsApi::class) this.pipeline,
     )
 }
@@ -673,7 +637,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     public inline fun <reified TArgs : Tool.Args, reified TResult : ToolResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult> {
         @Suppress("UNCHECKED_CAST")
-        val tool = (toolRegistry.stages.first().tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
+        val tool = (toolRegistry.tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool with type ${toolClass.simpleName} is not defined"))
 
         return SafeTool(tool, environment)
@@ -700,7 +664,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @throws IllegalArgumentException if a tool of the given type is not defined in the tool registry.
      */
     public inline fun <reified ToolT : Tool<*, *>> findTool(): SafeTool<*, *> {
-        val tool = toolRegistry.stages.first().tools.find(ToolT::class::isInstance) as? ToolT
+        val tool = toolRegistry.tools.find(ToolT::class::isInstance) as? ToolT
             ?: throw IllegalArgumentException("Tool with type ${ToolT::class.simpleName} is not defined")
 
         return SafeTool(tool, environment)

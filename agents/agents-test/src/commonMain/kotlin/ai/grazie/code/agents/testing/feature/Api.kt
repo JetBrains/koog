@@ -90,9 +90,14 @@ fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  * }
  * ```
  */
-fun FeatureContext.testGraph(test: Testing.Config.() -> Unit) = withTesting {
-    graph(test)
-}
+fun FeatureContext.testGraph(name: String, test: Testing.Config.SubgraphAssertionsBuilder<*, *>.() -> Unit) =
+    withTesting {
+        graph {
+            verifyStrategy(name) {
+                test()
+            }
+        }
+    }
 
 /**
  * Sample code demonstrating the usage of the [graph] function.
@@ -103,11 +108,7 @@ private fun graphUsageExample() {
     val config = Testing.Config()
 
     config.graph {
-        // Assert the order of stages
-        assertStagesOrder("first", "second")
-
-        // Configure assertions for the first stage
-        stage("first") {
+        verifyStrategy("strategy-name") {
             val start = startNode()
             val finish = finishNode()
 

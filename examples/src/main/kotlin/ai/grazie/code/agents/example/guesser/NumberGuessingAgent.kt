@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.example.guesser
 
-import ai.grazie.code.agents.core.tools.SimpleToolRegistry
-import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.api.simpleChatAgent
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
@@ -12,7 +12,7 @@ import kotlinx.coroutines.runBlocking
  */
 fun main() = runBlocking {
     // Create a tool registry with the guessing tools
-    val toolRegistry = SimpleToolRegistry {
+    val toolRegistry = ToolRegistry {
         tools(
             listOf(
                 LessThanTool,

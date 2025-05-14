@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.local.features.tracing.feature
 
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.core.feature.model.*
@@ -108,7 +108,7 @@ public class Tracing {
                 val event = AIAgentStartedEvent(
                     strategyName = strategy.name,
                 )
-                readStages { _ ->
+                readStrategy { stages ->
                     processMessage(config, event)
                 }
             }
@@ -137,7 +137,9 @@ public class Tracing {
                 val event = AIAgentStrategyStartEvent(
                     strategyName = strategy.name,
                 )
-                readStages { _ -> processMessage(config, event) }
+                readStrategy { stages ->
+                    processMessage(config, event)
+                }
             }
 
             pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ strategyName, result ->
@@ -152,19 +154,17 @@ public class Tracing {
 
             //region Intercept Node Events
 
-            pipeline.interceptBeforeNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? ->
+            pipeline.interceptBeforeNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
                 val event = AIAgentNodeExecutionStartEvent(
                     nodeName = node.name,
-                    stageName = context.stageName,
                     input = input?.toString() ?: ""
                 )
                 processMessage(config, event)
             }
 
-            pipeline.interceptAfterNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? ->
+            pipeline.interceptAfterNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
                 val event = AIAgentNodeExecutionEndEvent(
                     nodeName = node.name,
-                    stageName = context.stageName,
                     input = input?.toString() ?: "",
                     output = output?.toString() ?: ""
                 )
@@ -213,18 +213,16 @@ public class Tracing {
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolCall(this, featureImpl) intercept@{ stage, tool, toolArgs ->
+            pipeline.interceptToolCall(this, featureImpl) intercept@{ tool, toolArgs ->
                 val event = ToolCallEvent(
-                    stageName = stage.name,
                     toolName = tool.name,
                     toolArgs = toolArgs
                 )
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolValidationError(this, featureImpl) intercept@{ stage, tool, toolArgs, value ->
+            pipeline.interceptToolValidationError(this, featureImpl) intercept@{ tool, toolArgs, value ->
                 val event = ToolValidationErrorEvent(
-                    stageName = stage.name,
                     toolName = tool.name,
                     toolArgs = toolArgs,
                     errorMessage = value
@@ -232,9 +230,8 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolCallFailure(this, featureImpl) intercept@{ stage, tool, toolArgs, throwable ->
+            pipeline.interceptToolCallFailure(this, featureImpl) intercept@{ tool, toolArgs, throwable ->
                 val event = ToolCallFailureEvent(
-                    stageName = stage.name,
                     toolName = tool.name,
                     toolArgs = toolArgs,
                     error = throwable.toAgentError()
@@ -242,9 +239,8 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolCallResult(this, featureImpl) intercept@{ stage, tool, toolArgs, result ->
+            pipeline.interceptToolCallResult(this, featureImpl) intercept@{ tool, toolArgs, result ->
                 val event = ToolCallResultEvent(
-                    stageName = stage.name,
                     toolName = tool.name,
                     toolArgs = toolArgs,
                     result = result

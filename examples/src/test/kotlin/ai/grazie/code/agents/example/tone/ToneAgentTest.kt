@@ -38,20 +38,18 @@ class ToneAgentTest {
         // Create a tool registry
         val toneStageName = "tone_analysis"
         val toolRegistry = ToolRegistry {
-            stage(toneStageName) {
-                // Special tool, required with this type of agent.
-                tool(SayToUser)
+            // Special tool, required with this type of agent.
+            tool(SayToUser)
 
-                with(ToneTools) {
-                    tools()
-                }
+            with(ToneTools) {
+                tools()
             }
         }
 
         // Create an event handler
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall = { stage, tool, args ->
-                println("[DEBUG_LOG] Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
+            onToolCall = { tool, args ->
+                println("[DEBUG_LOG] Tool called: tool ${tool.name}, args $args")
                 toolCalls.add(tool.name)
             }
 

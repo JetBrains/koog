@@ -32,8 +32,8 @@ class SimpleAgentMockedTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onToolCall = { stage, tool, args ->
-            println("Tool called: stage ${stage.name}, tool ${tool.name}, args $args")
+        onToolCall = { tool, args ->
+            println("Tool called: tool ${tool.name}, args $args")
             actualToolCalls.add(tool.name)
         }
 
@@ -79,9 +79,7 @@ class SimpleAgentMockedTest {
     @Test
     fun `simpleChatAgent should call a custom tool`() = runBlocking {
         val toolRegistry = ToolRegistry {
-            stage {
-                tool(SayToUser)
-            }
+            tool(SayToUser)
         }
 
         val agent = simpleChatAgent(
@@ -128,9 +126,7 @@ class SimpleAgentMockedTest {
     @Test
     fun `simpleSingleRunAgent should call a custom tool`() = runBlocking {
         val toolRegistry = ToolRegistry {
-            stage {
-                tool(SayToUser)
-            }
+            tool(SayToUser)
         }
 
         val agent = simpleSingleRunAgent(

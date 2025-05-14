@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.example.simpleapi
 
-import ai.grazie.code.agents.core.tools.SimpleToolRegistry
-import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.core.api.simpleChatAgent
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.example.TokenService
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
@@ -17,7 +17,7 @@ fun main() = runBlocking {
     *       tool(SwitchStateTool(switch))
     *   }
     * */
-    val toolRegistry = SimpleToolRegistry {
+    val toolRegistry = ToolRegistry {
         tools(
             listOf(
                 SwitchTool(switch),

@@ -5,7 +5,6 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import io.modelcontextprotocol.kotlin.sdk.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -52,30 +51,22 @@ class McpToolTest {
         }
 
         // A list of tools that the server is expected to provide
-        val expectedToolDescriptors = setOf(
-            ToolStage.DEFAULT_STAGE_NAME to listOf(
-                ToolDescriptor(
-                    name = "greeting",
-                    description = "A simple greeting tool",
-                    requiredParameters = listOf(
-                        ToolParameterDescriptor(
-                            name = "name",
-                            type = ToolParameterType.String,
-                            description = "A name to greet",
-                        )
+        val expectedToolDescriptors = listOf(
+            ToolDescriptor(
+                name = "greeting",
+                description = "A simple greeting tool",
+                requiredParameters = listOf(
+                    ToolParameterDescriptor(
+                        name = "name",
+                        type = ToolParameterType.String,
+                        description = "A name to greet",
                     )
                 )
             )
         )
 
         // Actual list of tools provided
-        val actualToolDescriptor = toolRegistry
-            .stagesToolDescriptors
-            // FIXME remove this map & filter once the stages are removed
-            .mapValues { (_, descriptors) -> descriptors.filterNot { it.name == ToolStage.DEFAULT_TOOL_LIST_NAME } }
-            .toList()
-            .toSet()
-
+        val actualToolDescriptor = toolRegistry.tools.map { it.descriptor }
         assertEquals(expectedToolDescriptors, actualToolDescriptor)
 
         // Now test the actual tool

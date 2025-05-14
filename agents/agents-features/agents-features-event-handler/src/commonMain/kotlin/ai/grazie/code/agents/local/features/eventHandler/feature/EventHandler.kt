@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.local.features.eventHandler.feature
 
 import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.utils.mpp.LoggerFactory
@@ -104,14 +104,14 @@ public class EventHandler {
             pipeline.interceptBeforeNode(
                 this,
                 featureImpl
-            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? ->
+            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
                 config.onBeforeNode(node, context, input)
             }
 
             pipeline.interceptAfterNode(
                 this,
                 featureImpl
-            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? ->
+            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
                 config.onAfterNode(node, context, input, output)
             }
 
@@ -139,20 +139,20 @@ public class EventHandler {
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolCall(this, featureImpl) intercept@{ stage, tool, toolArgs ->
-                config.onToolCall(stage, tool, toolArgs)
+            pipeline.interceptToolCall(this, featureImpl) intercept@{ tool, toolArgs ->
+                config.onToolCall(tool, toolArgs)
             }
 
-            pipeline.interceptToolValidationError(this, featureImpl) intercept@{ stage, tool, toolArgs, value ->
-                config.onToolValidationError(stage, tool, toolArgs, value)
+            pipeline.interceptToolValidationError(this, featureImpl) intercept@{  tool, toolArgs, value ->
+                config.onToolValidationError(tool, toolArgs, value)
             }
 
-            pipeline.interceptToolCallFailure(this, featureImpl) intercept@{ stage, tool, toolArgs, throwable ->
-                config.onToolCallFailure(stage, tool, toolArgs, throwable)
+            pipeline.interceptToolCallFailure(this, featureImpl) intercept@{ tool, toolArgs, throwable ->
+                config.onToolCallFailure(tool, toolArgs, throwable)
             }
 
-            pipeline.interceptToolCallResult(this, featureImpl) intercept@{ stage, tool, toolArgs, result ->
-                config.onToolCallResult(stage, tool, toolArgs, result)
+            pipeline.interceptToolCallResult(this, featureImpl) intercept@{ tool, toolArgs, result ->
+                config.onToolCallResult(tool, toolArgs, result)
             }
 
             //endregion Intercept Tool Call Events

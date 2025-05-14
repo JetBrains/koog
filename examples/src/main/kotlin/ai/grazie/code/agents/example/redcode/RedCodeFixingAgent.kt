@@ -12,7 +12,6 @@ import ai.grazie.code.agents.core.dsl.extension.onToolCall
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
@@ -39,96 +38,92 @@ fun main() = runBlocking {
 
     // Create tool registry with all the red code fixing tools
     val toolRegistry = ToolRegistry {
-        stage {
-            // List files with errors
-            tool(SimpleKotlinListFilesWithErrorsTool(projectRootPath))
+        // List files with errors
+        tool(SimpleKotlinListFilesWithErrorsTool(projectRootPath))
 
-            // Find errors in a specific file
-            tool(SimpleKotlinFindErrorsInFileTool(projectRootPath))
+        // Find errors in a specific file
+        tool(SimpleKotlinFindErrorsInFileTool(projectRootPath))
 
-            // Read file text
-            tool(SimpleKotlinReadFileTextTool(projectRootPath))
+        // Read file text
+        tool(SimpleKotlinReadFileTextTool(projectRootPath))
 
-            // Edit file text
-            tool(SimpleKotlinEditFileTextTool(projectRootPath))
+        // Edit file text
+        tool(SimpleKotlinEditFileTextTool(projectRootPath))
 
-            // Import fixing tools
-            tool(SimpleKotlinListImportsInFileTool(projectRootPath))
-            tool(SimpleKotlinAddImportsToFileTool(projectRootPath))
-        }
+        // Import fixing tools
+        tool(SimpleKotlinListImportsInFileTool(projectRootPath))
+        tool(SimpleKotlinAddImportsToFileTool(projectRootPath))
     }
 
     // Define the strategy for the agent
     val strategy = strategy("red-code-fixing") {
-        stage {
-            // Main subgraph for fixing errors
-            val fixErrors by subgraph(
-                toolSelectionStrategy = ToolSelectionStrategy.Tools(
-                    tools = listOfNotNull(
-                        toolRegistry.getTool<SimpleKotlinListFilesWithErrorsTool>().descriptor,
-                        toolRegistry.getTool<SimpleKotlinFindErrorsInFileTool>().descriptor,
-                        toolRegistry.getTool<SimpleKotlinReadFileTextTool>().descriptor,
-                        toolRegistry.getTool<SimpleKotlinEditFileTextTool>().descriptor,
-                        toolRegistry.getTool<SimpleKotlinListImportsInFileTool>().descriptor,
-                        toolRegistry.getTool<SimpleKotlinAddImportsToFileTool>().descriptor
-                    )
+        // Main subgraph for fixing errors
+        val fixErrors by subgraph(
+            toolSelectionStrategy = ToolSelectionStrategy.Tools(
+                tools = listOfNotNull(
+                    toolRegistry.getTool<SimpleKotlinListFilesWithErrorsTool>().descriptor,
+                    toolRegistry.getTool<SimpleKotlinFindErrorsInFileTool>().descriptor,
+                    toolRegistry.getTool<SimpleKotlinReadFileTextTool>().descriptor,
+                    toolRegistry.getTool<SimpleKotlinEditFileTextTool>().descriptor,
+                    toolRegistry.getTool<SimpleKotlinListImportsInFileTool>().descriptor,
+                    toolRegistry.getTool<SimpleKotlinAddImportsToFileTool>().descriptor
                 )
-            ) {
-                val nodeSendInput by node<String, Message.Response> { input ->
-                    llm.writeSession {
-                        updatePrompt {
-                            user(input)
-                        }
-
-                        requestLLM()
-                    }
-                }
-                val nodeExecuteTool by nodeExecuteTool()
-                val nodeSendToolResult by nodeLLMSendToolResult()
-
-                edge(nodeStart forwardTo nodeSendInput transformed { it })
-                edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
-                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true } transformed {})
-                edge(nodeExecuteTool forwardTo nodeSendToolResult)
-                edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-                edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
-            }
-
-            // Structured LLM call for summary
-            val summarizeFixes by node<String, FixingResultWithMessage>("summarize_fixes") { task ->
-                val structuredResponse = llm.writeSession {
+            )
+        ) {
+            val nodeSendInput by node<String, Message.Response> { input ->
+                llm.writeSession {
                     updatePrompt {
-                        user(task)
+                        user(input)
                     }
 
-                    this.requestLLMStructured(
-                        structure = JsonStructuredData.createJsonStructure<FixingResultWithMessage>(
-                            schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                            schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
-                        ),
-                        fixingModel = OllamaModels.Meta.LLAMA_3_2
-                    ).getOrThrow()
+                    requestLLM()
                 }
-                structuredResponse.structure
             }
+            val nodeExecuteTool by nodeExecuteTool()
+            val nodeSendToolResult by nodeLLMSendToolResult()
 
-            // Connect the nodes
-            edge(nodeStart forwardTo fixErrors transformed {
-                "Please help me fix compilation errors in this project. " +
-                        "First, list all files with errors using the list_files_with_errors tool, " +
-                        "then analyze and fix each error one by one."
-            })
-
-            edge(
-                fixErrors forwardTo summarizeFixes
-                        transformed { "Please provide a summary of the fixes you made to resolve the compilation errors." }
-            )
-
-            edge(
-                summarizeFixes forwardTo nodeFinish
-                        transformed { "Red code fixing completed: ${it.message}" }
-            )
+            edge(nodeStart forwardTo nodeSendInput transformed { it })
+            edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true } transformed {})
+            edge(nodeExecuteTool forwardTo nodeSendToolResult)
+            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
         }
+
+        // Structured LLM call for summary
+        val summarizeFixes by node<String, FixingResultWithMessage>("summarize_fixes") { task ->
+            val structuredResponse = llm.writeSession {
+                updatePrompt {
+                    user(task)
+                }
+
+                this.requestLLMStructured(
+                    structure = JsonStructuredData.createJsonStructure<FixingResultWithMessage>(
+                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                        schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
+                    ),
+                    fixingModel = OllamaModels.Meta.LLAMA_3_2
+                ).getOrThrow()
+            }
+            structuredResponse.structure
+        }
+
+        // Connect the nodes
+        edge(nodeStart forwardTo fixErrors transformed {
+            "Please help me fix compilation errors in this project. " +
+                    "First, list all files with errors using the list_files_with_errors tool, " +
+                    "then analyze and fix each error one by one."
+        })
+
+        edge(
+            fixErrors forwardTo summarizeFixes
+                    transformed { "Please provide a summary of the fixes you made to resolve the compilation errors." }
+        )
+
+        edge(
+            summarizeFixes forwardTo nodeFinish
+                    transformed { "Red code fixing completed: ${it.message}" }
+        )
     }
 
     val agentConfig = AIAgentConfig(
@@ -164,8 +159,8 @@ fun main() = runBlocking {
         toolRegistry = toolRegistry,
     ) {
         install(EventHandler) {
-            onToolCall = { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args ->
-                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $toolArgs")
+            onToolCall = { tool: Tool<*, *>, toolArgs: Tool.Args ->
+                println("Tool called: tool ${tool.name}, args $toolArgs")
             }
 
             onAgentRunError = { strategyName: String, throwable: Throwable ->

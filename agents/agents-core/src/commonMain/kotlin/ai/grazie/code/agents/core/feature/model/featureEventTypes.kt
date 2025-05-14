@@ -59,7 +59,6 @@ public data class AIAgentStrategyFinishedEvent(
 @Serializable
 public data class AIAgentNodeExecutionStartEvent(
     val nodeName: String,
-    val stageName: String,
     val input: String,
     override val eventId: String = AIAgentNodeExecutionStartEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -67,7 +66,6 @@ public data class AIAgentNodeExecutionStartEvent(
 @Serializable
 public data class AIAgentNodeExecutionEndEvent(
     val nodeName: String,
-    val stageName: String,
     val input: String,
     val output: String,
     override val eventId: String = AIAgentNodeExecutionEndEvent::class.simpleName!!,
@@ -109,7 +107,6 @@ public data class LLMCallWithToolsEndEvent(
 
 @Serializable
 public data class ToolCallEvent(
-    val stageName: String,
     val toolName: String,
     val toolArgs: Tool.Args,
     override val eventId: String = ToolCallEvent::class.simpleName!!,
@@ -117,7 +114,6 @@ public data class ToolCallEvent(
 
 @Serializable
 public data class ToolValidationErrorEvent(
-    val stageName: String,
     val toolName: String,
     val toolArgs: Tool.Args,
     val errorMessage: String,
@@ -126,7 +122,6 @@ public data class ToolValidationErrorEvent(
 
 @Serializable
 public data class ToolCallFailureEvent(
-    val stageName: String,
     val toolName: String,
     val toolArgs: Tool.Args,
     val error: AIAgentError,
@@ -135,7 +130,6 @@ public data class ToolCallFailureEvent(
 
 @Serializable
 public data class ToolCallResultEvent(
-    val stageName: String,
     val toolName: String,
     val toolArgs: Tool.Args,
     val result: ToolResult?,
