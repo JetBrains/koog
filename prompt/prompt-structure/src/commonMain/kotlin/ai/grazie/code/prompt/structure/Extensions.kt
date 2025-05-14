@@ -96,4 +96,4 @@ public suspend fun <T> PromptExecutor.executeStructured(
     return Result.failure(LLMStructuredParsingError("Unable to parse structure after $retries retries"))
 }
 
-class LLMStructuredParsingError(message: String) : Exception(message)
+public class LLMStructuredParsingError(message: String) : Exception(message)
