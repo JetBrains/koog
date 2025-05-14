@@ -16,7 +16,7 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
  * and returns an optional value to determine whether to propagate it further.
  */
 public class LocalAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
-    val toNode: LocalAgentNode<OutgoingInput, *>,
+    public val toNode: LocalAgentNode<OutgoingInput, *>,
     internal val forwardOutput: suspend (context: LocalAgentStageContext, output: IncomingOutput) -> Option<OutgoingInput>,
 ) {
     @Suppress("UNCHECKED_CAST")

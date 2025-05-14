@@ -172,12 +172,12 @@ public fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
  * @param fixingModel The language model to use for re-parsing or error correction during retries.
  * @return A `LocalAgentNodeDelegate` that produces a structured response containing both the parsed structure and the raw response text.
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
+public fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     name: String? = null,
     structure: StructuredData<T>,
     retries: Int,
     fixingModel: LLModel
-): LocalAgentNodeDelegate<String, Result<StructuredResponse<T>>> =
+): LocalAgentNodeDelegateBase<String, Result<StructuredResponse<T>>> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -203,11 +203,11 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
  *                            obtained from the LLM request and returns a new flow of transformed data.
  * @return A delegate for the created node, which can be used to include it in the subgraph.
  */
-fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
+public fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
     transformStreamData: suspend (Flow<String>) -> Flow<T>
-): LocalAgentNodeDelegate<String, Flow<T>> =
+): LocalAgentNodeDelegateBase<String, Flow<T>> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -227,10 +227,10 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
  * @param structureDefinition An optional definition to structure the LLM request data.
  * @return A delegate representing the node, where the input is a String message and the output is a Flow of String representing the streamed LLM responses.
  */
-fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
+public fun LocalAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
-): LocalAgentNodeDelegate<String, Flow<String>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
+): LocalAgentNodeDelegateBase<String, Flow<String>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
 
 /**
  * LLM node that sends a user message to the LLM and gets a response with tools enabled,
