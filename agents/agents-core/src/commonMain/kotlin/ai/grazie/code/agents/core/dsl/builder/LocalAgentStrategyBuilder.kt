@@ -5,17 +5,17 @@ import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
 
-class LocalAgentStrategyBuilder(
+public class LocalAgentStrategyBuilder(
     private val name: String,
     private val llmHistoryTransitionPolicy: ContextTransitionPolicy,
 ) : BaseBuilder<LocalAgentStrategy> {
 
     private var stageBuilders = mutableListOf<LocalAgentStageBuilder>()
 
-    fun stage(
+    public fun stage(
         name: String = ToolStage.DEFAULT_STAGE_NAME,
         requiredTools: List<ToolDescriptor>? = null,
-        init: LocalAgentStageBuilder.() -> Unit
+        init: LocalAgentSubgraphBuilderBase<Unit, String>.() -> Unit
     ) {
         stageBuilders += LocalAgentStageBuilder(name, requiredTools).apply(init)
     }
@@ -47,7 +47,7 @@ class LocalAgentStrategyBuilder(
  *        - [ContextTransitionPolicy.CLEAR_LLM_HISTORY]: Clears the history between stages for independent processing.
  * @param init Lambda that defines stages and nodes of this agent
  */
-fun strategy(
+public fun strategy(
     name: String,
     llmHistoryTransitionPolicy: ContextTransitionPolicy = ContextTransitionPolicy.PERSIST_LLM_HISTORY,
     init: LocalAgentStrategyBuilder.() -> Unit,
@@ -60,9 +60,9 @@ fun strategy(
  *
  * The agent executes a single stage and returns a String result
  */
-fun simpleStrategy(
+public fun simpleStrategy(
     name: String,
-    init: LocalAgentStageBuilder.() -> Unit,
+    init: LocalAgentSubgraphBuilderBase<Unit, String>.() -> Unit,
 ): LocalAgentStrategy {
 
     return strategy(name) {

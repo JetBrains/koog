@@ -10,8 +10,8 @@ import ai.grazie.code.agents.core.annotation.InternalAgentsApi
  * @param Input The type of input data this node processes.
  * @param Output The type of output data this node produces.
  */
-abstract class LocalAgentNode<Input, Output> internal constructor() {
-    abstract val name: String
+public abstract class LocalAgentNode<Input, Output> internal constructor() {
+    public abstract val name: String
 
     /**
      * Represents the directed edges connecting the current node in the AI agent strategy graph
@@ -24,7 +24,7 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
      * @property edges A list of [LocalAgentEdge] describing the connections from this node
      * to other nodes in the strategy graph.
      */
-    var edges: List<LocalAgentEdge<Output, *>> = emptyList()
+    public var edges: List<LocalAgentEdge<Output, *>> = emptyList()
         private set
 
     /**
@@ -34,10 +34,9 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
      * @param edge The edge to be added, representing a connection from this node's output
      * to another node in the strategy graph.
      */
-    open fun addEdge(edge: LocalAgentEdge<Output, *>) {
+    public open fun addEdge(edge: LocalAgentEdge<Output, *>) {
         edges = edges + edge
     }
-
 
     /**
      * Represents a resolved edge in the context of an AI agent strategy graph, combining an edge and
@@ -48,7 +47,8 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
      * @property output The resolved output associated with the provided edge. This represents
      * the data produced or passed along this edge during execution.
      */
-    data class ResolvedEdge(val edge: LocalAgentEdge<*, *>, val output: Any?)
+    public data class ResolvedEdge(val edge: LocalAgentEdge<*, *>, val output: Any?)
+
     /**
      * Resolves the edge associated with the provided node output and execution context.
      * Iterates through available edges and identifies the first edge that can successfully
@@ -59,17 +59,14 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
      * @param nodeOutput The output of the current node used to resolve the edge.
      * @return A `ResolvedEdge` containing the matched edge and its output, or null if no edge matches.
      */
-    suspend fun resolveEdge(
+    public suspend fun resolveEdge(
         context: LocalAgentStageContext,
         nodeOutput: Output
     ): ResolvedEdge? {
-        var edge: LocalAgentEdge<*, *>? = null
-
         for (currentEdge in edges) {
             val output = currentEdge.forwardOutputUnsafe(nodeOutput, context)
 
             if (!output.isEmpty) {
-                edge = currentEdge
                 return ResolvedEdge(currentEdge, output.value)
             }
         }
@@ -81,7 +78,7 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    suspend fun resolveEdgeUnsafe(context: LocalAgentStageContext, nodeOutput: Any?) =
+    public suspend fun resolveEdgeUnsafe(context: LocalAgentStageContext, nodeOutput: Any?): ResolvedEdge? =
         resolveEdge(context, nodeOutput as Output)
 
     /**
@@ -91,14 +88,14 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
      * @param input The input data required to perform the execution.
      * @return The result of the execution as an Output object.
      */
-    abstract suspend fun execute(context: LocalAgentStageContext, input: Input): Output
+    public abstract suspend fun execute(context: LocalAgentStageContext, input: Input): Output
 
     /**
      * @suppress
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    suspend fun executeUnsafe(context: LocalAgentStageContext, input: Any?): Any? {
+    public suspend fun executeUnsafe(context: LocalAgentStageContext, input: Any?): Any? {
         context.pipeline.onBeforeNode(this, context, input)
         val output = execute(context, input as Input)
         context.pipeline.onAfterNode(this, context, input, output)
@@ -117,14 +114,14 @@ abstract class LocalAgentNode<Input, Output> internal constructor() {
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
-class SimpleLocalAgentNode<Input, Output> internal constructor(
+internal class SimpleLocalAgentNode<Input, Output> internal constructor(
     override val name: String,
     val execute: suspend LocalAgentStageContext.(input: Input) -> Output
 ) : LocalAgentNode<Input, Output>() {
     override suspend fun execute(context: LocalAgentStageContext, input: Input): Output = context.execute(input)
 }
 
-class StartAgentNode internal constructor() : StartNode<Unit>()
+internal class StartAgentNode internal constructor() : StartNode<Unit>()
 
 /**
  * A specialized implementation of `FinishNode` that finalizes the execution of a local agent subgraph.
@@ -138,4 +135,4 @@ class StartAgentNode internal constructor() : StartNode<Unit>()
  *
  * This node is critical to denote the completion of localized processing within a subgraph context.
  */
-object FinishAgentNode : FinishNode<String>()
+internal object FinishAgentNode : FinishNode<String>()

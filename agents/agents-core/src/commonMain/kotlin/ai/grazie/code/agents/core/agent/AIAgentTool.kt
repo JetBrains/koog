@@ -8,11 +8,11 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-fun AIAgent.asTool(
+public fun AIAgent.asTool(
     agentDescription: String,
     name: String? = null,
     requestDescription: String = "Input for the task"
-) = AIAgentTool(
+): Tool<AgentToolArgs, AgentToolResult> = AIAgentTool(
     agent = this,
     agentName = name ?: this::class.simpleName!!.lowercase(),
     requestDescription = requestDescription,
@@ -20,17 +20,17 @@ fun AIAgent.asTool(
 )
 
 
-class AIAgentTool(
-    val agent: AIAgent,
+public class AIAgentTool(
+    private val agent: AIAgent,
     agentName: String,
     agentDescription: String,
     requestDescription: String = "Input for the task"
 ) : Tool<AgentToolArgs, AgentToolResult>() {
     @Serializable
-    data class AgentToolArgs(val request: String) : Args
+    public data class AgentToolArgs(val request: String) : Args
 
     @Serializable
-    data class AgentToolResult(
+    public data class AgentToolResult(
         val successful: Boolean,
         val errorMessage: String? = null,
         val result: String? = null

@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.local.memory.feature.nodes
 
-import ai.grazie.code.agents.core.dsl.builder.LocalAgentNodeDelegate
+import ai.grazie.code.agents.core.dsl.builder.LocalAgentNodeDelegateBase
 import ai.grazie.code.agents.core.dsl.builder.LocalAgentSubgraphBuilderBase
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.feature.withMemory
@@ -25,7 +25,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType = MemoryScopeType.AGENT
-): LocalAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope))
+): LocalAgentNodeDelegateBase<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope))
 
 /**
  * Node that loads facts from memory for a given concept
@@ -39,7 +39,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     concepts: List<Concept>,
     subject: MemorySubject,
     scope: MemoryScopeType = MemoryScopeType.AGENT
-): LocalAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
+): LocalAgentNodeDelegateBase<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
 
 
 /**
@@ -54,7 +54,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     concepts: List<Concept>,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): LocalAgentNodeDelegateBase<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
             loadFactsToAgent(concept, scopes, subjects)
@@ -74,7 +74,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
     name: String? = null,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): LocalAgentNodeDelegateBase<T, T> = node(name) { input ->
     withMemory {
         loadAllFactsToAgent(scopes, subjects)
     }
@@ -94,7 +94,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     subject: MemorySubject,
     scope: MemoryScopeType,
     concepts: List<Concept>,
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): LocalAgentNodeDelegateBase<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
             saveFactsFromHistory(
@@ -121,7 +121,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType,
-): LocalAgentNodeDelegate<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept))
+): LocalAgentNodeDelegateBase<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept))
 
 /**
  * Node that automatically detects and extracts facts from the chat history and saves them to memory.
@@ -136,7 +136,7 @@ fun <T> LocalAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects
-): LocalAgentNodeDelegate<T, T> = node(name) { input ->
+): LocalAgentNodeDelegateBase<T, T> = node(name) { input ->
     llm.writeSession {
         updatePrompt {
             val prompt = MemoryPrompts.autoDetectFacts(subjects)

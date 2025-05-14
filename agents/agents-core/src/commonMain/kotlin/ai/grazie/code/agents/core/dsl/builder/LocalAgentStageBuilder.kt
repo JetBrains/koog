@@ -1,20 +1,22 @@
 package ai.grazie.code.agents.core.dsl.builder
 
 import ai.grazie.code.agents.core.agent.entity.FinishAgentNode
+import ai.grazie.code.agents.core.agent.entity.FinishNode
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 import ai.grazie.code.agents.core.agent.entity.StartAgentNode
+import ai.grazie.code.agents.core.agent.entity.StartNode
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentDynamicStage
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
 import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStaticStage
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import kotlin.reflect.KProperty
 
-class LocalAgentStageBuilder(
+internal class LocalAgentStageBuilder(
     private val name: String,
     private val tools: List<ToolDescriptor>?
 ) : LocalAgentSubgraphBuilderBase<Unit, String>(), BaseBuilder<LocalAgentStage> {
-    override val nodeStart = StartAgentNode()
-    override val nodeFinish = FinishAgentNode
+    override val nodeStart: StartNode<Unit> = StartAgentNode()
+    override val nodeFinish: FinishNode<String> = FinishAgentNode
 
     override fun build(): LocalAgentStage {
         require(isFinishReachable(nodeStart)) {
@@ -38,11 +40,11 @@ class LocalAgentStageBuilder(
     }
 }
 
-interface LocalAgentNodeDelegateBase<Input, Output> {
-    operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentNode<Input, Output>
+public interface LocalAgentNodeDelegateBase<Input, Output> {
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): LocalAgentNode<Input, Output>
 }
 
-open class LocalAgentNodeDelegate<Input, Output> internal constructor(
+internal open class LocalAgentNodeDelegate<Input, Output> internal constructor(
     private val name: String?,
     private val nodeBuilder: LocalAgentNodeBuilder<Input, Output>,
 ) : LocalAgentNodeDelegateBase<Input, Output> {

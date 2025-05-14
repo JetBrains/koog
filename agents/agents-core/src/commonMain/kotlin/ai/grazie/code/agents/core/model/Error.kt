@@ -8,7 +8,7 @@ import kotlinx.serialization.Serializable
  * This enum is used to categorize the errors for better error handling and reporting.
  */
 @Serializable
-enum class AgentServiceErrorType {
+public enum class AgentServiceErrorType {
     /**
      * Indicates that an unexpected type of message was sent to the agent service.
      *
@@ -57,7 +57,7 @@ enum class AgentServiceErrorType {
  * not found scenarios.
  */
 @Serializable
-data class AgentServiceError(
+public data class AgentServiceError(
     val type: AgentServiceErrorType,
     val message: String,
 ) {
@@ -76,7 +76,7 @@ data class AgentServiceError(
      *
      * @return An `AgentEngineException` instance that corresponds to the current error type.
      */
-    fun asException(): AgentEngineException {
+    public fun asException(): AgentEngineException {
         return when (type) {
             AgentServiceErrorType.UNEXPECTED_ERROR -> UnexpectedServerException(message)
             AgentServiceErrorType.UNEXPECTED_MESSAGE_TYPE -> UnexpectedMessageTypeException(message)

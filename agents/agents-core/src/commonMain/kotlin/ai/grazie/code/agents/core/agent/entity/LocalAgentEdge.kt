@@ -15,8 +15,8 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
  * before forwarding it to the destination node. This function can transform or filter the data
  * and returns an optional value to determine whether to propagate it further.
  */
-class LocalAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
-    val toNode: LocalAgentNode<OutgoingInput, *>,
+public class LocalAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
+    public val toNode: LocalAgentNode<OutgoingInput, *>,
     internal val forwardOutput: suspend (context: LocalAgentStageContext, output: IncomingOutput) -> Option<OutgoingInput>,
 ) {
     @Suppress("UNCHECKED_CAST")

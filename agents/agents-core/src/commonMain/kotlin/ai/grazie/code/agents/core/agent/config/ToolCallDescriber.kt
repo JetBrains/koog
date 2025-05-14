@@ -1,7 +1,5 @@
 package ai.grazie.code.agents.core.agent.config
 
-import ai.grazie.code.agents.core.tools.ToolDescriptor
-import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.message.Message.Assistant
 import ai.jetbrains.code.prompt.message.Message.User
@@ -14,27 +12,27 @@ import kotlinx.serialization.json.buildJsonObject
  * Describes the way to reformat tool call/tool result messages,
  * in case real tool call/tool result messages cannot be used
  */
-interface ToolCallDescriber {
+public interface ToolCallDescriber {
     /**
      * Composes a description of a tool call message.
      *
      * @param message The tool call message to be described. Must be an instance of Message.Tool.Call.
      * @return A Message instance containing the description of the tool call.
      */
-    fun describeToolCall(message: Message.Tool.Call): Message
+    public fun describeToolCall(message: Message.Tool.Call): Message
     /**
      * Describes the tool result by transforming it into a user-readable message object.
      *
      * @param message The tool result message to be described. It contains the tool call id, tool name, and content details.
      * @return A transformed message representing the description of the tool result.
      */
-    fun describeToolResult(message: Message.Tool.Result): Message
+    public fun describeToolResult(message: Message.Tool.Result): Message
 
     /**
      * JSON object implementing the `ToolCallDescriber` interface.
      * This object is responsible for describing tool calls and results by converting them into a structured JSON-based format.
      */
-    object JSON : ToolCallDescriber {
+    public object JSON : ToolCallDescriber {
         /**
          * A configuration of the kotlinx.serialization.Json instance tailored for serializing and
          * deserializing JSON data.
@@ -92,6 +90,8 @@ interface ToolCallDescriber {
 
 /**
  * Does not change tool calls, leaving real tool call messages
+ *
+ * TODO: dead code?
  */
 internal object Original : ToolCallDescriber {
     override fun describeToolCall(message: Message.Tool.Call): Message {

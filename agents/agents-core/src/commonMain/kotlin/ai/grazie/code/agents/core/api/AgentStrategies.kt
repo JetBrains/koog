@@ -16,7 +16,7 @@ import ai.jetbrains.code.prompt.message.Message
  * handle user input, execute tools, and provide responses.
  * Allows the agent to interact with the user in a chat-like manner.
  */
-fun chatAgentStrategy(): LocalAgentStrategy = simpleStrategy("chat") {
+public fun chatAgentStrategy(): LocalAgentStrategy = simpleStrategy("chat") {
     val sendInput by nodeLLMSendStageInput("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
@@ -50,7 +50,7 @@ fun chatAgentStrategy(): LocalAgentStrategy = simpleStrategy("chat") {
  * Sometimes, it also called "one-shot" strategy.
  * Useful if you need to run a straightforward process that doesn't require a lot of additional logic.
  */
-fun singleRunStrategy(): LocalAgentStrategy = simpleStrategy("single_run") {
+public fun singleRunStrategy(): LocalAgentStrategy = simpleStrategy("single_run") {
     val sendInput by nodeLLMSendStageInput("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")

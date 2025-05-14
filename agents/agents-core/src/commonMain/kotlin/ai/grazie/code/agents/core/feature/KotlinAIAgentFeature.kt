@@ -11,22 +11,22 @@ import ai.grazie.code.agents.local.features.common.config.FeatureConfig
  * @param Config The type representing the configuration for this feature.
  * @param FeatureT The type of the feature implementation.
  */
-interface KotlinAIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
+public interface KotlinAIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
 
     /**
      * A key used to uniquely identify a feature of type [FeatureT] within the local agent storage.
      */
-    val key: LocalAgentStorageKey<FeatureT>
+    public val key: LocalAgentStorageKey<FeatureT>
 
     /**
      * Creates and returns an initial configuration for the feature.
      */
-    fun createInitialConfig(): Config
+    public fun createInitialConfig(): Config
 
     /**
      * Installs the feature into the specified [AgentPipeline].
      */
-    fun install(config: Config, pipeline: AgentPipeline)
+    public fun install(config: Config, pipeline: AgentPipeline)
 
     /**
      * Installs the feature into the specified [AgentPipeline] using an unsafe configuration type cast.
@@ -35,5 +35,5 @@ interface KotlinAIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    fun installUnsafe(config: Any?, pipeline: AgentPipeline) = install(config as Config, pipeline)
+    public fun installUnsafe(config: Any?, pipeline: AgentPipeline): Unit = install(config as Config, pipeline)
 }

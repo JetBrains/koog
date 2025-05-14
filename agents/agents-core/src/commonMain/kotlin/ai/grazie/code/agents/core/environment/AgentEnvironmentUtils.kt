@@ -10,7 +10,7 @@ import ai.grazie.code.agents.core.model.message.EnvironmentToolResultMultipleToA
 import ai.grazie.code.agents.core.model.message.EnvironmentToolResultSingleToAgentMessage
 import ai.grazie.code.agents.core.model.message.LocalAgentEnvironmentToAgentInitializeMessage
 
-object AgentEnvironmentUtils {
+internal object AgentEnvironmentUtils {
     fun EnvironmentToAgentMessage.mapToToolResult(): List<ReceivedToolResult> {
         return when (this) {
             is EnvironmentToolResultSingleToAgentMessage -> {

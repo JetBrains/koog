@@ -7,19 +7,19 @@ import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
  * Container for node execution handlers.
  * Holds both before and after node execution handlers.
  */
-class ExecuteNodeHandler {
+public class ExecuteNodeHandler {
 
     /** Handler called before node execution */
-    var beforeNodeHandler: BeforeNodeHandler = BeforeNodeHandler { _, _, _ -> }
+    public var beforeNodeHandler: BeforeNodeHandler = BeforeNodeHandler { _, _, _ -> }
 
     /** Handler called after node execution */
-    var afterNodeHandler: AfterNodeHandler = AfterNodeHandler { _, _, _, _ -> }
+    public var afterNodeHandler: AfterNodeHandler = AfterNodeHandler { _, _, _, _ -> }
 }
 
 /**
  * Handler for intercepting node execution before it starts.
  */
-fun interface BeforeNodeHandler {
+public fun interface BeforeNodeHandler {
     /**
      * Called before a node is executed.
      *
@@ -27,7 +27,7 @@ fun interface BeforeNodeHandler {
      * @param context The stage context in which the node is executing
      * @param input The input data for the node
      */
-    suspend fun handle(
+    public suspend fun handle(
         node: LocalAgentNode<*, *>,
         context: LocalAgentStageContext,
         input: Any?
@@ -37,7 +37,7 @@ fun interface BeforeNodeHandler {
 /**
  * Handler for intercepting node execution after it completes.
  */
-fun interface AfterNodeHandler {
+public fun interface AfterNodeHandler {
     /**
      * Called after a node has been executed.
      *
@@ -46,7 +46,7 @@ fun interface AfterNodeHandler {
      * @param input The input data that was provided to the node
      * @param output The output data produced by the node
      */
-    suspend fun handle(
+    public suspend fun handle(
         node: LocalAgentNode<*, *>,
         context: LocalAgentStageContext,
         input: Any?,

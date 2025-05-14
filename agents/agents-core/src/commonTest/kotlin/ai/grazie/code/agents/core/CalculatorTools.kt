@@ -1,8 +1,8 @@
-package ai.grazie.code.agents.example.calculator
+package ai.grazie.code.agents.core
 
 import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
 
 object CalculatorTools {
 
@@ -39,10 +39,6 @@ object CalculatorTools {
         )
     }
 
-    /**
-     * 2. Implement the tool (tools).
-     */
-
     object PlusTool : CalculatorTool(
         name = "plus",
         description = "Adds a and b",
@@ -51,39 +47,4 @@ object CalculatorTools {
             return Result(args.a + args.b)
         }
     }
-
-    object MinusTool : CalculatorTool(
-        name = "minus",
-        description = "Subtracts b from a",
-    ) {
-        override suspend fun execute(args: Args): Result {
-            return Result(args.a - args.b)
-        }
-    }
-
-    object DivideTool : CalculatorTool(
-        name = "divide",
-        description = "Divides a and b",
-    ) {
-        override suspend fun execute(args: Args): Result {
-            return Result(args.a / args.b)
-        }
-    }
-
-    object MultiplyTool : CalculatorTool(
-        name = "multiply",
-        description = "Multiplies a and b",
-    ) {
-        override suspend fun execute(args: Args): Result {
-            return Result(args.a * args.b)
-        }
-    }
-
-    fun ToolStage.Builder.tools() {
-        tool(PlusTool)
-        tool(MinusTool)
-        tool(DivideTool)
-        tool(MultiplyTool)
-    }
-
 }

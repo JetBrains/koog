@@ -24,7 +24,7 @@ import kotlinx.coroutines.CoroutineScope
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality (default is an empty lambda).
  * @return A configured instance of KotlinAIAgent ready for use.
  */
-fun simpleChatAgent(
+public fun simpleChatAgent(
     executor: PromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",
@@ -79,7 +79,7 @@ fun simpleChatAgent(
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
  * @return A configured instance of `KotlinAIAgent` with a single-run execution strategy.
  */
-fun simpleSingleRunAgent(
+public fun simpleSingleRunAgent(
     executor: PromptExecutor,
     cs: CoroutineScope,
     systemPrompt: String = "",

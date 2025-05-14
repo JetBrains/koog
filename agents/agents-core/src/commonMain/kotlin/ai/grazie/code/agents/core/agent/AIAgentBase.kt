@@ -56,16 +56,16 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
  * @property installFeatures Lambda for installing additional features within the agent environment.
  * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
  */
-open class AIAgentBase(
-    val promptExecutor: PromptExecutor,
+public open class AIAgentBase(
+    public val promptExecutor: PromptExecutor,
     private val strategy: LocalAgentStrategy,
     cs: CoroutineScope,
-    val agentConfig: LocalAgentConfig,
-    val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
+    public val agentConfig: LocalAgentConfig,
+    public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
     private val installFeatures: suspend FeatureContext.() -> Unit = {}
 ) : AIAgent, AgentEnvironment {
 
-    companion object {
+    private companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.core.agent.${AIAgentBase::class.simpleName}")
         private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
         private const val NO_CONTENT = "Could not find \"content\", but \"error\" is also absent!"
@@ -79,8 +79,8 @@ open class AIAgentBase(
      *       calls in an [KotlinAIAgent] instance, like `agent.install(MyFeature) { ... }`.
      *       This makes the API a bit stricter and clear.
      */
-    class FeatureContext internal constructor(val agent: AIAgentBase) {
-        suspend fun <Config : FeatureConfig, Feature : Any> install(
+    public class FeatureContext internal constructor(private val agent: AIAgentBase) {
+        public suspend fun <Config : FeatureConfig, Feature : Any> install(
             feature: KotlinAIAgentFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
         ) {
@@ -140,7 +140,7 @@ open class AIAgentBase(
         }
     }
 
-    suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
+    public suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
         val prompt = TextContentBuilder().apply { this.builder() }.build()
         run(prompt = prompt)
     }

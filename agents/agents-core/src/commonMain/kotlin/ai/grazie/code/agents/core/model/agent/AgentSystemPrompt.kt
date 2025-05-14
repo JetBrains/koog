@@ -14,8 +14,8 @@ import kotlinx.serialization.encoding.Encoder
  * The prompt is encapsulated as a non-mutable string.
  */
 @Serializable(with = AgentSystemPrompt.Serializer::class)
-class AgentSystemPrompt(val prompt: String) {
-    object Serializer : KSerializer<AgentSystemPrompt> {
+public class AgentSystemPrompt(private val prompt: String) {
+    public object Serializer : KSerializer<AgentSystemPrompt> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("SystemPrompt", PrimitiveKind.STRING)
 
         override fun serialize(
