@@ -1,16 +1,15 @@
 package ai.jetbrains.embeddings.local
 
-import ai.jetbrains.code.embeddings.local.OllamaEmbeddingModels
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.embeddings.base.Vector
-import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
+import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class OllamaEmbedderTest {
     @Test
-    fun testEmbed() = runBlocking {
+    fun testEmbed() = runTest {
         val mockClient = MockOllamaEmbedderClient()
         val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
@@ -23,7 +22,7 @@ class OllamaEmbedderTest {
     }
 
     @Test
-    fun testDiff_identicalVectors() = runBlocking {
+    fun testDiff_identicalVectors() = runTest {
         val mockClient = MockOllamaEmbedderClient()
         val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
@@ -35,7 +34,7 @@ class OllamaEmbedderTest {
     }
 
     @Test
-    fun testDiff_differentVectors() = runBlocking {
+    fun testDiff_differentVectors() = runTest {
         val mockClient = MockOllamaEmbedderClient()
         val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
@@ -47,7 +46,7 @@ class OllamaEmbedderTest {
     }
 
     @Test
-    fun testDiff_oppositeVectors() = runBlocking {
+    fun testDiff_oppositeVectors() = runTest {
         val mockClient = MockOllamaEmbedderClient()
         val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 

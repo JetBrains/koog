@@ -1,4 +1,4 @@
-package ai.jetbrains.code.embeddings.local
+package ai.jetbrains.embeddings.local
 
 import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLMProvider
@@ -10,7 +10,7 @@ import ai.jetbrains.code.prompt.llm.LLModel
  * Models are sourced from https://ollama.com/blog/embedding-models and other official Ollama resources.
  * Each model has a specific purpose and performance characteristics.
  */
-object OllamaEmbeddingModels {
+public object OllamaEmbeddingModels {
     /**
      * Nomic's text embedding model, optimized for text embeddings.
      * A good general-purpose embedding model.
@@ -21,7 +21,7 @@ object OllamaEmbeddingModels {
      * Performance: High-quality embeddings for semantic search and text similarity tasks
      * Tradeoffs: Balanced between quality and efficiency
      */
-    val NOMIC_EMBED_TEXT = LLModel(
+    public val NOMIC_EMBED_TEXT: LLModel = LLModel(
         provider = LLMProvider.Meta,
         id = "nomic-embed-text",
         capabilities = listOf(LLMCapability.Embed)
@@ -36,7 +36,7 @@ object OllamaEmbeddingModels {
      * Performance: Fast inference with good quality for general text embeddings
      * Tradeoffs: Smaller model size with reduced context length, but very efficient
      */
-    val ALL_MINI_LM = LLModel(
+    public val ALL_MINI_LM: LLModel = LLModel(
         provider = LLMProvider.Meta,
         id = "all-minilm",
         capabilities = listOf(LLMCapability.Embed)
@@ -51,7 +51,7 @@ object OllamaEmbeddingModels {
      * Performance: Strong performance across 100+ languages
      * Tradeoffs: Larger model size but provides excellent multilingual capabilities
      */
-    val MULTILINGUAL_E5 = LLModel(
+    public val MULTILINGUAL_E5: LLModel = LLModel(
         provider = LLMProvider.Meta,
         id = "zylonai/multilingual-e5-large",
         capabilities = listOf(LLMCapability.Embed)
@@ -66,7 +66,7 @@ object OllamaEmbeddingModels {
      * Performance: Excellent for English text retrieval and semantic search
      * Tradeoffs: Larger model size but provides high-quality embeddings
      */
-    val BGE_LARGE = LLModel(
+    public val BGE_LARGE: LLModel = LLModel(
         provider = LLMProvider.Meta,
         id = "bge-large",
         capabilities = listOf(LLMCapability.Embed)
@@ -82,7 +82,7 @@ object OllamaEmbeddingModels {
      * It can be used in components that require referencing or interacting
      * with this specific model configuration.
      */
-    val MXBAI_EMBED_LARGE = LLModel(
+    public val MXBAI_EMBED_LARGE: LLModel = LLModel(
         provider = LLMProvider.Meta,
         id = "mxbai-embed-large",
         capabilities = listOf(LLMCapability.Embed)

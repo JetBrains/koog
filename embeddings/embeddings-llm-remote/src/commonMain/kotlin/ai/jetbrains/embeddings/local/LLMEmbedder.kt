@@ -1,6 +1,6 @@
 package ai.jetbrains.embeddings.local
 
-import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
+import ai.jetbrains.code.prompt.executor.clients.LLMClientWithEmbeddings
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.embeddings.base.Embedder
 import ai.jetbrains.embeddings.base.Vector
@@ -10,7 +10,7 @@ import ai.jetbrains.embeddings.base.Vector
  *
  * @property client The Ollama model client to use for embedding text.
  */
-class OllamaEmbedder(private val client: OllamaClient, private val model: LLModel) : Embedder {
+public class LLMEmbedder(private val client: LLMClientWithEmbeddings, private val model: LLModel) : Embedder {
     /**
      * Embeds the given text using the Ollama model.
      *
