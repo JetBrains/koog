@@ -113,7 +113,7 @@ public open class AIAgent(
         }
 
         pipeline.prepareFeatures()
-        pipeline.onAgentStarted(strategyName = strategy.name)
+        pipeline.onBeforeAgentStarted(strategy, this)
 
         strategy.run(
             sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),

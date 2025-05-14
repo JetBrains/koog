@@ -53,8 +53,8 @@ class Logging(val logger: Logger) {
         ) {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
 
-            pipeline.interceptAgentCreated(this, logging) {
-                logging.logger.info("Agent created with strategy: ${strategy.name}.")
+            pipeline.interceptBeforeAgentStarted(this, logging) {
+                logging.logger.info("Agent is going to be started with strategy: ${strategy.name}.")
             }
 
             pipeline.interceptStrategyStarted(this, logging) {

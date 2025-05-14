@@ -36,7 +36,6 @@ class FeatureMessageFileWriterTest {
     fun `test base state for non-initialized writer`(@TempDir tempDir: Path) = runBlocking {
         val writer = TestFeatureMessageFileWriter(tempDir)
         assertFalse(writer.isOpen)
-        assertFalse(writer.isReady.isCompleted)
     }
 
     @Test
@@ -56,8 +55,6 @@ class FeatureMessageFileWriterTest {
        TestFeatureMessageFileWriter(tempDir).use { writer ->
            writer.initialize()
            assertTrue(writer.isOpen)
-           assertTrue(writer.isReady.isCompleted)
-           assertTrue(writer.isReady.getCompleted())
        }
     }
 
@@ -67,8 +64,6 @@ class FeatureMessageFileWriterTest {
             writer.initialize()
             writer.initialize()
             assertTrue(writer.isOpen)
-            assertTrue(writer.isReady.isCompleted)
-            assertTrue(writer.isReady.getCompleted())
         }
     }
 

@@ -1,7 +1,5 @@
 package ai.grazie.code.agents.local.features.common.message
 
-import kotlinx.coroutines.CompletableDeferred
-
 /**
  * Represents a provider responsible for handling outbound feature messages or events.
  *
@@ -19,16 +17,9 @@ import kotlinx.coroutines.CompletableDeferred
 abstract class FeatureMessageProcessor : Closeable {
 
     /**
-     * A property representing the readiness status of the provider.
-     */
-    val isReady: CompletableDeferred<Boolean> = CompletableDeferred()
-
-    /**
      * Initializes the feature output stream provider to ensure it is ready for use.
      */
-    open suspend fun initialize() {
-        isReady.complete(true)
-    }
+    open suspend fun initialize() { }
 
     /**
      * Handles an incoming feature message or event for processing.

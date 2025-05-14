@@ -104,20 +104,13 @@ class Tracing {
 
             //region Intercept Agent Events
 
-            pipeline.interceptAgentCreated(this, featureImpl) intercept@{
-                val event = AIAgentCreateEvent(
+            pipeline.interceptBeforeAgentStarted(this, featureImpl) intercept@{
+                val event = AIAgentStartedEvent(
                     strategyName = strategy.name,
                 )
                 readStages { _ ->
                     processMessage(config, event)
                 }
-            }
-
-            pipeline.interceptAgentStarted(this, featureImpl) intercept@{ strategyName ->
-                val event = AIAgentStartedEvent(
-                    strategyName = strategyName,
-                )
-                processMessage(config, event)
             }
 
             pipeline.interceptAgentFinished(this, featureImpl) intercept@{ strategyName, result ->

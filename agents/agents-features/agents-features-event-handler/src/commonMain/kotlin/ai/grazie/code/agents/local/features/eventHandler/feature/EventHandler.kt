@@ -73,12 +73,8 @@ class EventHandler {
 
             //region Intercept Agent Events
 
-            pipeline.interceptAgentCreated(this, featureImpl) intercept@{
-                config.onAgentCreated(strategy, agent)
-            }
-
-            pipeline.interceptAgentStarted(this, featureImpl) intercept@{ strategyName ->
-                config.onAgentStarted(strategyName)
+            pipeline.interceptBeforeAgentStarted(this, featureImpl) intercept@{
+                config.onBeforeAgentStarted(strategy, agent)
             }
 
             pipeline.interceptAgentFinished(this, featureImpl) intercept@{ strategyName, result ->

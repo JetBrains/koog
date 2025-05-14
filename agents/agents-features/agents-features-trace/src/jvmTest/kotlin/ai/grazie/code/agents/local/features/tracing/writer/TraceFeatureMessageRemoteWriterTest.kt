@@ -103,7 +103,6 @@ class TraceFeatureMessageRemoteWriterTest {
         val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
-            AIAgentCreateEvent(strategyName = strategyName),
             AIAgentStartedEvent(strategyName = strategyName),
             AIAgentStrategyStartEvent(strategyName = strategyName),
             AIAgentNodeExecutionStartEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString()),

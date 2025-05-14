@@ -4,7 +4,6 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.feature.model.*
-import ai.grazie.code.agents.core.feature.model.AIAgentCreateEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
@@ -50,7 +49,6 @@ class TraceFeatureMessageLogWriterTest {
             agent.run("")
 
             val expectedLogMessages = listOf(
-                "[INFO] Received feature message [event]: ${AIAgentCreateEvent::class.simpleName} (strategy name: $strategyName)",
                 "[INFO] Received feature message [event]: ${AIAgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
                 "[INFO] Received feature message [event]: ${AIAgentStrategyStartEvent::class.simpleName} (strategy name: $strategyName)",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit)",
@@ -85,12 +83,12 @@ class TraceFeatureMessageLogWriterTest {
 
         val actualMessages = listOf(
             FeatureStringMessage("Test string message"),
-            AIAgentCreateEvent("test strategy")
+            AIAgentStartedEvent("test strategy")
         )
 
         val expectedMessages = listOf(
             "[INFO] Received feature message [message]: CUSTOM STRING. Test string message",
-            "[INFO] Received feature message [event]: CUSTOM EVENT. ${AIAgentCreateEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM EVENT. ${AIAgentStartedEvent::class.simpleName}",
         )
 
         TraceFeatureMessageLogWriter(targetLogger = targetLogger, format = customFormat).use { writer ->
@@ -110,7 +108,6 @@ class TraceFeatureMessageLogWriterTest {
         }
 
         val expectedEvents = listOf(
-            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentCreateEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStartedEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStrategyStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",

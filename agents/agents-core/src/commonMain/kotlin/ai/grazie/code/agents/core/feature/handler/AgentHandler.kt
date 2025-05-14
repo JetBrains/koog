@@ -15,13 +15,6 @@ import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
 
     /**
-     * The handler for agent creation events.
-     * Can be set outside the class.
-     */
-    public var agentCreatedHandler: AgentCreatedHandler<FeatureT> =
-        AgentCreatedHandler { context -> }
-
-    /**
      * Configurable transformer used to manipulate or modify an instance of AgentEnvironment.
      * Allows customization of the environment during agent creation or updates by applying
      * the provided transformation logic.
@@ -29,23 +22,14 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
     public var environmentTransformer: AgentEnvironmentTransformer<FeatureT> =
         AgentEnvironmentTransformer { _, it -> it }
 
-    public var agentStartedHandler: AgentStartedHandler =
-        AgentStartedHandler { _ -> }
+    public var beforeAgentStartedHandler: BeforeAgentStartedHandler<FeatureT> =
+        BeforeAgentStartedHandler { context -> }
 
     public var agentFinishedHandler: AgentFinishedHandler =
         AgentFinishedHandler { _, _ -> }
 
     public var agentRunErrorHandler: AgentRunErrorHandler =
         AgentRunErrorHandler { _, _ -> }
-
-    /**
-     * Handle agent creates events by delegating to the handler.
-     *
-     * @param context The context for updating the agent with the feature
-     */
-    public suspend fun handleAgentCreated(context: AgentCreateContext<FeatureT>) {
-        agentCreatedHandler.handle(context)
-    }
 
     /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
@@ -64,31 +48,15 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
     internal fun transformEnvironmentUnsafe(context: AgentCreateContext<*>, environment: AIAgentEnvironment) =
         transformEnvironment(context as AgentCreateContext<FeatureT>, environment)
 
-    /**
-     * Internal API for handling agent create events with type casting.
-     *
-     * @param context The context for updating the agent
-     *
-     * @suppress
-     */
+    public suspend fun handleBeforeAgentStarted(context: AgentStartContext<FeatureT>) {
+        beforeAgentStartedHandler.handle(context)
+    }
+
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun handleAgentCreatedUnsafe(context: AgentCreateContext<*>): Unit =
-        handleAgentCreated(context as AgentCreateContext<FeatureT>)
-}
-
-/**
- * Handler for intercepting agent creation.
- *
- * @param FeatureT The type of feature being handled
- */
-public fun interface AgentCreatedHandler<FeatureT : Any> {
-    /**
-     * Called when an agent is created.
-     *
-     * @param context The context for updating the agent with the feature
-     */
-    public suspend fun handle(context: AgentCreateContext<FeatureT>)
+    public suspend fun handleBeforeAgentStartedUnsafe(context: AgentStartContext<*>) {
+        handleBeforeAgentStarted(context as AgentStartContext<FeatureT>)
+    }
 }
 
 /**
@@ -109,8 +77,8 @@ public fun interface AgentEnvironmentTransformer<FeatureT : Any> {
     public fun transform(context: AgentCreateContext<FeatureT>, environment: AIAgentEnvironment): AIAgentEnvironment
 }
 
-public fun interface AgentStartedHandler {
-    public suspend fun handle(strategyName: String)
+public fun interface BeforeAgentStartedHandler<TFeature: Any> {
+    public suspend fun handle(context: AgentStartContext<TFeature>)
 }
 
 public fun interface AgentFinishedHandler {
@@ -125,6 +93,16 @@ public class AgentCreateContext<FeatureT>(
     public val strategy: AIAgentStrategy,
     public val agent: AIAgent,
     public val feature: FeatureT
+) {
+    public suspend fun readStages(block: suspend (List<AIAgentStage>) -> Unit) {
+        block(strategy.stages)
+    }
+}
+
+public class AgentStartContext<TFeature>(
+    public val strategy: AIAgentStrategy,
+    public val agent: AIAgent,
+    public val feature: TFeature
 ) {
     public suspend fun readStages(block: suspend (List<AIAgentStage>) -> Unit) {
         block(strategy.stages)

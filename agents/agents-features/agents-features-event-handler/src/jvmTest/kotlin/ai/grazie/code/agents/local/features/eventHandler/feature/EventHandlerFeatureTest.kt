@@ -24,12 +24,8 @@ class EventHandlerTest {
     private val collectedEvents = mutableListOf<String>()
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onAgentCreated = { strategy: AIAgentStrategy, agent: AIAgent ->
-            collectedEvents.add("OnAgentCreated (strategy: ${strategy.name})")
-        }
-
-        onAgentStarted = { strategyName: String ->
-            collectedEvents.add("OnAgentStarted (strategy: $strategyName)")
+        onBeforeAgentStarted = { strategy: AIAgentStrategy, agent: AIAgent ->
+            collectedEvents.add("OnBeforeAgentStarted (strategy: ${strategy.name})")
         }
 
         onAgentFinished = { strategyName: String, result: String? ->
@@ -118,8 +114,7 @@ class EventHandlerTest {
         agent.run("")
 
         val expectedEvents = listOf(
-            "OnAgentCreated (strategy: $strategyName)",
-            "OnAgentStarted (strategy: $strategyName)",
+            "OnBeforeAgentStarted (strategy: $strategyName)",
             "OnStrategyStarted (strategy: $strategyName)",
             "OnBeforeNode (node: __start__, input: ${Unit::class.qualifiedName})",
             "OnAfterNode (node: __start__, input: ${Unit::class.qualifiedName}, output: ${Unit::class.qualifiedName})",

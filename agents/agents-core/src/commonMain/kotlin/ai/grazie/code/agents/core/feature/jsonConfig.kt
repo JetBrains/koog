@@ -34,7 +34,6 @@ import kotlinx.serialization.modules.polymorphic
 public val agentFeatureMessageSerializersModule: SerializersModule
     get() = SerializersModule {
             polymorphic(FeatureMessage::class) {
-                subclass(AIAgentCreateEvent::class, AIAgentCreateEvent.serializer())
                 subclass(AIAgentStartedEvent::class, AIAgentStartedEvent.serializer())
                 subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
                 subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
@@ -48,7 +47,6 @@ public val agentFeatureMessageSerializersModule: SerializersModule
             }
 
             polymorphic(FeatureEvent::class) {
-                subclass(AIAgentCreateEvent::class, AIAgentCreateEvent.serializer())
                 subclass(AIAgentStartedEvent::class, AIAgentStartedEvent.serializer())
                 subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
                 subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
@@ -62,7 +60,6 @@ public val agentFeatureMessageSerializersModule: SerializersModule
             }
 
             polymorphic(DefinedFeatureEvent::class) {
-                subclass(AIAgentCreateEvent::class, AIAgentCreateEvent.serializer())
                 subclass(AIAgentStartedEvent::class, AIAgentStartedEvent.serializer())
                 subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
                 subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())

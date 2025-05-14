@@ -135,29 +135,17 @@ public class AIAgentPipeline {
     //region Trigger Agent Handlers
 
     /**
-     * Triggers all registered agent creation handlers when an agent is created.
-     *
-     * This method notifies all registered features about the creation of a new agent,
-     * allowing them to perform initialization or setup operations.
-     *
-     * @param strategy The strategy associated with the created agent
-     * @param agent The newly created agent instance
-     */
-    @OptIn(InternalAgentsApi::class)
-    public suspend fun onAgentCreated(strategy: AIAgentStrategy, agent: AIAgent) {
-        agentHandlers.values.forEach { handler ->
-            val updateContext = AgentCreateContext(strategy = strategy, agent = agent, feature = handler.feature)
-            handler.handleAgentCreatedUnsafe(updateContext)
-        }
-    }
-
-    /**
      * Notifies all registered handlers that an agent has started execution.
      *
-     * @param strategyName The name of the strategy being executed by the agent
+     * @param strategy The strategy being executed by the agent
+     * @param agent The agent instance for which the execution has started
      */
-    public suspend fun onAgentStarted(strategyName: String) {
-        agentHandlers.values.forEach { handler -> handler.agentStartedHandler.handle(strategyName) }
+    @OptIn(InternalAgentsApi::class)
+    public suspend fun onBeforeAgentStarted(strategy: AIAgentStrategy, agent: AIAgent) {
+        agentHandlers.values.forEach { handler ->
+            val context = AgentStartContext(strategy = strategy, agent = agent, feature = handler.feature)
+            handler.handleBeforeAgentStartedUnsafe(context)
+        }
     }
 
     /**
@@ -391,32 +379,6 @@ public class AIAgentPipeline {
     }
 
     /**
-     * Intercepts agent creation to modify or enhance the agent.
-     *
-     * @param handle The handler that processes agent creation events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptAgentCreation(MyFeature, myFeatureImpl) {
-     *     readStages { stages ->
-     *         // Inspect agent stages
-     *     }
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptAgentCreated(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
-        handle: suspend AgentCreateContext<TFeature>.() -> Unit
-    ) {
-        @Suppress("UNCHECKED_CAST")
-        val existingHandler: AgentHandler<TFeature> =
-            agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) } as? AgentHandler<TFeature> ?: return
-
-        existingHandler.agentCreatedHandler = AgentCreatedHandler { handle(it) }
-    }
-
-    /**
      * Intercepts environment creation to allow features to modify or enhance the agent environment.
      *
      * This method registers a transformer function that will be called when an agent environment
@@ -449,29 +411,29 @@ public class AIAgentPipeline {
     }
 
     /**
-     * Intercepts the agent's start event and binds a custom handler to execute specific behavior
-     * when the agent starts operating with a given strategy.
+     * Intercepts on before an agent started to modify or enhance the agent.
      *
-     * @param handle A suspend function providing custom logic to execute when the agent starts,
-     *               with the active strategy name as a parameter.
+     * @param handle The handler that processes agent creation events
      *
      * Example:
      * ```
-     * pipeline.interceptAgentStarted(MyFeature, myFeatureImpl) { strategyName ->
-     *     // Handle the agent starting here, using the active strategy name.
+     * pipeline.interceptBeforeAgentStarted(MyFeature, myFeatureImpl) {
+     *     readStages { stages ->
+     *         // Inspect agent stages
+     *     }
      * }
      * ```
      */
-    public fun <TFeature: Any> interceptAgentStarted(
+    public fun <TFeature : Any> interceptBeforeAgentStarted(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(strategyName: String) -> Unit
+        handle: suspend AgentStartContext<TFeature>.() -> Unit
     ) {
-        val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
+        @Suppress("UNCHECKED_CAST")
+        val existingHandler: AgentHandler<TFeature> =
+            agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) } as? AgentHandler<TFeature> ?: return
 
-        existingHandler.agentStartedHandler = AgentStartedHandler { strategyName ->
-            with(featureImpl) { handle(strategyName) }
-        }
+        existingHandler.beforeAgentStartedHandler = BeforeAgentStartedHandler { handle(it) }
     }
 
     /**
