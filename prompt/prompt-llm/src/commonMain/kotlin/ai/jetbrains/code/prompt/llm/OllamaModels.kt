@@ -23,7 +23,7 @@ public object OllamaModels {
          * LLAMA 3.2 is designed to support these specified features, enabling developers to utilize the model for tasks
          * that require dynamic behavior adjustments, schema adherence, and tool-based interactions.
          */
-        public val LLAMA_3_2 = LLModel(
+        public val LLAMA_3_2: LLModel = LLModel(
             provider = LLMProvider.Meta,
             id = "meta-llama-3-2",
             capabilities = listOf(
@@ -53,7 +53,7 @@ public object OllamaModels {
          * Use this configuration to interact with the Alibaba `QWQ` model in applications that
          * require these capabilities for varied and advanced tasks.
          */
-        public val QWQ = LLModel(
+        public val QWQ: LLModel = LLModel(
             provider = LLMProvider.Alibaba,
             id = "alibaba-qwq",
             capabilities = listOf(
@@ -62,6 +62,7 @@ public object OllamaModels {
                 LLMCapability.Tools
             )
         )
+
         /**
          * Represents the Alibaba Qwen-Coder model version 2.5 with 32 billion parameters.
          *
@@ -72,7 +73,7 @@ public object OllamaModels {
          *
          * The model is identified by the unique ID "alibaba-qwen-coder-2-5-32b" and categorized under the Alibaba provider.
          */
-        public val QWEN_CODER_2_5_32B = LLModel(
+        public val QWEN_CODER_2_5_32B: LLModel = LLModel(
             provider = LLMProvider.Alibaba,
             id = "alibaba-qwen-coder-2-5-32b",
             capabilities = listOf(

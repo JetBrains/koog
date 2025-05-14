@@ -62,7 +62,7 @@ public object OpenRouterModels {
      * @property id The unique identifier for the Claude v3 Haiku model.
      * @property capabilities A list detailing the multimodal capabilities supported by the model.
      */
-    public val Claude3Haiku = LLModel(
+    public val Claude3Haiku: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-haiku",
         capabilities = multimodalCapabilities
