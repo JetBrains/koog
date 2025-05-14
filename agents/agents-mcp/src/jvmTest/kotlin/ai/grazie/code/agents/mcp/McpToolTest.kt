@@ -7,13 +7,18 @@ import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.grazie.code.agents.core.tools.tools.ToolStage
 import io.modelcontextprotocol.kotlin.sdk.TextContent
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentToolsApi::class)
 object TestToolEnabler : DirectToolCallsEnabler
@@ -34,13 +39,17 @@ class McpToolTest {
 
     @OptIn(InternalAgentToolsApi::class)
     @Test
-    fun `test McpTool with SSE transport`() = runBlocking {
+    fun `test McpTool with SSE transport`() = runTest(timeout = 30.seconds) {
         // Create a tool registry using McpToolRegistryProvider.fromTransport
-        val toolRegistry = McpToolRegistryProvider.fromTransport(
-            transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$testPort"),
-            name = "test-client",
-            version = "0.1.0"
-        )
+        val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(1.minutes) {
+                McpToolRegistryProvider.fromTransport(
+                    transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$testPort"),
+                    name = "test-client",
+                    version = "0.1.0"
+                )
+            }
+        }
 
         // A list of tools that the server is expected to provide
         val expectedToolDescriptors = setOf(
@@ -73,7 +82,11 @@ class McpToolTest {
         val greetingTool = toolRegistry.getTool("greeting") as McpTool
         val args = McpTool.Args(buildJsonObject { put("name", "Test") })
 
-        val (result, _) = greetingTool.executeAndSerialize(args, TestToolEnabler)
+        val (result, _) = withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(1.minutes) {
+                greetingTool.executeAndSerialize(args, TestToolEnabler)
+            }
+        }
 
         val content = result.promptMessageContents.first() as TextContent
         assertEquals("Hello, Test!", content.text)
