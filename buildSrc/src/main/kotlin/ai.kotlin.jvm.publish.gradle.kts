@@ -1,3 +1,5 @@
+import ai.grazie.gradle.publish.maven.configureJvmJarManifest
+
 plugins {
     kotlin("jvm")
     `maven-publish`
@@ -14,3 +16,5 @@ publishing {
         }
     }
 }
+
+configureJvmJarManifest("jar")

@@ -9,7 +9,7 @@ group = "ai.jetbrains.code"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.1.0-alpha.1"
+    val main = "0.1.0-alpha.2"
 
     val feat = run {
         val releaseBuild = !System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH").isNullOrBlank()
@@ -67,14 +67,6 @@ subprojects {
             showExceptions = true
             exceptionFormat = FULL
         }
-        environment.putAll(
-            mapOf(
-                "USER_STGN_JWT_TOKEN" to
-                        (project.properties["grazieUserStgnToken"] ?: System.getenv("USER_STGN_JWT_TOKEN")),
-                "JB_SPACE_CLIENT_ID" to Secrets.Space.Maven.username(project),
-                "JB_SPACE_CLIENT_SECRET" to Secrets.Space.Maven.password(project),
-            )
-        )
     }
 }
 

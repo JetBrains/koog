@@ -17,16 +17,16 @@ import ai.jetbrains.code.prompt.llm.LLModel
  * @param maxAgentIterations The maximum number of iterations allowed for an agent during its execution, to prevent infinite loops.
  * @param missingToolsConversionStrategy Strategy to handle missing tool definitions in the prompt. Defaults to applying formatting for missing tools. Ex.: if in the LLM history, there are some tools that are currently undefined in the agent (sub)graph.
  */
-open class LocalAgentConfig(
-    val prompt: Prompt,
-    val model: LLModel,
-    val maxAgentIterations: Int,
-    val missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
+public open class LocalAgentConfig(
+    public val prompt: Prompt,
+    public val model: LLModel,
+    public val maxAgentIterations: Int,
+    public val missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
     ),
 ) : AIAgentConfig {
-    companion object {
-        fun withSystemPrompt(
+    public companion object {
+        public fun withSystemPrompt(
             prompt: String,
             llm: LLModel = OpenAIModels.Chat.GPT4o,
             id: String = "code-engine-agents",

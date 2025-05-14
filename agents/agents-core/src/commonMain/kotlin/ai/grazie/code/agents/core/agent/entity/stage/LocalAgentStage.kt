@@ -3,22 +3,23 @@ package ai.grazie.code.agents.core.agent.entity.stage
 import ai.grazie.code.agents.core.agent.entity.FinishAgentNode
 import ai.grazie.code.agents.core.agent.entity.LocalAgentSubgraph
 import ai.grazie.code.agents.core.agent.entity.StartAgentNode
+import ai.grazie.code.agents.core.agent.entity.StartNode
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 
-sealed class LocalAgentStage(name: String, start: StartAgentNode) : LocalAgentSubgraph<Unit, String>(
+public sealed class LocalAgentStage(name: String, start: StartNode<Unit>) : LocalAgentSubgraph<Unit, String>(
     name, start, FinishAgentNode, ToolSelectionStrategy.ALL
 ) {
-    suspend fun execute(context: LocalAgentStageContext): String = execute(context, Unit)
+    public suspend fun execute(context: LocalAgentStageContext): String = execute(context, Unit)
 }
 
 /**
  * Stage that expects a set of pre-defined tools.
  */
 // TODO since tools are mutable now, seems like there's no purpose in having this stage type with tools checks?
-class LocalAgentStaticStage internal constructor(
+public class LocalAgentStaticStage internal constructor(
     name: String,
-    startNode: StartAgentNode,
+    startNode: StartNode<Unit>,
     private val toolsList: List<ToolDescriptor>
 ) : LocalAgentStage(name, startNode) {
     override suspend fun execute(context: LocalAgentStageContext, input: Unit): String {
@@ -44,9 +45,9 @@ class LocalAgentStaticStage internal constructor(
 /**
  * Stage that does not expect any pre-defined tools, relying on the tools defined in the graph.
  */
-class LocalAgentDynamicStage internal constructor(
+public class LocalAgentDynamicStage internal constructor(
     name: String,
-    startNode: StartAgentNode,
+    startNode: StartNode<Unit>,
 ) : LocalAgentStage(name, startNode) {
     override suspend fun execute(context: LocalAgentStageContext, input: Unit): String {
         return doExecute(context, Unit)

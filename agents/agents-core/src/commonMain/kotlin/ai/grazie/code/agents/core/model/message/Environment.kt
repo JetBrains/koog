@@ -14,7 +14,7 @@ import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
  * @property message A message providing context or additional details about the initialization.
  * @property config Configuration settings specific to the AI agent, encapsulated in the `LocalAgentConfig` class.
  */
-data class LocalAgentEnvironmentInitializeMessageContent(
+public data class LocalAgentEnvironmentInitializeMessageContent(
     override val agentId: String,
     override val message: String,
     val config: LocalAgentConfig
@@ -28,7 +28,7 @@ data class LocalAgentEnvironmentInitializeMessageContent(
  * @property toolsForStages A mapping of stage identifiers to the list of tool descriptors available for each stage.
  * @property agent The strategy or behavior implementation that the AI agent will use.
  */
-data class LocalAgentEnvironmentToAgentInitializeMessage(
+public data class LocalAgentEnvironmentToAgentInitializeMessage(
     override val content: LocalAgentEnvironmentInitializeMessageContent,
     val toolsForStages: Map<String, List<ToolDescriptor>>,
     val agent: LocalAgentStrategy,
@@ -45,7 +45,7 @@ data class LocalAgentEnvironmentToAgentInitializeMessage(
  * @property message Output message describing the result of the tool execution.
  * @property toolResult The result of the tool call, encapsulated as an optional `ToolResult` object.
  */
-data class LocalAgentEnvironmentToolResultToAgentContent(
+public data class LocalAgentEnvironmentToolResultToAgentContent(
     override val toolCallId: String?,
     override val toolName: String,
     override val agentId: String,

@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
+import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
 
 group = "${rootProject.group}.agents"
 version = rootProject.version
@@ -34,23 +34,22 @@ kotlin {
 
         commonTest {
             dependencies {
+                api(project(":agents:agents-features:agents-features-event-handler"))
+
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":agents:agents-test"))
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(project(":agents:agents-test"))
-                api(project(":agents:agents-features:agents-features-event-handler"))
-
-                implementation(libs.junit.jupiter.params)
-                implementation(libs.mockk)
             }
         }
     }
 
+    explicitApi()
 }
 
 publishToGraziePublicMaven()

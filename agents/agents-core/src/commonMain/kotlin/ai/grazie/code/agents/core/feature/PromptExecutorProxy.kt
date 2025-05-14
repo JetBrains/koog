@@ -15,12 +15,12 @@ import kotlinx.coroutines.flow.Flow
  * @property executor The [ai.jetbrains.code.prompt.executor.model.PromptExecutor] to wrap.
  * @property pipeline The [AgentPipeline] associated with the executor.
  */
-class PromptExecutorProxy(
+public class PromptExecutorProxy(
     private val executor: PromptExecutor,
     private val pipeline: AgentPipeline
 ) : PromptExecutor {
 
-    companion object {
+    private companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.local.agent.PipelineAwarePromptExecutor")
     }
 

@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.core.dsl.builder
 
 @DslMarker
-annotation class LocalAgentBuilderMarker
+public annotation class LocalAgentBuilderMarker
 
 @LocalAgentBuilderMarker
-interface BaseBuilder<T> {
-    fun build(): T
+public interface BaseBuilder<T> {
+    public fun build(): T
 }

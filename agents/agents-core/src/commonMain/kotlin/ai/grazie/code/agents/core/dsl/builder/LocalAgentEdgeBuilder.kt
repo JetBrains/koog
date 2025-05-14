@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
 import ai.grazie.code.agents.core.agent.entity.LocalAgentEdge
 import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
 
-class LocalAgentEdgeBuilder<IncomingOutput, OutgoingInput> internal constructor(
+public class LocalAgentEdgeBuilder<IncomingOutput, OutgoingInput> internal constructor(
     private val edgeIntermediateBuilder: LocalAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>,
 ) : BaseBuilder<LocalAgentEdge<IncomingOutput, OutgoingInput>> {
     override fun build(): LocalAgentEdge<IncomingOutput, OutgoingInput> {
@@ -16,12 +16,12 @@ class LocalAgentEdgeBuilder<IncomingOutput, OutgoingInput> internal constructor(
     }
 }
 
-class LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal constructor(
+public class LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal constructor(
     internal val fromNode: LocalAgentNode<*, IncomingOutput>,
     internal val toNode: LocalAgentNode<OutgoingInput, *>,
     internal val forwardOutputComposition: suspend (LocalAgentStageContext, IncomingOutput) -> Option<IntermediateOutput>
 ) {
-    infix fun onCondition(
+    public infix fun onCondition(
         block: suspend LocalAgentStageContext.(output: IntermediateOutput) -> Boolean
     ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
         return LocalAgentEdgeBuilderIntermediate(
@@ -34,7 +34,7 @@ class LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, Outg
         )
     }
 
-    infix fun <NewIntermediateOutput> transformed(
+    public infix fun <NewIntermediateOutput> transformed(
         block: suspend LocalAgentStageContext.(IntermediateOutput) -> NewIntermediateOutput
     ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {
         return LocalAgentEdgeBuilderIntermediate(

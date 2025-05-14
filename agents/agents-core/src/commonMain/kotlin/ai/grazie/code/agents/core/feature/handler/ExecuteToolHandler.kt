@@ -1,37 +1,35 @@
 package ai.grazie.code.agents.core.feature.handler
 
-import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolResult
 import ai.grazie.code.agents.core.tools.tools.ToolStage
-import ai.jetbrains.code.prompt.message.Message
 
-class ExecuteToolHandler {
-    var toolCallHandler: ToolCallHandler =
+public class ExecuteToolHandler {
+    public var toolCallHandler: ToolCallHandler =
         ToolCallHandler { _, _, _ -> }
 
-    var toolValidationErrorHandler: ToolValidationErrorHandler =
+    public var toolValidationErrorHandler: ToolValidationErrorHandler =
         ToolValidationErrorHandler { _, _, _, _ -> }
 
-    var toolCallFailureHandler: ToolCallFailureHandler =
+    public var toolCallFailureHandler: ToolCallFailureHandler =
         ToolCallFailureHandler { _, _, _, _ -> }
 
-    var toolCallResultHandler: ToolCallResultHandler =
+    public var toolCallResultHandler: ToolCallResultHandler =
         ToolCallResultHandler { _, _, _, _ -> }
 }
 
-fun interface ToolCallHandler {
-    suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args)
+public fun interface ToolCallHandler {
+    public suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args)
 }
 
-fun interface ToolValidationErrorHandler {
-    suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String)
+public fun interface ToolValidationErrorHandler {
+    public suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String)
 }
 
-fun interface ToolCallFailureHandler {
-    suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable)
+public fun interface ToolCallFailureHandler {
+    public suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable)
 }
 
-fun interface ToolCallResultHandler {
-    suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?)
+public fun interface ToolCallResultHandler {
+    public suspend fun handle(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?)
 }

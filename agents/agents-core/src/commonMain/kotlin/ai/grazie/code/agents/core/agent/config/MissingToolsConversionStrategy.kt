@@ -13,10 +13,10 @@ import ai.jetbrains.code.prompt.message.Message
  *
  * @property format Formatter used to convert tool calls
  */
-abstract class MissingToolsConversionStrategy(val format: ToolCallDescriber) {
-    abstract fun convertPrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt
+public abstract class MissingToolsConversionStrategy(private val format: ToolCallDescriber) {
+    public abstract fun convertPrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt
 
-    fun convertMessage(message: Message): Message {
+    public fun convertMessage(message: Message): Message {
         return when (message) {
             is Message.Tool.Call -> format.describeToolCall(message)
             is Message.Tool.Result -> format.describeToolResult(message)
@@ -28,7 +28,7 @@ abstract class MissingToolsConversionStrategy(val format: ToolCallDescriber) {
      * Replace all real tool call and response messages with their dumps to the specified format,
      * and use them as plaintext messages.
      */
-    class All(format: ToolCallDescriber) : MissingToolsConversionStrategy(format) {
+    public class All(format: ToolCallDescriber) : MissingToolsConversionStrategy(format) {
         override fun convertPrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
             return prompt.withUpdatedMessages { map { convertMessage(it) } }
         }
@@ -39,7 +39,7 @@ abstract class MissingToolsConversionStrategy(val format: ToolCallDescriber) {
      * and use them as plaintext messages. The tool calls whose definitions are not missing, will be left
      * as real tool calls and responses.
      */
-    class Missing(format: ToolCallDescriber) : MissingToolsConversionStrategy(format) {
+    public class Missing(format: ToolCallDescriber) : MissingToolsConversionStrategy(format) {
         override fun convertPrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
             val toolNames = tools.map { it.name }
             return prompt.withUpdatedMessages {

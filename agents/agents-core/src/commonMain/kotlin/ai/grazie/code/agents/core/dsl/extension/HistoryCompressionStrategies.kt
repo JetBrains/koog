@@ -14,7 +14,7 @@ import ai.jetbrains.code.prompt.message.Message
  * - [HistoryCompressionStrategy.Chunked]
  * - [RetrieveFactsFromHistory] (in `agents-features-memory` module)
  */
-abstract class HistoryCompressionStrategy {
+public abstract class HistoryCompressionStrategy {
     /**
      * Compresses a given collection of memory messages using a specified strategy.
      *
@@ -22,7 +22,7 @@ abstract class HistoryCompressionStrategy {
      * @param preserveMemory A flag indicating whether parts of the memory should be preserved during compression.
      * @param memoryMessages A list of messages representing the memory to be compressed.
      */
-    abstract suspend fun compress(
+    public abstract suspend fun compress(
         llmSession: LocalAgentLLMWriteSession,
         preserveMemory: Boolean,
         memoryMessages: List<Message>
@@ -87,7 +87,7 @@ abstract class HistoryCompressionStrategy {
      * a succinct summary (TL;DR) and composing necessary messages to create a
      * streamlined prompt suitable for language model interactions.
      */
-    object WholeHistory : HistoryCompressionStrategy() {
+    public object WholeHistory : HistoryCompressionStrategy() {
         /**
          * Compresses and adjusts the prompt for the local agent's write session by summarizing and incorporating
          * memory messages optionally.
@@ -115,7 +115,7 @@ abstract class HistoryCompressionStrategy {
      *
      * @property n The number of most recent messages to retain during compression.
      */
-    data class FromLastNMessages(val n: Int) : HistoryCompressionStrategy() {
+    public data class FromLastNMessages(val n: Int) : HistoryCompressionStrategy() {
         /**
          * Compresses the conversation history by retaining the last N messages, generating a summary,
          * and composing the resulting prompt with the necessary messages.
@@ -147,7 +147,7 @@ abstract class HistoryCompressionStrategy {
      *
      * @property chunkSize The size of chunks into which the prompt messages are divided.
      */
-    data class Chunked(val chunkSize: Int) : HistoryCompressionStrategy() {
+    public data class Chunked(val chunkSize: Int) : HistoryCompressionStrategy() {
         /**
          * Compresses the conversation history into a summarized form (TLDR) using chunked processing.
          *

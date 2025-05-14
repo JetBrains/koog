@@ -14,7 +14,7 @@ import kotlin.reflect.KClass
  *
  * @param klass The class to check instance against (not actually used, see implementation comment)
  */
-inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified T : Any>
+public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified T : Any>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onIsInstance(
     /*
      klass is not used, but we need to use this trick to avoid passing all generic parameters on the usage side.
@@ -30,7 +30,7 @@ inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified T :
 
 
 @Suppress("UNCHECKED_CAST")
-inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
+public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onSuccessful(
     crossinline condition: suspend (TResult) -> Boolean
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result.Success<TResult>, OutgoingInput> =
@@ -40,7 +40,7 @@ inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
         }
 
 @Suppress("UNCHECKED_CAST")
-inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
+public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onFailure(
     crossinline condition: suspend (error: String) -> Boolean
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result.Failure<TResult>, OutgoingInput> =
@@ -54,7 +54,7 @@ inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
  *
  * @param block A function that evaluates whether to accept a tool call message
  */
-infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     block: suspend (Message.Tool.Call) -> Boolean
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
@@ -68,7 +68,7 @@ infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param tool The tool to match against
  * @param block A function that evaluates the tool arguments to determine if the edge should accept the message
  */
-inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : Tool.Args>
+public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : Tool.Args>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<Args, *>,
     crossinline block: suspend (Args) -> Boolean
@@ -86,7 +86,7 @@ inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : To
  *
  * @param tool The tool to match against
  */
-infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<*, *>,
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
@@ -101,7 +101,7 @@ infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  *
  * @param tool The tool to match against
  */
-infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolNotCalled(
     tool: Tool<*, *>,
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
@@ -117,7 +117,7 @@ infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param tool The tool to match against
  * @param block A function that evaluates the tool result to determine if the edge should accept the message
  */
-inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result : ToolResult>
+public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result : ToolResult>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolResult(
     tool: Tool<*, Result>,
     crossinline block: suspend (SafeTool.Result<Result>) -> Boolean
@@ -133,7 +133,7 @@ inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result : 
  *
  * @param block A function that evaluates whether to accept a list of tool call messages
  */
-infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleToolCalls(
     block: suspend (List<Message.Tool.Call>) -> Boolean
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Tool.Call>, OutgoingInput> {
@@ -150,7 +150,7 @@ infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  *
  * @param block A function that evaluates whether to accept a list of tool result messages
  */
-infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleToolResults(
     block: suspend (List<ReceivedToolResult>) -> Boolean
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, List<ReceivedToolResult>, OutgoingInput> {
@@ -166,7 +166,7 @@ infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  *
  * @param block A function that evaluates whether to accept an assistant message
  */
-infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         LocalAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessage(
     block: suspend (Message.Assistant) -> Boolean
 ): LocalAgentEdgeBuilderIntermediate<IncomingOutput, String, OutgoingInput> {

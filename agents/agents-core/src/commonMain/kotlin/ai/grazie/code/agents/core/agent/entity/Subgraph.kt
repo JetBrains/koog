@@ -14,17 +14,17 @@ import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.serialization.Serializable
 
-open class StartNode<Input>() : LocalAgentNode<Input, Input>() {
-    var subgraphName: String? = null
+public open class StartNode<Input>() : LocalAgentNode<Input, Input>() {
+    public var subgraphName: String? = null
         internal set
 
     override val name: String get() = subgraphName?.let { "__start__$it" } ?: "__start__"
 
-    override suspend fun execute(context: LocalAgentStageContext, input: Input) = input
+    override suspend fun execute(context: LocalAgentStageContext, input: Input): Input = input
 }
 
-open class FinishNode<Output>() : LocalAgentNode<Output, Output>() {
-    var subgraphName: String? = null
+public open class FinishNode<Output>() : LocalAgentNode<Output, Output>() {
+    public var subgraphName: String? = null
         internal set
 
     override val name: String = subgraphName?.let { "__finish__$it" } ?: "__finish__"
@@ -33,16 +33,16 @@ open class FinishNode<Output>() : LocalAgentNode<Output, Output>() {
         throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
     }
 
-    override suspend fun execute(context: LocalAgentStageContext, input: Output) = input
+    override suspend fun execute(context: LocalAgentStageContext, input: Output): Output = input
 }
 
-open class LocalAgentSubgraph<Input, Output>(
+public open class LocalAgentSubgraph<Input, Output>(
     override val name: String,
-    val start: StartNode<Input>,
-    val finish: FinishNode<Output>,
+    public val start: StartNode<Input>,
+    public val finish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
 ) : LocalAgentNode<Input, Output>() {
-    companion object {
+    private companion object {
         private val logger =
             LoggerFactory.create("ai.grazie.code.agents.local.agent.stage.${LocalAgentStage::class.simpleName}")
     }
@@ -161,7 +161,7 @@ open class LocalAgentSubgraph<Input, Output>(
  * This interface provides different configurations for tool selection, ranging from using all
  * available tools to a specific subset determined by the context or explicitly provided.
  */
-sealed interface ToolSelectionStrategy {
+public sealed interface ToolSelectionStrategy {
     /**
      * Represents the inclusion of all available tools in a given subgraph or process.
      *
@@ -171,7 +171,7 @@ sealed interface ToolSelectionStrategy {
      * Used in contexts where all tools should be provided or included without constraint,
      * such as within a `LocalAgentSubgraph` or similar constructs.
      */
-    data object ALL : ToolSelectionStrategy
+    public data object ALL : ToolSelectionStrategy
 
     /**
      * Represents a specific subset of tools used within a subgraph configuration where no tools are selected.
@@ -182,7 +182,7 @@ sealed interface ToolSelectionStrategy {
      * Part of the sealed interface `SubgraphToolSubset` which defines various tool subset configurations
      * for subgraph behaviors.
      */
-    data object NONE : ToolSelectionStrategy
+    public data object NONE : ToolSelectionStrategy
 
     /**
      * Represents a subset of tools tailored to the specific requirements of a subtask.
@@ -193,7 +193,7 @@ sealed interface ToolSelectionStrategy {
      *
      * @property subtaskDescription A description of the subtask for which the relevant tools should be selected.
      */
-    data class AutoSelectForTask(val subtaskDescription: String, val maxRetries: Int = 3) : ToolSelectionStrategy
+    public data class AutoSelectForTask(val subtaskDescription: String, val maxRetries: Int = 3) : ToolSelectionStrategy
 
     /**
      * Represents a subset of tools to be utilized within a subgraph or task.
@@ -204,5 +204,5 @@ sealed interface ToolSelectionStrategy {
      *
      * @property tools A collection of `ToolDescriptor` objects defining the tools to be used.
      */
-    data class Tools(val tools: List<ToolDescriptor>) : ToolSelectionStrategy
+    public data class Tools(val tools: List<ToolDescriptor>) : ToolSelectionStrategy
 }

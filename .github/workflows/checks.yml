@@ -69,10 +69,6 @@ jobs:
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
       - name: JvmTest with Gradle Wrapper
-        env:
-          JB_SPACE_CLIENT_ID: ${{ secrets.JB_SPACE_CLIENT_ID }}
-          JB_SPACE_CLIENT_SECRET: ${{ secrets.JB_SPACE_CLIENT_SECRET }}
-          USER_STGN_JWT_TOKEN: ${{ secrets.USER_STGN_JWT_TOKEN }}
         run: ./gradlew jvmTest --continue
 
       - name: Collect reports

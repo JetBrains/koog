@@ -6,20 +6,20 @@ import ai.grazie.code.agents.core.model.message.LocalAgentEnvironmentToolResultT
 import ai.jetbrains.code.prompt.dsl.PromptBuilder
 import ai.jetbrains.code.prompt.message.Message
 
-data class ReceivedToolResult(
+public data class ReceivedToolResult(
     val id: String?,
     val tool: String,
     val content: String,
     val result: ToolResult?
 ) {
-    fun toMessage(): Message.Tool.Result = Message.Tool.Result(
+    public fun toMessage(): Message.Tool.Result = Message.Tool.Result(
         id = id,
         tool = tool,
         content = content,
     )
 }
 
-fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
+public fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
     check(this is LocalAgentEnvironmentToolResultToAgentContent) {
         "Local agen't must receive LocalAgentEnvironmentToolResultToAgentContent," +
                 " but ${this::class.simpleName} was received"
@@ -28,13 +28,13 @@ fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
     return toResult()
 }
 
-fun LocalAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
+public fun LocalAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
     id = toolCallId,
     tool = toolName,
     content = message,
     result = toolResult
 )
 
-fun PromptBuilder.ToolMessageBuilder.result(result: ReceivedToolResult) {
+public fun PromptBuilder.ToolMessageBuilder.result(result: ReceivedToolResult) {
     result(result.toMessage())
 }
