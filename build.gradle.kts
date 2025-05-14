@@ -66,6 +66,14 @@ subprojects {
             showExceptions = true
             exceptionFormat = FULL
         }
+        environment.putAll(
+            mapOf(
+                "USER_STGN_JWT_TOKEN" to
+                        (project.properties["grazieUserStgnToken"] ?: System.getenv("USER_STGN_JWT_TOKEN")),
+                "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
+                "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
+            )
+        )
     }
 }
 

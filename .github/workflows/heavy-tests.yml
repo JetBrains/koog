@@ -42,9 +42,9 @@ jobs:
 
       - name: JvmIntegrationTest with Gradle Wrapper
         env:
-          JB_SPACE_CLIENT_ID: ${{ secrets.JB_SPACE_CLIENT_ID }}
-          JB_SPACE_CLIENT_SECRET: ${{ secrets.JB_SPACE_CLIENT_SECRET }}
           USER_STGN_JWT_TOKEN: ${{ secrets.USER_STGN_JWT_TOKEN }}
+          ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
+          OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
         run: ./gradlew jvmIntegrationTest --continue
 
       - name: Collect reports
