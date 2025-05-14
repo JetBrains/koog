@@ -406,7 +406,6 @@ class OllamaClientTest {
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
-    @Disabled("JBAI-13854")
     @Test
     fun testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test") {
@@ -419,7 +418,6 @@ class OllamaClientTest {
         var totalText = ""
         flow.collect { chunk ->
             println(chunk)
-            assertTrue(chunk.isNotEmpty(), "Chunk should not be empty")
             totalText += chunk
         }
 

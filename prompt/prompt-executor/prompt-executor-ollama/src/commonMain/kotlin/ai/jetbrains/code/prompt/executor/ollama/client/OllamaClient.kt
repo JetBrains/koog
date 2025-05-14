@@ -9,11 +9,16 @@ import ai.jetbrains.code.prompt.llm.LLModel
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.readUTF8Line
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 
 /**
@@ -25,18 +30,27 @@ import kotlinx.serialization.json.Json
 public open class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
+    requestTimeout: Long = 60_000,
+    connectTimeout: Long = 60_000,
+    socketTimeout: Long = 60_000,
 ) {
+
+    private val ollamaJson = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+
+    }
 
     private val client = baseClient.config {
         install(Logging)
         install(ContentNegotiation) {
-            json(
-                Json {
-                    ignoreUnknownKeys = true
-                    isLenient = true
+            json(ollamaJson)
+        }
 
-                }
-            )
+        install(HttpTimeout) {
+            requestTimeoutMillis = requestTimeout
+            connectTimeoutMillis = connectTimeout
+            socketTimeoutMillis  = socketTimeout
         }
     }
 
@@ -54,8 +68,22 @@ public open class OllamaClient(
         }
 
         // Non-streaming response
-        val result = response.body<OllamaChatResponseDTO>()
-        return result
+        return response.body<OllamaChatResponseDTO>()
+    }
+
+    public open suspend fun chatStream(request: OllamaChatRequestDTO): Flow<OllamaChatResponseDTO>  = flow {
+        val response = client.post("$baseUrl/api/chat") {
+            contentType(ContentType.Application.Json)
+            setBody(request)
+        }
+
+        val channel = response.bodyAsChannel()
+
+        while (!channel.isClosedForRead) {
+            val line = channel.readUTF8Line() ?: break
+            val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
+            emit(chunk)
+        }
     }
 
     // TODO: reconsider it's openness

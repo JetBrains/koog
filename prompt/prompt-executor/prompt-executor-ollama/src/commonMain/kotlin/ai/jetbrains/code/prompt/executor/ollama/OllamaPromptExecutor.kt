@@ -11,7 +11,7 @@ import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 /**
  * Executes code-related prompts using LLM Chat services.
@@ -68,5 +68,15 @@ public class OllamaPromptExecutor(private val client: OllamaClient) : PromptExec
         return listOf(Message.Assistant(content))
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow { emit(execute(prompt, model)) }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        logger.info { "Executing OLLAMA streaming request with model: $model" }
+        val request = OllamaChatRequestDTO(
+            model = model.toOllamaModelId(),
+            messages = prompt.toOllamaChatMessages(),
+            tools = listOf(),
+            stream = true,
+        )
+
+        return client.chatStream(request).map { it.message?.content ?: "" }
+    }
 }
