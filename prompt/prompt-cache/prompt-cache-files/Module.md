@@ -17,7 +17,7 @@ To use the file-based prompt cache in your project, add the following dependency
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code:prompt-cache-files:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-cache-files:$version")
 }
 ```
 

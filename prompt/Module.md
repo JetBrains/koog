@@ -23,16 +23,16 @@ Add the necessary dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core prompt functionality
-    implementation("ai.jetbrains.code:prompt-model:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-model:$version")
 
     // For executing prompts
-    implementation("ai.jetbrains.code:prompt-executor-model:$version")
-    implementation("ai.jetbrains.code:prompt-executor-llms:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-model:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-llms:$version")
 
     // Optional modules based on your needs
-    implementation("ai.jetbrains.code:prompt-cache-model:$version")
-    implementation("ai.jetbrains.code:prompt-markdown:$version")
-    implementation("ai.jetbrains.code:prompt-structure:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-cache-model:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-markdown:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-structure:$version")
 }
 ```
 

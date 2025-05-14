@@ -17,7 +17,7 @@ To use this module in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code:prompt-executor-llms")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-llms:$version")
 }
 ```
 

@@ -19,7 +19,7 @@ To use the agents-test module in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    testImplementation("ai.grazie.code.agents:agents-test:$version")
+    testImplementation("ai.jetbrains.code.agents:agents-test:$version")
 }
 ```
 

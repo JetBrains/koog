@@ -12,7 +12,7 @@ Add the dependency to your project:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.koan:prompt-executor-openrouter-client:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-openrouter-client:$version")
 }
 ```
 
