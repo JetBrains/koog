@@ -21,57 +21,58 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 
-private object MemorySubjects {
-    /**
-     * Information specific to the local machine environment
-     * Examples: Installed tools, SDKs, OS configuration, available commands
-     */
-    @Serializable
-    data object Machine : MemorySubject() {
-        override val name: String = "machine"
-        override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
-        override val priorityLevel: Int = 1
-    }
-
-    /**
-     * Information specific to the current user
-     * Examples: Preferences, settings, authentication tokens
-     */
-    @Serializable
-    data object User : MemorySubject() {
-        override val name: String = "user"
-        override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
-        override val priorityLevel: Int = 2
-    }
-
-    /**
-     * Information specific to the current project
-     * Examples: Build configuration, dependencies, code style rules
-     */
-    @Serializable
-    data object Project : MemorySubject() {
-        override val name: String = "project"
-        override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
-        override val priorityLevel: Int = 3
-    }
-
-    /**
-     * Information shared across an organization
-     * Examples: Coding standards, shared configurations, team practices
-     */
-    @Serializable
-    data object Organization : MemorySubject() {
-        override val name: String = "organization"
-        override val promptDescription: String = "Organization structure and policies"
-        override val priorityLevel: Int = 4
-    }
-}
 
 /**
  * Tests for the ProjectAnalyzerAgent.
  * These tests verify that the agent correctly analyzes projects and stores information in memory.
  */
 class ProjectAnalyzerTest {
+    object MemorySubjects {
+        /**
+         * Information specific to the local machine environment
+         * Examples: Installed tools, SDKs, OS configuration, available commands
+         */
+        @Serializable
+        data object Machine : MemorySubject() {
+            override val name: String = "machine"
+            override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
+            override val priorityLevel: Int = 1
+        }
+
+        /**
+         * Information specific to the current user
+         * Examples: Preferences, settings, authentication tokens
+         */
+        @Serializable
+        data object User : MemorySubject() {
+            override val name: String = "user"
+            override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+            override val priorityLevel: Int = 2
+        }
+
+        /**
+         * Information specific to the current project
+         * Examples: Build configuration, dependencies, code style rules
+         */
+        @Serializable
+        data object Project : MemorySubject() {
+            override val name: String = "project"
+            override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+            override val priorityLevel: Int = 3
+        }
+
+        /**
+         * Information shared across an organization
+         * Examples: Coding standards, shared configurations, team practices
+         */
+        @Serializable
+        data object Organization : MemorySubject() {
+            override val name: String = "organization"
+            override val promptDescription: String = "Organization structure and policies"
+            override val priorityLevel: Int = 4
+        }
+    }
+
 
     /**
      * Test memory provider that stores facts in memory for testing.
