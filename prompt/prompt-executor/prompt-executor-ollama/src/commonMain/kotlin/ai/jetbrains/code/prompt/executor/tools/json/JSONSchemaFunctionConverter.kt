@@ -40,6 +40,19 @@ public fun ToolDescriptor.toJSONSchema(): JsonObject {
                 put("type", "array")
                 put("items", toolParameterToSchema(type.itemsType))
             }
+
+            is ToolParameterType.Object -> {
+                put("type", JsonPrimitive("object"))
+                put("properties", buildJsonObject {
+                    type.properties.forEach { property ->
+                        put(property.name, buildJsonObject {
+                            toolParameterToSchema(property.type)
+                            put("description", property.description)
+                        })
+                    }
+                }
+                )
+            }
         }
 
         if (description != null) {

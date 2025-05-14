@@ -17,6 +17,7 @@ logback = "1.5.13"
 mockk = "1.13.8"
 shadow = "8.1.1"
 slf4j = "2.0.16"
+mcp = "0.5.0"
 dokka = "2.0.0"
 
 [libraries]
@@ -52,6 +53,7 @@ ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
 ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor3" }
+ktor-client-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor3" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
@@ -60,6 +62,7 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
 
 [plugins]
 compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }

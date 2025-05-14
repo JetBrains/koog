@@ -33,7 +33,6 @@ data class ToolDescriptor(
  * @property name The name of the tool parameter in snake_case
  * @property description The description of the tool parameter.
  * @property type The data type of the tool parameter.
- * @property defaultValue The default value of the tool parameter (nullable).
  */
 data class ToolParameterDescriptor(
     val name: String, val description: String, val type: ToolParameterType
@@ -63,6 +62,7 @@ sealed class ToolParameterType(val name: kotlin.String) {
      * Represents a float type parameter.
      */
     data object Float : ToolParameterType("FLOAT")
+
     /**
      * Represents a boolean type parameter.
      */
@@ -71,7 +71,6 @@ sealed class ToolParameterType(val name: kotlin.String) {
     /**
      * Represents an enum type parameter.
      *
-     * @param E The specific enumeration type handled by this parameter type.
      * @property entries The entries for the enumeration, allowing the parameter to be one of these values.
      */
     data class Enum(
@@ -81,10 +80,16 @@ sealed class ToolParameterType(val name: kotlin.String) {
     /**
      * Represents an array type parameter.
      *
-     * @param T The type of each item within the array.
      * @property itemsType The type definition for the items within the array.
      */
     data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY")
+
+    /**
+     * Represents an array type parameter.
+     *
+     * @property properties The properties of the object type.
+     */
+    data class Object(val properties: kotlin.collections.List<ToolParameterDescriptor>) : ToolParameterType("OBJECT")
 
     companion object {
         fun Enum(entries: EnumEntries<*>): Enum = Enum(entries.map { it.name }.toTypedArray())

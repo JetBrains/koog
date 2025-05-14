@@ -29,6 +29,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)
             }
