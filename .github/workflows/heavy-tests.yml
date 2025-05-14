@@ -42,7 +42,6 @@ jobs:
 
       - name: JvmIntegrationTest with Gradle Wrapper
         env:
-          USER_STGN_JWT_TOKEN: ${{ secrets.USER_STGN_JWT_TOKEN }}
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
           OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
         run: ./gradlew jvmIntegrationTest --continue
