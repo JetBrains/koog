@@ -8,7 +8,8 @@
 name: Heavy Tests
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ "main" ]
 
 jobs:
   integration-tests:
