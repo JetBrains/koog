@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-internal object MemorySubjects {
+private object MemorySubjects {
     /**
      * Information specific to the local machine environment
      * Examples: Installed tools, SDKs, OS configuration, available commands

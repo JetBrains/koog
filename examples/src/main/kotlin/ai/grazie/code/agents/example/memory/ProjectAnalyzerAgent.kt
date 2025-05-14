@@ -30,7 +30,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlin.io.path.Path
 
-internal object MemorySubjects {
+private object MemorySubjects {
     /**
      * Information specific to the local machine environment
      * Examples: Installed tools, SDKs, OS configuration, available commands
