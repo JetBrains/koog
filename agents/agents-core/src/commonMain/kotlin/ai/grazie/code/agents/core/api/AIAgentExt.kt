@@ -10,7 +10,6 @@ import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.params.LLMParams
-import kotlinx.coroutines.CoroutineScope
 
 /**
  * Creates and configures a simple chat agent.
@@ -26,13 +25,12 @@ import kotlinx.coroutines.CoroutineScope
  */
 public fun simpleChatAgent(
     executor: PromptExecutor,
-    cs: CoroutineScope,
     systemPrompt: String = "",
     llmModel: LLModel = OpenAIModels.Chat.GPT4o,
     temperature: Double = 1.0,
     toolRegistry: ToolRegistry? = null,
     maxIterations: Int = 50,
-    installFeatures: suspend AIAgent.FeatureContext.() -> Unit = {}
+    installFeatures: AIAgent.FeatureContext.() -> Unit = {}
 ): AIAgent {
 
     val agentConfig = AIAgentConfig(
@@ -59,7 +57,6 @@ public fun simpleChatAgent(
     return AIAgent(
         promptExecutor = executor,
         strategy = chatAgentStrategy(),
-        cs = cs,
         agentConfig = agentConfig,
         toolRegistry = resultingToolRegistry,
         installFeatures = installFeatures
@@ -81,13 +78,12 @@ public fun simpleChatAgent(
  */
 public fun simpleSingleRunAgent(
     executor: PromptExecutor,
-    cs: CoroutineScope,
     systemPrompt: String = "",
     llmModel: LLModel = OpenAIModels.Chat.GPT4o,
     temperature: Double = 1.0,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
-    installFeatures: suspend AIAgent.FeatureContext.() -> Unit = {}
+    installFeatures: AIAgent.FeatureContext.() -> Unit = {}
 ): AIAgent {
 
     val agentConfig = AIAgentConfig(
@@ -101,7 +97,6 @@ public fun simpleSingleRunAgent(
     return AIAgent(
         promptExecutor = executor,
         strategy = singleRunStrategy(),
-        cs = cs,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,
         installFeatures = installFeatures

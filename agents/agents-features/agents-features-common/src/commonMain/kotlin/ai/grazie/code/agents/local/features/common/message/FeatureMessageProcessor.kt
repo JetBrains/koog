@@ -37,3 +37,4 @@ abstract class FeatureMessageProcessor : Closeable {
      */
     abstract suspend fun processMessage(message: FeatureMessage)
 }
+

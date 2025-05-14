@@ -40,10 +40,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { true }
                     addMessageProcessor(writer)
@@ -142,10 +139,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { true }
                     addMessageProcessor(writer)
@@ -174,10 +168,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { true }
                     // Do not add stream providers
@@ -208,10 +199,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { message ->
                         message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent

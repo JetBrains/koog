@@ -96,7 +96,6 @@ class Logging(val logger: Logger) {
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
-        cs = coroutineScope,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(Logging) {

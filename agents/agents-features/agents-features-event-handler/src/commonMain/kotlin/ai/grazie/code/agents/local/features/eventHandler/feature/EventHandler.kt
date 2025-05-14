@@ -189,7 +189,7 @@ class EventHandler {
  * }
  * ```
  */
-suspend fun FeatureContext.handleEvents(configure: EventHandlerConfig.() -> Unit) {
+fun FeatureContext.handleEvents(configure: EventHandlerConfig.() -> Unit) {
     install(EventHandler) {
         configure()
     }

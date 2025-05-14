@@ -150,7 +150,6 @@ class LLMHistoryTransitionPolicyTest {
     private fun createRunnableAgent(strategy: AIAgentStrategy): AIAgent = AIAgent(
         promptExecutor = mockLLMExecutor,
         strategy = strategy,
-        cs = testScope,
         agentConfig = dummyAgentConfig,
         toolRegistry = emptyToolRegistry,
     ) {

@@ -71,7 +71,6 @@ class GraphTestingFeatureTest {
         AIAgent(
             promptExecutor = mockLLMApi,
             strategy = strategy,
-            cs = this@runTest,
             agentConfig = AIAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
             toolRegistry = toolRegistry
         ) {

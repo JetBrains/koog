@@ -252,7 +252,6 @@ fun main(): Unit = runBlocking {
             LLMProvider.Anthropic to AnthropicLLMClient(TokenService.anthropicToken),
         ),
         strategy = agentStrategy, // no tools needed for this example
-        cs = this,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry.EMPTY
     ) {

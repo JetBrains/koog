@@ -481,7 +481,6 @@ class KotlinAIAgentWithMultipleLLMTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
         ) {
@@ -569,7 +568,6 @@ class KotlinAIAgentWithMultipleLLMTest {
         val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
         ) {
@@ -655,7 +653,6 @@ class KotlinAIAgentWithMultipleLLMTest {
         val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools
         ) {
@@ -740,7 +737,6 @@ class KotlinAIAgentWithMultipleLLMTest {
         val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = AIAgentConfig(prompt("test") {}, AnthropicModels.Sonnet_3_7, 15),
             toolRegistry = tools
         ) {
@@ -870,7 +866,6 @@ class KotlinAIAgentWithMultipleLLMTest {
         val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
             agentConfig = AIAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools
         ) {
@@ -949,7 +944,6 @@ class KotlinAIAgentWithMultipleLLMTest {
             val a = simpleSingleRunAgent(
                 executor = simpleAnthropicExecutor(anthropicApiKey),
                 llmModel = AnthropicModels.Sonnet_3_7,
-                cs = CoroutineScope(coroutineContext),
                 systemPrompt = "You are a calculator with access to the calculator tools. Please call tools!!!",
                 toolRegistry = SimpleToolRegistry {
                     tool(CalculatorTool)

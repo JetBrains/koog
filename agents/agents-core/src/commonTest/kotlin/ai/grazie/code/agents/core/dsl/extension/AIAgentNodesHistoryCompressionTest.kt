@@ -58,7 +58,6 @@ class AIAgentNodesHistoryCompressionTest {
         val runner = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
@@ -113,7 +112,6 @@ class AIAgentNodesHistoryCompressionTest {
         val runner = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {
@@ -171,7 +169,6 @@ class AIAgentNodesHistoryCompressionTest {
         val runner = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {

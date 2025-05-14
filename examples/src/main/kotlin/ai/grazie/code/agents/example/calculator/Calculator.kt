@@ -97,7 +97,6 @@ fun main() = runBlocking {
     val agent = AIAgent(
         promptExecutor = executor,
         strategy = strategy,
-        cs = this,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry
     ) {

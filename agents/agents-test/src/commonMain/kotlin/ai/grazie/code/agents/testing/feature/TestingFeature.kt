@@ -1113,7 +1113,7 @@ fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult = toolRe
  * @see Testing
  * @see Testing.Config
  */
-suspend fun FeatureContext.withTesting(config: Testing.Config.() -> Unit = {}) {
+fun FeatureContext.withTesting(config: Testing.Config.() -> Unit = {}) {
     install(Testing) {
         config()
     }

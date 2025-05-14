@@ -72,7 +72,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                createAgent(strategy = strategy, scope = this) {
+                createAgent(strategy = strategy) {
                     install(Tracing) {
                         messageFilter = { true }
                         addMessageProcessor(writer)
@@ -137,10 +137,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                createAgent(
-                    strategy = strategy,
-                    scope = this,
-                ) {
+                createAgent(strategy = strategy) {
                     install(Tracing) {
                         messageFilter = { true }
                         addMessageProcessor(writer)
@@ -211,10 +208,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                     }
 
-                    createAgent(
-                        strategy = strategy,
-                        scope = this,
-                    ) {
+                    createAgent(strategy = strategy) {
                         install(Tracing) {
                             messageFilter = { true }
                             addMessageProcessor(fakeWriter)
@@ -298,10 +292,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                val agent = createAgent(
-                    strategy = strategy,
-                    scope = this,
-                ) {
+                createAgent(strategy = strategy) {
                     install(Tracing) {
                         messageFilter = { message ->
                             message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent

@@ -44,7 +44,6 @@ fun main() = runBlocking {
     val runner = AIAgent(
         promptExecutor = executor,
         strategy = agentStrategy, // no tools needed for this example
-        cs = this,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry.EMPTY,
     )
