@@ -53,7 +53,6 @@ enum class ContextTransitionPolicy {
  *        - [ContextTransitionPolicy.COMPRESS_LLM_HISTORY]: Compresses the history between stages to reduce token usage.
  *        - [ContextTransitionPolicy.CLEAR_LLM_HISTORY]: Clears the history between stages for independent processing.
  */
-@OptIn(InternalAgentsApi::class)
 class LocalAgentStrategy(
     override val name: String,
     stages: List<LocalAgentStage>,
@@ -233,6 +232,7 @@ class LocalAgentStrategy(
     override suspend fun execute(context: LocalAgentStageContext, input: String): String {
         val wrappedEnv = SubAgentEnvironment(context.environment)
 
+        @OptIn(InternalAgentsApi::class)
         run(
             sessionUuid = UUID.random(),
             userInput = input,

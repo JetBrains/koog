@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.gradle.*
-
 plugins {
     id("org.jetbrains.dokka")
 }
