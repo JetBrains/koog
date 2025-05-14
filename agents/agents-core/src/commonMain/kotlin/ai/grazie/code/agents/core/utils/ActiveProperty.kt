@@ -19,7 +19,12 @@ internal class ActiveProperty<T>(
     }
 
     /**
-     **/
+     * Provides the logic to retrieve the value of a delegated property.
+     *
+     * @param thisRef The object for which the property value is requested. Can be null if the property is global or does not depend on a specific class instance.
+     * @param property Metadata for the property being accessed.
+     * @return The value of the delegated property.
+     */
     operator fun getValue(thisRef: Any?, property: KProperty<*>): T {
         validate()
         return value
