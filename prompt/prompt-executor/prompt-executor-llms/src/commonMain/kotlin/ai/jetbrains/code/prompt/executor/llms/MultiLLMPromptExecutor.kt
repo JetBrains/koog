@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.flow
  * @param llmClients A map containing LLM providers associated with their respective [LLMClient]s.
  * @param fallback Optional settings to configure the fallback mechanism in case a specific provider is not directly available.
  */
-open class MultiLLMPromptExecutor(
+public open class MultiLLMPromptExecutor(
     private val llmClients: Map<LLMProvider, LLMClient>,
     private val fallback: FallbackPromptExecutorSettings? = null
 ) : PromptExecutor {
@@ -38,7 +38,7 @@ open class MultiLLMPromptExecutor(
      * @throws IllegalArgumentException If the provider of the fallback model does not match the
      * fallback provider.
      */
-    data class FallbackPromptExecutorSettings(
+    public data class FallbackPromptExecutorSettings(
         val fallbackProvider: LLMProvider,
         val fallbackModel: LLModel
     ) {
@@ -60,7 +60,7 @@ open class MultiLLMPromptExecutor(
      * @param llmClients Variable number of pairs, where each pair consists of an `LLMProvider` representing
      *                   the provider and a `LLMClient` for communication with that provider.
      */
-    constructor(vararg llmClients: Pair<LLMProvider, LLMClient>) : this(mapOf(*llmClients))
+    public constructor(vararg llmClients: Pair<LLMProvider, LLMClient>) : this(mapOf(*llmClients))
 
     /**
      * Companion object for `MultiLLMPromptExecutor` class.
@@ -69,7 +69,7 @@ open class MultiLLMPromptExecutor(
      * events and debugging information related to the execution of prompts using
      * multiple LLM clients.
      */
-    companion object {
+    private companion object {
         /**
          * Logger instance used for logging messages within the LLMPromptExecutor and MultiLLMPromptExecutor classes.
          *

@@ -5,9 +5,9 @@ import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.jetbrains.code.prompt.text.text
 
 
-object AgentParameters {
+public object AgentParameters {
 
-    val CODE_CONTEXT_PARAMETER = ToolParameterDescriptor(
+    public val CODE_CONTEXT_PARAMETER: ToolParameterDescriptor = ToolParameterDescriptor(
         name = "context",
         description = text {
             +"Additional context to guide the call, must be as specific as possible and based on what is already known at the moment of call"

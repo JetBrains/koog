@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.flow
  * Executes code-related prompts using LLM Chat services.
  * This executor provides a unified way to handle prompts and obtain responses from LLM services.
  */
-class OllamaPromptExecutor(private val client: OllamaClient) : PromptExecutor {
-    companion object {
+public class OllamaPromptExecutor(private val client: OllamaClient) : PromptExecutor {
+    public companion object {
         private val logger = LoggerFactory.create(OllamaPromptExecutor::class.simpleName!!)
-        fun default(): OllamaPromptExecutor = OllamaPromptExecutor(OllamaClient())
+        public fun default(): OllamaPromptExecutor = OllamaPromptExecutor(OllamaClient())
     }
 
 

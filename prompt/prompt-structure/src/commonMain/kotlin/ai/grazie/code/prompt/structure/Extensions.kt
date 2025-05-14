@@ -14,15 +14,15 @@ import kotlinx.serialization.SerializationException
 
 private val logger = LoggerFactory.create("ai.grazie.code.prompt.structure.Extensions")
 
-inline fun <reified T> TextContentBuilder.structure(language: JsonStructureLanguage, value: T) {
+public inline fun <reified T> TextContentBuilder.structure(language: JsonStructureLanguage, value: T) {
     +language.pretty(value)
 }
 
-fun <T> TextContentBuilder.structure(language: JsonStructureLanguage, value: T, serializer: KSerializer<T>) {
+public fun <T> TextContentBuilder.structure(language: JsonStructureLanguage, value: T, serializer: KSerializer<T>) {
     +language.pretty(value, serializer)
 }
 
-data class StructuredResponse<T>(val structure: T, val raw: String)
+public data class StructuredResponse<T>(val structure: T, val raw: String)
 
 /**
  * Executes a given prompt and parses the resulting text, expecting structured data in the response message.
@@ -34,7 +34,7 @@ data class StructuredResponse<T>(val structure: T, val raw: String)
  * for interpreting the raw response from the execution.
  * @return A [StructuredResponse] containing both parsed structure and raw text
  */
-suspend fun <T> PromptExecutor.executeStructuredOneShot(
+public suspend fun <T> PromptExecutor.executeStructuredOneShot(
     prompt: Prompt,
     model: LLModel,
     structure: StructuredData<T>
@@ -63,7 +63,7 @@ suspend fun <T> PromptExecutor.executeStructuredOneShot(
  * @return A [StructuredResponse] containing both parsed structure and raw text
  * @throws IllegalStateException if parsing fails after all retries
 */
-suspend fun <T> PromptExecutor.executeStructured(
+public suspend fun <T> PromptExecutor.executeStructured(
     prompt: Prompt,
     mainModel: LLModel,
     structure: StructuredData<T>,
@@ -80,10 +80,10 @@ suspend fun <T> PromptExecutor.executeStructured(
 
     val structureParser = StructureParser(this, fixingModel)
 
-    for (i in 0 until retries) {
+    repeat(retries) {
         val text = execute(prompt, mainModel)
         try {
-            return StructuredResponse<T>(
+            return StructuredResponse(
                 structure = structureParser.parse(structure, text),
                 raw = text,
             )

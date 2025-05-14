@@ -20,30 +20,30 @@ import kotlinx.serialization.json.JsonObject
  * customizable and incremental way.
  */
 @Serializable
-data class LLMParams(
+public data class LLMParams(
     val temperature: Double? = null,
     val speculation: String? = null,
     val schema: Schema? = null,
     val toolChoice: ToolChoice? = null,
 ) {
-    fun default(default: LLMParams): LLMParams = copy(
+    public fun default(default: LLMParams): LLMParams = copy(
         temperature = temperature ?: default.temperature,
         speculation = speculation ?: default.speculation,
         schema = schema ?: default.schema
     )
 
     @Serializable
-    sealed interface Schema {
-        val name: String
+    public sealed interface Schema {
+        public val name: String
 
         @Serializable
-        sealed interface JSON: Schema {
-            val schema: JsonObject
+        public sealed interface JSON: Schema {
+            public val schema: JsonObject
 
             @Serializable
-            data class Simple(override val name: String, override val schema: JsonObject) : JSON
+            public data class Simple(override val name: String, override val schema: JsonObject) : JSON
             @Serializable
-            data class Full(override val name: String, override val schema: JsonObject) : JSON
+            public data class Full(override val name: String, override val schema: JsonObject) : JSON
         }
     }
 
@@ -51,29 +51,29 @@ data class LLMParams(
      * Used to switch tool calling behavior of LLM
      */
     @Serializable
-    sealed class ToolChoice {
+    public sealed class ToolChoice {
         /**
          *  LLM will call the tool [name] as a response
          */
         @Serializable
-        data class Named(val name: String): ToolChoice()
+        public data class Named(val name: String): ToolChoice()
 
         /**
          * LLM will not call tools at all, and only generate text
          */
         @Serializable
-        object None: ToolChoice()
+        public object None: ToolChoice()
 
         /**
          * LLM will automatically decide whether to call tools or to generate text
          */
         @Serializable
-        object Auto: ToolChoice()
+        public object Auto: ToolChoice()
 
         /**
          * LLM will only call tools
          */
         @Serializable
-        object Required: ToolChoice()
+        public object Required: ToolChoice()
     }
 }

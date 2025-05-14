@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.Flow
 /**
  * A builder for creating markdown parsers with event-based handlers.
  */
-class MarkdownParserBuilder {
+public class MarkdownParserBuilder {
     private var headerHandlers = mutableMapOf<Int, suspend (String) -> Unit>()
     private var bulletHandler:  (suspend (String) -> Unit)? = null
     private var finishedHandler: (suspend (String) -> Unit)? = null
@@ -18,7 +18,7 @@ class MarkdownParserBuilder {
      * @param level The header level (1-6)
      * @param handler The handler function that receives the header text
      */
-    fun onHeader(level: Int, handler: suspend (String) -> Unit) {
+    public fun onHeader(level: Int, handler: suspend (String) -> Unit) {
         require(level in 1..6) { "Header level must be between 1 and 6" }
         headerHandlers[level] = handler
     }
@@ -27,7 +27,7 @@ class MarkdownParserBuilder {
      * Registers a handler for bullet points.
      * @param handler The handler function that receives the bullet point text
      */
-    fun onBullet(handler: suspend (String) -> Unit) {
+    public fun onBullet(handler: suspend (String) -> Unit) {
         bulletHandler = handler
     }
 
@@ -36,7 +36,7 @@ class MarkdownParserBuilder {
      *
      * @param handler The function to handle the final output, receiving the remaining text as a parameter.
      */
-    fun onFinishStream(handler: suspend (String) -> Unit) {
+    public fun onFinishStream(handler: suspend (String) -> Unit) {
         finishedHandler = handler
     }
 
@@ -45,7 +45,7 @@ class MarkdownParserBuilder {
      *
      * @param handler The handler function that receives the code block content and optional language identifier
      */
-    fun onCodeBlock(handler: suspend (String) -> Unit) {
+    public fun onCodeBlock(handler: suspend (String) -> Unit) {
         codeBlockHandler = handler
     }
 
@@ -56,7 +56,7 @@ class MarkdownParserBuilder {
      * @param regex The regex pattern to match against each line, or null to match any line
      * @param handler The function to handle the matched line
      */
-    fun onLineMatching(regex: Regex?, handler: suspend (String) -> Unit) {
+    public fun onLineMatching(regex: Regex?, handler: suspend (String) -> Unit) {
         lineMatchingHandlers[regex] = handler
     }
 
@@ -64,7 +64,7 @@ class MarkdownParserBuilder {
      * Creates a parser function that processes markdown text and returns a list of result objects.
      * @return A function that takes markdown text and returns a list of result objects
      */
-    fun build(): suspend (String) -> Unit {
+    public fun build(): suspend (String) -> Unit {
         return { markdown ->
             // Split the markdown by lines
             val lines = markdown.split("\n")
@@ -184,10 +184,10 @@ class MarkdownParserBuilder {
         }
     }
 
-    fun buildStreaming(): MarkdownStreamingParser = MarkdownStreamingParser(build())
+    public fun buildStreaming(): MarkdownStreamingParser = MarkdownStreamingParser(build())
 
-    inner class MarkdownStreamingParser(private val parser: suspend (String) -> Unit) {
-        suspend fun parseStream(markdownStream: Flow<String>) {
+    public inner class MarkdownStreamingParser(private val parser: suspend (String) -> Unit) {
+        public suspend fun parseStream(markdownStream: Flow<String>) {
             var buffer = ""
 
             markdownStream.collect { chunk ->
@@ -230,7 +230,7 @@ class MarkdownParserBuilder {
  * @param config The configuration function for the parser builder
  * @return A function that takes markdown text and returns a list of result objects
  */
-fun markdownParser(config: MarkdownParserBuilder.() -> Unit): suspend (String) -> Unit {
+public fun markdownParser(config: MarkdownParserBuilder.() -> Unit): suspend (String) -> Unit {
     return MarkdownParserBuilder().apply(config).build()
 }
 
@@ -239,6 +239,6 @@ fun markdownParser(config: MarkdownParserBuilder.() -> Unit): suspend (String) -
  * @param collector The configuration function for the parser builder
  * @return A function that takes a flow of markdown chunks and returns a flow of result objects
  */
-fun markdownStreamingParser(collector: MarkdownParserBuilder.() -> Unit): MarkdownStreamingParser {
+public fun markdownStreamingParser(collector: MarkdownParserBuilder.() -> Unit): MarkdownStreamingParser {
     return MarkdownParserBuilder().apply(collector).buildStreaming()
 }

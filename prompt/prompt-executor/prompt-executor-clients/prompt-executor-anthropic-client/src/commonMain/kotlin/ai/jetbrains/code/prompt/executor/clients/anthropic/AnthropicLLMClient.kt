@@ -51,11 +51,11 @@ import kotlinx.serialization.json.jsonObject
  * @property baseUrl The base URL for accessing the Anthropic API. Defaults to "https://api.anthropic.com".
  * @property apiVersion The version of the Anthropic API to be used. Defaults to "2023-06-01".
  */
-class AnthropicClientSettings(
-    val modelVersionsMap: Map<LLModel, String> = DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP,
-    val baseUrl: String = "https://api.anthropic.com",
-    val apiVersion: String = "2023-06-01",
-    val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+public class AnthropicClientSettings(
+    public val modelVersionsMap: Map<LLModel, String> = DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP,
+    public val baseUrl: String = "https://api.anthropic.com",
+    public val apiVersion: String = "2023-06-01",
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
 /**
@@ -70,13 +70,13 @@ class AnthropicClientSettings(
  * @param settings Configurable settings for the Anthropic client, which include the base URL and other options.
  * @param baseClient An optional custom configuration for the underlying HTTP client, defaulting to a Ktor client.
  */
-open class AnthropicLLMClient(
+public open class AnthropicLLMClient(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
     baseClient: HttpClient = HttpClient()
 ) : LLMClient {
 
-    companion object {
+    private companion object {
         private val logger =
             LoggerFactory.create("ai.jetbrains.code.prompt.executor.clients.anthropic.HTTPBasedAnthropicSuspendableDirectClient")
 

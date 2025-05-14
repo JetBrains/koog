@@ -1,8 +1,8 @@
 package ai.jetbrains.code.prompt.llm
 
-object OllamaModels {
-    object Meta {
-        val LLAMA_3_2 = LLModel(
+public object OllamaModels {
+    public object Meta {
+        public val LLAMA_3_2: LLModel = LLModel(
             provider = LLMProvider.Meta,
             id = "meta-llama-3-2",
             capabilities = listOf(
@@ -13,8 +13,8 @@ object OllamaModels {
         )
     }
 
-    object Alibaba {
-        val QWQ = LLModel(
+    public object Alibaba {
+        public val QWQ: LLModel = LLModel(
             provider = LLMProvider.Alibaba,
             id = "alibaba-qwq",
             capabilities = listOf(
@@ -23,7 +23,7 @@ object OllamaModels {
                 LLMCapability.Tools
             )
         )
-        val QWEN_CODER_2_5_32B = LLModel(
+        public val QWEN_CODER_2_5_32B: LLModel = LLModel(
             provider = LLMProvider.Alibaba,
             id = "alibaba-qwen-coder-2-5-32b",
             capabilities = listOf(

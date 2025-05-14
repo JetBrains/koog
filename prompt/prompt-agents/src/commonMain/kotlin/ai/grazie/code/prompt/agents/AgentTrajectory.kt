@@ -10,7 +10,7 @@ package ai.grazie.code.prompt.agents
  * @property explanation A textual explanation of the agent's reasoning or decision-making process.
  * @property outcome An outcome that should be observed after the agent execution
  */
-data class AgentTrajectory(
+public data class AgentTrajectory(
     val request: String,
     val steps: List<ToolStep>,
     val explanation: String,
@@ -24,7 +24,7 @@ data class AgentTrajectory(
      * @property reason The reason or intent behind invoking the tool in this step.
      * @property outcome The outcome or result of the tool's execution.
      */
-    data class ToolStep(
+    public data class ToolStep(
         val tool: String,
         val params: String,
         val reason: String,

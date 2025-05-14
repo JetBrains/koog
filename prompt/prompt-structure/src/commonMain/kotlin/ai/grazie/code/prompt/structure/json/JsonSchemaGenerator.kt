@@ -19,12 +19,12 @@ import kotlinx.serialization.json.*
  * The generated schemas help LLMs understand the expected response format, improving parsing reliability
  * and reducing the need for output coercion or error handling.
  */
-class JsonSchemaGenerator(
+public class JsonSchemaGenerator(
     private val json: Json,
     private val schemaFormat: SchemaFormat,
     private val maxDepth: Int
 ) {
-    enum class SchemaFormat {
+    public enum class SchemaFormat {
         /**
          * Simple format, embed all type definitions.
          * Won't work for more complicated cases, e.g. where subclass refers back again to the base class
@@ -38,7 +38,7 @@ class JsonSchemaGenerator(
         JsonSchema
     }
 
-    companion object {
+    private companion object {
         const val SCHEMA_KEY = "\$schema"
         const val ID_KEY = "\$id"
 
@@ -68,7 +68,7 @@ class JsonSchemaGenerator(
      * @param descriptions Optional map of serial class names and property names to descriptions
      * @return A JsonObject representing the JSON schema
      */
-    fun generate(
+    public fun generate(
         id: String,
         serializer: KSerializer<*>,
         descriptions: Map<String, String> = emptyMap()

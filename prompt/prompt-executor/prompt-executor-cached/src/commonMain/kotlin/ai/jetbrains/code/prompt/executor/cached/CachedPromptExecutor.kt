@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.flow
  * @param cache The cache implementation to use
  * @param nested The nested executor to use for cache misses
  */
-class CachedPromptExecutor(
+public class CachedPromptExecutor(
     private val cache: PromptCache,
     private val nested: PromptExecutor
 ) : PromptExecutor {

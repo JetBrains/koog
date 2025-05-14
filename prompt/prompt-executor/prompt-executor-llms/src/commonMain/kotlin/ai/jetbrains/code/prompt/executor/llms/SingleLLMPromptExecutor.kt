@@ -20,10 +20,10 @@ import kotlinx.coroutines.flow.flow
  * @constructor Creates an instance of `LLMPromptExecutor`.
  * @param llmClient The client used for direct communication with the LLM provider.
  */
-open class SingleLLMPromptExecutor(
+public open class SingleLLMPromptExecutor(
     private val llmClient: LLMClient,
 ) : PromptExecutor {
-    companion object {
+    private companion object {
         private val logger = LoggerFactory.create("ai.jetbrains.code.prompt.executor.llms.LLMPromptExecutor")
     }
 

@@ -4,7 +4,7 @@ import ai.grazie.code.prompt.markdown.markdown
 import ai.grazie.code.prompt.structure.StructuredDataDefinition
 import ai.jetbrains.code.prompt.text.TextContentBuilder
 
-class MarkdownStructuredDataDefinition(
+public class MarkdownStructuredDataDefinition(
     private val id: String,
     private val schema: TextContentBuilder.() -> Unit,
     private val examples: (TextContentBuilder.() -> Unit)? = null): StructuredDataDefinition {

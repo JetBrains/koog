@@ -4,11 +4,11 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 
-class JsonStructureLanguage(
-    val json: Json = defaultJson
+public class JsonStructureLanguage(
+    private val json: Json = defaultJson
 ) {
-    companion object {
-        val defaultJson: Json = Json {
+    public companion object {
+        public val defaultJson: Json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
             explicitNulls = false
@@ -23,17 +23,17 @@ class JsonStructureLanguage(
         prettyPrintIndent = "  "
     }
 
-    fun <T> string(value: T, serializer: KSerializer<T>): String = json.encodeToString(serializer, value)
-    inline fun <reified T> string(value: T): String = string(value, serializer<T>())
+    public fun <T> string(value: T, serializer: KSerializer<T>): String = json.encodeToString(serializer, value)
+    public inline fun <reified T> string(value: T): String = string(value, serializer<T>())
 
-    fun <T> pretty(value: T, serializer: KSerializer<T>): String = jsonPretty.encodeToString(serializer, value)
+    public fun <T> pretty(value: T, serializer: KSerializer<T>): String = jsonPretty.encodeToString(serializer, value)
 
-    inline fun <reified T> pretty(value: T): String = pretty(
+    public inline fun <reified T> pretty(value: T): String = pretty(
         value,
         serializer<T>()
     )
 
-    fun <T> parse(text: String, serializer: KSerializer<T>): T = json.decodeFromString(serializer, cleanup(text))
+    public fun <T> parse(text: String, serializer: KSerializer<T>): T = json.decodeFromString(serializer, cleanup(text))
 
     private fun cleanup(text: String): String {
         //cleanup some lines that are not json
@@ -50,5 +50,5 @@ class JsonStructureLanguage(
         return content
     }
 
-    inline fun <reified T> parse(text: String): T = parse(text, serializer<T>())
+    public inline fun <reified T> parse(text: String): T = parse(text, serializer<T>())
 }

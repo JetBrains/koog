@@ -1,11 +1,11 @@
 package ai.grazie.code.prompt.structure
 
-interface DescriptionMetadata {
-    val className: String
-    val classDescription: String?
-    val fieldDescriptions: Map<String, String>
+public interface DescriptionMetadata {
+    public val className: String
+    public val classDescription: String?
+    public val fieldDescriptions: Map<String, String>
 
-    fun allDescriptions(): Map<String, String> = buildMap {
+    public fun allDescriptions(): Map<String, String> = buildMap {
         putAll(fieldDescriptions)
         classDescription?.let { put(className, it) }
     }

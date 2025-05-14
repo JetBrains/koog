@@ -7,7 +7,7 @@ import ai.jetbrains.code.prompt.llm.LLModel
 /**
  * Anthropic models for text generation and embeddings.
  */
-object AnthropicModels {
+public object AnthropicModels {
 
     /**
      * Claude 3 Opus is Anthropic's most powerful model, designed for highly complex tasks.
@@ -18,7 +18,7 @@ object AnthropicModels {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
-    val Opus = LLModel(
+    public val Opus: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-opus",
         capabilities = listOf(
@@ -39,7 +39,7 @@ object AnthropicModels {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
-    val Sonnet_3 = LLModel(
+    public val Sonnet_3: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-sonnet",
         capabilities = listOf(
@@ -60,7 +60,7 @@ object AnthropicModels {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
-    val Haiku_3 = LLModel(
+    public val Haiku_3: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-haiku",
         capabilities = listOf(
@@ -81,7 +81,7 @@ object AnthropicModels {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
-    val Sonnet_3_5 = LLModel(
+    public val Sonnet_3_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-5-sonnet",
         capabilities = listOf(
@@ -102,7 +102,7 @@ object AnthropicModels {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
-    val Haiku_3_5 = LLModel(
+    public val Haiku_3_5: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-5-haiku",
         capabilities = listOf(
@@ -123,7 +123,7 @@ object AnthropicModels {
      *
      * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
      */
-    val Sonnet_3_7 = LLModel(
+    public val Sonnet_3_7: LLModel = LLModel(
         provider = LLMProvider.Anthropic,
         id = "claude-3-7-sonnet",
         capabilities = listOf(

@@ -46,9 +46,9 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 
-class OpenAIClientSettings(
-    val baseUrl: String = "https://api.openai.com",
-    val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+public class OpenAIClientSettings(
+    public val baseUrl: String = "https://api.openai.com",
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
 /**
@@ -58,13 +58,13 @@ class OpenAIClientSettings(
  * @param apiKey The API key for the OpenAI API
  * @param settings The base URL and timeouts for the OpenAI API, defaults to "https://api.openai.com" and 900 s
  */
-open class OpenAILLMClient(
+public open class OpenAILLMClient(
     private val apiKey: String,
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     baseClient: HttpClient = HttpClient()
 ) : LLMClientWithEmbeddings {
 
-    companion object {
+    private companion object {
         private val logger =
             LoggerFactory.create("ai.jetbrains.code.prompt.executor.clients.openai.HttpBasedOpenAISuspendableDirectClient")
 

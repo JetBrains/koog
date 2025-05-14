@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonElement
  * Message for the chat API.
  */
 @Serializable
-data class OllamaChatMessageDTO(
+public data class OllamaChatMessageDTO(
     val role: String,
     val content: String,
     val images: List<String>? = null,
@@ -20,14 +20,14 @@ data class OllamaChatMessageDTO(
  * Tool call for the chat API.
  */
 @Serializable
-data class OllamaToolCallDTO(
+public data class OllamaToolCallDTO(
     val function: Call
 ) {
     /**
      * Tool function for the chat API.
      */
     @Serializable
-    data class Call(
+    public data class Call(
         val name: String,
         val arguments: JsonElement
     )
@@ -38,7 +38,7 @@ data class OllamaToolCallDTO(
  * Tool definition for the chat API.
  */
 @Serializable
-data class OllamaToolDTO(
+public data class OllamaToolDTO(
     val type: String,
     val function: Definition
 ) {
@@ -46,7 +46,7 @@ data class OllamaToolDTO(
      * Tool definition for the chat API.
      */
     @Serializable
-    data class Definition(
+    public data class Definition(
         val name: String,
         val description: String,
         val parameters: JsonElement
@@ -57,7 +57,7 @@ data class OllamaToolDTO(
  * Request for the /api/chat endpoint.
  */
 @Serializable
-data class OllamaChatRequestDTO(
+public data class OllamaChatRequestDTO(
     val model: String,
     val messages: List<OllamaChatMessageDTO>,
     val tools: List<OllamaToolDTO>? = null,
@@ -70,7 +70,7 @@ data class OllamaChatRequestDTO(
      * Model options for generation.
      */
     @Serializable
-    data class Options(
+    public data class Options(
         val temperature: Double? = null,
     )
 }
@@ -79,7 +79,7 @@ data class OllamaChatRequestDTO(
  * Response from the /api/chat endpoint.
  */
 @Serializable
-data class OllamaChatResponseDTO(
+public data class OllamaChatResponseDTO(
     val model: String,
     val message: OllamaChatMessageDTO? = null,
     val done: Boolean
@@ -94,7 +94,7 @@ data class OllamaChatResponseDTO(
  * @property prompt The input text for which the embedding is to be generated.
  */
 @Serializable
-data class EmbeddingRequest(
+public data class EmbeddingRequest(
     val model: String,
     val prompt: String
 )
@@ -110,7 +110,7 @@ data class EmbeddingRequest(
  * @property modelId An optional identifier for the model that generated the embedding.
  */
 @Serializable
-data class EmbeddingResponse(
+public data class EmbeddingResponse(
     val embedding: List<Double>,
     @SerialName("model") val modelId: String? = null
 )

@@ -9,11 +9,10 @@ import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.serialization.json.Json
 
-
 /**
  * Converts LLModel to Ollama model ID string.
  */
-fun LLModel.toOllamaModelId(): String = when (this.id) {
+internal fun LLModel.toOllamaModelId(): String = when (this.id) {
     OllamaModels.Meta.LLAMA_3_2.id -> "llama3.2"
     OllamaModels.Alibaba.QWQ.id -> "qwq"
     OllamaModels.Alibaba.QWEN_CODER_2_5_32B.id -> "qwen2.5-coder:32b"
@@ -23,7 +22,7 @@ fun LLModel.toOllamaModelId(): String = when (this.id) {
 /**
  * Converts a Prompt to a list of ChatMessage objects for the Ollama API.
  */
-fun Prompt.toOllamaChatMessages(): List<OllamaChatMessageDTO> {
+internal fun Prompt.toOllamaChatMessages(): List<OllamaChatMessageDTO> {
     val messages = mutableListOf<OllamaChatMessageDTO>()
     for (message in this.messages) {
         val converted = when (message) {
@@ -75,7 +74,7 @@ fun Prompt.toOllamaChatMessages(): List<OllamaChatMessageDTO> {
 /**
  * Converts a ToolDescriptor to an Ollama Tool object.
  */
-fun ToolDescriptor.toOllamaTool(): OllamaToolDTO {
+internal fun ToolDescriptor.toOllamaTool(): OllamaToolDTO {
     val jsonSchema = this.toJSONSchema()
 
     return OllamaToolDTO(
@@ -91,7 +90,7 @@ fun ToolDescriptor.toOllamaTool(): OllamaToolDTO {
 /**
  * Extracts a tool call from a ChatMessage.
  */
-fun OllamaChatMessageDTO.getToolCall(): Message.Tool.Call? {
+internal fun OllamaChatMessageDTO.getToolCall(): Message.Tool.Call? {
     if (this.toolCalls.isNullOrEmpty()) {
         return null
     }

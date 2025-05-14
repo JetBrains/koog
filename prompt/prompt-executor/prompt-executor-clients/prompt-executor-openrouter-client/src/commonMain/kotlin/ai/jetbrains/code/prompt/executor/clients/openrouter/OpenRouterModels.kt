@@ -8,7 +8,7 @@ import ai.jetbrains.code.prompt.llm.LLModel
  * OpenRouter models
  * Models available through the OpenRouter API
  */
-object OpenRouterModels {
+public object OpenRouterModels {
     private val standardCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Temperature,
         LLMCapability.Schema.JSON.Full,
@@ -20,7 +20,7 @@ object OpenRouterModels {
     /**
      * Free model for testing and development
      */
-    val Phi4Reasoning = LLModel(
+    public val Phi4Reasoning: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "microsoft/phi-4-reasoning:free",
         capabilities = standardCapabilities
@@ -30,102 +30,102 @@ object OpenRouterModels {
     private val multimodalCapabilities: List<LLMCapability> = standardCapabilities + LLMCapability.Vision
     
     // Anthropic models
-    val Claude3Opus = LLModel(
+    public val Claude3Opus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-opus",
         capabilities = multimodalCapabilities
     )
     
-    val Claude3Sonnet = LLModel(
+    public val Claude3Sonnet: LLModel = LLModel(
         provider = LLMProvider.OpenRouter, 
         id = "anthropic/claude-3-sonnet", 
         capabilities = multimodalCapabilities
     )
 
-    val Claude3Haiku = LLModel(
+    public val Claude3Haiku: LLModel = LLModel(
         provider = LLMProvider.OpenRouter, 
         id = "anthropic/claude-3-haiku", 
         capabilities = multimodalCapabilities
     )
     
     // OpenAI models
-    val GPT4 = LLModel(
+    public val GPT4: LLModel = LLModel(
         provider = LLMProvider.OpenRouter, 
         id = "openai/gpt-4", 
         capabilities = standardCapabilities
     )
     
-    val GPT4o = LLModel(
+    public val GPT4o: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-4o",
         capabilities = multimodalCapabilities
     )
     
-    val GPT4Turbo = LLModel(
+    public val GPT4Turbo: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-4-turbo",
         capabilities = multimodalCapabilities
     )
     
-    val GPT35Turbo = LLModel(
+    public val GPT35Turbo: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-3.5-turbo",
         capabilities = standardCapabilities
     )
     
     // Google models
-    val Gemini14Pro = LLModel(
+    public val Gemini14Pro: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "google/gemini-1.5-pro",
         capabilities = multimodalCapabilities
     )
     
-    val Gemini15Flash = LLModel(
+    public val Gemini15Flash: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "google/gemini-1.5-flash",
         capabilities = multimodalCapabilities
     )
     
     // Meta models
-    val Llama3 = LLModel(
+    public val Llama3: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "meta/llama-3-70b",
         capabilities = standardCapabilities
     )
     
-    val Llama3Instruct = LLModel(
+    public val Llama3Instruct: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "meta/llama-3-70b-instruct",
         capabilities = standardCapabilities
     )
     
     // Mistral models
-    val Mistral7B = LLModel(
+    public val Mistral7B: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "mistral/mistral-7b",
         capabilities = standardCapabilities
     )
     
-    val Mixtral8x7B = LLModel(
+    public val Mixtral8x7B: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "mistral/mixtral-8x7b",
         capabilities = standardCapabilities
     )
     
     // Anthropic Vision models
-    val Claude3VisionSonnet = LLModel(
+    public val Claude3VisionSonnet: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-sonnet-vision",
         capabilities = multimodalCapabilities
     )
     
-    val Claude3VisionOpus = LLModel(
+    public val Claude3VisionOpus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-opus-vision",
         capabilities = multimodalCapabilities
     )
     
-    val Claude3VisionHaiku = LLModel(
+    public val Claude3VisionHaiku: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-haiku-vision",
         capabilities = multimodalCapabilities

@@ -12,7 +12,8 @@ import kotlinx.serialization.json.put
  * Convert a ToolDescriptor to a JsonObject representation.
  */
 // TODO: duplicated code?
-fun ToolDescriptor.toJSONSchema(): JsonObject {
+// TODO: yep, should we remove it?
+private fun ToolDescriptor.toJSONSchema(): JsonObject {
     /**
      * Helper function to convert a ToolParameterDescriptor into JSON schema.
      *

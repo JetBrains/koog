@@ -25,11 +25,11 @@ import kotlin.math.absoluteValue
  * @param maxFiles The maximum number of files to store in the cache (default: 3000).
  *                When this limit is reached, the least recently accessed files will be removed.
  */
-class FilePromptCache(
+public class FilePromptCache(
     storage: Path,
     private val maxFiles: Int? = 3000
 ) : PromptCache {
-    class Factory(val default: Path) : PromptCache.Factory.Named("file") {
+    public class Factory(private val default: Path) : PromptCache.Factory.Named("file") {
         override fun create(config: String): PromptCache {
             val parts = elements(config)
             val path = when {

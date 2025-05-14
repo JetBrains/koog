@@ -28,13 +28,12 @@ import kotlin.time.Duration.Companion.seconds
  * @param client The Redis client to use for connecting to Redis
  */
 @OptIn(ExperimentalLettuceCoroutinesApi::class)
-class RedisPromptCache(
+public class RedisPromptCache(
     private val client: RedisClient,
     private val prefix: String,
     private val ttl: Duration,
 ) : PromptCache {
-
-    companion object : PromptCache.Factory.Named("redis") {
+    public companion object : PromptCache.Factory.Named("redis") {
         private val logger = LoggerFactory.create(RedisPromptCache::class)
 
         private const val DEFAULT_URI = "redis://localhost:6379"
@@ -132,7 +131,7 @@ class RedisPromptCache(
      * Closes the Redis connection.
      * This method should be called when the cache is no longer needed.
      */
-    fun close() {
+    public fun close() {
         connection.close()
         client.shutdown()
     }
@@ -141,4 +140,4 @@ class RedisPromptCache(
 /**
  * Exception thrown when there is an error with Redis cache operations.
  */
-class RedisCacheException(message: String, cause: Throwable? = null) : Exception(message, cause)
+public class RedisCacheException(message: String, cause: Throwable? = null) : Exception(message, cause)
