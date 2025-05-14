@@ -50,6 +50,9 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":agents:agents-core"))
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
+                implementation(project(":agents:agents-features:agents-features-trace"))
             }
         }
     }
