@@ -10,10 +10,10 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.utils.use
 import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.OllamaModels

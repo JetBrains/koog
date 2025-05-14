@@ -4,7 +4,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
-import ai.grazie.code.agents.local.features.common.message.use
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlin.js.JsName

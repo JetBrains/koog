@@ -2,8 +2,8 @@ package ai.grazie.code.agents.local.features.writer
 
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
-import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.common.writer.FeatureMessageFileWriter
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll

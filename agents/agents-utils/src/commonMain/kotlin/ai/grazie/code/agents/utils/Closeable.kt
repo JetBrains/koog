@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.local.features.common.message
+package ai.grazie.code.agents.utils.ai.grazie.code.agents.utils
 
 /**
  * Represents a resource or entity that can be closed to release any associated resources.
