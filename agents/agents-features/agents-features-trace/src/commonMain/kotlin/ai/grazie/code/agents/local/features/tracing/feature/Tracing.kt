@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.local.features.tracing.feature
 
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
-import ai.grazie.code.agents.core.feature.AgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.core.feature.model.*
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
@@ -27,7 +27,7 @@ import ai.jetbrains.code.prompt.message.Message
  * 
  * Example of installing tracing to an agent:
  * ```kotlin
- * val agent = AIAgentBase(
+ * val agent = AIAgent(
  *     promptExecutor = executor,
  *     strategy = strategy,
  *     // other parameters...
@@ -66,13 +66,13 @@ class Tracing {
     /**
      * Feature implementation for the Tracing functionality.
      * 
-     * This companion object implements [KotlinAIAgentFeature] and provides methods for creating
+     * This companion object implements [AIAgentFeature] and provides methods for creating
      * an initial configuration and installing the tracing feature in an agent pipeline.
      * 
      * To use tracing in your agent, install it during agent creation:
      * 
      * ```kotlin
-     * val agent = AIAgentBase(...) {
+     * val agent = AIAgent(...) {
      *     install(Tracing) {
      *         // Configure tracing here
      *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
@@ -80,19 +80,19 @@ class Tracing {
      * }
      * ```
      */
-    companion object Feature : KotlinAIAgentFeature<TraceFeatureConfig, Tracing> {
+    companion object Feature : AIAgentFeature<TraceFeatureConfig, Tracing> {
 
         private val logger: MPPLogger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.tracing.feature.TracingFeature")
 
-        override val key: LocalAgentStorageKey<Tracing> =
-            LocalAgentStorageKey("agents-features-tracing")
+        override val key: AIAgentStorageKey<Tracing> =
+            AIAgentStorageKey("agents-features-tracing")
 
         override fun createInitialConfig() = TraceFeatureConfig()
 
         override fun install(
             config: TraceFeatureConfig,
-            pipeline: AgentPipeline,
+            pipeline: AIAgentPipeline,
         ) {
             logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 
@@ -105,7 +105,7 @@ class Tracing {
             //region Intercept Agent Events
 
             pipeline.interceptAgentCreated(this, featureImpl) intercept@{
-                val event = AgentCreateEvent(
+                val event = AIAgentCreateEvent(
                     strategyName = strategy.name,
                 )
                 readStages { _ ->
@@ -114,14 +114,14 @@ class Tracing {
             }
 
             pipeline.interceptAgentStarted(this, featureImpl) intercept@{ strategyName ->
-                val event = AgentStartedEvent(
+                val event = AIAgentStartedEvent(
                     strategyName = strategyName,
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptAgentFinished(this, featureImpl) intercept@{ strategyName, result ->
-                val event = AgentFinishedEvent(
+                val event = AIAgentFinishedEvent(
                     strategyName = strategyName,
                     result = result,
                 )
@@ -129,7 +129,7 @@ class Tracing {
             }
 
             pipeline.interceptAgentRunError(this, featureImpl) intercept@{ strategyName, throwable ->
-                val event = AgentRunErrorEvent(
+                val event = AIAgentRunErrorEvent(
                     strategyName = strategyName,
                     error = throwable.toAgentError(),
                 )
@@ -141,14 +141,14 @@ class Tracing {
             //region Intercept Strategy Events
 
             pipeline.interceptStrategyStarted(this, featureImpl) intercept@{
-                val event = StrategyStartEvent(
+                val event = AIAgentStrategyStartEvent(
                     strategyName = strategy.name,
                 )
                 readStages { _ -> processMessage(config, event) }
             }
 
             pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ strategyName, result ->
-                val event = StrategyFinishedEvent(
+                val event = AIAgentStrategyFinishedEvent(
                     strategyName = strategyName,
                     result = result,
                 )
@@ -159,8 +159,8 @@ class Tracing {
 
             //region Intercept Node Events
 
-            pipeline.interceptBeforeNode(this, featureImpl) intercept@{ node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any? ->
-                val event = NodeExecutionStartEvent(
+            pipeline.interceptBeforeNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? ->
+                val event = AIAgentNodeExecutionStartEvent(
                     nodeName = node.name,
                     stageName = context.stageName,
                     input = input?.toString() ?: ""
@@ -168,8 +168,8 @@ class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptAfterNode(this, featureImpl) intercept@{ node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any? ->
-                val event = NodeExecutionEndEvent(
+            pipeline.interceptAfterNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? ->
+                val event = AIAgentNodeExecutionEndEvent(
                     nodeName = node.name,
                     stageName = context.stageName,
                     input = input?.toString() ?: "",

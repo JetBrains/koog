@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.local.features.eventHandler.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.entity.LocalAgentNode
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
@@ -24,7 +24,7 @@ class EventHandlerTest {
     private val collectedEvents = mutableListOf<String>()
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onAgentCreated = { strategy: LocalAgentStrategy, agent: AIAgentBase ->
+        onAgentCreated = { strategy: AIAgentStrategy, agent: AIAgent ->
             collectedEvents.add("OnAgentCreated (strategy: ${strategy.name})")
         }
 
@@ -40,7 +40,7 @@ class EventHandlerTest {
             collectedEvents.add("OnAgentRunError (strategy: $strategyName, throwable: ${throwable.message})")
         }
 
-        onStrategyStarted = { strategy: LocalAgentStrategy ->
+        onStrategyStarted = { strategy: AIAgentStrategy ->
             collectedEvents.add("OnStrategyStarted (strategy: ${strategy.name})")
         }
 
@@ -48,11 +48,11 @@ class EventHandlerTest {
             collectedEvents.add("OnStrategyFinished (strategy: $strategyName, result: $result)")
         }
 
-        onBeforeNode = { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any? ->
+        onBeforeNode = { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? ->
             collectedEvents.add("OnBeforeNode (node: ${node.name}, input: $input)")
         }
 
-        onAfterNode = { node: LocalAgentNode<*, *>, context: LocalAgentStageContext, input: Any?, output: Any? ->
+        onAfterNode = { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? ->
             collectedEvents.add("OnAfterNode (node: ${node.name}, input: $input, output: $output)")
         }
 

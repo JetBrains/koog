@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.core.feature.handler
 
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStage
-import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStage
+import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 
 /**
  * Feature implementation for agent and strategy interception.
@@ -52,7 +52,7 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      *
      * @param environment The AgentEnvironment to be transformed
      */
-    public fun transformEnvironment(context: AgentCreateContext<FeatureT>, environment: AgentEnvironment): AgentEnvironment =
+    public fun transformEnvironment(context: AgentCreateContext<FeatureT>, environment: AIAgentEnvironment): AIAgentEnvironment =
         environmentTransformer.transform(context, environment)
 
     /**
@@ -61,7 +61,7 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      * @param environment The AgentEnvironment to be transformed
      */
     @Suppress("UNCHECKED_CAST")
-    internal fun transformEnvironmentUnsafe(context: AgentCreateContext<*>, environment: AgentEnvironment) =
+    internal fun transformEnvironmentUnsafe(context: AgentCreateContext<*>, environment: AIAgentEnvironment) =
         transformEnvironment(context as AgentCreateContext<FeatureT>, environment)
 
     /**
@@ -106,7 +106,7 @@ public fun interface AgentEnvironmentTransformer<FeatureT : Any> {
      * @param environment The current agent environment to be transformed
      * @return The transformed agent environment
      */
-    public fun transform(context: AgentCreateContext<FeatureT>, environment: AgentEnvironment): AgentEnvironment
+    public fun transform(context: AgentCreateContext<FeatureT>, environment: AIAgentEnvironment): AIAgentEnvironment
 }
 
 public fun interface AgentStartedHandler {
@@ -122,20 +122,20 @@ public fun interface AgentRunErrorHandler {
 }
 
 public class AgentCreateContext<FeatureT>(
-    public val strategy: LocalAgentStrategy,
-    public val agent: AIAgentBase,
+    public val strategy: AIAgentStrategy,
+    public val agent: AIAgent,
     public val feature: FeatureT
 ) {
-    public suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
+    public suspend fun readStages(block: suspend (List<AIAgentStage>) -> Unit) {
         block(strategy.stages)
     }
 }
 
 public class StrategyUpdateContext<FeatureT>(
-    public val strategy: LocalAgentStrategy,
+    public val strategy: AIAgentStrategy,
     public val feature: FeatureT
 ) {
-    public suspend fun readStages(block: suspend (List<LocalAgentStage>) -> Unit) {
+    public suspend fun readStages(block: suspend (List<AIAgentStage>) -> Unit) {
         block(strategy.stages)
     }
 }

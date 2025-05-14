@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -395,7 +395,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         fs: MockFileSystem,
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int
-    ): AIAgentBase {
+    ): AIAgent {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
@@ -478,11 +478,11 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
 
         // Create the agent
-        return AIAgentBase(
+        return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(Tracing) {
@@ -566,11 +566,11 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
+            agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools,
         ) {
             install(Tracing) {
@@ -652,11 +652,11 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
+            agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools
         ) {
             install(Tracing) {
@@ -737,11 +737,11 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         val tools = ToolRegistry {}
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test") {}, AnthropicModels.Sonnet_3_7, 15),
+            agentConfig = AIAgentConfig(prompt("test") {}, AnthropicModels.Sonnet_3_7, 15),
             toolRegistry = tools
         ) {
             install(Tracing) {
@@ -867,11 +867,11 @@ class KotlinAIAgentWithMultipleLLMTest {
             }
         }
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
             cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
+            agentConfig = AIAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
             toolRegistry = tools
         ) {
             install(Tracing) {

@@ -2,8 +2,8 @@ package ai.grazie.code.agents.example.structureddata
 
 import ai.grazie.code.agents.core.tools.SimpleToolRegistry
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -50,13 +50,13 @@ fun main() = runBlocking {
         tool(BookTool())
     }
 
-    val agentConfig = LocalAgentConfig.withSystemPrompt(
+    val agentConfig = AIAgentConfig.withSystemPrompt(
         prompt = """
             You're AI library assistant. Please provide users with comprehensive and structured information about the books of the world.
         """.trimIndent()
     )
 
-    val runner = AIAgentBase(
+    val runner = AIAgent(
         promptExecutor = executor,
         strategy = agentStrategy, // no tools needed for this example
         cs = this,

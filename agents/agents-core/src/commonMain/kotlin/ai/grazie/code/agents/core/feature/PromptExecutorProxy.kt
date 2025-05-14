@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.Flow
  * to catch and log events related to LLM calls.
  *
  * @property executor The [ai.jetbrains.code.prompt.executor.model.PromptExecutor] to wrap.
- * @property pipeline The [AgentPipeline] associated with the executor.
+ * @property pipeline The [AIAgentPipeline] associated with the executor.
  */
 public class PromptExecutorProxy(
     private val executor: PromptExecutor,
-    private val pipeline: AgentPipeline
+    private val pipeline: AIAgentPipeline
 ) : PromptExecutor {
 
     private companion object {

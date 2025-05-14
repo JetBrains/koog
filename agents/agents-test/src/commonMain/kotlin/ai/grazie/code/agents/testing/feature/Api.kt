@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.testing.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
+import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
 
 /**
  * Configures the Testing feature for graph testing.

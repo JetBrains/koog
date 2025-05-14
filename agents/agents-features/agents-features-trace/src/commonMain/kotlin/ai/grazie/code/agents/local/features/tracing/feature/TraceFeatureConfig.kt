@@ -12,7 +12,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureMessage
  * 
  * Example usage:
  * ```kotlin
- * val agent = AIAgentBase(...) {
+ * val agent = AIAgent(...) {
  *     install(Tracing) {
  *         // Add message processors to handle trace events
  *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))

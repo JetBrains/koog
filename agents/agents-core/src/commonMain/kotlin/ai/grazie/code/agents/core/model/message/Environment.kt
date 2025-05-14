@@ -2,8 +2,8 @@ package ai.grazie.code.agents.core.model.message
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
+import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
 
 /**
  * Represents the content of a message used to initialize a AI agent environment.
@@ -12,12 +12,12 @@ import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
  *
  * @property agentId Unique identifier for the agent being initialized.
  * @property message A message providing context or additional details about the initialization.
- * @property config Configuration settings specific to the AI agent, encapsulated in the `LocalAgentConfig` class.
+ * @property config Configuration settings specific to the AI agent, encapsulated in the `AIAgentConfig` class.
  */
-public data class LocalAgentEnvironmentInitializeMessageContent(
+public data class AIAgentEnvironmentInitializeMessageContent(
     override val agentId: String,
     override val message: String,
-    val config: LocalAgentConfig
+    val config: AIAgentConfig
 ) : EnvironmentInitializeToAgentContent()
 
 /**
@@ -28,10 +28,10 @@ public data class LocalAgentEnvironmentInitializeMessageContent(
  * @property toolsForStages A mapping of stage identifiers to the list of tool descriptors available for each stage.
  * @property agent The strategy or behavior implementation that the AI agent will use.
  */
-public data class LocalAgentEnvironmentToAgentInitializeMessage(
-    override val content: LocalAgentEnvironmentInitializeMessageContent,
+public data class AIAgentEnvironmentToAgentInitializeMessage(
+    override val content: AIAgentEnvironmentInitializeMessageContent,
     val toolsForStages: Map<String, List<ToolDescriptor>>,
-    val agent: LocalAgentStrategy,
+    val agent: AIAgentStrategy,
 ) : EnvironmentInitializeToAgentMessage()
 
 /**
@@ -45,7 +45,7 @@ public data class LocalAgentEnvironmentToAgentInitializeMessage(
  * @property message Output message describing the result of the tool execution.
  * @property toolResult The result of the tool call, encapsulated as an optional `ToolResult` object.
  */
-public data class LocalAgentEnvironmentToolResultToAgentContent(
+public data class AIAgentEnvironmentToolResultToAgentContent(
     override val toolCallId: String?,
     override val toolName: String,
     override val agentId: String,

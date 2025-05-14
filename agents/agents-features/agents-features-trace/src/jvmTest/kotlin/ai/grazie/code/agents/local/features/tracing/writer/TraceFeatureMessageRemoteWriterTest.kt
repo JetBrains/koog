@@ -4,8 +4,8 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.feature.model.*
-import ai.grazie.code.agents.core.feature.remote.client.config.AgentFeatureClientConnectionConfig
-import ai.grazie.code.agents.core.feature.remote.server.config.AgentFeatureServerConnectionConfig
+import ai.grazie.code.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
+import ai.grazie.code.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
 import ai.grazie.code.agents.local.features.common.message.use
@@ -43,8 +43,8 @@ class TraceFeatureMessageRemoteWriterTest {
     fun `test health check on agent run`() = runBlocking {
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isServerStarted = CompletableDeferred<Boolean>()
         val isClientFinished = CompletableDeferred<Boolean>()
@@ -106,25 +106,25 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
-            AgentCreateEvent(strategyName = strategyName),
-            AgentStartedEvent(strategyName = strategyName),
-            StrategyStartEvent(strategyName = strategyName),
-            NodeExecutionStartEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString()),
-            NodeExecutionEndEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString(), output = Unit::class.qualifiedName.toString()),
-            NodeExecutionStartEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt"),
+            AIAgentCreateEvent(strategyName = strategyName),
+            AIAgentStartedEvent(strategyName = strategyName),
+            AIAgentStrategyStartEvent(strategyName = strategyName),
+            AIAgentNodeExecutionStartEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString()),
+            AIAgentNodeExecutionEndEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString(), output = Unit::class.qualifiedName.toString()),
+            AIAgentNodeExecutionStartEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt"),
             LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy", "__tools_list__")),
             LLMCallWithToolsEndEvent(responses = listOf("Default test response"), tools = listOf("dummy", "__tools_list__")),
-            NodeExecutionEndEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt", output = "Assistant(content=Default test response)"),
-            NodeExecutionStartEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt"),
+            AIAgentNodeExecutionEndEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt", output = "Assistant(content=Default test response)"),
+            AIAgentNodeExecutionStartEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt"),
             LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy", "__tools_list__")),
             LLMCallWithToolsEndEvent(responses = listOf("Default test response"), tools = listOf("dummy", "__tools_list__")),
-            NodeExecutionEndEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt", output = "Assistant(content=Default test response)"),
-            StrategyFinishedEvent(strategyName = strategyName, result = "Done"),
-            AgentFinishedEvent(strategyName = strategyName, result = "Done"),
+            AIAgentNodeExecutionEndEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt", output = "Assistant(content=Default test response)"),
+            AIAgentStrategyFinishedEvent(strategyName = strategyName, result = "Done"),
+            AIAgentFinishedEvent(strategyName = strategyName, result = "Done"),
         )
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
@@ -205,8 +205,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<FeatureMessage>()
 
@@ -290,8 +290,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
             LLMCallWithToolsStartEvent("Test user message", listOf("dummy", "__tools_list__")),
