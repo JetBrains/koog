@@ -56,8 +56,9 @@ class SimpleAgentIntegrationTest {
     }
 
 
+    // ToDo add parametrisation for different LLMs
     @Test
-    fun `simpleChatAgent should call default tools`() = runBlockingWithToken {
+    fun integration_simpleChatAgentShouldCallDefaultTools() = runBlockingWithToken {
         val agent = simpleChatAgent(
             executor = simpleOpenAIExecutor(apiToken),
             systemPrompt = systemPrompt,
@@ -72,7 +73,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @Test
-    fun `simpleChatAgent should call a custom tool`() = runBlockingWithToken {
+    fun integration_simpleChatAgentShouldCallCustomTools() = runBlockingWithToken {
         val toolRegistry = ToolRegistry {
             stage {
                 tool(SayToUser)
@@ -96,7 +97,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should not call tools by default`() = runBlockingWithToken {
+    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault() = runBlockingWithToken {
         val agent = simpleSingleRunAgent(
             executor = simpleOpenAIExecutor(apiToken),
             systemPrompt = systemPrompt,
@@ -113,7 +114,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should call a custom tool`() = runBlockingWithToken {
+    fun integration_simpleSingleRunAgentShouldCallCustomTool() = runBlockingWithToken {
         val toolRegistry = ToolRegistry {
             stage {
                 tool(SayToUser)

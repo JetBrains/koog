@@ -24,7 +24,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
 
     @Test
-    fun testExecuteWithOpenAI_integration() = runTest {
+    fun integration_testExecuteWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -48,7 +48,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testExecuteWithAnthropic_integration() = runTest {
+    fun integration_testExecuteWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -72,7 +72,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testExecuteStreamingWithOpenAI_integration() = runTest {
+    fun integration_testExecuteStreamingWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -102,7 +102,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testExecuteStreamingWithAnthropic_integration() = runTest {
+    fun integration_testExecuteStreamingWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -132,7 +132,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testCodeGenerationWithOpenAI_integration() = runTest {
+    fun integration_testCodeGenerationWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -156,7 +156,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testCodeGenerationWithAnthropic_integration() = runTest {
+    fun integration_testCodeGenerationWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -180,7 +180,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testToolsWithRequiredParams_integration() = runTest {
+    fun integration_testToolsWithRequiredParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -228,7 +228,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testToolsWithRequiredOptionalParams_integration() = runTest {
+    fun integration_testToolsWithRequiredOptionalParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -283,7 +283,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testToolsWithOptionalParams_integration() = runTest {
+    fun integration_testToolsWithOptionalParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -337,7 +337,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testToolsWithNoParams_integration() = runTest {
+    fun integration_testToolsWithNoParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -376,7 +376,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testToolsWithListEnumParams_integration() = runTest {
+    fun integration_testToolsWithListEnumParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -416,7 +416,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testToolsWithNestedListParams_integration() = runTest {
+    fun integration_testToolsWithNestedListParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -457,7 +457,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testOpenAIRawStringStreaming_integration() = runTest(timeout = 600.seconds) {
+    fun integration_testOpenAIRawStringStreaming() = runTest(timeout = 600.seconds) {
         val openAIClient = OpenAILLMClient(openAIApiKey)
 
         val model = OpenAIModels.Chat.GPT4o
@@ -486,7 +486,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testAnthropicRawStringStreaming_integration() = runTest(timeout = 600.seconds) {
+    fun integration_testAnthropicRawStringStreaming() = runTest(timeout = 600.seconds) {
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val model = AnthropicModels.Sonnet_3_7
@@ -516,7 +516,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testOpenAIStructuredDataStreaming_integration() = runTest {
+    fun integration_testOpenAIStructuredDataStreaming() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()
@@ -553,7 +553,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @Test
-    fun testAnthropicStructuredDataStreaming_integration() = runTest {
+    fun integration_testAnthropicStructuredDataStreaming() = runTest {
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()

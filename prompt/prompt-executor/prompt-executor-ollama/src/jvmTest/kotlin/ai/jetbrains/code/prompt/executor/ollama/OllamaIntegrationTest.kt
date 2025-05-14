@@ -147,7 +147,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun `test agent with Ollama executor and CLEAR_LLM_HISTORY policy`() = runTest {
+    fun integration_testOllamaAgentClearContext() = runTest {
         val strategy = createTestStrategy("clear", ContextTransitionPolicy.CLEAR_LLM_HISTORY)
         val toolRegistry = createStageSpecificToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
@@ -159,7 +159,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun `test agent with Ollama executor and PERSIST_LLM_HISTORY policy`() = runTest {
+    fun integration_testOllamaAgentPersistContext() = runTest {
         val strategy = createTestStrategy("persist", ContextTransitionPolicy.PERSIST_LLM_HISTORY)
         val toolRegistry = createStageSpecificToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
@@ -172,7 +172,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun `test agent with Ollama executor and COMPRESS_LLM_HISTORY policy`() = runTest {
+    fun integration_testOllamaAgentCompressContext() = runTest {
         val strategy = createTestStrategy("compress", ContextTransitionPolicy.COMPRESS_LLM_HISTORY)
         val toolRegistry = createStageSpecificToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)

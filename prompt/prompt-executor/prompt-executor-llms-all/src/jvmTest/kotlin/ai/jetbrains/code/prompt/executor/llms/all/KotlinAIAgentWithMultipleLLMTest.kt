@@ -28,7 +28,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Disabled
 import kotlin.coroutines.coroutineContext
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
@@ -286,10 +285,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
     }
 
-    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-    @Disabled("This test requires valid API keys")
     @Test
-    fun testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+    fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
@@ -350,10 +347,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         )
     }
 
-    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-    @Disabled("This test requires valid API keys")
     @Test
-    fun testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
+    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         var errorMessage: String? = null
@@ -492,9 +487,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
     }
 
-    @Disabled
     @Test
-    fun `test agent with openAI and Anthropic clients`() = runTest {
+    fun integration_testOpenAIAnthropicAgent() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -597,9 +591,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertNotNull(result)
     }
 
-    @Disabled
     @Test
-    fun `test agent with openAI client only`() = runTest {
+    fun integration_testOpenAIAgent() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
 
         val executor = MultiLLMPromptExecutor(
@@ -682,9 +675,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertNotNull(result)
     }
 
-    @Disabled
     @Test
-    fun `test agent with Anthropic client only`() = runTest {
+    fun integration_testAnthropicAgent() = runTest {
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
         val executor = MultiLLMPromptExecutor(
             LLMProvider.Anthropic to anthropicClient
@@ -766,9 +758,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertNotNull(result)
     }
 
-    @Disabled
     @Test
-    fun `test agent with openAI and Anthropic with tools`() = runTest(timeout = 300.seconds) {
+    fun integration_testOpenAIAnthropicAgentWithTools() = runTest(timeout = 300.seconds) {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -936,10 +927,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         }.let(ToolResult::Number)
     }
 
-    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-    @Disabled("This test requires valid API keys")
     @Test
-    fun `test enum serialization in agents for Anthropic`() {
+    fun integration_testAnthropicAgentEnumSerialization() {
         runBlocking {
             val a = simpleSingleRunAgent(
                 executor = simpleAnthropicExecutor(anthropicApiKey),

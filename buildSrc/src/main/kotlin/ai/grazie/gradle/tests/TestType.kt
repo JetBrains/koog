@@ -12,7 +12,7 @@ enum class TestType(
     PERFORMANCE("*.prf_*", "prf", parallelism = false),
     GPU("*.gpu_*", "gpu", maxHeapForJvm = "2g"),
     CLIENT("*.client_*", "client"),
-    INTEGRATION("*._integration*", "integration");
+    INTEGRATION("*.integration_*", "integration");
 
     companion object {
         internal val testTypesWithoutMain = TestType.values().asList().minus(DEFAULT)
