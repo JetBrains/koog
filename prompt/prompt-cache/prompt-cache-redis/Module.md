@@ -1,4 +1,4 @@
-# Module prompt:prompt-cache:prompt-cache-redis
+# Module prompt-cache-redis
 
 A Redis-based implementation of the PromptCache interface for storing prompt execution results in a Redis database.
 

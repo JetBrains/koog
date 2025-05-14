@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client
+# Module prompt-executor-openai-client
 
 A client implementation for executing prompts using OpenAI's GPT models.
 

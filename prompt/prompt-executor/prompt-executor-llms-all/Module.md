@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-llms-all
+# Module prompt-executor-llms-all
 
 A comprehensive module that provides unified access to multiple LLM providers (OpenAI, Anthropic, OpenRouter) for prompt execution.
 

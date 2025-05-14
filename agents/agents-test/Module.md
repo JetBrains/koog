@@ -1,4 +1,4 @@
-# Module agents:agents-test
+# Module agents-test
 
 Comprehensive testing utilities for AI agents, providing mocking capabilities and validation tools for agent behavior.
 

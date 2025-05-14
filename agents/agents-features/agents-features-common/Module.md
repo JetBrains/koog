@@ -1,4 +1,4 @@
-# Module agents:agents-features:agents-features-common
+# Module agents-features-common
 
 Provides common infrastructure and utilities for implementing agent features, including configuration, messaging, and I/O capabilities.
 

@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-model
+# Module prompt-executor-model
 
 Core interfaces and models for executing prompts against language models.
 

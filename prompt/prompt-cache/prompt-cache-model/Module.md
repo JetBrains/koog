@@ -1,4 +1,4 @@
-# Module prompt:prompt-cache:prompt-cache-model
+# Module prompt-cache-model
 
 Core interfaces and models for caching prompt execution results with an in-memory implementation.
 

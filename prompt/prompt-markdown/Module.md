@@ -1,4 +1,4 @@
-# Module prompt:prompt-markdown
+# Module prompt-markdown
 
 A utility module for creating and manipulating Markdown content with a fluent builder API.
 

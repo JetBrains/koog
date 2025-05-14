@@ -1,4 +1,4 @@
-# Module prompt:prompt-llm
+# Module prompt-llm
 
 A module that provides abstractions and implementations for working with Large Language Models (LLMs) from various providers.
 

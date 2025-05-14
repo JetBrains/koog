@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-llms
+# Module prompt-executor-llms
 
 Implementations of PromptExecutor for executing prompts with Large Language Models (LLMs).
 

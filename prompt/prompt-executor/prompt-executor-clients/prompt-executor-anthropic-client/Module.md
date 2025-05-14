@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client
+# Module prompt-executor-anthropic-client
 
 A client implementation for executing prompts using Anthropic's Claude models.
 

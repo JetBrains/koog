@@ -1,4 +1,4 @@
-# Module agents:agents-core
+# Module agents-core
 
 Core library for building and executing AI agents with a graph-based architecture.
 

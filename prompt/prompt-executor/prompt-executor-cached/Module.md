@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-cached
+# Module prompt-executor-cached
 
 A caching wrapper for PromptExecutor that stores and retrieves responses to avoid redundant LLM calls.
 

@@ -1,4 +1,4 @@
-# Module embeddings:embeddings-base
+# Module embeddings-base
 
 A foundational module that provides core interfaces and data structures for representing and comparing text and code embeddings.
 

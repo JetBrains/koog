@@ -1,4 +1,4 @@
-# Module agents:agents-features:agents-features-memory
+# Module agents-features-memory
 
 Provides `AgentMemory` feature that allows to store and persist facts from LLM history between agent runs and even
 between multiple agents

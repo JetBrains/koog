@@ -1,4 +1,4 @@
-# Module prompt:prompt-cache:prompt-cache-files
+# Module prompt-cache-files
 
 A file-based implementation of the PromptCache interface for storing prompt execution results in the file system.
 

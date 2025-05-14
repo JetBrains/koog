@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client
+# Module prompt-executor-openrouter-client
 
 A client implementation for executing prompts using OpenRouter's API to access various LLM providers.
 

@@ -1,4 +1,4 @@
-# Module agents:agents-tools
+# Module agents-tools
 
 A module that provides a framework for defining, describing, and executing tools that can be used by AI agents to interact with the environment.
 

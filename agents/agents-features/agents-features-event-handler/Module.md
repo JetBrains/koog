@@ -1,4 +1,4 @@
-# Module agents:agents-features:agents-features-event-handler
+# Module agents-features-event-handler
 
 Provides `EventHandler` feature that allows to listen and react to events in the agent execution.
 
