@@ -817,7 +817,7 @@ class Testing {
                 feature.stages.addAll(config.getStages())
                 feature.stagesOrder = config.getStagesOrder()
 
-                pipeline.interceptAgentCreated(this, feature) {
+                pipeline.interceptBeforeAgentStarted(this, feature) {
                     readStages { stages ->
                         // Verify stages order if specified
                         feature.stagesOrder?.let { expectedOrder ->

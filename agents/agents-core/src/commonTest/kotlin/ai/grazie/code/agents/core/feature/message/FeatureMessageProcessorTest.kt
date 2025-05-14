@@ -67,19 +67,4 @@ class FeatureMessageProcessorTest {
 
         assertTrue(processor.isClose)
     }
-
-    @Test @JsName("testIsReadyPropertyIsInitiallyNotCompleted")
-    fun `test isReady property is initially not completed`() = runTest {
-        val processor = TestFeatureMessageProcessor()
-        assertFalse(processor.isReady.isCompleted)
-    }
-
-    @Test @JsName("testIsReadyPropertyIsCompletedAfterInitializeCall")
-    fun `test isReady property is completed after initialize() call`() = runTest {
-        TestFeatureMessageProcessor().use { processor ->
-            processor.initialize()
-            assertTrue(processor.isReady.isCompleted)
-            assertTrue(processor.isReady.await())
-        }
-    }
 }

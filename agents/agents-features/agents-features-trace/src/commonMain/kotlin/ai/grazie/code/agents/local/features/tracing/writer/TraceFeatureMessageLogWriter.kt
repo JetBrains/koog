@@ -65,9 +65,6 @@ class TraceFeatureMessageLogWriter(
         val FeatureStringMessage.featureStringMessage
             get() = "Feature string message (message: ${this.message})"
 
-        val AIAgentCreateEvent.agentCreateEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName})"
-
         val AIAgentStartedEvent.agentStartedEventFormat
             get() = "${this.eventId} (strategy name: ${this.strategyName})"
 
@@ -120,25 +117,24 @@ class TraceFeatureMessageLogWriter(
         }
 
         return when (this) {
-            is AIAgentCreateEvent           -> { this.agentCreateEventFormat }
-            is AIAgentStartedEvent          -> { this.agentStartedEventFormat }
-            is AIAgentFinishedEvent         -> { this.agentFinishedEventFormat }
-            is AIAgentRunErrorEvent         -> { this.agentRunErrorEventFormat}
-            is AIAgentStrategyStartEvent         -> { this.strategyStartEventFormat }
-            is AIAgentStrategyFinishedEvent      -> { this.strategyFinishedEventFormat }
-            is LLMCallStartEvent          -> { this.llmCallStartEventFormat}
-            is LLMCallEndEvent            -> { this.llmCallEndEventFormat}
-            is LLMCallWithToolsStartEvent -> { this.llmCallWithToolsStartEventFormat }
-            is LLMCallWithToolsEndEvent   -> { this.llmCallWithToolsEndEventFormat }
-            is ToolCallEvent              -> { this.toolCallEventFormat }
-            is ToolValidationErrorEvent   -> { this.toolValidationErrorEventFormat }
-            is ToolCallFailureEvent       -> { this.toolCallFailureEventFormat }
-            is ToolCallResultEvent        -> { this.toolCallResultEventFormat }
-            is AIAgentNodeExecutionStartEvent    -> { this.nodeExecutionStartEventFormat }
-            is AIAgentNodeExecutionEndEvent      -> { this.nodeExecutionEndEventFormat }
-            is FeatureStringMessage       -> { this.featureStringMessage }
-            is FeatureEvent               -> { this.featureEvent }
-            else                          -> { this.featureMessage }
+            is AIAgentStartedEvent            -> { this.agentStartedEventFormat }
+            is AIAgentFinishedEvent           -> { this.agentFinishedEventFormat }
+            is AIAgentRunErrorEvent           -> { this.agentRunErrorEventFormat}
+            is AIAgentStrategyStartEvent      -> { this.strategyStartEventFormat }
+            is AIAgentStrategyFinishedEvent   -> { this.strategyFinishedEventFormat }
+            is LLMCallStartEvent              -> { this.llmCallStartEventFormat}
+            is LLMCallEndEvent                -> { this.llmCallEndEventFormat}
+            is LLMCallWithToolsStartEvent     -> { this.llmCallWithToolsStartEventFormat }
+            is LLMCallWithToolsEndEvent       -> { this.llmCallWithToolsEndEventFormat }
+            is ToolCallEvent                  -> { this.toolCallEventFormat }
+            is ToolValidationErrorEvent       -> { this.toolValidationErrorEventFormat }
+            is ToolCallFailureEvent           -> { this.toolCallFailureEventFormat }
+            is ToolCallResultEvent            -> { this.toolCallResultEventFormat }
+            is AIAgentNodeExecutionStartEvent -> { this.nodeExecutionStartEventFormat }
+            is AIAgentNodeExecutionEndEvent   -> { this.nodeExecutionEndEventFormat }
+            is FeatureStringMessage           -> { this.featureStringMessage }
+            is FeatureEvent                   -> { this.featureEvent }
+            else                              -> { this.featureMessage }
         }
     }
 }

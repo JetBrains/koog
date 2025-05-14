@@ -43,7 +43,6 @@ class FeatureMessageRemoteWriterTest {
 
         val writer = TestFeatureMessageRemoteWriter(serverConfig)
         assertFalse(writer.isOpen)
-        assertFalse(writer.isReady.isCompleted)
     }
 
     @Test
@@ -69,8 +68,6 @@ class FeatureMessageRemoteWriterTest {
         TestFeatureMessageRemoteWriter(serverConfig).use { writer ->
             writer.initialize()
             assertTrue(writer.isOpen)
-            assertTrue(writer.isReady.isCompleted)
-            assertTrue(writer.isReady.getCompleted())
         }
     }
 
@@ -83,14 +80,10 @@ class FeatureMessageRemoteWriterTest {
             writer.initialize()
             writer.initialize()
             assertTrue(writer.isOpen)
-            assertTrue(writer.isReady.isCompleted)
-            assertTrue(writer.isReady.getCompleted())
         }
     }
 
     //endregion Initialize
-
-
 
     //region Health Check
 

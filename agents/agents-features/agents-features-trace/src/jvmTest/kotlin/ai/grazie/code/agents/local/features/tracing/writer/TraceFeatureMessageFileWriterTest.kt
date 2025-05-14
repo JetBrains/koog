@@ -46,7 +46,6 @@ class TraceFeatureMessageFileWriterTest {
             agent.run("")
 
             val expectedMessages = listOf(
-                "${AIAgentCreateEvent::class.simpleName} (strategy name: $strategyName)",
                 "${AIAgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
                 "${AIAgentStrategyStartEvent::class.simpleName} (strategy name: $strategyName)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit)",
@@ -83,12 +82,12 @@ class TraceFeatureMessageFileWriterTest {
 
         val messagesToProcess = listOf(
             FeatureStringMessage("Test string message"),
-            AIAgentCreateEvent("test strategy")
+            AIAgentStartedEvent("test strategy")
         )
 
         val expectedMessages = listOf(
             "CUSTOM STRING. Test string message",
-            "CUSTOM EVENT. ${AIAgentCreateEvent::class.simpleName}",
+            "CUSTOM EVENT. ${AIAgentStartedEvent::class.simpleName}",
         )
 
         TraceFeatureMessageFileWriter(fs = JVMFileSystemProvider.ReadWrite, path = tempDir, format = customFormat).use { writer ->
@@ -110,7 +109,6 @@ class TraceFeatureMessageFileWriterTest {
         }
 
         val expectedEvents = listOf(
-            "CUSTOM. ${AIAgentCreateEvent::class.simpleName}",
             "CUSTOM. ${AIAgentStartedEvent::class.simpleName}",
             "CUSTOM. ${AIAgentStrategyStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",

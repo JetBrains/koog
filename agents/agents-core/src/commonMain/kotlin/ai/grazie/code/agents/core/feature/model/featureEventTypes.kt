@@ -16,12 +16,6 @@ public sealed class DefinedFeatureEvent() : FeatureEvent {
 //region Agent
 
 @Serializable
-public data class AIAgentCreateEvent(
-    val strategyName: String,
-    override val eventId: String = AIAgentCreateEvent::class.simpleName!!,
-) : DefinedFeatureEvent()
-
-@Serializable
 public data class AIAgentStartedEvent(
     val strategyName: String,
     override val eventId: String = AIAgentStartedEvent::class.simpleName!!,

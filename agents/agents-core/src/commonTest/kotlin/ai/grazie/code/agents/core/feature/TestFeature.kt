@@ -26,10 +26,10 @@ class TestFeature(val events: MutableList<String>) {
         ) {
             val feature = TestFeature(events = config.events ?: mutableListOf())
 
-            pipeline.interceptAgentCreated(this, feature) {
-                feature.events += "Agent: agent created (strategy name: '${strategy.name}')"
+            pipeline.interceptBeforeAgentStarted(this, feature) {
+                feature.events += "Agent: before agent started (strategy name: '${strategy.name}')"
 
-                readStages { stages -> feature.events += "Agent: agent created (strategy name: '${strategy.name}'). read stages (size: ${stages.size})" }
+                readStages { stages -> feature.events += "Agent: before agent started (strategy name: '${strategy.name}'). read stages (size: ${stages.size})" }
             }
 
             pipeline.interceptStrategyStarted(this, feature) {
