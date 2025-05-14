@@ -54,7 +54,7 @@ KotlinAIAgent(
 
 ```kotlin
 // Create a tool registry
-val toolRegistry = ToolRegistry()
+val toolRegistry = ToolRegistry { }
 
 // Register tools
 toolRegistry.register(CalculatorTool)
