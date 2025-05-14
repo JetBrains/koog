@@ -202,7 +202,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
         public fun result(result: Message.Tool.Result) {
             messages
                 .indexOfLast { it is Message.Tool.Call && it.id == result.id }
-                .let { index -> if (index == -1) null else index }
+                .takeIf { it != -1 }
                 ?.let { index -> messages.add(index + 1, result) }
                 ?: throw IllegalStateException("Failed to add tool result: no call message with id ${result.id}")
         }
