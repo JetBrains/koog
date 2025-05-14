@@ -8,7 +8,7 @@ import ai.jetbrains.code.prompt.llm.LLModel
  * Google Gemini models and their capabilities.
  * See https://ai.google.dev/gemini-api/docs for more information.
  */
-object GoogleModels {
+public object GoogleModels {
     /**
      * Basic capabilities shared across all Gemini models
      */
@@ -42,7 +42,7 @@ object GoogleModels {
      * Context window: 1 million tokens
      * Knowledge cutoff: July 2024
      */
-    val Gemini2_0Flash = LLModel(
+    public val Gemini2_0Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash",
         capabilities = fullCapabilities
@@ -51,7 +51,7 @@ object GoogleModels {
     /**
      * Specific version of Gemini 2.0 Flash
      */
-    val Gemini2_0Flash001 = LLModel(
+    public val Gemini2_0Flash001: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-001",
         capabilities = fullCapabilities
@@ -64,7 +64,7 @@ object GoogleModels {
      * Context window: 1 million tokens
      * Knowledge cutoff: July 2024
      */
-    val Gemini2_0FlashLite = LLModel(
+    public val Gemini2_0FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite",
         capabilities = standardCapabilities // Flash Lite does not support tools
@@ -73,7 +73,7 @@ object GoogleModels {
     /**
      * Specific version of Gemini 2.0 Flash-Lite
      */
-    val Gemini2_0FlashLite001 = LLModel(
+    public val Gemini2_0FlashLite001: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite-001",
         capabilities = standardCapabilities // Flash Lite does not support tools
@@ -85,7 +85,7 @@ object GoogleModels {
      * Context window: 1 million tokens
      * Knowledge cutoff: February 2024
      */
-    val Gemini1_5Pro = LLModel(
+    public val Gemini1_5Pro: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-pro",
         capabilities = fullCapabilities // 1.5 Pro has robust tool support
@@ -94,7 +94,7 @@ object GoogleModels {
     /**
      * Latest version of Gemini 1.5 Pro
      */
-    val Gemini1_5ProLatest = LLModel(
+    public val Gemini1_5ProLatest: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-pro-latest",
         capabilities = fullCapabilities // 1.5 Pro has robust tool support
@@ -103,7 +103,7 @@ object GoogleModels {
     /**
      * Specific version of Gemini 1.5 Pro
      */
-    val Gemini1_5Pro001 = LLModel(
+    public val Gemini1_5Pro001: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-pro-001",
         capabilities = fullCapabilities // 1.5 Pro has robust tool support
@@ -112,7 +112,7 @@ object GoogleModels {
     /**
      * Specific version of Gemini 1.5 Pro
      */
-    val Gemini1_5Pro002 = LLModel(
+    public val Gemini1_5Pro002: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-pro-002",
         capabilities = fullCapabilities // 1.5 Pro has robust tool support
@@ -124,7 +124,7 @@ object GoogleModels {
      * Context window: 1 million tokens
      * Knowledge cutoff: February 2024
      */
-    val Gemini1_5Flash = LLModel(
+    public val Gemini1_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash",
         capabilities = fullCapabilities // 1.5 Flash has tool support
@@ -133,7 +133,7 @@ object GoogleModels {
     /**
      * Latest version of Gemini 1.5 Flash
      */
-    val Gemini1_5FlashLatest = LLModel(
+    public val Gemini1_5FlashLatest: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-latest",
         capabilities = multimodalCapabilities
@@ -142,7 +142,7 @@ object GoogleModels {
     /**
      * Specific version of Gemini 1.5 Flash
      */
-    val Gemini1_5Flash001 = LLModel(
+    public val Gemini1_5Flash001: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-001",
         capabilities = multimodalCapabilities
@@ -151,7 +151,7 @@ object GoogleModels {
     /**
      * Specific version of Gemini 1.5 Flash
      */
-    val Gemini1_5Flash002 = LLModel(
+    public val Gemini1_5Flash002: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-002",
         capabilities = multimodalCapabilities
@@ -160,7 +160,7 @@ object GoogleModels {
     /**
      * Gemini 1.5 Flash 8B is a smaller, more efficient variant of Gemini 1.5 Flash.
      */
-    val Gemini1_5Flash8B = LLModel(
+    public val Gemini1_5Flash8B: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-8b",
         capabilities = multimodalCapabilities
@@ -169,7 +169,7 @@ object GoogleModels {
     /**
      * Specific version of Gemini 1.5 Flash 8B
      */
-    val Gemini1_5Flash8B001 = LLModel(
+    public val Gemini1_5Flash8B001: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-8b-001",
         capabilities = multimodalCapabilities
@@ -178,7 +178,7 @@ object GoogleModels {
     /**
      * Latest version of Gemini 1.5 Flash 8B
      */
-    val Gemini1_5Flash8BLatest = LLModel(
+    public val Gemini1_5Flash8BLatest: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-8b-latest",
         capabilities = multimodalCapabilities
@@ -188,7 +188,7 @@ object GoogleModels {
      * Gemini Pro Vision is the multimodal version of the Gemini 1.0 Pro model.
      * Capable of processing both text and images.
      */
-    val GeminiProVision = LLModel(
+    public val GeminiProVision: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-pro-vision",
         capabilities = multimodalCapabilities
@@ -198,7 +198,7 @@ object GoogleModels {
      * Gemini 2.5 Pro Preview 05-06 is one of the Gemini 2.5 Pro preview versions.
      * It offers advanced capabilities for complex tasks.
      */
-    val Gemini2_5ProPreview0506 = LLModel(
+    public val Gemini2_5ProPreview0506: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-pro-preview-05-06",
         capabilities = multimodalCapabilities
@@ -208,7 +208,7 @@ object GoogleModels {
      * Gemini 2.5 Flash Preview 04-17 is one of the Gemini 2.5 Flash preview versions.
      * It offers a balance of speed and capability.
      */
-    val Gemini2_5FlashPreview0417 = LLModel(
+    public val Gemini2_5FlashPreview0417: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash-preview-04-17",
         capabilities = multimodalCapabilities

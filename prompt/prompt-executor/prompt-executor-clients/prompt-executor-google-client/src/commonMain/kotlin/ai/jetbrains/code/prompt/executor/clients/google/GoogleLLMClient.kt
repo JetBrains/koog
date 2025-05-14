@@ -39,7 +39,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -50,9 +52,9 @@ import kotlinx.serialization.json.putJsonArray
  * @property baseUrl The base URL for the Google AI API.
  * @property timeoutConfig Timeout configuration for API requests.
  */
-class GoogleClientSettings(
-    val baseUrl: String = "https://generativelanguage.googleapis.com",
-    val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+public class GoogleClientSettings(
+    public val baseUrl: String = "https://generativelanguage.googleapis.com",
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
 /**
@@ -65,13 +67,13 @@ class GoogleClientSettings(
  * @param settings Custom client settings, defaults to standard API endpoint and timeouts
  * @param baseClient Optional custom HTTP client
  */
-open class GoogleLLMClient(
+public open class GoogleLLMClient(
     private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     baseClient: HttpClient = HttpClient()
 ) : LLMClient {
 
-    companion object {
+    private companion object {
         private val logger: MPPLogger =
             LoggerFactory.create("ai.jetbrains.code.prompt.executor.clients.google.GoogleLLMClient")
 
@@ -277,42 +279,41 @@ open class GoogleLLMClient(
      * @param param The tool parameter descriptor
      * @return A JSON element representing the parameter type
      */
-    private fun buildGoogleParamType(param: ToolParameterDescriptor): JsonObject {
-        val builder = buildJsonObject {
-            put("description", JsonPrimitive(param.description))
+    private fun buildGoogleParamType(param: ToolParameterDescriptor): JsonObject = buildJsonObject {
+        put("description", JsonPrimitive(param.description))
 
-            when (val type = param.type) {
+        fun JsonObjectBuilder.putType(type: ToolParameterType) {
+            when (type) {
                 ToolParameterType.Boolean -> put("type", "boolean")
                 ToolParameterType.Float -> put("type", "number")
                 ToolParameterType.Integer -> put("type", "integer")
                 ToolParameterType.String -> put("type", "string")
+
                 is ToolParameterType.Enum -> {
                     put("type", "string")
-                    putJsonArray("enum") { addAll(type.entries.map { JsonPrimitive(it) }) }
+                    putJsonArray("enum") { type.entries.forEach { add(it) } }
                 }
 
                 is ToolParameterType.List -> {
-                    put("type", JsonPrimitive("array"))
-                    put("items", buildJsonObject {
-                        when (val itemType = type.itemsType) {
-                            ToolParameterType.Boolean -> put("type", "boolean")
-                            ToolParameterType.Float -> put("type", "number")
-                            ToolParameterType.Integer -> put("type", "integer")
-                            ToolParameterType.String -> put("type", "string")
-                            is ToolParameterType.Enum -> {
-                                put("type", "string")
-                                putJsonArray("enum") { addAll(itemType.entries.map { JsonPrimitive(it) }) }
-                            }
+                    put("type", "array")
+                    put("items", buildJsonObject { putType(type.itemsType) })
+                }
 
-                            is ToolParameterType.List -> {
-                                put("type", "string")
-                            }
+                is ToolParameterType.Object -> {
+                    put("type", "object")
+                    put("properties", buildJsonObject {
+                        type.properties.forEach { property ->
+                            put(property.name, buildJsonObject {
+                                putType(property.type)
+                                put("description", property.description)
+                            })
                         }
                     })
                 }
             }
         }
-        return builder
+
+        putType(param.type)
     }
 
     /**
