@@ -19,8 +19,8 @@ extensions.getByType<KotlinProjectExtension>().apply {
     }
 }
 
-val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_2
-val kotlinApiVersion = KotlinVersion.KOTLIN_2_2
+val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_1
+val kotlinApiVersion = KotlinVersion.KOTLIN_2_1
 
 tasks.withType<KotlinCompilationTask<*>>().configureEach {
     compilerOptions {
