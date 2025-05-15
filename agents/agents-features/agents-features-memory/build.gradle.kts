@@ -39,7 +39,7 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation(libs.code.engine.files.jvm) {
+                implementation(libs.code.engine.files.jvm.get().toString()) {
                     exclude("org.jetbrains", "ij-parsing-core")
                 }
                 implementation(kotlin("test-junit5"))
