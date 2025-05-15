@@ -9,6 +9,10 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+repositories {
+    maven(url = "https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
+}
+
 // Configure the application plugin with a default main class
 application {
     mainClass.set("ai.grazie.code.agents.example.calculator.CalculatorKt")
