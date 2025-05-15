@@ -135,7 +135,6 @@ dependencies {
     dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))
     dokka(project(":embeddings:embeddings-base"))
-    dokka(project(":embeddings:embeddings-local"))
     dokka(project(":prompt:prompt-cache:prompt-cache-files"))
     dokka(project(":prompt:prompt-cache:prompt-cache-model"))
     dokka(project(":prompt:prompt-cache:prompt-cache-redis"))

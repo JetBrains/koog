@@ -1,4 +1,4 @@
-# Module embeddings:embeddings-llm-remote
+# Module embeddings:embeddings-llm
 
 A module that provides functionality for generating and comparing embeddings using remote LLM services.
 
