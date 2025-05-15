@@ -1,0 +1,75 @@
+import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
+
+group = "${rootProject.group}.agents"
+version = rootProject.version
+
+plugins {
+    id("ai.kotlin.multiplatform")
+}
+
+val excluded = setOf(
+    ":agents:agents-test",
+    ":examples",
+    project.path,
+)
+
+val included = setOf<String>(
+    ":agents:agents-core",
+    ":agents:agents-features:agents-features-common",
+    ":agents:agents-features:agents-features-event-handler",
+    ":agents:agents-features:agents-features-memory",
+    ":agents:agents-features:agents-features-trace",
+    ":agents:agents-mcp",
+    ":agents:agents-tools",
+    ":agents:agents-utils",
+    ":embeddings:embeddings-base",
+    ":embeddings:embeddings-llm-remote",
+    ":embeddings:embeddings-local",
+    ":prompt:prompt-cache:prompt-cache-files",
+    ":prompt:prompt-cache:prompt-cache-model",
+    ":prompt:prompt-cache:prompt-cache-redis",
+    ":prompt:prompt-executor:prompt-executor-cached",
+    ":prompt:prompt-executor:prompt-executor-clients",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
+    ":prompt:prompt-executor:prompt-executor-llms",
+    ":prompt:prompt-executor:prompt-executor-llms-all",
+    ":prompt:prompt-executor:prompt-executor-model",
+    ":prompt:prompt-executor:prompt-executor-ollama",
+    ":prompt:prompt-llm",
+    ":prompt:prompt-markdown",
+    ":prompt:prompt-model",
+    ":prompt:prompt-structure",
+    ":prompt:prompt-xml"
+)
+
+kotlin {
+    sourceSets {
+        commonMain {
+            dependencies {
+                val projects = rootProject.subprojects
+                    .filterNot { it.path in excluded }
+                    .filter { it.buildFile.exists() }
+
+                val projectsPaths = projects.mapTo(sortedSetOf()) { it.path }
+
+                val obsoleteIncluded = included - projectsPaths
+                require(obsoleteIncluded.isEmpty()) {
+                    "There are obsolete modules in the included set:\n${obsoleteIncluded.joinToString(",\n") { "\"$it\"" } }"
+                }
+
+                val notIncluded = projectsPaths - included
+                require(notIncluded.isEmpty()) {
+                    "There are modules that are not listed in the included set:\n${notIncluded.joinToString(",\n") { "\"$it\"" } }"
+                }
+
+                projects.forEach {
+                    api(project(it.path))
+                }
+            }
+        }
+    }
+}
+
+publishToGraziePublicMaven()
