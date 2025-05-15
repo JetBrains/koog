@@ -3,16 +3,13 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
-import ai.grazie.utils.mpp.SuitableForIO
-import ai.grazie.utils.mpp.UUID
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
@@ -45,6 +42,8 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Configuration settings for the Google AI client.
@@ -74,9 +73,7 @@ public open class GoogleLLMClient(
 ) : LLMClient {
 
     private companion object {
-        private val logger: MPPLogger =
-            LoggerFactory.create("ai.koog.prompt.executor.clients.google.GoogleLLMClient")
-
+        private val logger = KotlinLogging.logger { }
 
         private const val DEFAULT_PATH = "v1beta/models"
         private const val DEFAULT_METHOD_GENERATE_CONTENT = "generateContent"
@@ -232,7 +229,7 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Tool.Call -> {
-                    logger.warning { "Tool calls in input messages are not directly supported by GoogleAI API" }
+                    logger.warn { "Tool calls in input messages are not directly supported by GoogleAI API" }
                 }
             }
         }
@@ -322,6 +319,7 @@ public open class GoogleLLMClient(
      * @param response The raw response from the Google AI API
      * @return A list of response messages
      */
+    @OptIn(ExperimentalUuidApi::class)
     private fun processGoogleResponse(response: GoogleResponse): List<Message.Response> {
         if (response.candidates.isEmpty()) {
             logger.error { "Empty candidates in Gemini response" }
@@ -332,7 +330,7 @@ public open class GoogleLLMClient(
             when (part) {
                 is GooglePart.Text -> Message.Assistant(part.text)
                 is GooglePart.FunctionCall -> Message.Tool.Call(
-                    UUID.random().toString(),
+                    Uuid.random().toString(),
                     part.functionCall.name,
                     part.functionCall.args.toString()
                 )
