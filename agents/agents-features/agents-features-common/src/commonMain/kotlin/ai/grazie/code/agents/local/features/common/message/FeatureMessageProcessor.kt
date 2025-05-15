@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.local.features.common.message
 
-import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.Closeable
+import ai.grazie.code.agents.utils.Closeable
 
 /**
  * Represents a provider responsible for handling outbound feature messages or events.

@@ -17,7 +17,7 @@ import ai.grazie.code.agents.core.model.message.*
 import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
-import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.Closeable
+import ai.grazie.code.agents.utils.Closeable
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor

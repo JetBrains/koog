@@ -11,7 +11,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcess
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.tracing.NetUtil.findAvailablePort
 import ai.grazie.code.agents.local.features.tracing.feature.Tracing
-import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
+import ai.grazie.code.agents.utils.use
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.create
 import io.ktor.client.plugins.sse.*
