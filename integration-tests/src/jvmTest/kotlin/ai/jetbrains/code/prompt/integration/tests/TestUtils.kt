@@ -1,3 +1,4 @@
+<<<<<<<< HEAD:prompt/prompt-executor/prompt-executor-llms-all/src/jvmTest/kotlin/ai/koog/prompt/executor/llms/all/TestUtils.kt
 package ai.koog.prompt.executor.llms.all
 
 import ai.koog.agents.core.tools.SimpleTool
@@ -5,28 +6,28 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+========
+package ai.jetbrains.code.prompt.integration.tests
+
+import ai.grazie.code.agents.core.tools.*
+>>>>>>>> 807c9c1 (JBAI-13946 Extend integration tests to cover new models and move to separate module):integration-tests/src/jvmTest/kotlin/ai/jetbrains/code/prompt/integration/tests/TestUtils.kt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
-import kotlin.apply
-import kotlin.collections.dropLast
-import kotlin.collections.forEach
-import kotlin.collections.getOrNull
-import kotlin.collections.isNotEmpty
-import kotlin.collections.last
-import kotlin.collections.map
-import kotlin.collections.random
-import kotlin.collections.toTypedArray
-import kotlin.text.clear
-import kotlin.text.isNotEmpty
-import kotlin.text.split
-import kotlin.text.startsWith
-import kotlin.text.substring
-import kotlin.text.substringAfter
-import kotlin.text.trim
-import kotlin.text.trimIndent
 
-class TestUtils {
+internal object TestUtils {
+    fun readTestAnthropicKeyFromEnv(): String {
+        return System.getenv("ANTHROPIC_API_TEST_KEY") ?: error("ERROR: environment variable `ANTHROPIC_API_TEST_KEY` is not set")
+    }
+
+    fun readTestOpenAIKeyFromEnv(): String {
+        return System.getenv("OPEN_AI_API_TEST_KEY") ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` is not set")
+    }
+
+    fun readTestGeminiKeyFromEnv(): String {
+        return System.getenv("GEMINI_API_TEST_KEY") ?: error("ERROR: environment variable `GEMINI_API_TEST_KEY` is not set")
+    }
+
     @Serializable
     enum class CalculatorOperation {
         ADD, SUBTRACT, MULTIPLY, DIVIDE

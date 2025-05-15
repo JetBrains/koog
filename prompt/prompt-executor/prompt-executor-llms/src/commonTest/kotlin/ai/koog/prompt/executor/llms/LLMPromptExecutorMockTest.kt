@@ -17,7 +17,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class LLMPromptExecutorTest {
+class LLMPromptExecutorMockTest {
 
     // Mock client for OpenAI
     private class MockOpenAILLMClient : LLMClient {
