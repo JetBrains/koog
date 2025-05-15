@@ -16,7 +16,9 @@ import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.message.Message
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -113,12 +115,16 @@ public class AIAgentPipeline {
     }
 
     internal suspend fun prepareFeatures() {
-        registeredFeatures.values.forEach { featureConfig ->
-            featureConfig.messageProcessor.map { processor ->
-                withContext(featurePrepareDispatcher) {
-                    launch { processor.initialize() }
+        withContext(featurePrepareDispatcher) {
+            registeredFeatures.values.forEach { featureConfig ->
+                featureConfig.messageProcessor.map { processor ->
+                    launch {
+                        logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
+                        processor.initialize()
+                        logger.debug { "Finished preparing processor: ${processor::class.simpleName}" }
+                    }
                 }
-            }.joinAll()
+            }
         }
     }
 
