@@ -16,6 +16,10 @@ kotlin {
                 implementation(project(":prompt:prompt-model"))
                 implementation(project(":agents:agents-tools"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-model"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
+                implementation(project(":embeddings:embeddings-base"))
 
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.serialization.json)

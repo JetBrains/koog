@@ -1,22 +1,25 @@
 package ai.jetbrains.code.prompt.executor.ollama.client
 
-import ai.jetbrains.code.prompt.executor.ollama.client.dto.EmbeddingRequest
-import ai.jetbrains.code.prompt.executor.ollama.client.dto.EmbeddingResponse
-import ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
-import ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.jetbrains.code.prompt.dsl.Prompt
+import ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig
+import ai.jetbrains.code.prompt.executor.clients.LLMClient
+import ai.jetbrains.code.prompt.executor.clients.LLMEmbeddingProvider
+import ai.jetbrains.code.prompt.executor.ollama.client.dto.*
 import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLModel
+import ai.jetbrains.code.prompt.message.Message
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
-import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.utils.io.readUTF8Line
+import io.ktor.utils.io.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
@@ -27,13 +30,11 @@ import kotlinx.serialization.json.Json
  * @property baseUrl The base URL of the Ollama API server.
  * @property baseClient The HTTP client used for making requests.
  */
-public open class OllamaClient(
+public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
-    requestTimeout: Long = 60_000,
-    connectTimeout: Long = 60_000,
-    socketTimeout: Long = 60_000,
-) {
+    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+): LLMClient, LLMEmbeddingProvider {
 
     private val ollamaJson = Json {
         ignoreUnknownKeys = true
@@ -48,33 +49,46 @@ public open class OllamaClient(
         }
 
         install(HttpTimeout) {
-            requestTimeoutMillis = requestTimeout
-            connectTimeoutMillis = connectTimeout
-            socketTimeoutMillis  = socketTimeout
+            requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
+            connectTimeoutMillis = timeoutConfig.connectTimeoutMillis
+            socketTimeoutMillis  = timeoutConfig.socketTimeoutMillis
         }
     }
 
-    // TODO: reconsider request and response classnames
-    /**
-     * Generate a chat completion for a given set of messages with a provided model.
-     *
-     * @param request The chat request parameters.
-     * @return A flow of chat responses.
-     */
-    public open suspend fun chat(request: OllamaChatRequestDTO): OllamaChatResponseDTO {
+    override suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<Message.Response> {
         val response = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
-            setBody(request)
-        }
+            setBody(
+                OllamaChatRequestDTO(
+                    model = model.toOllamaModelId(),
+                    messages = prompt.toOllamaChatMessages(),
+                    stream = false,
+                )
+            )
+        }.body<OllamaChatResponseDTO>()
 
-        // Non-streaming response
-        return response.body<OllamaChatResponseDTO>()
+        if (response.message?.content != null)
+            return listOf(Message.Assistant(response.message.content))
+        return emptyList()
     }
 
-    public open suspend fun chatStream(request: OllamaChatRequestDTO): Flow<OllamaChatResponseDTO>  = flow {
+    override suspend fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel
+    ): Flow<String> = flow {
         val response = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
-            setBody(request)
+            setBody(
+                OllamaChatRequestDTO(
+                    model = model.toOllamaModelId(),
+                    messages = prompt.toOllamaChatMessages(),
+                    stream = true,
+                )
+            )
         }
 
         val channel = response.bodyAsChannel()
@@ -82,11 +96,10 @@ public open class OllamaClient(
         while (!channel.isClosedForRead) {
             val line = channel.readUTF8Line() ?: break
             val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
-            emit(chunk)
+            emit(chunk.message?.content ?: "")
         }
     }
 
-    // TODO: reconsider it's openness
     /**
      * Embeds the given text using the Ollama model.
      *
@@ -95,7 +108,7 @@ public open class OllamaClient(
      * @return A vector representation of the text.
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
-    public open suspend fun embed(text: String, model: LLModel): List<Double> {
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
         if (!model.capabilities.contains(LLMCapability.Embed)) {
             throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
         }
@@ -108,7 +121,6 @@ public open class OllamaClient(
         val embeddingResponse = response.body<EmbeddingResponse>()
         return embeddingResponse.embedding
     }
-
 }
 
 internal expect fun engineFactoryProvider(): HttpClientEngineFactory<*>

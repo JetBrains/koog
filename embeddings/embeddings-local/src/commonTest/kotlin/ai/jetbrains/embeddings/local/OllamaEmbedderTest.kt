@@ -1,6 +1,6 @@
 package ai.jetbrains.embeddings.local
 
-import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
+import ai.jetbrains.code.prompt.executor.clients.LLMEmbeddingProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.embeddings.base.Vector
 import kotlinx.coroutines.test.runTest
@@ -56,17 +56,16 @@ class OllamaEmbedderTest {
         val result = embedder.diff(vector1, vector2)
         assertEquals(2.0, result, 0.0001)
     }
+}
 
-    class MockOllamaEmbedderClient : OllamaClient("") {
-        private val embeddings = mutableMapOf<String, Vector>()
+class MockOllamaEmbedderClient : LLMEmbeddingProvider {
+    private val embeddings = mutableMapOf<String, Vector>()
 
-        fun mockEmbedding(text: String, vector: Vector) {
-            embeddings[text] = vector
-        }
+    fun mockEmbedding(text: String, vector: Vector) {
+        embeddings[text] = vector
+    }
 
-        override suspend fun embed(text: String, model: LLModel): List<Double> {
-            return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
-        }
-
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
+        return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
     }
 }

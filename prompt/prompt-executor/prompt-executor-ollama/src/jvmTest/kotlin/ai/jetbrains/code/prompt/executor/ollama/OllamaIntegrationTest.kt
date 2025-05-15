@@ -8,6 +8,8 @@ import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.jetbrains.code.prompt.dsl.prompt
+import ai.jetbrains.code.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
@@ -21,7 +23,7 @@ import kotlin.test.assertTrue
 class OllamaIntegrationTest {
     private val model = OllamaModels.Meta.LLAMA_3_2
     val client = OllamaClient()
-    val executor = OllamaPromptExecutor(client)
+    val executor = SingleLLMPromptExecutor(client)
 
     private fun createTestStrategy(policyName: String) =
         strategy("test-ollama-$policyName") {
@@ -86,7 +88,7 @@ class OllamaIntegrationTest {
     }
 
     private fun createAgent(
-        executor: OllamaPromptExecutor,
+        executor: PromptExecutor,
         strategy: ai.grazie.code.agents.core.agent.entity.AIAgentStrategy,
         toolRegistry: ToolRegistry
     ): AIAgent {

@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(project(":prompt:prompt-executor:prompt-executor-ollama"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":embeddings:embeddings-base"))
                 implementation(libs.kotlinx.coroutines.core)

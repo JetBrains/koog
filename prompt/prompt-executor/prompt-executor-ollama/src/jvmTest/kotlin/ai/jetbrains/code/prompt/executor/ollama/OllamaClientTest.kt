@@ -4,6 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.jetbrains.code.prompt.dsl.Prompt
+import ai.jetbrains.code.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import kotlinx.coroutines.flow.Flow
@@ -19,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 class OllamaClientTest {
     private val model = OllamaModels.Meta.LLAMA_3_2
     val client = OllamaClient()
-    val executor = OllamaPromptExecutor(client)
+    val executor = SingleLLMPromptExecutor(client)
 
     @Test
     fun `test execute simple prompt`() = runTest {
@@ -568,7 +569,6 @@ class OllamaClientTest {
         }
     }
 
-    @Disabled("JBAI-13854")
     @Test
     fun `test execute streaming API with structured data`() = runTest {
         val countries = mutableListOf<Country>()
