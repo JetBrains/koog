@@ -30,7 +30,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureMessage
  * }
  * ```
  */
-class TraceFeatureConfig() : FeatureConfig() {
+public class TraceFeatureConfig() : FeatureConfig() {
 
     /**
      * A filter for messages to be sent to the tracing message processors.
@@ -51,5 +51,5 @@ class TraceFeatureConfig() : FeatureConfig() {
      * }
      * ```
      */
-    var messageFilter: (FeatureMessage) -> Boolean = { true }
+    public var messageFilter: (FeatureMessage) -> Boolean = { true }
 }

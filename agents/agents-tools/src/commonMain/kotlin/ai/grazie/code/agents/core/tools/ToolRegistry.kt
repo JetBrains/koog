@@ -43,8 +43,8 @@ import ai.grazie.code.agents.core.tools.tools.ToolStage
  * 
  * @property stages The list of tool stages contained in this registry
  */
-class ToolRegistry private constructor(
-    val stages: List<ToolStage>
+public class ToolRegistry private constructor(
+    public val stages: List<ToolStage>
 ) {
     /**
      * A lazily initialized map that associates stage names with lists of tool descriptors.
@@ -55,7 +55,7 @@ class ToolRegistry private constructor(
      * 
      * @return A map where keys are stage names and values are lists of tool descriptors
      */
-    val stagesToolDescriptors: Map<String, List<ToolDescriptor>> by lazy {
+    public val stagesToolDescriptors: Map<String, List<ToolDescriptor>> by lazy {
         stages.associate {
             it.name to it.tools.map { tool -> tool.descriptor }
         }
@@ -70,7 +70,7 @@ class ToolRegistry private constructor(
      * @return The tool with the specified name
      * @throws IllegalArgumentException if no tool with the specified name is found
      */
-    fun getTool(toolName: String): Tool<*, *> {
+    public fun getTool(toolName: String): Tool<*, *> {
         return stages
             .flatMap { it.tools }
             .firstOrNull { it.name == toolName }
@@ -86,7 +86,7 @@ class ToolRegistry private constructor(
      * @return The tool of the specified type
      * @throws IllegalArgumentException if no tool of the specified type is found
      */
-    inline fun <reified T : Tool<*, *>> getTool(): T {
+    public inline fun <reified T : Tool<*, *>> getTool(): T {
         return stages
             .flatMap { it.tools }
             .firstOrNull { it::class == T::class }
@@ -100,7 +100,7 @@ class ToolRegistry private constructor(
      * @param tool The name of the tool to search for
      * @return The stage containing the tool, or null if no stage contains a tool with the specified name
      */
-    fun getStageByToolOrNull(tool: String): ToolStage? {
+    public fun getStageByToolOrNull(tool: String): ToolStage? {
         return stages.firstOrNull { tool in it.tools.map { tool -> tool.name } }
     }
 
@@ -111,7 +111,7 @@ class ToolRegistry private constructor(
      * @return The stage containing the tool
      * @throws IllegalArgumentException if no stage contains a tool with the specified name
      */
-    fun getStageByTool(tool: String): ToolStage {
+    public fun getStageByTool(tool: String): ToolStage {
         return getStageByToolOrNull(tool) ?: throw IllegalArgumentException("Tool \"$tool\" is not defined")
     }
 
@@ -121,7 +121,7 @@ class ToolRegistry private constructor(
      * @param name The name of the stage to find
      * @return The stage with the specified name, or null if no stage with that name exists
      */
-    fun getStageByNameOrNull(name: String): ToolStage? {
+    public fun getStageByNameOrNull(name: String): ToolStage? {
         return stages.firstOrNull { it.name == name }
     }
 
@@ -132,11 +132,11 @@ class ToolRegistry private constructor(
      * @return The stage with the specified name
      * @throws IllegalArgumentException if no stage with the specified name exists
      */
-    fun getStageByName(name: String): ToolStage {
+    public fun getStageByName(name: String): ToolStage {
         return getStageByNameOrNull(name) ?: throw IllegalArgumentException("Stage \"$name\" is not defined")
     }
 
-    infix fun with(toolRegistry: ToolRegistry): ToolRegistry {
+    public infix fun with(toolRegistry: ToolRegistry): ToolRegistry {
         val thisStages: Map<String, List<Tool<*, *>>> = stages.associate { it.name to it.tools }
         val otherStages: Map<String, List<Tool<*, *>>> = toolRegistry.stages.associate { it.name to it.tools }
 
@@ -151,15 +151,15 @@ class ToolRegistry private constructor(
         return ToolRegistry(mergedStages)
     }
 
-    operator fun plus(toolRegistry: ToolRegistry) = this with toolRegistry
+    public operator fun plus(toolRegistry: ToolRegistry): ToolRegistry = this with toolRegistry
 
-    class Builder internal constructor() {
+    public class Builder internal constructor() {
         private val stages = mutableListOf<ToolStage>()
 
         /**
          * Provide a pre-built stage, e.g., when using a tool stage from some pre-defined collection.
          */
-        fun stage(stage: ToolStage) {
+        public fun stage(stage: ToolStage) {
             require(stage.name !in stages.map { it.name }) { "Stage \"${stage.name}\" is already defined" }
 
             val nonUniqueTools = stage.tools
@@ -178,11 +178,11 @@ class ToolRegistry private constructor(
         /**
          * Build a new tool stage in place
          */
-        fun stage(
+        public fun stage(
             stageName: String = ToolStage.DEFAULT_STAGE_NAME,
             toolListName: String = ToolStage.DEFAULT_TOOL_LIST_NAME,
             init: ToolStage.Builder.() -> Unit
-        ) = stage(ToolStage(stageName, toolListName, init))
+        ): Unit = stage(ToolStage(stageName, toolListName, init))
 
         internal fun build(): ToolRegistry {
             return ToolRegistry(stages)
@@ -192,19 +192,19 @@ class ToolRegistry private constructor(
     /**
      * Companion object providing factory methods and constants for ToolRegistry.
      */
-    companion object {
+    public companion object {
         /**
          * Creates a new ToolRegistry using the provided builder initialization block.
          * 
          * @param init A lambda that configures the registry by adding stages and tools
          * @return A new ToolRegistry instance configured according to the initialization block
          */
-        operator fun invoke(init: Builder.() -> Unit): ToolRegistry = Builder().apply(init).build()
+        public operator fun invoke(init: Builder.() -> Unit): ToolRegistry = Builder().apply(init).build()
 
         /**
          * A constant representing an empty registry with no stages or tools.
          */
-        val EMPTY = ToolRegistry(emptyList())
+        public val EMPTY: ToolRegistry = ToolRegistry(emptyList())
     }
 }
 
@@ -218,4 +218,4 @@ class ToolRegistry private constructor(
  * @return A new ToolRegistry instance with a single stage containing the specified tools
  */
 @Suppress("FunctionName")
-fun SimpleToolRegistry(init: ToolStage.Builder.() -> Unit): ToolRegistry = ToolRegistry { stage { init() } }
+public fun SimpleToolRegistry(init: ToolStage.Builder.() -> Unit): ToolRegistry = ToolRegistry { stage { init() } }

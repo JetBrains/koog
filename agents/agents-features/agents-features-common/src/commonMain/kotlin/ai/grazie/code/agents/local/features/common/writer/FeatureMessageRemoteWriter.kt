@@ -14,7 +14,7 @@ import kotlinx.coroutines.sync.Mutex
  * @param connectionConfig Configuration for the server connection. If not provided,
  * a default configuration using port 8080 will be used.
  */
-abstract class FeatureMessageRemoteWriter(
+public abstract class FeatureMessageRemoteWriter(
     connectionConfig: ServerConnectionConfig? = null
 ) : FeatureMessageProcessor() {
 
@@ -41,7 +41,7 @@ abstract class FeatureMessageRemoteWriter(
      *
      * This property reflects the internal `_isOpen` state and ensures thread-safe access.
      */
-    val isOpen: Boolean
+    public val isOpen: Boolean
         get() = _isOpen
 
     internal val server: FeatureMessageRemoteServer =

@@ -37,7 +37,7 @@ private val defaultFeatureMessageSerializersModule: SerializersModule
         }
     }
 
-fun featureMessageJsonConfig(serializersModule: SerializersModule? = null): Json {
+internal fun featureMessageJsonConfig(serializersModule: SerializersModule? = null): Json {
     return serializersModule?.let { modules ->
         Json(defaultFeatureMessageJsonConfig) {
             this.serializersModule += modules
@@ -47,7 +47,7 @@ fun featureMessageJsonConfig(serializersModule: SerializersModule? = null): Json
 
 @InternalAPI
 @Suppress("unused")
-class FeatureMessagesSerializerCollector : SerializersModuleCollector {
+internal class FeatureMessagesSerializerCollector : SerializersModuleCollector {
     private val serializers = mutableListOf<String>()
 
     override fun <T : Any> contextual(

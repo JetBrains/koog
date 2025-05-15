@@ -11,7 +11,7 @@ import kotlinx.serialization.modules.plus
  * This abstract class provides mechanisms to work with a configurable `Json` instance
  * and allows appending additional serializers modules dynamically.
  */
-abstract class ConnectionConfig {
+public abstract class ConnectionConfig {
 
     private var _jsonConfig: Json = featureMessageJsonConfig()
 
@@ -30,7 +30,7 @@ abstract class ConnectionConfig {
      *
      * @return The current [Json] instance used for serialization and deserialization.
      */
-    val jsonConfig: Json
+    public val jsonConfig: Json
         get() = _jsonConfig
 
     /**
@@ -40,7 +40,7 @@ abstract class ConnectionConfig {
      *
      * @param module The serializers module that needs to be appended to the existing JSON configuration.
      */
-    fun appendSerializersModule(module: SerializersModule) {
+    public fun appendSerializersModule(module: SerializersModule) {
         _jsonConfig = Json(_jsonConfig) {
             this.serializersModule = this.serializersModule.plus(module)
         }

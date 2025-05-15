@@ -8,12 +8,12 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
-const val KEY_SIZE = 256
-const val KEY_LENGTH_BYTES = 32
-const val GCM_NONCE_LENGTH = 12 // 96 bits
-const val GCM_TAG_LENGTH = 128 // 128 bits
+private const val KEY_SIZE = 256
+private const val KEY_LENGTH_BYTES = 32
+private const val GCM_NONCE_LENGTH = 12 // 96 bits
+private const val GCM_TAG_LENGTH = 128 // 128 bits
 
-class Aes256GCMEncryptor(secretKey: String) : Encryption {
+public class Aes256GCMEncryptor(secretKey: String) : Encryption {
     internal val key: SecretKey
 
     init {
@@ -66,16 +66,16 @@ class Aes256GCMEncryptor(secretKey: String) : Encryption {
         return decryptImpl(nonce, ciphertext)
     }
 
-    companion object {
+    public companion object {
         private val keyGenerator = KeyGenerator.getInstance("AES").apply {
             init(KEY_SIZE, SecureRandom())
         }
 
-        fun generateRandomKey(): SecretKey {
+        public fun generateRandomKey(): SecretKey {
             return keyGenerator.generateKey()
         }
 
-        fun keyFromString(keyString: String): SecretKey {
+        public fun keyFromString(keyString: String): SecretKey {
             val base64Key = Base64.getDecoder().decode(keyString)
             if (base64Key.size != KEY_LENGTH_BYTES) {
                 error(
@@ -85,7 +85,7 @@ class Aes256GCMEncryptor(secretKey: String) : Encryption {
             return SecretKeySpec(base64Key, 0, KEY_LENGTH_BYTES, "AES")
         }
 
-        fun keyToString(key: SecretKey): String {
+        public fun keyToString(key: SecretKey): String {
             return Base64.getEncoder().encodeToString(key.encoded)
         }
     }

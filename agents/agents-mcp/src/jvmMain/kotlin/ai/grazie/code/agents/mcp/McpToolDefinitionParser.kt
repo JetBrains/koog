@@ -13,14 +13,14 @@ import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 /**
  * Parsers tool definition from MCP SDK to our tool descriptor format.
  */
-interface McpToolDescriptorParser {
-    fun parse(sdkTool: SDKTool): ToolDescriptor
+public interface McpToolDescriptorParser {
+    public fun parse(sdkTool: SDKTool): ToolDescriptor
 }
 
 /**
  * Default implementation of [McpToolDescriptorParser].
  */
-object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
+public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
     /**
      * Parses an MCP SDK Tool definition into tool descriptor format.
      *

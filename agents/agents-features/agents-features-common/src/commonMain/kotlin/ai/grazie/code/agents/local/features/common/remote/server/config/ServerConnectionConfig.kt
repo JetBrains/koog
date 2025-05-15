@@ -9,9 +9,9 @@ import ai.grazie.code.agents.local.features.common.remote.ConnectionConfig
  * @property jsonConfig The effective JSON configuration to be used, falling back to a default configuration
  *                      if a custom configuration is not provided;
  */
-abstract class ServerConnectionConfig(val port: Int = DEFAULT_PORT) : ConnectionConfig() {
+public abstract class ServerConnectionConfig(public val port: Int = DEFAULT_PORT) : ConnectionConfig() {
 
-    companion object {
+    private companion object {
         private const val DEFAULT_PORT = 8080
     }
 }

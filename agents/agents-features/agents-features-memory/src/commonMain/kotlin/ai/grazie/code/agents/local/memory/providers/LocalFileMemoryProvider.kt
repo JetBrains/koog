@@ -79,7 +79,7 @@ import kotlinx.serialization.json.Json
  * @property fs Platform-specific file system provider for path manipulations
  * @property root Root directory where all memory storage will be located
  */
-data class LocalFileMemoryProvider<Path>(
+public data class LocalFileMemoryProvider<Path>(
     private val config: LocalMemoryConfig,
     private val storage: Storage<Path>,
     private val fs: FileSystemProvider.ReadWrite<Path>,

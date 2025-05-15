@@ -9,4 +9,4 @@ package ai.grazie.code.agents.core.tools.annotations
  * be used with caution in any external implementations or client code.
  */
 @RequiresOptIn
-annotation class InternalAgentToolsApi
+public annotation class InternalAgentToolsApi

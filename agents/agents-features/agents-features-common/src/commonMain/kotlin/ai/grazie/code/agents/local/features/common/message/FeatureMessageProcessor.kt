@@ -16,18 +16,18 @@ import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.Closeable
  * for an event to be sent to a target stream. These messages carry
  * information about various events or updates related to features in the system.
  */
-abstract class FeatureMessageProcessor : Closeable {
+public abstract class FeatureMessageProcessor : Closeable {
 
     /**
      * Initializes the feature output stream provider to ensure it is ready for use.
      */
-    open suspend fun initialize() { }
+    public open suspend fun initialize() { }
 
     /**
      * Handles an incoming feature message or event for processing.
      *
      * @param message the feature message to be handled.
      */
-    abstract suspend fun processMessage(message: FeatureMessage)
+    public abstract suspend fun processMessage(message: FeatureMessage)
 }
 

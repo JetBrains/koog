@@ -9,7 +9,7 @@ import kotlin.reflect.jvm.jvmName
  * @see ToolSet.asTools
  *
  */
-interface ToolSet {
+public interface ToolSet {
     /**
      * Retrieves the description of the current class or object from the `LLMDescription` annotation.
      * If the annotation is not present, defaults to the JVM name of the class.
@@ -17,6 +17,6 @@ interface ToolSet {
      * This property is typically used to provide human-readable descriptions of toolsets
      * or entities for integration with large language models (LLMs).
      */
-    val name: String
+    public val name: String
         get() = this.javaClass.getAnnotationsByType(LLMDescription::class.java).firstOrNull()?.description ?: this::class.jvmName
 }

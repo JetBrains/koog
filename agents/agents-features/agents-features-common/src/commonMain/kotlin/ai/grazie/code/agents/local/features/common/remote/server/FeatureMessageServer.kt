@@ -17,7 +17,7 @@ import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.Closeable
  *   - Process incoming messages from a client;
  *   - Respond to client's health check requests to verify connection state.
  */
-interface FeatureMessageServer : Closeable {
+public interface FeatureMessageServer : Closeable {
 
     /**
      * Indicates whether the server has been started.
@@ -28,7 +28,7 @@ interface FeatureMessageServer : Closeable {
      * It is used to ensure the state of the server before performing operations
      * such as message broadcasting or responding to client requests.
      */
-    val isStarted: Boolean
+    public val isStarted: Boolean
 
     /**
      * Starts the server, initializing any necessary resources and beginning to listen for incoming client connections or events.
@@ -41,7 +41,7 @@ interface FeatureMessageServer : Closeable {
      * @throws IllegalStateException if the server is already running or cannot be started due to invalid configuration.
      * @throws kotlinx.io.IOException if an error occurs while initializing the server's underlying infrastructure.
      */
-    suspend fun start()
+    public suspend fun start()
 
     /**
      * Sends a feature message for further processing or delivery to connected clients via server-sent events (SSE).
@@ -54,5 +54,5 @@ interface FeatureMessageServer : Closeable {
      *                includes information such as a timestamp and type, ensuring proper context
      *                for the recipient.
      */
-    suspend fun sendMessage(message: FeatureMessage)
+    public suspend fun sendMessage(message: FeatureMessage)
 }

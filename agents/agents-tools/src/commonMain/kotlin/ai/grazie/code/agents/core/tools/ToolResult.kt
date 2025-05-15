@@ -8,8 +8,8 @@ import kotlin.jvm.JvmInline
 /**
  * Represents a result produced by a tool operation. This is a marker interface implemented by various result types.
  */
-interface ToolResult {
-    companion object {
+public interface ToolResult {
+    private companion object {
         private val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
@@ -23,14 +23,14 @@ interface ToolResult {
      *
      * @return A string representation of the object.
      */
-    fun toStringDefault(): String
+    public fun toStringDefault(): String
 
     /**
      * Result implementation representing a simple tool result, just a string.
      */
     @Serializable
     @JvmInline
-    value class Text(val text: String) : ToolResult.JSONSerializable<Text> {
+    public value class Text(public val text: String) : JSONSerializable<Text> {
         override fun getSerializer(): KSerializer<Text> = serializer()
 
         /**
@@ -40,16 +40,16 @@ interface ToolResult {
          *
          * @param e The exception from which to generate the message.
          */
-        constructor(e: Exception) : this("Failed with exception '${e::class.simpleName}' and message '${e.message}'")
+        public constructor(e: Exception) : this("Failed with exception '${e::class.simpleName}' and message '${e.message}'")
 
-        companion object {
+        public companion object {
             /**
              * Builds a [Text] object by applying the given block to a [StringBuilder].
              *
              * @param block A lambda that operates on a [StringBuilder] to construct the text content.
              * @return A [Text] instance containing the constructed string.
              */
-            inline fun build(block: StringBuilder.() -> Unit): Text = Text(StringBuilder().apply(block).toString())
+            public inline fun build(block: StringBuilder.() -> Unit): Text = Text(StringBuilder().apply(block).toString())
         }
 
         override fun toStringDefault(): String = text
@@ -64,23 +64,23 @@ interface ToolResult {
      * @property result The internal `kotlin.Boolean` value representing the logical state.
      */
     @JvmInline
-    value class Boolean(val result: kotlin.Boolean) : ToolResult {
+    public value class Boolean(public val result: kotlin.Boolean) : ToolResult {
         /**
          * Companion object that provides constants for Boolean values.
          */
-        companion object {
+        public companion object {
             /**
              * Represents the boolean value `true`.
              *
              * This constant is a predefined instance of the `Boolean` value class indicating a `true` result.
              * It is used to signify a positive or affirmative condition.
              */
-            val TRUE = Boolean(true)
+            public val TRUE: Boolean = Boolean(true)
             /**
              * Represents the boolean constant `false` in the custom `Boolean` value class.
              * It is a pre-defined instance of the `Boolean` type with its internal value set to `false`.
              */
-            val FALSE = Boolean(false)
+            public val FALSE: Boolean = Boolean(false)
         }
         override fun toStringDefault(): String = result.toString()
     }
@@ -94,7 +94,7 @@ interface ToolResult {
      * @property result The underlying numeric value.
      */
     @JvmInline
-    value class Number(val result: kotlin.Number) : ToolResult {
+    public value class Number(public val result: kotlin.Number) : ToolResult {
         override fun toStringDefault(): String = result.toString()
     }
 
@@ -104,13 +104,13 @@ interface ToolResult {
      *
      * @param T The type of the implementing class, which must also be JSONSerializable.
      */
-    interface JSONSerializable<T : JSONSerializable<T>> : ToolResult {
+    public interface JSONSerializable<T : JSONSerializable<T>> : ToolResult {
         /**
          * Retrieves the serializer instance for the implementing class.
          *
          * @return The serializer of type KSerializer<T> specific to the class.
          */
-        fun getSerializer(): KSerializer<T>
+        public fun getSerializer(): KSerializer<T>
 
         override fun toStringDefault(): String = json.encodeToString(getSerializer(), this as T)
     }

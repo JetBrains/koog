@@ -49,13 +49,13 @@ import ai.grazie.utils.mpp.MPPLogger
  * @param logLevel The log level to use for trace events (default: INFO)
  * @param format Optional custom formatter for trace events
  */
-class TraceFeatureMessageLogWriter(
+public class TraceFeatureMessageLogWriter(
     targetLogger: MPPLogger,
     logLevel: LogLevel = LogLevel.INFO,
     private val format: ((FeatureMessage) -> String)? = null,
 ) : FeatureMessageLogWriter(targetLogger, logLevel) {
 
-    companion object {
+    internal companion object {
         val FeatureMessage.featureMessage
             get() = "Feature message"
 

@@ -4,6 +4,7 @@ import ai.grazie.code.agents.core.tools.SimpleTool
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.serialization.serializeToolDescriptorsToJsonString
+import kotlinx.serialization.KSerializer
 
 
 /**
@@ -16,13 +17,13 @@ import ai.grazie.code.agents.core.tools.serialization.serializeToolDescriptorsTo
  * @param name The name of the tool.
  * @param toolDescriptors A list of `ToolDescriptor` objects that define the tools available for a given stage.
  */
-class CollectToolsForStageTool internal constructor(
+public class CollectToolsForStageTool internal constructor(
     name: String,
     toolDescriptors: List<ToolDescriptor>
 ) : SimpleTool<Tool.EmptyArgs>() {
-    override val argsSerializer = EmptyArgs.serializer()
+    override val argsSerializer: KSerializer<EmptyArgs> = EmptyArgs.serializer()
 
-    override val descriptor = ToolDescriptor(
+    override val descriptor: ToolDescriptor = ToolDescriptor(
         name = name,
         description = "Service tool. Returns a list of available tools for a given stage."
     )

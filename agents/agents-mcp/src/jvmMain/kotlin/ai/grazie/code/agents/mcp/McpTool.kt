@@ -26,11 +26,11 @@ import kotlinx.serialization.json.JsonObject
  * 2. Calling the MCP tool through the MCP client
  * 3. Converting MCP tool results back to agent framework tool results
  */
-class McpTool(
+public class McpTool(
     private val mcpClient: Client, override val descriptor: ToolDescriptor
 ) : Tool<McpTool.Args, McpTool.Result>() {
 
-    companion object {
+    private companion object {
         private val logger = LoggerFactory.create("ai.grazie.code.agents.mcp.McpTool")
     }
 
@@ -44,7 +44,7 @@ class McpTool(
      * @property arguments The JsonObject containing the arguments for the MCP tool.
      */
     @Serializable(with = ArgsSerializer::class)
-    data class Args(val arguments: JsonObject) : Tool.Args
+    public data class Args(val arguments: JsonObject) : Tool.Args
 
     /**
      * Custom serializer for the Args class.
@@ -53,7 +53,7 @@ class McpTool(
      * It specifically handles JsonEncoder differently from other encoders to maintain
      * compatibility with the MCP SDK.
      */
-    class ArgsSerializer : KSerializer<Args> {
+    public class ArgsSerializer : KSerializer<Args> {
         override val descriptor: SerialDescriptor =
             buildClassSerialDescriptor("ai.grazie.code.agents.mcp.McpTool.Args") {
                 element("arguments", JsonObject.serializer().descriptor)
@@ -100,7 +100,7 @@ class McpTool(
      *
      * @property promptMessageContents The list of content items returned by the MCP tool.
      */
-    class Result(val promptMessageContents: List<PromptMessageContent>) : ToolResult {
+    public class Result(public val promptMessageContents: List<PromptMessageContent>) : ToolResult {
         /**
          * Converts the result to a string representation.
          *

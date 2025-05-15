@@ -23,13 +23,13 @@ import kotlin.properties.Delegates
  *             be created at initialization.
  * @param append Whether to append to an existing file or overwrite it. Defaults to `false`.
  */
-abstract class FeatureMessageFileWriter<Path>(
+public abstract class FeatureMessageFileWriter<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
     private val append: Boolean = false,
 ) : FeatureMessageProcessor() {
 
-    companion object {
+    private companion object {
         private val logger =
             LoggerFactory.create("ai.grazie.code.agents.local.features.common.provider.FeatureMessageFileWriter")
     }
@@ -45,7 +45,7 @@ abstract class FeatureMessageFileWriter<Path>(
     private val writerMutex = Mutex()
 
 
-    val targetPath: Path
+    public val targetPath: Path
         get() = _targetPath ?: error("Target path is not initialized. Please make sure you call method 'initialize()' before.")
 
     /**
@@ -61,7 +61,7 @@ abstract class FeatureMessageFileWriter<Path>(
      * Accessing this property allows for thread-safe checking of the writer's state, particularly in
      * scenarios that involve concurrent operations.
      */
-    val isOpen: Boolean
+    public val isOpen: Boolean
         get() = _isOpen
 
 
@@ -75,7 +75,7 @@ abstract class FeatureMessageFileWriter<Path>(
      *
      * @return A string representation of the `FeatureMessage` formatted for file output.
      */
-    abstract fun FeatureMessage.toFileString(): String
+    public abstract fun FeatureMessage.toFileString(): String
 
     override suspend fun processMessage(message: FeatureMessage) {
         check(isOpen) { "Writer is not initialized. Please make sure you call method 'initialize()' before." }

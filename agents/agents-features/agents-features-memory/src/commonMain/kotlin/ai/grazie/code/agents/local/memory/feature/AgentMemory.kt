@@ -1,5 +1,6 @@
 package ai.grazie.code.agents.local.memory.feature
 
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
 import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
 import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
@@ -79,7 +80,7 @@ import ai.grazie.utils.mpp.MPPLogger
  * @see AgentMemoryProvider
  * @see MemoryScopesProfile
  */
-class AgentMemory(
+public class AgentMemory(
     internal val agentMemory: AgentMemoryProvider,
     internal val llm: AIAgentLLMContext,
     internal val scopesProfile: MemoryScopesProfile
@@ -98,12 +99,12 @@ class AgentMemory(
      * The scope names are used to create concrete [MemoryScope] instances when
      * performing memory operations, determining the visibility of stored facts.
      */
-    class Config : FeatureConfig() {
+    public class Config : FeatureConfig() {
         /**
          * The provider that handles the actual storage and retrieval of facts.
          * Defaults to [NoMemory], which doesn't store anything.
          */
-        var memoryProvider: AgentMemoryProvider = NoMemory
+        public var memoryProvider: AgentMemoryProvider = NoMemory
 
         /**
          * Profile containing scope names for memory operations.
@@ -115,7 +116,7 @@ class AgentMemory(
          * The name of the agent for AGENT-scoped memory operations.
          * Facts stored with AGENT scope will only be accessible to this specific agent.
          */
-        var agentName: String
+        public var agentName: String
             get() = scopesProfile.names[MemoryScopeType.AGENT] ?: UNKNOWN_NAME
             set(value) {
                 scopesProfile.names[MemoryScopeType.AGENT] = value
@@ -125,7 +126,7 @@ class AgentMemory(
          * The name of the feature for FEATURE-scoped memory operations.
          * Facts stored with FEATURE scope will be shared between all agents of this feature.
          */
-        var featureName: String
+        public var featureName: String
             get() = scopesProfile.names[MemoryScopeType.FEATURE] ?: UNKNOWN_NAME
             set(value) {
                 scopesProfile.names[MemoryScopeType.FEATURE] = value
@@ -135,7 +136,7 @@ class AgentMemory(
          * The name of the organization for ORGANIZATION-scoped memory operations.
          * Facts stored with ORGANIZATION scope will be shared across different products.
          */
-        var organizationName: String
+        public var organizationName: String
             get() = scopesProfile.names[MemoryScopeType.ORGANIZATION] ?: UNKNOWN_NAME
             set(value) {
                 scopesProfile.names[MemoryScopeType.ORGANIZATION] = value
@@ -145,7 +146,7 @@ class AgentMemory(
          * The name of the product for PRODUCT-scoped memory operations.
          * Facts stored with PRODUCT scope will be available across the entire product.
          */
-        var productName: String
+        public var productName: String
             get() = scopesProfile.names[MemoryScopeType.PRODUCT] ?: UNKNOWN_NAME
             set(value) {
                 scopesProfile.names[MemoryScopeType.PRODUCT] = value
@@ -202,8 +203,8 @@ class AgentMemory(
      * }
      * ```
      */
-    companion object Feature : AIAgentFeature<Config, AgentMemory> {
-        override val key = createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
+    public companion object Feature : AIAgentFeature<Config, AgentMemory> {
+        override val key: AIAgentStorageKey<AgentMemory> = createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
         /**
          * Creates the initial configuration for the AgentMemory feature.
@@ -276,7 +277,7 @@ class AgentMemory(
      * @param scope The visibility scope for the facts (e.g., Agent, Feature, Product)
      * @param preserveQuestionsInLLMChat If true, keeps the fact extraction messages in the chat history
      */
-    suspend fun saveFactsFromHistory(
+    public suspend fun saveFactsFromHistory(
         concept: Concept,
         subject: MemorySubject,
         scope: MemoryScope,
@@ -315,11 +316,11 @@ class AgentMemory(
      * @param scopes List of memory scopes to search in (Agent, Feature, etc.). By default all scopes are used.
      * @param subjects List of subjects to search in (User, Project, etc.). By default all registered subjects are used.
      */
-    suspend fun loadFactsToAgent(
+    public suspend fun loadFactsToAgent(
         concept: Concept,
         scopes: List<MemoryScopeType> = MemoryScopeType.entries,
         subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-    ) = loadFactsToAgentImpl(scopes, subjects) { subject, scope ->
+    ): Unit = loadFactsToAgentImpl(scopes, subjects) { subject, scope ->
         agentMemory.load(concept, subject, scope)
     }
 
@@ -342,10 +343,10 @@ class AgentMemory(
      * @param scopes List of memory scopes to search in (Agent, Feature, etc.). By default all scopes are used.
      * @param subjects List of subjects to search in (User, Project, etc.). By default all registered subjects are used.
      */
-    suspend fun loadAllFactsToAgent(
+    public suspend fun loadAllFactsToAgent(
         scopes: List<MemoryScopeType> = MemoryScopeType.entries,
         subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-    ) = loadFactsToAgentImpl(scopes, subjects, agentMemory::loadAll)
+    ): Unit = loadFactsToAgentImpl(scopes, subjects, agentMemory::loadAll)
 
     /**
      * Implementation method for loading facts from memory and adding them to the LLM chat history.
@@ -519,7 +520,7 @@ private fun String.shortened() = lines().first().take(100) + "..."
  *
  * @return The AgentMemory instance for this agent context
  */
-fun AIAgentStageContextBase.memory(): AgentMemory = feature(AgentMemory.Feature)!!
+public fun AIAgentStageContextBase.memory(): AgentMemory = feature(AgentMemory.Feature)!!
 
 /**
  * Extension function to perform memory operations within a AIAgentStageContext.
@@ -543,4 +544,4 @@ fun AIAgentStageContextBase.memory(): AgentMemory = feature(AgentMemory.Feature)
  * @param action The memory operations to perform
  * @return The result of the action
  */
-suspend fun <T> AIAgentStageContextBase.withMemory(action: suspend AgentMemory.() -> T) = memory().action()
+public suspend fun <T> AIAgentStageContextBase.withMemory(action: suspend AgentMemory.() -> T): T = memory().action()

@@ -10,7 +10,7 @@ import ai.grazie.utils.mpp.LoggerFactory
  * without interrupting the execution flow. It is particularly useful in scenarios where multiple
  * processors are involved, and a failing processor shouldn't impact the processing of others.
  */
-object FeatureMessageProcessorUtil {
+public object FeatureMessageProcessorUtil {
 
     private val logger =
         LoggerFactory.create("ai.grazie.code.agents.local.features.logger.FeatureProviderUtil")
@@ -34,7 +34,7 @@ object FeatureMessageProcessorUtil {
      *
      * @param message The feature message to be processed by each `FeatureMessageProcessor`.
      */
-    suspend fun List<FeatureMessageProcessor>.onMessageForEachSafe(message: FeatureMessage) {
+    public suspend fun List<FeatureMessageProcessor>.onMessageForEachSafe(message: FeatureMessage) {
         this.forEach { provider -> provider.onMessageSafe(message) }
     }
 }

@@ -14,4 +14,4 @@ package ai.grazie.code.agents.core.tools.annotations
     AnnotationTarget.VALUE_PARAMETER,
     AnnotationTarget.FUNCTION
 )
-annotation class LLMDescription(val description: String)
+public annotation class LLMDescription(val description: String)

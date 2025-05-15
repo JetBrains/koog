@@ -24,7 +24,7 @@ import kotlin.reflect.jvm.kotlinFunction
  * @param json The [Json] instance to use for serialization when converting tools. Defaults to a new [Json] instance if not provided.
  * @return A [ai.grazie.code.agents.core.tools.tools.ToolStage] instance containing the name of the [ToolSet] and its converted tools.
  */
-fun ToolSet.asToolStage(json: Json = Json): ToolStage {
+public fun ToolSet.asToolStage(json: Json = Json): ToolStage {
     return ToolStage(name, this.asTools(json = json))
 }
 
@@ -60,7 +60,7 @@ fun ToolSet.asToolStage(json: Json = Json): ToolStage {
  * val tools = myToolset.asTools()
  * ```
  */
-fun ToolSet.asTools(json: Json = Json): List<ToolFromCallable> {
+public fun ToolSet.asTools(json: Json = Json): List<ToolFromCallable> {
     return this::class.asTools(json = json, thisRef = this)
 }
 
@@ -97,7 +97,7 @@ fun ToolSet.asTools(json: Json = Json): List<ToolFromCallable> {
  * val tools = myToolset.asToolsByInterface<MyToolsetInterface>() // only interface methods will be added
  * ```
  */
-inline fun <reified T : ToolSet> T.asToolsByInterface(json: Json = Json): List<ToolFromCallable> {
+public inline fun <reified T : ToolSet> T.asToolsByInterface(json: Json = Json): List<ToolFromCallable> {
     return T::class.asTools(json = json, thisRef = this)
 }
 
@@ -109,7 +109,7 @@ inline fun <reified T : ToolSet> T.asToolsByInterface(json: Json = Json): List<T
 
  * @see [asTool]
  */
-fun <T : ToolSet> KClass<out T>.asTools(json: Json = Json, thisRef: T? = null): List<ToolFromCallable> {
+public fun <T : ToolSet> KClass<out T>.asTools(json: Json = Json, thisRef: T? = null): List<ToolFromCallable> {
     return this.functions.filter { m ->
         m.getPreferredToolAnnotation() != null
     }.map {
@@ -124,7 +124,7 @@ fun <T : ToolSet> KClass<out T>.asTools(json: Json = Json, thisRef: T? = null): 
  *
  * See [asTools] and [asTool] for the description
  */
-fun ToolRegistry.Builder.stage(toolSet: ToolSet, name: String = toolSet.name) {
+public fun ToolRegistry.Builder.stage(toolSet: ToolSet, name: String = toolSet.name) {
     this.stage(name) {
         toolsFrom(toolSet)
     }
@@ -135,14 +135,14 @@ fun ToolRegistry.Builder.stage(toolSet: ToolSet, name: String = toolSet.name) {
  *
  * See [asTool] for the description
  */
-fun ToolStage.Builder.tool(
+public fun ToolStage.Builder.tool(
     callable: KFunction<*>,
     thisRef: Any? = null,
     name: String? = null,
     description: String? = null,
-) = tool(callable.asTool(thisRef = thisRef, json = ToolJson, name = name, description = description))
+): Unit = tool(callable.asTool(thisRef = thisRef, json = ToolJson, name = name, description = description))
 
-fun ToolStage.Builder.toolsFrom(toolSet: ToolSet) {
+public fun ToolStage.Builder.toolsFrom(toolSet: ToolSet) {
     toolSet.asTools().forEach { tool(it) }
 }
 
@@ -196,7 +196,7 @@ fun ToolStage.Builder.toolsFrom(toolSet: ToolSet) {
  * val tool = MyTools::my_best_tool.asTool(json = Json, thisRef = myTools)
  * ```
  */
-fun KFunction<*>.asTool(json: Json = Json, thisRef: Any? = null, name: String? = null, description: String? = null): ToolFromCallable {
+public fun KFunction<*>.asTool(json: Json = Json, thisRef: Any? = null, name: String? = null, description: String? = null): ToolFromCallable {
     val toolDescriptor = this.asToolDescriptor(name = name, description = description)
     if (instanceParameter != null && thisRef == null) error("Instance parameter is not null, but no 'this' object is provided")
     return ToolFromCallable(callable = this, thisRef = thisRef, descriptor = toolDescriptor, json = json)
@@ -213,7 +213,7 @@ fun KFunction<*>.asTool(json: Json = Json, thisRef: Any? = null, name: String? =
  * @return The corresponding `ToolParameterType` for the provided `KType`.
  *         Throws an `IllegalArgumentException` or error for unsupported types.
  */
-fun KType.asToolType(): ToolParameterType {
+public fun KType.asToolType(): ToolParameterType {
     val classifier = this.classifier
     return when (classifier) {
         String::class -> ToolParameterType.String
@@ -247,7 +247,7 @@ fun KType.asToolType(): ToolParameterType {
  * @param description An optional custom description for the tool. If not provided, the description is derived from annotations or the function name.
  * @return A [ToolDescriptor] containing the tool's name, description, required parameters, and optional parameters.
  */
-fun KFunction<*>.asToolDescriptor(name: String? = null, description: String? = null): ToolDescriptor {
+public fun KFunction<*>.asToolDescriptor(name: String? = null, description: String? = null): ToolDescriptor {
     val toolName = name ?: this.getPreferredToolAnnotation()?.customName?.ifBlank { this.name } ?: this.name
     val toolDescription = description ?: this.getPreferredToolDescriptionAnnotation()?.description ?: this.name
     val toolParameters = this.parameters.mapNotNull { param ->

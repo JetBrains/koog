@@ -23,16 +23,16 @@ import kotlinx.io.buffered
  * 3. Transforming MCP tools into the agent framework's Tool interface
  * 4. Registering the transformed tools in a ToolRegistry
  */
-object McpToolRegistryProvider {
+public object McpToolRegistryProvider {
     /**
      * Default name for the MCP client when connecting to an MCP server.
      */
-    const val DEFAULT_MCP_CLIENT_NAME = "mcp-client-cli"
+    public const val DEFAULT_MCP_CLIENT_NAME: String = "mcp-client-cli"
 
     /**
      * Default version for the MCP client when connecting to an MCP server.
      */
-    const val DEFAULT_MCP_CLIENT_VERSION = "1.0.0"
+    public const val DEFAULT_MCP_CLIENT_VERSION: String = "1.0.0"
 
 
     /**
@@ -41,7 +41,7 @@ object McpToolRegistryProvider {
      * @param process The process whose input and output streams will be used for communication.
      * @return A `StdioClientTransport` configured to communicate with the process using its standard input and output.
      */
-    fun defaultStdioTransport(process: Process): StdioClientTransport {
+    public fun defaultStdioTransport(process: Process): StdioClientTransport {
         return StdioClientTransport(
             input = process.inputStream.asSource().buffered(),
             output = process.outputStream.asSink().buffered()
@@ -54,7 +54,7 @@ object McpToolRegistryProvider {
      * @param url The URL to be used for establishing an SSE connection.
      * @return An instance of SseClientTransport configured with the given URL.
      */
-    fun defaultSseTransport(url: String): SseClientTransport {
+    public fun defaultSseTransport(url: String): SseClientTransport {
         // Setup SSE transport using the HTTP client
         return SseClientTransport(
             client = HttpClient {
@@ -74,7 +74,7 @@ object McpToolRegistryProvider {
      * @param stageName The name of the stage in which to register the tools.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
-    fun fromClient(
+    public fun fromClient(
         mcpClient: Client,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
         stageName: String = DEFAULT_STAGE_NAME
@@ -102,7 +102,7 @@ object McpToolRegistryProvider {
      * @param stageName The name of the stage in which to register the tools.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
-    suspend fun fromTransport(
+    public suspend fun fromTransport(
         transport: Transport,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
         name: String = DEFAULT_MCP_CLIENT_NAME,

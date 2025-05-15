@@ -14,9 +14,9 @@ import kotlinx.serialization.Serializable
  *
  * The descriptor defines the tool's metadata including its name, description, and required parameters.
  */
-object ExitTool : SimpleTool<ExitTool.Args>() {
+public object ExitTool : SimpleTool<ExitTool.Args>() {
     @Serializable
-    data class Args(val message: String) : Tool.Args
+    public data class Args(val message: String) : Tool.Args
 
     override suspend fun doExecute(args: Args): String {
         return "DONE"

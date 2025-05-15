@@ -14,7 +14,7 @@ import io.ktor.http.URLProtocol
  *             port for the specified protocol will be used.
  * @param protocol The protocol used for the connection, such as HTTP or HTTPS. Defaults to HTTPS.
  */
-class DefaultClientConnectionConfig(
+public class DefaultClientConnectionConfig(
     host: String = "localhost",
     port: Int? = null,
     protocol: URLProtocol = URLProtocol.HTTPS,
