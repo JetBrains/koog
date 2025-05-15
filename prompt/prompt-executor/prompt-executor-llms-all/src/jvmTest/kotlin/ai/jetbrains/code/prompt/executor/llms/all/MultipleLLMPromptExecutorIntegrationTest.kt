@@ -13,22 +13,18 @@ import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
+import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class MultipleLLMPromptExecutorIntegrationTest {
-
-    // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
 
 
-    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testExecuteWithOpenAI() = runTest {
+    fun integration_testExecuteWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -51,9 +47,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testExecuteWithAnthropic() = runTest {
+    fun integration_testExecuteWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -76,9 +71,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testExecuteStreamingWithOpenAI() = runTest {
+    fun integration_testExecuteStreamingWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -107,9 +101,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testExecuteStreamingWithAnthropic() = runTest {
+    fun integration_testExecuteStreamingWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -138,9 +131,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testCodeGenerationWithOpenAI() = runTest {
+    fun integration_testCodeGenerationWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -163,9 +155,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(content.contains("return"), "Response should contain a return statement")
     }
 
-    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun testCodeGenerationWithAnthropic() = runTest {
+    fun integration_testCodeGenerationWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -188,9 +179,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(content.contains("return"), "Response should contain a return statement")
     }
 
-    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`")
     @Test
-    fun `test execute tools with required parameters`() = runTest {
+    fun integration_testToolsWithRequiredParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -237,9 +227,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
 
-    @Disabled
     @Test
-    fun `test execute tools with required and optional parameters`() = runTest {
+    fun integration_testToolsWithRequiredOptionalParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -293,9 +282,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
 
-    @Disabled
     @Test
-    fun `test execute tools with optional parameters`() = runTest {
+    fun integration_testToolsWithOptionalParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -348,9 +336,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
 
-    @Disabled
     @Test
-    fun `test execute tools with no parameters`() = runTest {
+    fun integration_testToolsWithNoParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -388,9 +375,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
 
-    @Disabled
     @Test
-    fun `test execute tools with list enum parameter`() = runTest {
+    fun integration_testToolsWithListEnumParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -429,9 +415,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
 
-    @Disabled
     @Test
-    fun `test execute tools with list of lists parameter`() = runTest {
+    fun integration_testToolsWithNestedListParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -471,9 +456,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(responseAnthropic.isNotEmpty(), "Response should not be empty")
     }
 
-    @Disabled
     @Test
-    fun `test openai client with streaming API raw string`() = runTest(timeout = 600.seconds) {
+    fun integration_testOpenAIRawStringStreaming() = runTest(timeout = 600.seconds) {
         val openAIClient = OpenAILLMClient(openAIApiKey)
 
         val model = OpenAIModels.Chat.GPT4o
@@ -501,9 +485,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Disabled
     @Test
-    fun `test anthropic client with streaming API raw string`() = runTest(timeout = 600.seconds) {
+    fun integration_testAnthropicRawStringStreaming() = runTest(timeout = 600.seconds) {
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val model = AnthropicModels.Sonnet_3_7
@@ -532,9 +515,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Disabled
     @Test
-    fun `test openai client with streaming API structured data`() = runTest {
+    fun integration_testOpenAIStructuredDataStreaming() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()
@@ -570,9 +552,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
     }
 
-    @Disabled
     @Test
-    fun `test anthropic client with streaming API structured data`() = runTest {
+    fun integration_testAnthropicStructuredDataStreaming() = runTest {
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils().markdownCountryDefinition()

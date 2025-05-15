@@ -66,6 +66,12 @@ subprojects {
             showExceptions = true
             exceptionFormat = FULL
         }
+        environment.putAll(
+            mapOf(
+                "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
+                "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
+            )
+        )
     }
 }
 

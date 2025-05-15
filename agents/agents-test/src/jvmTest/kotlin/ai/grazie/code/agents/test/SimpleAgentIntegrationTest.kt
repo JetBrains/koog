@@ -8,7 +8,6 @@ import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import kotlin.test.AfterTest
@@ -20,13 +19,9 @@ class SimpleAgentIntegrationTest {
             You MUST use tools to communicate to the user.
             You MUST NOT communicate to the user without tools.
         """.trimIndent()
-    private val apiToken = System.getenv("USER_STGN_JWT_TOKEN")
 
-    private fun runBlockingWithToken(block: suspend CoroutineScope.(token: String) -> Unit) = runBlocking {
-        if (apiToken.isNullOrBlank() || apiToken == "null") {
-            return@runBlocking
-        }
-        block(apiToken)
+    private fun readTestOpenAIKeyFromEnv(): String {
+        return System.getenv("OPEN_AI_API_TEST_KEY") ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` not set")
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
@@ -56,10 +51,11 @@ class SimpleAgentIntegrationTest {
     }
 
 
+    // ToDo add parametrisation for different LLMs
     @Test
-    fun `simpleChatAgent should call default tools`() = runBlockingWithToken {
+    fun integration_simpleChatAgentShouldCallDefaultTools() = runBlocking {
         val agent = simpleChatAgent(
-            executor = simpleOpenAIExecutor(apiToken),
+            executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Chat.GPT4o,
             temperature = 1.0,
@@ -72,7 +68,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @Test
-    fun `simpleChatAgent should call a custom tool`() = runBlockingWithToken {
+    fun integration_simpleChatAgentShouldCallCustomTools() = runBlocking {
         val toolRegistry = ToolRegistry {
             stage {
                 tool(SayToUser)
@@ -80,7 +76,7 @@ class SimpleAgentIntegrationTest {
         }
 
         val agent = simpleChatAgent(
-            executor = simpleOpenAIExecutor(apiToken),
+            executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -96,9 +92,9 @@ class SimpleAgentIntegrationTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should not call tools by default`() = runBlockingWithToken {
+    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault() = runBlocking {
         val agent = simpleSingleRunAgent(
-            executor = simpleOpenAIExecutor(apiToken),
+            executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -113,7 +109,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should call a custom tool`() = runBlockingWithToken {
+    fun integration_simpleSingleRunAgentShouldCallCustomTool() = runBlocking {
         val toolRegistry = ToolRegistry {
             stage {
                 tool(SayToUser)
@@ -121,7 +117,7 @@ class SimpleAgentIntegrationTest {
         }
 
         val agent = simpleSingleRunAgent(
-            executor = simpleOpenAIExecutor(apiToken),
+            executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,

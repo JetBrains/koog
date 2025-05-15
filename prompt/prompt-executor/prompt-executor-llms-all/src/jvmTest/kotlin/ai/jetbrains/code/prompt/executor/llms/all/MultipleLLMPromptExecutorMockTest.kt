@@ -15,7 +15,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class MultipleLLMPromptExecutorTest {
+class MultipleLLMPromptExecutorMockTest {
 
     // Mock client for OpenAI
     private class MockOpenAILLMClient : OpenAILLMClient("fake-key") {

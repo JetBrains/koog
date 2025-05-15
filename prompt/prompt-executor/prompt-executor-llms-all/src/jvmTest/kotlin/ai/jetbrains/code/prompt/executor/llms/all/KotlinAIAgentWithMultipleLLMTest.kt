@@ -1,6 +1,7 @@
 package ai.jetbrains.code.prompt.executor.llms.all
 
 import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.AIAgentException
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
@@ -286,10 +287,9 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
     }
 
-    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-    @Disabled("This test requires valid API keys")
+    @Disabled("Todo fix")
     @Test
-    fun testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+    fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
@@ -350,10 +350,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         )
     }
 
-    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-    @Disabled("This test requires valid API keys")
     @Test
-    fun testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
+    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         var errorMessage: String? = null
@@ -369,24 +367,24 @@ class KotlinAIAgentWithMultipleLLMTest {
             onAgentFinished = { _, _ ->
                 eventsChannel.send(Event.Termination)
             }
-
-            onAgentRunError = { _, throwable ->
-                errorMessage = throwable.message
-                true
-            }
         }
         val steps = 10
         val agent = createTestAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = steps)
 
-        val result = agent.runAndGetResult(
-            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-        )
-        assertNull(result)
-        assertEquals(
-            "Local AI Agent has run into a problem: agent couldn't finish in given number of steps ($steps). " +
-                    "Please, consider increasing `maxAgentIterations` value in agent's configuration",
-            errorMessage
-        )
+        try {
+            val result = agent.runAndGetResult(
+                "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+            )
+            assertNull(result)
+        } catch (e: AIAgentException) {
+            errorMessage = e.message
+        } finally {
+            assertEquals(
+                "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
+                        "Please, consider increasing `maxAgentIterations` value in agent's configuration",
+                errorMessage
+            )
+        }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -492,9 +490,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
     }
 
-    @Disabled
     @Test
-    fun `test agent with openAI and Anthropic clients`() = runTest {
+    fun integration_testOpenAIAnthropicAgent() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -597,9 +594,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertNotNull(result)
     }
 
-    @Disabled
     @Test
-    fun `test agent with openAI client only`() = runTest {
+    fun integration_testOpenAIAgent() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
 
         val executor = MultiLLMPromptExecutor(
@@ -682,9 +678,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertNotNull(result)
     }
 
-    @Disabled
     @Test
-    fun `test agent with Anthropic client only`() = runTest {
+    fun integration_testAnthropicAgent() = runTest {
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
         val executor = MultiLLMPromptExecutor(
             LLMProvider.Anthropic to anthropicClient
@@ -766,9 +761,9 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertNotNull(result)
     }
 
-    @Disabled
+    @Disabled("Todo fix")
     @Test
-    fun `test agent with openAI and Anthropic with tools`() = runTest(timeout = 300.seconds) {
+    fun integration_testOpenAIAnthropicAgentWithTools() = runTest(timeout = 300.seconds) {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
@@ -936,10 +931,8 @@ class KotlinAIAgentWithMultipleLLMTest {
         }.let(ToolResult::Number)
     }
 
-    // TODO: pass the `OPEN_AI_API_TEST_KEY` and `ANTHROPIC_API_TEST_KEY`
-    @Disabled("This test requires valid API keys")
     @Test
-    fun `test enum serialization in agents for Anthropic`() {
+    fun integration_testAnthropicAgentEnumSerialization() {
         runBlocking {
             val a = simpleSingleRunAgent(
                 executor = simpleAnthropicExecutor(anthropicApiKey),
