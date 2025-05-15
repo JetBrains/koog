@@ -4,6 +4,7 @@ import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.LLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
+import ai.jetbrains.code.prompt.executor.clients.google.GoogleModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
@@ -31,7 +32,11 @@ class LLMPromptExecutorTest {
 
     // Mock client for Anthropic
     private class MockAnthropicLLMClient : LLMClient {
-        override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): List<Message.Response> {
             return listOf(Message.Assistant("Anthropic response"))
         }
 
@@ -40,11 +45,27 @@ class LLMPromptExecutorTest {
         }
     }
 
+    // Mock client for Gemini
+    private class MockGoogleLLMClient : LLMClient {
+        override suspend fun execute(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): List<Message.Response> {
+            return listOf(Message.Assistant("Gemini response"))
+        }
+
+        override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+            return flowOf("Gemini", " streaming", " response")
+        }
+    }
+
     @Test
     fun testExecuteWithOpenAI() = runTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
-            LLMProvider.Anthropic to MockAnthropicLLMClient()
+            LLMProvider.Anthropic to MockAnthropicLLMClient(),
+            LLMProvider.Google to MockGoogleLLMClient()
         )
 
         val model = OpenAIModels.Chat.GPT4o
@@ -62,9 +83,11 @@ class LLMPromptExecutorTest {
     fun testExecuteWithAnthropic() = runTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
-            LLMProvider.Anthropic to MockAnthropicLLMClient()
+            LLMProvider.Anthropic to MockAnthropicLLMClient(),
+            LLMProvider.Google to MockGoogleLLMClient()
         )
-val model = AnthropicModels.Sonnet_3_5
+
+        val model = AnthropicModels.Sonnet_3_5
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -76,10 +99,30 @@ val model = AnthropicModels.Sonnet_3_5
     }
 
     @Test
+    fun testExecuteWithGoogle() = runTest {
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.Anthropic to MockAnthropicLLMClient(),
+            LLMProvider.Google to MockGoogleLLMClient()
+        )
+
+        val model = GoogleModels.Gemini2_0Flash
+        val prompt = Prompt.build("test-prompt") {
+            system("You are a helpful assistant.")
+            user("What is the capital of France?")
+        }
+
+        val response = executor.execute(prompt, model)
+
+        assertEquals("Gemini response", response)
+    }
+
+    @Test
     fun testExecuteStreamingWithOpenAI() = runTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
-            LLMProvider.Anthropic to MockAnthropicLLMClient()
+            LLMProvider.Anthropic to MockAnthropicLLMClient(),
+            LLMProvider.Google to MockGoogleLLMClient()
         )
 
         val model = OpenAIModels.Chat.GPT4o
@@ -101,7 +144,8 @@ val model = AnthropicModels.Sonnet_3_5
     fun testExecuteStreamingWithAnthropic() = runTest {
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to MockOpenAILLMClient(),
-            LLMProvider.Anthropic to MockAnthropicLLMClient()
+            LLMProvider.Anthropic to MockAnthropicLLMClient(),
+            LLMProvider.Google to MockGoogleLLMClient()
         )
 
         val model = AnthropicModels.Sonnet_3_7
@@ -116,6 +160,29 @@ val model = AnthropicModels.Sonnet_3_5
             "Anthropic streaming response",
             responseChunks.joinToString(""),
             "Response should be from Anthropic client"
+        )
+    }
+
+    @Test
+    fun testExecuteStreamingWithGoogle() = runTest {
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.Anthropic to MockAnthropicLLMClient(),
+            LLMProvider.Google to MockGoogleLLMClient()
+        )
+
+        val model = GoogleModels.Gemini2_0Flash
+        val prompt = Prompt.build("test-prompt") {
+            system("You are a helpful assistant.")
+            user("What is the capital of France?")
+        }
+
+        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        assertEquals(3, responseChunks.size, "Response should have three chunks")
+        assertEquals(
+            "Gemini streaming response",
+            responseChunks.joinToString(""),
+            "Response should be from Gemini client"
         )
     }
 
@@ -137,7 +204,7 @@ val model = AnthropicModels.Sonnet_3_5
     @Test
     fun testExecuteStreamingWithUnsupportedProvider() = runTest {
         val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient())
-val model = AnthropicModels.Sonnet_3_7
+        val model = AnthropicModels.Sonnet_3_7
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")

@@ -15,7 +15,6 @@ import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.Test
 import kotlin.test.assertTrue
