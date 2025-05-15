@@ -14,6 +14,8 @@ kotlin {
             dependencies {
                 api("ai.jetbrains.code.files:code-files-model:1.0.0-beta.55+0.4.45")
 
+                implementation(project(":agents:agents-utils"))
+
                 implementation(libs.ai.grazie.model.llm)
                 implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.datetime)

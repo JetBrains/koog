@@ -1,7 +1,7 @@
 package ai.jetbrains.code.prompt.executor.ollama
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -12,8 +12,6 @@ import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 import ai.jetbrains.code.prompt.llm.OllamaModels
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
@@ -97,16 +95,15 @@ class OllamaIntegrationTest {
 
     private fun createAgent(
         executor: OllamaPromptExecutor,
-        strategy: ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy,
+        strategy: ai.grazie.code.agents.core.agent.entity.AIAgentStrategy,
         toolRegistry: ToolRegistry
-    ): AIAgentBase {
+    ): AIAgent {
         val promptsAndResponses = mutableListOf<String>()
 
-        return AIAgentBase(
+        return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            cs = CoroutineScope(newFixedThreadPoolContext(2, "TestAgent")),
-            agentConfig = LocalAgentConfig(prompt("test-ollama") {}, model, 15),
+            agentConfig = AIAgentConfig(prompt("test-ollama") {}, model, 15),
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
@@ -150,7 +147,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun `test agent with Ollama executor and CLEAR_LLM_HISTORY policy`() = runTest {
+    fun integration_testOllamaAgentClearContext() = runTest {
         val strategy = createTestStrategy("clear", ContextTransitionPolicy.CLEAR_LLM_HISTORY)
         val toolRegistry = createStageSpecificToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
@@ -162,7 +159,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun `test agent with Ollama executor and PERSIST_LLM_HISTORY policy`() = runTest {
+    fun integration_testOllamaAgentPersistContext() = runTest {
         val strategy = createTestStrategy("persist", ContextTransitionPolicy.PERSIST_LLM_HISTORY)
         val toolRegistry = createStageSpecificToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
@@ -175,7 +172,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun `test agent with Ollama executor and COMPRESS_LLM_HISTORY policy`() = runTest {
+    fun integration_testOllamaAgentCompressContext() = runTest {
         val strategy = createTestStrategy("compress", ContextTransitionPolicy.COMPRESS_LLM_HISTORY)
         val toolRegistry = createStageSpecificToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)

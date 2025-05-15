@@ -21,7 +21,6 @@ fun main() = runBlocking {
     val transferAgent = simpleChatAgent(
         executor = openAIExecutor,
         systemPrompt = bankingAssistantSystemPrompt,
-        cs = this,
         temperature = 0.0,
         toolRegistry = SimpleToolRegistry { toolsFrom(MoneyTransferTools()) }
     )
@@ -29,7 +28,6 @@ fun main() = runBlocking {
     val analysisAgent = simpleChatAgent(
         executor = openAIExecutor,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
-        cs = this,
         temperature = 0.0,
         toolRegistry = SimpleToolRegistry { toolsFrom(TransactionAnalysisTools()) }
     )
@@ -51,8 +49,7 @@ fun main() = runBlocking {
                 )
             )
         },
-        systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
-        cs = this
+        systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt
     )
 
     println("Banking Assistant started")

@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.tone
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
@@ -109,7 +109,7 @@ class ToneAgentTest {
         val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
 
         // Create agent config
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AIAgentConfig(
             prompt = prompt("test-agent") {
                 system(
                     """
@@ -126,10 +126,9 @@ class ToneAgentTest {
         )
 
         // Create the agent
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = mockLLMApi,
             strategy = strategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
         ) {

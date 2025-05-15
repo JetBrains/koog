@@ -46,7 +46,6 @@ fun main() {
                     executor = simpleOpenAIExecutor(openAIApiToken),
                     llmModel = OpenAIModels.Chat.GPT4o,
                     toolRegistry = toolRegistry,
-                    cs = this
                 )
                 val request = "Open a browser, navigate to jetbrains.com, accept all cookies, click AI in toolbar"
                 println("Sending request: $request")

@@ -4,7 +4,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
-import ai.grazie.code.agents.local.features.common.message.use
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlin.js.JsName
@@ -66,20 +66,5 @@ class FeatureMessageProcessorTest {
         processor.use { processor -> }
 
         assertTrue(processor.isClose)
-    }
-
-    @Test @JsName("testIsReadyPropertyIsInitiallyNotCompleted")
-    fun `test isReady property is initially not completed`() = runTest {
-        val processor = TestFeatureMessageProcessor()
-        assertFalse(processor.isReady.isCompleted)
-    }
-
-    @Test @JsName("testIsReadyPropertyIsCompletedAfterInitializeCall")
-    fun `test isReady property is completed after initialize() call`() = runTest {
-        TestFeatureMessageProcessor().use { processor ->
-            processor.initialize()
-            assertTrue(processor.isReady.isCompleted)
-            assertTrue(processor.isReady.await())
-        }
     }
 }

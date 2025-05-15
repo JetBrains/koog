@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.local.memory
 
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.local.memory.feature.AgentMemory
@@ -170,7 +170,7 @@ class MemoryNodesTest {
             }
         }
 
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AIAgentConfig(
             prompt = prompt("test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
@@ -180,10 +180,9 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = strategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage {
@@ -227,7 +226,7 @@ class MemoryNodesTest {
 
         val memory = TestMemoryProvider()
 
-        val agentConfig = LocalAgentConfig(
+        val agentConfig = AIAgentConfig(
             prompt = prompt("test") {
                 system("Test system message")
                 user("I prefer using Python for data analysis")
@@ -239,10 +238,9 @@ class MemoryNodesTest {
             maxAgentIterations = 10
         )
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = createMockExecutor(),
             strategy = strategy,
-            cs = this,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
                 stage("default") {

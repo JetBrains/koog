@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.example.features
 
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
-import ai.grazie.code.agents.core.feature.AgentPipeline
-import ai.grazie.code.agents.core.feature.KotlinAIAgentFeature
+import ai.grazie.code.agents.core.feature.AIAgentPipeline
+import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.core.feature.handler.BeforeNodeHandler
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
@@ -32,8 +32,8 @@ class Logging(val logger: Logger) {
      * This feature supports configuration via the [Config] class,
      * which allows specifying custom logger names.
      */
-    companion object Feature : KotlinAIAgentFeature<Config, Logging> {
-        override val key: LocalAgentStorageKey<Logging> = createStorageKey("logging-feature")
+    companion object Feature : AIAgentFeature<Config, Logging> {
+        override val key: AIAgentStorageKey<Logging> = createStorageKey("logging-feature")
 
         override fun createInitialConfig(): Config = Config()
 
@@ -49,12 +49,12 @@ class Logging(val logger: Logger) {
          */
         override fun install(
             config: Config,
-            pipeline: AgentPipeline
+            pipeline: AIAgentPipeline
         ) {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
 
-            pipeline.interceptAgentCreated(this, logging) {
-                logging.logger.info("Agent created with strategy: ${strategy.name}.")
+            pipeline.interceptBeforeAgentStarted(this, logging) {
+                logging.logger.info("Agent is going to be started with strategy: ${strategy.name}.")
             }
 
             pipeline.interceptStrategyStarted(this, logging) {
@@ -96,7 +96,6 @@ class Logging(val logger: Logger) {
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
-        cs = coroutineScope,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(Logging) {

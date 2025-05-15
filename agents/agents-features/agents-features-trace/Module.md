@@ -23,7 +23,7 @@ This data is crucial for evaluation and analysis of the working agent, enabling:
 To use the Tracing feature in your agent:
 
 ```kotlin
-val agent = AIAgentBase(
+val agent = AIAgent(
     promptExecutor = executor,
     strategy = strategy,
     // other parameters...
@@ -47,7 +47,7 @@ val agent = AIAgentBase(
 For unit tests, you can use a simple log printer:
 
 ```kotlin
-val agent = AIAgentBase(
+val agent = AIAgent(
     // parameters...
 ) {
     install(Tracing) {

@@ -4,12 +4,11 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.feature.model.*
-import ai.grazie.code.agents.core.feature.model.AgentCreateEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
-import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.tracing.feature.Tracing
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -40,10 +39,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { true }
                     addMessageProcessor(writer)
@@ -53,21 +49,20 @@ class TraceFeatureMessageLogWriterTest {
             agent.run("")
 
             val expectedLogMessages = listOf(
-                "[INFO] Received feature message [event]: ${AgentCreateEvent::class.simpleName} (strategy name: $strategyName)",
-                "[INFO] Received feature message [event]: ${AgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
-                "[INFO] Received feature message [event]: ${StrategyStartEvent::class.simpleName} (strategy name: $strategyName)",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit)",
-                "[INFO] Received feature message [event]: ${NodeExecutionEndEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit, output: kotlin.Unit)",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartEvent::class.simpleName} (stage: default, node: test LLM call, input: Test LLM call prompt)",
+                "[INFO] Received feature message [event]: ${AIAgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
+                "[INFO] Received feature message [event]: ${AIAgentStrategyStartEvent::class.simpleName} (strategy name: $strategyName)",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit)",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit, output: kotlin.Unit)",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: test LLM call, input: Test LLM call prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy, __tools_list__])",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy, __tools_list__])",
-                "[INFO] Received feature message [event]: ${NodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response))",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt)",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response))",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy, __tools_list__])",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy, __tools_list__])",
-                "[INFO] Received feature message [event]: ${NodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response))",
-                "[INFO] Received feature message [event]: ${StrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
-                "[INFO] Received feature message [event]: ${AgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response))",
+                "[INFO] Received feature message [event]: ${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
+                "[INFO] Received feature message [event]: ${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
             )
 
             assertEquals(expectedLogMessages.size, targetLogger.messages.size)
@@ -88,12 +83,12 @@ class TraceFeatureMessageLogWriterTest {
 
         val actualMessages = listOf(
             FeatureStringMessage("Test string message"),
-            AgentCreateEvent("test strategy")
+            AIAgentStartedEvent("test strategy")
         )
 
         val expectedMessages = listOf(
             "[INFO] Received feature message [message]: CUSTOM STRING. Test string message",
-            "[INFO] Received feature message [event]: CUSTOM EVENT. ${AgentCreateEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM EVENT. ${AIAgentStartedEvent::class.simpleName}",
         )
 
         TraceFeatureMessageLogWriter(targetLogger = targetLogger, format = customFormat).use { writer ->
@@ -113,21 +108,20 @@ class TraceFeatureMessageLogWriterTest {
         }
 
         val expectedEvents = listOf(
-            "[INFO] Received feature message [event]: CUSTOM. ${AgentCreateEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${AgentStartedEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${StrategyStartEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${NodeExecutionStartEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${NodeExecutionEndEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${NodeExecutionStartEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStartedEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStrategyStartEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${LLMCallWithToolsStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${LLMCallWithToolsEndEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${NodeExecutionEndEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${NodeExecutionStartEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${LLMCallWithToolsStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${LLMCallWithToolsEndEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${NodeExecutionEndEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${StrategyFinishedEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${AgentFinishedEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStrategyFinishedEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",
         )
 
         TraceFeatureMessageLogWriter(targetLogger = targetLogger, format = customFormat).use { writer ->
@@ -142,10 +136,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { true }
                     addMessageProcessor(writer)
@@ -174,10 +165,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { true }
                     // Do not add stream providers
@@ -208,10 +196,7 @@ class TraceFeatureMessageLogWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(
-                strategy = strategy,
-                scope = this,
-            ) {
+            val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
                     messageFilter = { message ->
                         message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent

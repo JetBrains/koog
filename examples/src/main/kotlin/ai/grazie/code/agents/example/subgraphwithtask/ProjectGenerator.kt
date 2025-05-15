@@ -1,6 +1,7 @@
 package ai.grazie.code.agents.example.subgraphwithtask
 
-
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.CreateDirectoryTool
@@ -10,13 +11,10 @@ import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.Dele
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.LSDirectoriesTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.ReadFileTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.RunCommand
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.jetbrains.code.prompt.params.LLMParams
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Path
@@ -67,11 +65,10 @@ fun main() {
         println("       (possible example: Generate an online book store in Java/Gradle with Spring Framework and PostgreSQL database. Language: Java, Framework: Spring, Database)")
         val userRequest = readln()
 
-        val agent = AIAgentBase(
+        val agent = AIAgent(
             promptExecutor = simpleAnthropicExecutor(TokenService.anthropicToken),
             strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
-            cs = CoroutineScope(coroutineContext),
-            agentConfig = LocalAgentConfig(
+            agentConfig = AIAgentConfig(
                 prompt = prompt(
                     "chat",
                     params = LLMParams()

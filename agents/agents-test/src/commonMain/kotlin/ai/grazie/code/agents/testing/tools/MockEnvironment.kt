@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.testing.tools
 
-import ai.grazie.code.agents.core.environment.AgentEnvironment
+import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.tools.DirectToolCallsEnabler
 import ai.grazie.code.agents.core.tools.ToolRegistry
@@ -16,7 +16,7 @@ import ai.jetbrains.code.prompt.message.Message
 private object MockToolsEnabler : DirectToolCallsEnabler
 
 /**
- * A mock implementation of [AgentEnvironment] used for testing agent behavior.
+ * A mock implementation of [AIAgentEnvironment] used for testing agent behavior.
  *
  * This class provides a controlled environment for testing agents by:
  * 1. Executing tool calls using either mocked responses or actual tool implementations
@@ -52,8 +52,8 @@ private object MockToolsEnabler : DirectToolCallsEnabler
 class MockEnvironment(
     val toolRegistry: ToolRegistry,
     val promptExecutor: PromptExecutor,
-    val baseEnvironment: AgentEnvironment? = null
-) : AgentEnvironment {
+    val baseEnvironment: AIAgentEnvironment? = null
+) : AIAgentEnvironment {
     /**
      * Executes a list of tool calls and returns their results.
      *

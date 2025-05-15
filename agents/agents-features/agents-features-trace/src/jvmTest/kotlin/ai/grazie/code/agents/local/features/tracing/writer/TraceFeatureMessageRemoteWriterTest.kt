@@ -4,14 +4,14 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.feature.model.*
-import ai.grazie.code.agents.core.feature.remote.client.config.AgentFeatureClientConnectionConfig
-import ai.grazie.code.agents.core.feature.remote.server.config.AgentFeatureServerConnectionConfig
+import ai.grazie.code.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
+import ai.grazie.code.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
-import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.tracing.NetUtil.findAvailablePort
 import ai.grazie.code.agents.local.features.tracing.feature.Tracing
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.create
 import io.ktor.client.plugins.sse.*
@@ -43,19 +43,16 @@ class TraceFeatureMessageRemoteWriterTest {
     fun `test health check on agent run`() = runBlocking {
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isServerStarted = CompletableDeferred<Boolean>()
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isClientConnected = CompletableDeferred<Boolean>()
 
         val clientJob = launch {
             FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
                 isServerStarted.await()
                 client.connect()
-                isClientConnected.complete(true)
-
                 client.healthCheck()
 
                 isClientFinished.complete(true)
@@ -64,11 +61,6 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
 
                 val strategy = simpleStrategy("tracing-test-strategy") {
                     val llmCallNode by nodeLLMRequest("test LLM call")
@@ -79,17 +71,17 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                val agent = createAgent(strategy = strategy, scope = this) {
+                createAgent(strategy = strategy) {
                     install(Tracing) {
                         messageFilter = { true }
                         addMessageProcessor(writer)
                     }
+                }.use { agent ->
+
+                    agent.run("")
+                    isServerStarted.complete(true)
+                    isClientFinished.await()
                 }
-
-                isClientConnected.await()
-                agent.run("")
-
-                isClientFinished.await()
             }
         }
 
@@ -106,40 +98,33 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
-            AgentCreateEvent(strategyName = strategyName),
-            AgentStartedEvent(strategyName = strategyName),
-            StrategyStartEvent(strategyName = strategyName),
-            NodeExecutionStartEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString()),
-            NodeExecutionEndEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString(), output = Unit::class.qualifiedName.toString()),
-            NodeExecutionStartEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt"),
+            AIAgentStartedEvent(strategyName = strategyName),
+            AIAgentStrategyStartEvent(strategyName = strategyName),
+            AIAgentNodeExecutionStartEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString()),
+            AIAgentNodeExecutionEndEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString(), output = Unit::class.qualifiedName.toString()),
+            AIAgentNodeExecutionStartEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt"),
             LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy", "__tools_list__")),
             LLMCallWithToolsEndEvent(responses = listOf("Default test response"), tools = listOf("dummy", "__tools_list__")),
-            NodeExecutionEndEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt", output = "Assistant(content=Default test response)"),
-            NodeExecutionStartEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt"),
+            AIAgentNodeExecutionEndEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt", output = "Assistant(content=Default test response)"),
+            AIAgentNodeExecutionStartEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt"),
             LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy", "__tools_list__")),
             LLMCallWithToolsEndEvent(responses = listOf("Default test response"), tools = listOf("dummy", "__tools_list__")),
-            NodeExecutionEndEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt", output = "Assistant(content=Default test response)"),
-            StrategyFinishedEvent(strategyName = strategyName, result = "Done"),
-            AgentFinishedEvent(strategyName = strategyName, result = "Done"),
+            AIAgentNodeExecutionEndEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt", output = "Assistant(content=Default test response)"),
+            AIAgentStrategyFinishedEvent(strategyName = strategyName, result = "Done"),
+            AIAgentFinishedEvent(strategyName = strategyName, result = "Done"),
         )
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isClientConnected = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
 
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
 
                 val strategy = simpleStrategy(strategyName) {
                     val llmCallNode by nodeLLMRequest("test LLM call")
@@ -150,20 +135,17 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                val agent = createAgent(
-                    strategy = strategy,
-                    scope = this,
-                ) {
+                createAgent(strategy = strategy) {
                     install(Tracing) {
                         messageFilter = { true }
                         addMessageProcessor(writer)
                     }
+                }.use { agent ->
+
+                    agent.run("")
+                    isServerStarted.complete(true)
+                    isClientFinished.await()
                 }
-
-                isClientConnected.await()
-                agent.run("")
-
-                isClientFinished.await()
             }
         }
 
@@ -181,8 +163,6 @@ class TraceFeatureMessageRemoteWriterTest {
                 isServerStarted.await()
 
                 client.connect()
-                isClientConnected.complete(true)
-
                 collectEventsJob.join()
 
                 assertEquals(expectedEvents.size, actualEvents.size)
@@ -205,8 +185,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<FeatureMessage>()
 
@@ -217,11 +197,6 @@ class TraceFeatureMessageRemoteWriterTest {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 TestFeatureMessageWriter().use { fakeWriter ->
 
-                    launch {
-                        fakeWriter.isReady.await()
-                        isServerStarted.complete(true)
-                    }
-
                     val strategy = simpleStrategy(strategyName) {
                         val llmCallNode by nodeLLMRequest("test LLM call")
                         val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
@@ -231,19 +206,17 @@ class TraceFeatureMessageRemoteWriterTest {
                         edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                     }
 
-                    val agent = createAgent(
-                        strategy = strategy,
-                        scope = this,
-                    ) {
+                    createAgent(strategy = strategy) {
                         install(Tracing) {
                             messageFilter = { true }
                             addMessageProcessor(fakeWriter)
                         }
+                    }.use { agent ->
+
+                        agent.run("")
+                        isServerStarted.complete(true)
+                        isClientFinished.await()
                     }
-
-                    agent.run("")
-
-                    isClientFinished.await()
                 }
             }
         }
@@ -290,8 +263,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
             LLMCallWithToolsStartEvent("Test user message", listOf("dummy", "__tools_list__")),
@@ -303,16 +276,10 @@ class TraceFeatureMessageRemoteWriterTest {
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isClientConnected = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
 
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
 
                 val strategy = simpleStrategy(strategyName) {
                     val llmCallNode by nodeLLMRequest("test LLM call")
@@ -323,22 +290,20 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                val agent = createAgent(
-                    strategy = strategy,
-                    scope = this,
-                ) {
+                createAgent(strategy = strategy) {
                     install(Tracing) {
                         messageFilter = { message ->
                             message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent
                         }
                         addMessageProcessor(writer)
                     }
+                }.use { agent ->
+
+                    agent.run("")
+                    isServerStarted.complete(true)
+
+                    isClientFinished.await()
                 }
-
-                isClientConnected.await()
-                agent.run("")
-
-                isClientFinished.await()
             }
         }
 
@@ -356,7 +321,6 @@ class TraceFeatureMessageRemoteWriterTest {
                 isServerStarted.await()
 
                 client.connect()
-                isClientConnected.complete(true)
                 collectEventsJob.join()
 
                 assertEquals(expectedEvents.size, actualEvents.size)

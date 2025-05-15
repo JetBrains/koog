@@ -3,12 +3,12 @@ package ai.grazie.code.agents.local.features.writer
 import ai.grazie.code.agents.local.features.NetUtil.findAvailablePort
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
-import ai.grazie.code.agents.local.features.common.message.use
 import ai.grazie.code.agents.local.features.common.remote.client.FeatureMessageRemoteClient
 import ai.grazie.code.agents.local.features.common.remote.client.config.DefaultClientConnectionConfig
 import ai.grazie.code.agents.local.features.common.remote.server.config.DefaultServerConnectionConfig
 import ai.grazie.code.agents.local.features.common.remote.server.config.ServerConnectionConfig
 import ai.grazie.code.agents.local.features.common.writer.FeatureMessageRemoteWriter
+import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import io.ktor.http.*
@@ -43,7 +43,6 @@ class FeatureMessageRemoteWriterTest {
 
         val writer = TestFeatureMessageRemoteWriter(serverConfig)
         assertFalse(writer.isOpen)
-        assertFalse(writer.isReady.isCompleted)
     }
 
     @Test
@@ -69,8 +68,6 @@ class FeatureMessageRemoteWriterTest {
         TestFeatureMessageRemoteWriter(serverConfig).use { writer ->
             writer.initialize()
             assertTrue(writer.isOpen)
-            assertTrue(writer.isReady.isCompleted)
-            assertTrue(writer.isReady.getCompleted())
         }
     }
 
@@ -83,14 +80,10 @@ class FeatureMessageRemoteWriterTest {
             writer.initialize()
             writer.initialize()
             assertTrue(writer.isOpen)
-            assertTrue(writer.isReady.isCompleted)
-            assertTrue(writer.isReady.getCompleted())
         }
     }
 
     //endregion Initialize
-
-
 
     //region Health Check
 
@@ -109,11 +102,7 @@ class FeatureMessageRemoteWriterTest {
 
                 logger.info { "Server is started on port: ${writer.server.connectionConfig.port}" }
                 writer.initialize()
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
+                isServerStarted.complete(true)
 
                 isClientFinished.await()
                 logger.info { "Server is finished successfully" }
@@ -163,11 +152,7 @@ class FeatureMessageRemoteWriterTest {
             TestFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 logger.info { "Server is started on port: ${writer.server.connectionConfig.port}" }
                 writer.initialize()
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
+                isServerStarted.complete(true)
 
                 writer.processMessage(testServerMessage)
 
@@ -229,11 +214,7 @@ class FeatureMessageRemoteWriterTest {
             TestFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 logger.info { "Server is started on port: ${writer.server.connectionConfig.port}" }
                 writer.initialize()
-
-                launch {
-                    writer.isReady.await()
-                    isServerStarted.complete(true)
-                }
+                isServerStarted.complete(true)
 
                 writer.processMessage(message = testServerMessage)
 

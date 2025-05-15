@@ -1,19 +1,18 @@
 package ai.grazie.code.agents.local.features.eventHandler.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStrategy
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
+import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.CoroutineScope
 
 fun createAgent(
-    strategy: LocalAgentStrategy,
-    scope: CoroutineScope,
-    installFeatures: suspend AIAgentBase.FeatureContext.() -> Unit = { }
-): AIAgentBase {
-    val agentConfig = LocalAgentConfig(
+    strategy: AIAgentStrategy,
+    installFeatures: AIAgent.FeatureContext.() -> Unit = { }
+): AIAgent {
+    val agentConfig = AIAgentConfig(
         prompt = prompt("test") {
             system("Test system message")
             user("Test user message")
@@ -23,10 +22,9 @@ fun createAgent(
         maxAgentIterations = 10
     )
 
-    return AIAgentBase(
+    return AIAgent(
         promptExecutor = TestLLMExecutor(),
         strategy = strategy,
-        cs = scope,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
             stage("default") {

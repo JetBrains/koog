@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.example.memory
 
-import ai.grazie.code.agents.core.agent.AIAgentBase
-import ai.grazie.code.agents.core.agent.config.LocalAgentConfig
+import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -75,7 +75,7 @@ fun createProjectAnalyzerAgent(
     featureName: String? = null,
     productName: String? = null,
     organizationName: String? = null,
-): AIAgentBase {
+): AIAgent {
     // Memory concepts
     val environmentInfoConcept = Concept(
         keyword = "environment-info",
@@ -130,7 +130,7 @@ fun createProjectAnalyzerAgent(
     )
 
     // Agent configuration
-    val agentConfig = LocalAgentConfig(
+    val agentConfig = AIAgentConfig(
         prompt = prompt("project-analyzer") {},
         model = AnthropicModels.Sonnet_3_7,
         maxAgentIterations = maxAgentIterations
@@ -228,10 +228,9 @@ fun createProjectAnalyzerAgent(
     }
 
     // Create and configure the agent runner
-    return AIAgentBase(
+    return AIAgent(
         promptExecutor = promptExecutor,
         strategy = strategy,
-        cs = cs,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
             stage("gather-information") {

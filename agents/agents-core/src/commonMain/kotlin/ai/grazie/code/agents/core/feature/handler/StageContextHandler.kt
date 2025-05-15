@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.feature.handler
 
-import ai.grazie.code.agents.core.agent.entity.stage.LocalAgentStageContext
+import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 
 /**
  * Handler for creating a feature instance in a stage context.
@@ -14,5 +14,5 @@ public fun interface StageContextHandler<FeatureT : Any> {
      * @param context The stage context where the feature will be used
      * @return A new instance of the feature
      */
-    public fun handle(context: LocalAgentStageContext): FeatureT
+    public fun handle(context: AIAgentStageContextBase): FeatureT
 }

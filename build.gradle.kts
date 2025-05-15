@@ -1,4 +1,3 @@
-import ai.grazie.gradle.Secrets
 import ai.grazie.gradle.fixups.DisableDistTasks.disableDistTasks
 import ai.grazie.gradle.publish.maven.graziePublic
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
@@ -9,7 +8,7 @@ group = "ai.jetbrains.code"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.1.0-alpha.2"
+    val main = "0.1.0-alpha.3"
 
     val feat = run {
         val releaseBuild = !System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH").isNullOrBlank()
@@ -67,6 +66,12 @@ subprojects {
             showExceptions = true
             exceptionFormat = FULL
         }
+        environment.putAll(
+            mapOf(
+                "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
+                "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
+            )
+        )
     }
 }
 

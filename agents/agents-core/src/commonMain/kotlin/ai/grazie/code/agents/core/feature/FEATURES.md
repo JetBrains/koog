@@ -311,9 +311,9 @@ Features can intercept various points in the agent execution pipeline:
    }
    ```
 
-3. **Agent Creation Interception**: Modify or enhance the agent during creation
+3. **Before Agent Started Interception**: Modify or enhance the agent during creation
    ```kotlin
-   pipeline.interceptAgentCreated(this, feature) {
+   pipeline.interceptBeforeAgentStarted(this, feature) {
        readStages { stages ->
            // Inspect agent stages
        }
@@ -382,7 +382,7 @@ class LoggingFeature(val logger: Logger) {
     }
 
     companion object Feature: KotlinAIAgentFeature<LoggingFeature.Config, LoggingFeature> {
-        override val key: LocalAgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
+        override val key: AIAgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
 
         override fun createInitialConfig(): Config = Config()
 
@@ -392,8 +392,8 @@ class LoggingFeature(val logger: Logger) {
         ) {
             val logging = LoggingFeature(LoggerFactory.getLogger(config.loggerName))
 
-            // Intercept agent creation
-            pipeline.interceptAgentCreated(this, logging) {
+            // Intercept agent started
+            pipeline.interceptBeforeAgentStarted(this, logging) {
                 readStages { stages ->
                     stages.forEach { stage ->
                         feature.logger.info("Stage ${stage.name} has ${stage.start.edges.size} edges")

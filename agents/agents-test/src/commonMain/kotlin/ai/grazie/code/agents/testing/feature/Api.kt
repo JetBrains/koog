@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.testing.feature
 
-import ai.grazie.code.agents.core.agent.AIAgentBase.FeatureContext
+import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
 
 /**
  * Configures the Testing feature for graph testing.
@@ -90,7 +90,7 @@ fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  * }
  * ```
  */
-suspend fun FeatureContext.testGraph(test: Testing.Config.() -> Unit) = withTesting {
+fun FeatureContext.testGraph(test: Testing.Config.() -> Unit) = withTesting {
     graph(test)
 }
 

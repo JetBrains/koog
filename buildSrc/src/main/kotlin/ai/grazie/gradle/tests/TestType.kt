@@ -2,11 +2,17 @@ package ai.grazie.gradle.tests
 
 import org.gradle.api.tasks.testing.TestFilter
 
-enum class TestType(internal val namePattern: String, val shortName: String, val parallelism: Boolean = true, internal val maxHeapForJvm: String? = null) {
+enum class TestType(
+    internal val namePattern: String,
+    val shortName: String,
+    val parallelism: Boolean = true,
+    internal val maxHeapForJvm: String? = null
+) {
     DEFAULT("", "test"),
     PERFORMANCE("*.prf_*", "prf", parallelism = false),
     GPU("*.gpu_*", "gpu", maxHeapForJvm = "2g"),
-    CLIENT("*.client_*", "client");
+    CLIENT("*.client_*", "client"),
+    INTEGRATION("*.integration_*", "integration");
 
     companion object {
         internal val testTypesWithoutMain = TestType.values().asList().minus(DEFAULT)

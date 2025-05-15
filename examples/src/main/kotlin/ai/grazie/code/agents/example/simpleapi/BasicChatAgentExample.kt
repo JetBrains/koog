@@ -13,7 +13,6 @@ fun main() = runBlocking {
     // Create a chat agent with a system prompt
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
-        cs = this,
         systemPrompt = "You are a helpful assistant. Answer user questions concisely."
     )
 

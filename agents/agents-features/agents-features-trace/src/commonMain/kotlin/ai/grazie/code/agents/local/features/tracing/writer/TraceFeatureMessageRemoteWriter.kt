@@ -17,7 +17,7 @@ import ai.grazie.code.agents.local.features.common.writer.FeatureMessageRemoteWr
  * 
  * Example usage:
  * ```kotlin
- * val agent = AIAgentBase(...) {
+ * val agent = AIAgent(...) {
  *     install(Tracing) {
  *         // Send trace events to a remote server using default connection settings
  *         addMessageProcessor(TraceFeatureMessageRemoteWriter())
