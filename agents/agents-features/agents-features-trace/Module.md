@@ -31,7 +31,7 @@ val agent = AIAgent(
     install(Tracing) {
         // Configure message processors to handle trace events
         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
-        addMessageProcessor(TraceFeatureMessageFileWriter(fileSystem, outputPath))
+        addMessageProcessor(TraceFeatureMessageFileWriter(outputPath, fileSystem::sink))
 
         // Optionally filter messages
         messageFilter = { message -> 

@@ -35,7 +35,7 @@ import ai.koog.prompt.message.Message
  *     install(Tracing) {
  *         // Configure message processors to handle trace events
  *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
- *         addMessageProcessor(TraceFeatureMessageFileWriter(fileSystem, outputPath))
+ *         addMessageProcessor(TraceFeatureMessageFileWriter(outputFile, fileSystem::sink))
  *         
  *         // Optionally filter messages
  *         messageFilter = { message -> 

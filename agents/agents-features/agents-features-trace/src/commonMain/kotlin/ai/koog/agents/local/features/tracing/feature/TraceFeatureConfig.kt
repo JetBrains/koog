@@ -16,7 +16,7 @@ import ai.koog.agents.local.features.common.message.FeatureMessage
  *     install(Tracing) {
  *         // Add message processors to handle trace events
  *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
- *         addMessageProcessor(TraceFeatureMessageFileWriter(fileSystem, outputPath))
+ *         addMessageProcessor(TraceFeatureMessageFileWriter(outputFile, fileSystem::sink))
  *         
  *         // Configure message filtering
  *         messageFilter = { message -> 

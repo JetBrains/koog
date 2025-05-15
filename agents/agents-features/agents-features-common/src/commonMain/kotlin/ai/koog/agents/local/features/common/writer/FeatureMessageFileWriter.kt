@@ -3,12 +3,9 @@ package ai.koog.agents.local.features.common.writer
 import ai.koog.agents.local.features.common.MutexCheck.withLockCheck
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureMessageProcessor
-import ai.grazie.code.files.model.FileSystemProvider
-import ai.grazie.code.files.model.isFile
 import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
 import kotlinx.io.Sink
 import kotlin.concurrent.Volatile
 import kotlin.properties.Delegates
@@ -18,15 +15,12 @@ import kotlin.properties.Delegates
  * This abstract class provides functionality to convert and write feature messages into a target file using a specified file system provider.
  *
  * @param Path The type representing paths supported by the file system provider.
- * @param fs The file system provider used to interact with the file system for reading and writing.
- * @param root The directory root or file path where messages will be written. If root is a directory, a new file will
- *             be created at initialization.
- * @param append Whether to append to an existing file or overwrite it. Defaults to `false`.
+ * @param targetPath The file where feature messages will be written.
+ * @param sinkOpener Returns a [Sink] for writing to the file, this class manages its lifecycle.
  */
 public abstract class FeatureMessageFileWriter<Path>(
-    private val fs: FileSystemProvider.ReadWrite<Path>,
-    private val root: Path,
-    private val append: Boolean = false,
+    public val targetPath: Path,
+    private val sinkOpener: (Path) -> Sink,
 ) : FeatureMessageProcessor() {
 
     private companion object {
@@ -37,16 +31,11 @@ public abstract class FeatureMessageFileWriter<Path>(
 
     private var _sink: Sink by Delegates.notNull()
 
-    private var _targetPath: Path? = null
-
     @Volatile
     private var _isOpen: Boolean = false
 
     private val writerMutex = Mutex()
 
-
-    public val targetPath: Path
-        get() = _targetPath ?: error("Target path is not initialized. Please make sure you call method 'initialize()' before.")
 
     /**
      * Indicates whether the writer is currently open and ready for operation.
@@ -86,11 +75,7 @@ public abstract class FeatureMessageFileWriter<Path>(
         withLockEnsureClosed {
             logger.debug { "Writer initialization is started." }
 
-            val path = resolvePath(fs, root)
-            val sink = fs.sink(path, append)
-
-            _sink = sink
-            _targetPath = path
+            _sink = sinkOpener(targetPath)
 
             _isOpen = true
             super.initialize()
@@ -117,16 +102,6 @@ public abstract class FeatureMessageFileWriter<Path>(
             _sink.write("\n".encodeToByteArray())
             _sink.flush()
         }
-    }
-
-    private suspend fun resolvePath(fs: FileSystemProvider.ReadWrite<Path>, root: Path): Path {
-        // Root is an existing file
-        if (fs.exists(root) && fs.isFile(root)) {
-            return root
-        }
-
-        val targetFileName = "agent-trace-${Clock.System.now().toEpochMilliseconds()}.log"
-        return fs.fromRelativeString(root, targetFileName)
     }
 
     private suspend fun withLockEnsureClosed(action: suspend () -> Unit) =
