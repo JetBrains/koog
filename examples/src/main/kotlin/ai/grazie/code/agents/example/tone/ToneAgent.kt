@@ -22,11 +22,6 @@ fun main() {
     /**
      * Describe the list of tools for your agent.
      */
-    val toneStageName = "tone_analysis"
-
-    /**
-     * Describe the list of tools for your agent.
-     */
     val toolRegistry = ToolRegistry {
         tool(SayToUser)
         tool(PositiveToneTool)
@@ -58,7 +53,7 @@ fun main() {
         )
 
         // Create the strategy
-        val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
+        val strategy = toneStrategy("tone_analysis")
 
         // Create the agent
         val agent = AIAgent(

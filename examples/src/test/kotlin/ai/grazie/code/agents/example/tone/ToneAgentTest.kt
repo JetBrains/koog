@@ -36,7 +36,6 @@ class ToneAgentTest {
         var result: String? = null
 
         // Create a tool registry
-        val toneStageName = "tone_analysis"
         val toolRegistry = ToolRegistry {
             // Special tool, required with this type of agent.
             tool(SayToUser)
@@ -104,7 +103,7 @@ class ToneAgentTest {
         }
 
         // Create strategy
-        val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
+        val strategy = toneStrategy("tone_analysis")
 
         // Create agent config
         val agentConfig = AIAgentConfig(

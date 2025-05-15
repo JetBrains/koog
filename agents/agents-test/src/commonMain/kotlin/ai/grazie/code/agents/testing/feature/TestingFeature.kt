@@ -22,7 +22,7 @@ import org.jetbrains.annotations.TestOnly
 
 
 class DummyAgentContext(
-    private val builder: AIAgentStageContextMockBuilder,
+    private val builder: AIAgentContextMockBuilder,
 ) : AIAgentContextBase {
     val isLLMDefined = builder.llm != null
     val isEnvironmentDefined = builder.environment != null
@@ -90,7 +90,7 @@ class DummyAgentContext(
 }
 
 @TestOnly
-interface AIAgentStageContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
+interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
     var environment: AIAgentEnvironment?
     var config: AIAgentConfig?
     var llm: AIAgentLLMContext?
@@ -99,13 +99,13 @@ interface AIAgentStageContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
     var sessionUuid: UUID?
     var strategyId: String?
 
-    fun copy(): AIAgentStageContextMockBuilderBase
+    fun copy(): AIAgentContextMockBuilderBase
 
     override fun build(): AIAgentContextBase
 }
 
 @TestOnly
-class AIAgentStageContextMockBuilder() : AIAgentStageContextMockBuilderBase {
+class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override var environment: AIAgentEnvironment? = null
     override var config: AIAgentConfig? = null
     override var llm: AIAgentLLMContext? = null
@@ -114,8 +114,8 @@ class AIAgentStageContextMockBuilder() : AIAgentStageContextMockBuilderBase {
     override var sessionUuid: UUID? = null
     override var strategyId: String? = null
 
-    override fun copy(): AIAgentStageContextMockBuilder {
-        return AIAgentStageContextMockBuilder().also {
+    override fun copy(): AIAgentContextMockBuilder {
+        return AIAgentContextMockBuilder().also {
             it.environment = environment
             it.config = config
             it.llm = llm
@@ -511,7 +511,7 @@ class Testing {
              * including node outputs, edge assertions, and reachability assertions.
              * It acts as a centralized resource for contextual test data and stage-related configurations.
              */
-            private val context = AIAgentStageContextMockBuilder()
+            private val context = AIAgentContextMockBuilder()
 
             /**
              * Retrieves the starting node reference of the stage.
@@ -627,8 +627,8 @@ class Testing {
              */
             class NodeOutputAssertionsBuilder(
                 private val stageBuilder: SubgraphAssertionsBuilder<*, *>,
-                private val context: AIAgentStageContextMockBuilder = stageBuilder.context.copy()
-            ) : AIAgentStageContextMockBuilderBase by context {
+                private val context: AIAgentContextMockBuilder = stageBuilder.context.copy()
+            ) : AIAgentContextMockBuilderBase by context {
 
                 /**
                  * Creates and returns a new copy of the NodeOutputAssertionsBuilder instance.
@@ -702,8 +702,8 @@ class Testing {
              */
             class EdgeAssertionsBuilder(
                 private val stageBuilder: SubgraphAssertionsBuilder<*, *>,
-                private val context: AIAgentStageContextMockBuilder = stageBuilder.context.copy()
-            ) : AIAgentStageContextMockBuilderBase by context {
+                private val context: AIAgentContextMockBuilder = stageBuilder.context.copy()
+            ) : AIAgentContextMockBuilderBase by context {
 
                 /**
                  * A mutable list that holds all the defined `EdgeAssertion` instances for the current context.

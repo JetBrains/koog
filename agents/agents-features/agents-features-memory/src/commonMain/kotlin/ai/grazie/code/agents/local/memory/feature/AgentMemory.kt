@@ -246,10 +246,10 @@ public class AgentMemory(
          * @param pipeline The agent pipeline to install the feature into
          */
         override fun install(config: Config, pipeline: AIAgentPipeline) {
-            pipeline.interceptContextAgentFeature(this) { stageContext ->
-                config.agentName = stageContext.strategyId
+            pipeline.interceptContextAgentFeature(this) { agentContext ->
+                config.agentName = agentContext.strategyId
 
-                AgentMemory(config.memoryProvider, stageContext.llm, config.scopesProfile)
+                AgentMemory(config.memoryProvider, agentContext.llm, config.scopesProfile)
             }
         }
     }

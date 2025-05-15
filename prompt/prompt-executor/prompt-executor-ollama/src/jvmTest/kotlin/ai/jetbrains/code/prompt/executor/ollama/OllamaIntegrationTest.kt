@@ -84,7 +84,7 @@ class OllamaIntegrationTest {
         }
 
 
-    private fun createStageSpecificToolRegistry(): ToolRegistry {
+    private fun createToolRegistry(): ToolRegistry {
         return ToolRegistry {
             tool(GeographyQueryTool)
             tool(AnswerVerificationTool)
@@ -148,7 +148,7 @@ class OllamaIntegrationTest {
     @Test
     fun integration_testOllamaAgentClearContext() = runTest {
         val strategy = createTestStrategy("clear")
-        val toolRegistry = createStageSpecificToolRegistry()
+        val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
         val result = agent.runAndGetResult("What is the capital of France?")
@@ -160,7 +160,7 @@ class OllamaIntegrationTest {
     @Test
     fun integration_testOllamaAgentPersistContext() = runTest {
         val strategy = createTestStrategy("persist")
-        val toolRegistry = createStageSpecificToolRegistry()
+        val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
         val result = agent.runAndGetResult("What is the capital of France?")
@@ -173,7 +173,7 @@ class OllamaIntegrationTest {
     @Test
     fun integration_testOllamaAgentCompressContext() = runTest {
         val strategy = createTestStrategy("compress")
-        val toolRegistry = createStageSpecificToolRegistry()
+        val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
         val result = agent.runAndGetResult("What is the capital of France?")

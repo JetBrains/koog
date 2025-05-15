@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 class GraphTestingFeatureTest {
 
     @Test
-    fun testMultiStageAgentStructure() = runTest {
+    fun testMultiSubgraphAgentStructure() = runTest {
         val strategy = strategy("test") {
             val firstSubgraph by subgraph(
                 "first",
@@ -165,9 +165,9 @@ class GraphTestingFeatureTest {
         assertEquals(4, firstSubgraphAssertion?.graphAssertions?.reachabilityAssertions?.size)
 
         // Verify the second stage
-        val secondStage = config.getAssertions().subgraphAssertions.find { it.subgraphRef.name == "second" }
-        assertEquals("second", secondStage?.subgraphRef?.name)
-        assertEquals(0, secondStage?.graphAssertions?.nodes?.size)
-        assertEquals(1, secondStage?.graphAssertions?.reachabilityAssertions?.size)
+        val secondSubgraphAssertion = config.getAssertions().subgraphAssertions.find { it.subgraphRef.name == "second" }
+        assertEquals("second", secondSubgraphAssertion?.subgraphRef?.name)
+        assertEquals(0, secondSubgraphAssertion?.graphAssertions?.nodes?.size)
+        assertEquals(1, secondSubgraphAssertion?.graphAssertions?.reachabilityAssertions?.size)
     }
 }

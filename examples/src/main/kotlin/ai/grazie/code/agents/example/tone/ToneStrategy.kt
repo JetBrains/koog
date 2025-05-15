@@ -5,12 +5,11 @@ import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
-import ai.grazie.code.agents.core.tools.ToolRegistry
 
 /**
  * Creates a strategy for the tone analysis agent.
  */
-fun toneStrategy(name: String, toolRegistry: ToolRegistry, toneStageName: String): AIAgentStrategy {
+fun toneStrategy(name: String): AIAgentStrategy {
     return strategy(name) {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteTool()
