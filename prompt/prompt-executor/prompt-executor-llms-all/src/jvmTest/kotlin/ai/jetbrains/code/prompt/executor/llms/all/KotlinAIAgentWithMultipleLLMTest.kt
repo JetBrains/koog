@@ -287,7 +287,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
     }
 
-    @Disabled("Todo fix")
+    @Disabled("JBAI-13957")
     @Test
     fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
@@ -397,14 +397,11 @@ class KotlinAIAgentWithMultipleLLMTest {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
-        // Create the executor
-        val executor = //grazieExecutor
-            MultiLLMPromptExecutor(
-                LLMProvider.OpenAI to openAIClient,
-                LLMProvider.Anthropic to anthropicClient
-            )
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient
+        )
 
-        // Create a simple agent strategy
         val strategy = strategy("test", llmHistoryTransitionPolicy = ContextTransitionPolicy.CLEAR_LLM_HISTORY) {
             stage("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
@@ -412,7 +409,11 @@ class KotlinAIAgentWithMultipleLLMTest {
                         model = AnthropicModels.Sonnet_3_7
                         rewritePrompt {
                             prompt("test") {
-                                system("You are a helpful assistant. You need to solve my task. CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!")
+                                system(
+                                    "You are a helpful assistant. You need to solve my task. " +
+                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
+                                            "WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                )
                             }
                         }
                     }
@@ -441,7 +442,9 @@ class KotlinAIAgentWithMultipleLLMTest {
                                     "You are a helpful assistant. You need to verify that the task is solved correctly. " +
                                             "Please analyze the whole produced solution, and check that it is valid." +
                                             "Write concise verification result." +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! " +
+                                            "ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE " +
+                                            "AFTER CALLING THE TOOLS!"
                                 )
                             }
                         }
@@ -761,7 +764,6 @@ class KotlinAIAgentWithMultipleLLMTest {
         assertNotNull(result)
     }
 
-    @Disabled("Todo fix")
     @Test
     fun integration_testOpenAIAnthropicAgentWithTools() = runTest(timeout = 300.seconds) {
         val openAIClient = OpenAILLMClient(openAIApiKey)
@@ -793,6 +795,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
                 edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
             }
             stage("openai-color-picker") {
@@ -819,6 +822,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
                 edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
             }
             stage("anthropic-summary") {
@@ -841,6 +845,7 @@ class KotlinAIAgentWithMultipleLLMTest {
                 edge(definePromptAnthropic forwardTo callLLM transformed { stageInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+                edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(callTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
             }
@@ -861,7 +866,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         val agent = AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 15),
+            agentConfig = AIAgentConfig(prompt("test-tools") {}, OpenAIModels.Chat.GPT4o, 30),
             toolRegistry = tools
         ) {
             install(Tracing) {
