@@ -14,7 +14,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
-                api("ai.jetbrains.code.files:code-files-model:1.0.0-beta.55+0.4.45")
                 implementation(project(":prompt:prompt-markdown"))
 
                 implementation(libs.ai.grazie.model.auth)
@@ -34,13 +33,15 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45")
                 implementation(libs.ktor.client.cio)
             }
         }
 
         jvmTest {
             dependencies {
+                implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45") {
+                    exclude("org.jetbrains", "ij-parsing-core")
+                }
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
                 implementation(libs.mockk)

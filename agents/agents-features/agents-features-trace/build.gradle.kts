@@ -27,7 +27,6 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45")
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.server.cio)
@@ -43,6 +42,9 @@ kotlin {
 
         jvmTest {
             dependencies {
+                implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45") {
+                    exclude("org.jetbrains", "ij-parsing-core")
+                }
                 implementation(kotlin("test-junit5"))
             }
         }
