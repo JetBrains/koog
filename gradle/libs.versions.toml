@@ -1,6 +1,5 @@
 [versions]
 annotations = "26.0.1"
-grazie-gradle = "0.3.6"
 grazie-platform = "0.4.49"
 junit = "5.8.2"
 kotlin = "2.1.21"
@@ -44,6 +43,5 @@ dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", vers
 mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
 
 [plugins]
-grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
