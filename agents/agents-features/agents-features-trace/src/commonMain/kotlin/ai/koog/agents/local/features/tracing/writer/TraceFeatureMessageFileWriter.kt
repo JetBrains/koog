@@ -5,7 +5,7 @@ import ai.koog.agents.local.features.common.message.FeatureEvent
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureStringMessage
 import ai.koog.agents.local.features.common.writer.FeatureMessageFileWriter
-import ai.grazie.code.files.model.FileSystemProvider
+import kotlinx.io.Sink
 
 /**
  * A message processor that writes trace events to a file.
@@ -24,14 +24,14 @@ import ai.grazie.code.files.model.FileSystemProvider
  *     install(Tracing) {
  *         // Write trace events to a file
  *         addMessageProcessor(TraceFeatureMessageFileWriter(
- *             fs = fileSystem,
- *             path = "agent-traces.log"
+ *             sinkOpener = fileSystem::sink,
+ *             targetPath = "agent-traces.log"
  *         ))
  *         
  *         // Optionally provide custom formatting
  *         addMessageProcessor(TraceFeatureMessageFileWriter(
- *             fs = fileSystem,
- *             path = "custom-traces.log",
+ *             sinkOpener = fileSystem::sink,
+ *             targetPath = "custom-traces.log",
  *             format = { message -> 
  *                 "[TRACE] ${message.eventId}: ${message::class.simpleName}"
  *             }
@@ -41,15 +41,15 @@ import ai.grazie.code.files.model.FileSystemProvider
  * ```
  * 
  * @param Path The type representing file paths in the file system
- * @param fs The file system provider to use for writing to files
- * @param path The path where trace events will be written
+ * @param targetPath The path where feature messages will be written.
+ * @param sinkOpener Returns a [Sink] for writing to the file, this class manages its lifecycle.
  * @param format Optional custom formatter for trace events
  */
 public class TraceFeatureMessageFileWriter<Path>(
-    fs: FileSystemProvider.ReadWrite<Path>,
-    path: Path,
+    targetPath: Path,
+    sinkOpener: (Path) -> Sink,
     private val format: ((FeatureMessage) -> String)? = null,
-) : FeatureMessageFileWriter<Path>(fs, path) {
+) : FeatureMessageFileWriter<Path>(targetPath, sinkOpener) {
 
     internal companion object {
         val FeatureMessage.featureMessage
