@@ -11,6 +11,7 @@ pluginManagement {
 
     repositories {
         gradlePluginPortal()
+        maven(url = "https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public")
     }
 }
 

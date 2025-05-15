@@ -31,6 +31,8 @@ dependencies {
     implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
     implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
+    implementation(libs.code.engine.files.jvm)
+
     implementation(libs.kotlinx.datetime)
     implementation(libs.logback.classic)
 
