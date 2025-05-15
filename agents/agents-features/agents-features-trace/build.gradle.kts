@@ -42,9 +42,6 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45") {
-                    exclude("org.jetbrains", "ij-parsing-core")
-                }
                 implementation(kotlin("test-junit5"))
             }
         }

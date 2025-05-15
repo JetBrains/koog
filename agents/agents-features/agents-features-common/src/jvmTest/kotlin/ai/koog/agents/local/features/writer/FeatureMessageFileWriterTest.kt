@@ -4,22 +4,34 @@ import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureStringMessage
 import ai.koog.agents.local.features.common.writer.FeatureMessageFileWriter
 import ai.koog.agents.utils.use
-import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.io.Sink
+import kotlinx.io.buffered
+import kotlinx.io.files.SystemFileSystem
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.pathString
 import kotlin.io.path.readLines
 import kotlin.test.*
 
 class FeatureMessageFileWriterTest {
 
+    companion object {
+        private fun createTempLogFile(tempDir: Path) = Files.createTempFile(tempDir, "agent-trace", ".log")
+
+        private fun sinkOpener(path: Path): Sink {
+            return SystemFileSystem.sink(path = kotlinx.io.files.Path(path.pathString)).buffered()
+        }
+    }
+
     class TestFeatureMessageFileWriter(root: Path) :
-        FeatureMessageFileWriter<Path>(fs = JVMFileSystemProvider.ReadWrite, root) {
+        FeatureMessageFileWriter<Path>(createTempLogFile(root), FeatureMessageFileWriterTest::sinkOpener) {
 
         override fun FeatureMessage.toFileString(): String {
             return when (this) {
@@ -35,18 +47,6 @@ class FeatureMessageFileWriterTest {
     @Test
     fun `test base state for non-initialized writer`(@TempDir tempDir: Path) = runBlocking {
         val writer = TestFeatureMessageFileWriter(tempDir)
-        assertFalse(writer.isOpen)
-    }
-
-    @Test
-    fun `test get target path using non-initialized writer`(@TempDir tempDir: Path) = runBlocking {
-        val writer = TestFeatureMessageFileWriter(tempDir)
-        val throwable = assertThrows<IllegalStateException> {
-            writer.targetPath
-        }
-
-        val expectedError = "Target path is not initialized. Please make sure you call method 'initialize()' before."
-        assertEquals(expectedError, throwable.message)
         assertFalse(writer.isOpen)
     }
 

@@ -107,9 +107,8 @@ class MyFeatureMessageFileWriter<Path>(
 
 // Create an instance and use it with a feature
 val fileWriter = MyFeatureMessageFileWriter(
-    fs = JVMFileSystemProvider.ReadWrite,
-    root = Path("/path/to/logs"),
-    append = true
+    sinkOpener = JVMFileSystemProvider.ReadWrite::sink,
+    targetPath = Path("/path/to/logs/main.log"),
 )
 
 // Initialize the writer before use
@@ -186,9 +185,8 @@ class MyFeatureMessageFileWriter<Path>(
 
 // Create an instance and use it with a feature
 val fileWriter = MyFeatureMessageFileWriter(
-    fs = JVMFileSystemProvider.ReadWrite,
-    root = Path("/path/to/logs"),
-    append = true
+    sinkOpener = JVMFileSystemProvider.ReadWrite::sink,
+    targetPath = Path("/path/to/logs/main.log"),
 )
 
 // Initialize the writer before use

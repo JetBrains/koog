@@ -9,10 +9,15 @@ import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureStringMessage
 import ai.koog.agents.local.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
-import ai.grazie.code.files.jvm.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
+import kotlinx.io.Sink
+import kotlinx.io.buffered
+import kotlinx.io.files.SystemFileSystem
 import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.pathString
 import kotlin.io.path.readLines
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -20,10 +25,18 @@ import kotlin.test.assertEquals
 
 class TraceFeatureMessageFileWriterTest {
 
+    companion object {
+        private fun createTempLogFile(tempDir: Path) = Files.createTempFile(tempDir, "agent-trace", ".log")
+
+        private fun sinkOpener(path: Path): Sink {
+            return SystemFileSystem.sink(path = kotlinx.io.files.Path(path.pathString)).buffered()
+        }
+    }
+
     @Test
     fun `test file stream feature provider collect events on agent run`(@TempDir tempDir: Path) = runBlocking {
 
-        TraceFeatureMessageFileWriter(JVMFileSystemProvider.ReadWrite, tempDir).use { writer ->
+        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener).use { writer ->
 
             val strategyName = "tracing-test-strategy"
 
@@ -91,7 +104,7 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM EVENT. ${AIAgentStartedEvent::class.simpleName}",
         )
 
-        TraceFeatureMessageFileWriter(fs = JVMFileSystemProvider.ReadWrite, path = tempDir, format = customFormat).use { writer ->
+        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener, format = customFormat).use { writer ->
             writer.initialize()
 
             messagesToProcess.forEach { message -> writer.processMessage(message) }
@@ -126,7 +139,7 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",
         )
 
-        TraceFeatureMessageFileWriter(fs = JVMFileSystemProvider.ReadWrite, path = tempDir, format = customFormat).use { writer ->
+        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener, format = customFormat).use { writer ->
             val strategyName = "tracing-test-strategy"
 
             val strategy = strategy(strategyName) {
@@ -157,7 +170,8 @@ class TraceFeatureMessageFileWriterTest {
     @Test
     fun `test file stream feature provider is not set`(@TempDir tempDir: Path) = runBlocking {
 
-        TraceFeatureMessageFileWriter(JVMFileSystemProvider.ReadWrite, tempDir).use { writer ->
+        val logFile = createTempLogFile(tempDir)
+        TraceFeatureMessageFileWriter(logFile, TraceFeatureMessageFileWriterTest::sinkOpener).use { writer ->
 
             val strategyName = "tracing-test-strategy"
 
@@ -178,17 +192,18 @@ class TraceFeatureMessageFileWriterTest {
 
             agent.run("")
 
-            assertEquals(
-                0, tempDir.toFile().listFiles()?.size ?: 0,
-                "No files should be created"
-            )
+            assertEquals(listOf(logFile), tempDir.listDirectoryEntries())
+            assertEquals(emptyList(), logFile.readLines())
         }
+
+        assertEquals(listOf(logFile), tempDir.listDirectoryEntries())
+        assertEquals(emptyList(), logFile.readLines())
     }
 
     @Test
     fun `test logger stream feature provider message filter`(@TempDir tempDir: Path) = runBlocking {
 
-        TraceFeatureMessageFileWriter(JVMFileSystemProvider.ReadWrite, tempDir).use { writer ->
+        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener).use { writer ->
 
             val strategyName = "tracing-test-strategy"
 

@@ -12,8 +12,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api("ai.jetbrains.code.files:code-files-model:1.0.0-beta.55+0.4.45")
-
                 implementation(project(":agents:agents-utils"))
 
                 implementation(libs.ai.grazie.model.llm)
@@ -45,9 +43,6 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45") {
-                    exclude("org.jetbrains", "ij-parsing-core")
-                }
                 implementation(kotlin("test-junit5"))
             }
         }
