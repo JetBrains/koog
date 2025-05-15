@@ -12,8 +12,8 @@ import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.LSDi
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.ReadFileTool
 import ai.grazie.code.agents.example.subgraphwithtask.ProjectGeneratorTools.RunCommand
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
-import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
+import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.params.LLMParams
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -66,14 +66,14 @@ fun main() {
         val userRequest = readln()
 
         val agent = AIAgent(
-            promptExecutor = simpleAnthropicExecutor(TokenService.anthropicToken),
+            promptExecutor = simpleOpenAIExecutor(TokenService.openAIToken),
             strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
             agentConfig = AIAgentConfig(
                 prompt = prompt(
                     "chat",
                     params = LLMParams()
                 ) {},
-                model = AnthropicModels.Sonnet_3_7,
+                model = OpenAIModels.Chat.GPT4o,
                 maxAgentIterations = 200
             ),
             toolRegistry = toolRegistry,
