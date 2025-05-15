@@ -6,6 +6,7 @@ import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.jetbrains.code.prompt.executor.clients.google.GoogleLLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
@@ -13,6 +14,7 @@ import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Disabled
 import kotlin.test.assertNotNull
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -21,14 +23,17 @@ import kotlin.time.Duration.Companion.seconds
 class MultipleLLMPromptExecutorIntegrationTest {
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+    private val geminiApiKey: String get() = readTestGeminiKeyFromEnv()
 
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
     @Test
     fun integration_testExecuteWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(geminiApiKey)
 
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-prompt") {
@@ -47,12 +52,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
     @Test
     fun integration_testExecuteWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(geminiApiKey)
 
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val model = AnthropicModels.Sonnet_3_7
         val prompt = Prompt.build("test-prompt") {
@@ -71,12 +78,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
     @Test
     fun integration_testExecuteStreamingWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(geminiApiKey)
 
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-streaming") {
@@ -101,12 +110,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
     @Test
     fun integration_testExecuteStreamingWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(geminiApiKey)
 
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val model = AnthropicModels.Sonnet_3_7
         val prompt = Prompt.build("test-streaming") {
@@ -131,12 +142,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
     @Test
     fun integration_testCodeGenerationWithOpenAI() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(geminiApiKey)
 
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val model = OpenAIModels.Chat.GPT4o
         val prompt = Prompt.build("test-code") {
@@ -155,12 +168,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(content.contains("return"), "Response should contain a return statement")
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
     @Test
     fun integration_testCodeGenerationWithAnthropic() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(geminiApiKey)
 
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient)
+        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val model = AnthropicModels.Sonnet_3_7
         val prompt = Prompt.build("test-code") {
@@ -179,6 +194,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(content.contains("return"), "Response should contain a return statement")
     }
 
+    @Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
     @Test
     fun integration_testToolsWithRequiredParams() = runTest {
         val openAIClient = OpenAILLMClient(openAIApiKey)

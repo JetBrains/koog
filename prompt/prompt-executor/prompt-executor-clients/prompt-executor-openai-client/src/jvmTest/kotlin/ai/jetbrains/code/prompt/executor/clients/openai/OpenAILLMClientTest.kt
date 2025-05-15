@@ -17,7 +17,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 fun readTestOpenAIKeyFromEnv(): String {
-    return System.getenv("OPENAI_API_TEST_KEY") ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` not set")
+    return System.getenv("OPEN_AI_API_TEST_KEY") ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` not set")
 }
 
 class OpenAILLMClientTest {

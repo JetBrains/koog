@@ -12,34 +12,38 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-llms"))
-                implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-tools"))
-                implementation(project(":agents:agents-features:agents-features-event-handler"))
-                implementation(project(":agents:agents-features:agents-features-trace"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-model"))
+                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
             }
         }
+
         jvmMain {
             dependencies {
                 implementation(libs.ktor.client.cio)
             }
         }
+
+        jsMain {
+            dependencies {
+                implementation(libs.ktor.client.js)
+            }
+        }
+
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.kotlinx.serialization.core)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
+
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
@@ -49,6 +53,5 @@ kotlin {
 
     explicitApi()
 }
-
 
 publishToGraziePublicMaven()
