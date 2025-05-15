@@ -15,7 +15,7 @@ import ai.grazie.code.agents.core.agent.AIAgent.FeatureContext
  *
  * @sample graphUsageExample
  */
-fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
+public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
     enableGraphTesting = true
 
     handleAssertion { assertionResult ->
@@ -90,7 +90,7 @@ fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  * }
  * ```
  */
-fun FeatureContext.testGraph(name: String, test: Testing.Config.SubgraphAssertionsBuilder<*, *>.() -> Unit) =
+public fun FeatureContext.testGraph(name: String, test: Testing.Config.SubgraphAssertionsBuilder<*, *>.() -> Unit): Unit =
     withTesting {
         graph {
             verifyStrategy(name) {

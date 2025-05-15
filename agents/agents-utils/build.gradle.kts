@@ -30,6 +30,7 @@ kotlin {
         }
     }
 
+    explicitApi()
 }
 
 publishToGraziePublicMaven()

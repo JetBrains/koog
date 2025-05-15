@@ -49,10 +49,10 @@ private object MockToolsEnabler : DirectToolCallsEnabler
  * ```
  */
 @OptIn(InternalAgentToolsApi::class)
-class MockEnvironment(
-    val toolRegistry: ToolRegistry,
-    val promptExecutor: PromptExecutor,
-    val baseEnvironment: AIAgentEnvironment? = null
+public class MockEnvironment(
+    public val toolRegistry: ToolRegistry,
+    public val promptExecutor: PromptExecutor,
+    public val baseEnvironment: AIAgentEnvironment? = null
 ) : AIAgentEnvironment {
     /**
      * Executes a list of tool calls and returns their results.
