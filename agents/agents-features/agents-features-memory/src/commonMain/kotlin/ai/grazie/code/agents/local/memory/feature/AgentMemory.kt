@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.local.memory.feature
 
-import ai.grazie.code.agents.core.agent.entity.LocalAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
 import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
 import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
@@ -204,7 +204,7 @@ public class AgentMemory(
      * ```
      */
     public companion object Feature : AIAgentFeature<Config, AgentMemory> {
-        override val key: LocalAgentStorageKey<AgentMemory> = createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
+        override val key: AIAgentStorageKey<AgentMemory> = createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
         /**
          * Creates the initial configuration for the AgentMemory feature.
