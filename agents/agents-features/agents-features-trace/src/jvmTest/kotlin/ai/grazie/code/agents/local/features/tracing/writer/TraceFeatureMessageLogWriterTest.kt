@@ -8,7 +8,7 @@ import ai.grazie.code.agents.local.features.common.message.FeatureEvent
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureStringMessage
 import ai.grazie.code.agents.local.features.tracing.feature.Tracing
-import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
+import ai.grazie.code.agents.utils.use
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test

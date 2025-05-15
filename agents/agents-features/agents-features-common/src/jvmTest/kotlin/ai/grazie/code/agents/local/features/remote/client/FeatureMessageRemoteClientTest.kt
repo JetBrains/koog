@@ -8,7 +8,7 @@ import ai.grazie.code.agents.local.features.common.remote.client.config.DefaultC
 import ai.grazie.code.agents.local.features.common.remote.server.FeatureMessageRemoteServer
 import ai.grazie.code.agents.local.features.common.remote.server.config.DefaultServerConnectionConfig
 import ai.grazie.code.agents.local.features.writer.TestFeatureEventMessage
-import ai.grazie.code.agents.utils.ai.grazie.code.agents.utils.use
+import ai.grazie.code.agents.utils.use
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.MPPLogger
 import io.ktor.http.*
