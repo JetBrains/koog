@@ -31,6 +31,10 @@ class DummyAgentContext(
         get() = builder.environment
             ?: throw NotImplementedError("Environment is not mocked")
 
+    override val agentInput: String
+        get() = builder.agentInput
+            ?: throw NotImplementedError("Config is not mocked")
+
     override val config: AIAgentConfig
         get() = builder.config
             ?: throw NotImplementedError("Config is not mocked")
@@ -69,6 +73,7 @@ class DummyAgentContext(
 
     override fun copy(
         environment: AIAgentEnvironment?,
+        agentInput: String?,
         config: AIAgentConfig?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
@@ -79,6 +84,7 @@ class DummyAgentContext(
     ): AIAgentContextBase = DummyAgentContext(
         builder.copy().apply {
             environment?.let { this.environment = it }
+            agentInput?.let { this.agentInput = it }
             config?.let { this.config = it }
             llm?.let { this.llm = it }
             stateManager?.let { this.stateManager = it }
@@ -92,6 +98,7 @@ class DummyAgentContext(
 @TestOnly
 interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
     var environment: AIAgentEnvironment?
+    var agentInput: String?
     var config: AIAgentConfig?
     var llm: AIAgentLLMContext?
     var stateManager: AIAgentStateManager?
@@ -107,6 +114,7 @@ interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
 @TestOnly
 class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override var environment: AIAgentEnvironment? = null
+    override var agentInput: String? = null
     override var config: AIAgentConfig? = null
     override var llm: AIAgentLLMContext? = null
     override var stateManager: AIAgentStateManager? = null
@@ -117,6 +125,7 @@ class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override fun copy(): AIAgentContextMockBuilder {
         return AIAgentContextMockBuilder().also {
             it.environment = environment
+            it.agentInput = agentInput
             it.config = config
             it.llm = llm
             it.stateManager = stateManager

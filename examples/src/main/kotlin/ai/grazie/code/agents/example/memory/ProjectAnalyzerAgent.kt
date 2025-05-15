@@ -2,7 +2,6 @@ package ai.grazie.code.agents.example.memory
 
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -142,9 +141,7 @@ fun createProjectAnalyzerAgent(
 
     // Create agent strategy
     val strategy = strategy("project-analyzer", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
-        val agentInputKey = AIAgentStorageKey<String>("agentInput")
-
-        val loadMemorySubgraph by subgraph("load-memory") {
+        val loadMemorySubgraph by subgraph<String, Unit>("load-memory") {
             val nodeLoadEnvironmentInfo by nodeLoadFromMemory<Unit>(
                 concept = environmentInfoConcept,
                 subject = MemorySubjects.Machine,
@@ -169,14 +166,14 @@ fun createProjectAnalyzerAgent(
                 scope = MemoryScopeType.PRODUCT
             )
 
-            edge(nodeStart forwardTo nodeLoadEnvironmentInfo)
+            edge(nodeStart forwardTo nodeLoadEnvironmentInfo transformed { })
             edge(nodeLoadEnvironmentInfo forwardTo nodeLoadProjectDependencies)
             edge(nodeLoadProjectDependencies forwardTo nodeLoadProjectStructure)
             edge(nodeLoadProjectStructure forwardTo nodeLoadCodeStyle)
-            edge(nodeLoadCodeStyle forwardTo nodeFinish transformed { })
+            edge(nodeLoadCodeStyle forwardTo nodeFinish)
         }
 
-        val gatherInfoSubgraph by subgraph(
+        val gatherInfoSubgraph by subgraph<Unit, String>(
             "gather-information",
             listOf(bashTool, fileSearchTool, codeAnalysisTool)
         ) {
@@ -195,16 +192,16 @@ fun createProjectAnalyzerAgent(
             val sendToolResult by nodeLLMSendToolResult()
 
             // Define the flow
-            edge(nodeStart forwardTo defineTask)
+            edge(nodeStart forwardTo defineTask transformed { })
             edge(defineTask forwardTo sendInput transformed { "Please analyze this project and gather information about the environment, project structure, dependencies, and code style." })
             edge(sendInput forwardTo callTool onToolCall { true })
-            edge(sendInput forwardTo nodeFinish onAssistantMessage { true } transformed {})
+            edge(sendInput forwardTo nodeFinish onAssistantMessage { true })
             edge(callTool forwardTo sendToolResult)
             edge(sendToolResult forwardTo callTool onToolCall { true })
-            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
+            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
         }
 
-        val saveToMemorySubgraph by subgraph("save-to-memory") {
+        val saveToMemorySubgraph by subgraph<String, String>("save-to-memory") {
             val nodeSaveEnvironmentInfo by nodeSaveToMemory<Unit>(
                 concept = environmentInfoConcept,
                 subject = MemorySubjects.Machine,
@@ -229,19 +226,14 @@ fun createProjectAnalyzerAgent(
                 scope = MemoryScopeType.PRODUCT
             )
 
-            edge(nodeStart forwardTo nodeSaveEnvironmentInfo)
+            edge(nodeStart forwardTo nodeSaveEnvironmentInfo transformed { })
             edge(nodeSaveEnvironmentInfo forwardTo nodeSaveProjectDependencies)
             edge(nodeSaveProjectDependencies forwardTo nodeSaveProjectStructure)
             edge(nodeSaveProjectStructure forwardTo nodeSaveCodeStyle)
-            edge(nodeSaveCodeStyle forwardTo nodeFinish transformed { "" })
+            edge(nodeSaveCodeStyle forwardTo nodeFinish transformed { "Saved to memory" })
         }
 
-        val nodeSaveInput by node<String, Unit>("save_input") {
-            storage.set(agentInputKey, it)
-        }
-
-        nodeStart then nodeSaveInput then loadMemorySubgraph then
-                gatherInfoSubgraph then saveToMemorySubgraph then nodeFinish
+        nodeStart then loadMemorySubgraph then gatherInfoSubgraph then saveToMemorySubgraph then nodeFinish
     }
 
     // Create and configure the agent runner

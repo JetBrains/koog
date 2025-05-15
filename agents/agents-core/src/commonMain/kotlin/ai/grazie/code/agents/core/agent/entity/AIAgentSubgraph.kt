@@ -35,7 +35,7 @@ public open class AIAgentSubgraph<Input, Output>(
 
     @OptIn(InternalAgentsApi::class)
     protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
-        logger.info { formatLog(context, "Starting stage($name) execution") }
+        logger.info { formatLog(context, "Executing subgraph $name") }
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
 
@@ -69,7 +69,7 @@ public open class AIAgentSubgraph<Input, Output>(
             currentInput = resolvedEdge.output
         }
 
-        logger.info { formatLog(context, "Stage(${name}) execution completed successfully") }
+        logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
         return (currentInput as? Output) ?: run {
             logger.error {

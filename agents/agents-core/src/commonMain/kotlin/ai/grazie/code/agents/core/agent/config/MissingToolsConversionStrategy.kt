@@ -6,7 +6,7 @@ import ai.jetbrains.code.prompt.message.Message
 
 /**
  * Determines how the tool calls which are present in the prompt, but whose definitions are not present in the request,
- * are converted when sending to the Grazie API.
+ * are converted when sending to the Model.
  *
  * Missing tool definitions usually occur when different sets of tools are used between stages/subgraphs,
  * and the same prompt history is used without compression.

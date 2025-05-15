@@ -406,8 +406,7 @@ class KotlinAIAgentWithMultipleLLMTest {
         )
 
         val strategy = strategy("test") {
-            val agentInputKey = AIAgentStorageKey<String>("agentInput")
-            val anthropicSubgraph by subgraph("anthropic") {
+            val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
                         model = AnthropicModels.Sonnet_3_7
@@ -428,8 +427,8 @@ class KotlinAIAgentWithMultipleLLMTest {
                 val sendToolResult by nodeLLMSendToolResult()
 
 
-                edge(nodeStart forwardTo definePromptAnthropic)
-                edge(definePromptAnthropic forwardTo callLLM transformed { storage.get(agentInputKey).orEmpty() })
+                edge(nodeStart forwardTo definePromptAnthropic transformed {})
+                edge(definePromptAnthropic forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
                 edge(callTool forwardTo sendToolResult)
@@ -462,7 +461,7 @@ class KotlinAIAgentWithMultipleLLMTest {
 
 
                 edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { storage.get(agentInputKey).orEmpty() })
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
                 edge(callTool forwardTo sendToolResult)
@@ -471,12 +470,8 @@ class KotlinAIAgentWithMultipleLLMTest {
             }
 
             val compressHistoryNode by nodeLLMCompressHistory<Unit>("compress_history")
-            val nodeSaveInput by node<String, Unit>("save_input") {
-                storage.set(agentInputKey, it)
-            }
 
-            nodeStart then nodeSaveInput then
-                    anthropicSubgraph then compressHistoryNode then openaiSubgraph then nodeFinish then nodeSaveInput
+            nodeStart then anthropicSubgraph then compressHistoryNode then openaiSubgraph then nodeFinish
         }
 
         val tools = ToolRegistry {
@@ -520,8 +515,7 @@ class KotlinAIAgentWithMultipleLLMTest {
 
         // Create a simple agent strategy
         val strategy = strategy("test") {
-            val agentInputKey = AIAgentStorageKey<String>("agentInput")
-            val openaiSubgraphFirst by subgraph("openai0") {
+            val openaiSubgraphFirst by subgraph<String, Unit>("openai0") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
                         model = OpenAIModels.Chat.GPT4o
@@ -544,8 +538,8 @@ class KotlinAIAgentWithMultipleLLMTest {
                 val sendToolResult by nodeLLMSendToolResult()
 
 
-                edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { storage.get(agentInputKey).orEmpty() })
+                edge(nodeStart forwardTo definePromptOpenAI transformed {})
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
                 edge(callTool forwardTo sendToolResult)
@@ -576,7 +570,7 @@ class KotlinAIAgentWithMultipleLLMTest {
 
 
                 edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { storage.get(agentInputKey).orEmpty() })
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
                 edge(callTool forwardTo sendToolResult)
@@ -585,12 +579,8 @@ class KotlinAIAgentWithMultipleLLMTest {
             }
 
             val compressHistoryNode by nodeLLMCompressHistory<Unit>("compress_history")
-            val nodeSaveInput by node<String, Unit>("save_input") {
-                storage.set(agentInputKey, it)
-            }
 
-            nodeStart then nodeSaveInput then
-                    openaiSubgraphFirst then compressHistoryNode then openaiSubgraphSecond then nodeFinish then nodeSaveInput
+            nodeStart then openaiSubgraphFirst then compressHistoryNode then openaiSubgraphSecond then nodeFinish
         }
 
         val tools = ToolRegistry {

@@ -123,6 +123,7 @@ public open class AIAgent(
 
         val agentContext = AIAgentContext(
             this,
+            agentInput = agentInput,
             agentConfig,
             llm = AIAgentLLMContext(
                 toolRegistry.tools.map { it.descriptor },

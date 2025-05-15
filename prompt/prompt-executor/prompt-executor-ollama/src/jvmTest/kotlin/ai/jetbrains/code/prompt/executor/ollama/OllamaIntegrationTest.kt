@@ -2,7 +2,6 @@ package ai.jetbrains.code.prompt.executor.ollama
 
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -26,9 +25,7 @@ class OllamaIntegrationTest {
 
     private fun createTestStrategy(policyName: String) =
         strategy("test-ollama-$policyName") {
-            val agentInputKey = AIAgentStorageKey<String>("agentInput")
-
-            val askCapitalSubgraph by subgraph("ask-capital") {
+            val askCapitalSubgraph by subgraph<String, String>("ask-capital") {
                 val definePrompt by node<Unit, Unit> {
                     llm.writeSession {
                         model = OllamaModels.Meta.LLAMA_3_2
@@ -44,15 +41,15 @@ class OllamaIntegrationTest {
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
 
-                edge(nodeStart forwardTo definePrompt)
-                edge(definePrompt forwardTo callLLM transformed { storage.get(agentInputKey).orEmpty() })
+                edge(nodeStart forwardTo definePrompt transformed {})
+                edge(definePrompt forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo callTool onToolCall { true })
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
             }
 
-            val askVerifyAnswer by subgraph("verify-answer") {
+            val askVerifyAnswer by subgraph<String, String>("verify-answer") {
                 val definePrompt by node<Unit, Unit> {
                     llm.writeSession {
                         model = OllamaModels.Meta.LLAMA_3_2
@@ -68,19 +65,15 @@ class OllamaIntegrationTest {
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
 
-                edge(nodeStart forwardTo definePrompt)
-                edge(definePrompt forwardTo callLLM transformed { storage.get(agentInputKey).orEmpty() })
+                edge(nodeStart forwardTo definePrompt transformed {})
+                edge(definePrompt forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
             }
 
-            val nodeSaveInput by node<String, Unit>("save_input") {
-                storage.set(agentInputKey, it)
-            }
-
-            nodeStart then nodeSaveInput then askCapitalSubgraph then askVerifyAnswer then nodeFinish
+            nodeStart then askCapitalSubgraph then askVerifyAnswer then nodeFinish
         }
 
 
