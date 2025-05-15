@@ -22,6 +22,12 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         return AIAgentNodeDelegate(name, AIAgentNodeBuilder(execute))
     }
 
+    /**
+     * Creates a subgraph with specified tool selection strategy.
+     * @param name Optional subgraph name
+     * @param toolSelectionStrategy Strategy for tool selection
+     * @param define Subgraph definition function
+     */
     public fun <Input, Output> subgraph(
         name: String? = null,
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
@@ -30,6 +36,12 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         return AIAgentSubgraphBuilder<Input, Output>(name, toolSelectionStrategy).also { it.define() }.build()
     }
 
+    /**
+     * Creates a subgraph with specified tools.
+     * @param name Optional subgraph name
+     * @param tools List of tools available to the subgraph
+     * @param define Subgraph definition function
+     */
     public fun <Input, Output> subgraph(
         name: String? = null,
         tools: List<Tool<*, *>>,
@@ -38,11 +50,20 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), define)
     }
 
+    /**
+     * Connects the sequence of nodes with edges between them.
+     * @param nextNode Node to connect to
+     * @return The next node
+     */
     public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
         edge(this forwardTo nextNode)
         return nextNode
     }
 
+    /**
+     * Creates an edge between nodes.
+     * @param edgeIntermediate Intermediate edge builder
+     */
     public fun <IncomingOutput, OutgoingInput> edge(
         edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>
     ) {
@@ -50,6 +71,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         edgeIntermediate.fromNode.addEdge(edge)
     }
 
+    /**
+     * Checks if finish node is reachable from start node.
+     * @param start Starting node
+     * @return True if finish node is reachable
+     */
     protected fun isFinishReachable(start: StartAIAgentNodeBase<Input>): Boolean {
         val visited = mutableSetOf<AIAgentNodeBase<*, *>>()
 

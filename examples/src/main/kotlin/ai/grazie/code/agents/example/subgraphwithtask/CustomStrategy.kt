@@ -65,7 +65,7 @@ fun customWizardStrategy(
             """.trimIndent()
     }
 
-    edge(nodeStart forwardTo generate transformed { TODO("FIXME") })
+    edge(nodeStart forwardTo generate transformed { })
     edge(generate forwardTo verify transformed { "Project is generated and is ready for verification." })
     edge(verify forwardTo fix onCondition { !it.correct })
     edge(verify forwardTo nodeFinish onCondition { it.correct } transformed { "Project is correct." })

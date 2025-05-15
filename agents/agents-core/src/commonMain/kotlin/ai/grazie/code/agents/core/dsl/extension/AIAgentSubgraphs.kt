@@ -2,10 +2,10 @@ package ai.grazie.code.agents.core.dsl.extension
 
 import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
-import ai.grazie.code.agents.core.tools.*
 import ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphDelegateBase
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.tools.*
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
 import ai.jetbrains.code.prompt.params.LLMParams
@@ -164,7 +164,7 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
     val sendToolResult by nodeLLMSendToolResult()
 
     edge(nodeStart forwardTo defineTaskNode)
-    edge(defineTaskNode forwardTo nodeCallLLM transformed {TODO("FIXME")})
+    edge(defineTaskNode forwardTo nodeCallLLM transformed { agentInput })
     edge(nodeCallLLM forwardTo preFinish onToolCall (finishTool) transformed {
         Json.decodeFromJsonElement(finishTool.argsSerializer, it.contentJson)
     })
