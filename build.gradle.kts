@@ -142,6 +142,7 @@ dependencies {
     dokka(project(":prompt:prompt-cache:prompt-cache-redis"))
     dokka(project(":prompt:prompt-executor:prompt-executor-cached"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
