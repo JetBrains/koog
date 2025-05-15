@@ -28,7 +28,7 @@ include(":agents:agents-tools")
 include(":agents:agents-utils")
 
 include(":embeddings:embeddings-base")
-include(":embeddings:embeddings-llm-remote")
+include(":embeddings:embeddings-llm")
 include(":embeddings:embeddings-local")
 
 include(":examples")

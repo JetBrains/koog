@@ -11,7 +11,7 @@ class OllamaEmbedderTest {
     @Test
     fun testEmbed() = runTest {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+        val embedder = LLMEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val text = "Hello, world!"
         val expectedVector = Vector(listOf(0.1, 0.2, 0.3))
@@ -24,7 +24,7 @@ class OllamaEmbedderTest {
     @Test
     fun testDiff_identicalVectors() = runTest {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+        val embedder = LLMEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val vector1 = Vector(listOf(1.0, 2.0, 3.0))
         val vector2 = Vector(listOf(1.0, 2.0, 3.0))
@@ -36,7 +36,7 @@ class OllamaEmbedderTest {
     @Test
     fun testDiff_differentVectors() = runTest {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+        val embedder = LLMEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val vector1 = Vector(listOf(1.0, 0.0, 0.0))
         val vector2 = Vector(listOf(0.0, 1.0, 0.0))
@@ -48,7 +48,7 @@ class OllamaEmbedderTest {
     @Test
     fun testDiff_oppositeVectors() = runTest {
         val mockClient = MockOllamaEmbedderClient()
-        val embedder = OllamaEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+        val embedder = LLMEmbedder(mockClient, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
 
         val vector1 = Vector(listOf(1.0, 2.0, 3.0))
         val vector2 = Vector(listOf(-1.0, -2.0, -3.0))
