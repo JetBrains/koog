@@ -10,16 +10,33 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-@Disabled("Disabled until having a docker image with Ollama running")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OllamaClientTest {
     private val model = OllamaModels.Meta.LLAMA_3_2
-    val client = OllamaClient()
-    val executor = OllamaPromptExecutor(client)
+    private lateinit var client: OllamaClient
+    private lateinit var executor: OllamaPromptExecutor
+
+    private val ollamaContainer = OllamaContainer()
+
+    @BeforeAll
+    fun setup() {
+        ollamaContainer.start()
+
+        client = OllamaClient(baseUrl = ollamaContainer.getOllamaUrl())
+        executor = OllamaPromptExecutor(client)
+    }
+
+    @AfterAll
+    fun tearDown() {
+        ollamaContainer.stop()
+    }
 
     @Test
     fun `test execute simple prompt`() = runTest {
@@ -410,7 +427,7 @@ class OllamaClientTest {
     fun testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
-            user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words.")
+            user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 100 words.")
         }
 
         val flow = executor.executeStreaming(prompt, model)
@@ -568,7 +585,6 @@ class OllamaClientTest {
         }
     }
 
-    @Disabled("JBAI-13854")
     @Test
     fun `test execute streaming API with structured data`() = runTest {
         val countries = mutableListOf<Country>()
