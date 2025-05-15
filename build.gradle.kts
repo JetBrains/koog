@@ -8,7 +8,7 @@ group = "ai.jetbrains.code"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.1.0-alpha.3"
+    val main = "0.1.0-alpha.4"
 
     val feat = run {
         val releaseBuild = !System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH").isNullOrBlank()
