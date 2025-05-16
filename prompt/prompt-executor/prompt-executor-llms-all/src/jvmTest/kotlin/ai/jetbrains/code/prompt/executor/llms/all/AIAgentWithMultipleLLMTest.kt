@@ -3,7 +3,6 @@ package ai.jetbrains.code.prompt.executor.llms.all
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.AIAgentException
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
@@ -290,7 +289,6 @@ class KotlinAIAgentWithMultipleLLMTest {
         }
     }
 
-    @Disabled("JBAI-13957")
     @Test
     fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
