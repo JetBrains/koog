@@ -40,14 +40,10 @@ public fun simpleChatAgent(
         maxAgentIterations = maxIterations,
     )
 
-    val resultingToolRegistry = if (toolRegistry == null) ToolRegistry {
-        tool(AskUser)
-        tool(ExitTool)
-    } else
-        ToolRegistry {
-            tool(AskUser)
-            tool(ExitTool)
-        } with toolRegistry
+    toolRegistry
+
+    val resultingToolRegistry = toolRegistry ?: ToolRegistry { }
+    resultingToolRegistry.addAll(AskUser, ExitTool)
 
     return AIAgent(
         promptExecutor = executor,
