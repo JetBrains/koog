@@ -23,7 +23,7 @@ class OllamaClientTest {
     val executor = SingleLLMPromptExecutor(client)
 
     @Test
-    fun `test execute simple prompt`() = runTest {
+    fun `integration_test execute simple prompt`() = runTest {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -36,7 +36,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with required parameters`() = runTest {
+    fun `integration_test execute tools with required parameters`() = runTest {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -65,7 +65,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with required and optional parameters`() = runTest {
+    fun `integration_test execute tools with required and optional parameters`() = runTest {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -96,7 +96,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with optional parameters`() = runTest {
+    fun `integration_test execute tools with optional parameters`() = runTest {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -126,7 +126,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with no parameters`() = runTest {
+    fun `integration_test execute tools with no parameters`() = runTest {
         val getTimeTool = ToolDescriptor(
             name = "getTime",
             description = "Get the current time"
@@ -143,7 +143,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with int parameter`() = runTest {
+    fun `integration_test execute tools with int parameter`() = runTest {
         val setLimitTool = ToolDescriptor(
             name = "setLimit",
             description = "Set the limit",
@@ -167,7 +167,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with float parameter`() = runTest {
+    fun `integration_test execute tools with float parameter`() = runTest {
         val printValueTool = ToolDescriptor(
             name = "printValue",
             description = "Print the value",
@@ -191,7 +191,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with string parameter`() = runTest {
+    fun `integration_test execute tools with string parameter`() = runTest {
         val setNameTool = ToolDescriptor(
             name = "setName",
             description = "Set the name",
@@ -215,7 +215,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with enum parameter`() = runTest {
+    fun `integration_test execute tools with enum parameter`() = runTest {
         val setColor = ToolDescriptor(
             name = "setColor",
             description = "Set the color",
@@ -244,7 +244,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with serializable enum parameter`() = runTest {
+    fun `integration_test execute tools with serializable enum parameter`() = runTest {
         val calculatorTool = ToolDescriptor(
             name = "calculator",
             description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
@@ -278,7 +278,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of strings parameter`() = runTest {
+    fun `integration_test execute tools with list of strings parameter`() = runTest {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -302,7 +302,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of integers parameter`() = runTest {
+    fun `integration_test execute tools with list of integers parameter`() = runTest {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -326,7 +326,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of floats parameter`() = runTest {
+    fun `integration_test execute tools with list of floats parameter`() = runTest {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -359,7 +359,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of enums parameter`() = runTest {
+    fun `integration_test execute tools with list of enums parameter`() = runTest {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -383,7 +383,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of lists parameter`() = runTest {
+    fun `integration_test execute tools with list of lists parameter`() = runTest {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -570,7 +570,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute streaming API with structured data`() = runTest {
+    fun `integration_test execute streaming API with structured data`() = runTest {
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
 

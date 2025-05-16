@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.ollama
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
@@ -49,6 +50,7 @@ class OllamaIntegrationTest {
                 edge(callTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
             }
 
             val askVerifyAnswer by subgraph<String, String>("verify-answer") {
@@ -73,6 +75,7 @@ class OllamaIntegrationTest {
                 edge(callTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
             }
 
             nodeStart then askCapitalSubgraph then askVerifyAnswer then nodeFinish
@@ -89,7 +92,7 @@ class OllamaIntegrationTest {
 
     private fun createAgent(
         executor: PromptExecutor,
-        strategy: ai.koog.agents.core.agent.entity.AIAgentStrategy,
+        strategy: AIAgentStrategy,
         toolRegistry: ToolRegistry
     ): AIAgent {
         val promptsAndResponses = mutableListOf<String>()
