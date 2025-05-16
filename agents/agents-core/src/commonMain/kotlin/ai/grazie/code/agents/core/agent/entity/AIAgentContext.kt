@@ -329,6 +329,7 @@ public data class AIAgentLLMContext(
             // update tools and prompt after session execution
             this.prompt = it.prompt
             this.tools = it.tools
+            this.model = it.model
 
             result
         }
