@@ -1,5 +1,4 @@
 import ai.grazie.gradle.publish.maven.publishToGraziePublicMaven
-import org.gradle.internal.classpath.Instrumented.systemProperty
 
 group = "${rootProject.group}.prompt"
 version = rootProject.version
@@ -14,21 +13,13 @@ kotlin {
         commonMain {
             dependencies {
                 implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.ktor.client.content.negotiation)
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-llms"))
-                api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
-                implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":agents:agents-tools"))
-                implementation(project(":prompt:prompt-llm"))
-                implementation(project(":prompt:prompt-model"))
             }
         }
         commonTest {
@@ -41,9 +32,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
-                implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
-                implementation(project(":agents:agents-test"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }
         }
