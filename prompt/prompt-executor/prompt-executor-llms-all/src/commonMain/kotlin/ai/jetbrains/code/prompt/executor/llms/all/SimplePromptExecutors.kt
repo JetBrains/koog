@@ -5,6 +5,7 @@ import ai.jetbrains.code.prompt.executor.clients.google.GoogleLLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.jetbrains.code.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
 
 public fun simpleOpenAIExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
 
@@ -28,3 +29,10 @@ public fun simpleOpenRouterExecutor(apiToken: String): SingleLLMPromptExecutor =
  * @param apiToken The API token used for authentication with the Google AI service.
  */
 public fun simpleGoogleAIExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(GoogleLLMClient(apiToken))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with an `OllamaClient`.
+ *
+ * @param apiToken The API token used for authentication with the Google AI service.
+ */
+public fun simpleOllamaAIExecutor(baseUrl: String = "http://localhost:11434"): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))

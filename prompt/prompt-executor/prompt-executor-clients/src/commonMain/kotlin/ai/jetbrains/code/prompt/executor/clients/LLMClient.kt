@@ -35,23 +35,6 @@ public interface LLMClient {
     public suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
 }
 
-/**
- * Extension of the LLMClient interface which includes functionality for generating text embeddings
- * in addition to executing prompts and streaming outputs.
- */
-public interface LLMClientWithEmbeddings: LLMClient {
-    /**
-     * Embeds the given text using into a vector of double-precision numbers.
-     *
-     * @param text The text to embed.
-     * @param model The model to use for embedding. Must have the Embed capability.
-     * @return A list of floating-point values representing the embedding.
-     * @throws IllegalArgumentException if the model does not have the Embed capability.
-     */
-    public suspend fun embed(text: String, model: LLModel): List<Double>
-}
-
-
 public data class ConnectionTimeoutConfig(
     val requestTimeoutMillis: Long = DEFAULT_TIMEOUT_MS,
     val connectTimeoutMillis: Long = DEFAULT_CONNECT_TIMEOUT_MS,

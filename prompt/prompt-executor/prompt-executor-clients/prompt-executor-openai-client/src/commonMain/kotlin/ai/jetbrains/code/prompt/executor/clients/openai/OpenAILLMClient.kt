@@ -9,7 +9,7 @@ import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.jetbrains.code.prompt.executor.clients.LLMClient
-import ai.jetbrains.code.prompt.executor.clients.LLMClientWithEmbeddings
+import ai.jetbrains.code.prompt.executor.clients.LLMEmbeddingProvider
 import ai.jetbrains.code.prompt.llm.LLMCapability
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
@@ -50,7 +50,7 @@ public open class OpenAILLMClient(
     private val apiKey: String,
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     baseClient: HttpClient = HttpClient()
-) : LLMClientWithEmbeddings {
+) : LLMEmbeddingProvider, LLMClient {
 
     private companion object {
         private val logger =
