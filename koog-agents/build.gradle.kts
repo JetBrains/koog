@@ -10,7 +10,7 @@ plugins {
 val excluded = setOf(
     ":agents:agents-test",
     ":examples",
-    project.path, // the current project should not depend in itself
+    project.path, // the current project should not depend on itself
 )
 
 val included = setOf(
@@ -63,6 +63,18 @@ kotlin {
                 val notIncluded = projectsPaths - included
                 require(notIncluded.isEmpty()) {
                     "There are modules that are not listed in the included set:\n${notIncluded.joinToString(",\n") { "\"$it\"" } }"
+                }
+
+                projects.forEach {
+                    val text = it.buildFile.readText()
+
+                    require("import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven" in text) {
+                        "Module ${it.path} is used as a dependency for '${project.name}' main jar. Hence, it should be published. If not, please mark it as excluded in ${project.name}/build.gradle.kts"
+                    }
+
+                    require("publishToGraziePublicMaven()" in text) {
+                        "Module ${it.path} is used as a dependency for '${project.name}' main jar. Hence, it should be published. If not, please mark it as excluded in ${project.name}/build.gradle.kts"
+                    }
                 }
 
                 projects.forEach {
