@@ -6,6 +6,7 @@ version = rootProject.version
 plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)
+    id("org.gradle.test-retry") version "1.5.3"
 }
 
 kotlin {
@@ -61,6 +62,13 @@ kotlin {
     }
 
     explicitApi()
+}
+
+tasks.withType<Test> {
+    retry {
+        maxRetries.set(3)
+        failOnPassedAfterRetry.set(true)
+    }
 }
 
 publishToGraziePublicMaven()

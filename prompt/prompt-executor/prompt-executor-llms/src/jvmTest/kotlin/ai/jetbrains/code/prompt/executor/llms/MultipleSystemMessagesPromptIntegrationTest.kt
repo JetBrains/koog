@@ -52,6 +52,6 @@ class MultipleSystemMessagesPromptIntegrationTest {
         assertTrue(responseGemini.isNotEmpty(), "Gemini response should not be empty")
         println("OpenAI Response: $responseOpenAI")
         println("Anthropic Response: $responseAnthropic")
-        println("Gemini Response: $responseAnthropic")
+        println("Gemini Response: $responseGemini")
     }
 }

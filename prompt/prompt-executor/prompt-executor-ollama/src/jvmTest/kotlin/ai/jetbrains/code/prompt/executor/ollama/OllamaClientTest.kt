@@ -294,7 +294,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun integration_testToolsListOfStringsParam() = runTest {
+    fun integration_testToolsListOfStringsParam() = runTest(timeout = 600.seconds) {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -318,7 +318,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun integration_testToolsListOfIntsParam() = runTest {
+    fun integration_testToolsListOfIntsParam() = runTest(timeout = 600.seconds) {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -342,7 +342,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun integration_testToolsListOfFloatsParam() = runTest {
+    fun integration_testToolsListOfFloatsParam() = runTest(timeout = 600.seconds) {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -375,7 +375,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun integration_testToolsListOfEnumsParam() = runTest {
+    fun integration_testToolsListOfEnumsParam() = runTest(timeout = 600.seconds) {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -399,7 +399,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun integration_testToolsNestedListParam() = runTest {
+    fun integration_testToolsNestedListParam() = runTest(timeout = 600.seconds) {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
