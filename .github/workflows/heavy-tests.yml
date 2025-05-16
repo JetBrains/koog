@@ -42,6 +42,7 @@ jobs:
         env:
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
           OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
+          GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
         run: ./gradlew jvmIntegrationTest --continue
 
       - name: Collect reports

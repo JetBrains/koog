@@ -65,6 +65,7 @@ subprojects {
             mapOf(
                 "ANTHROPIC_API_TEST_KEY" to System.getenv("ANTHROPIC_API_TEST_KEY"),
                 "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
+                "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
             )
         )
     }
