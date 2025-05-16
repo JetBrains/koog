@@ -1,3 +1,5 @@
+import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
+
 plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)
@@ -63,3 +65,5 @@ kotlin {
 
     explicitApi()
 }
+
+publishToGraziePublicMaven()
