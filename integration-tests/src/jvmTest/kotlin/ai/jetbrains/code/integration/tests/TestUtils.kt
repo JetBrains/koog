@@ -7,15 +7,18 @@ import kotlinx.serialization.Serializable
 
 internal object TestUtils {
     fun readTestAnthropicKeyFromEnv(): String {
-        return System.getenv("ANTHROPIC_API_TEST_KEY") ?: error("ERROR: environment variable `ANTHROPIC_API_TEST_KEY` is not set")
+        return System.getenv("ANTHROPIC_API_TEST_KEY")
+            ?: error("ERROR: environment variable `ANTHROPIC_API_TEST_KEY` is not set")
     }
 
     fun readTestOpenAIKeyFromEnv(): String {
-        return System.getenv("OPEN_AI_API_TEST_KEY") ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` is not set")
+        return System.getenv("OPEN_AI_API_TEST_KEY")
+            ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` is not set")
     }
 
     fun readTestGeminiKeyFromEnv(): String {
-        return System.getenv("GEMINI_API_TEST_KEY") ?: error("ERROR: environment variable `GEMINI_API_TEST_KEY` is not set")
+        return System.getenv("GEMINI_API_TEST_KEY")
+            ?: error("ERROR: environment variable `GEMINI_API_TEST_KEY` is not set")
     }
 
     @Serializable
