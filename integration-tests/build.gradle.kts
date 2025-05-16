@@ -1,5 +1,3 @@
-import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
-
 group = "${rootProject.group}.prompt"
 version = rootProject.version
 
@@ -38,5 +36,3 @@ kotlin {
         }
     }
 }
-
-publishToGraziePublicMaven()
