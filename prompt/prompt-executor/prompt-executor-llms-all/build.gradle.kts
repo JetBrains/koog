@@ -19,6 +19,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
                 implementation(project(":agents:agents-core"))
+                implementation(project(":agents:agents-ext"))
                 implementation(project(":agents:agents-tools"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))

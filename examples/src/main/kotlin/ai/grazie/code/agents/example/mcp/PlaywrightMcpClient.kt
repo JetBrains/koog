@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.example.mcp
 
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
+import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
 import ai.grazie.code.agents.mcp.McpToolRegistryProvider
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor

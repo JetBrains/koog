@@ -1,14 +1,15 @@
 package ai.grazie.code.agents.test
 
-import ai.grazie.code.agents.core.api.simpleChatAgent
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.tools.ExitTool
-import ai.grazie.code.agents.core.tools.tools.SayToUser
+import ai.grazie.code.agents.ext.agent.simpleChatAgent
+import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
+import ai.grazie.code.agents.ext.tool.ExitTool
+import ai.grazie.code.agents.ext.tool.SayToUser
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -61,6 +62,7 @@ class SimpleAgentMockedTest {
     fun `simpleChatAgent should call default tools`() = runBlocking {
         val agent = simpleChatAgent(
             systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
             maxIterations = 10,
             executor = testExecutor,
@@ -84,6 +86,7 @@ class SimpleAgentMockedTest {
 
         val agent = simpleChatAgent(
             systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
             maxIterations = 10,
             toolRegistry = toolRegistry,
@@ -106,6 +109,7 @@ class SimpleAgentMockedTest {
     fun `simpleSingleRunAgent should not call tools by default`() = runBlocking {
         val agent = simpleSingleRunAgent(
             systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
             maxIterations = 10,
             executor = testExecutor,
@@ -131,6 +135,7 @@ class SimpleAgentMockedTest {
 
         val agent = simpleSingleRunAgent(
             systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,

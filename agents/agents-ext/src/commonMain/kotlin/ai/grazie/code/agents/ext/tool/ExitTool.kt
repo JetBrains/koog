@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.tools.tools
+package ai.grazie.code.agents.ext.tool
 
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer

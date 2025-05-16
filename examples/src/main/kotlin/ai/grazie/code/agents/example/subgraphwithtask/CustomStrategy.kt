@@ -2,10 +2,10 @@ package ai.grazie.code.agents.example.subgraphwithtask
 
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
-import ai.grazie.code.agents.core.dsl.extension.ProvideVerifiedSubgraphResult
-import ai.grazie.code.agents.core.dsl.extension.VerifiedSubgraphResult
-import ai.grazie.code.agents.core.dsl.extension.subgraphWithTask
-import ai.grazie.code.agents.core.dsl.extension.subgraphWithVerification
+import ai.grazie.code.agents.ext.agent.ProvideVerifiedSubgraphResult
+import ai.grazie.code.agents.ext.agent.VerifiedSubgraphResult
+import ai.grazie.code.agents.ext.agent.subgraphWithTask
+import ai.grazie.code.agents.ext.agent.subgraphWithVerification
 import ai.grazie.code.agents.core.tools.Tool
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels

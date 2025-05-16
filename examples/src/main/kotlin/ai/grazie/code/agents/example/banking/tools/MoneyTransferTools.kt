@@ -3,10 +3,11 @@ package ai.grazie.code.agents.example.banking.tools
 import ai.grazie.code.agents.core.tools.reflect.ToolSet
 import ai.grazie.code.agents.core.tools.annotations.Tool
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
-import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.reflect.asTools
 import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.ext.agent.simpleChatAgent
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -170,6 +171,7 @@ fun main() = runBlocking {
 
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(apiKey),
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
         temperature = 0.0,
         toolRegistry = toolRegistry

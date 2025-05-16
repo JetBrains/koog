@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.example.banking.routing
 
-import ai.grazie.code.agents.core.dsl.extension.SerializableSubgraphResult
+import ai.grazie.code.agents.ext.agent.SerializableSubgraphResult
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

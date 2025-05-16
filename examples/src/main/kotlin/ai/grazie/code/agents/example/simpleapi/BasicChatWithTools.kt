@@ -1,8 +1,9 @@
 package ai.grazie.code.agents.example.simpleapi
 
-import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.ext.agent.simpleChatAgent
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
@@ -27,6 +28,7 @@ fun main() = runBlocking {
     }
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
         temperature = 0.0,
         toolRegistry = toolRegistry

@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.test
 
-import ai.grazie.code.agents.core.api.simpleChatAgent
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.tools.SayToUser
+import ai.grazie.code.agents.ext.agent.simpleChatAgent
+import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
+import ai.grazie.code.agents.ext.tool.SayToUser
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels

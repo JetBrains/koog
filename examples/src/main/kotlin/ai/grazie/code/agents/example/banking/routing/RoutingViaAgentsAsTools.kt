@@ -1,16 +1,17 @@
 package ai.grazie.code.agents.example.banking.routing
 
 import ai.grazie.code.agents.core.agent.asTool
-import ai.grazie.code.agents.core.api.simpleChatAgent
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.reflect.asTools
-import ai.grazie.code.agents.core.tools.tools.AskUser
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.banking.tools.MoneyTransferTools
 import ai.grazie.code.agents.example.banking.tools.TransactionAnalysisTools
 import ai.grazie.code.agents.example.banking.tools.bankingAssistantSystemPrompt
 import ai.grazie.code.agents.example.banking.tools.transactionAnalysisPrompt
+import ai.grazie.code.agents.ext.agent.simpleChatAgent
+import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
+import ai.grazie.code.agents.ext.tool.AskUser
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
@@ -20,6 +21,7 @@ fun main() = runBlocking {
 
     val transferAgent = simpleChatAgent(
         executor = openAIExecutor,
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
         temperature = 0.0,
         toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
@@ -27,6 +29,7 @@ fun main() = runBlocking {
 
     val analysisAgent = simpleChatAgent(
         executor = openAIExecutor,
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
         temperature = 0.0,
         toolRegistry = ToolRegistry { tools(TransactionAnalysisTools().asTools()) }
@@ -34,6 +37,7 @@ fun main() = runBlocking {
 
     val classifierAgent = simpleSingleRunAgent(
         executor = openAIExecutor,
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         toolRegistry = ToolRegistry {
             tool(AskUser)
             tool(

@@ -1,9 +1,10 @@
 package ai.grazie.code.agents.example.simpleapi
 
 import ai.grazie.code.agents.example.TokenService
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
+import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
@@ -19,6 +20,7 @@ fun main() = runBlocking {
     // Create a single-run agent with a system prompt
     val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples.",
         installFeatures = { install(EventHandler, eventHandlerConfig) }
     )

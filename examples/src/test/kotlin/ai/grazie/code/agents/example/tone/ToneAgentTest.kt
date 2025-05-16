@@ -3,11 +3,11 @@ package ai.grazie.code.agents.example.tone
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.tools.SayToUser
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.PositiveToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.ToneTool
+import ai.grazie.code.agents.ext.tool.SayToUser
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.testing.feature.withTesting

@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.agent.entity.*
-import ai.grazie.code.agents.core.api.AIAgentBase
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
 import ai.grazie.code.agents.core.environment.ReceivedToolResult

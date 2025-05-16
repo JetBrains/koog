@@ -1,12 +1,11 @@
-package ai.grazie.code.agents.core.api
+package ai.grazie.code.agents.ext.agent
 
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.tools.AskUser
-import ai.grazie.code.agents.core.tools.tools.ExitTool
+import ai.grazie.code.agents.ext.tool.AskUser
+import ai.grazie.code.agents.ext.tool.ExitTool
 import ai.jetbrains.code.prompt.dsl.prompt
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.model.PromptExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.params.LLMParams
@@ -26,7 +25,7 @@ import ai.jetbrains.code.prompt.params.LLMParams
 public fun simpleChatAgent(
     executor: PromptExecutor,
     systemPrompt: String = "",
-    llmModel: LLModel = OpenAIModels.Chat.GPT4o,
+    llmModel: LLModel,
     temperature: Double = 1.0,
     toolRegistry: ToolRegistry? = null,
     maxIterations: Int = 50,
@@ -75,7 +74,7 @@ public fun simpleChatAgent(
 public fun simpleSingleRunAgent(
     executor: PromptExecutor,
     systemPrompt: String = "",
-    llmModel: LLModel = OpenAIModels.Chat.GPT4o,
+    llmModel: LLModel,
     temperature: Double = 1.0,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
