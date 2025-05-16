@@ -8,7 +8,6 @@ import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
 import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
 import io.modelcontextprotocol.kotlin.sdk.shared.Transport
-import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
@@ -72,11 +71,11 @@ public object McpToolRegistryProvider {
      * @param mcpClient The MCP client connected to an MCP server.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
-    public fun fromClient(
+    public suspend fun fromClient(
         mcpClient: Client,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
     ): ToolRegistry {
-        val sdkTools = runBlocking { mcpClient.listTools() }?.tools.orEmpty()
+        val sdkTools = mcpClient.listTools()?.tools.orEmpty()
         return ToolRegistry {
             sdkTools.forEach { sdkTool ->
                 val toolDescriptor = mcpToolParser.parse(sdkTool)
