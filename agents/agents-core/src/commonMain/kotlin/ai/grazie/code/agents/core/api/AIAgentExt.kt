@@ -42,16 +42,12 @@ public fun simpleChatAgent(
     )
 
     val resultingToolRegistry = if (toolRegistry == null) ToolRegistry {
-        stage {
-            tool(AskUser)
-            tool(ExitTool)
-        }
+        tool(AskUser)
+        tool(ExitTool)
     } else
         ToolRegistry {
-            stage {
-                tool(AskUser)
-                tool(ExitTool)
-            }
+            tool(AskUser)
+            tool(ExitTool)
         } with toolRegistry
 
     return AIAgent(

@@ -1,91 +1,57 @@
 package ai.grazie.code.agents.example.calculator
 
-import ai.grazie.code.agents.core.tools.*
-import ai.grazie.code.agents.core.tools.tools.ToolStage
-import kotlinx.serialization.Serializable
+import ai.grazie.code.agents.core.tools.annotations.LLMDescription
+import ai.grazie.code.agents.core.tools.annotations.Tool
+import ai.grazie.code.agents.core.tools.reflect.ToolSet
 
-object CalculatorTools {
+@LLMDescription("Tools for basic calculator operations")
+class CalculatorTools : ToolSet {
 
-    abstract class CalculatorTool(
-        name: String,
-        description: String,
-    ) : Tool<CalculatorTool.Args, CalculatorTool.Result>() {
-        @Serializable
-        data class Args(val a: Float, val b: Float) : Tool.Args
+    @Tool
+    @LLMDescription("Adds two numbers")
+    fun plus(
+        @LLMDescription("First number")
+        a: Float,
 
-        @Serializable
-        @JvmInline
-        value class Result(val result: Float) : ToolResult {
-            override fun toStringDefault(): String {
-                return result.toString()
-            }
-        }
-
-        final override val argsSerializer = Args.serializer()
-
-        final override val descriptor = ToolDescriptor(
-            name = name,
-            description = description,
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "First number",
-                    type = ToolParameterType.Float,
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "Second number",
-                    type = ToolParameterType.Float,
-                ),
-            )
-        )
+        @LLMDescription("Second number")
+        b: Float
+    ): String {
+        return (a + b).toString()
     }
 
-    /**
-     * 2. Implement the tool (tools).
-     */
+    @Tool
+    @LLMDescription("Subtracts the second number from the first")
+    fun minus(
+        @LLMDescription("First number")
+        a: Float,
 
-    object PlusTool : CalculatorTool(
-        name = "plus",
-        description = "Adds a and b",
-    ) {
-        override suspend fun execute(args: Args): Result {
-            return Result(args.a + args.b)
-        }
+        @LLMDescription("Second number")
+        b: Float
+    ): String {
+        return (a - b).toString()
     }
 
-    object MinusTool : CalculatorTool(
-        name = "minus",
-        description = "Subtracts b from a",
-    ) {
-        override suspend fun execute(args: Args): Result {
-            return Result(args.a - args.b)
-        }
+    @Tool
+    @LLMDescription("Divides the first number by the second")
+    fun divide(
+        @LLMDescription("First number")
+        a: Float,
+
+        @LLMDescription("Second number")
+        b: Float
+    ): String {
+        return (a / b).toString()
     }
 
-    object DivideTool : CalculatorTool(
-        name = "divide",
-        description = "Divides a and b",
-    ) {
-        override suspend fun execute(args: Args): Result {
-            return Result(args.a / args.b)
-        }
-    }
+    @Tool
+    @LLMDescription("Multiplies two numbers")
+    fun multiply(
+        @LLMDescription("First number")
+        a: Float,
 
-    object MultiplyTool : CalculatorTool(
-        name = "multiply",
-        description = "Multiplies a and b",
-    ) {
-        override suspend fun execute(args: Args): Result {
-            return Result(args.a * args.b)
-        }
+        @LLMDescription("Second number")
+        b: Float
+    ): String {
+        return (a * b).toString()
     }
-
-    fun ToolStage.Builder.tools() {
-        tool(PlusTool)
-        tool(MinusTool)
-        tool(DivideTool)
-        tool(MultiplyTool)
-    }
-
 }

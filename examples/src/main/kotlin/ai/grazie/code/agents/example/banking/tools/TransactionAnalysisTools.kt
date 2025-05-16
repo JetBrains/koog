@@ -3,9 +3,9 @@ package ai.grazie.code.agents.example.banking.tools
 import ai.grazie.code.agents.core.tools.reflect.ToolSet
 import ai.grazie.code.agents.core.tools.annotations.Tool
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
-import ai.grazie.code.agents.core.tools.SimpleToolRegistry
 import ai.grazie.code.agents.core.api.simpleChatAgent
-import ai.grazie.code.agents.core.tools.reflect.toolsFrom
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.reflect.asTools
 import ai.grazie.code.agents.example.TokenService
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -136,8 +136,8 @@ class TransactionAnalysisTools : ToolSet {
 fun main() = runBlocking {
     val apiKey = System.getenv("OPENAI_API_KEY") ?: TokenService.openAIToken // Your OpenAI API key
 
-    val toolRegistry = SimpleToolRegistry {
-        toolsFrom(TransactionAnalysisTools())
+    val toolRegistry = ToolRegistry {
+        tools(TransactionAnalysisTools().asTools())
     }
 
     val agent = simpleChatAgent(

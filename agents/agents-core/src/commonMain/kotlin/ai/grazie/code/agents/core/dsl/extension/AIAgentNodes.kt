@@ -50,42 +50,6 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     }
 
 /**
- * LLM node that updates the prompt with the user's stage input and triggers an LLM request within a write session.
- *
- * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
- * @return A delegate representing the defined node, which takes no input (Unit) and produces a `Message.Response` from the LLM.
- */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInput(name: String? = null): AIAgentNodeDelegateBase<Unit, Message.Response> =
-    node(name) { _ ->
-        llm.writeSession {
-            updatePrompt {
-                user(stageInput)
-            }
-
-            requestLLM()
-        }
-    }
-
-/**
- * Creates a node that sends the current stage input to the LLM and gets multiple responses.
- *
- * @param name Optional name for the node.
- */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendStageInputMultiple(
-    name: String? = null
-): AIAgentNodeDelegateBase<Unit, List<Message.Response>> =
-    node(name) { _ ->
-        llm.writeSession {
-            updatePrompt {
-                user(stageInput)
-            }
-
-            requestLLMMultiple()
-        }
-    }
-
-
-/**
  * Creates a node that sends a user message to the LLM and gets a response with LLM allowed ONLY to call tools.
  *
  * @param name Optional name for the node.

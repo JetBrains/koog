@@ -1,7 +1,6 @@
 package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.utils.Option
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 
 /**
  * Represents a directed edge connecting two nodes in the graph of an AI agent strategy.
@@ -17,9 +16,9 @@ import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
  */
 public class AIAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
     public val toNode: AIAgentNodeBase<OutgoingInput, *>,
-    internal val forwardOutput: suspend (context: AIAgentStageContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
+    internal val forwardOutput: suspend (context: AIAgentContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
 ) {
     @Suppress("UNCHECKED_CAST")
-    internal suspend fun forwardOutputUnsafe(output: Any?, context: AIAgentStageContextBase): Option<OutgoingInput> =
+    internal suspend fun forwardOutputUnsafe(output: Any?, context: AIAgentContextBase): Option<OutgoingInput> =
         forwardOutput(context, output as IncomingOutput)
 }

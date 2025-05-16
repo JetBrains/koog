@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.local.memory
 
-import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
+import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.local.memory.feature.AgentMemory
 import ai.grazie.code.agents.local.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.grazie.code.agents.local.memory.feature.withMemory
@@ -60,7 +60,8 @@ class MemoryNodesTest {
         @Serializable
         data object Machine : MemorySubject() {
             override val name: String = "machine"
-            override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
+            override val promptDescription: String =
+                "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
             override val priorityLevel: Int = 1
         }
 
@@ -71,7 +72,8 @@ class MemoryNodesTest {
         @Serializable
         data object User : MemorySubject() {
             override val name: String = "user"
-            override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+            override val promptDescription: String =
+                "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
             override val priorityLevel: Int = 2
         }
 
@@ -82,7 +84,8 @@ class MemoryNodesTest {
         @Serializable
         data object Project : MemorySubject() {
             override val name: String = "project"
-            override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+            override val promptDescription: String =
+                "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
             override val priorityLevel: Int = 3
         }
 
@@ -146,28 +149,26 @@ class MemoryNodesTest {
         val result = mutableListOf<Fact>()
 
         val strategy = strategy("test-agent") {
-            stage {
-                val saveAutoDetect by nodeSaveToMemoryAutoDetectFacts<Unit>(
-                    subjects = listOf(MemorySubjects.User)
-                )
+            val saveAutoDetect by nodeSaveToMemoryAutoDetectFacts<Unit>(
+                subjects = listOf(MemorySubjects.User)
+            )
 
-                val saveTestConcept by node<Unit, Unit> {
-                    withMemory {
-                        agentMemory.save(fact, MemorySubjects.User, MemoryScope.Agent("test-agent"))
-                    }
+            val saveTestConcept by node<Unit, Unit> {
+                withMemory {
+                    agentMemory.save(fact, MemorySubjects.User, MemoryScope.Agent("test-agent"))
                 }
-
-                val loadTestConcept by node<Unit, Unit> {
-                    result += withMemory {
-                        agentMemory.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
-                    }
-                }
-
-                edge(nodeStart forwardTo saveAutoDetect)
-                edge(saveAutoDetect forwardTo saveTestConcept)
-                edge(saveTestConcept forwardTo loadTestConcept)
-                edge(loadTestConcept forwardTo nodeFinish transformed { "Done" })
             }
+
+            val loadTestConcept by node<Unit, Unit> {
+                result += withMemory {
+                    agentMemory.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
+                }
+            }
+
+            edge(nodeStart forwardTo saveAutoDetect transformed { })
+            edge(saveAutoDetect forwardTo saveTestConcept)
+            edge(saveTestConcept forwardTo loadTestConcept)
+            edge(loadTestConcept forwardTo nodeFinish transformed { "Done" })
         }
 
         val agentConfig = AIAgentConfig(
@@ -185,9 +186,7 @@ class MemoryNodesTest {
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
-                stage {
-                    tool(DummyTool())
-                }
+                tool(DummyTool())
             }
         ) {
             install(AgentMemory) {
@@ -214,14 +213,12 @@ class MemoryNodesTest {
     @Test
     fun testAutoDetectFacts() = runTest {
         val strategy = strategy("test-agent") {
-            stage {
-                val detect by nodeSaveToMemoryAutoDetectFacts<Unit>(
-                    subjects = listOf(MemorySubjects.User, MemorySubjects.Project)
-                )
+            val detect by nodeSaveToMemoryAutoDetectFacts<Unit>(
+                subjects = listOf(MemorySubjects.User, MemorySubjects.Project)
+            )
 
-                edge(nodeStart forwardTo detect transformed { })
-                edge(detect forwardTo nodeFinish transformed { "Done" })
-            }
+            edge(nodeStart forwardTo detect transformed { })
+            edge(detect forwardTo nodeFinish transformed { "Done" })
         }
 
         val memory = TestMemoryProvider()
@@ -243,9 +240,7 @@ class MemoryNodesTest {
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry {
-                stage("default") {
-                    tool(DummyTool())
-                }
+                tool(DummyTool())
             }
         ) {
             install(AgentMemory) {

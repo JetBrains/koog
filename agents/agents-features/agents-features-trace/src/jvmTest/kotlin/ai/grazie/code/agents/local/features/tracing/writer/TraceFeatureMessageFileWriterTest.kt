@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.features.tracing.writer
 
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.feature.model.*
 import ai.grazie.code.agents.local.features.common.message.FeatureEvent
@@ -27,7 +27,7 @@ class TraceFeatureMessageFileWriterTest {
 
             val strategyName = "tracing-test-strategy"
 
-            val strategy = simpleStrategy(strategyName) {
+            val strategy = strategy(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -43,21 +43,22 @@ class TraceFeatureMessageFileWriterTest {
                 }
             }
 
-            agent.run("")
+            val agentInput = "Hello World!"
+            agent.run(agentInput)
 
             val expectedMessages = listOf(
                 "${AIAgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
                 "${AIAgentStrategyStartEvent::class.simpleName} (strategy name: $strategyName)",
-                "${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit)",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (stage: default, node: __start__, input: kotlin.Unit, output: kotlin.Unit)",
-                "${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: test LLM call, input: Test LLM call prompt)",
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy, __tools_list__])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy, __tools_list__])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response))",
-                "${AIAgentNodeExecutionStartEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt)",
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy, __tools_list__])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy, __tools_list__])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (stage: default, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response))",
+                "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: __start__, input: $agentInput)",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: __start__, input: $agentInput, output: $agentInput)",
+                "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
+                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
+                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response))",
+                "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
+                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
+                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response))",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
                 "${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
             )
@@ -128,7 +129,7 @@ class TraceFeatureMessageFileWriterTest {
         TraceFeatureMessageFileWriter(fs = JVMFileSystemProvider.ReadWrite, path = tempDir, format = customFormat).use { writer ->
             val strategyName = "tracing-test-strategy"
 
-            val strategy = simpleStrategy(strategyName) {
+            val strategy = strategy(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -160,7 +161,7 @@ class TraceFeatureMessageFileWriterTest {
 
             val strategyName = "tracing-test-strategy"
 
-            val strategy = simpleStrategy(strategyName) {
+            val strategy = strategy(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -191,7 +192,7 @@ class TraceFeatureMessageFileWriterTest {
 
             val strategyName = "tracing-test-strategy"
 
-            val strategy = simpleStrategy(strategyName) {
+            val strategy = strategy(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -212,10 +213,10 @@ class TraceFeatureMessageFileWriterTest {
             agent.run("")
 
             val expectedLogMessages = listOf(
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy, __tools_list__])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy, __tools_list__])",
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy, __tools_list__])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy, __tools_list__])",
+                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
+                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
+                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
+                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
             )
 
             val actualMessages = writer.targetPath.readLines()

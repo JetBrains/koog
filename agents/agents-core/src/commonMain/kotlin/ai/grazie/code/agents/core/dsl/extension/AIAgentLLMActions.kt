@@ -1,6 +1,6 @@
 package ai.grazie.code.agents.core.dsl.extension
 
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.AIAgentLLMWriteSession
 import ai.jetbrains.code.prompt.params.LLMParams
 
 public fun AIAgentLLMWriteSession.clearHistory() {

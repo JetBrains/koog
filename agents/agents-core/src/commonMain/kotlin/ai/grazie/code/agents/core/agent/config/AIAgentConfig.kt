@@ -14,6 +14,7 @@ import ai.jetbrains.code.prompt.llm.LLModel
  * and strategies for handling missing tools during execution.
  *
  * @param prompt The initial prompt configuration for the agent, encapsulating messages, model, and parameters.
+ * @param model The model to use for the agent's prompt execution
  * @param maxAgentIterations The maximum number of iterations allowed for an agent during its execution, to prevent infinite loops.
  * @param missingToolsConversionStrategy Strategy to handle missing tool definitions in the prompt. Defaults to applying formatting for missing tools. Ex.: if in the LLM history, there are some tools that are currently undefined in the agent (sub)graph.
  */

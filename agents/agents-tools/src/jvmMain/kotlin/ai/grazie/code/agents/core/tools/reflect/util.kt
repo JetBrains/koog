@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.core.tools.reflect
 
-import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.core.tools.ToolDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
+import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.grazie.code.agents.core.tools.annotations.LLMDescription
 import ai.grazie.code.agents.core.tools.annotations.Tool
-import ai.grazie.code.agents.core.tools.serialization.ToolJson
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import kotlinx.serialization.json.Json
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
@@ -15,18 +15,6 @@ import kotlin.reflect.full.functions
 import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.kotlinFunction
-
-/**
- * Converts the current [ToolSet] instance into a [ai.grazie.code.agents.core.tools.tools.ToolStage].
- * This method constructs a [ai.grazie.code.agents.core.tools.tools.ToolStage] using the `name` property of the [ToolSet]
- * and the tools converted from the set via the [ToolSet.asTools] method.
- *
- * @param json The [Json] instance to use for serialization when converting tools. Defaults to a new [Json] instance if not provided.
- * @return A [ai.grazie.code.agents.core.tools.tools.ToolStage] instance containing the name of the [ToolSet] and its converted tools.
- */
-public fun ToolSet.asToolStage(json: Json = Json): ToolStage {
-    return ToolStage(name, this.asTools(json = json))
-}
 
 /**
  * Converts all instance methods of [this] class marked as [Tool] to a list of tools.
@@ -120,33 +108,6 @@ public fun <T : ToolSet> KClass<out T>.asTools(json: Json = Json, thisRef: T? = 
 }
 
 /**
- * Adds tools from [toolSet] instance to the stage
- *
- * See [asTools] and [asTool] for the description
- */
-public fun ToolRegistry.Builder.stage(toolSet: ToolSet, name: String = toolSet.name) {
-    this.stage(name) {
-        toolsFrom(toolSet)
-    }
-}
-
-/**
- * Adds a tool from a KFunction to the stage
- *
- * See [asTool] for the description
- */
-public fun ToolStage.Builder.tool(
-    callable: KFunction<*>,
-    thisRef: Any? = null,
-    name: String? = null,
-    description: String? = null,
-): Unit = tool(callable.asTool(thisRef = thisRef, json = ToolJson, name = name, description = description))
-
-public fun ToolStage.Builder.toolsFrom(toolSet: ToolSet) {
-    toolSet.asTools().forEach { tool(it) }
-}
-
-/**
  * Converts a KFunction into a code-engine tool that works by reflection.
  *
  *
@@ -196,7 +157,12 @@ public fun ToolStage.Builder.toolsFrom(toolSet: ToolSet) {
  * val tool = MyTools::my_best_tool.asTool(json = Json, thisRef = myTools)
  * ```
  */
-public fun KFunction<*>.asTool(json: Json = Json, thisRef: Any? = null, name: String? = null, description: String? = null): ToolFromCallable {
+public fun KFunction<*>.asTool(
+    json: Json = Json,
+    thisRef: Any? = null,
+    name: String? = null,
+    description: String? = null
+): ToolFromCallable {
     val toolDescriptor = this.asToolDescriptor(name = name, description = description)
     if (instanceParameter != null && thisRef == null) error("Instance parameter is not null, but no 'this' object is provided")
     return ToolFromCallable(callable = this, thisRef = thisRef, descriptor = toolDescriptor, json = json)
@@ -227,14 +193,17 @@ public fun KType.asToolType(): ToolParameterType {
                     @Suppress("UNCHECKED_CAST")
                     ToolParameterType.Enum((classJava as Class<Enum<*>>).enumConstants)
                 }
+
                 classJava.isArray -> {
                     val arrayItemType = this.arguments[0].type ?: error("Array item type is null")
                     val arrayItemToolType = arrayItemType.asToolType()
                     ToolParameterType.List(arrayItemToolType)
                 }
+
                 else -> throw kotlin.IllegalArgumentException("Unsupported type $classifier")
             }
         }
+
         else -> error("Unsupported type $classifier")
     }
 }
@@ -252,7 +221,8 @@ public fun KFunction<*>.asToolDescriptor(name: String? = null, description: Stri
     val toolDescription = description ?: this.getPreferredToolDescriptionAnnotation()?.description ?: this.name
     val toolParameters = this.parameters.mapNotNull { param ->
         val parameterName = param.name ?: return@mapNotNull null // likely `this` parameter
-        val toolParameterDescription = param.getPreferredParameterDescriptionAnnotation(this)?.description ?: parameterName
+        val toolParameterDescription =
+            param.getPreferredParameterDescriptionAnnotation(this)?.description ?: parameterName
         val paramType = param.type
         val paramToolType = paramType.asToolType()
         val isOptional = param.isOptional
@@ -397,7 +367,8 @@ private fun KFunction<*>.getImplementedMethods(): Sequence<KFunction<*>> {
             }
 
             try {
-                val kotlinMethod = currentClass.getDeclaredMethod(methodName, *parameterTypes).kotlinFunction ?: continue
+                val kotlinMethod =
+                    currentClass.getDeclaredMethod(methodName, *parameterTypes).kotlinFunction ?: continue
                 if (kotlinMethod != this@getImplementedMethods) yield(kotlinMethod)
             } catch (_: NoSuchMethodException) {
                 // Method not found in this class/interface, continue traversal

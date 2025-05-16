@@ -1,7 +1,6 @@
 package ai.grazie.code.agents.mcp
 
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.tools.ToolStage.Companion.DEFAULT_STAGE_NAME
 import io.ktor.client.*
 import io.ktor.client.plugins.sse.*
 import io.modelcontextprotocol.kotlin.sdk.Implementation
@@ -71,21 +70,17 @@ public object McpToolRegistryProvider {
      * transforms them into the agent framework's Tool interface, and registers them in a ToolRegistry.
      *
      * @param mcpClient The MCP client connected to an MCP server.
-     * @param stageName The name of the stage in which to register the tools.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
     public fun fromClient(
         mcpClient: Client,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
-        stageName: String = DEFAULT_STAGE_NAME
     ): ToolRegistry {
         val sdkTools = runBlocking { mcpClient.listTools() }?.tools.orEmpty()
         return ToolRegistry {
-            stage(stageName) {
-                sdkTools.forEach { sdkTool ->
-                    val toolDescriptor = mcpToolParser.parse(sdkTool)
-                    tool(McpTool(mcpClient, toolDescriptor))
-                }
+            sdkTools.forEach { sdkTool ->
+                val toolDescriptor = mcpToolParser.parse(sdkTool)
+                tool(McpTool(mcpClient, toolDescriptor))
             }
         }
     }
@@ -99,7 +94,6 @@ public object McpToolRegistryProvider {
      * @param transport The transport to use.
      * @param name The name of the MCP client.
      * @param version The version of the MCP client.
-     * @param stageName The name of the stage in which to register the tools.
      * @return A ToolRegistry containing all tools from the MCP server.
      */
     public suspend fun fromTransport(
@@ -107,7 +101,6 @@ public object McpToolRegistryProvider {
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
-        stageName: String = DEFAULT_STAGE_NAME
     ): ToolRegistry {
         // Create the MCP client
         val mcpClient = Client(clientInfo = Implementation(name = name, version = version))
@@ -115,6 +108,6 @@ public object McpToolRegistryProvider {
         // Connect to the MCP server
         mcpClient.connect(transport)
 
-        return fromClient(mcpClient, mcpToolParser, stageName)
+        return fromClient(mcpClient, mcpToolParser)
     }
 }

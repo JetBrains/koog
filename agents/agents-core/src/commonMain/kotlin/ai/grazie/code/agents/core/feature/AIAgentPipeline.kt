@@ -1,17 +1,16 @@
 package ai.grazie.code.agents.core.feature
 
 import ai.grazie.code.agents.core.agent.AIAgent
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.environment.AIAgentEnvironment
 import ai.grazie.code.agents.core.feature.handler.*
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolResult
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.jetbrains.code.prompt.dsl.Prompt
@@ -70,7 +69,7 @@ public class AIAgentPipeline {
      * Map of stage context handlers registered for different features.
      * Keys are feature storage keys, values are stage context handlers.
      */
-    private val stageContextHandler: MutableMap<AIAgentStorageKey<*>, StageContextHandler<*>> = mutableMapOf()
+    private val agentContextHandler: MutableMap<AIAgentStorageKey<*>, AgentContextHandler<*>> = mutableMapOf()
 
     /**
      * Map of node execution handlers registered for different features.
@@ -235,8 +234,8 @@ public class AIAgentPipeline {
      * @param context The stage context for which to retrieve features
      * @return A map of feature keys to their corresponding feature instances
      */
-    public fun getStageFeatures(context: AIAgentStageContextBase): Map<AIAgentStorageKey<*>, Any> {
-        return stageContextHandler.mapValues { (_, featureProvider) ->
+    public fun getAgentFeatures(context: AIAgentContextBase): Map<AIAgentStorageKey<*>, Any> {
+        return agentContextHandler.mapValues { (_, featureProvider) ->
             featureProvider.handle(context)
         }
     }
@@ -252,7 +251,7 @@ public class AIAgentPipeline {
      * @param context The stage context in which the node is being executed
      * @param input The input data for the node execution
      */
-    public suspend fun onBeforeNode(node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?) {
+    public suspend fun onBeforeNode(node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) {
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(node, context, input) }
     }
 
@@ -264,7 +263,12 @@ public class AIAgentPipeline {
      * @param input The input data that was provided to the node
      * @param output The output data produced by the node execution
      */
-    public suspend fun onAfterNode(node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any?) {
+    public suspend fun onAfterNode(
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentContextBase,
+        input: Any?,
+        output: Any?
+    ) {
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(node, context, input, output) }
     }
 
@@ -317,48 +321,56 @@ public class AIAgentPipeline {
     /**
      * Notifies all registered tool handlers when a tool is called.
      *
-     * @param stage The stage in which the tool is being called
      * @param tool The tool that is being called
      * @param toolArgs The arguments provided to the tool
      */
-    public suspend fun onToolCall(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) {
-        executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(stage, tool, toolArgs) }
+    public suspend fun onToolCall(tool: Tool<*, *>, toolArgs: Tool.Args) {
+        executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(tool, toolArgs) }
     }
 
     /**
      * Notifies all registered tool handlers when a validation error occurs during a tool call.
      *
-     * @param stage The stage in which the validation error occurred
      * @param tool The tool for which validation failed
      * @param toolArgs The arguments that failed validation
      * @param error The validation error message
      */
-    public suspend fun onToolValidationError(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
-        executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(stage, tool, toolArgs, error) }
+    public suspend fun onToolValidationError(tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
+        executeToolHandlers.values.forEach { handler ->
+            handler.toolValidationErrorHandler.handle(
+                tool,
+                toolArgs,
+                error
+            )
+        }
     }
 
     /**
      * Notifies all registered tool handlers when a tool call fails with an exception.
      *
-     * @param stage The stage in which the tool call failed
      * @param tool The tool that failed
      * @param toolArgs The arguments provided to the tool
      * @param throwable The exception that caused the failure
      */
-    public suspend fun onToolCallFailure(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
-        executeToolHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(stage, tool, toolArgs,  throwable) }
+    public suspend fun onToolCallFailure(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
+        executeToolHandlers.values.forEach { handler ->
+            handler.toolCallFailureHandler.handle(
+                tool,
+                toolArgs,
+                throwable
+            )
+        }
     }
 
     /**
      * Notifies all registered tool handlers about the result of a tool call.
      *
-     * @param stage The stage in which the tool was called
      * @param tool The tool that was called
      * @param toolArgs The arguments that were provided to the tool
      * @param result The result produced by the tool, or null if no result was produced
      */
-    public suspend fun onToolCallResult(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
-        executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(stage, tool, toolArgs, result) }
+    public suspend fun onToolCallResult(tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
+        executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(tool, toolArgs, result) }
     }
 
     //endregion Trigger Tool Call Handlers
@@ -377,11 +389,11 @@ public class AIAgentPipeline {
      * }
      * ```
      */
-    public fun <TFeature : Any> interceptContextStageFeature(
+    public fun <TFeature : Any> interceptContextAgentFeature(
         feature: AIAgentFeature<*, TFeature>,
-        handler: StageContextHandler<TFeature>,
+        handler: AgentContextHandler<TFeature>,
     ) {
-        stageContextHandler[feature.key] = handler
+        agentContextHandler[feature.key] = handler
     }
 
     /**
@@ -454,7 +466,7 @@ public class AIAgentPipeline {
      * }
      * ```
      */
-    public fun <TFeature: Any> interceptAgentFinished(
+    public fun <TFeature : Any> interceptAgentFinished(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(strategyName: String, result: String?) -> Unit
@@ -478,7 +490,7 @@ public class AIAgentPipeline {
      * }
      * ```
      */
-    public fun <TFeature: Any> interceptAgentRunError(
+    public fun <TFeature : Any> interceptAgentRunError(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
         handle: suspend TFeature.(strategyName: String, throwable: Throwable) -> Unit
@@ -514,7 +526,7 @@ public class AIAgentPipeline {
         if (existingHandler as? StrategyHandler<TFeature> == null) {
             logger.debug {
                 "Expected to get an agent handler for feature of type <${featureImpl::class}>, but get a handler of type <${feature.key}> instead. " +
-                    "Skipping adding strategy started interceptor for feature."
+                        "Skipping adding strategy started interceptor for feature."
             }
             return
         }
@@ -564,7 +576,7 @@ public class AIAgentPipeline {
     public fun <TFeature : Any> interceptBeforeNode(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?) -> Unit
+        handle: suspend TFeature.(node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) -> Unit
     ) {
         val existingHandler = executeNodeHandlers.getOrPut(feature.key) { ExecuteNodeHandler() }
 
@@ -590,7 +602,7 @@ public class AIAgentPipeline {
         featureImpl: TFeature,
         handle: suspend TFeature.(
             node: AIAgentNodeBase<*, *>,
-            context: AIAgentStageContextBase,
+            context: AIAgentContextBase,
             input: Any?,
             output: Any?
         ) -> Unit
@@ -702,24 +714,24 @@ public class AIAgentPipeline {
      * Intercepts and handles tool calls for the specified feature and its implementation.
      * Updates the tool call handler for the given feature key with a custom handler.
      *
-     * @param handle A suspend lambda function that processes tool calls, taking the current stage, the tool, and its arguments as parameters.
+     * @param handle A suspend lambda function that processes tool calls, taking the tool, and its arguments as parameters.
      *
      * Example:
      * ```
-     * pipeline.interceptToolCall(MyFeature, myFeatureImpl) { stage, tool, toolArgs ->
+     * pipeline.interceptToolCall(MyFeature, myFeatureImpl) { tool, toolArgs ->
      *    // Process or log the tool call
      * }
      * ```
      */
-    public fun <TFeature: Any> interceptToolCall(
+    public fun <TFeature : Any> interceptToolCall(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
 
-        existingHandler.toolCallHandler = ToolCallHandler { stage, tool, toolArgs ->
-            with(featureImpl) { handle(stage, tool, toolArgs) }
+        existingHandler.toolCallHandler = ToolCallHandler { tool, toolArgs ->
+            with(featureImpl) { handle(tool, toolArgs) }
         }
     }
 
@@ -731,20 +743,20 @@ public class AIAgentPipeline {
      *
      * Example:
      * ```
-     * pipeline.interceptToolValidationError(MyFeature, myFeatureImpl) { stage, tool, toolArgs, value ->
+     * pipeline.interceptToolValidationError(MyFeature, myFeatureImpl) { tool, toolArgs, value ->
      *     // Handle the tool validation error here
      * }
      * ```
      */
-    public fun <TFeature: Any> interceptToolValidationError(
+    public fun <TFeature : Any> interceptToolValidationError(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
 
-        existingHandler.toolValidationErrorHandler = ToolValidationErrorHandler { stage, tool, toolArgs, value ->
-            with(featureImpl) { handle(stage, tool, toolArgs, value) }
+        existingHandler.toolValidationErrorHandler = ToolValidationErrorHandler { tool, toolArgs, value ->
+            with(featureImpl) { handle(tool, toolArgs, value) }
         }
     }
 
@@ -756,20 +768,20 @@ public class AIAgentPipeline {
      *
      * Example:
      * ```
-     * pipeline.interceptToolCallFailure(MyFeature, myFeatureImpl) { stage, tool, toolArgs, throwable ->
+     * pipeline.interceptToolCallFailure(MyFeature, myFeatureImpl) { tool, toolArgs, throwable ->
      *     // Handle the tool call failure here
      * }
      * ```
      */
-    public fun <TFeature: Any> interceptToolCallFailure(
+    public fun <TFeature : Any> interceptToolCallFailure(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
 
-        existingHandler.toolCallFailureHandler = ToolCallFailureHandler { stage, tool, toolArgs, throwable ->
-            with(featureImpl) { handle(stage, tool, toolArgs, throwable) }
+        existingHandler.toolCallFailureHandler = ToolCallFailureHandler { tool, toolArgs, throwable ->
+            with(featureImpl) { handle(tool, toolArgs, throwable) }
         }
     }
 
@@ -782,20 +794,20 @@ public class AIAgentPipeline {
      *
      * Example:
      * ```
-     * pipeline.interceptToolCallResult(MyFeature, myFeatureImpl) { stage, tool, toolArgs, result ->
+     * pipeline.interceptToolCallResult(MyFeature, myFeatureImpl) { tool, toolArgs, result ->
      *     // Handle the tool call result here
      * }
      * ```
      */
-    public fun <TFeature: Any> interceptToolCallResult(
+    public fun <TFeature : Any> interceptToolCallResult(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
 
-        existingHandler.toolCallResultHandler = ToolCallResultHandler { stage, tool, toolArgs, result ->
-            with(featureImpl) { handle(stage, tool, toolArgs, result) }
+        existingHandler.toolCallResultHandler = ToolCallResultHandler { tool, toolArgs, result ->
+            with(featureImpl) { handle(tool, toolArgs, result) }
         }
     }
 

@@ -2,6 +2,7 @@ package ai.grazie.code.agents.example.memory
 
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
+import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
@@ -38,7 +39,8 @@ private object MemorySubjects {
     @Serializable
     data object Machine : MemorySubject() {
         override val name: String = "machine"
-        override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
+        override val promptDescription: String =
+            "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
         override val priorityLevel: Int = 1
     }
 
@@ -49,7 +51,8 @@ private object MemorySubjects {
     @Serializable
     data object Project : MemorySubject() {
         override val name: String = "project"
-        override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
+        override val promptDescription: String =
+            "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
         override val priorityLevel: Int = 4
     }
 }
@@ -137,8 +140,8 @@ fun createProjectAnalyzerAgent(
     )
 
     // Create agent strategy
-    val strategy = strategy("project-analyzer") {
-        stage("load-memory") {
+    val strategy = strategy("project-analyzer", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
+        val loadMemorySubgraph by subgraph<String, Unit>("load-memory") {
             val nodeLoadEnvironmentInfo by nodeLoadFromMemory<Unit>(
                 concept = environmentInfoConcept,
                 subject = MemorySubjects.Machine,
@@ -163,13 +166,17 @@ fun createProjectAnalyzerAgent(
                 scope = MemoryScopeType.PRODUCT
             )
 
-            edge(nodeStart forwardTo nodeLoadEnvironmentInfo)
+            edge(nodeStart forwardTo nodeLoadEnvironmentInfo transformed { })
             edge(nodeLoadEnvironmentInfo forwardTo nodeLoadProjectDependencies)
             edge(nodeLoadProjectDependencies forwardTo nodeLoadProjectStructure)
             edge(nodeLoadProjectStructure forwardTo nodeLoadCodeStyle)
-            edge(nodeLoadCodeStyle forwardTo nodeFinish transformed { "" })
+            edge(nodeLoadCodeStyle forwardTo nodeFinish)
         }
-        stage("gather-information") {
+
+        val gatherInfoSubgraph by subgraph<Unit, String>(
+            "gather-information",
+            listOf(bashTool, fileSearchTool, codeAnalysisTool)
+        ) {
             // Define universal agent nodes
             val defineTask by nodeUpdatePrompt {
                 system(
@@ -185,7 +192,7 @@ fun createProjectAnalyzerAgent(
             val sendToolResult by nodeLLMSendToolResult()
 
             // Define the flow
-            edge(nodeStart forwardTo defineTask)
+            edge(nodeStart forwardTo defineTask transformed { })
             edge(defineTask forwardTo sendInput transformed { "Please analyze this project and gather information about the environment, project structure, dependencies, and code style." })
             edge(sendInput forwardTo callTool onToolCall { true })
             edge(sendInput forwardTo nodeFinish onAssistantMessage { true })
@@ -194,7 +201,7 @@ fun createProjectAnalyzerAgent(
             edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
         }
 
-        stage("save-to-memory") {
+        val saveToMemorySubgraph by subgraph<String, String>("save-to-memory") {
             val nodeSaveEnvironmentInfo by nodeSaveToMemory<Unit>(
                 concept = environmentInfoConcept,
                 subject = MemorySubjects.Machine,
@@ -219,12 +226,14 @@ fun createProjectAnalyzerAgent(
                 scope = MemoryScopeType.PRODUCT
             )
 
-            edge(nodeStart forwardTo nodeSaveEnvironmentInfo)
+            edge(nodeStart forwardTo nodeSaveEnvironmentInfo transformed { })
             edge(nodeSaveEnvironmentInfo forwardTo nodeSaveProjectDependencies)
             edge(nodeSaveProjectDependencies forwardTo nodeSaveProjectStructure)
             edge(nodeSaveProjectStructure forwardTo nodeSaveCodeStyle)
-            edge(nodeSaveCodeStyle forwardTo nodeFinish transformed { "" })
+            edge(nodeSaveCodeStyle forwardTo nodeFinish transformed { "Saved to memory" })
         }
+
+        nodeStart then loadMemorySubgraph then gatherInfoSubgraph then saveToMemorySubgraph then nodeFinish
     }
 
     // Create and configure the agent runner
@@ -233,11 +242,9 @@ fun createProjectAnalyzerAgent(
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
-            stage("gather-information") {
-                tool(bashTool)
-                tool(fileSearchTool)
-                tool(codeAnalysisTool)
-            }
+            tool(bashTool)
+            tool(fileSearchTool)
+            tool(codeAnalysisTool)
         }
     ) {
         install(AgentMemory) {

@@ -145,7 +145,6 @@ class ProjectAnalyzerTest {
 
                 for (toolToUse in tools) {
                     when (toolToUse.name) {
-                        "__tools_list__" -> continue
                         "bash" -> {
                             if (bashToolCallsCount++ >= 4) continue
                             result = when (bashToolCallsCount) {

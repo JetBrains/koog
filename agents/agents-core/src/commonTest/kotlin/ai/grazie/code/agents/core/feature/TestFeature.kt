@@ -1,9 +1,9 @@
 package ai.grazie.code.agents.core.feature
 
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
 import ai.grazie.code.agents.core.agent.entity.AIAgentNodeBase
 import ai.jetbrains.code.prompt.dsl.Prompt
@@ -27,19 +27,16 @@ class TestFeature(val events: MutableList<String>) {
             val feature = TestFeature(events = config.events ?: mutableListOf())
 
             pipeline.interceptBeforeAgentStarted(this, feature) {
-                feature.events += "Agent: before agent started (strategy name: '${strategy.name}')"
-
-                readStages { stages -> feature.events += "Agent: before agent started (strategy name: '${strategy.name}'). read stages (size: ${stages.size})" }
+                feature.events += "Agent: before agent started"
+                readStrategy { strategy -> feature.events += "Agent: before agent started (strategy name: '${strategy.name}')" }
             }
 
             pipeline.interceptStrategyStarted(this, feature) {
                 feature.events += "Agent: strategy started (strategy name: '${strategy.name}')"
-
-                readStages { stages -> feature.events += "Agent: strategy started (strategy name: '${strategy.name}'). read stages (size: ${stages.size})" }
             }
 
-            pipeline.interceptContextStageFeature(this) { stageContext: AIAgentStageContextBase ->
-                feature.events += "Stage Context: request features from stage context (stage name: ${stageContext.stageName})"
+            pipeline.interceptContextAgentFeature(this) { agentContext: AIAgentContextBase ->
+                feature.events += "Agent Context: request features from agent context"
                 TestFeature(mutableListOf())
             }
 
@@ -59,19 +56,19 @@ class TestFeature(val events: MutableList<String>) {
                 feature.events += "LLM + Tools: finish LLM call with tools (responses: '$responses', tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptBeforeNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any? ->
+            pipeline.interceptBeforeNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
                 feature.events += "Node: start node (name: '${node.name}', input: '$input')"
             }
 
-            pipeline.interceptAfterNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentStageContextBase, input: Any?, output: Any? ->
+            pipeline.interceptAfterNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
                 feature.events += "Node: finish node (name: '${node.name}', input: '$input', output: '$output')"
             }
 
-            pipeline.interceptToolCall(this, feature) { stage, tool, toolArgs ->
+            pipeline.interceptToolCall(this, feature) { tool, toolArgs ->
                 feature.events += "Tool: call tool (tool: ${tool.name}, args: $toolArgs)"
             }
 
-            pipeline.interceptToolCallResult(this, feature) { stage, tool, toolArgs, result ->
+            pipeline.interceptToolCallResult(this, feature) { tool, toolArgs, result ->
                 feature.events += "Tool: finish tool call with result (tool: ${tool.name}, result: ${result?.toStringDefault() ?: "null"})"
             }
         }

@@ -2,12 +2,10 @@ package ai.jetbrains.code.prompt.executor.ollama
 
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.ContextTransitionPolicy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.ToolRegistry
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.ollama.client.OllamaClient
@@ -25,9 +23,9 @@ class OllamaIntegrationTest {
     val client = OllamaClient()
     val executor = OllamaPromptExecutor(client)
 
-    private fun createTestStrategy(policyName: String, policy: ContextTransitionPolicy) =
-        strategy("test-ollama-$policyName", llmHistoryTransitionPolicy = policy) {
-            stage("ask-capital") {
+    private fun createTestStrategy(policyName: String) =
+        strategy("test-ollama-$policyName") {
+            val askCapitalSubgraph by subgraph<String, String>("ask-capital") {
                 val definePrompt by node<Unit, Unit> {
                     llm.writeSession {
                         model = OllamaModels.Meta.LLAMA_3_2
@@ -43,15 +41,15 @@ class OllamaIntegrationTest {
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
 
-                edge(nodeStart forwardTo definePrompt)
-                edge(definePrompt forwardTo callLLM transformed { stageInput })
+                edge(nodeStart forwardTo definePrompt transformed {})
+                edge(definePrompt forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
             }
 
-            stage("verify-answer") {
+            val askVerifyAnswer by subgraph<String, String>("verify-answer") {
                 val definePrompt by node<Unit, Unit> {
                     llm.writeSession {
                         model = OllamaModels.Meta.LLAMA_3_2
@@ -67,29 +65,23 @@ class OllamaIntegrationTest {
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
 
-                edge(nodeStart forwardTo definePrompt)
-                edge(definePrompt forwardTo callLLM transformed { stageInput })
+                edge(nodeStart forwardTo definePrompt transformed {})
+                edge(definePrompt forwardTo callLLM transformed { agentInput })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callTool forwardTo sendToolResult)
                 edge(sendToolResult forwardTo callTool onToolCall { true })
                 edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
             }
+
+            nodeStart then askCapitalSubgraph then askVerifyAnswer then nodeFinish
         }
 
 
-    private fun createStageSpecificToolRegistry(): ToolRegistry {
-        val askCapitalStage = ToolStage("ask-capital") {
-            tool(GeographyQueryTool)
-        }
-
-        val verifyAnswerStage = ToolStage("verify-answer") {
-            tool(AnswerVerificationTool)
-        }
-
+    private fun createToolRegistry(): ToolRegistry {
         return ToolRegistry {
-            stage(askCapitalStage)
-            stage(verifyAnswerStage)
-            stage { tool(GenericParameterTool) }
+            tool(GeographyQueryTool)
+            tool(AnswerVerificationTool)
+            tool(GenericParameterTool)
         }
     }
 
@@ -107,9 +99,9 @@ class OllamaIntegrationTest {
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
-                onToolCall = { stage, tool, arguments ->
+                onToolCall = { tool, arguments ->
                     println(
-                        "[$stage] Calling tool ${tool.name} with arguments ${
+                        "Calling tool ${tool.name} with arguments ${
                             arguments.toString().lines().first().take(100)
                         }"
                     )
@@ -148,8 +140,8 @@ class OllamaIntegrationTest {
 
     @Test
     fun integration_testOllamaAgentClearContext() = runTest {
-        val strategy = createTestStrategy("clear", ContextTransitionPolicy.CLEAR_LLM_HISTORY)
-        val toolRegistry = createStageSpecificToolRegistry()
+        val strategy = createTestStrategy("clear")
+        val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
         val result = agent.runAndGetResult("What is the capital of France?")
@@ -160,8 +152,8 @@ class OllamaIntegrationTest {
 
     @Test
     fun integration_testOllamaAgentPersistContext() = runTest {
-        val strategy = createTestStrategy("persist", ContextTransitionPolicy.PERSIST_LLM_HISTORY)
-        val toolRegistry = createStageSpecificToolRegistry()
+        val strategy = createTestStrategy("persist")
+        val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
         val result = agent.runAndGetResult("What is the capital of France?")
@@ -173,8 +165,8 @@ class OllamaIntegrationTest {
 
     @Test
     fun integration_testOllamaAgentCompressContext() = runTest {
-        val strategy = createTestStrategy("compress", ContextTransitionPolicy.COMPRESS_LLM_HISTORY)
-        val toolRegistry = createStageSpecificToolRegistry()
+        val strategy = createTestStrategy("compress")
+        val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
         val result = agent.runAndGetResult("What is the capital of France?")

@@ -2,8 +2,6 @@ package ai.grazie.code.agents.core.agent.entity
 
 import ai.grazie.code.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.grazie.code.agents.core.agent.AIAgentStuckInTheNodeException
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStage
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 import ai.grazie.code.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.grazie.code.agents.core.prompt.Prompts.selectRelevantTools
@@ -23,21 +21,21 @@ public open class AIAgentSubgraph<Input, Output>(
 ) : AIAgentNodeBase<Input, Output>() {
     private companion object {
         private val logger =
-            LoggerFactory.create("ai.grazie.code.agents.local.agent.stage.${AIAgentStage::class.simpleName}")
+            LoggerFactory.create("ai.grazie.code.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
     }
 
-    override suspend fun execute(context: AIAgentStageContextBase, input: Input): Output {
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
         if (toolSelectionStrategy == ToolSelectionStrategy.ALL) return doExecute(context, input)
 
         return doExecuteWithCustomTools(context, input)
     }
 
-    private fun formatLog(context: AIAgentStageContextBase, message: String): String =
+    private fun formatLog(context: AIAgentContextBase, message: String): String =
         "$message [$name, ${context.strategyId}, ${context.sessionUuid.text}]"
 
     @OptIn(InternalAgentsApi::class)
-    protected suspend fun doExecute(context: AIAgentStageContextBase, initialInput: Input): Output {
-        logger.info { formatLog(context, "Starting stage($name) execution") }
+    protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
+        logger.info { formatLog(context, "Executing subgraph $name") }
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
 
@@ -71,7 +69,7 @@ public open class AIAgentSubgraph<Input, Output>(
             currentInput = resolvedEdge.output
         }
 
-        logger.info { formatLog(context, "Stage(${name}) execution completed successfully") }
+        logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
         return (currentInput as? Output) ?: run {
             logger.error {
@@ -90,7 +88,7 @@ public open class AIAgentSubgraph<Input, Output>(
         val tools: List<String>
     )
 
-    private suspend fun doExecuteWithCustomTools(context: AIAgentStageContextBase, input: Input): Output {
+    private suspend fun doExecuteWithCustomTools(context: AIAgentContextBase, input: Input): Output {
         @OptIn(InternalAgentsApi::class)
         val innerContext = when (toolSelectionStrategy) {
             ToolSelectionStrategy.ALL -> context

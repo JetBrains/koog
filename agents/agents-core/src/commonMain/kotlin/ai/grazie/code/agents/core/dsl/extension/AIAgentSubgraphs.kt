@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.core.dsl.extension
 
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphDelegateBase
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -13,7 +13,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-internal suspend fun AIAgentStageContextBase.promptWithTLDR(
+internal suspend fun AIAgentContextBase.promptWithTLDR(
     systemMessage: String,
     shouldTLDRHistory: Boolean = true,
     model: LLModel? = null,
@@ -128,11 +128,10 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend AIAgentStageContextBase.(input: Input) -> String
+    defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraph(toolSelectionStrategy = toolSelectionStrategy) {
     val defineTaskNode by node<Input, Unit> { input ->
         val task = defineTask(input)
-
         promptWithTLDR(
             task,
             shouldTLDRHistory,
@@ -160,17 +159,16 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
         input
     }
 
-
-    val sendInput by nodeLLMSendStageInput()
+    val nodeCallLLM by nodeLLMRequestMultiple()
     val callTool by nodeExecuteTool()
     val sendToolResult by nodeLLMSendToolResult()
 
     edge(nodeStart forwardTo defineTaskNode)
-    edge(defineTaskNode forwardTo sendInput)
-    edge(sendInput forwardTo preFinish onToolCall (finishTool) transformed {
+    edge(defineTaskNode forwardTo nodeCallLLM transformed { agentInput })
+    edge(nodeCallLLM forwardTo preFinish onToolCall (finishTool) transformed {
         Json.decodeFromJsonElement(finishTool.argsSerializer, it.contentJson)
     })
-    edge(sendInput forwardTo callTool onToolNotCalled (finishTool))
+    edge(nodeCallLLM forwardTo callTool onToolNotCalled (finishTool))
 
     edge(callTool forwardTo sendToolResult)
 
@@ -189,7 +187,7 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend AIAgentStageContextBase.(input: Input) -> String
+    defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     finishTool = finishTool,
@@ -208,7 +206,7 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend AIAgentStageContextBase.(input: Input) -> String
+    defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
     finishTool = ProvideStringSubgraphResult,
@@ -224,7 +222,7 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend AIAgentStageContextBase.(input: Input) -> String
+    defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,
@@ -243,7 +241,7 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend AIAgentStageContextBase.(input: Input) -> String
+    defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithTask(
     finishTool = ProvideVerifiedSubgraphResult,
     toolSelectionStrategy = toolSelectionStrategy,
@@ -259,7 +257,7 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     model: LLModel? = null,
     params: LLMParams? = null,
     shouldTLDRHistory: Boolean = true,
-    defineTask: suspend AIAgentStageContextBase.(input: Input) -> String
+    defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithVerification(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,

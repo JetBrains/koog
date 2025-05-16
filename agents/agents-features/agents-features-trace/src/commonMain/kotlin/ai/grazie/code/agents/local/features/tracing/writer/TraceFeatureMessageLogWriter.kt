@@ -93,22 +93,22 @@ public class TraceFeatureMessageLogWriter(
             get() = "${this.eventId} (responses: ${this.responses}, tools: [${this.tools.joinToString(", ")}])"
 
         val ToolCallEvent.toolCallEventFormat
-            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs})"
+            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs})"
 
         val ToolValidationErrorEvent.toolValidationErrorEventFormat
-            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs}, validation error: ${this.errorMessage})"
+            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, validation error: ${this.errorMessage})"
 
         val ToolCallFailureEvent.toolCallFailureEventFormat
-            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs}, error: ${this.error.message})"
+            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, error: ${this.error.message})"
 
         val ToolCallResultEvent.toolCallResultEventFormat
-            get() = "${this.eventId} (stage: ${this.stageName}, tool: ${this.toolName}, tool args: ${this.toolArgs}, result: ${this.result})"
+            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, result: ${this.result})"
 
         val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
-            get() = "${this.eventId} (stage: ${this.stageName}, node: ${this.nodeName}, input: ${this.input})"
+            get() = "${this.eventId} (node: ${this.nodeName}, input: ${this.input})"
 
         val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
-            get() = "${this.eventId} (stage: ${this.stageName}, node: ${this.nodeName}, input: ${this.input}, output: ${this.output})"
+            get() = "${this.eventId} (node: ${this.nodeName}, input: ${this.input}, output: ${this.output})"
     }
 
     override fun FeatureMessage.toLoggerMessage(): String {

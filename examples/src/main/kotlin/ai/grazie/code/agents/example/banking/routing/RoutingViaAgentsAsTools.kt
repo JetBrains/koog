@@ -3,8 +3,8 @@ package ai.grazie.code.agents.example.banking.routing
 import ai.grazie.code.agents.core.agent.asTool
 import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
-import ai.grazie.code.agents.core.tools.SimpleToolRegistry
-import ai.grazie.code.agents.core.tools.reflect.toolsFrom
+import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.reflect.asTools
 import ai.grazie.code.agents.core.tools.tools.AskUser
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.banking.tools.MoneyTransferTools
@@ -22,19 +22,19 @@ fun main() = runBlocking {
         executor = openAIExecutor,
         systemPrompt = bankingAssistantSystemPrompt,
         temperature = 0.0,
-        toolRegistry = SimpleToolRegistry { toolsFrom(MoneyTransferTools()) }
+        toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
     )
 
     val analysisAgent = simpleChatAgent(
         executor = openAIExecutor,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
         temperature = 0.0,
-        toolRegistry = SimpleToolRegistry { toolsFrom(TransactionAnalysisTools()) }
+        toolRegistry = ToolRegistry { tools(TransactionAnalysisTools().asTools()) }
     )
 
     val classifierAgent = simpleSingleRunAgent(
         executor = openAIExecutor,
-        toolRegistry = SimpleToolRegistry {
+        toolRegistry = ToolRegistry {
             tool(AskUser)
             tool(
                 transferAgent.asTool(

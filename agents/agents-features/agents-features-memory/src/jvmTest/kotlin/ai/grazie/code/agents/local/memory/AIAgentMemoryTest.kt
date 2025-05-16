@@ -1,8 +1,8 @@
 package ai.grazie.code.agents.local.memory
 
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
+import ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.AIAgentLLMWriteSession
 import ai.grazie.code.agents.local.memory.config.MemoryScopeType
 import ai.grazie.code.agents.local.memory.config.MemoryScopesProfile
 import ai.grazie.code.agents.local.memory.feature.AgentMemory

@@ -8,9 +8,9 @@ import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.environment.ReceivedToolResult
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
+import ai.grazie.code.agents.core.tools.reflect.asTools
 import ai.grazie.code.agents.core.tools.tools.AskUser
 import ai.grazie.code.agents.core.tools.tools.SayToUser
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.local.features.eventHandler.feature.handleEvents
 import ai.jetbrains.code.prompt.dsl.prompt
@@ -21,67 +21,56 @@ import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
-    val calculatorStageName = "calculator"
 
     // Create tool registry with calculator tools
     val toolRegistry = ToolRegistry {
-        stage(calculatorStageName) {
-            // Special tool, required with this type of agent.
-            tool(AskUser)
-            tool(SayToUser)
-            with(CalculatorTools) {
-                tools()
-            }
-        }
+        // Special tool, required with this type of agent.
+        tool(AskUser)
+        tool(SayToUser)
+        tools(CalculatorTools().asTools())
     }
 
     val strategy = strategy("test") {
-        stage(
-            name = calculatorStageName,
-            requiredTools = toolRegistry.stagesToolDescriptors.getValue(calculatorStageName)
-        ) {
-            val nodeSendInput by nodeLLMSendStageInputMultiple()
-            val nodeExecuteToolMultiple by nodeExecuteMultipleTools(parallelTools = true)
-            val nodeSendToolResultMultiple by nodeLLMSendMultipleToolResults()
-            val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>()
+        val nodeCallLLM by nodeLLMRequestMultiple()
+        val nodeExecuteToolMultiple by nodeExecuteMultipleTools(parallelTools = true)
+        val nodeSendToolResultMultiple by nodeLLMSendMultipleToolResults()
+        val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>()
 
-            edge(nodeStart forwardTo nodeSendInput)
+        edge(nodeStart forwardTo nodeCallLLM)
 
-            edge(
-                (nodeSendInput forwardTo nodeFinish)
-                        transformed { it.first() }
+        edge(
+            (nodeCallLLM forwardTo nodeFinish)
+                    transformed { it.first() }
                     onAssistantMessage { true }
-            )
+        )
 
-            edge(
-                (nodeSendInput forwardTo nodeExecuteToolMultiple)
+        edge(
+            (nodeCallLLM forwardTo nodeExecuteToolMultiple)
                     onMultipleToolCalls { true }
-            )
+        )
 
-            edge(
-                (nodeExecuteToolMultiple forwardTo nodeCompressHistory)
-                        onCondition { _ -> llm.readSession { prompt.messages.size > 100 } }
-            )
+        edge(
+            (nodeExecuteToolMultiple forwardTo nodeCompressHistory)
+                    onCondition { _ -> llm.readSession { prompt.messages.size > 100 } }
+        )
 
-            edge(nodeCompressHistory forwardTo nodeSendToolResultMultiple)
+        edge(nodeCompressHistory forwardTo nodeSendToolResultMultiple)
 
-            edge(
-                (nodeExecuteToolMultiple forwardTo nodeSendToolResultMultiple)
-                        onCondition { _ -> llm.readSession { prompt.messages.size <= 100 } }
-            )
+        edge(
+            (nodeExecuteToolMultiple forwardTo nodeSendToolResultMultiple)
+                    onCondition { _ -> llm.readSession { prompt.messages.size <= 100 } }
+        )
 
-            edge(
-                (nodeSendToolResultMultiple forwardTo nodeExecuteToolMultiple)
-                        onMultipleToolCalls { true }
-            )
+        edge(
+            (nodeSendToolResultMultiple forwardTo nodeExecuteToolMultiple)
+                    onMultipleToolCalls { true }
+        )
 
-            edge(
-                (nodeSendToolResultMultiple forwardTo nodeFinish)
-                        transformed { it.first() }
-                        onAssistantMessage { true }
-            )
-
-        }
+        edge(
+            (nodeSendToolResultMultiple forwardTo nodeFinish)
+                    transformed { it.first() }
+                    onAssistantMessage { true }
+        )
     }
 
     // Create agent config with proper prompt
@@ -101,8 +90,8 @@ fun main() = runBlocking {
         toolRegistry = toolRegistry
     ) {
         handleEvents {
-            onToolCall = { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args ->
-                println("Tool called: stage ${stage.name}, tool ${tool.name}, args $toolArgs")
+            onToolCall = { tool: Tool<*, *>, toolArgs: Tool.Args ->
+                println("Tool called: tool ${tool.name}, args $toolArgs")
             }
 
             onAgentRunError = { strategyName: String, throwable: Throwable ->

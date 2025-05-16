@@ -6,7 +6,6 @@ import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import kotlinx.coroutines.CoroutineScope
 
 fun createAgent(
     strategy: AIAgentStrategy,
@@ -27,9 +26,7 @@ fun createAgent(
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry {
-            stage("default") {
-                tool(DummyTool())
-            }
+            tool(DummyTool())
         },
         installFeatures = installFeatures,
     )

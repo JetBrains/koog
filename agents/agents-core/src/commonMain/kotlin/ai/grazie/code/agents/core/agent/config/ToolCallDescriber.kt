@@ -20,6 +20,7 @@ public interface ToolCallDescriber {
      * @return A Message instance containing the description of the tool call.
      */
     public fun describeToolCall(message: Message.Tool.Call): Message
+
     /**
      * Describes the tool result by transforming it into a user-readable message object.
      *
@@ -85,20 +86,5 @@ public interface ToolCallDescriber {
                 )
             )
         }
-    }
-}
-
-/**
- * Does not change tool calls, leaving real tool call messages
- *
- * TODO: dead code?
- */
-internal object Original : ToolCallDescriber {
-    override fun describeToolCall(message: Message.Tool.Call): Message {
-        return message
-    }
-
-    override fun describeToolResult(message: Message.Tool.Result): Message {
-        return message
     }
 }

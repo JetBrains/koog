@@ -1,6 +1,5 @@
 package ai.grazie.code.agents.core.agent.entity
 
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.annotation.InternalAgentsApi
 
 /**
@@ -60,7 +59,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @return A `ResolvedEdge` containing the matched edge and its output, or null if no edge matches.
      */
     public suspend fun resolveEdge(
-        context: AIAgentStageContextBase,
+        context: AIAgentContextBase,
         nodeOutput: Output
     ): ResolvedEdge? {
         for (currentEdge in edges) {
@@ -79,7 +78,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun resolveEdgeUnsafe(context: AIAgentStageContextBase, nodeOutput: Any?): ResolvedEdge? =
+    public suspend fun resolveEdgeUnsafe(context: AIAgentContextBase, nodeOutput: Any?): ResolvedEdge? =
         resolveEdge(context, nodeOutput as Output)
 
     /**
@@ -89,14 +88,14 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @param input The input data required to perform the execution.
      * @return The result of the execution as an Output object.
      */
-    public abstract suspend fun execute(context: AIAgentStageContextBase, input: Input): Output
+    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output
 
     /**
      * @suppress
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun executeUnsafe(context: AIAgentStageContextBase, input: Any?): Any? {
+    public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? {
         context.pipeline.onBeforeNode(this, context, input)
         val output = execute(context, input as Input)
         context.pipeline.onAfterNode(this, context, input, output)
@@ -117,9 +116,9 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
  */
 internal class AIAgentNode<Input, Output> internal constructor(
     override val name: String,
-    val execute: suspend AIAgentStageContextBase.(input: Input) -> Output
+    val execute: suspend AIAgentContextBase.(input: Input) -> Output
 ) : AIAgentNodeBase<Input, Output>() {
-    override suspend fun execute(context: AIAgentStageContextBase, input: Input): Output = context.execute(input)
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output = context.execute(input)
 }
 
 public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>() {
@@ -128,7 +127,7 @@ public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>(
 
     override val name: String get() = subgraphName?.let { "__start__$it" } ?: "__start__"
 
-    override suspend fun execute(context: AIAgentStageContextBase, input: Input): Input = input
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Input = input
 }
 
 public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Output>() {
@@ -141,11 +140,11 @@ public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Outp
         throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
     }
 
-    override suspend fun execute(context: AIAgentStageContextBase, input: Output): Output = input
+    override suspend fun execute(context: AIAgentContextBase, input: Output): Output = input
 }
 
 
-internal class StartAIAgentNode internal constructor() : StartAIAgentNodeBase<Unit>()
+internal class StartAIAgentNode internal constructor() : StartAIAgentNodeBase<String>()
 
 /**
  * A specialized implementation of `FinishNode` that finalizes the execution of a local agent subgraph.
@@ -159,5 +158,5 @@ internal class StartAIAgentNode internal constructor() : StartAIAgentNodeBase<Un
  *
  * This node is critical to denote the completion of localized processing within a subgraph context.
  */
-internal object FinishAIAgentNode : FinishAIAgentNodeBase<String>()
+internal class FinishAIAgentNode : FinishAIAgentNodeBase<String>()
 

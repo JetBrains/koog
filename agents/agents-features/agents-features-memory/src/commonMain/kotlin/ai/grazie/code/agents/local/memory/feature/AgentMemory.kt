@@ -1,10 +1,10 @@
 package ai.grazie.code.agents.local.memory.feature
 
 import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
+import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
+import ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext
+import ai.grazie.code.agents.core.agent.entity.AIAgentLLMWriteSession
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMContext
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentLLMWriteSession
-import ai.grazie.code.agents.core.agent.entity.stage.AIAgentStageContextBase
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
@@ -246,10 +246,10 @@ public class AgentMemory(
          * @param pipeline The agent pipeline to install the feature into
          */
         override fun install(config: Config, pipeline: AIAgentPipeline) {
-            pipeline.interceptContextStageFeature(this) { stageContext ->
-                config.agentName = stageContext.strategyId
+            pipeline.interceptContextAgentFeature(this) { agentContext ->
+                config.agentName = agentContext.strategyId
 
-                AgentMemory(config.memoryProvider, stageContext.llm, config.scopesProfile)
+                AgentMemory(config.memoryProvider, agentContext.llm, config.scopesProfile)
             }
         }
     }
@@ -520,7 +520,7 @@ private fun String.shortened() = lines().first().take(100) + "..."
  *
  * @return The AgentMemory instance for this agent context
  */
-public fun AIAgentStageContextBase.memory(): AgentMemory = feature(AgentMemory.Feature)!!
+public fun AIAgentContextBase.memory(): AgentMemory = feature(AgentMemory.Feature)!!
 
 /**
  * Extension function to perform memory operations within a AIAgentStageContext.
@@ -544,4 +544,4 @@ public fun AIAgentStageContextBase.memory(): AgentMemory = feature(AgentMemory.F
  * @param action The memory operations to perform
  * @return The result of the action
  */
-public suspend fun <T> AIAgentStageContextBase.withMemory(action: suspend AgentMemory.() -> T): T = memory().action()
+public suspend fun <T> AIAgentContextBase.withMemory(action: suspend AgentMemory.() -> T): T = memory().action()

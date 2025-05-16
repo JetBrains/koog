@@ -5,7 +5,6 @@ import ai.grazie.code.agents.core.agent.config.AIAgentConfig
 import ai.grazie.code.agents.core.tools.Tool
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
-import ai.grazie.code.agents.core.tools.tools.ToolStage
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.tone.ToneTools.NegativeToneTool
 import ai.grazie.code.agents.example.tone.ToneTools.NeutralToneTool
@@ -23,18 +22,11 @@ fun main() {
     /**
      * Describe the list of tools for your agent.
      */
-    val toneStageName = "tone_analysis"
-
-    /**
-     * Describe the list of tools for your agent.
-     */
     val toolRegistry = ToolRegistry {
-        stage(toneStageName) {
-            tool(SayToUser)
-            tool(PositiveToneTool)
-            tool(NegativeToneTool)
-            tool(NeutralToneTool)
-        }
+        tool(SayToUser)
+        tool(PositiveToneTool)
+        tool(NegativeToneTool)
+        tool(NeutralToneTool)
     }
 
     runBlocking {
@@ -61,7 +53,7 @@ fun main() {
         )
 
         // Create the strategy
-        val strategy = toneStrategy("tone_analysis", toolRegistry, toneStageName)
+        val strategy = toneStrategy("tone_analysis")
 
         // Create the agent
         val agent = AIAgent(
@@ -71,8 +63,8 @@ fun main() {
             toolRegistry = toolRegistry
         ) {
             handleEvents {
-                onToolCall = { stage: ToolStage, tool: Tool<*, *>, toolArgs: Tool.Args ->
-                    println("Tool called: stage ${stage.name}, tool ${tool.name}, args $toolArgs")
+                onToolCall = { tool: Tool<*, *>, toolArgs: Tool.Args ->
+                    println("Tool called: tool ${tool.name}, args $toolArgs")
                 }
 
                 onAgentRunError = { strategyName: String, throwable: Throwable ->

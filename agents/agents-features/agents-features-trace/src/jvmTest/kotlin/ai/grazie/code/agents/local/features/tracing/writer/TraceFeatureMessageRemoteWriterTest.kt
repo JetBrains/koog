@@ -1,7 +1,7 @@
 package ai.grazie.code.agents.local.features.tracing.writer
 
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
-import ai.grazie.code.agents.core.dsl.builder.simpleStrategy
+import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequest
 import ai.grazie.code.agents.core.feature.model.*
 import ai.grazie.code.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
@@ -36,7 +36,7 @@ class TraceFeatureMessageRemoteWriterTest {
             processedMessages.add(message)
         }
 
-        override suspend fun close() { }
+        override suspend fun close() {}
     }
 
     @Test
@@ -44,7 +44,8 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val clientConfig =
+            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val isServerStarted = CompletableDeferred<Boolean>()
         val isClientFinished = CompletableDeferred<Boolean>()
@@ -62,7 +63,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
 
-                val strategy = simpleStrategy("tracing-test-strategy") {
+                val strategy = strategy("tracing-test-strategy") {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -77,7 +78,6 @@ class TraceFeatureMessageRemoteWriterTest {
                         addMessageProcessor(writer)
                     }
                 }.use { agent ->
-
                     agent.run("")
                     isServerStarted.complete(true)
                     isClientFinished.await()
@@ -99,21 +99,43 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val clientConfig =
+            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
             AIAgentStartedEvent(strategyName = strategyName),
             AIAgentStrategyStartEvent(strategyName = strategyName),
-            AIAgentNodeExecutionStartEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString()),
-            AIAgentNodeExecutionEndEvent(nodeName = "__start__", stageName = "default", input = Unit::class.qualifiedName.toString(), output = Unit::class.qualifiedName.toString()),
-            AIAgentNodeExecutionStartEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt"),
-            LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy", "__tools_list__")),
-            LLMCallWithToolsEndEvent(responses = listOf("Default test response"), tools = listOf("dummy", "__tools_list__")),
-            AIAgentNodeExecutionEndEvent(nodeName = "test LLM call", stageName = "default", input = "Test LLM call prompt", output = "Assistant(content=Default test response)"),
-            AIAgentNodeExecutionStartEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt"),
-            LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy", "__tools_list__")),
-            LLMCallWithToolsEndEvent(responses = listOf("Default test response"), tools = listOf("dummy", "__tools_list__")),
-            AIAgentNodeExecutionEndEvent(nodeName = "test LLM call with tools", stageName = "default", input = "Test LLM call with tools prompt", output = "Assistant(content=Default test response)"),
+            AIAgentNodeExecutionStartEvent(nodeName = "__start__", input = ""),
+            AIAgentNodeExecutionEndEvent(
+                nodeName = "__start__",
+                input = "",
+                output = ""
+            ),
+            AIAgentNodeExecutionStartEvent(nodeName = "test LLM call", input = "Test LLM call prompt"),
+            LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy")),
+            LLMCallWithToolsEndEvent(
+                responses = listOf("Default test response"),
+                tools = listOf("dummy")
+            ),
+            AIAgentNodeExecutionEndEvent(
+                nodeName = "test LLM call",
+                input = "Test LLM call prompt",
+                output = "Assistant(content=Default test response)"
+            ),
+            AIAgentNodeExecutionStartEvent(
+                nodeName = "test LLM call with tools",
+                input = "Test LLM call with tools prompt"
+            ),
+            LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy")),
+            LLMCallWithToolsEndEvent(
+                responses = listOf("Default test response"),
+                tools = listOf("dummy")
+            ),
+            AIAgentNodeExecutionEndEvent(
+                nodeName = "test LLM call with tools",
+                input = "Test LLM call with tools prompt",
+                output = "Assistant(content=Default test response)"
+            ),
             AIAgentStrategyFinishedEvent(strategyName = strategyName, result = "Done"),
             AIAgentFinishedEvent(strategyName = strategyName, result = "Done"),
         )
@@ -126,7 +148,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
 
-                val strategy = simpleStrategy(strategyName) {
+                val strategy = strategy(strategyName) {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -186,7 +208,8 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val clientConfig =
+            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<FeatureMessage>()
 
@@ -197,7 +220,7 @@ class TraceFeatureMessageRemoteWriterTest {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 TestFeatureMessageWriter().use { fakeWriter ->
 
-                    val strategy = simpleStrategy(strategyName) {
+                    val strategy = strategy(strategyName) {
                         val llmCallNode by nodeLLMRequest("test LLM call")
                         val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -264,13 +287,14 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val port = findAvailablePort()
         val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+        val clientConfig =
+            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val expectedEvents = listOf(
-            LLMCallWithToolsStartEvent("Test user message", listOf("dummy", "__tools_list__")),
-            LLMCallWithToolsEndEvent(listOf("Default test response"), listOf("dummy", "__tools_list__")),
-            LLMCallWithToolsStartEvent("Test user message", listOf("dummy", "__tools_list__")),
-            LLMCallWithToolsEndEvent(listOf("Default test response"), listOf("dummy", "__tools_list__")),
+            LLMCallWithToolsStartEvent("Test user message", listOf("dummy")),
+            LLMCallWithToolsEndEvent(listOf("Default test response"), listOf("dummy")),
+            LLMCallWithToolsStartEvent("Test user message", listOf("dummy")),
+            LLMCallWithToolsEndEvent(listOf("Default test response"), listOf("dummy")),
         )
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
@@ -281,7 +305,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
 
-                val strategy = simpleStrategy(strategyName) {
+                val strategy = strategy(strategyName) {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 

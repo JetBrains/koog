@@ -22,9 +22,12 @@ import kotlin.test.assertEquals
 class GraphTestingFeatureTest {
 
     @Test
-    fun testMultiStageAgentStructure() = runTest {
+    fun testMultiSubgraphAgentStructure() = runTest {
         val strategy = strategy("test") {
-            stage("first") {
+            val firstSubgraph by subgraph(
+                "first",
+                tools = listOf(DummyTool, CreateTool, SolveTool)
+            ) {
                 val callLLM by nodeLLMRequest(allowToolCalls = false)
                 val executeTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
@@ -37,7 +40,7 @@ class GraphTestingFeatureTest {
                     input
                 }
 
-                edge(nodeStart forwardTo callLLM transformed { stageInput })
+                edge(nodeStart forwardTo callLLM)
                 edge(callLLM forwardTo executeTool onToolCall { true })
                 edge(callLLM forwardTo giveFeedback onAssistantMessage { true })
                 edge(giveFeedback forwardTo giveFeedback onAssistantMessage { true })
@@ -45,20 +48,19 @@ class GraphTestingFeatureTest {
                 edge(executeTool forwardTo nodeFinish transformed { it.content })
             }
 
-            stage("second") {
-                edge(nodeStart forwardTo nodeFinish transformed { stageInput })
+            val secondSubgraph by subgraph<String, String>("second") {
+                edge(nodeStart forwardTo nodeFinish)
             }
+
+            edge(nodeStart forwardTo firstSubgraph)
+            edge(firstSubgraph forwardTo secondSubgraph)
+            edge(secondSubgraph forwardTo nodeFinish)
         }
 
         val toolRegistry = ToolRegistry {
-            stage("first") {
-                tool(DummyTool)
-                tool(CreateTool)
-                tool(SolveTool)
-            }
-            stage("second") {
-                tool(DummyTool)
-            }
+            tool(DummyTool)
+            tool(CreateTool)
+            tool(SolveTool)
         }
 
         val mockLLMApi = getMockExecutor(toolRegistry) {
@@ -74,10 +76,17 @@ class GraphTestingFeatureTest {
             agentConfig = AIAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
             toolRegistry = toolRegistry
         ) {
-            testGraph {
-                assertStagesOrder("first", "second")
+            testGraph("test") {
+                val firstSubgraph = assertSubgraphByName<Unit, String>("first")
+                val secondSubgraph = assertSubgraphByName<Unit, String>("second")
 
-                stage("first") {
+                assertEdges {
+                    startNode() alwaysGoesTo firstSubgraph
+                    firstSubgraph alwaysGoesTo secondSubgraph
+                    secondSubgraph alwaysGoesTo finishNode()
+                }
+
+                verifySubgraph(firstSubgraph) {
                     val start = startNode()
                     val finish = finishNode()
 
@@ -108,10 +117,6 @@ class GraphTestingFeatureTest {
                         askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
                     }
                 }
-
-                stage("second") {
-                    // Empty stage for demonstration
-                }
             }
         }
     }
@@ -124,44 +129,45 @@ class GraphTestingFeatureTest {
 
         // Create a Config instance directly to test the API
         val config = Testing.Config().apply {
-            assertStagesOrder("first", "second")
+            verifyStrategy("test") {
+                val first = assertSubgraphByName<String, String>("first")
+                val second = assertSubgraphByName<String, String>("second")
+                verifySubgraph(first) {
+                    val start = startNode()
+                    val finish = finishNode()
 
-            stage("first") {
-                val start = startNode()
-                val finish = finishNode()
+                    val askLLM = assertNodeByName<String, Message.Response>("callLLM")
+                    val callTool = assertNodeByName<Message.Tool.Call, Message.Tool.Result>("executeTool")
+                    val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
 
-                val askLLM = assertNodeByName<String, Message.Response>("callLLM")
-                val callTool = assertNodeByName<Message.Tool.Call, Message.Tool.Result>("executeTool")
-                val giveFeedback = assertNodeByName<Any?, Any?>("giveFeedback")
+                    assertReachable(start, askLLM)
+                    assertReachable(askLLM, callTool)
+                    assertReachable(callTool, giveFeedback)
+                    assertReachable(giveFeedback, finish)
+                }
 
-                assertReachable(start, askLLM)
-                assertReachable(askLLM, callTool)
-                assertReachable(callTool, giveFeedback)
-                assertReachable(giveFeedback, finish)
-            }
+                verifySubgraph(second) {
+                    val start = startNode()
+                    val finish = finishNode()
 
-            stage("second") {
-                val start = startNode()
-                val finish = finishNode()
-
-                assertReachable(start, finish)
+                    assertReachable(start, finish)
+                }
             }
         }
 
         // Verify that the config was created correctly
-        assertEquals(2, config.getStages().size)
-        assertEquals(listOf("first", "second"), config.getStagesOrder())
+        assertEquals(2, config.getAssertions().subgraphAssertions.size)
 
         // Verify the first stage
-        val firstStage = config.getStages().find { it.name == "first" }
-        assertEquals("first", firstStage?.name)
-        assertEquals(3, firstStage?.nodes?.size)
-        assertEquals(4, firstStage?.reachabilityAssertions?.size)
+        val firstSubgraphAssertion = config.getAssertions().subgraphAssertions.find { it.subgraphRef.name == "first" }
+        assertEquals("first", firstSubgraphAssertion?.subgraphRef?.name)
+        assertEquals(3, firstSubgraphAssertion?.graphAssertions?.nodes?.size)
+        assertEquals(4, firstSubgraphAssertion?.graphAssertions?.reachabilityAssertions?.size)
 
         // Verify the second stage
-        val secondStage = config.getStages().find { it.name == "second" }
-        assertEquals("second", secondStage?.name)
-        assertEquals(0, secondStage?.nodes?.size)
-        assertEquals(1, secondStage?.reachabilityAssertions?.size)
+        val secondSubgraphAssertion = config.getAssertions().subgraphAssertions.find { it.subgraphRef.name == "second" }
+        assertEquals("second", secondSubgraphAssertion?.subgraphRef?.name)
+        assertEquals(0, secondSubgraphAssertion?.graphAssertions?.nodes?.size)
+        assertEquals(1, secondSubgraphAssertion?.graphAssertions?.reachabilityAssertions?.size)
     }
 }

@@ -95,9 +95,7 @@ class MockEnvironment(
                     )
                 }
         }
-        val tool = toolRegistry
-            .getStageByTool(functionCall.tool)
-            .getTool(functionCall.tool)
+        val tool = toolRegistry.getTool(functionCall.tool)
 
         val args = tool.decodeArgsFromString(functionCall.content)
         val result = tool.executeUnsafe(args, MockToolsEnabler)
