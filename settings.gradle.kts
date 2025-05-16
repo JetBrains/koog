@@ -33,6 +33,8 @@ include(":embeddings:embeddings-llm")
 
 include(":examples")
 
+include(":integration-tests")
+
 include(":koog-agents")
 
 include(":prompt:prompt-cache:prompt-cache-files")
@@ -58,4 +60,3 @@ include(":prompt:prompt-model")
 include(":prompt:prompt-structure")
 include(":prompt:prompt-xml")
 include("prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client")
-include(":integration-tests")
