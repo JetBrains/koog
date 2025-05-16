@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.api
+package ai.grazie.code.agents.core.agent
 
 /**
  * Represents a basic interface for AI agent.

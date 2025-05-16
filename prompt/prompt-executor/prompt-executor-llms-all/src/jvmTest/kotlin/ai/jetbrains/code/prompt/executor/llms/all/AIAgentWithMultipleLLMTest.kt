@@ -3,11 +3,11 @@ package ai.jetbrains.code.prompt.executor.llms.all
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.AIAgentException
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.*
+import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.local.features.tracing.feature.Tracing
@@ -31,7 +31,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Disabled
 import kotlin.coroutines.coroutineContext
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds

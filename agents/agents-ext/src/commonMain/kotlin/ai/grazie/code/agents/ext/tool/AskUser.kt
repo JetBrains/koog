@@ -1,30 +1,31 @@
-package ai.grazie.code.agents.core.tools.tools
+package ai.grazie.code.agents.ext.tool
 
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
- * The `SayToUser` allows agent to say something to the output (via `println`).
+ * Object representation of a tool that provides an interface for agent-user interaction.
+ * It allows the agent to ask the user for input (via `stdout`/`stdin`).
  */
-public object SayToUser : SimpleTool<SayToUser.Args>() {
+public object AskUser : SimpleTool<AskUser.Args>() {
     @Serializable
     public data class Args(val message: String) : Tool.Args
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "__say_to_user__", description = "Service tool, used by the agent to talk.",
+        name = "__ask_user__",
+        description = "Service tool, used by the agent to talk with user",
         requiredParameters = listOf(
             ToolParameterDescriptor(
                 name = "message", description = "Message from the agent", type = ToolParameterType.String
-            ),
-        ),
+            )
+        )
     )
 
     override suspend fun doExecute(args: Args): String {
-        println("Agent says: ${args.message}")
-
-        return "DONE"
+        println(args.message)
+        return readln()
     }
 }

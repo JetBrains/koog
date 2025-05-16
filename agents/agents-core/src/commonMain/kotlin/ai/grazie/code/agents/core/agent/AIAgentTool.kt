@@ -2,7 +2,7 @@ package ai.grazie.code.agents.core.agent
 
 import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolArgs
 import ai.grazie.code.agents.core.agent.AIAgentTool.AgentToolResult
-import ai.grazie.code.agents.core.api.AIAgentBase
+import ai.grazie.code.agents.core.agent.AIAgentBase
 import ai.grazie.code.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

@@ -7,12 +7,13 @@ import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.reflect.asTools
-import ai.grazie.code.agents.core.tools.tools.AskUser
 import ai.grazie.code.agents.example.TokenService
 import ai.grazie.code.agents.example.banking.tools.MoneyTransferTools
 import ai.grazie.code.agents.example.banking.tools.TransactionAnalysisTools
 import ai.grazie.code.agents.example.banking.tools.bankingAssistantSystemPrompt
 import ai.grazie.code.agents.example.banking.tools.transactionAnalysisPrompt
+import ai.grazie.code.agents.ext.agent.subgraphWithTask
+import ai.grazie.code.agents.ext.tool.AskUser
 import ai.grazie.code.prompt.structure.json.JsonSchemaGenerator
 import ai.grazie.code.prompt.structure.json.JsonStructuredData
 import ai.jetbrains.code.prompt.dsl.prompt

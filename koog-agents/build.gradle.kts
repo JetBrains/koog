@@ -13,8 +13,9 @@ val excluded = setOf(
     project.path, // the current project should not depend in itself
 )
 
-val included = setOf<String>(
+val included = setOf(
     ":agents:agents-core",
+    ":agents:agents-ext",
     ":agents:agents-features:agents-features-common",
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",

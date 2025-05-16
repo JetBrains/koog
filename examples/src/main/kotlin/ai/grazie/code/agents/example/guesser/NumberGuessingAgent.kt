@@ -1,8 +1,9 @@
 package ai.grazie.code.agents.example.guesser
 
-import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.ext.agent.simpleChatAgent
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
@@ -25,6 +26,7 @@ fun main() = runBlocking {
     // Create a chat agent with a system prompt and the tool registry
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = """
             You are a number guessing agent. Your goal is to guess a number that the user is thinking of.
             

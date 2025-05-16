@@ -1,10 +1,18 @@
-package ai.grazie.code.agents.core.dsl.extension
+package ai.grazie.code.agents.ext.agent
 
 import ai.grazie.code.agents.core.agent.entity.AIAgentContextBase
 import ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy
 import ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphDelegateBase
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
+import ai.grazie.code.agents.core.dsl.extension.nodeExecuteTool
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMRequestMultiple
+import ai.grazie.code.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.grazie.code.agents.core.dsl.extension.onToolCall
+import ai.grazie.code.agents.core.dsl.extension.onToolNotCalled
+import ai.grazie.code.agents.core.dsl.extension.replaceHistoryWithTLDR
+import ai.grazie.code.agents.core.dsl.extension.setToolChoiceRequired
+import ai.grazie.code.agents.core.dsl.extension.unsetToolChoice
 import ai.grazie.code.agents.core.tools.*
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
@@ -138,11 +146,13 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
             model,
             params,
         )
+
         llm.writeSession {
             setToolChoiceRequired()
-        }
-        if (finishTool.descriptor !in llm.tools) {
-            llm.tools = llm.tools + finishTool.descriptor
+
+            if (finishTool.descriptor !in tools) {
+                tools = tools + finishTool.descriptor
+            }
         }
     }
 
@@ -155,7 +165,11 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
             }
             unsetToolChoice()
         }
-        llm.tools = llm.tools - finishTool.descriptor
+
+        llm.writeSession {
+            tools = tools - finishTool.descriptor
+        }
+
         input
     }
 

@@ -2,12 +2,13 @@ package ai.grazie.code.agents.example.features
 
 import ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey
 import ai.grazie.code.agents.core.agent.entity.createStorageKey
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
 import ai.grazie.code.agents.core.feature.AIAgentPipeline
 import ai.grazie.code.agents.core.feature.AIAgentFeature
 import ai.grazie.code.agents.core.feature.handler.BeforeNodeHandler
 import ai.grazie.code.agents.example.TokenService
+import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
 import ai.grazie.code.agents.local.features.common.config.FeatureConfig
+import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -96,6 +97,7 @@ class Logging(val logger: Logger) {
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
+        llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(Logging) {

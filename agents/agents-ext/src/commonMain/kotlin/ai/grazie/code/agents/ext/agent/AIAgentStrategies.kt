@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.core.api
+package ai.grazie.code.agents.ext.agent
 
 import ai.grazie.code.agents.core.agent.entity.AIAgentStrategy
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
@@ -7,7 +7,7 @@ import ai.grazie.code.agents.core.dsl.extension.*
 import ai.jetbrains.code.prompt.message.Message
 
 /**
- * Creates and configures a [AIAgentStrategy] for executing a chat interaction process.
+ * Creates and configures a [ai.grazie.code.agents.core.agent.entity.AIAgentStrategy] for executing a chat interaction process.
  * The agent orchestrates interactions between different stages, nodes, and tools to
  * handle user input, execute tools, and provide responses.
  * Allows the agent to interact with the user in a chat-like manner.

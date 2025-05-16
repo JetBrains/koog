@@ -15,6 +15,7 @@ kotlin {
                 implementation(kotlin("test"))
 
                 implementation(project(":agents:agents-core"))
+                implementation(project(":agents:agents-ext"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
