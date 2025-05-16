@@ -29,6 +29,12 @@ class ToolRegistryTest {
     }
 
     @Test
+    fun testToolRegistryInitialState() = runTest {
+        val toolRegistry = ToolRegistry {}
+        assertEquals(0, toolRegistry.tools.size)
+    }
+
+    @Test
     fun testBuilderBuildsValidRegistry() {
         // Verify that the registry contains the expected tools
         assertEquals(2, sampleRegistry.tools.size)
@@ -103,6 +109,84 @@ class ToolRegistryTest {
         // Test with unknown args type
         assertFailsWith<IllegalArgumentException>("Should fail on unknown tool") {
             sampleRegistry.getTool("unknown_tool")
+        }
+    }
+
+    @Test
+    fun testToolRegistryAddNonExistingTool() = runTest {
+        val toolRegistry = ToolRegistry { }
+        assertEquals(0, toolRegistry.tools.size)
+
+        toolRegistry.add(tool1)
+        assertEquals(1, toolRegistry.tools.size)
+        assertEquals(tool1, toolRegistry.tools.single())
+    }
+
+    @Test
+    fun testToolRegistryAddExistingTool() = runTest {
+        val toolRegistry = ToolRegistry {
+            tool(tool1)
+        }
+        assertEquals(1, toolRegistry.tools.size)
+
+        toolRegistry.add(tool1)
+        assertEquals(1, toolRegistry.tools.size)
+        assertEquals(tool1, toolRegistry.tools.single())
+    }
+
+    @Test
+    fun testToolRegistryAddAllNonExistingTools() = runTest {
+        val toolRegistry = ToolRegistry {}
+        assertEquals(0, toolRegistry.tools.size)
+
+        toolRegistry.addAll(tool1, tool2)
+
+        val expectedTools = listOf(tool1, tool2)
+        assertEquals(expectedTools.size, toolRegistry.tools.size)
+        assertContentEquals(expectedTools, toolRegistry.tools)
+    }
+
+    @Test
+    fun testToolRegistryAddAllExistingTool() = runTest {
+        val toolRegistry = ToolRegistry {
+            tools(listOf(tool1,  tool2))
+        }
+        assertEquals(2, toolRegistry.tools.size)
+
+        toolRegistry.addAll(tool1, tool2)
+
+        val expectedTools = listOf(tool1, tool2)
+        assertEquals(expectedTools.size, toolRegistry.tools.size)
+        assertContentEquals(expectedTools, toolRegistry.tools)
+    }
+
+    @Test
+    fun testToolRegistryAddAllPartiallyExistingTool() = runTest {
+        @Test
+        fun testToolRegistryAddAllExistingTool() = runTest {
+            val toolRegistry = ToolRegistry {
+                tools(listOf(tool1,  tool2))
+            }
+            assertEquals(2, toolRegistry.tools.size)
+
+            toolRegistry.addAll(tool2, tool3)
+
+            val expectedTools = listOf(tool1, tool2, tool3)
+            assertEquals(expectedTools.size, toolRegistry.tools.size)
+            assertContentEquals(expectedTools, toolRegistry.tools)
+        }
+    }
+
+    @Test
+    fun testToolRegistryAddAllEmptyList() = runTest {
+        @Test
+        fun testToolRegistryAddAllExistingTool() = runTest {
+            val toolRegistry = ToolRegistry { }
+            assertEquals(0, toolRegistry.tools.size)
+
+            toolRegistry.addAll()
+
+            assertTrue(toolRegistry.tools.isEmpty())
         }
     }
 }

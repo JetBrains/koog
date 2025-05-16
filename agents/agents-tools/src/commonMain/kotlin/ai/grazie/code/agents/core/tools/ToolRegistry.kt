@@ -26,9 +26,12 @@ package ai.grazie.code.agents.core.tools
  *
  * @property tools The list of tools contained in this registry
  */
-public class ToolRegistry private constructor(
+public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyList()) {
+
+    private val _tools: MutableList<Tool<*, *>> = tools.toMutableList()
+
     public val tools: List<Tool<*, *>>
-) {
+        get() = _tools.toList()
 
     /**
      * Retrieves a tool by its name from any stage in the registry.
@@ -61,12 +64,19 @@ public class ToolRegistry private constructor(
             ?: throw IllegalArgumentException("Tool with type ${T::class} is not defined")
     }
 
-    public infix fun with(toolRegistry: ToolRegistry): ToolRegistry {
+    public operator fun plus(toolRegistry: ToolRegistry): ToolRegistry {
         val mergedTools = (this.tools + toolRegistry.tools).distinctBy { it.name }
         return ToolRegistry(mergedTools)
     }
 
-    public operator fun plus(toolRegistry: ToolRegistry): ToolRegistry = this with toolRegistry
+    public fun add(tool: Tool<*, *>) {
+        if (_tools.contains(tool)) return
+        _tools.add(tool)
+    }
+
+    public fun addAll(vararg tools: Tool<*, *>) {
+        tools.forEach { tool -> add(tool) }
+    }
 
     public class Builder internal constructor() {
         private val tools = mutableListOf<Tool<*, *>>()
