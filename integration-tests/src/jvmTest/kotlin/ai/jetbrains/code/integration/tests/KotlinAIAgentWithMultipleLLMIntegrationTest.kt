@@ -3,10 +3,6 @@ package ai.jetbrains.code.integration.tests
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.AIAgentException
 import ai.grazie.code.agents.core.agent.config.AIAgentConfig
-<<<<<<<< HEAD:prompt/prompt-executor/prompt-executor-llms-all/src/jvmTest/kotlin/ai/jetbrains/code/prompt/executor/llms/all/AIAgentWithMultipleLLMTest.kt
-========
-import ai.grazie.code.agents.core.api.simpleSingleRunAgent
->>>>>>>> c0e4aeb (JBAI-13946 Extend integration tests to cover new models and move to separate module):integration-tests/src/jvmTest/kotlin/ai/jetbrains/code/prompt/integration/tests/KotlinAIAgentWithMultipleLLMIntegrationTest.kt
 import ai.grazie.code.agents.core.dsl.builder.forwardTo
 import ai.grazie.code.agents.core.dsl.builder.strategy
 import ai.grazie.code.agents.core.dsl.extension.*

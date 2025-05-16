@@ -10,6 +10,7 @@ kotlin {
     sourceSets {
         jvmTest {
             dependencies {
+                implementation(project(":agents:agents-ext"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
