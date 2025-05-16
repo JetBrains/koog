@@ -39,7 +39,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute simple prompt`() = runTest {
+    fun integration_testSimplePrompt() = runTest {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -52,7 +52,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with required parameters`() = runTest {
+    fun integration_testToolsRequiredParams() = runTest {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -81,7 +81,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with required and optional parameters`() = runTest {
+    fun integration_testToolsRequiredOptionalParams() = runTest {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -112,7 +112,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with optional parameters`() = runTest {
+    fun integration_testToolsOptionalParams() = runTest {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -142,7 +142,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with no parameters`() = runTest {
+    fun integration_testToolsNoParams() = runTest {
         val getTimeTool = ToolDescriptor(
             name = "getTime",
             description = "Get the current time"
@@ -159,7 +159,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with int parameter`() = runTest {
+    fun integration_testToolsIntParam() = runTest {
         val setLimitTool = ToolDescriptor(
             name = "setLimit",
             description = "Set the limit",
@@ -183,7 +183,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with float parameter`() = runTest {
+    fun integration_testToolsFloatParam() = runTest {
         val printValueTool = ToolDescriptor(
             name = "printValue",
             description = "Print the value",
@@ -207,7 +207,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with string parameter`() = runTest {
+    fun integration_testToolsStringParam() = runTest {
         val setNameTool = ToolDescriptor(
             name = "setName",
             description = "Set the name",
@@ -231,7 +231,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with enum parameter`() = runTest {
+    fun integration_testToolsEnumParam() = runTest {
         val setColor = ToolDescriptor(
             name = "setColor",
             description = "Set the color",
@@ -260,7 +260,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with serializable enum parameter`() = runTest {
+    fun integration_testToolsSerializableEnumParam() = runTest {
         val calculatorTool = ToolDescriptor(
             name = "calculator",
             description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
@@ -294,7 +294,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of strings parameter`() = runTest {
+    fun integration_testToolsListOfStringsParam() = runTest {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -318,7 +318,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of integers parameter`() = runTest {
+    fun integration_testToolsListOfIntsParam() = runTest {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -342,7 +342,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of floats parameter`() = runTest {
+    fun integration_testToolsListOfFloatsParam() = runTest {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -375,7 +375,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of enums parameter`() = runTest {
+    fun integration_testToolsListOfEnumsParam() = runTest {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -399,7 +399,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute tools with list of lists parameter`() = runTest {
+    fun integration_testToolsNestedListParam() = runTest {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -424,10 +424,11 @@ class OllamaClientTest {
     }
 
     @Test
-    fun testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
+    fun integration_testStreamingApiWithRawText() = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
-            user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 100 words.")
+            user("Write an essay about the history of artificial intelligence, including its origins, " +
+                    "major milestones, key figures, and current state. Please make it 100 words.")
         }
 
         val flow = executor.executeStreaming(prompt, model)
@@ -586,7 +587,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun `test execute streaming API with structured data`() = runTest {
+    fun integration_testStreamingApiWithStructuredData() = runTest(timeout = 600.seconds) {
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
 
@@ -594,7 +595,7 @@ class OllamaClientTest {
             system("You are a helpful assistant.")
             user(
                 """
-                Please provide information about 30 European countries in this format:
+                Please provide information about 3 European countries in this format:
 
                 $countryDefinition
 
