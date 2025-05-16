@@ -16,6 +16,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-tools"))
