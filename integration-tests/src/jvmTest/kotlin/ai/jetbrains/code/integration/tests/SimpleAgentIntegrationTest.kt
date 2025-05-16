@@ -1,4 +1,4 @@
-package ai.jetbrains.code.prompt.integration.tests
+package ai.jetbrains.code.integration.tests
 
 import ai.grazie.code.agents.core.api.simpleChatAgent
 import ai.grazie.code.agents.core.api.simpleSingleRunAgent
@@ -6,15 +6,15 @@ import ai.grazie.code.agents.core.tools.ToolRegistry
 import ai.grazie.code.agents.core.tools.tools.SayToUser
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestGeminiKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
 import ai.jetbrains.code.prompt.executor.clients.google.GoogleModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestGeminiKeyFromEnv
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue

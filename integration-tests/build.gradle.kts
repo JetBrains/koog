@@ -12,11 +12,13 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                implementation(libs.ktor.client.content.negotiation)
                 implementation(kotlin("test"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
+                implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":agents:agents-tools"))
             }
         }

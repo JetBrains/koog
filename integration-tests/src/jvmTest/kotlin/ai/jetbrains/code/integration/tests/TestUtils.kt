@@ -1,16 +1,6 @@
-<<<<<<<< HEAD:prompt/prompt-executor/prompt-executor-llms-all/src/jvmTest/kotlin/ai/koog/prompt/executor/llms/all/TestUtils.kt
-package ai.koog.prompt.executor.llms.all
-
-import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
-========
-package ai.jetbrains.code.prompt.integration.tests
+package ai.jetbrains.code.integration.tests
 
 import ai.grazie.code.agents.core.tools.*
->>>>>>>> 807c9c1 (JBAI-13946 Extend integration tests to cover new models and move to separate module):integration-tests/src/jvmTest/kotlin/ai/jetbrains/code/prompt/integration/tests/TestUtils.kt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable

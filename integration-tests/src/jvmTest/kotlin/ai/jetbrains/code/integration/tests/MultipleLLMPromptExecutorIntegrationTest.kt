@@ -1,8 +1,11 @@
-package ai.jetbrains.code.prompt.integration.tests
+package ai.jetbrains.code.integration.tests
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
+import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestGeminiKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
@@ -12,9 +15,6 @@ import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestGeminiKeyFromEnv
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message

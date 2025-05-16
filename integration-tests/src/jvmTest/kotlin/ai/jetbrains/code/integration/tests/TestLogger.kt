@@ -1,4 +1,4 @@
-package ai.jetbrains.code.prompt.integration.tests
+package ai.jetbrains.code.integration.tests
 
 import ai.grazie.code.agents.local.features.common.message.FeatureMessage
 import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor

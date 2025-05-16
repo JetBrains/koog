@@ -1,17 +1,8 @@
-<<<<<<<< HEAD:prompt/prompt-executor/prompt-executor-llms/src/jvmTest/kotlin/ai/koog/prompt/executor/llms/MultipleSystemMessagesPromptIntegrationTest.kt
-package ai.koog.prompt.executor.llms
+package ai.jetbrains.code.integration.tests
 
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleModels
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.llm.LLMProvider
-========
-package ai.jetbrains.code.prompt.integration.tests
-
+import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestGeminiKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
@@ -20,11 +11,7 @@ import ai.jetbrains.code.prompt.executor.clients.google.GoogleModels
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestGeminiKeyFromEnv
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.llm.LLMProvider
->>>>>>>> 807c9c1 (JBAI-13946 Extend integration tests to cover new models and move to separate module):integration-tests/src/jvmTest/kotlin/ai/jetbrains/code/prompt/integration/tests/MultipleSystemMessagesPromptIntegrationTest.kt
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test

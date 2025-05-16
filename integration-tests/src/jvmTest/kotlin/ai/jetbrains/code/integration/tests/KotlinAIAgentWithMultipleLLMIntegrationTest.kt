@@ -1,31 +1,4 @@
-<<<<<<<< HEAD:prompt/prompt-executor/prompt-executor-llms-all/src/jvmTest/kotlin/ai/koog/prompt/executor/llms/all/AIAgentWithMultipleLLMTest.kt
-package ai.koog.prompt.executor.llms.all
-
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgentException
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.tools.*
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
-import ai.koog.agents.local.features.eventHandler.feature.EventHandler
-import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.agents.local.features.tracing.feature.Tracing
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.all.ReportingLLMLLMClient.Event
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
-========
-package ai.jetbrains.code.prompt.integration.tests
+package ai.jetbrains.code.integration.tests
 
 import ai.grazie.code.agents.core.agent.AIAgent
 import ai.grazie.code.agents.core.agent.AIAgentException
@@ -42,6 +15,9 @@ import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.grazie.code.agents.local.features.tracing.feature.Tracing
+import ai.jetbrains.code.integration.tests.ReportingLLMLLMClient.Event
+import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.LLMClient
@@ -51,13 +27,9 @@ import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
-import ai.jetbrains.code.prompt.integration.tests.ReportingLLMLLMClient.Event
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.message.Message
->>>>>>>> 807c9c1 (JBAI-13946 Extend integration tests to cover new models and move to separate module):integration-tests/src/jvmTest/kotlin/ai/jetbrains/code/prompt/integration/tests/KotlinAIAgentWithMultipleLLMIntegrationTest.kt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -127,11 +99,7 @@ internal fun LLMClient.reportingTo(
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
 @Suppress("SSBasedInspection")
-<<<<<<<< HEAD:prompt/prompt-executor/prompt-executor-llms-all/src/jvmTest/kotlin/ai/koog/prompt/executor/llms/all/AIAgentWithMultipleLLMTest.kt
-class AIAgentWithMultipleLLMTest {
-========
 class KotlinAIAgentWithMultipleLLMIntegrationTestTest {
->>>>>>>> 807c9c1 (JBAI-13946 Extend integration tests to cover new models and move to separate module):integration-tests/src/jvmTest/kotlin/ai/jetbrains/code/prompt/integration/tests/KotlinAIAgentWithMultipleLLMIntegrationTest.kt
 
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
@@ -328,7 +296,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTestTest {
     }
 
     @Test
-    fun integration_testAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+    fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
@@ -644,8 +612,6 @@ class KotlinAIAgentWithMultipleLLMIntegrationTestTest {
 
     @Test
     fun integration_testAnthropicAgent() = runTest {
-        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
-
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {

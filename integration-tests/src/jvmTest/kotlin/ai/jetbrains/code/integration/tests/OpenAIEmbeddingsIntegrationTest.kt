@@ -1,12 +1,8 @@
-<<<<<<<< HEAD:prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/src/jvmTest/kotlin/ai/koog/prompt/executor/clients/openai/OpenAIEmbeddingTest.kt
-package ai.koog.prompt.executor.clients.openai
-========
-package ai.jetbrains.code.prompt.integration.tests
->>>>>>>> 807c9c1 (JBAI-13946 Extend integration tests to cover new models and move to separate module):integration-tests/src/jvmTest/kotlin/ai/jetbrains/code/prompt/integration/tests/OpenAIEmbeddingsIntegrationTest.kt
+package ai.jetbrains.code.integration.tests
 
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import ai.jetbrains.code.prompt.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
