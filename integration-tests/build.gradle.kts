@@ -1,4 +1,4 @@
-group = "${rootProject.group}.prompt"
+group = "${rootProject.group}.integration-tests"
 version = rootProject.version
 
 plugins {
@@ -8,29 +8,19 @@ plugins {
 
 kotlin {
     sourceSets {
-        commonMain {
-            dependencies {
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(kotlin("test"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-                implementation(project(":agents:agents-features:agents-features-event-handler"))
-                implementation(project(":agents:agents-features:agents-features-trace"))
-                implementation(project(":agents:agents-tools"))
-            }
-        }
-        commonTest {
-            dependencies {
-                implementation(libs.ai.grazie.utils.common)
-                implementation(libs.kotlinx.coroutines.test)
-            }
-        }
         jvmTest {
             dependencies {
+                implementation(kotlin("test"))
                 implementation(kotlin("test-junit5"))
                 implementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+                implementation(libs.ai.grazie.utils.common)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
             }
         }
