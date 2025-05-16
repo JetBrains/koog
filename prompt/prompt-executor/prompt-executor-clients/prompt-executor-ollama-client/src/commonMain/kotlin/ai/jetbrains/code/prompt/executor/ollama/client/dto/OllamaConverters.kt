@@ -3,7 +3,7 @@ package ai.jetbrains.code.prompt.executor.ollama.client.dto
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.utils.json.JSON
 import ai.jetbrains.code.prompt.dsl.Prompt
-import ai.jetbrains.code.prompt.executor.tools.json.toJSONSchema
+import ai.jetbrains.code.prompt.executor.ollama.tools.json.toJSONSchema
 import ai.jetbrains.code.prompt.llm.LLModel
 import ai.jetbrains.code.prompt.llm.OllamaModels
 import ai.jetbrains.code.prompt.message.Message

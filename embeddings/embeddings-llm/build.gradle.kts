@@ -12,7 +12,6 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":prompt:prompt-executor:prompt-executor-ollama"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients"))
                 implementation(project(":embeddings:embeddings-base"))

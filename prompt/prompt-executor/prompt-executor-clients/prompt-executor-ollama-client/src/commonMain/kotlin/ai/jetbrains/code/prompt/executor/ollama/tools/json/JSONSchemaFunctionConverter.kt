@@ -1,8 +1,9 @@
-package ai.jetbrains.code.prompt.executor.tools.json
+package ai.jetbrains.code.prompt.executor.ollama.tools.json
 
 import ai.grazie.code.agents.core.tools.ToolDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import kotlinx.serialization.json.*
+import kotlinx.serialization.json.put
 
 /**
  * Converts the current ToolDescriptor instance into a JSON Schema representation.
