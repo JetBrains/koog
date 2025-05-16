@@ -23,6 +23,7 @@ val included = setOf<String>(
     ":agents:agents-tools",
     ":agents:agents-utils",
     ":embeddings:embeddings-base",
+    ":embeddings:embeddings-llm",
     ":prompt:prompt-cache:prompt-cache-files",
     ":prompt:prompt-cache:prompt-cache-model",
     ":prompt:prompt-cache:prompt-cache-redis",
