@@ -13,6 +13,7 @@ import ai.koog.agents.core.dsl.extension.onToolNotCalled
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.dsl.extension.unsetToolChoice
+import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.tools.*
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -173,7 +174,7 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
         input
     }
 
-    val nodeCallLLM by nodeLLMRequestMultiple()
+    val nodeCallLLM by nodeLLMRequest()
     val callTool by nodeExecuteTool()
     val sendToolResult by nodeLLMSendToolResult()
 

@@ -80,6 +80,9 @@ class FailedToPlanSequentialNode(problemDescription: String) : FailureMessage(pr
 
 fun parse(message: String): ParsedMessage = ParsingErrorMessage("TODO: parsing is not implemented")
 
+/**
+ * The planner builds a plan in the form of a tree with parallel and sequential subtasks.
+ * */
 suspend fun planWork(
     initialTaskDescription: String,
     subAgents: List<AgentDescriptor>,

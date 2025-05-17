@@ -108,7 +108,24 @@ public class ToolFromCallable(
         override fun serialize(
             encoder: Encoder,
             value: VarArgs,
-        ): Unit = error("Should not be called")
+        ) {
+            val compositeEncoder = encoder.beginStructure(descriptor)
+            for ((i, parameter) in kCallable.parameters.withIndex()) {
+                if (parameter.name == null) continue
+
+                val paramValue = value.args[parameter]
+                if (paramValue != null) {
+                    val parameterSerializer = serializer(parameter.type)
+                    compositeEncoder.encodeNullableSerializableElement(
+                        descriptor,
+                        i,
+                        parameterSerializer,
+                        paramValue
+                    )
+                }
+            }
+            compositeEncoder.endStructure(descriptor)
+        }
 
         override fun deserialize(decoder: Decoder): VarArgs {
             val argumentMap = mutableMapOf<KParameter, Any?>()

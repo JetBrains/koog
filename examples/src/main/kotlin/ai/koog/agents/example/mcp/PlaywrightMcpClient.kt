@@ -20,7 +20,7 @@ import kotlinx.coroutines.runBlocking
  */
 fun main() {
     // Get the API key from environment variables
-    val openAIApiToken = System.getenv("OPEN_AI_TOKEN") ?: error("OPEN_AI_TOKEN environment variable not set")
+    val openAIApiToken = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable not set")
 
     // Start the Docker container with the Google Maps MCP server
     val process = ProcessBuilder(
