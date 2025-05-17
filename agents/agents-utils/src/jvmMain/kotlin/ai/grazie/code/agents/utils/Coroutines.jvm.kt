@@ -1,4 +1,4 @@
-package ai.grazie.code.agents.utils.ai.grazie.code.agents.utils
+package ai.grazie.code.agents.utils
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
