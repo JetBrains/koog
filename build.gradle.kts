@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
 val graziePlatformVersion = libs.versions.grazie.platform.get()
 
-group = "ai.jetbrains.code"
+group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
