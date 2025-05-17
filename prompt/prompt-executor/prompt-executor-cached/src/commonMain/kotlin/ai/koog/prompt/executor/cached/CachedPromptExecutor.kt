@@ -1,4 +1,4 @@
-package ./ai.koog.prompt.executor.cached
+package ai.koog.prompt.executor.cached
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.cache.model.PromptCache
