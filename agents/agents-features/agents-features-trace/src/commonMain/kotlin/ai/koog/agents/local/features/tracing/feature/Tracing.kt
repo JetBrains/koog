@@ -1,6 +1,6 @@
 package ai.koog.agents.local.features.tracing.feature
 
-import ai.koog.agents.core.agent.entity.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentPipeline

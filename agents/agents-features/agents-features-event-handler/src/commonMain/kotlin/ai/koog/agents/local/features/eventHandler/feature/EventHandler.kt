@@ -1,7 +1,7 @@
 package ai.koog.agents.local.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
-import ai.koog.agents.core.agent.entity.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentPipeline

@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
-import ai.koog.agents.core.agent.entity.AIAgentLLMWriteSession
+import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.prompt.params.LLMParams
 
 public fun AIAgentLLMWriteSession.clearHistory() {

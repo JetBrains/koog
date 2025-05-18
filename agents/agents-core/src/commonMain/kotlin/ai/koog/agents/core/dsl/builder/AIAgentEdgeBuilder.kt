@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.entity.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase

@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent.entity
 
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 
 /**

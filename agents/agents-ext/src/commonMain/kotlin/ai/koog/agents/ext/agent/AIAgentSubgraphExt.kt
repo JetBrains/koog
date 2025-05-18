@@ -1,6 +1,6 @@
 package ai.koog.agents.ext.agent
 
-import ai.koog.agents.core.agent.entity.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegateBase

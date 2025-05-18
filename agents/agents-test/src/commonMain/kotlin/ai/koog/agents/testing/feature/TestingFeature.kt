@@ -17,6 +17,8 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.local.features.common.config.FeatureConfig
 import ai.koog.agents.testing.tools.MockEnvironment
 import ai.grazie.utils.mpp.UUID
+import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 
