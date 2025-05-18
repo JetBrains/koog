@@ -1,4 +1,4 @@
-# Module agents:agents-features:agents-features-memory
+# Module agents-features-memory
 
 Provides `AgentMemory` feature that allows to store and persist facts from LLM history between agent runs and even
 between multiple agents
@@ -20,7 +20,7 @@ To use the memory feature in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.code.agents:agents-features-memory:$version")
+    implementation("ai.jetbrains.code.agents:agents-features-memory:$version")
 }
 ```
 

@@ -16,8 +16,8 @@ Add the following dependencies to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code:embeddings-base:$code_engine_version")
-    implementation("ai.jetbrains.code:embeddings-local:$code_engine_version")
+    implementation("ai.jetbrains.code.embeddings:embeddings-base:$code_engine_version")
+    implementation("ai.jetbrains.code.embeddings:embeddings-local:$code_engine_version")
 }
 ```
 

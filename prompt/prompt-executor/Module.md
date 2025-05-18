@@ -22,19 +22,19 @@ Add the dependencies for the specific sub-modules you need:
 ```kotlin
 dependencies {
     // Core interfaces and models
-    implementation("ai.grazie.koan:prompt-executor-model:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-model:$version")
 
     // Client implementations
-    implementation("ai.grazie.koan:prompt-executor-clients:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-clients:$version")
 
     // LLM executors
-    implementation("ai.grazie.koan:prompt-executor-llms:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-llms:$version")
 
     // For unified access to multiple providers
-    implementation("ai.grazie.koan:prompt-executor-llms-all:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-llms-all:$version")
 
     // For local LLM execution with Ollama
-    implementation("ai.grazie.koan:prompt-executor-ollama:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-ollama:$version")
 }
 ```
 

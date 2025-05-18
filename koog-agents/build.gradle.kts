@@ -87,4 +87,10 @@ kotlin {
     }
 }
 
+dokka {
+    dokkaSourceSets.configureEach {
+        suppress.set(true)
+    }
+}
+
 publishToGraziePublicMaven()

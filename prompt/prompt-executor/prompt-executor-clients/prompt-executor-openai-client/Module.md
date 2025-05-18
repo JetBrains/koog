@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client
+# Module prompt-executor-openai-client
 
 A client implementation for executing prompts using OpenAI's GPT models.
 
@@ -12,7 +12,7 @@ Add the dependency to your project:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.koan:prompt-executor-openai-client:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-openai-client:$version")
 }
 ```
 

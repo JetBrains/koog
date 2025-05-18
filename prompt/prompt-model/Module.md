@@ -1,4 +1,4 @@
-# Module prompt:prompt-model
+# Module prompt-model
 
 A core module that defines data models and parameters for controlling language model behavior.
 

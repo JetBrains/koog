@@ -80,3 +80,9 @@ registerRunExampleTask("runExampleMarkdownStreamingWithTool", "ai.grazie.code.ag
 registerRunExampleTask("runExampleRiderProjectTemplate", "ai.grazie.code.agents.example.rider.project.template.RiderProjectTemplateKt")
 registerRunExampleTask("runExampleExecSandbox", "ai.grazie.code.agents.example.execsandbox.ExecSandboxKt")
 registerRunExampleTask("runExampleLoopComponent", "ai.grazie.code.agents.example.components.loop.ProjectGeneratorKt")
+
+dokka {
+    dokkaSourceSets.named("main") {
+        suppress.set(true)
+    }
+}

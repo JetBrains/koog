@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-llms
+# Module prompt-executor-llms
 
 Implementations of PromptExecutor for executing prompts with Large Language Models (LLMs).
 
@@ -17,7 +17,7 @@ To use this module in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code:prompt-executor-llms")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-llms:$version")
 }
 ```
 

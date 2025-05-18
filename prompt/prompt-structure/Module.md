@@ -1,4 +1,4 @@
-# Module prompt:prompt-structure
+# Module prompt-structure
 
 A module for defining, parsing, and formatting structured data in various formats.
 

@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client
+# Module prompt-executor-anthropic-client
 
 A client implementation for executing prompts using Anthropic's Claude models.
 
@@ -12,7 +12,7 @@ Add the dependency to your project:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.koan:prompt-executor-anthropic-client:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-anthropic-client:$version")
 }
 ```
 

@@ -1,4 +1,4 @@
-# Module agents:agents-features:agents-features-trace
+# Module agents-features-trace
 
 Provides implementation of the `Tracing` feature for AI Agents
 

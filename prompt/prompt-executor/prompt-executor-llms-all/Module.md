@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-llms-all
+# Module prompt-executor-llms-all
 
 A comprehensive module that provides unified access to multiple LLM providers (OpenAI, Anthropic, OpenRouter) for prompt execution.
 
@@ -11,7 +11,7 @@ This module aggregates various LLM clients (OpenAI, Anthropic, OpenRouter) and p
 Add the dependency to your build.gradle.kts file:
 
 ```kotlin
-implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+implementation("ai.jetbrains.code.prompt:prompt-executor-llms-all:$version")
 ```
 
 ### Using in tests

@@ -18,11 +18,11 @@ Add the following dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core interfaces
-    implementation("ai.jetbrains.code:prompt-cache-model:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-cache-model:$version")
 
     // Choose one or more implementations
-    implementation("ai.jetbrains.code:prompt-cache-files:$version") // For file-based caching
-    implementation("ai.jetbrains.code:prompt-cache-redis:$version") // For Redis-based caching
+    implementation("ai.jetbrains.code.prompt:prompt-cache-files:$version") // For file-based caching
+    implementation("ai.jetbrains.code.prompt:prompt-cache-redis:$version") // For Redis-based caching
 }
 ```
 

@@ -1,4 +1,4 @@
-# Module prompt:prompt-xml
+# Module prompt-xml
 
 A utility module for creating and manipulating XML content with a fluent builder API.
 

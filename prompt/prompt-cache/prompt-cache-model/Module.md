@@ -1,4 +1,4 @@
-# Module prompt:prompt-cache:prompt-cache-model
+# Module prompt-cache-model
 
 Core interfaces and models for caching prompt execution results with an in-memory implementation.
 
@@ -18,7 +18,7 @@ To use the prompt cache model in your project, add the following dependency to y
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code:prompt-cache-model:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-cache-model:$version")
 }
 ```
 

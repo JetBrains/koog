@@ -1,4 +1,4 @@
-# Module prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client
+# Module prompt-executor-openrouter-client
 
 A client implementation for executing prompts using OpenRouter's API to access various LLM providers.
 
@@ -12,7 +12,7 @@ Add the dependency to your project:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.koan:prompt-executor-openrouter-client:$koanVersion")
+    implementation("ai.jetbrains.code.prompt:prompt-executor-openrouter-client:$version")
 }
 ```
 

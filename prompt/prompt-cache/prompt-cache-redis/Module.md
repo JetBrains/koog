@@ -1,4 +1,4 @@
-# Module prompt:prompt-cache:prompt-cache-redis
+# Module prompt-cache-redis
 
 A Redis-based implementation of the PromptCache interface for storing prompt execution results in a Redis database.
 
@@ -18,7 +18,7 @@ To use the Redis-based prompt cache in your project, add the following dependenc
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code:prompt-cache-redis:$version")
+    implementation("ai.jetbrains.code.prompt:prompt-cache-redis:$version")
 }
 ```
 

@@ -1,4 +1,4 @@
-# Module agents:agents-test
+# Module agents-test
 
 Comprehensive testing utilities for AI agents, providing mocking capabilities and validation tools for agent behavior.
 
@@ -19,7 +19,7 @@ To use the agents-test module in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    testImplementation("ai.grazie.code.agents:agents-test:$version")
+    testImplementation("ai.jetbrains.code.agents:agents-test:$version")
 }
 ```
 

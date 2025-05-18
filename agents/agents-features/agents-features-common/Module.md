@@ -1,4 +1,4 @@
-# Module agents:agents-features:agents-features-common
+# Module agents-features-common
 
 Provides common infrastructure and utilities for implementing agent features, including configuration, messaging, and I/O capabilities.
 
@@ -19,7 +19,7 @@ To use the common feature infrastructure in your project, add the following depe
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.code.agents:agents-features-common:$version")
+    implementation("ai.jetbrains.code.agents:agents-features-common:$version")
 }
 ```
 

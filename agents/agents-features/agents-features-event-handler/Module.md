@@ -1,4 +1,4 @@
-# Module agents:agents-features:agents-features-event-handler
+# Module agents-features-event-handler
 
 Provides `EventHandler` feature that allows to listen and react to events in the agent execution.
 
@@ -19,7 +19,7 @@ To use the event handler feature in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.code.agents:agents-features-event-handler:$version")
+    implementation("ai.jetbrains.code.agents:agents-features-event-handler:$version")
 }
 ```
 

@@ -1,4 +1,4 @@
-# Module agents:agents-core
+# Module agents-core
 
 Core library for building and executing AI agents with a graph-based architecture.
 
@@ -20,7 +20,7 @@ To use the agents-core module in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie.code.agents:agents-core:$version")
+    implementation("ai.jetbrains.code.agents:agents-core:$version")
 }
 ```
 
