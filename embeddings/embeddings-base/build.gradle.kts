@@ -1,6 +1,6 @@
 import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
 
-group = "${rootProject.group}.embeddings"
+group = rootProject.group
 version = rootProject.version
 
 plugins {
