@@ -20,12 +20,11 @@ import ai.grazie.utils.mpp.UUID
 import ai.jetbrains.code.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 
-
-class DummyAgentContext(
+public class DummyAgentContext(
     private val builder: AIAgentContextMockBuilder,
 ) : AIAgentContextBase {
-    val isLLMDefined = builder.llm != null
-    val isEnvironmentDefined = builder.environment != null
+    public val isLLMDefined: Boolean = builder.llm != null
+    public val isEnvironmentDefined: Boolean = builder.environment != null
 
     override val environment: AIAgentEnvironment
         get() = builder.environment
@@ -96,23 +95,23 @@ class DummyAgentContext(
 }
 
 @TestOnly
-interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
-    var environment: AIAgentEnvironment?
-    var agentInput: String?
-    var config: AIAgentConfig?
-    var llm: AIAgentLLMContext?
-    var stateManager: AIAgentStateManager?
-    var storage: AIAgentStorage?
-    var sessionUuid: UUID?
-    var strategyId: String?
+public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
+    public var environment: AIAgentEnvironment?
+    public var agentInput: String?
+    public var config: AIAgentConfig?
+    public var llm: AIAgentLLMContext?
+    public var stateManager: AIAgentStateManager?
+    public var storage: AIAgentStorage?
+    public var sessionUuid: UUID?
+    public var strategyId: String?
 
-    fun copy(): AIAgentContextMockBuilderBase
+    public fun copy(): AIAgentContextMockBuilderBase
 
     override fun build(): AIAgentContextBase
 }
 
 @TestOnly
-class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
+public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override var environment: AIAgentEnvironment? = null
     override var agentInput: String? = null
     override var config: AIAgentConfig? = null
@@ -139,16 +138,16 @@ class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
         return DummyAgentContext(this.copy())
     }
 
-    companion object {
+    private companion object {
         @Suppress("UNCHECKED_CAST")
         private inline fun <reified T : Any> createDummyProxy(name: String): T {
             return ProxyHandler<T>(name).createProxy()
         }
     }
 
-    class ProxyHandler<T : Any>(private val name: String) {
+    public class ProxyHandler<T : Any>(private val name: String) {
         @Suppress("UNCHECKED_CAST")
-        fun createProxy(): T {
+        public fun createProxy(): T {
             return object : Any() {
                 override fun toString() = "DummyProxy<${name}>"
 
@@ -172,21 +171,21 @@ class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
 
 
 @TestOnly
-sealed class NodeReference<Input, Output> {
-    abstract fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output>
+public sealed class NodeReference<Input, Output> {
+    public abstract fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output>
 
-    class Start<Input> : NodeReference<Input, Input>() {
+    public class Start<Input> : NodeReference<Input, Input>() {
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>) = subgraph.start as AIAgentNodeBase<Input, Input>
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Input> = subgraph.start as AIAgentNodeBase<Input, Input>
     }
 
-    class Finish<Output> : NodeReference<Output, Output>() {
+    public class Finish<Output> : NodeReference<Output, Output>() {
         @Suppress("UNCHECKED_CAST")
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Output, Output> =
             subgraph.finish as AIAgentNodeBase<Output, Output>
     }
 
-    open class NamedNode<Input, Output>(val name: String) : NodeReference<Input, Output>() {
+    public open class NamedNode<Input, Output>(public val name: String) : NodeReference<Input, Output>() {
         @Suppress("UNCHECKED_CAST")
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
@@ -207,7 +206,7 @@ sealed class NodeReference<Input, Output> {
         }
     }
 
-    open class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
+    public open class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentSubgraph<Input, Output> {
             val result = super.resolve(subgraph)
 
@@ -219,7 +218,7 @@ sealed class NodeReference<Input, Output> {
         }
     }
 
-    class Strategy(name: String) : SubgraphNode<String, String>(name) {
+    public class Strategy(name: String) : SubgraphNode<String, String>(name) {
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
@@ -235,7 +234,7 @@ sealed class NodeReference<Input, Output> {
 }
 
 @TestOnly
-data class GraphAssertions(
+public data class GraphAssertions(
     val name: String,
     val start: NodeReference.Start<*>,
     val finish: NodeReference.Finish<*>,
@@ -248,7 +247,7 @@ data class GraphAssertions(
 )
 
 @TestOnly
-data class NodeOutputAssertion<Input, Output>(
+public data class NodeOutputAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
     val context: DummyAgentContext,
     val input: Input,
@@ -256,7 +255,7 @@ data class NodeOutputAssertion<Input, Output>(
 )
 
 @TestOnly
-data class EdgeAssertion<Input, Output>(
+public data class EdgeAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
     val context: AIAgentContextBase,
     val output: Output,
@@ -264,21 +263,21 @@ data class EdgeAssertion<Input, Output>(
 )
 
 @TestOnly
-data class UnconditionalEdgeAssertion(
+public data class UnconditionalEdgeAssertion(
     val node: NodeReference<*, *>,
     val expectedNode: NodeReference<*, *>
 )
 
 @TestOnly
-data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
+public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
 
 @TestOnly
-data class SubGraphAssertions(val subgraphRef: NodeReference.SubgraphNode<*, *>, val graphAssertions: GraphAssertions)
+public data class SubGraphAssertions(val subgraphRef: NodeReference.SubgraphNode<*, *>, val graphAssertions: GraphAssertions)
 
 @TestOnly
-sealed interface AssertionResult {
-    class NotEqual(val expected: Any?, val actual: Any?, val message: String) : AssertionResult
-    class False(val message: String) : AssertionResult
+public sealed interface AssertionResult {
+    public class NotEqual(public val expected: Any?, public val actual: Any?, public val message: String) : AssertionResult
+    public class False(public val message: String) : AssertionResult
 }
 
 /**
@@ -335,7 +334,7 @@ sealed interface AssertionResult {
  * @see Testing.Config
  */
 @TestOnly
-class Testing {
+public class Testing {
     /**
      * A mutable list storing `GraphAssertions` objects, which define validation
      * criteria for the graphs.
@@ -348,7 +347,7 @@ class Testing {
      * It includes methods for registering custom assertion handling, managing stages and their order,
      * and defining stage-specific assertions.
      */
-    class Config : FeatureConfig() {
+    public class Config : FeatureConfig() {
         /**
          * A configuration flag that determines whether graph-related testing features are enabled.
          *
@@ -356,7 +355,7 @@ class Testing {
          * assertions, or structure evaluation may be activated within the system.
          * Default value is `false`, which disables graph testing functionalities.
          */
-        var enableGraphTesting = false
+        public var enableGraphTesting: Boolean = false
 
         /**
          * A nullable variable that defines the handler invoked when an assertion result is generated.
@@ -409,7 +408,6 @@ class Testing {
             }
         }
 
-
         /**
          * Sets a custom handler for processing assertion results.
          *
@@ -417,7 +415,7 @@ class Testing {
          *              This allows customization of how assertion results are handled,
          *              such as logging or throwing custom exceptions.
          */
-        fun handleAssertion(block: (AssertionResult) -> Unit) {
+        public fun handleAssertion(block: (AssertionResult) -> Unit) {
             assertionHandler = block
         }
 
@@ -427,7 +425,7 @@ class Testing {
          * @param name The name of the strategy to be verified.
          * @param buildAssertions A lambda defining the assertions to be built for the strategy.
          */
-        fun verifyStrategy(name: String, buildAssertions: SubgraphAssertionsBuilder<String, String>.() -> Unit) {
+        public fun verifyStrategy(name: String, buildAssertions: SubgraphAssertionsBuilder<String, String>.() -> Unit) {
             assertions = SubgraphAssertionsBuilder(NodeReference.Strategy(name)).apply(buildAssertions).build()
         }
 
@@ -435,7 +433,7 @@ class Testing {
          * Builder class for constructing stage-level assertions.
          * This includes setup for nodes, edges, reachability assertions, and context-related mock setups.
          */
-        class SubgraphAssertionsBuilder<Input, Output>(
+        public class SubgraphAssertionsBuilder<Input, Output>(
             private val subgraphRef: NodeReference.SubgraphNode<Input, Output>
         ) {
 
@@ -527,7 +525,7 @@ class Testing {
              *
              * @return The starting node reference of type NodeReference.Start, representing the entry point of the stage.
              */
-            fun startNode(): NodeReference.Start<Input> {
+            public fun startNode(): NodeReference.Start<Input> {
                 return start
             }
 
@@ -536,7 +534,7 @@ class Testing {
              *
              * @return a [NodeReference.Finish] representing the terminal node of the stage.
              */
-            fun finishNode(): NodeReference.Finish<Output> {
+            public fun finishNode(): NodeReference.Finish<Output> {
                 return finish
             }
 
@@ -548,7 +546,7 @@ class Testing {
              * @param name the name of the node to assert or retrieve.
              * @return a `NodeReference` for the node identified by the given name.
              */
-            fun <I, O> assertNodeByName(name: String): NodeReference.NamedNode<I, O> {
+            public fun <I, O> assertNodeByName(name: String): NodeReference.NamedNode<I, O> {
                 val nodeRef = NodeReference.NamedNode<I, O>(name)
                 nodes[name] = nodeRef
                 return nodeRef
@@ -556,7 +554,7 @@ class Testing {
 
             /**
              * Asserts the existence of a subgraph by its name*/
-            fun <I, O> assertSubgraphByName(
+            public fun <I, O> assertSubgraphByName(
                 name: String
             ): NodeReference.SubgraphNode<I, O> {
                 val nodeRef = NodeReference.SubgraphNode<I, O>(name)
@@ -564,7 +562,7 @@ class Testing {
                 return nodeRef
             }
 
-            fun <I, O> verifySubgraph(
+            public fun <I, O> verifySubgraph(
                 subgraph: NodeReference.SubgraphNode<I, O>,
                 checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}
             ) {
@@ -578,7 +576,7 @@ class Testing {
              * @param from The starting node reference from where the reachability is checked.
              * @param to The target node reference to which the reachability is checked.
              */
-            fun assertReachable(from: NodeReference<*, *>, to: NodeReference<*, *>) {
+            public fun assertReachable(from: NodeReference<*, *>, to: NodeReference<*, *>) {
                 reachabilityAssertions.add(ReachabilityAssertion(from, to))
             }
 
@@ -589,7 +587,7 @@ class Testing {
              * @param block A lambda receiver operating on a `NodeOutputAssertionsBuilder` that defines the assertions
              *              to be applied to the nodes in the stage.
              */
-            fun assertNodes(block: NodeOutputAssertionsBuilder.() -> Unit) {
+            public fun assertNodes(block: NodeOutputAssertionsBuilder.() -> Unit) {
                 val builder = NodeOutputAssertionsBuilder(this)
                 builder.block()
                 nodeOutputs.addAll(builder.assertions)
@@ -600,7 +598,7 @@ class Testing {
              *
              * @param block A lambda function that operates on an instance of `EdgeAssertionsBuilder` to define specific edge assertions.
              */
-            fun assertEdges(block: EdgeAssertionsBuilder.() -> Unit) {
+            public fun assertEdges(block: EdgeAssertionsBuilder.() -> Unit) {
                 val builder = EdgeAssertionsBuilder(this)
                 builder.block()
                 edgeAssertions.addAll(builder.assertions)
@@ -634,7 +632,7 @@ class Testing {
              * @property stageBuilder A reference to the parent StageAssertionsBuilder, which serves as the context for assertions.
              * @property context A mock builder for the local agent stage context, used to manage and copy state during the assertion process.
              */
-            class NodeOutputAssertionsBuilder(
+            public class NodeOutputAssertionsBuilder(
                 private val stageBuilder: SubgraphAssertionsBuilder<*, *>,
                 private val context: AIAgentContextMockBuilder = stageBuilder.context.copy()
             ) : AIAgentContextMockBuilderBase by context {
@@ -659,14 +657,14 @@ class Testing {
                  * These assertions are used to verify the correctness of node operations within the
                  * local agent stage context during testing.
                  */
-                val assertions = mutableListOf<NodeOutputAssertion<*, *>>()
+                public val assertions: MutableList<NodeOutputAssertion<*, *>> = mutableListOf()
 
                 /**
                  * Executes the specified block of code within a duplicate context of the current `NodeOutputAssertionsBuilder`.
                  *
                  * @param block The block of code to be executed within the duplicated context of `NodeOutputAssertionsBuilder`.
                  */
-                fun withContext(block: NodeOutputAssertionsBuilder.() -> Unit) {
+                public fun withContext(block: NodeOutputAssertionsBuilder.() -> Unit) {
                     with(copy(), block)
                 }
 
@@ -677,7 +675,7 @@ class Testing {
                  * @param input The input value to associate with the node reference.
                  * @return A `NodeOutputPair` containing the node reference and the provided input.
                  */
-                infix fun <I, O> NodeReference<I, O>.withInput(input: I): NodeOutputPair<I, O> {
+                public infix fun <I, O> NodeReference<I, O>.withInput(input: I): NodeOutputPair<I, O> {
                     return NodeOutputPair(this, input)
                 }
 
@@ -690,13 +688,13 @@ class Testing {
                  * @property node The reference to the specific node.
                  * @property input The input associated with the node.
                  */
-                inner class NodeOutputPair<I, O>(val node: NodeReference<I, O>, val input: I) {
+                public inner class NodeOutputPair<I, O>(public val node: NodeReference<I, O>, public val input: I) {
                     /**
                      * Asserts that the output of the current node given the specified input matches the expected output.
                      *
                      * @param output The expected output to validate against the current node's actual output.
                      */
-                    infix fun outputs(output: O) {
+                    public infix fun outputs(output: O) {
                         assertions.add(NodeOutputAssertion(node, context.build(), input, output))
                     }
                 }
@@ -709,7 +707,7 @@ class Testing {
              * @property stageBuilder The parent builder for the stage, used to initialize context and other related components.
              * @property context A local agent stage context mock builder, initialized as a copy of the stage builder's context.
              */
-            class EdgeAssertionsBuilder(
+            public class EdgeAssertionsBuilder(
                 private val stageBuilder: SubgraphAssertionsBuilder<*, *>,
                 private val context: AIAgentContextMockBuilder = stageBuilder.context.copy()
             ) : AIAgentContextMockBuilderBase by context {
@@ -725,7 +723,7 @@ class Testing {
                  * that build or define edge assertions. Each assertion is added via the respective fluent APIs
                  * provided within the builder.
                  */
-                val assertions = mutableListOf<EdgeAssertion<*, *>>()
+                public val assertions: MutableList<EdgeAssertion<*, *>> = mutableListOf()
 
                 /**
                  * A collection that stores assertions ensuring an unconditional connection
@@ -735,7 +733,7 @@ class Testing {
                  * This list is populated by adding instances of [UnconditionalEdgeAssertion] through relevant methods,
                  * such as when defining relationships or validating graph behavior.
                  */
-                val unconditionalEdgeAssertions = mutableListOf<UnconditionalEdgeAssertion>()
+                public val unconditionalEdgeAssertions: MutableList<UnconditionalEdgeAssertion> = mutableListOf<UnconditionalEdgeAssertion>()
 
                 /**
                  * Creates a deep copy of the current EdgeAssertionsBuilder instance, duplicating its state and context.
@@ -749,7 +747,7 @@ class Testing {
                  *
                  * @param block The block of code to execute within the context of the copied `EdgeAssertionsBuilder` instance.
                  */
-                fun withContext(block: EdgeAssertionsBuilder.() -> Unit) {
+                public fun withContext(block: EdgeAssertionsBuilder.() -> Unit) {
                     with(copy(), block)
                 }
 
@@ -760,7 +758,7 @@ class Testing {
                  * @param output the output value to associate with the current node reference
                  * @return an instance of EdgeOutputPair containing the current node reference and the associated output
                  */
-                infix fun <I, O> NodeReference<I, O>.withOutput(output: O): EdgeOutputPair<I, O> {
+                public infix fun <I, O> NodeReference<I, O>.withOutput(output: O): EdgeOutputPair<I, O> {
                     return EdgeOutputPair(this, output)
                 }
 
@@ -769,7 +767,7 @@ class Testing {
                  *
                  * @param targetNode The target node that the current node output is expected to connect to.
                  */
-                infix fun NodeReference<*, *>.alwaysGoesTo(targetNode: NodeReference<*, *>) {
+                public infix fun NodeReference<*, *>.alwaysGoesTo(targetNode: NodeReference<*, *>) {
                     unconditionalEdgeAssertions.add(UnconditionalEdgeAssertion(this, targetNode))
                 }
 
@@ -782,13 +780,13 @@ class Testing {
                  * @property node the reference to the node associated with this edge output.
                  * @property output the output value associated with the node.
                  */
-                inner class EdgeOutputPair<I, O>(val node: NodeReference<I, O>, val output: O) {
+                public inner class EdgeOutputPair<I, O>(public val node: NodeReference<I, O>, public val output: O) {
                     /**
                      * Creates an assertion to verify that a specific output from the current node leads to the given target node.
                      *
                      * @param targetNode The target node that the current node output is expected to connect to.
                      */
-                    infix fun goesTo(targetNode: NodeReference<*, *>) {
+                    public infix fun goesTo(targetNode: NodeReference<*, *>) {
                         assertions.add(EdgeAssertion(node, context.build(), output, targetNode))
                     }
                 }
@@ -802,7 +800,7 @@ class Testing {
      * reachability, outputs, and edges within an AI agent pipeline.
      */
     @TestOnly
-    companion object Feature : AIAgentFeature<Config, Testing> {
+    public companion object Feature : AIAgentFeature<Config, Testing> {
         /**
          * A storage key uniquely identifying the `Testing` feature within the local agent's storage.
          * The key is generated using the `createStorageKey` function and associates the
@@ -1052,7 +1050,7 @@ class Testing {
  * }
  * ```
  */
-fun <Args : Tool.Args> toolCallMessage(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
+public fun <Args : Tool.Args> toolCallMessage(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
     Message.Tool.Call(null, tool.name, tool.encodeArgsToString(args))
 
 /**
@@ -1077,7 +1075,7 @@ fun <Args : Tool.Args> toolCallMessage(tool: Tool<Args, *>, args: Args): Message
  * }
  * ```
  */
-fun <Args : Tool.Args> toolCallSignature(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
+public fun <Args : Tool.Args> toolCallSignature(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
     Message.Tool.Call(null, tool.name, tool.encodeArgsToString(args))
 
 /**
@@ -1101,7 +1099,7 @@ fun <Args : Tool.Args> toolCallSignature(tool: Tool<Args, *>, args: Args): Messa
  * }
  * ```
  */
-fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
+public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
     ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), result)
 
 /**
@@ -1125,7 +1123,7 @@ fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Result): Rec
  * }
  * ```
  */
-fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult = toolResult(tool, ToolResult.Text(result))
+public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult = toolResult(tool, ToolResult.Text(result))
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.
@@ -1159,7 +1157,7 @@ fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult = toolRe
  * @see Testing
  * @see Testing.Config
  */
-fun FeatureContext.withTesting(config: Testing.Config.() -> Unit = {}) {
+public fun FeatureContext.withTesting(config: Testing.Config.() -> Unit = {}) {
     install(Testing) {
         config()
     }

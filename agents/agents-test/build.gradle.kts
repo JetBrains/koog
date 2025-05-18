@@ -41,6 +41,8 @@ kotlin {
             }
         }
     }
+
+    explicitApi()
 }
 
 // Configure the publication to use the Grazie Public Maven repository

@@ -19,10 +19,10 @@ import ai.jetbrains.code.prompt.message.Message
  * @property argsCondition A function that determines if the tool call matches this condition
  * @property produceResult A function that produces the result when the condition is satisfied
  */
-class ToolCondition<Args : Tool.Args, Result : ToolResult>(
-    val tool: Tool<Args, Result>,
-    val argsCondition: suspend (Args) -> Boolean,
-    val produceResult: suspend (Args) -> Result
+public class ToolCondition<Args : Tool.Args, Result : ToolResult>(
+    public val tool: Tool<Args, Result>,
+    public val argsCondition: suspend (Args) -> Boolean,
+    public val produceResult: suspend (Args) -> Result
 ) {
     /**
      * Checks if this condition applies to the given tool call.
@@ -80,7 +80,7 @@ class ToolCondition<Args : Tool.Args, Result : ToolResult>(
  * }
  * ```
  */
-class MockLLMBuilder {
+public class MockLLMBuilder {
     private val assistantPartialMatches = mutableMapOf<String, String>()
     private val assistantExactMatches = mutableMapOf<String, String>()
     private val conditional = mutableMapOf<(String) -> Boolean, String>()
@@ -94,7 +94,7 @@ class MockLLMBuilder {
      * Companion object for the MockLLMBuilder class.
      * Provides access to the current builder instance during configuration.
      */
-    companion object {
+    internal companion object {
         var currentBuilder: MockLLMBuilder? = null
     }
 
@@ -103,7 +103,7 @@ class MockLLMBuilder {
      *
      * @param response The default response string
      */
-    fun setDefaultResponse(response: String) {
+    public fun setDefaultResponse(response: String) {
         defaultResponse = response
     }
 
@@ -112,7 +112,7 @@ class MockLLMBuilder {
      *
      * @param registry The tool registry containing all available tools
      */
-    fun setToolRegistry(registry: ToolRegistry) {
+    public fun setToolRegistry(registry: ToolRegistry) {
         toolRegistry = registry
     }
 
@@ -123,7 +123,7 @@ class MockLLMBuilder {
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    fun <Args : Tool.Args> addLLMAnswerExactPattern(llmAnswer: String, tool: Tool<Args, *>, args: Args) {
+    public fun <Args : Tool.Args> addLLMAnswerExactPattern(llmAnswer: String, tool: Tool<Args, *>, args: Args) {
         toolCallExactMatches[llmAnswer] =
             Message.Tool.Call(id = null, tool = tool.name, content = tool.encodeArgsToString(args))
     }
@@ -135,7 +135,7 @@ class MockLLMBuilder {
      * @param argsCondition A function that determines if the tool call arguments match this action
      * @param action A function that produces the result when the condition is satisfied
      */
-    fun <Args : Tool.Args, Result : ToolResult> addToolAction(
+    public fun <Args : Tool.Args, Result : ToolResult> addToolAction(
         tool: Tool<Args, Result>,
         argsCondition: suspend (Args) -> Boolean = { true },
         action: suspend (Args) -> Result
@@ -153,7 +153,7 @@ class MockLLMBuilder {
      * @param args The arguments to pass to the tool
      * @return A [ToolCallReceiver] for further configuration
      */
-    fun <Args : Tool.Args> mockLLMToolCall(tool: Tool<Args, *>, args: Args): ToolCallReceiver<Args> {
+    public fun <Args : Tool.Args> mockLLMToolCall(tool: Tool<Args, *>, args: Args): ToolCallReceiver<Args> {
         return ToolCallReceiver(tool, args, this)
     }
 
@@ -166,7 +166,7 @@ class MockLLMBuilder {
      * @param tool The tool to be mocked
      * @return A [MockToolReceiver] for further configuration
      */
-    fun <Args : Tool.Args, Result : ToolResult> mockTool(tool: Tool<Args, Result>): MockToolReceiver<Args, Result> {
+    public fun <Args : Tool.Args, Result : ToolResult> mockTool(tool: Tool<Args, Result>): MockToolReceiver<Args, Result> {
         return MockToolReceiver(tool, this)
     }
 
@@ -176,7 +176,7 @@ class MockLLMBuilder {
      * @param pattern The substring to look for in the user request
      * @return The MockLLMBuilder instance for method chaining
      */
-    infix fun String.onUserRequestContains(pattern: String): MockLLMBuilder {
+    public infix fun String.onUserRequestContains(pattern: String): MockLLMBuilder {
         assistantPartialMatches[pattern] = this
         return this@MockLLMBuilder
     }
@@ -187,7 +187,7 @@ class MockLLMBuilder {
      * @param pattern The exact string to match in the user request
      * @return The MockLLMBuilder instance for method chaining
      */
-    infix fun String.onUserRequestEquals(pattern: String): MockLLMBuilder {
+    public infix fun String.onUserRequestEquals(pattern: String): MockLLMBuilder {
         assistantExactMatches[pattern] = this
         return this@MockLLMBuilder
     }
@@ -198,7 +198,7 @@ class MockLLMBuilder {
      * @param condition A function that evaluates the user request and returns true if it matches
      * @return The MockLLMBuilder instance for method chaining
      */
-    infix fun String.onCondition(condition: (String) -> Boolean): MockLLMBuilder {
+    public infix fun String.onCondition(condition: (String) -> Boolean): MockLLMBuilder {
         conditional[condition] = this
         return this@MockLLMBuilder
     }
@@ -214,7 +214,7 @@ class MockLLMBuilder {
      * @property args The arguments to pass to the tool
      * @property builder The parent MockLLMBuilder instance
      */
-    class ToolCallReceiver<Args : Tool.Args>(
+    public class ToolCallReceiver<Args : Tool.Args>(
         private val tool: Tool<Args, *>,
         private val args: Args,
         private val builder: MockLLMBuilder
@@ -225,7 +225,7 @@ class MockLLMBuilder {
          * @param llmAnswer The exact string to match in the user request
          * @return The llmAnswer string for method chaining
          */
-        infix fun onRequestEquals(llmAnswer: String): String {
+        public infix fun onRequestEquals(llmAnswer: String): String {
             // Using the llmAnswer directly as the response, which should contain the tool call JSON
             builder.addLLMAnswerExactPattern(llmAnswer, tool, args)
 
@@ -245,7 +245,7 @@ class MockLLMBuilder {
      * @property tool The tool to be mocked
      * @property builder The parent MockLLMBuilder instance
      */
-    class MockToolReceiver<Args : Tool.Args, Result : ToolResult>(
+    public class MockToolReceiver<Args : Tool.Args, Result : ToolResult>(
         private val tool: Tool<Args, Result>,
         private val builder: MockLLMBuilder
     ) {
@@ -261,7 +261,7 @@ class MockLLMBuilder {
          * @property action A function that produces the result
          * @property builder The parent MockLLMBuilder instance
          */
-        class MockToolResponseBuilder<Args : Tool.Args, Result : ToolResult>(
+        public class MockToolResponseBuilder<Args : Tool.Args, Result : ToolResult>(
             private val tool: Tool<Args, Result>,
             private val action: suspend () -> Result,
             private val builder: MockLLMBuilder
@@ -271,7 +271,7 @@ class MockLLMBuilder {
              *
              * @param args The exact arguments to match
              */
-            infix fun onArguments(args: Args) {
+            public infix fun onArguments(args: Args) {
                 builder.addToolAction(tool, { it == args }) { action() }
             }
 
@@ -280,7 +280,7 @@ class MockLLMBuilder {
              *
              * @param condition A function that evaluates the arguments and returns true if they match
              */
-            infix fun onArgumentsMatching(condition: suspend (Args) -> Boolean) {
+            public infix fun onArgumentsMatching(condition: suspend (Args) -> Boolean) {
                 builder.addToolAction(tool, condition) { action() }
             }
         }
@@ -290,7 +290,7 @@ class MockLLMBuilder {
          *
          * @param response The result to return
          */
-        infix fun alwaysReturns(response: Result) {
+        public infix fun alwaysReturns(response: Result) {
             builder.addToolAction(tool) { response }
         }
 
@@ -299,7 +299,7 @@ class MockLLMBuilder {
          *
          * @param action A function that produces the result
          */
-        infix fun alwaysDoes(action: suspend () -> Result) {
+        public infix fun alwaysDoes(action: suspend () -> Result) {
             builder.addToolAction(tool) { action() }
         }
 
@@ -309,7 +309,7 @@ class MockLLMBuilder {
          * @param result The result to return
          * @return A [MockToolResponseBuilder] for further configuration
          */
-        infix fun returns(result: Result): MockToolResponseBuilder<Args, Result> =
+        public infix fun returns(result: Result): MockToolResponseBuilder<Args, Result> =
             MockToolResponseBuilder(tool, { result }, builder)
 
         /**
@@ -318,7 +318,7 @@ class MockLLMBuilder {
          * @param action A function that produces the result
          * @return A [MockToolResponseBuilder] for further configuration
          */
-        infix fun does(action: suspend () -> Result): MockToolResponseBuilder<Args, Result> =
+        public infix fun does(action: suspend () -> Result): MockToolResponseBuilder<Args, Result> =
             MockToolResponseBuilder(tool, action, builder)
     }
 
@@ -328,7 +328,7 @@ class MockLLMBuilder {
      * @param response The string to return
      * @return The result of the alwaysReturns call
      */
-    infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.alwaysReturns(response: String) =
+    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.alwaysReturns(response: String): Unit =
         alwaysReturns(ToolResult.Text(response))
 
     /**
@@ -338,7 +338,7 @@ class MockLLMBuilder {
      * @param action A function that produces the string result
      * @return The result of the alwaysDoes call
      */
-    infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(action: suspend () -> String) =
+    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(action: suspend () -> String): Unit =
         alwaysDoes { ToolResult.Text(action()) }
 
     /**
@@ -348,7 +348,7 @@ class MockLLMBuilder {
      * @param action A function that produces the string result
      * @return The result of the does call
      */
-    infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String) =
+    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String):  MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
         does { ToolResult.Text(action()) }
 
     /**
@@ -359,7 +359,7 @@ class MockLLMBuilder {
      *
      * @return A configured MockLLMExecutor instance
      */
-    fun build(): PromptExecutor {
+    public fun build(): PromptExecutor {
         val combinedExactMatches = assistantExactMatches.mapValues {
             Message.Assistant(it.value.trimIndent())
         } + toolCallExactMatches
@@ -396,7 +396,7 @@ class MockLLMBuilder {
  * mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
  * ```
  */
-fun mockLLMAnswer(response: String) = DefaultResponseReceiver(response)
+public fun mockLLMAnswer(response: String): DefaultResponseReceiver = DefaultResponseReceiver(response)
 
 /**
  * Receiver class for configuring text responses from the LLM.
@@ -406,12 +406,12 @@ fun mockLLMAnswer(response: String) = DefaultResponseReceiver(response)
  *
  * @property response The text response to return
  */
-class DefaultResponseReceiver(val response: String) {
+public class DefaultResponseReceiver(public val response: String) {
     /**
      * Companion object for the DefaultResponseReceiver class.
      * Stores and manages the configured responses.
      */
-    companion object {
+    internal companion object {
         private var defaultResponse: String? = null
         private val partialMatches = mutableMapOf<String, String>()
         private val exactMatches = mutableMapOf<String, String>()
@@ -469,7 +469,7 @@ class DefaultResponseReceiver(val response: String) {
      *
      * @return The response string for method chaining
      */
-    val asDefaultResponse: String
+    public val asDefaultResponse: String
         get() {
             defaultResponse = response
             return response
@@ -481,7 +481,7 @@ class DefaultResponseReceiver(val response: String) {
      * @param pattern The substring to look for in the user request
      * @return The response string for method chaining
      */
-    infix fun onRequestContains(pattern: String): String {
+    public infix fun onRequestContains(pattern: String): String {
         partialMatches[pattern] = response
         return response
     }
@@ -492,7 +492,7 @@ class DefaultResponseReceiver(val response: String) {
      * @param pattern The exact string to match in the user request
      * @return The response string for method chaining
      */
-    infix fun onRequestEquals(pattern: String): String {
+    public infix fun onRequestEquals(pattern: String): String {
         exactMatches[pattern] = response
         return response
     }
@@ -503,7 +503,7 @@ class DefaultResponseReceiver(val response: String) {
      * @param condition A function that evaluates the user request and returns true if it matches
      * @return The response string for method chaining
      */
-    infix fun onCondition(condition: (String) -> Boolean): String {
+    public infix fun onCondition(condition: (String) -> Boolean): String {
         conditionalMatches[condition] = response
         return response
     }
@@ -539,7 +539,7 @@ class DefaultResponseReceiver(val response: String) {
  * }
  * ```
  */
-fun getMockExecutor(
+public fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
     init: MockLLMBuilder.() -> Unit
 ): PromptExecutor {
