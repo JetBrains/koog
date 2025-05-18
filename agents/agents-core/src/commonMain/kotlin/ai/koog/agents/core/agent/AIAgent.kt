@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -65,7 +65,7 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
 public open class AIAgent(
     public val promptExecutor: PromptExecutor,
     private val strategy: AIAgentStrategy,
-    public val agentConfig: AIAgentConfig,
+    public val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase, AIAgentEnvironment, Closeable {

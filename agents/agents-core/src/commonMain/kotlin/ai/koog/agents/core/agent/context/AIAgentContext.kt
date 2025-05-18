@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -33,7 +33,7 @@ import kotlin.uuid.Uuid
 internal class AIAgentContext(
     override val environment: AIAgentEnvironment,
     override val agentInput: String,
-    override val config: AIAgentConfig,
+    override val config: AIAgentConfigBase,
     override val llm: AIAgentLLMContext,
     override val stateManager: AIAgentStateManager,
     override val storage: AIAgentStorage,
@@ -90,7 +90,7 @@ internal class AIAgentContext(
      * Creates a copy of the current [AIAgentContext], allowing for selective overriding of its properties.
      *
      * @param environment The [AIAgentEnvironment] to be used in the new context, or `null` to retain the current one.
-     * @param config The [AIAgentConfig] for the new context, or `null` to retain the current configuration.
+     * @param config The [AIAgentConfigBase] for the new context, or `null` to retain the current configuration.
      * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
@@ -101,7 +101,7 @@ internal class AIAgentContext(
     override fun copy(
         environment: AIAgentEnvironment?,
         agentInput: String?,
-        config: AIAgentConfig?,
+        config: AIAgentConfigBase?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,

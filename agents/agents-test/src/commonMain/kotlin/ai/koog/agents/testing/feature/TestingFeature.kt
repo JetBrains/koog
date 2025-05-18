@@ -4,7 +4,7 @@ package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
-import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.BaseBuilder
@@ -39,7 +39,7 @@ public class DummyAgentContext(
         get() = builder.agentInput
             ?: throw NotImplementedError("Config is not mocked")
 
-    override val config: AIAgentConfig
+    override val config: AIAgentConfigBase
         get() = builder.config
             ?: throw NotImplementedError("Config is not mocked")
 
@@ -78,7 +78,7 @@ public class DummyAgentContext(
     override fun copy(
         environment: AIAgentEnvironment?,
         agentInput: String?,
-        config: AIAgentConfig?,
+        config: AIAgentConfigBase?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
@@ -103,7 +103,7 @@ public class DummyAgentContext(
 public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
     public var environment: AIAgentEnvironment?
     public var agentInput: String?
-    public var config: AIAgentConfig?
+    public var config: AIAgentConfigBase?
     public var llm: AIAgentLLMContext?
     public var stateManager: AIAgentStateManager?
     public var storage: AIAgentStorage?
@@ -119,7 +119,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
 public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override var environment: AIAgentEnvironment? = null
     override var agentInput: String? = null
-    override var config: AIAgentConfig? = null
+    override var config: AIAgentConfigBase? = null
     override var llm: AIAgentLLMContext? = null
     override var stateManager: AIAgentStateManager? = null
     override var storage: AIAgentStorage? = null
