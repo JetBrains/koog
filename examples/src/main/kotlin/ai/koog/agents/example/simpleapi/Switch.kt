@@ -1,8 +1,8 @@
 package ai.koog.agents.example.simpleapi
 
-import ai.koog.agents.core.tools.*
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
 
 class Switch {
     private var state: Boolean = false
@@ -16,42 +16,19 @@ class Switch {
     }
 }
 
-class SwitchTool(private val switch: Switch) : SimpleTool<SwitchTool.Args>() {
-    override suspend fun doExecute(args: Args): String {
-        switch.switch(args.state)
-        return "Switched to ${if (args.state) "on" else "off"}"
+// Tools from this tool set class are used in BasicChatWithTools example
+class SwitchTools(val switch: Switch) : ToolSet {
+    @Tool
+    @LLMDescription("Switches the state of the switch")
+    fun switch(state: Boolean): String {
+        switch.switch(state)
+        return "Switched to ${if (state) "on" else "off"}"
     }
 
-    override val argsSerializer: KSerializer<Args>
-        get() = Args.serializer()
 
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            "switch",
-            "Switches the state of the switch",
-            listOf(
-                ToolParameterDescriptor(
-                    name = "state",
-                    description = "The state to switch to",
-                    type = ToolParameterType.Boolean
-                )
-            ))
-
-    @Serializable
-    data class Args(val state: Boolean) : Tool.Args
-}
-
-class SwitchStateTool(private val switch: Switch) : SimpleTool<Tool.EmptyArgs>() {
-    override suspend fun doExecute(args: EmptyArgs): String {
+    @Tool
+    @LLMDescription("Returns the state of the switch")
+    fun switchState(state: Boolean): String {
         return "Switch is ${if (switch.isOn()) "on" else "off"}"
     }
-
-    override val argsSerializer: KSerializer<EmptyArgs>
-        get() = EmptyArgs.serializer()
-
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            "switch_state",
-            "Returns the state of the switch"
-        )
 }

@@ -246,8 +246,8 @@ public class MockLLMBuilder {
      * @property builder The parent MockLLMBuilder instance
      */
     public class MockToolReceiver<Args : Tool.Args, Result : ToolResult>(
-        private val tool: Tool<Args, Result>,
-        private val builder: MockLLMBuilder
+        internal val tool: Tool<Args, Result>,
+        internal val builder: MockLLMBuilder
     ) {
         /**
          * Builder class for configuring conditional tool responses.

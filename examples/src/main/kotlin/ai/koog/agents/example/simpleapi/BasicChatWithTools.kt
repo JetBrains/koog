@@ -1,6 +1,7 @@
 package ai.koog.agents.example.simpleapi
 
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.TokenService
 import ai.koog.agents.ext.agent.simpleChatAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -19,12 +20,7 @@ fun main() = runBlocking {
     *   }
     * */
     val toolRegistry = ToolRegistry {
-        tools(
-            listOf(
-                SwitchTool(switch),
-                SwitchStateTool(switch)
-            )
-        )
+        tools(SwitchTools(switch).asTools())
     }
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
