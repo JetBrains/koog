@@ -96,14 +96,14 @@ public class DummyAgentContext(
 
 @TestOnly
 public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
-    var environment: AIAgentEnvironment?
-    var agentInput: String?
-    var config: AIAgentConfig?
-    var llm: AIAgentLLMContext?
-    var stateManager: AIAgentStateManager?
-    var storage: AIAgentStorage?
-    var sessionUuid: UUID?
-    var strategyId: String?
+    public var environment: AIAgentEnvironment?
+    public var agentInput: String?
+    public var config: AIAgentConfig?
+    public var llm: AIAgentLLMContext?
+    public var stateManager: AIAgentStateManager?
+    public var storage: AIAgentStorage?
+    public var sessionUuid: UUID?
+    public var strategyId: String?
 
     public fun copy(): AIAgentContextMockBuilderBase
 
@@ -176,7 +176,7 @@ public sealed class NodeReference<Input, Output> {
 
     public class Start<Input> : NodeReference<Input, Input>() {
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>) = subgraph.start as AIAgentNodeBase<Input, Input>
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Input> = subgraph.start as AIAgentNodeBase<Input, Input>
     }
 
     public class Finish<Output> : NodeReference<Output, Output>() {
@@ -185,7 +185,7 @@ public sealed class NodeReference<Input, Output> {
             subgraph.finish as AIAgentNodeBase<Output, Output>
     }
 
-    public open class NamedNode<Input, Output>(val name: String) : NodeReference<Input, Output>() {
+    public open class NamedNode<Input, Output>(public val name: String) : NodeReference<Input, Output>() {
         @Suppress("UNCHECKED_CAST")
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
@@ -206,7 +206,7 @@ public sealed class NodeReference<Input, Output> {
         }
     }
 
-    open class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
+    public open class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentSubgraph<Input, Output> {
             val result = super.resolve(subgraph)
 
@@ -218,7 +218,7 @@ public sealed class NodeReference<Input, Output> {
         }
     }
 
-    class Strategy(name: String) : SubgraphNode<String, String>(name) {
+    public class Strategy(name: String) : SubgraphNode<String, String>(name) {
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
@@ -234,7 +234,7 @@ public sealed class NodeReference<Input, Output> {
 }
 
 @TestOnly
-data class GraphAssertions(
+public data class GraphAssertions(
     val name: String,
     val start: NodeReference.Start<*>,
     val finish: NodeReference.Finish<*>,
@@ -263,7 +263,7 @@ public data class EdgeAssertion<Input, Output>(
 )
 
 @TestOnly
-data class UnconditionalEdgeAssertion(
+public data class UnconditionalEdgeAssertion(
     val node: NodeReference<*, *>,
     val expectedNode: NodeReference<*, *>
 )
@@ -272,7 +272,7 @@ data class UnconditionalEdgeAssertion(
 public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
 
 @TestOnly
-data class SubGraphAssertions(val subgraphRef: NodeReference.SubgraphNode<*, *>, val graphAssertions: GraphAssertions)
+public data class SubGraphAssertions(val subgraphRef: NodeReference.SubgraphNode<*, *>, val graphAssertions: GraphAssertions)
 
 @TestOnly
 public sealed interface AssertionResult {
@@ -391,6 +391,20 @@ public class Testing {
         internal fun assertEquals(expected: Any?, actual: Any?, message: String) {
             if (expected != actual) {
                 assertionHandler?.invoke(AssertionResult.NotEqual(expected, actual, message))
+            }
+        }
+
+        /**
+         * Asserts the truthfulness of the provided boolean value.
+         * If the assertion fails (i.e., the value is false), a custom handler is invoked
+         * with an `AssertionResult.False` containing the provided message.
+         *
+         * @param value the boolean value to evaluate. If false, the assertion fails.
+         * @param message the message to include in the assertion result if the value is false.
+         */
+        internal fun assert(value: Boolean, message: String) {
+            if (!value) {
+                assertionHandler?.invoke(AssertionResult.False(message))
             }
         }
 
@@ -540,7 +554,7 @@ public class Testing {
 
             /**
              * Asserts the existence of a subgraph by its name*/
-            fun <I, O> assertSubgraphByName(
+            public fun <I, O> assertSubgraphByName(
                 name: String
             ): NodeReference.SubgraphNode<I, O> {
                 val nodeRef = NodeReference.SubgraphNode<I, O>(name)
@@ -548,7 +562,7 @@ public class Testing {
                 return nodeRef
             }
 
-            fun <I, O> verifySubgraph(
+            public fun <I, O> verifySubgraph(
                 subgraph: NodeReference.SubgraphNode<I, O>,
                 checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}
             ) {
@@ -719,7 +733,7 @@ public class Testing {
                  * This list is populated by adding instances of [UnconditionalEdgeAssertion] through relevant methods,
                  * such as when defining relationships or validating graph behavior.
                  */
-                val unconditionalEdgeAssertions = mutableListOf<UnconditionalEdgeAssertion>()
+                public val unconditionalEdgeAssertions: MutableList<UnconditionalEdgeAssertion> = mutableListOf<UnconditionalEdgeAssertion>()
 
                 /**
                  * Creates a deep copy of the current EdgeAssertionsBuilder instance, duplicating its state and context.
@@ -753,7 +767,7 @@ public class Testing {
                  *
                  * @param targetNode The target node that the current node output is expected to connect to.
                  */
-                infix fun NodeReference<*, *>.alwaysGoesTo(targetNode: NodeReference<*, *>) {
+                public infix fun NodeReference<*, *>.alwaysGoesTo(targetNode: NodeReference<*, *>) {
                     unconditionalEdgeAssertions.add(UnconditionalEdgeAssertion(this, targetNode))
                 }
 
