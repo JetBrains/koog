@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -46,7 +46,7 @@ public interface AIAgentContextBase {
      * such as the maximum number of iterations an agent can perform, as well as providing
      * the agent's prompt configuration.
      */
-    public val config: AIAgentConfig
+    public val config: AIAgentConfigBase
 
     /**
      * Represents the AI agent's LLM context, providing mechanisms for managing tools, prompts,
@@ -159,7 +159,7 @@ public interface AIAgentContextBase {
     public fun copy(
         environment: AIAgentEnvironment? = null,
         agentInput: String? = null,
-        config: AIAgentConfig? = null,
+        config: AIAgentConfigBase? = null,
         llm: AIAgentLLMContext? = null,
         stateManager: AIAgentStateManager? = null,
         storage: AIAgentStorage? = null,

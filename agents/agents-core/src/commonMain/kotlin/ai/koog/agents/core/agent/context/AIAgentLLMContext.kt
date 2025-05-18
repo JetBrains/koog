@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.session.AIAgentLLMReadSession
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -30,7 +30,7 @@ public data class AIAgentLLMContext(
     private var model: LLModel,
     internal val promptExecutor: PromptExecutor,
     private val environment: AIAgentEnvironment,
-    private val config: AIAgentConfig,
+    private val config: AIAgentConfigBase,
 ) {
 
     private val rwLock = RWLock()
