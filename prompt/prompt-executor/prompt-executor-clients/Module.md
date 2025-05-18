@@ -19,13 +19,13 @@ Add the dependency for the specific client you want to use:
 ```kotlin
 dependencies {
     // For Anthropic
-    implementation("ai.jetbrains.code.prompt:prompt-executor-anthropic-client:$version")
+    implementation("ai.koog.prompt:prompt-executor-anthropic-client:$version")
 
     // For OpenAI
-    implementation("ai.jetbrains.code.prompt:prompt-executor-openai-client:$version")
+    implementation("ai.koog.prompt:prompt-executor-openai-client:$version")
 
     // For OpenRouter
-    implementation("ai.jetbrains.code.prompt:prompt-executor-openrouter-client:$version")
+    implementation("ai.koog.prompt:prompt-executor-openrouter-client:$version")
 }
 ```
 

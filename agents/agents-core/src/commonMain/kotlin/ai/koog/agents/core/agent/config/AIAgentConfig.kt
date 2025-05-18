@@ -1,0 +1,45 @@
+package ai.koog.agents.core.agent.config
+
+import ai.koog.agents.core.model.agent.AIAgentConfig
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.llm.LLModel
+
+/**
+ * Configuration class for a local AI agent that specifies the prompt, execution parameters, and behavior.
+ *
+ * This class is responsible for defining the various settings and components required
+ * for an AI agent to operate locally. It includes the prompt configuration, iteration limits,
+ * and strategies for handling missing tools during execution.
+ *
+ * @param prompt The initial prompt configuration for the agent, encapsulating messages, model, and parameters.
+ * @param model The model to use for the agent's prompt execution
+ * @param maxAgentIterations The maximum number of iterations allowed for an agent during its execution, to prevent infinite loops.
+ * @param missingToolsConversionStrategy Strategy to handle missing tool definitions in the prompt. Defaults to applying formatting for missing tools. Ex.: if in the LLM history, there are some tools that are currently undefined in the agent (sub)graph.
+ */
+public open class AIAgentConfig(
+    public val prompt: Prompt,
+    public val model: LLModel,
+    public val maxAgentIterations: Int,
+    public val missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
+        ToolCallDescriber.JSON
+    ),
+) : AIAgentConfig {
+    public companion object {
+        public fun withSystemPrompt(
+            prompt: String,
+            llm: LLModel = OpenAIModels.Chat.GPT4o,
+            id: String = "code-engine-agents",
+            maxAgentIterations: Int = 3,
+        ): ai.koog.agents.core.agent.config.AIAgentConfig {
+            return AIAgentConfig(
+                prompt = prompt(id) {
+                    system(prompt)
+                },
+                model = llm,
+                maxAgentIterations = maxAgentIterations
+            )
+        }
+    }
+}

@@ -12,7 +12,7 @@ Add the dependency to your project:
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code.prompt:prompt-executor-openrouter-client:$version")
+    implementation("ai.koog.prompt:prompt-executor-openrouter-client:$version")
 }
 ```
 

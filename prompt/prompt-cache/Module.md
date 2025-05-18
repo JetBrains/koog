@@ -18,11 +18,11 @@ Add the following dependencies to your `build.gradle.kts`:
 ```kotlin
 dependencies {
     // Core interfaces
-    implementation("ai.jetbrains.code.prompt:prompt-cache-model:$version")
+    implementation("ai.koog.prompt:prompt-cache-model:$version")
 
     // Choose one or more implementations
-    implementation("ai.jetbrains.code.prompt:prompt-cache-files:$version") // For file-based caching
-    implementation("ai.jetbrains.code.prompt:prompt-cache-redis:$version") // For Redis-based caching
+    implementation("ai.koog.prompt:prompt-cache-files:$version") // For file-based caching
+    implementation("ai.koog.prompt:prompt-cache-redis:$version") // For Redis-based caching
 }
 ```
 
@@ -32,7 +32,7 @@ For unit tests, you can use the in-memory implementation which doesn't require a
 
 ```kotlin
 // Create an in-memory cache for testing
-val cache = ai.jetbrains.code.prompt.cache.memory.InMemoryPromptCache()
+val cache = ai.koog.prompt.cache.memory.InMemoryPromptCache()
 ```
 
 ### Example of usage

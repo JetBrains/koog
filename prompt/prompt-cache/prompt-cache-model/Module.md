@@ -18,7 +18,7 @@ To use the prompt cache model in your project, add the following dependency to y
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code.prompt:prompt-cache-model:$version")
+    implementation("ai.koog.prompt:prompt-cache-model:$version")
 }
 ```
 

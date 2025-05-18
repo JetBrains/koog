@@ -1,4 +1,4 @@
-rootProject.name = "koog-ai"
+rootProject.name = "koog-agents"
 
 pluginManagement {
     resolutionStrategy {

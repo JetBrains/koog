@@ -22,19 +22,19 @@ Add the dependencies for the specific sub-modules you need:
 ```kotlin
 dependencies {
     // Core interfaces and models
-    implementation("ai.jetbrains.code.prompt:prompt-executor-model:$version")
+    implementation("ai.koog.prompt:prompt-executor-model:$version")
 
     // Client implementations
-    implementation("ai.jetbrains.code.prompt:prompt-executor-clients:$version")
+    implementation("ai.koog.prompt:prompt-executor-clients:$version")
 
     // LLM executors
-    implementation("ai.jetbrains.code.prompt:prompt-executor-llms:$version")
+    implementation("ai.koog.prompt:prompt-executor-llms:$version")
 
     // For unified access to multiple providers
-    implementation("ai.jetbrains.code.prompt:prompt-executor-llms-all:$version")
+    implementation("ai.koog.prompt:prompt-executor-llms-all:$version")
 
     // For local LLM execution with Ollama
-    implementation("ai.jetbrains.code.prompt:prompt-executor-ollama:$version")
+    implementation("ai.koog.prompt:prompt-executor-ollama:$version")
 }
 ```
 
