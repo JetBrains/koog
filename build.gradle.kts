@@ -2,8 +2,6 @@ import ai.grazie.gradle.fixups.DisableDistTasks.disableDistTasks
 import ai.grazie.gradle.publish.maven.graziePublic
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
-val graziePlatformVersion = libs.versions.grazie.platform.get()
-
 group = "ai.koog"
 version = run {
     // our version follows the semver specification
@@ -39,7 +37,7 @@ version = run {
         }
     }
 
-    "$main$feat+$graziePlatformVersion"
+    "$main$feat"
 }
 
 plugins {
