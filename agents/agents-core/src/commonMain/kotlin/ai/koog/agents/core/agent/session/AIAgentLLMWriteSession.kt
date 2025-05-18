@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.session
 
-import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
@@ -40,7 +40,7 @@ public class AIAgentLLMWriteSession internal constructor(
     @PublishedApi internal val toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
-    config: AIAgentConfig,
+    config: AIAgentConfigBase,
 ) : AIAgentLLMSession(executor, tools, prompt, model, config) {
     /**
      * Represents the prompt object used within the session. The prompt can be accessed or
