@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.handler
 
-import ai.koog.agents.core.agent.entity.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 
 /**

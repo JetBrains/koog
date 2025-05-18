@@ -1,12 +1,12 @@
 package ai.koog.agents.local.memory.feature
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.entity.AIAgentContextBase
-import ai.koog.agents.core.agent.entity.AIAgentLLMContext
-import ai.koog.agents.core.agent.entity.AIAgentLLMWriteSession
+import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.local.features.common.config.FeatureConfig
 import ai.koog.agents.local.memory.config.MemoryScopeType
 import ai.koog.agents.local.memory.config.MemoryScopesProfile

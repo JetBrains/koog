@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.tools.Tool
 import kotlin.reflect.KProperty

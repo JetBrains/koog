@@ -1,6 +1,6 @@
 package ai.koog.agents.local.memory.feature.history
 
-import ai.koog.agents.core.agent.entity.AIAgentLLMWriteSession
+import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
 import ai.koog.agents.local.memory.feature.retrieveFactsFromHistory
 import ai.koog.agents.local.memory.model.Concept
