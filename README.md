@@ -3,8 +3,8 @@
 [![Kotlin Alpha](https://kotl.in/badges/alpha.svg)](https://kotlinlang.org/docs/components-stability.html)
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://github.com/JetBrains#jetbrains-on-github)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1-blue.svg?logo=kotlin)](http://kotlinlang.org)
-[![CI status](https://img.shields.io/github/checks-status/JetBrains/koan-agents/main)](https://github.com/JetBrains/koan-agents/actions?query=branch%3Amain)
-[![GitHub license](https://img.shields.io/github/license/JetBrains/koan-agents)](LICENSE)
+[![CI status](https://img.shields.io/github/checks-status/JetBrains/koog-agents/main)](https://github.com/JetBrains/koog-agents/actions?query=branch%3Amain)
+[![GitHub license](https://img.shields.io/github/license/JetBrains/koog-agents)](LICENSE)
 [![docs](https://img.shields.io/badge/documentation-blue)](https://koan-agents.labs.jb.gg)
 <!-- TODO: maven central link -->
 
