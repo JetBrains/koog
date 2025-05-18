@@ -7,6 +7,7 @@ import ai.grazie.code.agents.ext.tool.ExitTool
 import ai.grazie.code.agents.ext.tool.SayToUser
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.grazie.code.agents.testing.tools.getMockExecutor
 import ai.grazie.code.agents.testing.tools.mockLLMAnswer
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
@@ -25,6 +26,7 @@ class SimpleAgentMockedTest {
     val testExecutor = getMockExecutor {
         mockLLMToolCall(ExitTool, ExitTool.Args("Bye-bye.")) onRequestEquals "Please exit."
         mockLLMToolCall(SayToUser, SayToUser.Args("Fine, and you?")) onRequestEquals "Hello, how are you?"
+        mockLLMToolCall(DummyTool(), DummyTool.Args("dummy")) onRequestEquals "Call dummy tool."
         mockLLMAnswer("Hello, I'm good.") onRequestEquals "Repeat after me: Hello, I'm good."
         mockLLMToolCall(
             SayToUser,
@@ -79,9 +81,31 @@ class SimpleAgentMockedTest {
     }
 
     @Test
+    fun `simpleChatAgent should call a conversation tool`() = runBlocking {
+        val agent = simpleChatAgent(
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            temperature = 1.0,
+            maxIterations = 10,
+            executor = testExecutor,
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
+        )
+
+        agent.run("Hello, how are you?")
+
+        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
+        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
+        assertTrue(results.isNotEmpty(), "No agent run results were received")
+        assertTrue(
+            errors.isEmpty(),
+            "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
+        )
+    }
+
+    @Test
     fun `simpleChatAgent should call a custom tool`() = runBlocking {
         val toolRegistry = ToolRegistry {
-            tool(SayToUser)
+            tool(DummyTool())
         }
 
         val agent = simpleChatAgent(
@@ -94,10 +118,10 @@ class SimpleAgentMockedTest {
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
-        agent.run("Hello, how are you?")
+        agent.run("Call dummy tool.")
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
+        assertTrue(actualToolCalls.contains("dummy"), "The dummy tool was not called")
         assertTrue(results.isNotEmpty(), "No agent run results were received")
         assertTrue(
             errors.isEmpty(),

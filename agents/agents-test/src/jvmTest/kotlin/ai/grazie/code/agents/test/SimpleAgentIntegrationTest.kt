@@ -6,6 +6,7 @@ import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
 import ai.grazie.code.agents.ext.tool.SayToUser
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.grazie.code.agents.testing.tools.DummyTool
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -68,9 +69,26 @@ class SimpleAgentIntegrationTest {
     }
 
     @Test
+    fun integration_simpleChatAgentShouldCallConversationTools() = runBlocking {
+        val agent = simpleChatAgent(
+            executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            temperature = 1.0,
+            maxIterations = 10,
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
+        )
+
+        agent.run("Hello, how are you?")
+
+        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
+        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
+    }
+
+    @Test
     fun integration_simpleChatAgentShouldCallCustomTools() = runBlocking {
         val toolRegistry = ToolRegistry {
-            tool(SayToUser)
+            tool(DummyTool())
         }
 
         val agent = simpleChatAgent(
@@ -83,10 +101,10 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
-        agent.run("Hello, how are you?")
+        agent.run("Call dummy tool.")
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
+        assertTrue(actualToolCalls.contains("dummy"), "The dummy tool was not called")
     }
 
     @Test
