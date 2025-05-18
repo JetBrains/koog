@@ -19,7 +19,7 @@ To use the common feature infrastructure in your project, add the following depe
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code.agents:agents-features-common:$version")
+    implementation("ai.koog.agents:agents-features-common:$version")
 }
 ```
 

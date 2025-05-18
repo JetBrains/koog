@@ -84,7 +84,6 @@ KotlinAIAgent(
     strategy = strategy,
     eventHandler = eventHandler,
     agentConfig = agentConfig,
-    cs = this
 ) {
     // Enable testing mode
     withTesting()
@@ -111,7 +110,6 @@ KotlinAIAgent(
     eventHandler = eventHandler,
     agentConfig = agentConfig,
     promptExecutor = mockLLMApi,
-    cs = this
 ) {
     testGraph {
         // Assert the order of stages
@@ -383,7 +381,6 @@ fun testToneAgent() = runTest {
         strategy = strategy,
         eventHandler = eventHandler,
         agentConfig = agentConfig,
-        cs = this
     ) {
         withTesting()
     }
@@ -461,7 +458,6 @@ fun testMultiStageAgentStructure() = runBlocking {
         eventHandler = EventHandler {},
         agentConfig = AIAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
         promptExecutor = mockLLMApi,
-        cs = this
     ) {
         testGraph {
             assertStagesOrder("first", "second")

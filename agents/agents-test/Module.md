@@ -19,7 +19,7 @@ To use the agents-test module in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    testImplementation("ai.jetbrains.code.agents:agents-test:$version")
+    testImplementation("ai.koog.agents:agents-test:$version")
 }
 ```
 
@@ -51,7 +51,6 @@ val agent = KotlinAIAgent(
     strategy = strategy,
     eventHandler = eventHandler,
     agentConfig = agentConfig,
-    cs = this
 ) {
     withTesting()
 }
@@ -80,7 +79,6 @@ fun testAgentBehavior() = runTest {
         strategy = strategy,
         eventHandler = eventHandler,
         agentConfig = agentConfig,
-        cs = this
     ) {
         withTesting()
 

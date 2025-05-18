@@ -15,7 +15,7 @@ enum class TestType(
     INTEGRATION("*.integration_*", "integration");
 
     companion object {
-        internal val testTypesWithoutMain = TestType.values().asList().minus(DEFAULT)
+        internal val testTypesWithoutMain = values().asList().minus(DEFAULT)
     }
 }
 

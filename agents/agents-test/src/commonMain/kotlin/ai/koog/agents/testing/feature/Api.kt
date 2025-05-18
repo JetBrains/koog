@@ -54,7 +54,6 @@ public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  *     strategy = strategy,
  *     eventHandler = eventHandler,
  *     agentConfig = agentConfig,
- *     cs = this
  * ) {
  *     // Test the agent's graph structure
  *     testGraph {

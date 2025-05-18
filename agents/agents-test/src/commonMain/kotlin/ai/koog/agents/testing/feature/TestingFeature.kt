@@ -1142,7 +1142,6 @@ public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
  *     strategy = strategy,
  *     eventHandler = eventHandler,
  *     agentConfig = agentConfig,
- *     cs = this
  * ) {
  *     // Enable testing with custom configuration
  *     withTesting {

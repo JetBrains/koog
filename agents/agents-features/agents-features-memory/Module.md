@@ -20,7 +20,7 @@ To use the memory feature in your project, add the following dependency:
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code.agents:agents-features-memory:$version")
+    implementation("ai.koog.agents:agents-features-memory:$version")
 }
 ```
 

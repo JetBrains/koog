@@ -23,7 +23,7 @@ This module provides a specialized builder for creating Markdown content. It wra
 ### Basic Example
 
 ```kotlin
-import ai.grazie.code.prompt.markdown.*
+import ai.koog.prompt.markdown.*
 
 val markdown: String = markdown {
     h1("Hello, Markdown!")

@@ -18,7 +18,7 @@ To use the Redis-based prompt cache in your project, add the following dependenc
 
 ```kotlin
 dependencies {
-    implementation("ai.jetbrains.code.prompt:prompt-cache-redis:$version")
+    implementation("ai.koog.prompt:prompt-cache-redis:$version")
 }
 ```
 

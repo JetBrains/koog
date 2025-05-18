@@ -13,7 +13,7 @@ import ai.koog.prompt.params.LLMParams
 /**
  * Creates and configures a simple chat agent.
  *
- * @param cs The coroutine scope within which the agent will operate.
+ * @param executor [PromptExecutor] that would be executing all prompts (usually, using one or more LLM clients)
  * @param systemPrompt System-level instructions provided to the agent (default is an empty string).
  * @param llmModel The language model to be used by the agent (default is `OpenAIModels.Chat.GPT4o`).
  * @param temperature A value between 0.0 and 1.0 controlling the randomness of the responses (default is 1.0).
@@ -58,7 +58,6 @@ public fun simpleChatAgent(
  * Creates and configures a `KotlinAIAgent` instance with a single-run strategy.
  *
  * @param executor The `PromptExecutor` responsible for executing the prompts.
- * @param cs The `CoroutineScope` used to manage coroutine operations.
  * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
  * @param llmModel The language model to be used by the agent. Default is `OpenAIModels.Chat.GPT4o`.
  * @param temperature The sampling temperature for the language model, controlling randomness. Default is 1.0.

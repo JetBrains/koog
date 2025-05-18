@@ -26,12 +26,12 @@ This repository contains the Koan Agents framework, a Kotlin multiplatform libra
 # Run a specific test class
 ./gradlew jvmTest --tests "fully.qualified.TestClassName"
 # Example:
-./gradlew jvmTest --tests "ai.grazie.code.agents.test.SimpleAgentIntegrationTest"
+./gradlew jvmTest --tests "ai.koog.agents.test.SimpleAgentIntegrationTest"
 
 # Run a specific test method
 ./gradlew jvmTest --tests "fully.qualified.TestClassName.testMethodName"
 # Example:
-./gradlew jvmTest --tests "ai.grazie.code.agents.test.SimpleAgentIntegrationTest.simpleChatAgent should call default tools"
+./gradlew jvmTest --tests "ai.koog.agents.test.SimpleAgentIntegrationTest.simpleChatAgent should call default tools"
 ```
 
 ## Architecture

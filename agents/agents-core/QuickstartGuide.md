@@ -15,7 +15,7 @@ Add the Code Engine dependencies to your project:
 
 ```kotlin
 dependencies {
-    implementation("ai.grazie:agents-core:VERSION")
+    implementation("ai.koog:agents-core:VERSION")
     // Other dependencies as needed
 }
 ```
@@ -31,8 +31,7 @@ fun main() = runBlocking {
     val apiToken = "YOUR_API_TOKEN"
 
     val agent = simpleChatAgent(
-        apiToken = apiToken,
-        cs = this,
+        executor = simpleOpenAIExecutor("API_TOKEN"),
         systemPrompt = "You are a helpful assistant. Answer user questions concisely."
     )
 
@@ -51,8 +50,7 @@ fun main() = runBlocking {
     val apiToken = "YOUR_API_TOKEN"
 
     val agent = simpleSingleRunAgent(
-        apiToken = apiToken,
-        cs = this,
+        executor = simpleOpenAIExecutor("API_TOKEN"),
         systemPrompt = "You are a code assistant. Provide concise code examples."
     )
 
@@ -66,15 +64,13 @@ Please note that the single-run agent doesn't have any tools by default.
 
 Both `simpleChatAgent` and `simpleSingleRunAgent` accept the following parameters:
 
-- `apiToken` (required): Your JetBrains AI API token
-- `cs` (required): CoroutineScope for running the agent
+- `executor` (required): Your LLM prompt executor
 - `systemPrompt`: Initial system prompt for the agent (default: empty string)
 - `llmModel`: LLM model to use (default: OpenAIModels.Chat.GPT4o)
 - `temperature`: Temperature for LLM generation (default: 1.0)
 - `eventHandler`: Custom event handler (default: empty handler)
 - `toolRegistry`: Custom tool registry (default: built-in tools for chat agent, empty for single-run agent)
 - `maxIterations`: Maximum number of agent iterations (default: 50)
-- `apiUrl`: JetBrains AI API URL (default: "https://api.jetbrains.ai")
 
 ## Available Tools
 
@@ -136,15 +132,12 @@ Register custom tools when creating an agent:
 
 ```kotlin
 val toolRegistry = ToolRegistry {
-    stage {
-        tool(CalculatorTool)
-        // Add more tools as needed
-    }
+    tool(CalculatorTool)
+    // Add more tools as needed
 }
 
 val agent = simpleChatAgent(
-    apiToken = apiToken,
-    cs = coroutineScope,
+    executor = simpleOpenAIExecutor("API_TOKEN"),
     systemPrompt = "You are a helpful assistant with calculator capabilities.",
     toolRegistry = toolRegistry
 )
@@ -207,18 +200,15 @@ object GenerateCodeTool : SimpleTool<GenerateCodeTool.Args>() {
 }
 
 fun main() = runBlocking {
-    val apiToken = System.getenv("JETBRAINS_AI_API_TOKEN")
+    val apiToken = System.getenv("LLM_API_TOKEN")
     val coroutineScope = CoroutineScope(Dispatchers.Default)
 
     val toolRegistry = ToolRegistry {
-        stage {
-            tool(GenerateCodeTool)
-        }
+        tool(GenerateCodeTool)
     }
 
     val agent = simpleChatAgent(
-        apiToken = apiToken,
-        cs = coroutineScope,
+        executor = simpleOpenAIExecutor("API_TOKEN"),
         systemPrompt = "You are a code assistant. Use the generate_code tool to create code examples.",
         toolRegistry = toolRegistry
     )
