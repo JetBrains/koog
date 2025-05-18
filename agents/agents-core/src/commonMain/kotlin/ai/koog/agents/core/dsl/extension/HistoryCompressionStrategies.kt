@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
-import ai.koog.agents.core.agent.entity.AIAgentLLMWriteSession
+import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
 
@@ -12,7 +12,6 @@ import ai.koog.prompt.message.Message
  * - [HistoryCompressionStrategy.WholeHistory]
  * - [HistoryCompressionStrategy.FromLastNMessages]
  * - [HistoryCompressionStrategy.Chunked]
- * - [RetrieveFactsFromHistory] (in `agents-features-memory` module)
  */
 public abstract class HistoryCompressionStrategy {
     /**

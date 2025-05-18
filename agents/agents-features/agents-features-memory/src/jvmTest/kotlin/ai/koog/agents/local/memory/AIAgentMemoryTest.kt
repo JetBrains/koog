@@ -1,8 +1,8 @@
 package ai.koog.agents.local.memory
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentLLMContext
-import ai.koog.agents.core.agent.entity.AIAgentLLMWriteSession
+import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.local.memory.config.MemoryScopeType
 import ai.koog.agents.local.memory.config.MemoryScopesProfile
 import ai.koog.agents.local.memory.feature.AgentMemory

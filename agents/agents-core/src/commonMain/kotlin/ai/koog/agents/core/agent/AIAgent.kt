@@ -2,7 +2,7 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.*
-import ai.koog.agents.core.agent.AIAgentBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -20,6 +20,7 @@ import ai.koog.agents.local.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
 import ai.grazie.utils.mpp.LoggerFactory
 import ai.grazie.utils.mpp.UUID
+import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.text.TextContentBuilder
