@@ -32,7 +32,7 @@ For unit tests, you can use the in-memory implementation which doesn't require a
 
 ```kotlin
 // Create an in-memory cache for testing
-val cache = ai.jetbrains.code.prompt.cache.memory.InMemoryPromptCache()
+val cache = ai.koog.prompt.cache.memory.InMemoryPromptCache()
 ```
 
 ### Example of usage
