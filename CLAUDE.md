@@ -39,7 +39,7 @@ This repository contains the Koan Agents framework, a Kotlin multiplatform libra
 ### Key Modules
 
 1. **agents-core**: Core abstractions and interfaces
-   - AIAgent, AIAgentStrategy, event handling system, KotlinAIAgent, execution strategies, session management
+   - AIAgent, AIAgentStrategy, event handling system, AIAgent, execution strategies, session management
 
 2. **agents-tools**: Tool infrastructure
    - Tool, ToolRegistry, ToolDescriptor

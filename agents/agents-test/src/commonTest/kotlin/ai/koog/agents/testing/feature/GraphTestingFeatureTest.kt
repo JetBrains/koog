@@ -125,7 +125,7 @@ class GraphTestingFeatureTest {
     @Test
     fun testTestingFeatureAPI() {
         // This test demonstrates the API of Testing feature
-        // In a real test, you would use an actual KotlinAIAgent
+        // In a real test, you would use an actual AIAgent
 
         // Create a Config instance directly to test the API
         val config = Testing.Config().apply {

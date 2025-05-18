@@ -78,7 +78,7 @@ public open class AIAgent(
      * The context for adding and configuring features in a Kotlin AI Agent instance.
      *
      * Note: The method is used to hide internal install() method from a public API to prevent
-     *       calls in an [KotlinAIAgent] instance, like `agent.install(MyFeature) { ... }`.
+     *       calls in an [AIAgent] instance, like `agent.install(MyFeature) { ... }`.
      *       This makes the API a bit stricter and clear.
      */
     public class FeatureContext internal constructor(private val agent: AIAgent) {

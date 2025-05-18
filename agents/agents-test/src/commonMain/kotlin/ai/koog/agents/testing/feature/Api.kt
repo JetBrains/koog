@@ -48,7 +48,7 @@ public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  * Example usage:
  * ```kotlin
  * // Create an agent with testing enabled
- * KotlinAIAgent(
+ * AIAgent(
  *     promptExecutor = mockLLMApi,
  *     toolRegistry = toolRegistry,
  *     strategy = strategy,

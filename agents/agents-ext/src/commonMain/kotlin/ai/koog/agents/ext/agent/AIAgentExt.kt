@@ -20,7 +20,7 @@ import ai.koog.prompt.params.LLMParams
  * @param toolRegistry Optional registry of tools available to the agent (default includes basic tools such as AskUser and ExitTool).
  * @param maxIterations Maximum number of iterations the agent will perform in a single interaction loop (default is 50).
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality (default is an empty lambda).
- * @return A configured instance of KotlinAIAgent ready for use.
+ * @return A configured instance of AIAgent ready for use.
  */
 public fun simpleChatAgent(
     executor: PromptExecutor,
@@ -55,7 +55,7 @@ public fun simpleChatAgent(
 }
 
 /**
- * Creates and configures a `KotlinAIAgent` instance with a single-run strategy.
+ * Creates and configures a `AIAgent` instance with a single-run strategy.
  *
  * @param executor The `PromptExecutor` responsible for executing the prompts.
  * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
@@ -64,7 +64,7 @@ public fun simpleChatAgent(
  * @param toolRegistry The `ToolRegistry` containing tools available to the agent. Default is `ToolRegistry.EMPTY`.
  * @param maxIterations Maximum number of iterations for the agent's execution. Default is 50.
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
- * @return A configured instance of `KotlinAIAgent` with a single-run execution strategy.
+ * @return A configured instance of `AIAgent` with a single-run execution strategy.
  */
 public fun simpleSingleRunAgent(
     executor: PromptExecutor,

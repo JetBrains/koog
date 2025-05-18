@@ -74,11 +74,11 @@ The examples above demonstrate different ways to mock tools, from simple to more
 
 ### Enabling Testing Mode
 
-To enable testing mode on an agent, use the `withTesting()` function within the KotlinAIAgent constructor block:
+To enable testing mode on an agent, use the `withTesting()` function within the AIAgent constructor block:
 
 ```kotlin
 // Create the agent with testing enabled
-KotlinAIAgent(
+AIAgent(
     promptExecutor = mockLLMApi,
     toolRegistry = toolRegistry,
     strategy = strategy,
@@ -103,7 +103,7 @@ The `Testing` feature provides a comprehensive way to test your agent's graph st
 Start by validating the fundamental structure of your agent's graph:
 
 ```kotlin
-KotlinAIAgent(
+AIAgent(
     // constructor arguments
     toolRegistry = toolRegistry,
     strategy = strategy,
@@ -375,7 +375,7 @@ fun testToneAgent() = runTest {
     )
 
     // Create the agent with testing enabled
-    val agent = KotlinAIAgent(
+    val agent = AIAgent(
         promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         strategy = strategy,
@@ -452,7 +452,7 @@ fun testMultiStageAgentStructure() = runBlocking {
 
     val basePrompt = prompt("test") {}
 
-    KotlinAIAgent(
+    AIAgent(
         toolRegistry = toolRegistry,
         strategy = strategy,
         eventHandler = EventHandler {},
