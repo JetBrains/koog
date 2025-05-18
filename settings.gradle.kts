@@ -1,5 +1,4 @@
-// TODO: don't forget to rename it
-rootProject.name = "koan-agents"
+rootProject.name = "koog-ai"
 
 pluginManagement {
     resolutionStrategy {
