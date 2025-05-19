@@ -96,7 +96,7 @@ fun main() {
 
     // Create a tool registry
     val registry = ToolRegistry.Builder().apply {
-        stage(mathTools)
+        tools
     }.build()
 
     // Find and use a tool (in a real scenario, this would be done through an agent)

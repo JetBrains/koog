@@ -33,7 +33,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *
  * To install the AgentMemory feature in your agent:
  * ```kotlin
- * val agent = LocalAIAgentsRunner(
+ * val agent = AIAgents(
  *     strategy = myStrategy,
  *     promptExecutor = myExecutor
  * ) {
@@ -163,7 +163,7 @@ public class AgentMemory(
      *
      * To install the AgentMemory feature in your agent:
      * ```kotlin
-     * val agent = LocalAIAgentsRunner(
+     * val agent = AIAgents(
      *     strategy = myStrategy,
      *     promptExecutor = myExecutor
      * ) {
@@ -219,7 +219,7 @@ public class AgentMemory(
          *
          * Example usage:
          * ```kotlin
-         * val agent = LocalAIAgentsRunner(
+         * val agent = AIAgents(
          *     strategy = myStrategy,
          *     promptExecutor = myExecutor
          * ) {

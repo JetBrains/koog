@@ -85,7 +85,7 @@ class LoggingMessageProcessor : FeatureMessageProcessor() {
 }
 
 // Install the feature in your agent
-val agent = LocalAIAgentsRunner(/* configuration */) {
+val agent = AIAgents(/* configuration */) {
     install(LoggingFeature) {
         logLevel = "DEBUG"
         addMessageProcessor(LoggingMessageProcessor())

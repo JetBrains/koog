@@ -231,7 +231,7 @@ Once you're comfortable with the basics, you can explore:
 ## Adding Memory Feature to Agents
 Just use `install(AgentMemory)` and configure it as you like when creating the agent:
 ```kotlin
-val myAgent = LocalAIAgentsRunner(
+val myAgent = AIAgents(
     ...
 ) {
     install(AgentMemory) {
