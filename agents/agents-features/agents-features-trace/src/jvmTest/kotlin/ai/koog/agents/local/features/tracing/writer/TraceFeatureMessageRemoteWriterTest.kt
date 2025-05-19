@@ -119,7 +119,7 @@ class TraceFeatureMessageRemoteWriterTest {
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call",
                 input = "Test LLM call prompt",
-                output = "Assistant(content=Default test response)"
+                output = "Assistant(content=Default test response, finishReason=null)"
             ),
             AIAgentNodeExecutionStartEvent(
                 nodeName = "test LLM call with tools",
@@ -133,7 +133,7 @@ class TraceFeatureMessageRemoteWriterTest {
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call with tools",
                 input = "Test LLM call with tools prompt",
-                output = "Assistant(content=Default test response)"
+                output = "Assistant(content=Default test response, finishReason=null)"
             ),
             AIAgentStrategyFinishedEvent(strategyName = strategyName, result = "Done"),
             AIAgentFinishedEvent(strategyName = strategyName, result = "Done"),
