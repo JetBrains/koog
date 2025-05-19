@@ -17,7 +17,7 @@ kotlin {
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
                 api(libs.kotlinx.coroutines.core)
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
         commonTest {
