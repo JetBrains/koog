@@ -263,7 +263,7 @@ internal class GoogleResponse(
  */
 @Serializable
 internal class GoogleCandidate(
-    val content: GoogleContent,
+    val content: GoogleContent? = null,
     val finishReason: String? = null,
     val safetyRatings: List<GoogleSafetyRating>? = null,
     val index: Int? = null,

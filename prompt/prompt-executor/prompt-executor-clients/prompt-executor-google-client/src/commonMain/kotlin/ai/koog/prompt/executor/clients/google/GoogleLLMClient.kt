@@ -186,6 +186,14 @@ public open class GoogleLLMClient(
     private fun createGoogleRequest(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleRequest {
         val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
+        val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
+
+        fun flushCalls() {
+            if (pendingCalls.isNotEmpty()) {
+                contents += GoogleContent(role = "model", parts = pendingCalls.toList())
+                pendingCalls.clear()
+            }
+        }
 
         for (message in prompt.messages) {
             when (message) {
@@ -194,6 +202,7 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.User -> {
+                    flushCalls()
                     // User messages become 'user' role content
                     contents.add(
                         GoogleContent(
@@ -204,6 +213,7 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Assistant -> {
+                    flushCalls()
                     contents.add(
                         GoogleContent(
                             role = "model",
@@ -213,6 +223,7 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Tool.Result -> {
+                    flushCalls()
                     contents.add(
                         GoogleContent(
                             role = "user",
@@ -230,10 +241,17 @@ public open class GoogleLLMClient(
                 }
 
                 is Message.Tool.Call -> {
-                    logger.warn { "Tool calls in input messages are not directly supported by GoogleAI API" }
+                    pendingCalls += GooglePart.FunctionCall(
+                        functionCall = GoogleData.FunctionCall(
+                            id = message.id,
+                            name = message.tool,
+                            args = json.decodeFromString(message.content)
+                        )
+                    )
                 }
             }
         }
+        flushCalls()
 
         val googleTools = tools
             .map { tool ->
