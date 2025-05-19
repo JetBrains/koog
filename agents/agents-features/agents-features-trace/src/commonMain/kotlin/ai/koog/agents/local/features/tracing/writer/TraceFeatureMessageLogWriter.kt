@@ -5,7 +5,7 @@ import ai.koog.agents.local.features.common.message.FeatureEvent
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureStringMessage
 import ai.koog.agents.local.features.common.writer.FeatureMessageLogWriter
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KLogger
 
 /**
  * A message processor that writes trace events to a logger.
@@ -50,7 +50,7 @@ import ai.grazie.utils.mpp.MPPLogger
  * @param format Optional custom formatter for trace events
  */
 public class TraceFeatureMessageLogWriter(
-    targetLogger: MPPLogger,
+    targetLogger: KLogger,
     logLevel: LogLevel = LogLevel.INFO,
     private val format: ((FeatureMessage) -> String)? = null,
 ) : FeatureMessageLogWriter(targetLogger, logLevel) {

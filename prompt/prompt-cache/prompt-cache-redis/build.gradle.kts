@@ -13,8 +13,9 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-cache:prompt-cache-model"))
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

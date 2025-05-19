@@ -1,12 +1,12 @@
 package ai.koog.prompt.executor.ollama.client.dto
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.grazie.utils.json.JSON
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
@@ -97,7 +97,11 @@ internal fun OllamaChatMessageDTO.getToolCall(): Message.Tool.Call? {
 
     val toolCall = this.toolCalls.first()
     val name = toolCall.function.name
-    val content = JSON.Default.string(toolCall.function.arguments)
+    val json = Json {
+        ignoreUnknownKeys = true
+        allowStructuredMapKeys = true
+    }
+    val content = json.encodeToString(toolCall.function.arguments)
 
     return Message.Tool.Call(
         // TODO support tool call ids for Ollama

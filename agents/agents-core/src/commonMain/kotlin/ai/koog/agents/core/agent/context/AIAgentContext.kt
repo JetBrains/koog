@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent.context
 
-import ai.grazie.utils.mpp.UUID
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -10,6 +9,8 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Implements the [AIAgentContext] interface, providing the context required for an AI agent's execution.
@@ -28,6 +29,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
  * @param strategyId The identifier for the selected strategy in the agent's lifecycle.
  * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
  */
+@OptIn(ExperimentalUuidApi::class)
 internal class AIAgentContext(
     override val environment: AIAgentEnvironment,
     override val agentInput: String,
@@ -35,7 +37,7 @@ internal class AIAgentContext(
     override val llm: AIAgentLLMContext,
     override val stateManager: AIAgentStateManager,
     override val storage: AIAgentStorage,
-    override val sessionUuid: UUID,
+    override val sessionUuid: Uuid,
     override val strategyId: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
@@ -103,7 +105,7 @@ internal class AIAgentContext(
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
-        sessionUuid: UUID?,
+        sessionUuid: Uuid?,
         strategyId: String?,
         pipeline: AIAgentPipeline?,
     ): AIAgentContextBase = AIAgentContext(

@@ -2,17 +2,17 @@ package ai.koog.prompt.structure
 
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.structure.json.JsonStructureLanguage
-import ai.grazie.utils.mpp.LoggerFactory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.text.TextContentBuilder
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 
-private val logger = LoggerFactory.create("ai.koog.prompt.structure.Extensions")
+private val logger = KotlinLogging.logger {  }
 
 /**
  * Adds a structured representation of the given value to the text content using the specified language.
@@ -116,7 +116,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
                 )
             )
         } catch (e: SerializationException) {
-            logger.warning(e) { "Unable to parse structure, retrying: $text" }
+            logger.warn(e) { "Unable to parse structure, retrying: $text" }
         }
     }
 

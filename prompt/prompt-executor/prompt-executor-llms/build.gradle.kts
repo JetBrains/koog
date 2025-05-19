@@ -16,8 +16,8 @@ kotlin {
                 implementation(project(":agents:agents-tools"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-model"))
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
         commonTest {

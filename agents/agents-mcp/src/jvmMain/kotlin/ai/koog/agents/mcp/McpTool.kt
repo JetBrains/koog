@@ -3,7 +3,7 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
-import ai.grazie.utils.mpp.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.serialization.KSerializer
@@ -31,7 +31,7 @@ public class McpTool(
 ) : Tool<McpTool.Args, McpTool.Result>() {
 
     private companion object {
-        private val logger = LoggerFactory.create("ai.koog.agents.mcp.McpTool")
+        private val logger = KotlinLogging.logger {  }
     }
 
 

@@ -3,29 +3,49 @@ package ai.koog.prompt.executor.clients.openrouter
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.SuitableForIO
-import ai.grazie.utils.mpp.UUID
+import ai.koog.agents.utils.SuitableForIO
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.sse.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.github.oshai.kotlinlogging.KotlinLogging
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.accept
+import io.ktor.client.request.header
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Configuration settings for connecting to the OpenRouter API.
@@ -52,8 +72,7 @@ public class OpenRouterLLMClient(
 ) : LLMClient {
 
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient")
+        private val logger = KotlinLogging.logger {  }
 
         private const val DEFAULT_MESSAGE_PATH = "api/v1/chat/completions"
     }
@@ -155,6 +174,7 @@ public class OpenRouterLLMClient(
         }
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun createOpenRouterRequest(
         prompt: Prompt,
        model: LLModel, tools: List<ToolDescriptor>,
@@ -214,7 +234,7 @@ public class OpenRouterLLMClient(
                 }
 
                 is Message.Tool.Call -> pendingCalls += OpenRouterToolCall(
-                    id = message.id ?: UUID.random().toString(),
+                    id = message.id ?: Uuid.random().toString(),
                     function = OpenRouterFunction(message.tool, message.content)
                 )
             }

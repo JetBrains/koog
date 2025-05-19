@@ -1,6 +1,7 @@
 package ai.koog.agents.local.features.common.message
 
-import ai.grazie.utils.mpp.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
+
 
 /**
  * Utility object providing safe handling and processing of feature messages for collections
@@ -12,8 +13,7 @@ import ai.grazie.utils.mpp.LoggerFactory
  */
 public object FeatureMessageProcessorUtil {
 
-    private val logger =
-        LoggerFactory.create("ai.koog.agents.local.features.logger.FeatureProviderUtil")
+    private val logger = KotlinLogging.logger {  }
 
     internal suspend fun FeatureMessageProcessor.onMessageSafe(message: FeatureMessage) {
         try {

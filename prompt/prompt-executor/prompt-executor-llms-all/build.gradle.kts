@@ -38,7 +38,6 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.coroutines.test)
             }
         }

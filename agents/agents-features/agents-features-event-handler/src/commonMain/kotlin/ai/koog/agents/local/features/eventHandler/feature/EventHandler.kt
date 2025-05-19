@@ -6,8 +6,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.AIAgentFeature
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * A feature that allows hooking into various events in the agent's lifecycle.
@@ -55,8 +54,7 @@ public class EventHandler {
      */
     public companion object Feature : AIAgentFeature<EventHandlerConfig, EventHandler> {
 
-        private val logger: MPPLogger =
-            LoggerFactory.create("ai.koog.agents.local.features.eventHandler.feature.EventHandler")
+        private val logger = KotlinLogging.logger {  }
 
         override val key: AIAgentStorageKey<EventHandler> =
             AIAgentStorageKey("agents-features-event-handler")

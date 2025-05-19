@@ -1,12 +1,12 @@
 package ai.koog.prompt.structure
 
 import ai.koog.prompt.markdown.markdown
-import ai.grazie.utils.mpp.LoggerFactory
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.SerializationException
 
 
@@ -22,8 +22,7 @@ public class StructureParser(
     private val fixingModel: LLModel = OpenAIModels.Chat.GPT4o,
 ) {
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.prompt.structure.${StructureParser::class.simpleName}")
+        private val logger = KotlinLogging.logger {  }
     }
 
     /**
@@ -39,7 +38,7 @@ public class StructureParser(
         return try {
             structure.parse(content)
         } catch (e: SerializationException) {
-            logger.warning(e) { "Unable to parse structure: $content" }
+            logger.warn(e) { "Unable to parse structure: $content" }
             tryFixStructure(content, e, structure)
         }
     }

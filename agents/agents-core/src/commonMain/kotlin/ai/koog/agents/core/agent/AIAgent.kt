@@ -18,12 +18,11 @@ import ai.koog.agents.core.tools.*
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.local.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.UUID
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.text.TextContentBuilder
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -34,6 +33,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @OptIn(InternalAgentToolsApi::class)
 private class DirectToolCallsEnablerImpl : DirectToolCallsEnabler
@@ -60,16 +61,17 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
  * @property installFeatures Lambda for installing additional features within the agent environment.
  * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
  */
+@OptIn(ExperimentalUuidApi::class)
 public open class AIAgent(
     public val promptExecutor: PromptExecutor,
     private val strategy: AIAgentStrategy,
     public val agentConfig: AIAgentConfig,
-    public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
+    public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private val installFeatures: FeatureContext.() -> Unit = {}
 ) : AIAgentBase, AIAgentEnvironment, Closeable {
 
     private companion object {
-        private val logger = LoggerFactory.create("ai.koog.agents.core.agent.${AIAgent::class.simpleName}")
+        private val logger = KotlinLogging.logger {}
         private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
         private const val NO_CONTENT = "Could not find \"content\", but \"error\" is also absent!"
         private const val NO_RESULT = "Required tool argument value not found: \"${TerminationTool.ARG}\"!"
@@ -93,7 +95,7 @@ public open class AIAgent(
 
     private var isRunning = false
 
-    private var sessionUuid: UUID? = null
+    private var sessionUuid: Uuid? = null
 
     private val runningMutex = Mutex()
 
@@ -113,7 +115,7 @@ public open class AIAgent(
             }
 
             isRunning = true
-            sessionUuid = UUID.random()
+            sessionUuid = Uuid.random()
         }
 
         pipeline.prepareFeatures()
@@ -354,7 +356,7 @@ public open class AIAgent(
     }
 
     private fun formatLog(message: String): String =
-        "$message [${strategy.name}, ${sessionUuid?.text ?: throw IllegalStateException("Session UUID is null")}]"
+        "$message [${strategy.name}, ${sessionUuid?.toString() ?: throw IllegalStateException("Session UUID is null")}]"
 
     //endregion Private Methods
 }

@@ -17,11 +17,10 @@ kotlin {
                 api(project(":agents:agents-features:agents-features-common"))
                 implementation(project(":prompt:prompt-markdown"))
 
-                implementation(libs.ai.grazie.model.auth)
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
@@ -40,7 +39,7 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45") {
+                implementation(libs.code.engine.files.jvm.get().toString()) {
                     exclude("org.jetbrains", "ij-parsing-core")
                 }
                 implementation(kotlin("test-junit5"))

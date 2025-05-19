@@ -4,16 +4,11 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.structure.DescriptionMetadata
 import ai.koog.prompt.structure.StructuredData
 import ai.koog.prompt.structure.structure
-import ai.grazie.utils.merge
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-
-
-
-
 
 /**
  * Represents a structure for handling and interacting with structured data of a specified type.
@@ -88,9 +83,7 @@ public class JsonStructuredData<TStruct>(
 
             // Use platform-specific implementations to get property descriptions
             val propertyDescriptions = metadata?.allDescriptions().orEmpty()
-                .merge(propertyDescriptionOverrides) { key, value, overrideValue ->
-                    overrideValue
-                }
+                .merge(propertyDescriptionOverrides) { _, _, override -> override }
 
             val schema =
                 JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, propertyDescriptions)
@@ -159,5 +152,29 @@ public class JsonStructuredData<TStruct>(
                 override val fieldDescriptions: Map<String, String> = fieldDescriptions
             }
         }
+
+        /**
+         * Merges [other] into the current map.
+         * If the key already exists, it calls [merger] and puts its result,
+         * otherwise it simply adds a new pair.
+         */
+        @PublishedApi
+        internal inline fun <K, V> MutableMap<K, V>.mergeInPlace(
+            other: Map<K, V>,
+            merger: (key: K, first: V, second: V) -> V
+        ): MutableMap<K, V> = apply {
+            other.forEach { (k, v) ->
+                this[k] = get(k)?.let { merger(k, it, v) } ?: v
+            }
+        }
+
+        /**
+         * Non-blocking merge: returns a new map, leaving the original collections unchanged.
+         */
+        @PublishedApi
+        internal inline fun <K, V> Map<K, V>.merge(
+            other: Map<K, V>,
+            merger: (key: K, first: V, second: V) -> V
+        ): Map<K, V> = toMutableMap().mergeInPlace(other, merger)
     }
 }

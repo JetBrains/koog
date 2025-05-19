@@ -8,9 +8,8 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
@@ -82,8 +81,7 @@ public class Tracing {
      */
     public companion object Feature : AIAgentFeature<TraceFeatureConfig, Tracing> {
 
-        private val logger: MPPLogger =
-            LoggerFactory.create("ai.koog.agents.local.features.tracing.feature.TracingFeature")
+        private val logger = KotlinLogging.logger {  }
 
         override val key: AIAgentStorageKey<Tracing> =
             AIAgentStorageKey("agents-features-tracing")
@@ -97,7 +95,7 @@ public class Tracing {
             logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 
             if (config.messageProcessor.isEmpty()) {
-                logger.warning { "Tracing Feature. No feature out stream providers are defined. Trace streaming has no target." }
+                logger.warn { "Tracing Feature. No feature out stream providers are defined. Trace streaming has no target." }
             }
 
             val featureImpl = Tracing()

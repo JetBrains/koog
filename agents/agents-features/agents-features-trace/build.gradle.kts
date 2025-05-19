@@ -15,13 +15,12 @@ kotlin {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
 
-                implementation(libs.ai.grazie.model.auth)
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.serialization.json)
 
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.server.sse)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

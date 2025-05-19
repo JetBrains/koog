@@ -27,7 +27,7 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.sse)
-                implementation(libs.ai.grazie.utils.common)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
