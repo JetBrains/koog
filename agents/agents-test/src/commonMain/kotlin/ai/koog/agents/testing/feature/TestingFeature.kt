@@ -298,7 +298,7 @@ public sealed interface AssertionResult {
  *
  * Example usage:
  * ```kotlin
- * KotlinAIAgent(
+ * AIAgent(
  *     // constructor arguments
  * ) {
  *     testGraph {
@@ -797,7 +797,7 @@ public class Testing {
     }
 
     /**
-     * Companion object that defines the `Testing` feature as a `KotlinAIAgentFeature`.
+     * Companion object that defines the `Testing` feature as a `AIAgentFeature`.
      * This feature provides testing capabilities for validating graph-based stages, nodes,
      * reachability, outputs, and edges within an AI agent pipeline.
      */
@@ -1138,7 +1138,7 @@ public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
  * Example usage:
  * ```kotlin
  * // Create an agent with testing enabled
- * KotlinAIAgent(
+ * AIAgent(
  *     promptExecutor = mockLLMApi,
  *     toolRegistry = toolRegistry,
  *     strategy = strategy,

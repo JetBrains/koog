@@ -1,4 +1,4 @@
-group = "${rootProject.group}.agents"
+group = rootProject.group
 version = rootProject.version
 
 plugins {

@@ -1,6 +1,6 @@
-# KotlinAIAgent Features
+# AIAgent Features
 
-This document describes how to use and implement custom features for KotlinAIAgent.
+This document describes how to use and implement custom features for AIAgent.
 
 ## Table of Contents
 
@@ -21,7 +21,7 @@ This document describes how to use and implement custom features for KotlinAIAge
 
 ## Introduction
 
-KotlinAIAgent features provide a way to extend and enhance the functionality of AI agents. Features can:
+AIAgent features provide a way to extend and enhance the functionality of AI agents. Features can:
 
 - Add new capabilities to agents
 - Intercept and modify agent behavior
@@ -32,10 +32,10 @@ Features are designed to be modular and composable, allowing you to mix and matc
 
 ## Installing Features
 
-Features are installed when creating a KotlinAIAgent instance using the `install` method in the agent constructor:
+Features are installed when creating a AIAgent instance using the `install` method in the agent constructor:
 
 ```kotlin
-val agent = KotlinAIAgent(
+val agent = AIAgent(
     localEngine = localEngine,
     toolRegistry = toolRegistry,
     strategy = strategy,
@@ -134,7 +134,7 @@ The writer handles thread safety, file path resolution, and proper resource mana
 
 ## Message Processors
 
-The KotlinAIAgent features framework provides several message processor implementations that can be used to process feature messages in different ways. These processors can be added to a feature configuration using the `addMessageProcessor` method from the `FeatureConfig` class.
+The AIAgent features framework provides several message processor implementations that can be used to process feature messages in different ways. These processors can be added to a feature configuration using the `addMessageProcessor` method from the `FeatureConfig` class.
 
 ### Using FeatureMessageLogWriter
 
@@ -256,7 +256,7 @@ To implement a custom feature, you need to:
 
 1. Create a feature class
 2. Define a configuration class
-3. Create a companion object that implements `KotlinAIAgentFeature`
+3. Create a companion object that implements `AIAgentFeature`
 4. Implement the required methods
 
 Here's a basic example:
@@ -269,7 +269,7 @@ class MyFeature(val someProperty: String) {
     }
 
     // Feature definition
-    companion object Feature : KotlinAIAgentFeature<Config, MyFeature> {
+    companion object Feature : AIAgentFeature<Config, MyFeature> {
         // Unique key for the feature
         override val key = createStorageKey<MyFeature>("my-feature")
 
@@ -379,7 +379,7 @@ class LoggingFeature(val logger: Logger) {
         var loggerName: String = "agent-logs"
     }
 
-    companion object Feature: KotlinAIAgentFeature<LoggingFeature.Config, LoggingFeature> {
+    companion object Feature: AIAgentFeature<LoggingFeature.Config, LoggingFeature> {
         override val key: AIAgentStorageKey<LoggingFeature> = createStorageKey("logging-feature")
 
         override fun createInitialConfig(): Config = Config()

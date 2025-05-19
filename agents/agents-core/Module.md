@@ -43,7 +43,7 @@ The agents-core module provides utilities for testing AI agents, including:
 To enable testing mode on an agent, use the `withTesting()` function within the agent constructor block:
 
 ```kotlin
-KotlinAIAgent(
+AIAgent(
     // constructor arguments
 ) {
     withTesting()
@@ -67,7 +67,7 @@ val agentConfig = AgentConfig(
 )
 
 // Create the agent
-val agent = KotlinAIAgent(
+val agent = AIAgent(
     promptExecutor = llmExecutor,
     toolRegistry = toolRegistry,
     strategy = simpleSingleRunStrategy(),

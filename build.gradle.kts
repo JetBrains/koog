@@ -2,13 +2,11 @@ import ai.grazie.gradle.fixups.DisableDistTasks.disableDistTasks
 import ai.grazie.gradle.publish.maven.graziePublic
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
-val graziePlatformVersion = libs.versions.grazie.platform.get()
-
 group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.1.0-alpha.5"
+    val main = "0.1.0-alpha.6"
 
     val feat = run {
         val releaseBuild = !System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH").isNullOrBlank()
@@ -39,7 +37,7 @@ version = run {
         }
     }
 
-    "$main$feat+$graziePlatformVersion"
+    "$main$feat"
 }
 
 plugins {

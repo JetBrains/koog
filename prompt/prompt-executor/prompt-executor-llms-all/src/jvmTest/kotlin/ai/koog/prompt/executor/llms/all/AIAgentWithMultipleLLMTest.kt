@@ -92,7 +92,7 @@ internal fun LLMClient.reportingTo(
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
 @Suppress("SSBasedInspection")
-class KotlinAIAgentWithMultipleLLMTest {
+class AIAgentWithMultipleLLMTest {
 
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
@@ -289,7 +289,7 @@ class KotlinAIAgentWithMultipleLLMTest {
     }
 
     @Test
-    fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+    fun integration_testAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()

@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-group = "${rootProject.group}.prompt"
+group = rootProject.group
 version = rootProject.version
 
 kotlin {
