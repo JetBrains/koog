@@ -78,53 +78,6 @@ task("reportProjectVersionToTeamCity") {
     }
 }
 
-/*
-Based on https://docs.gradle.org/current/userguide/composite_builds.html.
-
-Output example:
-
-```
-includeBuild(".../code-engine") { // path to the Code Engine location, it attaches the Code Engine sources to your project
-    dependencySubstitution {
-        ...
-        // The next line replaces dependency on 'ai.jetbrains.code.features:code-features-kotlin' lib with dependency on ':code-features:code-features-kotlin' project
-        // that comes from the project included above.
-        substitute(module("ai.jetbrains.code.features:code-features-kotlin")).using(project(":code-features:code-features-kotlin"))
-        ...
-    }
-}
-```
-*/
-task("printConfigForLocalCodeEngine") {
-    doLast {
-        project.subprojects
-            .filter { subproject -> subproject.buildFile.exists() }
-            .map { subproject ->
-                val artifact = subproject.group.toString() + ":" + subproject.name
-                val projectPath = subproject.path
-                artifact to projectPath
-            }
-            .sortedBy { (artifact, _) -> artifact }
-            .joinToString(
-                separator = "\n",
-                prefix = """
-                // add to settings.gradle.kts
-                includeBuild("${project.rootDir.path}") {
-                  dependencySubstitution {
-
-            """.trimIndent(),
-                postfix = """
-
-                  }
-                }
-            """.trimIndent()
-            ) { (artifact, projectPath) ->
-                "    substitute(module(\"${artifact}\")).using(project(\"${projectPath}\"))"
-            }
-            .also { println(it) }
-    }
-}
-
 dependencies {
     dokka(project(":agents:agents-core"))
     dokka(project(":agents:agents-features:agents-features-common"))
