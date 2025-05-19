@@ -39,7 +39,7 @@ private object MockToolsEnabler : DirectToolCallsEnabler
  * )
  *
  * // Use the mock environment with an agent
- * val agent = KotlinAIAgent(
+ * val agent = AIAgent(
  *     promptExecutor = mockLLMExecutor,
  *     toolRegistry = toolRegistry,
  *     strategy = strategy,

@@ -45,7 +45,7 @@ To enable testing mode on an agent, use the `withTesting()` function within the 
 
 ```kotlin
 // Create the agent with testing enabled
-val agent = KotlinAIAgent(
+val agent = AIAgent(
     promptExecutor = mockLLMApi,
     toolRegistry = toolRegistry,
     strategy = strategy,
@@ -73,7 +73,7 @@ fun testAgentBehavior() = runTest {
     }
 
     // Create agent with testing enabled
-    val agent = KotlinAIAgent(
+    val agent = AIAgent(
         promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         strategy = strategy,

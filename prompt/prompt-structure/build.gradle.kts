@@ -1,7 +1,6 @@
 import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
-import org.gradle.kotlin.dsl.project
 
-group = "${rootProject.group}.prompt"
+group = rootProject.group
 version = rootProject.version
 
 plugins {
