@@ -14,20 +14,20 @@ kotlin {
     sourceSets {
         jvmMain {
             dependencies {
-                implementation(project(":agents:agents-tools"))
-                implementation(project(":agents:agents-core"))
-                implementation(project(":prompt:prompt-model"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+                api(project(":agents:agents-tools"))
+                api(project(":agents:agents-core"))
+                api(project(":prompt:prompt-model"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-llms"))
+                api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
                 api(libs.mcp)
-                implementation(libs.kotlinx.io.core)
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.ktor.client.cio)
-                implementation(libs.ktor.client.sse)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.kotlinx.io.core)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
+                api(libs.ktor.client.cio)
+                api(libs.ktor.client.sse)
+                api(libs.oshai.kotlin.logging)
             }
         }
 

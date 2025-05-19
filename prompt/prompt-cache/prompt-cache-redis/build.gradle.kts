@@ -13,16 +13,16 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-cache:prompt-cache-model"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
         jvmMain {
             dependencies {
-                implementation(libs.kotlinx.coroutines.reactive)
-                implementation(libs.lettuce.core)
+                api(libs.kotlinx.coroutines.reactive)
+                api(libs.lettuce.core)
             }
         }
     }

@@ -15,12 +15,12 @@ kotlin {
                 api("ai.jetbrains.code.files:code-files-model:1.0.0-beta.55+0.4.45")
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
-                implementation(project(":prompt:prompt-markdown"))
+                api(project(":prompt:prompt-markdown"))
 
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.kotlinx.serialization.json)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
@@ -33,7 +33,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                implementation(libs.ktor.client.cio)
+                api(libs.ktor.client.cio)
             }
         }
 

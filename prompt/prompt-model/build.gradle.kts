@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-llm"))
-                implementation(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.serialization.json)
             }
         }
 
