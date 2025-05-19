@@ -2,7 +2,7 @@
 
 package ai.koog.agents.core.model.message
 
-import ai.grazie.code.agents.core.model.AgentServiceError
+import ai.koog.agents.core.model.AgentServiceError
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

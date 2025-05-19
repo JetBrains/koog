@@ -1,7 +1,7 @@
-package ai.grazie.code.agents.utils
+package ai.koog.agents.utils
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
-actual val Dispatchers.SuitableForIO: CoroutineDispatcher
+public actual val Dispatchers.SuitableForIO: CoroutineDispatcher
     get() = Dispatchers.IO
