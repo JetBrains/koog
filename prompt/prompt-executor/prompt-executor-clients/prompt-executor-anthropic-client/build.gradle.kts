@@ -8,23 +8,19 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-repositories {
-    mavenCentral()
-    maven { url = uri("https://jitpack.io") }
-}
-
 kotlin {
     sourceSets {
         commonMain {
             dependencies {
                 implementation(project(":agents:agents-tools"))
+                implementation(project(":agents:agents-utils"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients"))
                 implementation(project(":prompt:prompt-llm"))
                 implementation(project(":prompt:prompt-model"))
-                implementation(libs.ai.grazie.utils.common)
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

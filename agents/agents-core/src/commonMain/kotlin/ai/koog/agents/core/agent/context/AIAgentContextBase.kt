@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent.context
 
-import ai.grazie.utils.mpp.UUID
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -10,6 +9,8 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * The [AIAgentContextBase] interface represents the context of an AI agent in the lifecycle.
@@ -17,6 +18,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
  * metadata necessary for the operation of the agent.
  * Additionally, it supports features for custom workflows and extensibility.
  */
+@OptIn(ExperimentalUuidApi::class)
 public interface AIAgentContextBase {
     /**
      * Represents the environment in which the agent operates.
@@ -83,7 +85,7 @@ public interface AIAgentContextBase {
      * A unique identifier for the current session associated with the AI agent context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
-    public val sessionUuid: UUID
+    public val sessionUuid: Uuid
 
     /**
      * Represents the unique identifier for the strategy being used in the current AI agent context.
@@ -161,7 +163,7 @@ public interface AIAgentContextBase {
         llm: AIAgentLLMContext? = null,
         stateManager: AIAgentStateManager? = null,
         storage: AIAgentStorage? = null,
-        sessionUuid: UUID? = null,
+        sessionUuid: Uuid? = null,
         strategyId: String? = null,
         pipeline: AIAgentPipeline? = null,
     ): AIAgentContextBase

@@ -1,6 +1,5 @@
 package ai.koog.agents.example.subgraphwithtask
 
-import ai.grazie.client.common.logging.qualifiedName
 import ai.koog.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -103,7 +102,7 @@ object ProjectGeneratorTools {
             } catch (e: Exception) {
                 Result(
                     successful = false,
-                    comment = "Failed to read file: ${e.javaClass.qualifiedName()} ${e.message}\nStacktrace: ${
+                    comment = "Failed to read file: ${e::class.qualifiedName} ${e.message}\nStacktrace: ${
                         e.stackTraceToString().take(300)
                     }"
                 )
@@ -159,7 +158,7 @@ object ProjectGeneratorTools {
             } catch (e: Exception) {
                 Result(
                     successful = false,
-                    comment = "Failed to read file: ${e.javaClass.qualifiedName()} ${e.message}\nStacktrace: ${
+                    comment = "Failed to read file: ${e::class.qualifiedName} ${e.message}\nStacktrace: ${
                         e.stackTraceToString().take(300)
                     }"
                 )
@@ -357,7 +356,7 @@ object ProjectGeneratorTools {
             } catch (e: Exception) {
                 Result(
                     successful = false,
-                    comment = "Exception occurred: ${e::class.java.qualifiedName()} ${e.message}\nStacktrace: ${
+                    comment = "Exception occurred: ${e::class.qualifiedName} ${e.message}\nStacktrace: ${
                         e.stackTraceToString().take(300)
                     }"
                 )

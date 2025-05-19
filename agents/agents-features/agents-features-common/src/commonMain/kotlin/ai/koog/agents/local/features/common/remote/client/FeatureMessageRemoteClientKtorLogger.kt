@@ -1,6 +1,6 @@
 package ai.koog.agents.local.features.common.remote.client
 
-import ai.grazie.utils.mpp.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.plugins.logging.*
 
 /**
@@ -27,8 +27,7 @@ internal class FeatureMessageRemoteClientKtorLogger : Logger {
          * logging functionality, such as outputting debug information or tracing issues within the class operations.
          * It utilizes the `LoggerFactory` to configure and provide the appropriate logging mechanism.
          */
-        private val logger =
-            LoggerFactory.create("ai.koog.agents.local.features.common.remote.client.FeatureMessageRemoteClientKtorLogger")
+        private val logger = KotlinLogging.logger {  }
     }
 
     /**
@@ -41,7 +40,7 @@ internal class FeatureMessageRemoteClientKtorLogger : Logger {
      * when debug logging is not enabled.
      */
     val debugEnabled: Boolean
-        get() = logger.debugEnabled
+        get() = logger.isDebugEnabled()
 
     /**
      * Logs a debug message using the internal logger.

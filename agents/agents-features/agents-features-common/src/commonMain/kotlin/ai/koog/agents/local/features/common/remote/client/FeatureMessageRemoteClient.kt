@@ -2,8 +2,7 @@ package ai.koog.agents.local.features.common.remote.client
 
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.remote.client.config.ClientConnectionConfig
-import ai.grazie.model.cloud.GrazieHeaders
-import ai.grazie.utils.mpp.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -47,8 +46,7 @@ public class FeatureMessageRemoteClient(
 ) : FeatureMessageClient {
 
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.agents.local.features.common.remote.client.FeatureMessageRemoteClient")
+        private val logger = KotlinLogging.logger {  }
     }
 
     private var isInitialized = false
@@ -92,7 +90,7 @@ public class FeatureMessageRemoteClient(
         logger.info { "Feature Message Remote Client. Start connecting to server: ${connectionConfig.url}" }
 
         if (isInitialized) {
-            logger.warning { "Feature Message Remote Client. Client is already connected. Skip initialization." }
+            logger.warn { "Feature Message Remote Client. Client is already connected. Skip initialization." }
             return
         }
 
@@ -106,7 +104,7 @@ public class FeatureMessageRemoteClient(
         logger.info { "Feature Message Remote Client. Closing client: ${connectionConfig.url}" }
 
         if (!isInitialized) {
-            logger.warning { "Feature Message Remote Client. Client is already stopped. Skip stopping." }
+            logger.warn { "Feature Message Remote Client. Client is already stopped. Skip stopping." }
             return
         }
 
@@ -187,7 +185,7 @@ public class FeatureMessageRemoteClient(
                 val ktorLogger = FeatureMessageRemoteClientKtorLogger()
                 level = if (ktorLogger.debugEnabled) LogLevel.ALL else LogLevel.NONE
                 logger = ktorLogger
-                sanitizeHeader { header -> header.equals(other = GrazieHeaders.AUTH_TOKEN, ignoreCase = true) }
+                sanitizeHeader { header -> header.equals(HttpHeaders.Authorization, ignoreCase = true) }
             }
 
             install(HttpTimeout) {

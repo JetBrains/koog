@@ -3,9 +3,9 @@ package ai.koog.agents.local.features.common.writer
 import ai.koog.agents.local.features.common.MutexCheck.withLockCheck
 import ai.koog.agents.local.features.common.message.FeatureMessage
 import ai.koog.agents.local.features.common.message.FeatureMessageProcessor
-import ai.grazie.utils.mpp.LoggerFactory
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.io.Sink
 import kotlin.concurrent.Volatile
 import kotlin.properties.Delegates
@@ -24,8 +24,7 @@ public abstract class FeatureMessageFileWriter<Path>(
 ) : FeatureMessageProcessor() {
 
     private companion object {
-        private val logger =
-            LoggerFactory.create("ai.koog.agents.local.features.common.provider.FeatureMessageFileWriter")
+        private val logger = KotlinLogging.logger {  }
     }
 
 

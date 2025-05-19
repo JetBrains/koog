@@ -9,8 +9,7 @@ import ai.koog.agents.local.features.common.remote.server.FeatureMessageRemoteSe
 import ai.koog.agents.local.features.common.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.local.features.writer.TestFeatureEventMessage
 import ai.koog.agents.utils.use
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -26,8 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 class FeatureMessageRemoteClientTest {
 
     companion object {
-        private val logger: MPPLogger =
-            LoggerFactory.create("ai.koog.agents.local.features.remote.client.FeatureMessageRemoteClientTest")
+        private val logger = KotlinLogging.logger {  }
 
         private val defaultClientServerTimeout = 500.seconds
     }

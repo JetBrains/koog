@@ -23,14 +23,6 @@ dependencies {
     implementation(project(":agents:agents-mcp"))
     implementation(project(":agents:agents-features:agents-features-event-handler"))
     implementation(project(":agents:agents-features:agents-features-memory"))
-    implementation("ai.jetbrains.code.exec:code-exec-jvm:1.0.0-beta.55+0.4.45")
-    implementation("ai.jetbrains.code.exec:code-exec-tools:1.0.0-beta.55+0.4.45")
-    implementation("ai.jetbrains.code.features:code-features-common:1.0.0-beta.55+0.4.45")
-    implementation("ai.jetbrains.code.files:code-files-jvm:1.0.0-beta.55+0.4.45")
-    implementation("ai.jetbrains.code.files:code-files-sandbox:1.0.0-beta.55+0.4.45")
-    implementation("ai.jetbrains.code.files:code-files-tools:1.0.0-beta.55+0.4.45")
-    implementation("ai.jetbrains.code.files:code-files-vfs:1.0.0-beta.55+0.4.45")
-    implementation(libs.kotlinx.datetime)
 
     implementation(project(":prompt:prompt-markdown"))
     implementation(project(":prompt:prompt-structure"))
@@ -39,8 +31,9 @@ dependencies {
     implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
     implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
-    implementation(libs.ai.grazie.api.gateway.client)
-    implementation(libs.ai.grazie.client.ktor)
+    implementation(libs.code.engine.files.jvm)
+
+    implementation(libs.kotlinx.datetime)
     implementation(libs.logback.classic)
 
     testImplementation(kotlin("test"))

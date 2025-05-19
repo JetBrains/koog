@@ -16,8 +16,9 @@ kotlin {
 
                 implementation(project(":prompt:prompt-markdown"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-
-                implementation(libs.ai.grazie.utils.common)
+                implementation(libs.kotlinx.coroutines.core)
+                implementation(libs.kotlinx.serialization.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

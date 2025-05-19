@@ -15,9 +15,7 @@ import ai.koog.agents.local.memory.model.DefaultTimeProvider.getCurrentTimestamp
 import ai.koog.agents.local.memory.prompts.MemoryPrompts
 import ai.koog.agents.local.memory.providers.AgentMemoryProvider
 import ai.koog.agents.local.memory.providers.NoMemory
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
-
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Memory implementation for AI agents that provides persistent storage and retrieval of facts.
@@ -85,7 +83,7 @@ public class AgentMemory(
     internal val llm: AIAgentLLMContext,
     internal val scopesProfile: MemoryScopesProfile
 ) {
-    private val logger: MPPLogger = LoggerFactory.create("ai.koog.agents.local.memory.LocalAIAgentMemory")
+    private val logger = KotlinLogging.logger {  }
 
     private fun getCurrentTimestamp(): Long = DefaultTimeProvider.getCurrentTimestamp()
 

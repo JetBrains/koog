@@ -48,8 +48,6 @@ plugins {
 allprojects {
     repositories {
         mavenCentral()
-//        maven(url = "https://packages.jetbrains.team/maven/p/konfy/maven")
-//        google()
         graziePublic(project)
     }
 }

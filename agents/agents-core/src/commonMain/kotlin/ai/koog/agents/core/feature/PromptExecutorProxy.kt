@@ -1,11 +1,11 @@
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.grazie.utils.mpp.LoggerFactory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -21,7 +21,7 @@ public class PromptExecutorProxy(
 ) : PromptExecutor {
 
     private companion object {
-        private val logger = LoggerFactory.create("ai.koog.agents.local.agent.PipelineAwarePromptExecutor")
+        private val logger = KotlinLogging.logger {  }
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel): String {

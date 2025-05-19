@@ -143,7 +143,7 @@ The `FeatureMessageLogWriter` is a message processor that logs feature messages 
 ```kotlin
 // Create a custom implementation of FeatureMessageLogWriter
 class MyFeatureMessageLogWriter(
-    logger: MPPLogger
+    logger: KLogger
 ) : FeatureMessageLogWriter(logger) {
     // Implement the required method to convert a FeatureMessage to a string
     override fun FeatureMessage.toLoggerMessage(): String {
@@ -153,7 +153,7 @@ class MyFeatureMessageLogWriter(
 
 // Create an instance and use it with a feature
 val logWriter = MyFeatureMessageLogWriter(
-    targetLogger = LoggerFactory.create("my.feature.logger")
+    targetLogger = KotlinLogger.logger("my.feature.logger")
 )
 
 // Initialize the writer before use

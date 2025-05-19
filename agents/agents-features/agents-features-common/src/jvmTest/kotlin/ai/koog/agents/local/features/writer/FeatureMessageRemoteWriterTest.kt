@@ -9,8 +9,8 @@ import ai.koog.agents.local.features.common.remote.server.config.DefaultServerCo
 import ai.koog.agents.local.features.common.remote.server.config.ServerConnectionConfig
 import ai.koog.agents.local.features.common.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.utils.use
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.MPPLogger
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.consumeAsFlow
@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.seconds
 class FeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger: MPPLogger = LoggerFactory.create(
+        private val logger: KLogger = KotlinLogging.logger(
             FeatureMessageRemoteWriterTest::class.qualifiedName ?:
             "ai.koog.agents.local.features.writer.FeatureMessageRemoteWriterTest"
         )

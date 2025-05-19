@@ -1,18 +1,18 @@
 package ai.koog.prompt.cache.redis
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.grazie.utils.json.JSON
-import ai.grazie.utils.mpp.LoggerFactory
-import ai.grazie.utils.mpp.create
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.api.coroutines
 import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -59,7 +59,19 @@ public class RedisPromptCache(
      *   exception if the cache type is not "redis".
      */
     public companion object : PromptCache.Factory.Named("redis") {
-        private val logger = LoggerFactory.create(RedisPromptCache::class)
+        private val logger = KotlinLogging.logger {  }
+
+        private val defaultJson = Json {
+            ignoreUnknownKeys = true
+            allowStructuredMapKeys = true
+        }
+
+        private val prettyJson = Json {
+            ignoreUnknownKeys = true
+            allowStructuredMapKeys = true
+            prettyPrint = true
+            prettyPrintIndent = "  "
+        }
 
         private const val DEFAULT_URI = "redis://localhost:6379"
         private const val CACHE_KEY_PREFIX = "code-prompt-cache:"
@@ -89,7 +101,7 @@ public class RedisPromptCache(
     @Serializable
     private data class Request(val prompt: Prompt, val tools: List<JsonObject> = emptyList()) {
         val id: String
-            get() = JSON.Pretty.string(this).hashCode().absoluteValue.toString(36)
+            get() = prettyJson.encodeToString(this).hashCode().absoluteValue.toString(36)
     }
 
     /**
@@ -130,7 +142,7 @@ public class RedisPromptCache(
             // Update access time by setting the key with the same value but updated TTL
             commands.set(key, value)
 
-            return JSON.Default.parse<CachedElement>(value).response
+            return defaultJson.decodeFromString<CachedElement>(value).response
         } catch (e: Exception) {
             // Log the error but don't fail the operation
             println("Error retrieving from Redis cache: ${e.message}")
@@ -141,7 +153,7 @@ public class RedisPromptCache(
     private suspend fun put(request: Request, response: List<Message.Response>) {
         try {
             val key = cacheKey(request)
-            val value = JSON.Pretty.string(CachedElement(response, request))
+            val value = prettyJson.encodeToString(CachedElement(response, request))
 
             // Store the value
             commands.setex(key, seconds = ttl.inWholeSeconds, value)

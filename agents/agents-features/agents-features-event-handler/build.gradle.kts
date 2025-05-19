@@ -15,9 +15,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
-
-                implementation(libs.ai.grazie.model.auth)
-                implementation(libs.ai.grazie.utils.common)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
@@ -25,6 +23,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.kotlinx.serialization.json)
             }
         }
 
