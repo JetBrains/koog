@@ -1,19 +1,20 @@
-package ai.koog.prompt.executor.clients.openai
+package ai.jetbrains.code.integration.tests
 
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class OpenAIEmbeddingTest {
+class OpenAIEmbeddingsIntegrationTest {
 
     // API key for testing
     private val apiKey: String get() = readTestOpenAIKeyFromEnv()
 
-    @Disabled("TODO: pass the `OPENAI_API_TEST_KEY`")
     @Test
-    fun testEmbed() = runTest {
+    fun integration_testEmbed() = runTest {
         val client = OpenAILLMClient(apiKey)
 
         val text = "This is a test text for embedding."
@@ -35,9 +36,8 @@ class OpenAIEmbeddingTest {
         println("Embedding: $embedding")
     }
 
-    @Disabled("TODO: pass the `OPENAI_API_TEST_KEY`")
     @Test
-    fun testEmbedWithCustomModel() = runTest {
+    fun integration_testEmbedWithCustomModel() = runTest {
         val client = OpenAILLMClient(apiKey)
 
         val text = "This is a test text for embedding with a custom model."

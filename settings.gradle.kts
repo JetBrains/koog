@@ -33,6 +33,8 @@ include(":embeddings:embeddings-llm")
 
 include(":examples")
 
+include(":integration-tests")
+
 include(":koog-agents")
 
 include(":prompt:prompt-cache:prompt-cache-files")

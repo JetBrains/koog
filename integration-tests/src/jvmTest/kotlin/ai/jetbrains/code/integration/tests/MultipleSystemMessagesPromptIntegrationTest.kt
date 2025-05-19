@@ -1,5 +1,8 @@
-package ai.koog.prompt.executor.llms
+package ai.jetbrains.code.integration.tests
 
+import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestGoogleAIKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -7,19 +10,17 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import kotlinx.coroutines.runBlocking
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class MultipleSystemMessagesPromptIntegrationTest {
-    private val openAIToken = System.getenv("OPEN_AI_API_TEST_KEY")
-    private val anthropicToken = System.getenv("ANTHROPIC_API_TEST_KEY")
+    private val openAIToken = readTestOpenAIKeyFromEnv()
+    private val anthropicToken = readTestAnthropicKeyFromEnv()
+    private val googleToken = readTestGoogleAIKeyFromEnv()
 
-    private val googleToken = System.getenv("Gemini_API_TEST_KEY")
-
-    @Ignore // TODO: `GEMINI_API_TEST_KEY`
     @Test
     fun integration_testMultipleSystemMessages() = runBlocking {
         val openAIClient = OpenAILLMClient(openAIToken)
@@ -52,6 +53,6 @@ class MultipleSystemMessagesPromptIntegrationTest {
         assertTrue(responseGemini.isNotEmpty(), "Gemini response should not be empty")
         println("OpenAI Response: $responseOpenAI")
         println("Anthropic Response: $responseAnthropic")
-        println("Gemini Response: $responseAnthropic")
+        println("Gemini Response: $responseGemini")
     }
 }
