@@ -30,10 +30,10 @@ public interface AIAgentContextBase {
     /**
      * Represents the input provided to the agent's execution.
      *
-     * This value is used to dynamically update the prompt for the large language model (LLM)
-     * and influence the behavior or response of the agent in the current stage. It is typically
-     * set or modified as part of the execution flow to provide context or additional information
-     * relevant to the current stage of processing.
+     * This variable provides access to the agent's input, which can be used to
+     * determine the agent's intent, context, or other relevant information at any stage of agents execution.
+     *
+     * @see [AIAgentEnvironment.input]
      */
     public val agentInput: String
 
@@ -110,7 +110,7 @@ public interface AIAgentContextBase {
     public val pipeline: AIAgentPipeline
 
     /**
-     * Retrieves a feature from the local agent's storage using the specified key.
+     * Retrieves a feature from the agent's storage using the specified key.
      *
      * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding feature.
      * @return The feature associated with the provided key, or null if no matching feature is found.

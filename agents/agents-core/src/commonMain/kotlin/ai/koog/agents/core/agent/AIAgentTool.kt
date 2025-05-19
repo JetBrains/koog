@@ -2,12 +2,19 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolArgs
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
-import ai.koog.agents.core.agent.AIAgentBase
 import ai.koog.agents.core.tools.*
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
+/**
+ * Converts the current AI agent into a tool that can be utilized with the specified parameters.
+ *
+ * @param agentDescription a descriptive text that explains the functionality or purpose of the agent
+ * @param name an optional name for the tool; if not provided, the name will be derived from the agent's class name
+ * @param requestDescription a description of the input expected for the created tool; defaults to "Input for the task"
+ * @return a tool representation of the AI agent
+ */
 public fun AIAgentBase.asTool(
     agentDescription: String,
     name: String? = null,
@@ -19,7 +26,21 @@ public fun AIAgentBase.asTool(
     agentDescription = agentDescription
 )
 
-
+/**
+ * AIAgentTool is a specialized tool that integrates an AI agent for processing tasks
+ * by leveraging input arguments and producing corresponding results.
+ *
+ * This class extends the generic Tool interface with custom argument and result types.
+ *
+ * @constructor Creates an instance of AIAgentTool with the specified AI agent, its name,
+ * description, and an optional description for the request parameter.
+ *
+ * @param agent The AI agent that implements the AIAgentBase interface and handles task execution.
+ * @param agentName A name assigned to the tool that helps identify it.
+ * @param agentDescription A brief description of what the tool does.
+ * @param requestDescription An optional description of the input to the tool, defaulting to
+ * "Input for the task".
+ */
 public class AIAgentTool(
     private val agent: AIAgentBase,
     agentName: String,

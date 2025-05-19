@@ -27,7 +27,7 @@ dependencies {
 Then, install the AgentMemory feature when creating your agent:
 
 ```kotlin
-val myAgent = LocalAIAgentsRunner(
+val myAgent = AIAgents(
     // other configuration parameters
 ) {
     install(AgentMemory) {
@@ -55,7 +55,7 @@ val testMemoryProvider = LocalFileMemoryProvider(
 )
 
 // Create a test agent with memory
-val testAgent = LocalAIAgentsRunner(
+val testAgent = AIAgents(
     // other test configuration
 ) {
     install(AgentMemory) {

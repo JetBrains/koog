@@ -26,7 +26,7 @@ dependencies {
 Then, install the EventHandler feature when creating your agent:
 
 ```kotlin
-val myAgent = LocalAIAgentsRunner(
+val myAgent = AIAgents(
     // other configuration parameters
 ) {
     handleEvents {
@@ -48,7 +48,7 @@ For testing agents with event handling capabilities, you can use the EventHandle
 
 ```kotlin
 // Create a test agent with event handling
-val testAgent = LocalAIAgentsRunner(
+val testAgent = AIAgents(
     // other test configuration
 ) {
     // Track events for testing
@@ -81,7 +81,7 @@ assert(agentFinished) { "Expected agent to finish" }
 Here's an example of using the EventHandler to monitor and log various events during agent execution:
 
 ```kotlin
-val agent = LocalAIAgentsRunner(
+val agent = AIAgents(
     // other configuration parameters
 ) {
     handleEvents {

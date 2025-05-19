@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.flow
 import kotlin.reflect.KClass
 
 /**
- * A session for locally managing interactions with a language learning model (LLM)
+ * A session for managing interactions with a language learning model (LLM)
  * and tools in an agent environment. This class provides functionality for executing
  * LLM requests, managing tools, and customizing prompts dynamically within a specific
  * session context.

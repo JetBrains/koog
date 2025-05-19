@@ -13,7 +13,18 @@ import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 import kotlinx.serialization.Serializable
 
-
+/**
+ * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
+ * segment containing a defined starting and ending point. The subgraph is responsible for executing tasks
+ * in a step-by-step manner, managing iterations, and handling tool selection strategies.
+ *
+ * @param Input The type of input data accepted by the subgraph.
+ * @param Output The type of output data returned by the subgraph.
+ * @param name The name of the subgraph.
+ * @param start The starting node of the subgraph, which initiates the processing.
+ * @param finish The finishing node of the subgraph, which concludes the processing.
+ * @param toolSelectionStrategy Strategy determining which tools should be available during this subgraph's execution.
+ */
 public open class AIAgentSubgraph<Input, Output>(
     override val name: String,
     public val start: StartAIAgentNodeBase<Input>,
@@ -25,6 +36,14 @@ public open class AIAgentSubgraph<Input, Output>(
             LoggerFactory.create("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
     }
 
+    /**
+     * Executes the desired operation based on the input and the provided context.
+     * This function determines the execution strategy based on the tool selection strategy configured in the class.
+     *
+     * @param context The context of the AI agent which includes all necessary resources and metadata for execution.
+     * @param input The input object representing the data to be processed by the AI agent.
+     * @return The output of the AI agent execution, generated after processing the input.
+     */
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
         if (toolSelectionStrategy == ToolSelectionStrategy.ALL) return doExecute(context, input)
 

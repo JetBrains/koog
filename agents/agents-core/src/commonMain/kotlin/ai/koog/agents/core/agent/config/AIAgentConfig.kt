@@ -7,10 +7,10 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
 
 /**
- * Configuration class for a local AI agent that specifies the prompt, execution parameters, and behavior.
+ * Configuration class for a AI agent that specifies the prompt, execution parameters, and behavior.
  *
  * This class is responsible for defining the various settings and components required
- * for an AI agent to operate locally. It includes the prompt configuration, iteration limits,
+ * for an AI agent to operate. It includes the prompt configuration, iteration limits,
  * and strategies for handling missing tools during execution.
  *
  * @param prompt The initial prompt configuration for the agent, encapsulating messages, model, and parameters.
