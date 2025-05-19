@@ -25,7 +25,7 @@ object Publishing {
 
                                 pom.name.set(this@publishToGraziePublicMaven.name)
                                 pom.description.set("Koog is a framework for quickly creating AI agents in Kotlin with minimal effort.")
-                                pom.url.set("https://github.com/JetBrains/koog-agents")
+                                pom.url.set("https://github.com/JetBrains/koog")
 
                                 pom.licenses(
                                     Action {
@@ -62,7 +62,7 @@ object Publishing {
                                 pom.scm(
                                     Action {
                                         val scm = this
-                                        scm.url.set("https://github.com/JetBrains/koog-agents.git")
+                                        scm.url.set("https://github.com/JetBrains/koog.git")
                                     }
                                 )
                             }

@@ -3,8 +3,8 @@
 [![Kotlin Alpha](https://kotl.in/badges/alpha.svg)](https://kotlinlang.org/docs/components-stability.html)
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://github.com/JetBrains#jetbrains-on-github)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1-blue.svg?logo=kotlin)](http://kotlinlang.org)
-[![CI status](https://img.shields.io/github/checks-status/JetBrains/koog-agents/main)](https://github.com/JetBrains/koog-agents/actions?query=branch%3Amain)
-[![GitHub license](https://img.shields.io/github/license/JetBrains/koog-agents)](LICENSE)
+[![CI status](https://img.shields.io/github/checks-status/JetBrains/koog/main)](https://github.com/JetBrains/koog/actions?query=branch%3Amain)
+[![GitHub license](https://img.shields.io/github/license/JetBrains/koog)](LICENSE)
 [![docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
 <!-- TODO: maven central link -->
 
@@ -71,8 +71,20 @@ On JVM, JDK 17 or higher is required to use the framework.
 ### How to use with Gradle (Kotlin DSL)
   To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
 ```kotlin
-implementation("ai.koog.agents:koog-agents:0.1.0-alpha.5+0.4.49")
-    <groupId>ai.koog.agents</groupId>
+implementation("ai.koog:koog-agents:0.1.0-alpha.5+0.4.49")
+```
+
+### How to use with Gradle (Groovy)
+  To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
+```groovy
+implementation 'ai.koog:koog-agents:0.1.0-alpha.5+0.4.49'
+```
+
+### How to use with Maven
+  To include all Koog dependencies together (useful for a quickstart), please add the following to your pom.xml:
+```xml
+<dependency>
+    <groupId>ai.koog</groupId>
     <artifactId>koog-agents</artifactId>
     <version>0.1.0-alpha.5+0.4.49</version>
 </dependency>

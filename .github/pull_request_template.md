@@ -12,7 +12,7 @@ Also, please tick the appropriate points in the checklist below.
 
 #### Checklist for all pull requests
 - [ ] The pull request has a description of the proposed change
-- [ ] I read the [Contributing Guidelines](https://github.com/JetBrains/koog-agents/blob/main/CONTRIBUTING.md) before opening the pull request
+- [ ] I read the [Contributing Guidelines](https://github.com/JetBrains/koog/blob/main/CONTRIBUTING.md) before opening the pull request
 - [ ] The pull request uses **`develop`** as the base branch
 - [ ] Tests for the changes have been added
 - [ ] All new and existing tests passed
