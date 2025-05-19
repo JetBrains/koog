@@ -1,4 +1,4 @@
-# Kotlin AI Agents
+# Koog
 
 [![Kotlin Alpha](https://kotl.in/badges/alpha.svg)](https://kotlinlang.org/docs/components-stability.html)
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://github.com/JetBrains#jetbrains-on-github)
@@ -9,7 +9,7 @@
 <!-- TODO: maven central link -->
 
 
-Kotlin AI Agents is a Kotlin-based framework for creating and running AI agents locally without requiring external services. 
+Koog is a Kotlin-based framework for creating and running AI agents locally without requiring external services. 
 It provides a pure Kotlin implementation for building intelligent agents that can interact with tools, 
 handle complex workflows, and communicate with users.
 
@@ -97,7 +97,7 @@ Read the [Contributing Guidelines](CONTRIBUTING.md).
 This project and the corresponding community are governed by the [JetBrains Open Source and Community Code of Conduct](https://github.com/jetbrains#code-of-conduct). Please make sure you read it.
 
 ## License
-Kotlin AI Agents is licensed under the [Apache 2.0 License](LICENSE).
+Koog is licensed under the [Apache 2.0 License](LICENSE).
 
 ## Support
 
