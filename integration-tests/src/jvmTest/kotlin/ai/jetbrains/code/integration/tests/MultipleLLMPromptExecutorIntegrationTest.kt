@@ -104,7 +104,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testCodeGenerationWithOpenAI(model: LLModel) = runTest {
+    fun integration_testCodeGenerationWith(model: LLModel) = runTest {
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-code") {
@@ -135,7 +135,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithRequiredParamsOpenAI(model: LLModel) = runTest {
+    fun integration_testToolsWithRequiredParams(model: LLModel) = runTest {
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -177,7 +177,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithRequiredOptionalParamsOpenAI(model: LLModel) = runTest {
+    fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest {
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -226,7 +226,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithOptionalParamsOpenAI(model: LLModel) = runTest {
+    fun integration_testToolsWithOptionalParams(model: LLModel) = runTest {
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -273,7 +273,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithNoParamsOpenAI(model: LLModel) = runTest {
+    fun integration_testToolsWithNoParams(model: LLModel) = runTest {
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -305,7 +305,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithListEnumParamsOpenAI(model: LLModel) = runTest {
+    fun integration_testToolsWithListEnumParams(model: LLModel) = runTest {
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -338,7 +338,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithNestedListParamsOpenAI(model: LLModel) = runTest {
+    fun integration_testToolsWithNestedListParams(model: LLModel) = runTest {
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -373,7 +373,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testOpenAIRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
+    fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Count from 1 to 5.")
@@ -405,7 +405,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testOpenAIStructuredDataStreaming(model: LLModel) = runTest {
+    fun integration_testStructuredDataStreaming(model: LLModel) = runTest {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 

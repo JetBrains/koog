@@ -73,7 +73,7 @@ class SimpleAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleChatAgentShouldCallDefaultToolsOpenAI(model: LLModel) = runBlocking {
+    fun integration_simpleChatAgentShouldCallDefaultTools(model: LLModel) = runBlocking {
         // model doesn't support tools
         assumeTrue(model != OpenAIModels.Reasoning.O1Mini)
 
@@ -92,7 +92,7 @@ class SimpleAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleChatAgentShouldCallCustomToolsOpenAI(model: LLModel) = runBlocking {
+    fun integration_simpleChatAgentShouldCallCustomTools(model: LLModel) = runBlocking {
         // model doesn't support tools
         assumeTrue(model != OpenAIModels.Reasoning.O1Mini)
 
@@ -121,7 +121,7 @@ class SimpleAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefaultOpenAI(model: LLModel) = runBlocking {
+    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
         val agent = simpleSingleRunAgent(
             executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
             systemPrompt = systemPrompt,
@@ -140,7 +140,7 @@ class SimpleAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleSingleRunAgentShouldCallCustomToolOpenAI(model: LLModel) = runBlocking {
+    fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         // model doesn't support tools
         assumeTrue(model != OpenAIModels.Reasoning.O1Mini)
 
