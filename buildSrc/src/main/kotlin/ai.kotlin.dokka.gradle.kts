@@ -8,7 +8,7 @@ dokka {
 
         sourceLink {
             localDirectory = rootDir
-            remoteUrl("https://github.com/JetBrains/koog-agents/tree/main")
+            remoteUrl("https://github.com/JetBrains/koog/tree/main")
             remoteLineSuffix = "#L"
         }
     }
