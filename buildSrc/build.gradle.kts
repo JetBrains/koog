@@ -1,5 +1,6 @@
 repositories {
     mavenCentral()
+    maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
 }
 
 plugins {
@@ -9,6 +10,7 @@ plugins {
 dependencies {
     implementation(libs.kotlin.gradle.plugin)
     implementation(libs.dokka.gradle.plugin)
+    implementation(libs.jetsign.gradle.plugin)
 }
 
 kotlin {
