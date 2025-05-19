@@ -104,7 +104,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testCodeGenerationWith(model: LLModel) = runTest {
+    fun integration_testCodeGeneration(model: LLModel) = runTest {
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-code") {
