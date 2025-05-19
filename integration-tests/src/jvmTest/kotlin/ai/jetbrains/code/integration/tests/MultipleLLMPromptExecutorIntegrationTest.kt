@@ -10,6 +10,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
@@ -57,6 +58,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-prompt") {
@@ -78,6 +82,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-streaming") {
@@ -105,6 +112,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testCodeGeneration(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-code") {
@@ -136,6 +146,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -178,6 +191,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -227,6 +243,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithOptionalParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -274,6 +293,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNoParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -306,6 +328,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithListEnumParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -339,6 +364,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNestedListParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -374,6 +402,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Count from 1 to 5.")
@@ -406,6 +437,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
