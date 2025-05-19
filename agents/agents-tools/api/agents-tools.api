@@ -1,0 +1,338 @@
+public abstract interface class ai/grazie/code/agents/core/tools/DirectToolCallsEnabler {
+}
+
+public abstract class ai/grazie/code/agents/core/tools/SimpleTool : ai/grazie/code/agents/core/tools/Tool {
+	public fun <init> ()V
+	public abstract fun doExecute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public synthetic fun encodeResultToString (Lai/grazie/code/agents/core/tools/ToolResult;)Ljava/lang/String;
+	public fun encodeResultToString-2tWGuQE (Ljava/lang/String;)Ljava/lang/String;
+	public synthetic fun execute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun execute-L7j8EaA (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class ai/grazie/code/agents/core/tools/Tool {
+	public fun <init> ()V
+	public final fun decodeArgs (Lkotlinx/serialization/json/JsonObject;)Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun decodeArgsFromString (Ljava/lang/String;)Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun encodeArgs (Lai/grazie/code/agents/core/tools/Tool$Args;)Lkotlinx/serialization/json/JsonObject;
+	public final fun encodeArgsToString (Lai/grazie/code/agents/core/tools/Tool$Args;)Ljava/lang/String;
+	public fun encodeResultToString (Lai/grazie/code/agents/core/tools/ToolResult;)Ljava/lang/String;
+	public final fun encodeResultToStringUnsafe (Lai/grazie/code/agents/core/tools/ToolResult;)Ljava/lang/String;
+	protected abstract fun execute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun executeAndSerialize (Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/tools/DirectToolCallsEnabler;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun executeUnsafe (Ljava/lang/Object;Lai/grazie/code/agents/core/tools/DirectToolCallsEnabler;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun getArgsSerializer ()Lkotlinx/serialization/KSerializer;
+	public abstract fun getDescriptor ()Lai/grazie/code/agents/core/tools/ToolDescriptor;
+	public final fun getName ()Ljava/lang/String;
+}
+
+public abstract interface class ai/grazie/code/agents/core/tools/Tool$Args {
+}
+
+public final class ai/grazie/code/agents/core/tools/Tool$EmptyArgs : ai/grazie/code/agents/core/tools/Tool$Args {
+	public static final field INSTANCE Lai/grazie/code/agents/core/tools/Tool$EmptyArgs;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolDescriptor {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lai/grazie/code/agents/core/tools/ToolDescriptor;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/tools/ToolDescriptor;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/ToolDescriptor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOptionalParameters ()Ljava/util/List;
+	public final fun getRequiredParameters ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/grazie/code/agents/core/tools/ToolException : java/lang/Exception {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolException$ValidationFailure : ai/grazie/code/agents/core/tools/ToolException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolExceptionKt {
+	public static final fun fail (Ljava/lang/String;)Ljava/lang/Void;
+	public static final fun validate (ZLkotlin/jvm/functions/Function0;)V
+	public static final fun validateNotNull (Ljava/lang/Object;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterDescriptor {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolParameterType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lai/grazie/code/agents/core/tools/ToolParameterType;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolParameterType;)Lai/grazie/code/agents/core/tools/ToolParameterDescriptor;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/tools/ToolParameterDescriptor;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolParameterType;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/ToolParameterDescriptor;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getType ()Lai/grazie/code/agents/core/tools/ToolParameterType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/grazie/code/agents/core/tools/ToolParameterType {
+	public static final field Companion Lai/grazie/code/agents/core/tools/ToolParameterType$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getName ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$Boolean : ai/grazie/code/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/grazie/code/agents/core/tools/ToolParameterType$Boolean;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$Companion {
+	public final fun Enum (Lkotlin/enums/EnumEntries;)Lai/grazie/code/agents/core/tools/ToolParameterType$Enum;
+	public final fun Enum ([Ljava/lang/Enum;)Lai/grazie/code/agents/core/tools/ToolParameterType$Enum;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$Enum : ai/grazie/code/agents/core/tools/ToolParameterType {
+	public fun <init> ([Ljava/lang/String;)V
+	public final fun component1 ()[Ljava/lang/String;
+	public final fun copy ([Ljava/lang/String;)Lai/grazie/code/agents/core/tools/ToolParameterType$Enum;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/tools/ToolParameterType$Enum;[Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/ToolParameterType$Enum;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEntries ()[Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$Float : ai/grazie/code/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/grazie/code/agents/core/tools/ToolParameterType$Float;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$Integer : ai/grazie/code/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/grazie/code/agents/core/tools/ToolParameterType$Integer;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$List : ai/grazie/code/agents/core/tools/ToolParameterType {
+	public fun <init> (Lai/grazie/code/agents/core/tools/ToolParameterType;)V
+	public final fun component1 ()Lai/grazie/code/agents/core/tools/ToolParameterType;
+	public final fun copy (Lai/grazie/code/agents/core/tools/ToolParameterType;)Lai/grazie/code/agents/core/tools/ToolParameterType$List;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/tools/ToolParameterType$List;Lai/grazie/code/agents/core/tools/ToolParameterType;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/ToolParameterType$List;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getItemsType ()Lai/grazie/code/agents/core/tools/ToolParameterType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$Object : ai/grazie/code/agents/core/tools/ToolParameterType {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/grazie/code/agents/core/tools/ToolParameterType$Object;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/tools/ToolParameterType$Object;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/ToolParameterType$Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProperties ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolParameterType$String : ai/grazie/code/agents/core/tools/ToolParameterType {
+	public static final field INSTANCE Lai/grazie/code/agents/core/tools/ToolParameterType$String;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolRegistry {
+	public static final field Companion Lai/grazie/code/agents/core/tools/ToolRegistry$Companion;
+	public synthetic fun <init> (Ljava/util/List;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getTool (Ljava/lang/String;)Lai/grazie/code/agents/core/tools/Tool;
+	public final fun getTools ()Ljava/util/List;
+	public final fun plus (Lai/grazie/code/agents/core/tools/ToolRegistry;)Lai/grazie/code/agents/core/tools/ToolRegistry;
+	public final fun with (Lai/grazie/code/agents/core/tools/ToolRegistry;)Lai/grazie/code/agents/core/tools/ToolRegistry;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolRegistry$Builder {
+	public final fun tool (Lai/grazie/code/agents/core/tools/Tool;)V
+	public final fun tools (Ljava/util/List;)V
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolRegistry$Companion {
+	public final fun getEMPTY ()Lai/grazie/code/agents/core/tools/ToolRegistry;
+	public final fun invoke (Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/core/tools/ToolRegistry;
+}
+
+public abstract interface class ai/grazie/code/agents/core/tools/ToolResult {
+	public abstract fun toStringDefault ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolResult$Boolean : ai/grazie/code/agents/core/tools/ToolResult {
+	public static final field Companion Lai/grazie/code/agents/core/tools/ToolResult$Boolean$Companion;
+	public static final synthetic fun box-impl (Z)Lai/grazie/code/agents/core/tools/ToolResult$Boolean;
+	public static fun constructor-impl (Z)Z
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (ZLjava/lang/Object;)Z
+	public static final fun equals-impl0 (ZZ)Z
+	public final fun getResult ()Z
+	public fun hashCode ()I
+	public static fun hashCode-impl (Z)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Z)Ljava/lang/String;
+	public fun toStringDefault ()Ljava/lang/String;
+	public static fun toStringDefault-impl (Z)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Z
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolResult$Boolean$Companion {
+	public final fun getFALSE-sz2avck ()Z
+	public final fun getTRUE-sz2avck ()Z
+}
+
+public abstract interface class ai/grazie/code/agents/core/tools/ToolResult$JSONSerializable : ai/grazie/code/agents/core/tools/ToolResult {
+	public abstract fun getSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun toStringDefault ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolResult$Number : ai/grazie/code/agents/core/tools/ToolResult {
+	public static final synthetic fun box-impl (Ljava/lang/Number;)Lai/grazie/code/agents/core/tools/ToolResult$Number;
+	public static fun constructor-impl (Ljava/lang/Number;)Ljava/lang/Number;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/Number;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/Number;Ljava/lang/Number;)Z
+	public final fun getResult ()Ljava/lang/Number;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/Number;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/Number;)Ljava/lang/String;
+	public fun toStringDefault ()Ljava/lang/String;
+	public static fun toStringDefault-impl (Ljava/lang/Number;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/Number;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolResult$Text : ai/grazie/code/agents/core/tools/ToolResult$JSONSerializable {
+	public static final field Companion Lai/grazie/code/agents/core/tools/ToolResult$Text$Companion;
+	public static final synthetic fun box-impl (Ljava/lang/String;)Lai/grazie/code/agents/core/tools/ToolResult$Text;
+	public static fun constructor-impl (Ljava/lang/Exception;)Ljava/lang/String;
+	public static fun constructor-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public static fun equals-impl (Ljava/lang/String;Ljava/lang/Object;)Z
+	public static final fun equals-impl0 (Ljava/lang/String;Ljava/lang/String;)Z
+	public fun getSerializer ()Lkotlinx/serialization/KSerializer;
+	public static fun getSerializer-impl (Ljava/lang/String;)Lkotlinx/serialization/KSerializer;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public static fun hashCode-impl (Ljava/lang/String;)I
+	public fun toString ()Ljava/lang/String;
+	public static fun toString-impl (Ljava/lang/String;)Ljava/lang/String;
+	public fun toStringDefault ()Ljava/lang/String;
+	public static fun toStringDefault-impl (Ljava/lang/String;)Ljava/lang/String;
+	public final synthetic fun unbox-impl ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolResult$Text$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/tools/ToolResult$Text$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize-rVQESl0 (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/String;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize-zJPG8jg (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/String;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/tools/ToolResult$Text$Companion {
+	public final fun build-rVQESl0 (Lkotlin/jvm/functions/Function1;)Ljava/lang/String;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface annotation class ai/grazie/code/agents/core/tools/annotations/InternalAgentToolsApi : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class ai/grazie/code/agents/core/tools/annotations/LLMDescription : java/lang/annotation/Annotation {
+	public abstract fun description ()Ljava/lang/String;
+}
+
+public abstract interface annotation class ai/grazie/code/agents/core/tools/annotations/Tool : java/lang/annotation/Annotation {
+	public abstract fun customName ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/reflect/ToolFromCallable : ai/grazie/code/agents/core/tools/Tool {
+	public fun <init> (Lkotlin/reflect/KCallable;Ljava/lang/Object;Lai/grazie/code/agents/core/tools/ToolDescriptor;Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lkotlin/reflect/KCallable;Ljava/lang/Object;Lai/grazie/code/agents/core/tools/ToolDescriptor;Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun execute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getArgsSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun getDescriptor ()Lai/grazie/code/agents/core/tools/ToolDescriptor;
+}
+
+public final class ai/grazie/code/agents/core/tools/reflect/ToolFromCallable$Result : ai/grazie/code/agents/core/tools/ToolResult {
+	public fun <init> (Ljava/lang/Object;Lkotlin/reflect/KType;Lkotlinx/serialization/json/Json;)V
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public final fun getResult ()Ljava/lang/Object;
+	public final fun getType ()Lkotlin/reflect/KType;
+	public fun toStringDefault ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/reflect/ToolFromCallable$VarArgs : ai/grazie/code/agents/core/tools/Tool$Args {
+	public fun <init> (Ljava/util/Map;)V
+	public final fun asNamedValues ()Ljava/util/List;
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lai/grazie/code/agents/core/tools/reflect/ToolFromCallable$VarArgs;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/tools/reflect/ToolFromCallable$VarArgs;Ljava/util/Map;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/reflect/ToolFromCallable$VarArgs;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArgs ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/reflect/ToolFromCallable$VarArgsSerializer : kotlinx/serialization/KSerializer {
+	public fun <init> (Lkotlin/reflect/KCallable;)V
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/tools/reflect/ToolFromCallable$VarArgs;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun getKCallable ()Lkotlin/reflect/KCallable;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/tools/reflect/ToolFromCallable$VarArgs;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public abstract interface class ai/grazie/code/agents/core/tools/reflect/ToolSet {
+	public fun getName ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/tools/reflect/UtilKt {
+	public static final fun asTool (Lkotlin/reflect/KFunction;Lkotlinx/serialization/json/Json;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/tools/reflect/ToolFromCallable;
+	public static synthetic fun asTool$default (Lkotlin/reflect/KFunction;Lkotlinx/serialization/json/Json;Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/reflect/ToolFromCallable;
+	public static final fun asToolDescriptor (Lkotlin/reflect/KFunction;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/tools/ToolDescriptor;
+	public static synthetic fun asToolDescriptor$default (Lkotlin/reflect/KFunction;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/ToolDescriptor;
+	public static final fun asToolType (Lkotlin/reflect/KType;)Lai/grazie/code/agents/core/tools/ToolParameterType;
+	public static final fun asTools (Lai/grazie/code/agents/core/tools/reflect/ToolSet;Lkotlinx/serialization/json/Json;)Ljava/util/List;
+	public static final fun asTools (Lkotlin/reflect/KClass;Lkotlinx/serialization/json/Json;Lai/grazie/code/agents/core/tools/reflect/ToolSet;)Ljava/util/List;
+	public static synthetic fun asTools$default (Lai/grazie/code/agents/core/tools/reflect/ToolSet;Lkotlinx/serialization/json/Json;ILjava/lang/Object;)Ljava/util/List;
+	public static synthetic fun asTools$default (Lkotlin/reflect/KClass;Lkotlinx/serialization/json/Json;Lai/grazie/code/agents/core/tools/reflect/ToolSet;ILjava/lang/Object;)Ljava/util/List;
+}
+
+public class ai/grazie/code/agents/core/tools/serialization/ToolResultStringSerializer : kotlinx/serialization/KSerializer {
+	public fun <init> (Lkotlinx/serialization/descriptors/SerialDescriptor;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lkotlinx/serialization/descriptors/SerialDescriptor;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/tools/serialization/ToolSerializationKt {
+	public static final fun serializeToolDescriptorsToJsonString (Ljava/util/List;)Ljava/lang/String;
+}
+

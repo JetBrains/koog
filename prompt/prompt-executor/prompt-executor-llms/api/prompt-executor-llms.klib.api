@@ -1,0 +1,38 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-llms>
+open class ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor : ai.jetbrains.code.prompt.executor.model/PromptExecutor { // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor|null[0]
+    constructor <init>(kotlin.collections/Map<ai.jetbrains.code.prompt.llm/LLMProvider, ai.jetbrains.code.prompt.executor.clients/LLMClient>, ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings? = ...) // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.<init>|<init>(kotlin.collections.Map<ai.jetbrains.code.prompt.llm.LLMProvider,ai.jetbrains.code.prompt.executor.clients.LLMClient>;ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor.FallbackPromptExecutorSettings?){}[0]
+    constructor <init>(kotlin/Array<out kotlin/Pair<ai.jetbrains.code.prompt.llm/LLMProvider, ai.jetbrains.code.prompt.executor.clients/LLMClient>>...) // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.<init>|<init>(kotlin.Array<out|kotlin.Pair<ai.jetbrains.code.prompt.llm.LLMProvider,ai.jetbrains.code.prompt.executor.clients.LLMClient>>...){}[0]
+
+    open suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+
+    final class FallbackPromptExecutorSettings { // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings|null[0]
+        constructor <init>(ai.jetbrains.code.prompt.llm/LLMProvider, ai.jetbrains.code.prompt.llm/LLModel) // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.<init>|<init>(ai.jetbrains.code.prompt.llm.LLMProvider;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+
+        final val fallbackModel // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.fallbackModel|{}fallbackModel[0]
+            final fun <get-fallbackModel>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.fallbackModel.<get-fallbackModel>|<get-fallbackModel>(){}[0]
+        final val fallbackProvider // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.fallbackProvider|{}fallbackProvider[0]
+            final fun <get-fallbackProvider>(): ai.jetbrains.code.prompt.llm/LLMProvider // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.fallbackProvider.<get-fallbackProvider>|<get-fallbackProvider>(){}[0]
+
+        final fun component1(): ai.jetbrains.code.prompt.llm/LLMProvider // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.component1|component1(){}[0]
+        final fun component2(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.component2|component2(){}[0]
+        final fun copy(ai.jetbrains.code.prompt.llm/LLMProvider = ..., ai.jetbrains.code.prompt.llm/LLModel = ...): ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.copy|copy(ai.jetbrains.code.prompt.llm.LLMProvider;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor.FallbackPromptExecutorSettings.toString|toString(){}[0]
+    }
+}
+
+open class ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor : ai.jetbrains.code.prompt.executor.model/PromptExecutor { // ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor|null[0]
+    constructor <init>(ai.jetbrains.code.prompt.executor.clients/LLMClient) // ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor.<init>|<init>(ai.jetbrains.code.prompt.executor.clients.LLMClient){}[0]
+
+    open suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}

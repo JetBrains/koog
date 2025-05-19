@@ -1,0 +1,62 @@
+public final class ai/grazie/code/prompt/markdown/MarkdownContentBuilder : ai/jetbrains/code/prompt/text/TextContentBuilder {
+	public fun <init> ()V
+	public final fun blockquote (Ljava/lang/String;)V
+	public final fun bold (Ljava/lang/String;)V
+	public final fun bulleted (Lkotlin/jvm/functions/Function1;)V
+	public final fun code (Ljava/lang/String;)V
+	public final fun codeblock (Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun codeblock$default (Lai/grazie/code/prompt/markdown/MarkdownContentBuilder;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun h1 (Ljava/lang/String;)V
+	public final fun h2 (Ljava/lang/String;)V
+	public final fun h3 (Ljava/lang/String;)V
+	public final fun h4 (Ljava/lang/String;)V
+	public final fun h5 (Ljava/lang/String;)V
+	public final fun h6 (Ljava/lang/String;)V
+	public final fun header (ILjava/lang/String;)V
+	public final fun horizontalRule ()V
+	public final fun image (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun italic (Ljava/lang/String;)V
+	public final fun line (Lkotlin/jvm/functions/Function1;)V
+	public final fun link (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun numbered (Lkotlin/jvm/functions/Function1;)V
+	public final fun strikethrough (Ljava/lang/String;)V
+	public final fun table (Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public static synthetic fun table$default (Lai/grazie/code/prompt/markdown/MarkdownContentBuilder;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)V
+}
+
+public final class ai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext {
+	public fun <init> ()V
+	public fun <init> (Lai/jetbrains/code/prompt/text/TextContentBuilder;)V
+	public synthetic fun <init> (Lai/jetbrains/code/prompt/text/TextContentBuilder;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun bold (Ljava/lang/String;)Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+	public final fun code (Ljava/lang/String;)Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+	public final fun image (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+	public final fun italic (Ljava/lang/String;)Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+	public final fun link (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+	public final fun space ()Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+	public final fun strikethrough (Ljava/lang/String;)Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+	public final fun text (Ljava/lang/String;)Lai/grazie/code/prompt/markdown/MarkdownContentBuilder$LineContext;
+}
+
+public final class ai/grazie/code/prompt/markdown/MarkdownContentBuilder$ListContext {
+	public fun <init> (Lai/grazie/code/prompt/markdown/MarkdownContentBuilder;Lkotlin/jvm/functions/Function1;)V
+	public final fun item (Ljava/lang/String;)V
+	public final fun item (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun item (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class ai/grazie/code/prompt/markdown/MarkdownKt {
+	public static final fun markdown (Lai/jetbrains/code/prompt/text/TextContentBuilder;Lkotlin/jvm/functions/Function1;)V
+	public static final fun markdown (Ljava/lang/StringBuilder;Lkotlin/jvm/functions/Function1;)V
+	public static final fun markdown (Lkotlin/jvm/functions/Function1;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/prompt/markdown/TableAlignment : java/lang/Enum {
+	public static final field CENTER Lai/grazie/code/prompt/markdown/TableAlignment;
+	public static final field LEFT Lai/grazie/code/prompt/markdown/TableAlignment;
+	public static final field RIGHT Lai/grazie/code/prompt/markdown/TableAlignment;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/prompt/markdown/TableAlignment;
+	public static fun values ()[Lai/grazie/code/prompt/markdown/TableAlignment;
+}
+

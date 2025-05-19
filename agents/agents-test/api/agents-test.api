@@ -1,0 +1,463 @@
+public final class ai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder : ai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase {
+	public static final field Companion Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder$Companion;
+	public fun <init> ()V
+	public synthetic fun build ()Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public fun build ()Lai/grazie/code/agents/testing/feature/DummyAgentContext;
+	public synthetic fun build ()Ljava/lang/Object;
+	public fun copy ()Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder;
+	public synthetic fun copy ()Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase;
+	public fun getAgentInput ()Ljava/lang/String;
+	public fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public fun getLlm ()Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun getStateManager ()Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyId ()Ljava/lang/String;
+	public fun setAgentInput (Ljava/lang/String;)V
+	public fun setConfig (Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)V
+	public fun setEnvironment (Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)V
+	public fun setLlm (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;)V
+	public fun setSessionUuid (Lai/grazie/utils/mpp/UUID;)V
+	public fun setStateManager (Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;)V
+	public fun setStorage (Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;)V
+	public fun setStrategyId (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder$Companion {
+}
+
+public final class ai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder$ProxyHandler {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun createProxy ()Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase : ai/grazie/code/agents/core/dsl/builder/BaseBuilder {
+	public abstract fun build ()Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public abstract fun copy ()Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase;
+	public abstract fun getAgentInput ()Ljava/lang/String;
+	public abstract fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public abstract fun getEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public abstract fun getLlm ()Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public abstract fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public abstract fun getStateManager ()Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;
+	public abstract fun getStorage ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;
+	public abstract fun getStrategyId ()Ljava/lang/String;
+	public abstract fun setAgentInput (Ljava/lang/String;)V
+	public abstract fun setConfig (Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)V
+	public abstract fun setEnvironment (Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)V
+	public abstract fun setLlm (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;)V
+	public abstract fun setSessionUuid (Lai/grazie/utils/mpp/UUID;)V
+	public abstract fun setStateManager (Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;)V
+	public abstract fun setStorage (Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;)V
+	public abstract fun setStrategyId (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/ApiKt {
+	public static final fun graph (Lai/grazie/code/agents/testing/feature/Testing$Config;Lkotlin/jvm/functions/Function1;)V
+	public static final fun testGraph (Lai/grazie/code/agents/core/agent/AIAgent$FeatureContext;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract interface class ai/grazie/code/agents/testing/feature/AssertionResult {
+}
+
+public final class ai/grazie/code/agents/testing/feature/AssertionResult$False : ai/grazie/code/agents/testing/feature/AssertionResult {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getMessage ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/feature/AssertionResult$NotEqual : ai/grazie/code/agents/testing/feature/AssertionResult {
+	public fun <init> (Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun getActual ()Ljava/lang/Object;
+	public final fun getExpected ()Ljava/lang/Object;
+	public final fun getMessage ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/feature/DummyAgentContext : ai/grazie/code/agents/core/agent/entity/AIAgentContextBase {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder;)V
+	public fun copy (Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Ljava/lang/String;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;Lai/grazie/utils/mpp/UUID;Ljava/lang/String;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public fun feature (Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;)Ljava/lang/Object;
+	public fun feature (Lai/grazie/code/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
+	public fun getAgentInput ()Ljava/lang/String;
+	public fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public fun getLlm ()Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public fun getPipeline ()Lai/grazie/code/agents/core/feature/AIAgentPipeline;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun getStateManager ()Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyId ()Ljava/lang/String;
+	public final fun isEnvironmentDefined ()Z
+	public final fun isLLMDefined ()Z
+}
+
+public final class ai/grazie/code/agents/testing/feature/EdgeAssertion {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lai/grazie/code/agents/testing/feature/NodeReference;)V
+	public final fun component1 ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public final fun component3 ()Ljava/lang/Object;
+	public final fun component4 ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun copy (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lai/grazie/code/agents/testing/feature/NodeReference;)Lai/grazie/code/agents/testing/feature/EdgeAssertion;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/testing/feature/EdgeAssertion;Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lai/grazie/code/agents/testing/feature/NodeReference;ILjava/lang/Object;)Lai/grazie/code/agents/testing/feature/EdgeAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContext ()Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public final fun getExpectedNode ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun getNode ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun getOutput ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/feature/GraphAssertions {
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/testing/feature/NodeReference$Start;Lai/grazie/code/agents/testing/feature/NodeReference$Finish;Ljava/util/Map;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/grazie/code/agents/testing/feature/NodeReference$Start;
+	public final fun component3 ()Lai/grazie/code/agents/testing/feature/NodeReference$Finish;
+	public final fun component4 ()Ljava/util/Map;
+	public final fun component5 ()Ljava/util/List;
+	public final fun component6 ()Ljava/util/List;
+	public final fun component7 ()Ljava/util/List;
+	public final fun component8 ()Ljava/util/List;
+	public final fun component9 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lai/grazie/code/agents/testing/feature/NodeReference$Start;Lai/grazie/code/agents/testing/feature/NodeReference$Finish;Ljava/util/Map;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lai/grazie/code/agents/testing/feature/GraphAssertions;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/testing/feature/GraphAssertions;Ljava/lang/String;Lai/grazie/code/agents/testing/feature/NodeReference$Start;Lai/grazie/code/agents/testing/feature/NodeReference$Finish;Ljava/util/Map;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/testing/feature/GraphAssertions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEdgeAssertions ()Ljava/util/List;
+	public final fun getFinish ()Lai/grazie/code/agents/testing/feature/NodeReference$Finish;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getNodeOutputAssertions ()Ljava/util/List;
+	public final fun getNodes ()Ljava/util/Map;
+	public final fun getReachabilityAssertions ()Ljava/util/List;
+	public final fun getStart ()Lai/grazie/code/agents/testing/feature/NodeReference$Start;
+	public final fun getSubgraphAssertions ()Ljava/util/List;
+	public final fun getUnconditionalEdgeAssertions ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/feature/NodeOutputAssertion {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/DummyAgentContext;Ljava/lang/Object;Ljava/lang/Object;)V
+	public final fun component1 ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/grazie/code/agents/testing/feature/DummyAgentContext;
+	public final fun component3 ()Ljava/lang/Object;
+	public final fun component4 ()Ljava/lang/Object;
+	public final fun copy (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/DummyAgentContext;Ljava/lang/Object;Ljava/lang/Object;)Lai/grazie/code/agents/testing/feature/NodeOutputAssertion;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/testing/feature/NodeOutputAssertion;Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/DummyAgentContext;Ljava/lang/Object;Ljava/lang/Object;ILjava/lang/Object;)Lai/grazie/code/agents/testing/feature/NodeOutputAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContext ()Lai/grazie/code/agents/testing/feature/DummyAgentContext;
+	public final fun getExpectedOutput ()Ljava/lang/Object;
+	public final fun getInput ()Ljava/lang/Object;
+	public final fun getNode ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/grazie/code/agents/testing/feature/NodeReference {
+	public abstract fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/grazie/code/agents/testing/feature/NodeReference$Finish : ai/grazie/code/agents/testing/feature/NodeReference {
+	public fun <init> ()V
+	public fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public class ai/grazie/code/agents/testing/feature/NodeReference$NamedNode : ai/grazie/code/agents/testing/feature/NodeReference {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getName ()Ljava/lang/String;
+	public fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/grazie/code/agents/testing/feature/NodeReference$Start : ai/grazie/code/agents/testing/feature/NodeReference {
+	public fun <init> ()V
+	public fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/grazie/code/agents/testing/feature/NodeReference$Strategy : ai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode {
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+	public fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public synthetic fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;
+}
+
+public class ai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode : ai/grazie/code/agents/testing/feature/NodeReference$NamedNode {
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+	public fun resolve (Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;)Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;
+}
+
+public final class ai/grazie/code/agents/testing/feature/ReachabilityAssertion {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;)V
+	public final fun component1 ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun copy (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;)Lai/grazie/code/agents/testing/feature/ReachabilityAssertion;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/testing/feature/ReachabilityAssertion;Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;ILjava/lang/Object;)Lai/grazie/code/agents/testing/feature/ReachabilityAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFrom ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun getTo ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/feature/SubGraphAssertions {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;Lai/grazie/code/agents/testing/feature/GraphAssertions;)V
+	public final fun component1 ()Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;
+	public final fun component2 ()Lai/grazie/code/agents/testing/feature/GraphAssertions;
+	public final fun copy (Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;Lai/grazie/code/agents/testing/feature/GraphAssertions;)Lai/grazie/code/agents/testing/feature/SubGraphAssertions;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/testing/feature/SubGraphAssertions;Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;Lai/grazie/code/agents/testing/feature/GraphAssertions;ILjava/lang/Object;)Lai/grazie/code/agents/testing/feature/SubGraphAssertions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGraphAssertions ()Lai/grazie/code/agents/testing/feature/GraphAssertions;
+	public final fun getSubgraphRef ()Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing {
+	public static final field Feature Lai/grazie/code/agents/testing/feature/Testing$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing$Config : ai/grazie/code/agents/local/features/common/config/FeatureConfig {
+	public fun <init> ()V
+	public final fun getEnableGraphTesting ()Z
+	public final fun handleAssertion (Lkotlin/jvm/functions/Function1;)V
+	public final fun setEnableGraphTesting (Z)V
+	public final fun verifyStrategy (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;)V
+	public final fun assertEdges (Lkotlin/jvm/functions/Function1;)V
+	public final fun assertNodeByName (Ljava/lang/String;)Lai/grazie/code/agents/testing/feature/NodeReference$NamedNode;
+	public final fun assertNodes (Lkotlin/jvm/functions/Function1;)V
+	public final fun assertReachable (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;)V
+	public final fun assertSubgraphByName (Ljava/lang/String;)Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;
+	public final fun finishNode ()Lai/grazie/code/agents/testing/feature/NodeReference$Finish;
+	public final fun startNode ()Lai/grazie/code/agents/testing/feature/NodeReference$Start;
+	public final fun verifySubgraph (Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun verifySubgraph$default (Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/grazie/code/agents/testing/feature/NodeReference$SubgraphNode;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder : ai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder;)V
+	public synthetic fun <init> (Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun alwaysGoesTo (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;)V
+	public fun build ()Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public synthetic fun build ()Ljava/lang/Object;
+	public synthetic fun copy ()Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase;
+	public fun copy ()Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder;
+	public fun getAgentInput ()Ljava/lang/String;
+	public final fun getAssertions ()Ljava/util/List;
+	public fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public fun getLlm ()Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun getStateManager ()Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyId ()Ljava/lang/String;
+	public final fun getUnconditionalEdgeAssertions ()Ljava/util/List;
+	public fun setAgentInput (Ljava/lang/String;)V
+	public fun setConfig (Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)V
+	public fun setEnvironment (Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)V
+	public fun setLlm (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;)V
+	public fun setSessionUuid (Lai/grazie/utils/mpp/UUID;)V
+	public fun setStateManager (Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;)V
+	public fun setStorage (Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;)V
+	public fun setStrategyId (Ljava/lang/String;)V
+	public final fun withContext (Lkotlin/jvm/functions/Function1;)V
+	public final fun withOutput (Lai/grazie/code/agents/testing/feature/NodeReference;Ljava/lang/Object;)Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder$EdgeOutputPair;
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder$EdgeOutputPair {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$EdgeAssertionsBuilder;Lai/grazie/code/agents/testing/feature/NodeReference;Ljava/lang/Object;)V
+	public final fun getNode ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun getOutput ()Ljava/lang/Object;
+	public final fun goesTo (Lai/grazie/code/agents/testing/feature/NodeReference;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder : ai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder;)V
+	public synthetic fun <init> (Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder;Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilder;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun build ()Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public synthetic fun build ()Ljava/lang/Object;
+	public synthetic fun copy ()Lai/grazie/code/agents/testing/feature/AIAgentContextMockBuilderBase;
+	public fun copy ()Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder;
+	public fun getAgentInput ()Ljava/lang/String;
+	public final fun getAssertions ()Ljava/util/List;
+	public fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public fun getEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public fun getLlm ()Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun getStateManager ()Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;
+	public fun getStorage ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;
+	public fun getStrategyId ()Ljava/lang/String;
+	public fun setAgentInput (Ljava/lang/String;)V
+	public fun setConfig (Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)V
+	public fun setEnvironment (Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)V
+	public fun setLlm (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;)V
+	public fun setSessionUuid (Lai/grazie/utils/mpp/UUID;)V
+	public fun setStateManager (Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;)V
+	public fun setStorage (Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;)V
+	public fun setStrategyId (Ljava/lang/String;)V
+	public final fun withContext (Lkotlin/jvm/functions/Function1;)V
+	public final fun withInput (Lai/grazie/code/agents/testing/feature/NodeReference;Ljava/lang/Object;)Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder$NodeOutputPair;
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder$NodeOutputPair {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/Testing$Config$SubgraphAssertionsBuilder$NodeOutputAssertionsBuilder;Lai/grazie/code/agents/testing/feature/NodeReference;Ljava/lang/Object;)V
+	public final fun getInput ()Ljava/lang/Object;
+	public final fun getNode ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun outputs (Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/Testing$Feature : ai/grazie/code/agents/core/feature/AIAgentFeature {
+	public synthetic fun createInitialConfig ()Lai/grazie/code/agents/local/features/common/config/FeatureConfig;
+	public fun createInitialConfig ()Lai/grazie/code/agents/testing/feature/Testing$Config;
+	public fun getKey ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/grazie/code/agents/local/features/common/config/FeatureConfig;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+	public fun install (Lai/grazie/code/agents/testing/feature/Testing$Config;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/TestingFeatureKt {
+	public static final fun toolCallMessage (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;)Lai/jetbrains/code/prompt/message/Message$Tool$Call;
+	public static final fun toolCallSignature (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;)Lai/jetbrains/code/prompt/message/Message$Tool$Call;
+	public static final fun toolResult (Lai/grazie/code/agents/core/tools/SimpleTool;Ljava/lang/String;)Lai/grazie/code/agents/core/environment/ReceivedToolResult;
+	public static final fun toolResult (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/ToolResult;)Lai/grazie/code/agents/core/environment/ReceivedToolResult;
+	public static final fun withTesting (Lai/grazie/code/agents/core/agent/AIAgent$FeatureContext;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun withTesting$default (Lai/grazie/code/agents/core/agent/AIAgent$FeatureContext;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/testing/feature/UnconditionalEdgeAssertion {
+	public fun <init> (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;)V
+	public final fun component1 ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun component2 ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun copy (Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;)Lai/grazie/code/agents/testing/feature/UnconditionalEdgeAssertion;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/testing/feature/UnconditionalEdgeAssertion;Lai/grazie/code/agents/testing/feature/NodeReference;Lai/grazie/code/agents/testing/feature/NodeReference;ILjava/lang/Object;)Lai/grazie/code/agents/testing/feature/UnconditionalEdgeAssertion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExpectedNode ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public final fun getNode ()Lai/grazie/code/agents/testing/feature/NodeReference;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/tools/DefaultResponseReceiver {
+	public static final field Companion Lai/grazie/code/agents/testing/tools/DefaultResponseReceiver$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getAsDefaultResponse ()Ljava/lang/String;
+	public final fun getResponse ()Ljava/lang/String;
+	public final fun onCondition (Lkotlin/jvm/functions/Function1;)Ljava/lang/String;
+	public final fun onRequestContains (Ljava/lang/String;)Ljava/lang/String;
+	public final fun onRequestEquals (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/tools/DefaultResponseReceiver$Companion {
+	public final fun clearMatches ()V
+	public final fun getConditionalMatches ()Ljava/util/Map;
+	public final fun getDefaultResponse ()Ljava/lang/String;
+	public final fun getExactMatches ()Ljava/util/Map;
+	public final fun getPartialMatches ()Ljava/util/Map;
+}
+
+public final class ai/grazie/code/agents/testing/tools/DummyTool : ai/grazie/code/agents/core/tools/SimpleTool {
+	public fun <init> ()V
+	public synthetic fun doExecute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun doExecute (Lai/grazie/code/agents/testing/tools/DummyTool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getArgsSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun getDescriptor ()Lai/grazie/code/agents/core/tools/ToolDescriptor;
+}
+
+public final class ai/grazie/code/agents/testing/tools/DummyTool$Args : ai/grazie/code/agents/core/tools/Tool$Args {
+	public static final field Companion Lai/grazie/code/agents/testing/tools/DummyTool$Args$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/testing/tools/DummyTool$Args;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/testing/tools/DummyTool$Args;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/testing/tools/DummyTool$Args;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDummy ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/tools/DummyTool$Args$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/testing/tools/DummyTool$Args$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/testing/tools/DummyTool$Args;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/testing/tools/DummyTool$Args;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/testing/tools/DummyTool$Args$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/testing/tools/MockEnvironment : ai/grazie/code/agents/core/environment/AIAgentEnvironment {
+	public fun <init> (Lai/grazie/code/agents/core/tools/ToolRegistry;Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)V
+	public synthetic fun <init> (Lai/grazie/code/agents/core/tools/ToolRegistry;Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun executeTools (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getBaseEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public final fun getPromptExecutor ()Lai/jetbrains/code/prompt/executor/model/PromptExecutor;
+	public final fun getToolRegistry ()Lai/grazie/code/agents/core/tools/ToolRegistry;
+	public fun reportProblem (Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendTermination (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/testing/tools/MockLLMBuilder {
+	public static final field Companion Lai/grazie/code/agents/testing/tools/MockLLMBuilder$Companion;
+	public fun <init> ()V
+	public final fun addLLMAnswerExactPattern (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;)V
+	public final fun addToolAction (Lai/grazie/code/agents/core/tools/Tool;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
+	public static synthetic fun addToolAction$default (Lai/grazie/code/agents/testing/tools/MockLLMBuilder;Lai/grazie/code/agents/core/tools/Tool;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)V
+	public final fun alwaysReturns (Lai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver;Ljava/lang/String;)V
+	public final fun alwaysTells (Lai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver;Lkotlin/jvm/functions/Function1;)V
+	public final fun build ()Lai/jetbrains/code/prompt/executor/model/PromptExecutor;
+	public final fun doesStr (Lai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver;Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver$MockToolResponseBuilder;
+	public final fun mockLLMToolCall (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder$ToolCallReceiver;
+	public final fun mockTool (Lai/grazie/code/agents/core/tools/Tool;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver;
+	public final fun onCondition (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder;
+	public final fun onUserRequestContains (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder;
+	public final fun onUserRequestEquals (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder;
+	public final fun setDefaultResponse (Ljava/lang/String;)V
+	public final fun setToolRegistry (Lai/grazie/code/agents/core/tools/ToolRegistry;)V
+}
+
+public final class ai/grazie/code/agents/testing/tools/MockLLMBuilder$Companion {
+	public final fun getCurrentBuilder ()Lai/grazie/code/agents/testing/tools/MockLLMBuilder;
+	public final fun setCurrentBuilder (Lai/grazie/code/agents/testing/tools/MockLLMBuilder;)V
+}
+
+public final class ai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver {
+	public fun <init> (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/testing/tools/MockLLMBuilder;)V
+	public final fun alwaysDoes (Lkotlin/jvm/functions/Function1;)V
+	public final fun alwaysReturns (Lai/grazie/code/agents/core/tools/ToolResult;)V
+	public final fun does (Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver$MockToolResponseBuilder;
+	public final fun returns (Lai/grazie/code/agents/core/tools/ToolResult;)Lai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver$MockToolResponseBuilder;
+}
+
+public final class ai/grazie/code/agents/testing/tools/MockLLMBuilder$MockToolReceiver$MockToolResponseBuilder {
+	public fun <init> (Lai/grazie/code/agents/core/tools/Tool;Lkotlin/jvm/functions/Function1;Lai/grazie/code/agents/testing/tools/MockLLMBuilder;)V
+	public final fun onArguments (Lai/grazie/code/agents/core/tools/Tool$Args;)V
+	public final fun onArgumentsMatching (Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class ai/grazie/code/agents/testing/tools/MockLLMBuilder$ToolCallReceiver {
+	public fun <init> (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/testing/tools/MockLLMBuilder;)V
+	public final fun onRequestEquals (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/testing/tools/MockLLMBuilderKt {
+	public static final fun getMockExecutor (Lai/grazie/code/agents/core/tools/ToolRegistry;Lkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/executor/model/PromptExecutor;
+	public static synthetic fun getMockExecutor$default (Lai/grazie/code/agents/core/tools/ToolRegistry;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/model/PromptExecutor;
+	public static final fun mockLLMAnswer (Ljava/lang/String;)Lai/grazie/code/agents/testing/tools/DefaultResponseReceiver;
+}
+
+public final class ai/grazie/code/agents/testing/tools/ToolCondition {
+	public fun <init> (Lai/grazie/code/agents/core/tools/Tool;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;)V
+	public final fun getArgsCondition ()Lkotlin/jvm/functions/Function2;
+	public final fun getProduceResult ()Lkotlin/jvm/functions/Function2;
+	public final fun getTool ()Lai/grazie/code/agents/core/tools/Tool;
+}
+

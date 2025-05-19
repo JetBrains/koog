@@ -1,0 +1,294 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.agents:agents-tools>
+open annotation class ai.grazie.code.agents.core.tools.annotations/InternalAgentToolsApi : kotlin/Annotation { // ai.grazie.code.agents.core.tools.annotations/InternalAgentToolsApi|null[0]
+    constructor <init>() // ai.grazie.code.agents.core.tools.annotations/InternalAgentToolsApi.<init>|<init>(){}[0]
+}
+
+open annotation class ai.grazie.code.agents.core.tools.annotations/LLMDescription : kotlin/Annotation { // ai.grazie.code.agents.core.tools.annotations/LLMDescription|null[0]
+    constructor <init>(kotlin/String) // ai.grazie.code.agents.core.tools.annotations/LLMDescription.<init>|<init>(kotlin.String){}[0]
+
+    final val description // ai.grazie.code.agents.core.tools.annotations/LLMDescription.description|{}description[0]
+        final fun <get-description>(): kotlin/String // ai.grazie.code.agents.core.tools.annotations/LLMDescription.description.<get-description>|<get-description>(){}[0]
+}
+
+open annotation class ai.grazie.code.agents.core.tools.annotations/Tool : kotlin/Annotation { // ai.grazie.code.agents.core.tools.annotations/Tool|null[0]
+    constructor <init>(kotlin/String = ...) // ai.grazie.code.agents.core.tools.annotations/Tool.<init>|<init>(kotlin.String){}[0]
+
+    final val customName // ai.grazie.code.agents.core.tools.annotations/Tool.customName|{}customName[0]
+        final fun <get-customName>(): kotlin/String // ai.grazie.code.agents.core.tools.annotations/Tool.customName.<get-customName>|<get-customName>(){}[0]
+}
+
+abstract interface ai.grazie.code.agents.core.tools/DirectToolCallsEnabler // ai.grazie.code.agents.core.tools/DirectToolCallsEnabler|null[0]
+
+abstract interface ai.grazie.code.agents.core.tools/ToolResult { // ai.grazie.code.agents.core.tools/ToolResult|null[0]
+    abstract fun toStringDefault(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.toStringDefault|toStringDefault(){}[0]
+
+    abstract interface <#A1: ai.grazie.code.agents.core.tools/ToolResult.JSONSerializable<#A1>> JSONSerializable : ai.grazie.code.agents.core.tools/ToolResult { // ai.grazie.code.agents.core.tools/ToolResult.JSONSerializable|null[0]
+        abstract fun getSerializer(): kotlinx.serialization/KSerializer<#A1> // ai.grazie.code.agents.core.tools/ToolResult.JSONSerializable.getSerializer|getSerializer(){}[0]
+        open fun toStringDefault(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.JSONSerializable.toStringDefault|toStringDefault(){}[0]
+    }
+
+    final value class Boolean : ai.grazie.code.agents.core.tools/ToolResult { // ai.grazie.code.agents.core.tools/ToolResult.Boolean|null[0]
+        constructor <init>(kotlin/Boolean) // ai.grazie.code.agents.core.tools/ToolResult.Boolean.<init>|<init>(kotlin.Boolean){}[0]
+
+        final val result // ai.grazie.code.agents.core.tools/ToolResult.Boolean.result|{}result[0]
+            final fun <get-result>(): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolResult.Boolean.result.<get-result>|<get-result>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolResult.Boolean.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolResult.Boolean.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.Boolean.toString|toString(){}[0]
+        final fun toStringDefault(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.Boolean.toStringDefault|toStringDefault(){}[0]
+
+        final object Companion { // ai.grazie.code.agents.core.tools/ToolResult.Boolean.Companion|null[0]
+            final val FALSE // ai.grazie.code.agents.core.tools/ToolResult.Boolean.Companion.FALSE|{}FALSE[0]
+                final fun <get-FALSE>(): ai.grazie.code.agents.core.tools/ToolResult.Boolean // ai.grazie.code.agents.core.tools/ToolResult.Boolean.Companion.FALSE.<get-FALSE>|<get-FALSE>(){}[0]
+            final val TRUE // ai.grazie.code.agents.core.tools/ToolResult.Boolean.Companion.TRUE|{}TRUE[0]
+                final fun <get-TRUE>(): ai.grazie.code.agents.core.tools/ToolResult.Boolean // ai.grazie.code.agents.core.tools/ToolResult.Boolean.Companion.TRUE.<get-TRUE>|<get-TRUE>(){}[0]
+        }
+    }
+
+    final value class Number : ai.grazie.code.agents.core.tools/ToolResult { // ai.grazie.code.agents.core.tools/ToolResult.Number|null[0]
+        constructor <init>(kotlin/Number) // ai.grazie.code.agents.core.tools/ToolResult.Number.<init>|<init>(kotlin.Number){}[0]
+
+        final val result // ai.grazie.code.agents.core.tools/ToolResult.Number.result|{}result[0]
+            final fun <get-result>(): kotlin/Number // ai.grazie.code.agents.core.tools/ToolResult.Number.result.<get-result>|<get-result>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolResult.Number.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolResult.Number.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.Number.toString|toString(){}[0]
+        final fun toStringDefault(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.Number.toStringDefault|toStringDefault(){}[0]
+    }
+
+    final value class Text : ai.grazie.code.agents.core.tools/ToolResult.JSONSerializable<ai.grazie.code.agents.core.tools/ToolResult.Text> { // ai.grazie.code.agents.core.tools/ToolResult.Text|null[0]
+        constructor <init>(kotlin/Exception) // ai.grazie.code.agents.core.tools/ToolResult.Text.<init>|<init>(kotlin.Exception){}[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.core.tools/ToolResult.Text.<init>|<init>(kotlin.String){}[0]
+
+        final val text // ai.grazie.code.agents.core.tools/ToolResult.Text.text|{}text[0]
+            final fun <get-text>(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.Text.text.<get-text>|<get-text>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolResult.Text.equals|equals(kotlin.Any?){}[0]
+        final fun getSerializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.core.tools/ToolResult.Text> // ai.grazie.code.agents.core.tools/ToolResult.Text.getSerializer|getSerializer(){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolResult.Text.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.Text.toString|toString(){}[0]
+        final fun toStringDefault(): kotlin/String // ai.grazie.code.agents.core.tools/ToolResult.Text.toStringDefault|toStringDefault(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.core.tools/ToolResult.Text> { // ai.grazie.code.agents.core.tools/ToolResult.Text.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.core.tools/ToolResult.Text.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.core.tools/ToolResult.Text.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.core.tools/ToolResult.Text.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.core.tools/ToolResult.Text // ai.grazie.code.agents.core.tools/ToolResult.Text.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.core.tools/ToolResult.Text) // ai.grazie.code.agents.core.tools/ToolResult.Text.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.core.tools.ToolResult.Text){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.core.tools/ToolResult.Text.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.core.tools/ToolResult.Text> // ai.grazie.code.agents.core.tools/ToolResult.Text.Companion.serializer|serializer(){}[0]
+            final inline fun build(kotlin/Function1<kotlin.text/StringBuilder, kotlin/Unit>): ai.grazie.code.agents.core.tools/ToolResult.Text // ai.grazie.code.agents.core.tools/ToolResult.Text.Companion.build|build(kotlin.Function1<kotlin.text.StringBuilder,kotlin.Unit>){}[0]
+        }
+    }
+}
+
+abstract class <#A: ai.grazie.code.agents.core.tools/Tool.Args, #B: ai.grazie.code.agents.core.tools/ToolResult> ai.grazie.code.agents.core.tools/Tool { // ai.grazie.code.agents.core.tools/Tool|null[0]
+    constructor <init>() // ai.grazie.code.agents.core.tools/Tool.<init>|<init>(){}[0]
+
+    abstract val argsSerializer // ai.grazie.code.agents.core.tools/Tool.argsSerializer|{}argsSerializer[0]
+        abstract fun <get-argsSerializer>(): kotlinx.serialization/KSerializer<#A> // ai.grazie.code.agents.core.tools/Tool.argsSerializer.<get-argsSerializer>|<get-argsSerializer>(){}[0]
+    abstract val descriptor // ai.grazie.code.agents.core.tools/Tool.descriptor|{}descriptor[0]
+        abstract fun <get-descriptor>(): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.core.tools/Tool.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+    final val name // ai.grazie.code.agents.core.tools/Tool.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.grazie.code.agents.core.tools/Tool.name.<get-name>|<get-name>(){}[0]
+
+    abstract suspend fun execute(#A): #B // ai.grazie.code.agents.core.tools/Tool.execute|execute(1:0){}[0]
+    final fun decodeArgs(kotlinx.serialization.json/JsonObject): #A // ai.grazie.code.agents.core.tools/Tool.decodeArgs|decodeArgs(kotlinx.serialization.json.JsonObject){}[0]
+    final fun decodeArgsFromString(kotlin/String): #A // ai.grazie.code.agents.core.tools/Tool.decodeArgsFromString|decodeArgsFromString(kotlin.String){}[0]
+    final fun encodeArgs(#A): kotlinx.serialization.json/JsonObject // ai.grazie.code.agents.core.tools/Tool.encodeArgs|encodeArgs(1:0){}[0]
+    final fun encodeArgsToString(#A): kotlin/String // ai.grazie.code.agents.core.tools/Tool.encodeArgsToString|encodeArgsToString(1:0){}[0]
+    final fun encodeResultToStringUnsafe(ai.grazie.code.agents.core.tools/ToolResult): kotlin/String // ai.grazie.code.agents.core.tools/Tool.encodeResultToStringUnsafe|encodeResultToStringUnsafe(ai.grazie.code.agents.core.tools.ToolResult){}[0]
+    final suspend fun executeAndSerialize(#A, ai.grazie.code.agents.core.tools/DirectToolCallsEnabler): kotlin/Pair<#B, kotlin/String> // ai.grazie.code.agents.core.tools/Tool.executeAndSerialize|executeAndSerialize(1:0;ai.grazie.code.agents.core.tools.DirectToolCallsEnabler){}[0]
+    final suspend fun executeUnsafe(kotlin/Any?, ai.grazie.code.agents.core.tools/DirectToolCallsEnabler): #B // ai.grazie.code.agents.core.tools/Tool.executeUnsafe|executeUnsafe(kotlin.Any?;ai.grazie.code.agents.core.tools.DirectToolCallsEnabler){}[0]
+    open fun encodeResultToString(#B): kotlin/String // ai.grazie.code.agents.core.tools/Tool.encodeResultToString|encodeResultToString(1:1){}[0]
+
+    abstract interface Args // ai.grazie.code.agents.core.tools/Tool.Args|null[0]
+
+    final object EmptyArgs : ai.grazie.code.agents.core.tools/Tool.Args, kotlinx.serialization.internal/SerializerFactory { // ai.grazie.code.agents.core.tools/Tool.EmptyArgs|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/Tool.EmptyArgs.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/Tool.EmptyArgs.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.core.tools/Tool.EmptyArgs> // ai.grazie.code.agents.core.tools/Tool.EmptyArgs.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.grazie.code.agents.core.tools/Tool.EmptyArgs.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/Tool.EmptyArgs.toString|toString(){}[0]
+    }
+}
+
+abstract class <#A: ai.grazie.code.agents.core.tools/Tool.Args> ai.grazie.code.agents.core.tools/SimpleTool : ai.grazie.code.agents.core.tools/Tool<#A, ai.grazie.code.agents.core.tools/ToolResult.Text> { // ai.grazie.code.agents.core.tools/SimpleTool|null[0]
+    constructor <init>() // ai.grazie.code.agents.core.tools/SimpleTool.<init>|<init>(){}[0]
+
+    abstract suspend fun doExecute(#A): kotlin/String // ai.grazie.code.agents.core.tools/SimpleTool.doExecute|doExecute(1:0){}[0]
+    final suspend fun execute(#A): ai.grazie.code.agents.core.tools/ToolResult.Text // ai.grazie.code.agents.core.tools/SimpleTool.execute|execute(1:0){}[0]
+    open fun encodeResultToString(ai.grazie.code.agents.core.tools/ToolResult.Text): kotlin/String // ai.grazie.code.agents.core.tools/SimpleTool.encodeResultToString|encodeResultToString(ai.grazie.code.agents.core.tools.ToolResult.Text){}[0]
+}
+
+final class ai.grazie.code.agents.core.tools/ToolDescriptor { // ai.grazie.code.agents.core.tools/ToolDescriptor|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> = ..., kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> = ...) // ai.grazie.code.agents.core.tools/ToolDescriptor.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolParameterDescriptor>;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolParameterDescriptor>){}[0]
+
+    final val description // ai.grazie.code.agents.core.tools/ToolDescriptor.description|{}description[0]
+        final fun <get-description>(): kotlin/String // ai.grazie.code.agents.core.tools/ToolDescriptor.description.<get-description>|<get-description>(){}[0]
+    final val name // ai.grazie.code.agents.core.tools/ToolDescriptor.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.grazie.code.agents.core.tools/ToolDescriptor.name.<get-name>|<get-name>(){}[0]
+    final val optionalParameters // ai.grazie.code.agents.core.tools/ToolDescriptor.optionalParameters|{}optionalParameters[0]
+        final fun <get-optionalParameters>(): kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> // ai.grazie.code.agents.core.tools/ToolDescriptor.optionalParameters.<get-optionalParameters>|<get-optionalParameters>(){}[0]
+    final val requiredParameters // ai.grazie.code.agents.core.tools/ToolDescriptor.requiredParameters|{}requiredParameters[0]
+        final fun <get-requiredParameters>(): kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> // ai.grazie.code.agents.core.tools/ToolDescriptor.requiredParameters.<get-requiredParameters>|<get-requiredParameters>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.core.tools/ToolDescriptor.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.grazie.code.agents.core.tools/ToolDescriptor.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> // ai.grazie.code.agents.core.tools/ToolDescriptor.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> // ai.grazie.code.agents.core.tools/ToolDescriptor.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> = ..., kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> = ...): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.core.tools/ToolDescriptor.copy|copy(kotlin.String;kotlin.String;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolParameterDescriptor>;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolParameterDescriptor>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolDescriptor.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolDescriptor.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolDescriptor.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.agents.core.tools/ToolParameterDescriptor { // ai.grazie.code.agents.core.tools/ToolParameterDescriptor|null[0]
+    constructor <init>(kotlin/String, kotlin/String, ai.grazie.code.agents.core.tools/ToolParameterType) // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.<init>|<init>(kotlin.String;kotlin.String;ai.grazie.code.agents.core.tools.ToolParameterType){}[0]
+
+    final val description // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.description|{}description[0]
+        final fun <get-description>(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.description.<get-description>|<get-description>(){}[0]
+    final val name // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.name.<get-name>|<get-name>(){}[0]
+    final val type // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.type|{}type[0]
+        final fun <get-type>(): ai.grazie.code.agents.core.tools/ToolParameterType // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.component2|component2(){}[0]
+    final fun component3(): ai.grazie.code.agents.core.tools/ToolParameterType // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., ai.grazie.code.agents.core.tools/ToolParameterType = ...): ai.grazie.code.agents.core.tools/ToolParameterDescriptor // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.copy|copy(kotlin.String;kotlin.String;ai.grazie.code.agents.core.tools.ToolParameterType){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterDescriptor.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.agents.core.tools/ToolRegistry { // ai.grazie.code.agents.core.tools/ToolRegistry|null[0]
+    final val tools // ai.grazie.code.agents.core.tools/ToolRegistry.tools|{}tools[0]
+        final fun <get-tools>(): kotlin.collections/List<ai.grazie.code.agents.core.tools/Tool<*, *>> // ai.grazie.code.agents.core.tools/ToolRegistry.tools.<get-tools>|<get-tools>(){}[0]
+
+    final fun getTool(kotlin/String): ai.grazie.code.agents.core.tools/Tool<*, *> // ai.grazie.code.agents.core.tools/ToolRegistry.getTool|getTool(kotlin.String){}[0]
+    final fun plus(ai.grazie.code.agents.core.tools/ToolRegistry): ai.grazie.code.agents.core.tools/ToolRegistry // ai.grazie.code.agents.core.tools/ToolRegistry.plus|plus(ai.grazie.code.agents.core.tools.ToolRegistry){}[0]
+    final fun with(ai.grazie.code.agents.core.tools/ToolRegistry): ai.grazie.code.agents.core.tools/ToolRegistry // ai.grazie.code.agents.core.tools/ToolRegistry.with|with(ai.grazie.code.agents.core.tools.ToolRegistry){}[0]
+    final inline fun <#A1: reified ai.grazie.code.agents.core.tools/Tool<*, *>> getTool(): #A1 // ai.grazie.code.agents.core.tools/ToolRegistry.getTool|getTool(){0§<ai.grazie.code.agents.core.tools.Tool<*,*>>}[0]
+
+    final class Builder { // ai.grazie.code.agents.core.tools/ToolRegistry.Builder|null[0]
+        final fun tool(ai.grazie.code.agents.core.tools/Tool<*, *>) // ai.grazie.code.agents.core.tools/ToolRegistry.Builder.tool|tool(ai.grazie.code.agents.core.tools.Tool<*,*>){}[0]
+        final fun tools(kotlin.collections/List<ai.grazie.code.agents.core.tools/Tool<*, *>>) // ai.grazie.code.agents.core.tools/ToolRegistry.Builder.tools|tools(kotlin.collections.List<ai.grazie.code.agents.core.tools.Tool<*,*>>){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.core.tools/ToolRegistry.Companion|null[0]
+        final val EMPTY // ai.grazie.code.agents.core.tools/ToolRegistry.Companion.EMPTY|{}EMPTY[0]
+            final fun <get-EMPTY>(): ai.grazie.code.agents.core.tools/ToolRegistry // ai.grazie.code.agents.core.tools/ToolRegistry.Companion.EMPTY.<get-EMPTY>|<get-EMPTY>(){}[0]
+
+        final fun invoke(kotlin/Function1<ai.grazie.code.agents.core.tools/ToolRegistry.Builder, kotlin/Unit>): ai.grazie.code.agents.core.tools/ToolRegistry // ai.grazie.code.agents.core.tools/ToolRegistry.Companion.invoke|invoke(kotlin.Function1<ai.grazie.code.agents.core.tools.ToolRegistry.Builder,kotlin.Unit>){}[0]
+    }
+}
+
+open class <#A: kotlin/Any?> ai.grazie.code.agents.core.tools.serialization/ToolResultStringSerializer : kotlinx.serialization/KSerializer<#A> { // ai.grazie.code.agents.core.tools.serialization/ToolResultStringSerializer|null[0]
+    constructor <init>(kotlinx.serialization.descriptors/SerialDescriptor = ..., kotlin/Function1<#A, kotlin/String>) // ai.grazie.code.agents.core.tools.serialization/ToolResultStringSerializer.<init>|<init>(kotlinx.serialization.descriptors.SerialDescriptor;kotlin.Function1<1:0,kotlin.String>){}[0]
+
+    final val descriptor // ai.grazie.code.agents.core.tools.serialization/ToolResultStringSerializer.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.core.tools.serialization/ToolResultStringSerializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final fun deserialize(kotlinx.serialization.encoding/Decoder): #A // ai.grazie.code.agents.core.tools.serialization/ToolResultStringSerializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+    final fun serialize(kotlinx.serialization.encoding/Encoder, #A) // ai.grazie.code.agents.core.tools.serialization/ToolResultStringSerializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;1:0){}[0]
+}
+
+sealed class ai.grazie.code.agents.core.tools/ToolException : kotlin/Exception { // ai.grazie.code.agents.core.tools/ToolException|null[0]
+    open val message // ai.grazie.code.agents.core.tools/ToolException.message|{}message[0]
+        open fun <get-message>(): kotlin/String // ai.grazie.code.agents.core.tools/ToolException.message.<get-message>|<get-message>(){}[0]
+
+    final class ValidationFailure : ai.grazie.code.agents.core.tools/ToolException { // ai.grazie.code.agents.core.tools/ToolException.ValidationFailure|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.core.tools/ToolException.ValidationFailure.<init>|<init>(kotlin.String){}[0]
+    }
+}
+
+sealed class ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType|null[0]
+    final val name // ai.grazie.code.agents.core.tools/ToolParameterType.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.name.<get-name>|<get-name>(){}[0]
+
+    final class Enum : ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType.Enum|null[0]
+        constructor <init>(kotlin/Array<kotlin/String>) // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.<init>|<init>(kotlin.Array<kotlin.String>){}[0]
+
+        final val entries // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.entries|{}entries[0]
+            final fun <get-entries>(): kotlin/Array<kotlin/String> // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.entries.<get-entries>|<get-entries>(){}[0]
+
+        final fun component1(): kotlin/Array<kotlin/String> // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.component1|component1(){}[0]
+        final fun copy(kotlin/Array<kotlin/String> = ...): ai.grazie.code.agents.core.tools/ToolParameterType.Enum // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.copy|copy(kotlin.Array<kotlin.String>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.Enum.toString|toString(){}[0]
+    }
+
+    final class List : ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType.List|null[0]
+        constructor <init>(ai.grazie.code.agents.core.tools/ToolParameterType) // ai.grazie.code.agents.core.tools/ToolParameterType.List.<init>|<init>(ai.grazie.code.agents.core.tools.ToolParameterType){}[0]
+
+        final val itemsType // ai.grazie.code.agents.core.tools/ToolParameterType.List.itemsType|{}itemsType[0]
+            final fun <get-itemsType>(): ai.grazie.code.agents.core.tools/ToolParameterType // ai.grazie.code.agents.core.tools/ToolParameterType.List.itemsType.<get-itemsType>|<get-itemsType>(){}[0]
+
+        final fun component1(): ai.grazie.code.agents.core.tools/ToolParameterType // ai.grazie.code.agents.core.tools/ToolParameterType.List.component1|component1(){}[0]
+        final fun copy(ai.grazie.code.agents.core.tools/ToolParameterType = ...): ai.grazie.code.agents.core.tools/ToolParameterType.List // ai.grazie.code.agents.core.tools/ToolParameterType.List.copy|copy(ai.grazie.code.agents.core.tools.ToolParameterType){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterType.List.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterType.List.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.List.toString|toString(){}[0]
+    }
+
+    final class Object : ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType.Object|null[0]
+        constructor <init>(kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor>) // ai.grazie.code.agents.core.tools/ToolParameterType.Object.<init>|<init>(kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolParameterDescriptor>){}[0]
+
+        final val properties // ai.grazie.code.agents.core.tools/ToolParameterType.Object.properties|{}properties[0]
+            final fun <get-properties>(): kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> // ai.grazie.code.agents.core.tools/ToolParameterType.Object.properties.<get-properties>|<get-properties>(){}[0]
+
+        final fun component1(): kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> // ai.grazie.code.agents.core.tools/ToolParameterType.Object.component1|component1(){}[0]
+        final fun copy(kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolParameterDescriptor> = ...): ai.grazie.code.agents.core.tools/ToolParameterType.Object // ai.grazie.code.agents.core.tools/ToolParameterType.Object.copy|copy(kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolParameterDescriptor>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterType.Object.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterType.Object.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.Object.toString|toString(){}[0]
+    }
+
+    final object Boolean : ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType.Boolean|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterType.Boolean.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterType.Boolean.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.Boolean.toString|toString(){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.core.tools/ToolParameterType.Companion|null[0]
+        final fun Enum(kotlin.enums/EnumEntries<*>): ai.grazie.code.agents.core.tools/ToolParameterType.Enum // ai.grazie.code.agents.core.tools/ToolParameterType.Companion.Enum|Enum(kotlin.enums.EnumEntries<*>){}[0]
+        final fun Enum(kotlin/Array<kotlin/Enum<*>>): ai.grazie.code.agents.core.tools/ToolParameterType.Enum // ai.grazie.code.agents.core.tools/ToolParameterType.Companion.Enum|Enum(kotlin.Array<kotlin.Enum<*>>){}[0]
+    }
+
+    final object Float : ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType.Float|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterType.Float.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterType.Float.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.Float.toString|toString(){}[0]
+    }
+
+    final object Integer : ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType.Integer|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterType.Integer.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterType.Integer.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.Integer.toString|toString(){}[0]
+    }
+
+    final object String : ai.grazie.code.agents.core.tools/ToolParameterType { // ai.grazie.code.agents.core.tools/ToolParameterType.String|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.core.tools/ToolParameterType.String.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.core.tools/ToolParameterType.String.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.core.tools/ToolParameterType.String.toString|toString(){}[0]
+    }
+}
+
+final fun <#A: kotlin/Any> ai.grazie.code.agents.core.tools/validateNotNull(#A?, kotlin/Function0<kotlin/String>): #A // ai.grazie.code.agents.core.tools/validateNotNull|validateNotNull(0:0?;kotlin.Function0<kotlin.String>){0§<kotlin.Any>}[0]
+final fun ai.grazie.code.agents.core.tools.serialization/serializeToolDescriptorsToJsonString(kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin/String // ai.grazie.code.agents.core.tools.serialization/serializeToolDescriptorsToJsonString|serializeToolDescriptorsToJsonString(kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+final fun ai.grazie.code.agents.core.tools/fail(kotlin/String): kotlin/Nothing // ai.grazie.code.agents.core.tools/fail|fail(kotlin.String){}[0]
+final fun ai.grazie.code.agents.core.tools/validate(kotlin/Boolean, kotlin/Function0<kotlin/String>) // ai.grazie.code.agents.core.tools/validate|validate(kotlin.Boolean;kotlin.Function0<kotlin.String>){}[0]

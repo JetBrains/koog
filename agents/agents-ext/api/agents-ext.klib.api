@@ -1,0 +1,202 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.agents:agents-ext>
+abstract interface <#A: ai.grazie.code.agents.ext.agent/SerializableSubgraphResult<#A>> ai.grazie.code.agents.ext.agent/SerializableSubgraphResult : ai.grazie.code.agents.core.tools/Tool.Args, ai.grazie.code.agents.core.tools/ToolResult.JSONSerializable<#A> // ai.grazie.code.agents.ext.agent/SerializableSubgraphResult|null[0]
+
+abstract interface ai.grazie.code.agents.ext.agent/SubgraphResult : ai.grazie.code.agents.core.tools/Tool.Args, ai.grazie.code.agents.core.tools/ToolResult // ai.grazie.code.agents.ext.agent/SubgraphResult|null[0]
+
+abstract class <#A: ai.grazie.code.agents.ext.agent/SubgraphResult> ai.grazie.code.agents.ext.agent/ProvideSubgraphResult : ai.grazie.code.agents.core.tools/Tool<#A, #A> { // ai.grazie.code.agents.ext.agent/ProvideSubgraphResult|null[0]
+    constructor <init>() // ai.grazie.code.agents.ext.agent/ProvideSubgraphResult.<init>|<init>(){}[0]
+}
+
+final class ai.grazie.code.agents.ext.agent/StringSubgraphResult : ai.grazie.code.agents.ext.agent/SubgraphResult { // ai.grazie.code.agents.ext.agent/StringSubgraphResult|null[0]
+    constructor <init>(kotlin/String) // ai.grazie.code.agents.ext.agent/StringSubgraphResult.<init>|<init>(kotlin.String){}[0]
+
+    final val result // ai.grazie.code.agents.ext.agent/StringSubgraphResult.result|{}result[0]
+        final fun <get-result>(): kotlin/String // ai.grazie.code.agents.ext.agent/StringSubgraphResult.result.<get-result>|<get-result>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.ext.agent/StringSubgraphResult.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): ai.grazie.code.agents.ext.agent/StringSubgraphResult // ai.grazie.code.agents.ext.agent/StringSubgraphResult.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.ext.agent/StringSubgraphResult.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.ext.agent/StringSubgraphResult.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.ext.agent/StringSubgraphResult.toString|toString(){}[0]
+    final fun toStringDefault(): kotlin/String // ai.grazie.code.agents.ext.agent/StringSubgraphResult.toStringDefault|toStringDefault(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.ext.agent/StringSubgraphResult> { // ai.grazie.code.agents.ext.agent/StringSubgraphResult.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.ext.agent/StringSubgraphResult.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.ext.agent/StringSubgraphResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.ext.agent/StringSubgraphResult.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.ext.agent/StringSubgraphResult // ai.grazie.code.agents.ext.agent/StringSubgraphResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.ext.agent/StringSubgraphResult) // ai.grazie.code.agents.ext.agent/StringSubgraphResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.ext.agent.StringSubgraphResult){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.ext.agent/StringSubgraphResult.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.agent/StringSubgraphResult> // ai.grazie.code.agents.ext.agent/StringSubgraphResult.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult : ai.grazie.code.agents.ext.agent/SubgraphResult { // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult|null[0]
+    constructor <init>(kotlin/Boolean, kotlin/String) // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.<init>|<init>(kotlin.Boolean;kotlin.String){}[0]
+
+    final val correct // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.correct|{}correct[0]
+        final fun <get-correct>(): kotlin/Boolean // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.correct.<get-correct>|<get-correct>(){}[0]
+    final val message // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.message|{}message[0]
+        final fun <get-message>(): kotlin/String // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.message.<get-message>|<get-message>(){}[0]
+
+    final fun component1(): kotlin/Boolean // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.component2|component2(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/String = ...): ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.copy|copy(kotlin.Boolean;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.toString|toString(){}[0]
+    final fun toStringDefault(): kotlin/String // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.toStringDefault|toStringDefault(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult> { // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult) // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.ext.agent.VerifiedSubgraphResult){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult> // ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final object ai.grazie.code.agents.ext.agent/ProvideStringSubgraphResult : ai.grazie.code.agents.ext.agent/ProvideSubgraphResult<ai.grazie.code.agents.ext.agent/StringSubgraphResult> { // ai.grazie.code.agents.ext.agent/ProvideStringSubgraphResult|null[0]
+    final val argsSerializer // ai.grazie.code.agents.ext.agent/ProvideStringSubgraphResult.argsSerializer|{}argsSerializer[0]
+        final fun <get-argsSerializer>(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.agent/StringSubgraphResult> // ai.grazie.code.agents.ext.agent/ProvideStringSubgraphResult.argsSerializer.<get-argsSerializer>|<get-argsSerializer>(){}[0]
+    final val descriptor // ai.grazie.code.agents.ext.agent/ProvideStringSubgraphResult.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.ext.agent/ProvideStringSubgraphResult.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+}
+
+final object ai.grazie.code.agents.ext.agent/ProvideVerifiedSubgraphResult : ai.grazie.code.agents.ext.agent/ProvideSubgraphResult<ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult> { // ai.grazie.code.agents.ext.agent/ProvideVerifiedSubgraphResult|null[0]
+    final val argsSerializer // ai.grazie.code.agents.ext.agent/ProvideVerifiedSubgraphResult.argsSerializer|{}argsSerializer[0]
+        final fun <get-argsSerializer>(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult> // ai.grazie.code.agents.ext.agent/ProvideVerifiedSubgraphResult.argsSerializer.<get-argsSerializer>|<get-argsSerializer>(){}[0]
+    final val descriptor // ai.grazie.code.agents.ext.agent/ProvideVerifiedSubgraphResult.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.ext.agent/ProvideVerifiedSubgraphResult.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+}
+
+final object ai.grazie.code.agents.ext.tool/AskUser : ai.grazie.code.agents.core.tools/SimpleTool<ai.grazie.code.agents.ext.tool/AskUser.Args> { // ai.grazie.code.agents.ext.tool/AskUser|null[0]
+    final val argsSerializer // ai.grazie.code.agents.ext.tool/AskUser.argsSerializer|{}argsSerializer[0]
+        final fun <get-argsSerializer>(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.tool/AskUser.Args> // ai.grazie.code.agents.ext.tool/AskUser.argsSerializer.<get-argsSerializer>|<get-argsSerializer>(){}[0]
+    final val descriptor // ai.grazie.code.agents.ext.tool/AskUser.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.ext.tool/AskUser.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final suspend fun doExecute(ai.grazie.code.agents.ext.tool/AskUser.Args): kotlin/String // ai.grazie.code.agents.ext.tool/AskUser.doExecute|doExecute(ai.grazie.code.agents.ext.tool.AskUser.Args){}[0]
+
+    final class Args : ai.grazie.code.agents.core.tools/Tool.Args { // ai.grazie.code.agents.ext.tool/AskUser.Args|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.ext.tool/AskUser.Args.<init>|<init>(kotlin.String){}[0]
+
+        final val message // ai.grazie.code.agents.ext.tool/AskUser.Args.message|{}message[0]
+            final fun <get-message>(): kotlin/String // ai.grazie.code.agents.ext.tool/AskUser.Args.message.<get-message>|<get-message>(){}[0]
+
+        final fun component1(): kotlin/String // ai.grazie.code.agents.ext.tool/AskUser.Args.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.grazie.code.agents.ext.tool/AskUser.Args // ai.grazie.code.agents.ext.tool/AskUser.Args.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.ext.tool/AskUser.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.ext.tool/AskUser.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.ext.tool/AskUser.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.ext.tool/AskUser.Args> { // ai.grazie.code.agents.ext.tool/AskUser.Args.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.ext.tool/AskUser.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.ext.tool/AskUser.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.ext.tool/AskUser.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.ext.tool/AskUser.Args // ai.grazie.code.agents.ext.tool/AskUser.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.ext.tool/AskUser.Args) // ai.grazie.code.agents.ext.tool/AskUser.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.ext.tool.AskUser.Args){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.ext.tool/AskUser.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.tool/AskUser.Args> // ai.grazie.code.agents.ext.tool/AskUser.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final object ai.grazie.code.agents.ext.tool/ExitTool : ai.grazie.code.agents.core.tools/SimpleTool<ai.grazie.code.agents.ext.tool/ExitTool.Args> { // ai.grazie.code.agents.ext.tool/ExitTool|null[0]
+    final val argsSerializer // ai.grazie.code.agents.ext.tool/ExitTool.argsSerializer|{}argsSerializer[0]
+        final fun <get-argsSerializer>(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.tool/ExitTool.Args> // ai.grazie.code.agents.ext.tool/ExitTool.argsSerializer.<get-argsSerializer>|<get-argsSerializer>(){}[0]
+    final val descriptor // ai.grazie.code.agents.ext.tool/ExitTool.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.ext.tool/ExitTool.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final suspend fun doExecute(ai.grazie.code.agents.ext.tool/ExitTool.Args): kotlin/String // ai.grazie.code.agents.ext.tool/ExitTool.doExecute|doExecute(ai.grazie.code.agents.ext.tool.ExitTool.Args){}[0]
+
+    final class Args : ai.grazie.code.agents.core.tools/Tool.Args { // ai.grazie.code.agents.ext.tool/ExitTool.Args|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.ext.tool/ExitTool.Args.<init>|<init>(kotlin.String){}[0]
+
+        final val message // ai.grazie.code.agents.ext.tool/ExitTool.Args.message|{}message[0]
+            final fun <get-message>(): kotlin/String // ai.grazie.code.agents.ext.tool/ExitTool.Args.message.<get-message>|<get-message>(){}[0]
+
+        final fun component1(): kotlin/String // ai.grazie.code.agents.ext.tool/ExitTool.Args.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.grazie.code.agents.ext.tool/ExitTool.Args // ai.grazie.code.agents.ext.tool/ExitTool.Args.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.ext.tool/ExitTool.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.ext.tool/ExitTool.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.ext.tool/ExitTool.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.ext.tool/ExitTool.Args> { // ai.grazie.code.agents.ext.tool/ExitTool.Args.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.ext.tool/ExitTool.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.ext.tool/ExitTool.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.ext.tool/ExitTool.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.ext.tool/ExitTool.Args // ai.grazie.code.agents.ext.tool/ExitTool.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.ext.tool/ExitTool.Args) // ai.grazie.code.agents.ext.tool/ExitTool.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.ext.tool.ExitTool.Args){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.ext.tool/ExitTool.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.tool/ExitTool.Args> // ai.grazie.code.agents.ext.tool/ExitTool.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final object ai.grazie.code.agents.ext.tool/SayToUser : ai.grazie.code.agents.core.tools/SimpleTool<ai.grazie.code.agents.ext.tool/SayToUser.Args> { // ai.grazie.code.agents.ext.tool/SayToUser|null[0]
+    final val argsSerializer // ai.grazie.code.agents.ext.tool/SayToUser.argsSerializer|{}argsSerializer[0]
+        final fun <get-argsSerializer>(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.tool/SayToUser.Args> // ai.grazie.code.agents.ext.tool/SayToUser.argsSerializer.<get-argsSerializer>|<get-argsSerializer>(){}[0]
+    final val descriptor // ai.grazie.code.agents.ext.tool/SayToUser.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.ext.tool/SayToUser.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final suspend fun doExecute(ai.grazie.code.agents.ext.tool/SayToUser.Args): kotlin/String // ai.grazie.code.agents.ext.tool/SayToUser.doExecute|doExecute(ai.grazie.code.agents.ext.tool.SayToUser.Args){}[0]
+
+    final class Args : ai.grazie.code.agents.core.tools/Tool.Args { // ai.grazie.code.agents.ext.tool/SayToUser.Args|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.ext.tool/SayToUser.Args.<init>|<init>(kotlin.String){}[0]
+
+        final val message // ai.grazie.code.agents.ext.tool/SayToUser.Args.message|{}message[0]
+            final fun <get-message>(): kotlin/String // ai.grazie.code.agents.ext.tool/SayToUser.Args.message.<get-message>|<get-message>(){}[0]
+
+        final fun component1(): kotlin/String // ai.grazie.code.agents.ext.tool/SayToUser.Args.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.grazie.code.agents.ext.tool/SayToUser.Args // ai.grazie.code.agents.ext.tool/SayToUser.Args.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.ext.tool/SayToUser.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.ext.tool/SayToUser.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.ext.tool/SayToUser.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.ext.tool/SayToUser.Args> { // ai.grazie.code.agents.ext.tool/SayToUser.Args.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.ext.tool/SayToUser.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.ext.tool/SayToUser.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.ext.tool/SayToUser.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.ext.tool/SayToUser.Args // ai.grazie.code.agents.ext.tool/SayToUser.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.ext.tool/SayToUser.Args) // ai.grazie.code.agents.ext.tool/SayToUser.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.ext.tool.SayToUser.Args){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.ext.tool/SayToUser.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.ext.tool/SayToUser.Args> // ai.grazie.code.agents.ext.tool/SayToUser.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final fun <#A: kotlin/Any?, #B: ai.grazie.code.agents.ext.agent/SubgraphResult> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.ext.agent/subgraphWithTask(ai.grazie.code.agents.core.agent.entity/ToolSelectionStrategy, ai.grazie.code.agents.ext.agent/ProvideSubgraphResult<#B>, ai.jetbrains.code.prompt.llm/LLModel? = ..., ai.jetbrains.code.prompt.params/LLMParams? = ..., kotlin/Boolean = ..., kotlin.coroutines/SuspendFunction2<ai.grazie.code.agents.core.agent.entity/AIAgentContextBase, #A, kotlin/String>): ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphDelegateBase<#A, #B> // ai.grazie.code.agents.ext.agent/subgraphWithTask|subgraphWithTask@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy;ai.grazie.code.agents.ext.agent.ProvideSubgraphResult<0:1>;ai.jetbrains.code.prompt.llm.LLModel?;ai.jetbrains.code.prompt.params.LLMParams?;kotlin.Boolean;kotlin.coroutines.SuspendFunction2<ai.grazie.code.agents.core.agent.entity.AIAgentContextBase,0:0,kotlin.String>){0§<kotlin.Any?>;1§<ai.grazie.code.agents.ext.agent.SubgraphResult>}[0]
+final fun <#A: kotlin/Any?, #B: ai.grazie.code.agents.ext.agent/SubgraphResult> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.ext.agent/subgraphWithTask(kotlin.collections/List<ai.grazie.code.agents.core.tools/Tool<*, *>>, ai.grazie.code.agents.ext.agent/ProvideSubgraphResult<#B>, ai.jetbrains.code.prompt.llm/LLModel? = ..., ai.jetbrains.code.prompt.params/LLMParams? = ..., kotlin/Boolean = ..., kotlin.coroutines/SuspendFunction2<ai.grazie.code.agents.core.agent.entity/AIAgentContextBase, #A, kotlin/String>): ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphDelegateBase<#A, #B> // ai.grazie.code.agents.ext.agent/subgraphWithTask|subgraphWithTask@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.collections.List<ai.grazie.code.agents.core.tools.Tool<*,*>>;ai.grazie.code.agents.ext.agent.ProvideSubgraphResult<0:1>;ai.jetbrains.code.prompt.llm.LLModel?;ai.jetbrains.code.prompt.params.LLMParams?;kotlin.Boolean;kotlin.coroutines.SuspendFunction2<ai.grazie.code.agents.core.agent.entity.AIAgentContextBase,0:0,kotlin.String>){0§<kotlin.Any?>;1§<ai.grazie.code.agents.ext.agent.SubgraphResult>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.ext.agent/subgraphWithTask(ai.grazie.code.agents.core.agent.entity/ToolSelectionStrategy, ai.jetbrains.code.prompt.llm/LLModel? = ..., ai.jetbrains.code.prompt.params/LLMParams? = ..., kotlin/Boolean = ..., kotlin.coroutines/SuspendFunction2<ai.grazie.code.agents.core.agent.entity/AIAgentContextBase, #A, kotlin/String>): ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphDelegateBase<#A, ai.grazie.code.agents.ext.agent/StringSubgraphResult> // ai.grazie.code.agents.ext.agent/subgraphWithTask|subgraphWithTask@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy;ai.jetbrains.code.prompt.llm.LLModel?;ai.jetbrains.code.prompt.params.LLMParams?;kotlin.Boolean;kotlin.coroutines.SuspendFunction2<ai.grazie.code.agents.core.agent.entity.AIAgentContextBase,0:0,kotlin.String>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.ext.agent/subgraphWithTask(kotlin.collections/List<ai.grazie.code.agents.core.tools/Tool<*, *>>, ai.jetbrains.code.prompt.llm/LLModel? = ..., ai.jetbrains.code.prompt.params/LLMParams? = ..., kotlin/Boolean = ..., kotlin.coroutines/SuspendFunction2<ai.grazie.code.agents.core.agent.entity/AIAgentContextBase, #A, kotlin/String>): ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphDelegateBase<#A, ai.grazie.code.agents.ext.agent/StringSubgraphResult> // ai.grazie.code.agents.ext.agent/subgraphWithTask|subgraphWithTask@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.collections.List<ai.grazie.code.agents.core.tools.Tool<*,*>>;ai.jetbrains.code.prompt.llm.LLModel?;ai.jetbrains.code.prompt.params.LLMParams?;kotlin.Boolean;kotlin.coroutines.SuspendFunction2<ai.grazie.code.agents.core.agent.entity.AIAgentContextBase,0:0,kotlin.String>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.ext.agent/subgraphWithVerification(ai.grazie.code.agents.core.agent.entity/ToolSelectionStrategy, ai.jetbrains.code.prompt.llm/LLModel? = ..., ai.jetbrains.code.prompt.params/LLMParams? = ..., kotlin/Boolean = ..., kotlin.coroutines/SuspendFunction2<ai.grazie.code.agents.core.agent.entity/AIAgentContextBase, #A, kotlin/String>): ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphDelegateBase<#A, ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult> // ai.grazie.code.agents.ext.agent/subgraphWithVerification|subgraphWithVerification@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(ai.grazie.code.agents.core.agent.entity.ToolSelectionStrategy;ai.jetbrains.code.prompt.llm.LLModel?;ai.jetbrains.code.prompt.params.LLMParams?;kotlin.Boolean;kotlin.coroutines.SuspendFunction2<ai.grazie.code.agents.core.agent.entity.AIAgentContextBase,0:0,kotlin.String>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.ext.agent/subgraphWithVerification(kotlin.collections/List<ai.grazie.code.agents.core.tools/Tool<*, *>>, ai.jetbrains.code.prompt.llm/LLModel? = ..., ai.jetbrains.code.prompt.params/LLMParams? = ..., kotlin/Boolean = ..., kotlin.coroutines/SuspendFunction2<ai.grazie.code.agents.core.agent.entity/AIAgentContextBase, #A, kotlin/String>): ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphDelegateBase<#A, ai.grazie.code.agents.ext.agent/VerifiedSubgraphResult> // ai.grazie.code.agents.ext.agent/subgraphWithVerification|subgraphWithVerification@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.collections.List<ai.grazie.code.agents.core.tools.Tool<*,*>>;ai.jetbrains.code.prompt.llm.LLModel?;ai.jetbrains.code.prompt.params.LLMParams?;kotlin.Boolean;kotlin.coroutines.SuspendFunction2<ai.grazie.code.agents.core.agent.entity.AIAgentContextBase,0:0,kotlin.String>){0§<kotlin.Any?>}[0]
+final fun ai.grazie.code.agents.ext.agent/chatAgentStrategy(): ai.grazie.code.agents.core.agent.entity/AIAgentStrategy // ai.grazie.code.agents.ext.agent/chatAgentStrategy|chatAgentStrategy(){}[0]
+final fun ai.grazie.code.agents.ext.agent/simpleChatAgent(ai.jetbrains.code.prompt.executor.model/PromptExecutor, kotlin/String = ..., ai.jetbrains.code.prompt.llm/LLModel, kotlin/Double = ..., ai.grazie.code.agents.core.tools/ToolRegistry? = ..., kotlin/Int = ..., kotlin/Function1<ai.grazie.code.agents.core.agent/AIAgent.FeatureContext, kotlin/Unit> = ...): ai.grazie.code.agents.core.agent/AIAgent // ai.grazie.code.agents.ext.agent/simpleChatAgent|simpleChatAgent(ai.jetbrains.code.prompt.executor.model.PromptExecutor;kotlin.String;ai.jetbrains.code.prompt.llm.LLModel;kotlin.Double;ai.grazie.code.agents.core.tools.ToolRegistry?;kotlin.Int;kotlin.Function1<ai.grazie.code.agents.core.agent.AIAgent.FeatureContext,kotlin.Unit>){}[0]
+final fun ai.grazie.code.agents.ext.agent/simpleSingleRunAgent(ai.jetbrains.code.prompt.executor.model/PromptExecutor, kotlin/String = ..., ai.jetbrains.code.prompt.llm/LLModel, kotlin/Double = ..., ai.grazie.code.agents.core.tools/ToolRegistry = ..., kotlin/Int = ..., kotlin/Function1<ai.grazie.code.agents.core.agent/AIAgent.FeatureContext, kotlin/Unit> = ...): ai.grazie.code.agents.core.agent/AIAgent // ai.grazie.code.agents.ext.agent/simpleSingleRunAgent|simpleSingleRunAgent(ai.jetbrains.code.prompt.executor.model.PromptExecutor;kotlin.String;ai.jetbrains.code.prompt.llm.LLModel;kotlin.Double;ai.grazie.code.agents.core.tools.ToolRegistry;kotlin.Int;kotlin.Function1<ai.grazie.code.agents.core.agent.AIAgent.FeatureContext,kotlin.Unit>){}[0]
+final fun ai.grazie.code.agents.ext.agent/singleRunStrategy(): ai.grazie.code.agents.core.agent.entity/AIAgentStrategy // ai.grazie.code.agents.ext.agent/singleRunStrategy|singleRunStrategy(){}[0]

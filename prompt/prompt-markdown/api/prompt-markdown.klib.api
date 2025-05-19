@@ -1,0 +1,69 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-markdown>
+final enum class ai.grazie.code.prompt.markdown/TableAlignment : kotlin/Enum<ai.grazie.code.prompt.markdown/TableAlignment> { // ai.grazie.code.prompt.markdown/TableAlignment|null[0]
+    enum entry CENTER // ai.grazie.code.prompt.markdown/TableAlignment.CENTER|null[0]
+    enum entry LEFT // ai.grazie.code.prompt.markdown/TableAlignment.LEFT|null[0]
+    enum entry RIGHT // ai.grazie.code.prompt.markdown/TableAlignment.RIGHT|null[0]
+
+    final val entries // ai.grazie.code.prompt.markdown/TableAlignment.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.grazie.code.prompt.markdown/TableAlignment> // ai.grazie.code.prompt.markdown/TableAlignment.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.grazie.code.prompt.markdown/TableAlignment // ai.grazie.code.prompt.markdown/TableAlignment.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.grazie.code.prompt.markdown/TableAlignment> // ai.grazie.code.prompt.markdown/TableAlignment.values|values#static(){}[0]
+}
+
+final class ai.grazie.code.prompt.markdown/MarkdownContentBuilder : ai.jetbrains.code.prompt.text/TextContentBuilder { // ai.grazie.code.prompt.markdown/MarkdownContentBuilder|null[0]
+    constructor <init>() // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.<init>|<init>(){}[0]
+
+    final fun blockquote(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.blockquote|blockquote(kotlin.String){}[0]
+    final fun bold(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.bold|bold(kotlin.String){}[0]
+    final fun bulleted(kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder.ListContext, kotlin/Unit>) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.bulleted|bulleted(kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder.ListContext,kotlin.Unit>){}[0]
+    final fun code(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.code|code(kotlin.String){}[0]
+    final fun codeblock(kotlin/String, kotlin/String = ...) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.codeblock|codeblock(kotlin.String;kotlin.String){}[0]
+    final fun h1(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.h1|h1(kotlin.String){}[0]
+    final fun h2(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.h2|h2(kotlin.String){}[0]
+    final fun h3(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.h3|h3(kotlin.String){}[0]
+    final fun h4(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.h4|h4(kotlin.String){}[0]
+    final fun h5(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.h5|h5(kotlin.String){}[0]
+    final fun h6(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.h6|h6(kotlin.String){}[0]
+    final fun header(kotlin/Int, kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.header|header(kotlin.Int;kotlin.String){}[0]
+    final fun horizontalRule() // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.horizontalRule|horizontalRule(){}[0]
+    final fun image(kotlin/String, kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.image|image(kotlin.String;kotlin.String){}[0]
+    final fun italic(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.italic|italic(kotlin.String){}[0]
+    final fun line(kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext, kotlin/Unit>) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.line|line(kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder.LineContext,kotlin.Unit>){}[0]
+    final fun link(kotlin/String, kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.link|link(kotlin.String;kotlin.String){}[0]
+    final fun numbered(kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder.ListContext, kotlin/Unit>) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.numbered|numbered(kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder.ListContext,kotlin.Unit>){}[0]
+    final fun strikethrough(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.strikethrough|strikethrough(kotlin.String){}[0]
+    final fun table(kotlin.collections/List<kotlin/String>, kotlin.collections/List<kotlin.collections/List<kotlin/String>>, kotlin.collections/List<ai.grazie.code.prompt.markdown/TableAlignment> = ...) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.table|table(kotlin.collections.List<kotlin.String>;kotlin.collections.List<kotlin.collections.List<kotlin.String>>;kotlin.collections.List<ai.grazie.code.prompt.markdown.TableAlignment>){}[0]
+
+    final class LineContext { // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext|null[0]
+        constructor <init>(ai.jetbrains.code.prompt.text/TextContentBuilder = ...) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.<init>|<init>(ai.jetbrains.code.prompt.text.TextContentBuilder){}[0]
+
+        final fun bold(kotlin/String): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.bold|bold(kotlin.String){}[0]
+        final fun code(kotlin/String): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.code|code(kotlin.String){}[0]
+        final fun image(kotlin/String, kotlin/String): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.image|image(kotlin.String;kotlin.String){}[0]
+        final fun italic(kotlin/String): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.italic|italic(kotlin.String){}[0]
+        final fun link(kotlin/String, kotlin/String): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.link|link(kotlin.String;kotlin.String){}[0]
+        final fun space(): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.space|space(){}[0]
+        final fun strikethrough(kotlin/String): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.strikethrough|strikethrough(kotlin.String){}[0]
+        final fun text(kotlin/String): ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.LineContext.text|text(kotlin.String){}[0]
+    }
+
+    final inner class ListContext { // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.ListContext|null[0]
+        constructor <init>(kotlin/Function1<kotlin/Int, kotlin/String>) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.ListContext.<init>|<init>(kotlin.Function1<kotlin.Int,kotlin.String>){}[0]
+
+        final fun item(kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder, kotlin/Unit>) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.ListContext.item|item(kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder,kotlin.Unit>){}[0]
+        final fun item(kotlin/String) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.ListContext.item|item(kotlin.String){}[0]
+        final fun item(kotlin/String, kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder, kotlin/Unit>) // ai.grazie.code.prompt.markdown/MarkdownContentBuilder.ListContext.item|item(kotlin.String;kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder,kotlin.Unit>){}[0]
+    }
+}
+
+final fun ai.grazie.code.prompt.markdown/markdown(kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder, kotlin/Unit>): kotlin/String // ai.grazie.code.prompt.markdown/markdown|markdown(kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder,kotlin.Unit>){}[0]
+final inline fun (ai.jetbrains.code.prompt.text/TextContentBuilder).ai.grazie.code.prompt.markdown/markdown(kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder, kotlin/Unit>) // ai.grazie.code.prompt.markdown/markdown|markdown@ai.jetbrains.code.prompt.text.TextContentBuilder(kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder,kotlin.Unit>){}[0]
+final inline fun (kotlin.text/StringBuilder).ai.grazie.code.prompt.markdown/markdown(kotlin/Function1<ai.grazie.code.prompt.markdown/MarkdownContentBuilder, kotlin/Unit>) // ai.grazie.code.prompt.markdown/markdown|markdown@kotlin.text.StringBuilder(kotlin.Function1<ai.grazie.code.prompt.markdown.MarkdownContentBuilder,kotlin.Unit>){}[0]

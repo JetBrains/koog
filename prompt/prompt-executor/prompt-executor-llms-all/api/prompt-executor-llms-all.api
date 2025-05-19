@@ -1,0 +1,13 @@
+public final class ai/jetbrains/code/prompt/executor/llms/all/DefaultMultiLLMPromptExecutor : ai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor {
+	public fun <init> (Lai/jetbrains/code/prompt/executor/clients/openai/OpenAILLMClient;Lai/jetbrains/code/prompt/executor/clients/anthropic/AnthropicLLMClient;Lai/jetbrains/code/prompt/executor/clients/google/GoogleLLMClient;)V
+}
+
+public final class ai/jetbrains/code/prompt/executor/llms/all/SimplePromptExecutorsKt {
+	public static final fun simpleAnthropicExecutor (Ljava/lang/String;)Lai/jetbrains/code/prompt/executor/llms/SingleLLMPromptExecutor;
+	public static final fun simpleGoogleAIExecutor (Ljava/lang/String;)Lai/jetbrains/code/prompt/executor/llms/SingleLLMPromptExecutor;
+	public static final fun simpleOllamaAIExecutor (Ljava/lang/String;)Lai/jetbrains/code/prompt/executor/llms/SingleLLMPromptExecutor;
+	public static synthetic fun simpleOllamaAIExecutor$default (Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/llms/SingleLLMPromptExecutor;
+	public static final fun simpleOpenAIExecutor (Ljava/lang/String;)Lai/jetbrains/code/prompt/executor/llms/SingleLLMPromptExecutor;
+	public static final fun simpleOpenRouterExecutor (Ljava/lang/String;)Lai/jetbrains/code/prompt/executor/llms/SingleLLMPromptExecutor;
+}
+

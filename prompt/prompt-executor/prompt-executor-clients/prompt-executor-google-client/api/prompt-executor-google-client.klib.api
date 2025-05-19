@@ -1,0 +1,62 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-google-client>
+final class ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings { // ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings|null[0]
+    constructor <init>(kotlin/String = ..., ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final val baseUrl // ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings.baseUrl|{}baseUrl[0]
+        final fun <get-baseUrl>(): kotlin/String // ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    final val timeoutConfig // ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings.timeoutConfig|{}timeoutConfig[0]
+        final fun <get-timeoutConfig>(): ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig // ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings.timeoutConfig.<get-timeoutConfig>|<get-timeoutConfig>(){}[0]
+}
+
+open class ai.jetbrains.code.prompt.executor.clients.google/GoogleLLMClient : ai.jetbrains.code.prompt.executor.clients/LLMClient { // ai.jetbrains.code.prompt.executor.clients.google/GoogleLLMClient|null[0]
+    constructor <init>(kotlin/String, ai.jetbrains.code.prompt.executor.clients.google/GoogleClientSettings = ..., io.ktor.client/HttpClient = ...) // ai.jetbrains.code.prompt.executor.clients.google/GoogleLLMClient.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.clients.google.GoogleClientSettings;io.ktor.client.HttpClient){}[0]
+
+    open suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.clients.google/GoogleLLMClient.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.clients.google/GoogleLLMClient.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}
+
+final object ai.jetbrains.code.prompt.executor.clients.google/GoogleModels { // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels|null[0]
+    final val Gemini1_5Flash // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash|{}Gemini1_5Flash[0]
+        final fun <get-Gemini1_5Flash>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash.<get-Gemini1_5Flash>|<get-Gemini1_5Flash>(){}[0]
+    final val Gemini1_5Flash001 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash001|{}Gemini1_5Flash001[0]
+        final fun <get-Gemini1_5Flash001>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash001.<get-Gemini1_5Flash001>|<get-Gemini1_5Flash001>(){}[0]
+    final val Gemini1_5Flash002 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash002|{}Gemini1_5Flash002[0]
+        final fun <get-Gemini1_5Flash002>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash002.<get-Gemini1_5Flash002>|<get-Gemini1_5Flash002>(){}[0]
+    final val Gemini1_5Flash8B // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash8B|{}Gemini1_5Flash8B[0]
+        final fun <get-Gemini1_5Flash8B>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash8B.<get-Gemini1_5Flash8B>|<get-Gemini1_5Flash8B>(){}[0]
+    final val Gemini1_5Flash8B001 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash8B001|{}Gemini1_5Flash8B001[0]
+        final fun <get-Gemini1_5Flash8B001>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash8B001.<get-Gemini1_5Flash8B001>|<get-Gemini1_5Flash8B001>(){}[0]
+    final val Gemini1_5Flash8BLatest // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash8BLatest|{}Gemini1_5Flash8BLatest[0]
+        final fun <get-Gemini1_5Flash8BLatest>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Flash8BLatest.<get-Gemini1_5Flash8BLatest>|<get-Gemini1_5Flash8BLatest>(){}[0]
+    final val Gemini1_5FlashLatest // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5FlashLatest|{}Gemini1_5FlashLatest[0]
+        final fun <get-Gemini1_5FlashLatest>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5FlashLatest.<get-Gemini1_5FlashLatest>|<get-Gemini1_5FlashLatest>(){}[0]
+    final val Gemini1_5Pro // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Pro|{}Gemini1_5Pro[0]
+        final fun <get-Gemini1_5Pro>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Pro.<get-Gemini1_5Pro>|<get-Gemini1_5Pro>(){}[0]
+    final val Gemini1_5Pro001 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Pro001|{}Gemini1_5Pro001[0]
+        final fun <get-Gemini1_5Pro001>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Pro001.<get-Gemini1_5Pro001>|<get-Gemini1_5Pro001>(){}[0]
+    final val Gemini1_5Pro002 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Pro002|{}Gemini1_5Pro002[0]
+        final fun <get-Gemini1_5Pro002>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5Pro002.<get-Gemini1_5Pro002>|<get-Gemini1_5Pro002>(){}[0]
+    final val Gemini1_5ProLatest // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5ProLatest|{}Gemini1_5ProLatest[0]
+        final fun <get-Gemini1_5ProLatest>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini1_5ProLatest.<get-Gemini1_5ProLatest>|<get-Gemini1_5ProLatest>(){}[0]
+    final val Gemini2_0Flash // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0Flash|{}Gemini2_0Flash[0]
+        final fun <get-Gemini2_0Flash>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0Flash.<get-Gemini2_0Flash>|<get-Gemini2_0Flash>(){}[0]
+    final val Gemini2_0Flash001 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0Flash001|{}Gemini2_0Flash001[0]
+        final fun <get-Gemini2_0Flash001>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0Flash001.<get-Gemini2_0Flash001>|<get-Gemini2_0Flash001>(){}[0]
+    final val Gemini2_0FlashLite // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0FlashLite|{}Gemini2_0FlashLite[0]
+        final fun <get-Gemini2_0FlashLite>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0FlashLite.<get-Gemini2_0FlashLite>|<get-Gemini2_0FlashLite>(){}[0]
+    final val Gemini2_0FlashLite001 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0FlashLite001|{}Gemini2_0FlashLite001[0]
+        final fun <get-Gemini2_0FlashLite001>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_0FlashLite001.<get-Gemini2_0FlashLite001>|<get-Gemini2_0FlashLite001>(){}[0]
+    final val Gemini2_5FlashPreview0417 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_5FlashPreview0417|{}Gemini2_5FlashPreview0417[0]
+        final fun <get-Gemini2_5FlashPreview0417>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_5FlashPreview0417.<get-Gemini2_5FlashPreview0417>|<get-Gemini2_5FlashPreview0417>(){}[0]
+    final val Gemini2_5ProPreview0506 // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_5ProPreview0506|{}Gemini2_5ProPreview0506[0]
+        final fun <get-Gemini2_5ProPreview0506>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.Gemini2_5ProPreview0506.<get-Gemini2_5ProPreview0506>|<get-Gemini2_5ProPreview0506>(){}[0]
+    final val GeminiProVision // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.GeminiProVision|{}GeminiProVision[0]
+        final fun <get-GeminiProVision>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.google/GoogleModels.GeminiProVision.<get-GeminiProVision>|<get-GeminiProVision>(){}[0]
+}

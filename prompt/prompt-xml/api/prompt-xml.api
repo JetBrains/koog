@@ -1,0 +1,25 @@
+public final class ai/grazie/code/prompt/xml/XmlContentBuilder : ai/jetbrains/code/prompt/text/TextContentBuilder {
+	public fun <init> (Z)V
+	public final fun cdata (Ljava/lang/String;)V
+	public final fun comment (Ljava/lang/String;)V
+	public final fun doctype (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun doctype$default (Lai/grazie/code/prompt/xml/XmlContentBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+	public final fun processingInstruction (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun selfClosingTag (Ljava/lang/String;Ljava/util/LinkedHashMap;)V
+	public static synthetic fun selfClosingTag$default (Lai/grazie/code/prompt/xml/XmlContentBuilder;Ljava/lang/String;Ljava/util/LinkedHashMap;ILjava/lang/Object;)V
+	public final fun tag (Ljava/lang/String;Ljava/util/LinkedHashMap;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun tag$default (Lai/grazie/code/prompt/xml/XmlContentBuilder;Ljava/lang/String;Ljava/util/LinkedHashMap;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public fun unaryPlus (Ljava/lang/String;)V
+	public final fun xmlDeclaration (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)V
+	public static synthetic fun xmlDeclaration$default (Lai/grazie/code/prompt/xml/XmlContentBuilder;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)V
+}
+
+public final class ai/grazie/code/prompt/xml/XmlKt {
+	public static final fun xml (Lai/jetbrains/code/prompt/text/TextContentBuilder;ZLkotlin/jvm/functions/Function1;)V
+	public static final fun xml (Ljava/lang/StringBuilder;ZLkotlin/jvm/functions/Function1;)V
+	public static final fun xml (ZLkotlin/jvm/functions/Function1;)Ljava/lang/String;
+	public static synthetic fun xml$default (Lai/jetbrains/code/prompt/text/TextContentBuilder;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun xml$default (Ljava/lang/StringBuilder;ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+	public static synthetic fun xml$default (ZLkotlin/jvm/functions/Function1;ILjava/lang/Object;)Ljava/lang/String;
+}
+

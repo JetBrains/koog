@@ -1,0 +1,13 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-model>
+abstract interface ai.jetbrains.code.prompt.executor.model/PromptExecutor { // ai.jetbrains.code.prompt.executor.model/PromptExecutor|null[0]
+    abstract suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.model/PromptExecutor.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    abstract suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.model/PromptExecutor.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+    open suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlin/String // ai.jetbrains.code.prompt.executor.model/PromptExecutor.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}

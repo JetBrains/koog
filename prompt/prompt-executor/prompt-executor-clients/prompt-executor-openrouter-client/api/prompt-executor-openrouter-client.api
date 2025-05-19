@@ -1,0 +1,36 @@
+public final class ai/jetbrains/code/prompt/executor/clients/openrouter/OpenRouterClientSettings {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getTimeoutConfig ()Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/openrouter/OpenRouterLLMClient : ai/jetbrains/code/prompt/executor/clients/LLMClient {
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lio/ktor/client/HttpClient;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/openrouter/OpenRouterClientSettings;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/openrouter/OpenRouterModels {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/openrouter/OpenRouterModels;
+	public final fun getClaude3Haiku ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getClaude3Opus ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getClaude3Sonnet ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getClaude3VisionHaiku ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getClaude3VisionOpus ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getClaude3VisionSonnet ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGPT35Turbo ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGPT4 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGPT4Turbo ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGPT4o ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini14Pro ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini15Flash ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getLlama3 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getLlama3Instruct ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getMistral7B ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getMixtral8x7B ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getPhi4Reasoning ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+

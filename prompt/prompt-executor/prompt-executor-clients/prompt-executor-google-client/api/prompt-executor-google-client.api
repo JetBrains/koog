@@ -1,0 +1,37 @@
+public final class ai/jetbrains/code/prompt/executor/clients/google/GoogleClientSettings {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getTimeoutConfig ()Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;
+}
+
+public class ai/jetbrains/code/prompt/executor/clients/google/GoogleLLMClient : ai/jetbrains/code/prompt/executor/clients/LLMClient {
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/google/GoogleClientSettings;Lio/ktor/client/HttpClient;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/google/GoogleClientSettings;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/google/GoogleModels {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/google/GoogleModels;
+	public final fun getGemini1_5Flash ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Flash001 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Flash002 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Flash8B ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Flash8B001 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Flash8BLatest ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5FlashLatest ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Pro ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Pro001 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5Pro002 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini1_5ProLatest ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini2_0Flash ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini2_0Flash001 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini2_0FlashLite ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini2_0FlashLite001 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini2_5FlashPreview0417 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGemini2_5ProPreview0506 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGeminiProVision ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+

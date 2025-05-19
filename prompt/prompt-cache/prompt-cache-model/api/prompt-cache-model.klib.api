@@ -1,0 +1,44 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt.cache:prompt-cache-model>
+abstract interface ai.jetbrains.code.prompt.cache.model/PromptCache { // ai.jetbrains.code.prompt.cache.model/PromptCache|null[0]
+    abstract suspend fun get(ai.jetbrains.code.prompt.dsl/Prompt, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor> = ...): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response>? // ai.jetbrains.code.prompt.cache.model/PromptCache.get|get(ai.jetbrains.code.prompt.dsl.Prompt;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    abstract suspend fun put(ai.jetbrains.code.prompt.dsl/Prompt, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor> = ..., kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response>) // ai.jetbrains.code.prompt.cache.model/PromptCache.put|put(ai.jetbrains.code.prompt.dsl.Prompt;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>;kotlin.collections.List<ai.jetbrains.code.prompt.message.Message.Response>){}[0]
+
+    abstract interface Factory { // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory|null[0]
+        abstract fun create(kotlin/String): ai.jetbrains.code.prompt.cache.model/PromptCache // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.create|create(kotlin.String){}[0]
+        open fun elements(kotlin/String): kotlin.collections/List<kotlin/String> // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.elements|elements(kotlin.String){}[0]
+
+        abstract class Named : ai.jetbrains.code.prompt.cache.model/PromptCache.Factory { // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named|null[0]
+            constructor <init>(kotlin/String) // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named.<init>|<init>(kotlin.String){}[0]
+
+            final val name // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named.name|{}name[0]
+                final fun <get-name>(): kotlin/String // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named.name.<get-name>|<get-name>(){}[0]
+
+            final fun supports(kotlin/String): kotlin/Boolean // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named.supports|supports(kotlin.String){}[0]
+        }
+
+        final class Aggregated : ai.jetbrains.code.prompt.cache.model/PromptCache.Factory { // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Aggregated|null[0]
+            constructor <init>(kotlin.collections/List<ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named>) // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Aggregated.<init>|<init>(kotlin.collections.List<ai.jetbrains.code.prompt.cache.model.PromptCache.Factory.Named>){}[0]
+            constructor <init>(kotlin/Array<out ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named>...) // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Aggregated.<init>|<init>(kotlin.Array<out|ai.jetbrains.code.prompt.cache.model.PromptCache.Factory.Named>...){}[0]
+
+            final fun create(kotlin/String): ai.jetbrains.code.prompt.cache.model/PromptCache // ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Aggregated.create|create(kotlin.String){}[0]
+        }
+    }
+}
+
+final class ai.jetbrains.code.prompt.cache.memory/InMemoryPromptCache : ai.jetbrains.code.prompt.cache.model/PromptCache { // ai.jetbrains.code.prompt.cache.memory/InMemoryPromptCache|null[0]
+    constructor <init>(kotlin/Int?) // ai.jetbrains.code.prompt.cache.memory/InMemoryPromptCache.<init>|<init>(kotlin.Int?){}[0]
+
+    final suspend fun get(ai.jetbrains.code.prompt.dsl/Prompt, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response>? // ai.jetbrains.code.prompt.cache.memory/InMemoryPromptCache.get|get(ai.jetbrains.code.prompt.dsl.Prompt;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun put(ai.jetbrains.code.prompt.dsl/Prompt, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>, kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response>) // ai.jetbrains.code.prompt.cache.memory/InMemoryPromptCache.put|put(ai.jetbrains.code.prompt.dsl.Prompt;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>;kotlin.collections.List<ai.jetbrains.code.prompt.message.Message.Response>){}[0]
+
+    final object Companion : ai.jetbrains.code.prompt.cache.model/PromptCache.Factory.Named { // ai.jetbrains.code.prompt.cache.memory/InMemoryPromptCache.Companion|null[0]
+        final fun create(kotlin/String): ai.jetbrains.code.prompt.cache.model/PromptCache // ai.jetbrains.code.prompt.cache.memory/InMemoryPromptCache.Companion.create|create(kotlin.String){}[0]
+    }
+}

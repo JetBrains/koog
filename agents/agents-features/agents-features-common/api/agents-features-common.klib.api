@@ -1,0 +1,265 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.agents:agents-features-common>
+abstract interface ai.grazie.code.agents.local.features.common.message/FeatureEvent : ai.grazie.code.agents.local.features.common.message/FeatureMessage { // ai.grazie.code.agents.local.features.common.message/FeatureEvent|null[0]
+    abstract val eventId // ai.grazie.code.agents.local.features.common.message/FeatureEvent.eventId|{}eventId[0]
+        abstract fun <get-eventId>(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureEvent.eventId.<get-eventId>|<get-eventId>(){}[0]
+}
+
+abstract interface ai.grazie.code.agents.local.features.common.message/FeatureMessage { // ai.grazie.code.agents.local.features.common.message/FeatureMessage|null[0]
+    abstract val messageType // ai.grazie.code.agents.local.features.common.message/FeatureMessage.messageType|{}messageType[0]
+        abstract fun <get-messageType>(): ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type // ai.grazie.code.agents.local.features.common.message/FeatureMessage.messageType.<get-messageType>|<get-messageType>(){}[0]
+    abstract val timestamp // ai.grazie.code.agents.local.features.common.message/FeatureMessage.timestamp|{}timestamp[0]
+        abstract fun <get-timestamp>(): kotlin/Long // ai.grazie.code.agents.local.features.common.message/FeatureMessage.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+
+    final enum class Type : kotlin/Enum<ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type> { // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type|null[0]
+        enum entry Event // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.Event|null[0]
+        enum entry Message // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.Message|null[0]
+
+        final val entries // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type> // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.entries.<get-entries>|<get-entries>#static(){}[0]
+        final val value // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.value|{}value[0]
+            final fun <get-value>(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.value.<get-value>|<get-value>(){}[0]
+
+        final fun valueOf(kotlin/String): ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type> // ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type.values|values#static(){}[0]
+    }
+}
+
+abstract interface ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient : ai.grazie.code.agents.utils/Closeable { // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient|null[0]
+    abstract val isConnected // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient.isConnected|{}isConnected[0]
+        abstract fun <get-isConnected>(): kotlin/Boolean // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient.isConnected.<get-isConnected>|<get-isConnected>(){}[0]
+
+    abstract suspend fun connect() // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient.connect|connect(){}[0]
+    abstract suspend fun healthCheck() // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient.healthCheck|healthCheck(){}[0]
+    abstract suspend fun send(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient.send|send(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+}
+
+abstract interface ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageServer : ai.grazie.code.agents.utils/Closeable { // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageServer|null[0]
+    abstract val isStarted // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageServer.isStarted|{}isStarted[0]
+        abstract fun <get-isStarted>(): kotlin/Boolean // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageServer.isStarted.<get-isStarted>|<get-isStarted>(){}[0]
+
+    abstract suspend fun sendMessage(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageServer.sendMessage|sendMessage(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+    abstract suspend fun start() // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageServer.start|start(){}[0]
+}
+
+abstract class <#A: kotlin/Any?> ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter : ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor { // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter|null[0]
+    constructor <init>(ai.grazie.code.files.model/FileSystemProvider.ReadWrite<#A>, #A, kotlin/Boolean = ...) // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.<init>|<init>(ai.grazie.code.files.model.FileSystemProvider.ReadWrite<1:0>;1:0;kotlin.Boolean){}[0]
+
+    final val isOpen // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.isOpen|{}isOpen[0]
+        final fun <get-isOpen>(): kotlin/Boolean // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.isOpen.<get-isOpen>|<get-isOpen>(){}[0]
+    final val targetPath // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.targetPath|{}targetPath[0]
+        final fun <get-targetPath>(): #A // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.targetPath.<get-targetPath>|<get-targetPath>(){}[0]
+
+    abstract fun (ai.grazie.code.agents.local.features.common.message/FeatureMessage).toFileString(): kotlin/String // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.toFileString|toFileString@ai.grazie.code.agents.local.features.common.message.FeatureMessage(){}[0]
+    open suspend fun close() // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.close|close(){}[0]
+    open suspend fun initialize() // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.initialize|initialize(){}[0]
+    open suspend fun processMessage(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter.processMessage|processMessage(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+}
+
+abstract class ai.grazie.code.agents.local.features.common.config/FeatureConfig { // ai.grazie.code.agents.local.features.common.config/FeatureConfig|null[0]
+    constructor <init>() // ai.grazie.code.agents.local.features.common.config/FeatureConfig.<init>|<init>(){}[0]
+
+    final val messageProcessor // ai.grazie.code.agents.local.features.common.config/FeatureConfig.messageProcessor|{}messageProcessor[0]
+        final fun <get-messageProcessor>(): kotlin.collections/List<ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor> // ai.grazie.code.agents.local.features.common.config/FeatureConfig.messageProcessor.<get-messageProcessor>|<get-messageProcessor>(){}[0]
+
+    final fun addMessageProcessor(ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor) // ai.grazie.code.agents.local.features.common.config/FeatureConfig.addMessageProcessor|addMessageProcessor(ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor){}[0]
+}
+
+abstract class ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor : ai.grazie.code.agents.utils/Closeable { // ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor|null[0]
+    constructor <init>() // ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor.<init>|<init>(){}[0]
+
+    abstract suspend fun processMessage(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor.processMessage|processMessage(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+    open suspend fun initialize() // ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor.initialize|initialize(){}[0]
+}
+
+abstract class ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig : ai.grazie.code.agents.local.features.common.remote/ConnectionConfig { // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig|null[0]
+    constructor <init>(kotlin/String, kotlin/Int? = ..., io.ktor.http/URLProtocol = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ...) // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.<init>|<init>(kotlin.String;kotlin.Int?;io.ktor.http.URLProtocol;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.time.Duration?){}[0]
+
+    final val connectTimeout // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.connectTimeout|{}connectTimeout[0]
+        final fun <get-connectTimeout>(): kotlin.time/Duration? // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.connectTimeout.<get-connectTimeout>|<get-connectTimeout>(){}[0]
+    final val headers // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.headers.<get-headers>|<get-headers>(){}[0]
+    final val healthCheckUrl // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.healthCheckUrl|{}healthCheckUrl[0]
+        final fun <get-healthCheckUrl>(): kotlin/String // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.healthCheckUrl.<get-healthCheckUrl>|<get-healthCheckUrl>(){}[0]
+    final val host // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.host|{}host[0]
+        final fun <get-host>(): kotlin/String // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.host.<get-host>|<get-host>(){}[0]
+    final val messageUrl // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.messageUrl|{}messageUrl[0]
+        final fun <get-messageUrl>(): kotlin/String // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.messageUrl.<get-messageUrl>|<get-messageUrl>(){}[0]
+    final val port // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.port|{}port[0]
+        final fun <get-port>(): kotlin/Int // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.port.<get-port>|<get-port>(){}[0]
+    final val protocol // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.protocol|{}protocol[0]
+        final fun <get-protocol>(): io.ktor.http/URLProtocol // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.protocol.<get-protocol>|<get-protocol>(){}[0]
+    final val reconnectionDelay // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.reconnectionDelay|{}reconnectionDelay[0]
+        final fun <get-reconnectionDelay>(): kotlin.time/Duration? // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.reconnectionDelay.<get-reconnectionDelay>|<get-reconnectionDelay>(){}[0]
+    final val requestTimeout // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.requestTimeout|{}requestTimeout[0]
+        final fun <get-requestTimeout>(): kotlin.time/Duration? // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.requestTimeout.<get-requestTimeout>|<get-requestTimeout>(){}[0]
+    final val sseUrl // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.sseUrl|{}sseUrl[0]
+        final fun <get-sseUrl>(): kotlin/String // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.sseUrl.<get-sseUrl>|<get-sseUrl>(){}[0]
+    final val url // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.url|{}url[0]
+        final fun <get-url>(): kotlin/String // ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig.url.<get-url>|<get-url>(){}[0]
+}
+
+abstract class ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig : ai.grazie.code.agents.local.features.common.remote/ConnectionConfig { // ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig|null[0]
+    constructor <init>(kotlin/Int = ...) // ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig.<init>|<init>(kotlin.Int){}[0]
+
+    final val port // ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig.port|{}port[0]
+        final fun <get-port>(): kotlin/Int // ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig.port.<get-port>|<get-port>(){}[0]
+}
+
+abstract class ai.grazie.code.agents.local.features.common.remote/ConnectionConfig { // ai.grazie.code.agents.local.features.common.remote/ConnectionConfig|null[0]
+    constructor <init>() // ai.grazie.code.agents.local.features.common.remote/ConnectionConfig.<init>|<init>(){}[0]
+
+    final val jsonConfig // ai.grazie.code.agents.local.features.common.remote/ConnectionConfig.jsonConfig|{}jsonConfig[0]
+        final fun <get-jsonConfig>(): kotlinx.serialization.json/Json // ai.grazie.code.agents.local.features.common.remote/ConnectionConfig.jsonConfig.<get-jsonConfig>|<get-jsonConfig>(){}[0]
+
+    final fun appendSerializersModule(kotlinx.serialization.modules/SerializersModule) // ai.grazie.code.agents.local.features.common.remote/ConnectionConfig.appendSerializersModule|appendSerializersModule(kotlinx.serialization.modules.SerializersModule){}[0]
+}
+
+abstract class ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter : ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor { // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter|null[0]
+    constructor <init>(ai.grazie.utils.mpp/MPPLogger, ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel = ...) // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.<init>|<init>(ai.grazie.utils.mpp.MPPLogger;ai.grazie.code.agents.local.features.common.writer.FeatureMessageLogWriter.LogLevel){}[0]
+
+    final val logLevel // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.logLevel|{}logLevel[0]
+        final fun <get-logLevel>(): ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.logLevel.<get-logLevel>|<get-logLevel>(){}[0]
+    final val targetLogger // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.targetLogger|{}targetLogger[0]
+        final fun <get-targetLogger>(): ai.grazie.utils.mpp/MPPLogger // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.targetLogger.<get-targetLogger>|<get-targetLogger>(){}[0]
+
+    abstract fun (ai.grazie.code.agents.local.features.common.message/FeatureMessage).toLoggerMessage(): kotlin/String // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.toLoggerMessage|toLoggerMessage@ai.grazie.code.agents.local.features.common.message.FeatureMessage(){}[0]
+    open suspend fun close() // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.close|close(){}[0]
+    open suspend fun processMessage(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.processMessage|processMessage(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+
+    final enum class LogLevel : kotlin/Enum<ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel> { // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel|null[0]
+        enum entry DEBUG // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel.DEBUG|null[0]
+        enum entry INFO // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel.INFO|null[0]
+
+        final val entries // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel> // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel> // ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel.values|values#static(){}[0]
+    }
+}
+
+abstract class ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter : ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor { // ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter|null[0]
+    constructor <init>(ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig? = ...) // ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter.<init>|<init>(ai.grazie.code.agents.local.features.common.remote.server.config.ServerConnectionConfig?){}[0]
+
+    final val isOpen // ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter.isOpen|{}isOpen[0]
+        final fun <get-isOpen>(): kotlin/Boolean // ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter.isOpen.<get-isOpen>|<get-isOpen>(){}[0]
+
+    open suspend fun close() // ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter.close|close(){}[0]
+    open suspend fun initialize() // ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter.initialize|initialize(){}[0]
+    open suspend fun processMessage(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter.processMessage|processMessage(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+}
+
+final class ai.grazie.code.agents.local.features.common.message/FeatureEventMessage : ai.grazie.code.agents.local.features.common.message/FeatureEvent { // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage|null[0]
+    constructor <init>(kotlin/String) // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.<init>|<init>(kotlin.String){}[0]
+
+    final val eventId // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.eventId|{}eventId[0]
+        final fun <get-eventId>(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.eventId.<get-eventId>|<get-eventId>(){}[0]
+    final val messageType // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.messageType|{}messageType[0]
+        final fun <get-messageType>(): ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.messageType.<get-messageType>|<get-messageType>(){}[0]
+    final val timestamp // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.timestamp|{}timestamp[0]
+        final fun <get-timestamp>(): kotlin/Long // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): ai.grazie.code.agents.local.features.common.message/FeatureEventMessage // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.features.common.message/FeatureEventMessage> { // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.features.common.message/FeatureEventMessage // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.features.common.message/FeatureEventMessage) // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.features.common.message.FeatureEventMessage){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.Companion|null[0]
+        final val $childSerializers // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.features.common.message/FeatureEventMessage> // ai.grazie.code.agents.local.features.common.message/FeatureEventMessage.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.features.common.message/FeatureStringMessage : ai.grazie.code.agents.local.features.common.message/FeatureMessage { // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage|null[0]
+    constructor <init>(kotlin/String) // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.<init>|<init>(kotlin.String){}[0]
+
+    final val message // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.message|{}message[0]
+        final fun <get-message>(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.message.<get-message>|<get-message>(){}[0]
+    final val messageType // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.messageType|{}messageType[0]
+        final fun <get-messageType>(): ai.grazie.code.agents.local.features.common.message/FeatureMessage.Type // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.messageType.<get-messageType>|<get-messageType>(){}[0]
+    final val timestamp // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.timestamp|{}timestamp[0]
+        final fun <get-timestamp>(): kotlin/Long // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.component1|component1(){}[0]
+    final fun copy(kotlin/String = ...): ai.grazie.code.agents.local.features.common.message/FeatureStringMessage // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.copy|copy(kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.features.common.message/FeatureStringMessage> { // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.features.common.message/FeatureStringMessage // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.features.common.message/FeatureStringMessage) // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.features.common.message.FeatureStringMessage){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.Companion|null[0]
+        final val $childSerializers // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.features.common.message/FeatureStringMessage> // ai.grazie.code.agents.local.features.common.message/FeatureStringMessage.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.features.common.remote.client.config/DefaultClientConnectionConfig : ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig { // ai.grazie.code.agents.local.features.common.remote.client.config/DefaultClientConnectionConfig|null[0]
+    constructor <init>(kotlin/String = ..., kotlin/Int? = ..., io.ktor.http/URLProtocol = ...) // ai.grazie.code.agents.local.features.common.remote.client.config/DefaultClientConnectionConfig.<init>|<init>(kotlin.String;kotlin.Int?;io.ktor.http.URLProtocol){}[0]
+}
+
+final class ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient : ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageClient { // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient|null[0]
+    constructor <init>(ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig, kotlinx.coroutines/CoroutineScope, io.ktor.client/HttpClient = ..., kotlin/Function1<io.ktor.client.request/HttpRequestBuilder, kotlin/Unit> = ...) // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.<init>|<init>(ai.grazie.code.agents.local.features.common.remote.client.config.ClientConnectionConfig;kotlinx.coroutines.CoroutineScope;io.ktor.client.HttpClient;kotlin.Function1<io.ktor.client.request.HttpRequestBuilder,kotlin.Unit>){}[0]
+
+    final val connectionConfig // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.connectionConfig|{}connectionConfig[0]
+        final fun <get-connectionConfig>(): ai.grazie.code.agents.local.features.common.remote.client.config/ClientConnectionConfig // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.connectionConfig.<get-connectionConfig>|<get-connectionConfig>(){}[0]
+    final val isConnected // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.isConnected|{}isConnected[0]
+        final fun <get-isConnected>(): kotlin/Boolean // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.isConnected.<get-isConnected>|<get-isConnected>(){}[0]
+    final val receivedMessages // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.receivedMessages|{}receivedMessages[0]
+        final fun <get-receivedMessages>(): kotlinx.coroutines.channels/Channel<ai.grazie.code.agents.local.features.common.message/FeatureMessage> // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.receivedMessages.<get-receivedMessages>|<get-receivedMessages>(){}[0]
+
+    final suspend fun close() // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.close|close(){}[0]
+    final suspend fun connect() // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.connect|connect(){}[0]
+    final suspend fun healthCheck() // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.healthCheck|healthCheck(){}[0]
+    final suspend fun send(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.remote.client/FeatureMessageRemoteClient.send|send(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+}
+
+final class ai.grazie.code.agents.local.features.common.remote.server.config/DefaultServerConnectionConfig : ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig { // ai.grazie.code.agents.local.features.common.remote.server.config/DefaultServerConnectionConfig|null[0]
+    constructor <init>(kotlin/Int = ...) // ai.grazie.code.agents.local.features.common.remote.server.config/DefaultServerConnectionConfig.<init>|<init>(kotlin.Int){}[0]
+}
+
+final class ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer : ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageServer { // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer|null[0]
+    constructor <init>(ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig) // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.<init>|<init>(ai.grazie.code.agents.local.features.common.remote.server.config.ServerConnectionConfig){}[0]
+
+    final val connectionConfig // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.connectionConfig|{}connectionConfig[0]
+        final fun <get-connectionConfig>(): ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.connectionConfig.<get-connectionConfig>|<get-connectionConfig>(){}[0]
+    final val isStarted // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.isStarted|{}isStarted[0]
+        final fun <get-isStarted>(): kotlin/Boolean // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.isStarted.<get-isStarted>|<get-isStarted>(){}[0]
+    final val receivedMessages // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.receivedMessages|{}receivedMessages[0]
+        final fun <get-receivedMessages>(): kotlinx.coroutines.channels/Channel<ai.grazie.code.agents.local.features.common.message/FeatureMessage> // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.receivedMessages.<get-receivedMessages>|<get-receivedMessages>(){}[0]
+
+    final fun (ai.grazie.code.agents.local.features.common.message/FeatureMessage).toServerEventData(): kotlin/String // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.toServerEventData|toServerEventData@ai.grazie.code.agents.local.features.common.message.FeatureMessage(){}[0]
+    final suspend fun close() // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.close|close(){}[0]
+    final suspend fun sendMessage(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.sendMessage|sendMessage(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+    final suspend fun start() // ai.grazie.code.agents.local.features.common.remote.server/FeatureMessageRemoteServer.start|start(){}[0]
+}
+
+final object ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessorUtil { // ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessorUtil|null[0]
+    final suspend fun (kotlin.collections/List<ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessor>).onMessageForEachSafe(ai.grazie.code.agents.local.features.common.message/FeatureMessage) // ai.grazie.code.agents.local.features.common.message/FeatureMessageProcessorUtil.onMessageForEachSafe|onMessageForEachSafe@kotlin.collections.List<ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor>(ai.grazie.code.agents.local.features.common.message.FeatureMessage){}[0]
+}

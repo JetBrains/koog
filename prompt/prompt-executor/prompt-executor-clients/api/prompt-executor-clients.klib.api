@@ -1,0 +1,35 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-clients>
+abstract interface ai.jetbrains.code.prompt.executor.clients/LLMClient { // ai.jetbrains.code.prompt.executor.clients/LLMClient|null[0]
+    abstract suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor> = ...): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.clients/LLMClient.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    abstract suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.clients/LLMClient.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}
+
+abstract interface ai.jetbrains.code.prompt.executor.clients/LLMEmbeddingProvider { // ai.jetbrains.code.prompt.executor.clients/LLMEmbeddingProvider|null[0]
+    abstract suspend fun embed(kotlin/String, ai.jetbrains.code.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.jetbrains.code.prompt.executor.clients/LLMEmbeddingProvider.embed|embed(kotlin.String;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}
+
+final class ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig { // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig|null[0]
+    constructor <init>(kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ...) // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.Long){}[0]
+
+    final val connectTimeoutMillis // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.connectTimeoutMillis|{}connectTimeoutMillis[0]
+        final fun <get-connectTimeoutMillis>(): kotlin/Long // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.connectTimeoutMillis.<get-connectTimeoutMillis>|<get-connectTimeoutMillis>(){}[0]
+    final val requestTimeoutMillis // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.requestTimeoutMillis|{}requestTimeoutMillis[0]
+        final fun <get-requestTimeoutMillis>(): kotlin/Long // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.requestTimeoutMillis.<get-requestTimeoutMillis>|<get-requestTimeoutMillis>(){}[0]
+    final val socketTimeoutMillis // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.socketTimeoutMillis|{}socketTimeoutMillis[0]
+        final fun <get-socketTimeoutMillis>(): kotlin/Long // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.socketTimeoutMillis.<get-socketTimeoutMillis>|<get-socketTimeoutMillis>(){}[0]
+
+    final fun component1(): kotlin/Long // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.component2|component2(){}[0]
+    final fun component3(): kotlin/Long // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.component3|component3(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., kotlin/Long = ...): ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.copy|copy(kotlin.Long;kotlin.Long;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig.toString|toString(){}[0]
+}

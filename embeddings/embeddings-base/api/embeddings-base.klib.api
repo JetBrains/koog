@@ -1,0 +1,41 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.embeddings:embeddings-base>
+abstract interface ai.jetbrains.embeddings.base/Embedder { // ai.jetbrains.embeddings.base/Embedder|null[0]
+    abstract fun diff(ai.jetbrains.embeddings.base/Vector, ai.jetbrains.embeddings.base/Vector): kotlin/Double // ai.jetbrains.embeddings.base/Embedder.diff|diff(ai.jetbrains.embeddings.base.Vector;ai.jetbrains.embeddings.base.Vector){}[0]
+    abstract suspend fun embed(kotlin/String): ai.jetbrains.embeddings.base/Vector // ai.jetbrains.embeddings.base/Embedder.embed|embed(kotlin.String){}[0]
+}
+
+final class ai.jetbrains.embeddings.base/Vector { // ai.jetbrains.embeddings.base/Vector|null[0]
+    constructor <init>(kotlin.collections/List<kotlin/Double>) // ai.jetbrains.embeddings.base/Vector.<init>|<init>(kotlin.collections.List<kotlin.Double>){}[0]
+
+    final val dimension // ai.jetbrains.embeddings.base/Vector.dimension|{}dimension[0]
+        final fun <get-dimension>(): kotlin/Int // ai.jetbrains.embeddings.base/Vector.dimension.<get-dimension>|<get-dimension>(){}[0]
+    final val values // ai.jetbrains.embeddings.base/Vector.values|{}values[0]
+        final fun <get-values>(): kotlin.collections/List<kotlin/Double> // ai.jetbrains.embeddings.base/Vector.values.<get-values>|<get-values>(){}[0]
+
+    final fun component1(): kotlin.collections/List<kotlin/Double> // ai.jetbrains.embeddings.base/Vector.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<kotlin/Double> = ...): ai.jetbrains.embeddings.base/Vector // ai.jetbrains.embeddings.base/Vector.copy|copy(kotlin.collections.List<kotlin.Double>){}[0]
+    final fun cosineSimilarity(ai.jetbrains.embeddings.base/Vector): kotlin/Double // ai.jetbrains.embeddings.base/Vector.cosineSimilarity|cosineSimilarity(ai.jetbrains.embeddings.base.Vector){}[0]
+    final fun dotProduct(ai.jetbrains.embeddings.base/Vector): kotlin/Double // ai.jetbrains.embeddings.base/Vector.dotProduct|dotProduct(ai.jetbrains.embeddings.base.Vector){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.embeddings.base/Vector.equals|equals(kotlin.Any?){}[0]
+    final fun euclideanDistance(ai.jetbrains.embeddings.base/Vector): kotlin/Double // ai.jetbrains.embeddings.base/Vector.euclideanDistance|euclideanDistance(ai.jetbrains.embeddings.base.Vector){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.embeddings.base/Vector.hashCode|hashCode(){}[0]
+    final fun isNull(): kotlin/Boolean // ai.jetbrains.embeddings.base/Vector.isNull|isNull(){}[0]
+    final fun magnitude(): kotlin/Double // ai.jetbrains.embeddings.base/Vector.magnitude|magnitude(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.embeddings.base/Vector.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.embeddings.base/Vector> { // ai.jetbrains.embeddings.base/Vector.$serializer|null[0]
+        final val descriptor // ai.jetbrains.embeddings.base/Vector.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.embeddings.base/Vector.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.embeddings.base/Vector.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.embeddings.base/Vector // ai.jetbrains.embeddings.base/Vector.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.embeddings.base/Vector) // ai.jetbrains.embeddings.base/Vector.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.embeddings.base.Vector){}[0]
+    }
+}

@@ -1,0 +1,328 @@
+public final class ai/jetbrains/code/prompt/executor/ollama/client/OllamaClient : ai/jetbrains/code/prompt/executor/clients/LLMClient, ai/jetbrains/code/prompt/executor/clients/LLMEmbeddingProvider {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lio/ktor/client/HttpClient;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/lang/String;Lio/ktor/client/HttpClient;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun embed (Ljava/lang/String;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/OllamaCustomModelConverters {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/OllamaCustomModelConverters;
+	public final fun qwq (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getPrompt ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse$Companion;
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEmbedding ()Ljava/util/List;
+	public final fun getModelId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/EmbeddingResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getImages ()Ljava/util/List;
+	public final fun getRole ()Ljava/lang/String;
+	public final fun getToolCalls ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/serialization/json/JsonElement;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;ZLjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/serialization/json/JsonElement;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;ZLjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/util/List;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun component5 ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;
+	public final fun component6 ()Z
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/serialization/json/JsonElement;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;ZLjava/lang/String;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Lkotlinx/serialization/json/JsonElement;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;ZLjava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFormat ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getKeepAlive ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/List;
+	public final fun getModel ()Ljava/lang/String;
+	public final fun getOptions ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;
+	public final fun getStream ()Z
+	public final fun getTools ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Double;)V
+	public synthetic fun <init> (Ljava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Double;
+	public final fun copy (Ljava/lang/Double;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;Ljava/lang/Double;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTemperature ()Ljava/lang/Double;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatRequestDTO$Options$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO$Companion;
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;Z)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO;Ljava/lang/String;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;ZILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDone ()Z
+	public final fun getMessage ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatMessageDTO;
+	public final fun getModel ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaChatResponseDTO$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Companion;
+	public fun <init> (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;)V
+	public final fun component1 ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;
+	public final fun copy (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFunction ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Lkotlinx/serialization/json/JsonElement;
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Call$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolCallDTO$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Companion;
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;
+	public final fun copy (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO;Ljava/lang/String;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFunction ()Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition {
+	public static final field Companion Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/serialization/json/JsonElement;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonElement;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getParameters ()Lkotlinx/serialization/json/JsonElement;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/client/dto/OllamaToolDTO$Definition$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/executor/ollama/tools/json/JSONSchemaFunctionConverterKt {
+	public static final fun toJSONSchema (Lai/grazie/code/agents/core/tools/ToolDescriptor;)Lkotlinx/serialization/json/JsonObject;
+}
+

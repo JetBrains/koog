@@ -1,0 +1,510 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-model>
+open annotation class ai.jetbrains.code.prompt.dsl/PromptDSL : kotlin/Annotation { // ai.jetbrains.code.prompt.dsl/PromptDSL|null[0]
+    constructor <init>() // ai.jetbrains.code.prompt.dsl/PromptDSL.<init>|<init>(){}[0]
+}
+
+sealed interface ai.jetbrains.code.prompt.message/Message { // ai.jetbrains.code.prompt.message/Message|null[0]
+    abstract val content // ai.jetbrains.code.prompt.message/Message.content|{}content[0]
+        abstract fun <get-content>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.content.<get-content>|<get-content>(){}[0]
+    abstract val role // ai.jetbrains.code.prompt.message/Message.role|{}role[0]
+        abstract fun <get-role>(): ai.jetbrains.code.prompt.message/Message.Role // ai.jetbrains.code.prompt.message/Message.role.<get-role>|<get-role>(){}[0]
+
+    final enum class Role : kotlin/Enum<ai.jetbrains.code.prompt.message/Message.Role> { // ai.jetbrains.code.prompt.message/Message.Role|null[0]
+        enum entry Assistant // ai.jetbrains.code.prompt.message/Message.Role.Assistant|null[0]
+        enum entry System // ai.jetbrains.code.prompt.message/Message.Role.System|null[0]
+        enum entry Tool // ai.jetbrains.code.prompt.message/Message.Role.Tool|null[0]
+        enum entry User // ai.jetbrains.code.prompt.message/Message.Role.User|null[0]
+
+        final val entries // ai.jetbrains.code.prompt.message/Message.Role.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.jetbrains.code.prompt.message/Message.Role> // ai.jetbrains.code.prompt.message/Message.Role.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.jetbrains.code.prompt.message/Message.Role // ai.jetbrains.code.prompt.message/Message.Role.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.jetbrains.code.prompt.message/Message.Role> // ai.jetbrains.code.prompt.message/Message.Role.values|values#static(){}[0]
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.message/Message.Role.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.Role> // ai.jetbrains.code.prompt.message/Message.Role.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.message/Message.Role.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed interface Request : ai.jetbrains.code.prompt.message/Message { // ai.jetbrains.code.prompt.message/Message.Request|null[0]
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.message/Message.Request.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.Request> // ai.jetbrains.code.prompt.message/Message.Request.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.message/Message.Request.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed interface Response : ai.jetbrains.code.prompt.message/Message { // ai.jetbrains.code.prompt.message/Message.Response|null[0]
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.message/Message.Response.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.message/Message.Response.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.message/Message.Response.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed interface Tool : ai.jetbrains.code.prompt.message/Message { // ai.jetbrains.code.prompt.message/Message.Tool|null[0]
+        abstract val id // ai.jetbrains.code.prompt.message/Message.Tool.id|{}id[0]
+            abstract fun <get-id>(): kotlin/String? // ai.jetbrains.code.prompt.message/Message.Tool.id.<get-id>|<get-id>(){}[0]
+        abstract val tool // ai.jetbrains.code.prompt.message/Message.Tool.tool|{}tool[0]
+            abstract fun <get-tool>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.tool.<get-tool>|<get-tool>(){}[0]
+
+        final class Call : ai.jetbrains.code.prompt.message/Message.Response, ai.jetbrains.code.prompt.message/Message.Tool { // ai.jetbrains.code.prompt.message/Message.Tool.Call|null[0]
+            constructor <init>(kotlin/String?, kotlin/String, kotlin/String) // ai.jetbrains.code.prompt.message/Message.Tool.Call.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String){}[0]
+
+            final val content // ai.jetbrains.code.prompt.message/Message.Tool.Call.content|{}content[0]
+                final fun <get-content>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Call.content.<get-content>|<get-content>(){}[0]
+            final val contentJson // ai.jetbrains.code.prompt.message/Message.Tool.Call.contentJson|{}contentJson[0]
+                final fun <get-contentJson>(): kotlinx.serialization.json/JsonObject // ai.jetbrains.code.prompt.message/Message.Tool.Call.contentJson.<get-contentJson>|<get-contentJson>(){}[0]
+            final val id // ai.jetbrains.code.prompt.message/Message.Tool.Call.id|{}id[0]
+                final fun <get-id>(): kotlin/String? // ai.jetbrains.code.prompt.message/Message.Tool.Call.id.<get-id>|<get-id>(){}[0]
+            final val role // ai.jetbrains.code.prompt.message/Message.Tool.Call.role|{}role[0]
+                final fun <get-role>(): ai.jetbrains.code.prompt.message/Message.Role // ai.jetbrains.code.prompt.message/Message.Tool.Call.role.<get-role>|<get-role>(){}[0]
+            final val tool // ai.jetbrains.code.prompt.message/Message.Tool.Call.tool|{}tool[0]
+                final fun <get-tool>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Call.tool.<get-tool>|<get-tool>(){}[0]
+
+            final fun component1(): kotlin/String? // ai.jetbrains.code.prompt.message/Message.Tool.Call.component1|component1(){}[0]
+            final fun component2(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Call.component2|component2(){}[0]
+            final fun component3(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Call.component3|component3(){}[0]
+            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ...): ai.jetbrains.code.prompt.message/Message.Tool.Call // ai.jetbrains.code.prompt.message/Message.Tool.Call.copy|copy(kotlin.String?;kotlin.String;kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.message/Message.Tool.Call.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.message/Message.Tool.Call.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Call.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.message/Message.Tool.Call> { // ai.jetbrains.code.prompt.message/Message.Tool.Call.$serializer|null[0]
+                final val descriptor // ai.jetbrains.code.prompt.message/Message.Tool.Call.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.message/Message.Tool.Call.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.message/Message.Tool.Call.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.message/Message.Tool.Call // ai.jetbrains.code.prompt.message/Message.Tool.Call.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.message/Message.Tool.Call) // ai.jetbrains.code.prompt.message/Message.Tool.Call.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.message.Message.Tool.Call){}[0]
+            }
+
+            final object Companion { // ai.jetbrains.code.prompt.message/Message.Tool.Call.Companion|null[0]
+                final val $childSerializers // ai.jetbrains.code.prompt.message/Message.Tool.Call.Companion.$childSerializers|{}$childSerializers[0]
+
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.Tool.Call> // ai.jetbrains.code.prompt.message/Message.Tool.Call.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final class Result : ai.jetbrains.code.prompt.message/Message.Request, ai.jetbrains.code.prompt.message/Message.Tool { // ai.jetbrains.code.prompt.message/Message.Tool.Result|null[0]
+            constructor <init>(kotlin/String?, kotlin/String, kotlin/String) // ai.jetbrains.code.prompt.message/Message.Tool.Result.<init>|<init>(kotlin.String?;kotlin.String;kotlin.String){}[0]
+
+            final val content // ai.jetbrains.code.prompt.message/Message.Tool.Result.content|{}content[0]
+                final fun <get-content>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Result.content.<get-content>|<get-content>(){}[0]
+            final val id // ai.jetbrains.code.prompt.message/Message.Tool.Result.id|{}id[0]
+                final fun <get-id>(): kotlin/String? // ai.jetbrains.code.prompt.message/Message.Tool.Result.id.<get-id>|<get-id>(){}[0]
+            final val role // ai.jetbrains.code.prompt.message/Message.Tool.Result.role|{}role[0]
+                final fun <get-role>(): ai.jetbrains.code.prompt.message/Message.Role // ai.jetbrains.code.prompt.message/Message.Tool.Result.role.<get-role>|<get-role>(){}[0]
+            final val tool // ai.jetbrains.code.prompt.message/Message.Tool.Result.tool|{}tool[0]
+                final fun <get-tool>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Result.tool.<get-tool>|<get-tool>(){}[0]
+
+            final fun component1(): kotlin/String? // ai.jetbrains.code.prompt.message/Message.Tool.Result.component1|component1(){}[0]
+            final fun component2(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Result.component2|component2(){}[0]
+            final fun component3(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Result.component3|component3(){}[0]
+            final fun copy(kotlin/String? = ..., kotlin/String = ..., kotlin/String = ...): ai.jetbrains.code.prompt.message/Message.Tool.Result // ai.jetbrains.code.prompt.message/Message.Tool.Result.copy|copy(kotlin.String?;kotlin.String;kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.message/Message.Tool.Result.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.message/Message.Tool.Result.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Tool.Result.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.message/Message.Tool.Result> { // ai.jetbrains.code.prompt.message/Message.Tool.Result.$serializer|null[0]
+                final val descriptor // ai.jetbrains.code.prompt.message/Message.Tool.Result.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.message/Message.Tool.Result.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.message/Message.Tool.Result.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.message/Message.Tool.Result // ai.jetbrains.code.prompt.message/Message.Tool.Result.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.message/Message.Tool.Result) // ai.jetbrains.code.prompt.message/Message.Tool.Result.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.message.Message.Tool.Result){}[0]
+            }
+
+            final object Companion { // ai.jetbrains.code.prompt.message/Message.Tool.Result.Companion|null[0]
+                final val $childSerializers // ai.jetbrains.code.prompt.message/Message.Tool.Result.Companion.$childSerializers|{}$childSerializers[0]
+
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.Tool.Result> // ai.jetbrains.code.prompt.message/Message.Tool.Result.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.message/Message.Tool.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.Tool> // ai.jetbrains.code.prompt.message/Message.Tool.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.message/Message.Tool.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    final class Assistant : ai.jetbrains.code.prompt.message/Message.Response { // ai.jetbrains.code.prompt.message/Message.Assistant|null[0]
+        constructor <init>(kotlin/String) // ai.jetbrains.code.prompt.message/Message.Assistant.<init>|<init>(kotlin.String){}[0]
+
+        final val content // ai.jetbrains.code.prompt.message/Message.Assistant.content|{}content[0]
+            final fun <get-content>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Assistant.content.<get-content>|<get-content>(){}[0]
+        final val role // ai.jetbrains.code.prompt.message/Message.Assistant.role|{}role[0]
+            final fun <get-role>(): ai.jetbrains.code.prompt.message/Message.Role // ai.jetbrains.code.prompt.message/Message.Assistant.role.<get-role>|<get-role>(){}[0]
+
+        final fun component1(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Assistant.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.jetbrains.code.prompt.message/Message.Assistant // ai.jetbrains.code.prompt.message/Message.Assistant.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.message/Message.Assistant.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.message/Message.Assistant.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.message/Message.Assistant.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.message/Message.Assistant> { // ai.jetbrains.code.prompt.message/Message.Assistant.$serializer|null[0]
+            final val descriptor // ai.jetbrains.code.prompt.message/Message.Assistant.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.message/Message.Assistant.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.message/Message.Assistant.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.message/Message.Assistant // ai.jetbrains.code.prompt.message/Message.Assistant.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.message/Message.Assistant) // ai.jetbrains.code.prompt.message/Message.Assistant.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.message.Message.Assistant){}[0]
+        }
+
+        final object Companion { // ai.jetbrains.code.prompt.message/Message.Assistant.Companion|null[0]
+            final val $childSerializers // ai.jetbrains.code.prompt.message/Message.Assistant.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.Assistant> // ai.jetbrains.code.prompt.message/Message.Assistant.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class System : ai.jetbrains.code.prompt.message/Message.Request { // ai.jetbrains.code.prompt.message/Message.System|null[0]
+        constructor <init>(kotlin/String) // ai.jetbrains.code.prompt.message/Message.System.<init>|<init>(kotlin.String){}[0]
+
+        final val content // ai.jetbrains.code.prompt.message/Message.System.content|{}content[0]
+            final fun <get-content>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.System.content.<get-content>|<get-content>(){}[0]
+        final val role // ai.jetbrains.code.prompt.message/Message.System.role|{}role[0]
+            final fun <get-role>(): ai.jetbrains.code.prompt.message/Message.Role // ai.jetbrains.code.prompt.message/Message.System.role.<get-role>|<get-role>(){}[0]
+
+        final fun component1(): kotlin/String // ai.jetbrains.code.prompt.message/Message.System.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.jetbrains.code.prompt.message/Message.System // ai.jetbrains.code.prompt.message/Message.System.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.message/Message.System.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.message/Message.System.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.message/Message.System.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.message/Message.System> { // ai.jetbrains.code.prompt.message/Message.System.$serializer|null[0]
+            final val descriptor // ai.jetbrains.code.prompt.message/Message.System.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.message/Message.System.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.message/Message.System.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.message/Message.System // ai.jetbrains.code.prompt.message/Message.System.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.message/Message.System) // ai.jetbrains.code.prompt.message/Message.System.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.message.Message.System){}[0]
+        }
+
+        final object Companion { // ai.jetbrains.code.prompt.message/Message.System.Companion|null[0]
+            final val $childSerializers // ai.jetbrains.code.prompt.message/Message.System.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.System> // ai.jetbrains.code.prompt.message/Message.System.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class User : ai.jetbrains.code.prompt.message/Message.Request { // ai.jetbrains.code.prompt.message/Message.User|null[0]
+        constructor <init>(kotlin/String) // ai.jetbrains.code.prompt.message/Message.User.<init>|<init>(kotlin.String){}[0]
+
+        final val content // ai.jetbrains.code.prompt.message/Message.User.content|{}content[0]
+            final fun <get-content>(): kotlin/String // ai.jetbrains.code.prompt.message/Message.User.content.<get-content>|<get-content>(){}[0]
+        final val role // ai.jetbrains.code.prompt.message/Message.User.role|{}role[0]
+            final fun <get-role>(): ai.jetbrains.code.prompt.message/Message.Role // ai.jetbrains.code.prompt.message/Message.User.role.<get-role>|<get-role>(){}[0]
+
+        final fun component1(): kotlin/String // ai.jetbrains.code.prompt.message/Message.User.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.jetbrains.code.prompt.message/Message.User // ai.jetbrains.code.prompt.message/Message.User.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.message/Message.User.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.message/Message.User.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.message/Message.User.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.message/Message.User> { // ai.jetbrains.code.prompt.message/Message.User.$serializer|null[0]
+            final val descriptor // ai.jetbrains.code.prompt.message/Message.User.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.message/Message.User.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.message/Message.User.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.message/Message.User // ai.jetbrains.code.prompt.message/Message.User.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.message/Message.User) // ai.jetbrains.code.prompt.message/Message.User.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.message.Message.User){}[0]
+        }
+
+        final object Companion { // ai.jetbrains.code.prompt.message/Message.User.Companion|null[0]
+            final val $childSerializers // ai.jetbrains.code.prompt.message/Message.User.Companion.$childSerializers|{}$childSerializers[0]
+
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message.User> // ai.jetbrains.code.prompt.message/Message.User.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.message/Message.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.message/Message> // ai.jetbrains.code.prompt.message/Message.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.message/Message.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.dsl/Prompt { // ai.jetbrains.code.prompt.dsl/Prompt|null[0]
+    constructor <init>(kotlin.collections/List<ai.jetbrains.code.prompt.message/Message>, kotlin/String, ai.jetbrains.code.prompt.params/LLMParams = ...) // ai.jetbrains.code.prompt.dsl/Prompt.<init>|<init>(kotlin.collections.List<ai.jetbrains.code.prompt.message.Message>;kotlin.String;ai.jetbrains.code.prompt.params.LLMParams){}[0]
+
+    final val id // ai.jetbrains.code.prompt.dsl/Prompt.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.jetbrains.code.prompt.dsl/Prompt.id.<get-id>|<get-id>(){}[0]
+    final val messages // ai.jetbrains.code.prompt.dsl/Prompt.messages|{}messages[0]
+        final fun <get-messages>(): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message> // ai.jetbrains.code.prompt.dsl/Prompt.messages.<get-messages>|<get-messages>(){}[0]
+    final val params // ai.jetbrains.code.prompt.dsl/Prompt.params|{}params[0]
+        final fun <get-params>(): ai.jetbrains.code.prompt.params/LLMParams // ai.jetbrains.code.prompt.dsl/Prompt.params.<get-params>|<get-params>(){}[0]
+
+    final fun component1(): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message> // ai.jetbrains.code.prompt.dsl/Prompt.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.jetbrains.code.prompt.dsl/Prompt.component2|component2(){}[0]
+    final fun component3(): ai.jetbrains.code.prompt.params/LLMParams // ai.jetbrains.code.prompt.dsl/Prompt.component3|component3(){}[0]
+    final fun copy(kotlin.collections/List<ai.jetbrains.code.prompt.message/Message> = ..., kotlin/String = ..., ai.jetbrains.code.prompt.params/LLMParams = ...): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.copy|copy(kotlin.collections.List<ai.jetbrains.code.prompt.message.Message>;kotlin.String;ai.jetbrains.code.prompt.params.LLMParams){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.dsl/Prompt.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.dsl/Prompt.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.dsl/Prompt.toString|toString(){}[0]
+    final fun withMessages(kotlin.collections/List<ai.jetbrains.code.prompt.message/Message>): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.withMessages|withMessages(kotlin.collections.List<ai.jetbrains.code.prompt.message.Message>){}[0]
+    final fun withParams(ai.jetbrains.code.prompt.params/LLMParams): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.withParams|withParams(ai.jetbrains.code.prompt.params.LLMParams){}[0]
+    final fun withUpdatedMessages(kotlin/Function1<kotlin.collections/MutableList<ai.jetbrains.code.prompt.message/Message>, kotlin/Unit>): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.withUpdatedMessages|withUpdatedMessages(kotlin.Function1<kotlin.collections.MutableList<ai.jetbrains.code.prompt.message.Message>,kotlin.Unit>){}[0]
+    final fun withUpdatedParams(kotlin/Function1<ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext, kotlin/Unit>): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.withUpdatedParams|withUpdatedParams(kotlin.Function1<ai.jetbrains.code.prompt.dsl.Prompt.LLMParamsUpdateContext,kotlin.Unit>){}[0]
+
+    final class LLMParamsUpdateContext { // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext|null[0]
+        final var schema // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.schema|{}schema[0]
+            final fun <get-schema>(): ai.jetbrains.code.prompt.params/LLMParams.Schema? // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.schema.<get-schema>|<get-schema>(){}[0]
+            final fun <set-schema>(ai.jetbrains.code.prompt.params/LLMParams.Schema?) // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.schema.<set-schema>|<set-schema>(ai.jetbrains.code.prompt.params.LLMParams.Schema?){}[0]
+        final var speculation // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.speculation|{}speculation[0]
+            final fun <get-speculation>(): kotlin/String? // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.speculation.<get-speculation>|<get-speculation>(){}[0]
+            final fun <set-speculation>(kotlin/String?) // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.speculation.<set-speculation>|<set-speculation>(kotlin.String?){}[0]
+        final var temperature // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.temperature|{}temperature[0]
+            final fun <get-temperature>(): kotlin/Double? // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.temperature.<get-temperature>|<get-temperature>(){}[0]
+            final fun <set-temperature>(kotlin/Double?) // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.temperature.<set-temperature>|<set-temperature>(kotlin.Double?){}[0]
+        final var toolChoice // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.toolChoice|{}toolChoice[0]
+            final fun <get-toolChoice>(): ai.jetbrains.code.prompt.params/LLMParams.ToolChoice? // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.toolChoice.<get-toolChoice>|<get-toolChoice>(){}[0]
+            final fun <set-toolChoice>(ai.jetbrains.code.prompt.params/LLMParams.ToolChoice?) // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.toolChoice.<set-toolChoice>|<set-toolChoice>(ai.jetbrains.code.prompt.params.LLMParams.ToolChoice?){}[0]
+
+        final fun toParams(): ai.jetbrains.code.prompt.params/LLMParams // ai.jetbrains.code.prompt.dsl/Prompt.LLMParamsUpdateContext.toParams|toParams(){}[0]
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.dsl/Prompt> { // ai.jetbrains.code.prompt.dsl/Prompt.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.dsl/Prompt.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.dsl/Prompt.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.dsl/Prompt.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.dsl/Prompt) // ai.jetbrains.code.prompt.dsl/Prompt.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.dsl.Prompt){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.dsl/Prompt.Companion|null[0]
+        final val $childSerializers // ai.jetbrains.code.prompt.dsl/Prompt.Companion.$childSerializers|{}$childSerializers[0]
+        final val Empty // ai.jetbrains.code.prompt.dsl/Prompt.Companion.Empty|{}Empty[0]
+            final fun <get-Empty>(): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.Companion.Empty.<get-Empty>|<get-Empty>(){}[0]
+
+        final fun build(ai.jetbrains.code.prompt.dsl/Prompt, kotlin/Function1<ai.jetbrains.code.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.Companion.build|build(ai.jetbrains.code.prompt.dsl.Prompt;kotlin.Function1<ai.jetbrains.code.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+        final fun build(kotlin/String, ai.jetbrains.code.prompt.params/LLMParams = ..., kotlin/Function1<ai.jetbrains.code.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/Prompt.Companion.build|build(kotlin.String;ai.jetbrains.code.prompt.params.LLMParams;kotlin.Function1<ai.jetbrains.code.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.dsl/Prompt> // ai.jetbrains.code.prompt.dsl/Prompt.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.dsl/PromptBuilder { // ai.jetbrains.code.prompt.dsl/PromptBuilder|null[0]
+    final fun assistant(kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.jetbrains.code.prompt.dsl/PromptBuilder.assistant|assistant(kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun assistant(kotlin/String) // ai.jetbrains.code.prompt.dsl/PromptBuilder.assistant|assistant(kotlin.String){}[0]
+    final fun message(ai.jetbrains.code.prompt.message/Message) // ai.jetbrains.code.prompt.dsl/PromptBuilder.message|message(ai.jetbrains.code.prompt.message.Message){}[0]
+    final fun messages(kotlin.collections/List<ai.jetbrains.code.prompt.message/Message>) // ai.jetbrains.code.prompt.dsl/PromptBuilder.messages|messages(kotlin.collections.List<ai.jetbrains.code.prompt.message.Message>){}[0]
+    final fun system(kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.jetbrains.code.prompt.dsl/PromptBuilder.system|system(kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun system(kotlin/String) // ai.jetbrains.code.prompt.dsl/PromptBuilder.system|system(kotlin.String){}[0]
+    final fun tool(kotlin/Function1<ai.jetbrains.code.prompt.dsl/PromptBuilder.ToolMessageBuilder, kotlin/Unit>) // ai.jetbrains.code.prompt.dsl/PromptBuilder.tool|tool(kotlin.Function1<ai.jetbrains.code.prompt.dsl.PromptBuilder.ToolMessageBuilder,kotlin.Unit>){}[0]
+    final fun user(kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.jetbrains.code.prompt.dsl/PromptBuilder.user|user(kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun user(kotlin/String) // ai.jetbrains.code.prompt.dsl/PromptBuilder.user|user(kotlin.String){}[0]
+
+    final inner class ToolMessageBuilder { // ai.jetbrains.code.prompt.dsl/PromptBuilder.ToolMessageBuilder|null[0]
+        constructor <init>() // ai.jetbrains.code.prompt.dsl/PromptBuilder.ToolMessageBuilder.<init>|<init>(){}[0]
+
+        final fun call(ai.jetbrains.code.prompt.message/Message.Tool.Call) // ai.jetbrains.code.prompt.dsl/PromptBuilder.ToolMessageBuilder.call|call(ai.jetbrains.code.prompt.message.Message.Tool.Call){}[0]
+        final fun result(ai.jetbrains.code.prompt.message/Message.Tool.Result) // ai.jetbrains.code.prompt.dsl/PromptBuilder.ToolMessageBuilder.result|result(ai.jetbrains.code.prompt.message.Message.Tool.Result){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.params/LLMParams { // ai.jetbrains.code.prompt.params/LLMParams|null[0]
+    constructor <init>(kotlin/Double? = ..., kotlin/String? = ..., ai.jetbrains.code.prompt.params/LLMParams.Schema? = ..., ai.jetbrains.code.prompt.params/LLMParams.ToolChoice? = ...) // ai.jetbrains.code.prompt.params/LLMParams.<init>|<init>(kotlin.Double?;kotlin.String?;ai.jetbrains.code.prompt.params.LLMParams.Schema?;ai.jetbrains.code.prompt.params.LLMParams.ToolChoice?){}[0]
+
+    final val schema // ai.jetbrains.code.prompt.params/LLMParams.schema|{}schema[0]
+        final fun <get-schema>(): ai.jetbrains.code.prompt.params/LLMParams.Schema? // ai.jetbrains.code.prompt.params/LLMParams.schema.<get-schema>|<get-schema>(){}[0]
+    final val speculation // ai.jetbrains.code.prompt.params/LLMParams.speculation|{}speculation[0]
+        final fun <get-speculation>(): kotlin/String? // ai.jetbrains.code.prompt.params/LLMParams.speculation.<get-speculation>|<get-speculation>(){}[0]
+    final val temperature // ai.jetbrains.code.prompt.params/LLMParams.temperature|{}temperature[0]
+        final fun <get-temperature>(): kotlin/Double? // ai.jetbrains.code.prompt.params/LLMParams.temperature.<get-temperature>|<get-temperature>(){}[0]
+    final val toolChoice // ai.jetbrains.code.prompt.params/LLMParams.toolChoice|{}toolChoice[0]
+        final fun <get-toolChoice>(): ai.jetbrains.code.prompt.params/LLMParams.ToolChoice? // ai.jetbrains.code.prompt.params/LLMParams.toolChoice.<get-toolChoice>|<get-toolChoice>(){}[0]
+
+    final fun component1(): kotlin/Double? // ai.jetbrains.code.prompt.params/LLMParams.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // ai.jetbrains.code.prompt.params/LLMParams.component2|component2(){}[0]
+    final fun component3(): ai.jetbrains.code.prompt.params/LLMParams.Schema? // ai.jetbrains.code.prompt.params/LLMParams.component3|component3(){}[0]
+    final fun component4(): ai.jetbrains.code.prompt.params/LLMParams.ToolChoice? // ai.jetbrains.code.prompt.params/LLMParams.component4|component4(){}[0]
+    final fun copy(kotlin/Double? = ..., kotlin/String? = ..., ai.jetbrains.code.prompt.params/LLMParams.Schema? = ..., ai.jetbrains.code.prompt.params/LLMParams.ToolChoice? = ...): ai.jetbrains.code.prompt.params/LLMParams // ai.jetbrains.code.prompt.params/LLMParams.copy|copy(kotlin.Double?;kotlin.String?;ai.jetbrains.code.prompt.params.LLMParams.Schema?;ai.jetbrains.code.prompt.params.LLMParams.ToolChoice?){}[0]
+    final fun default(ai.jetbrains.code.prompt.params/LLMParams): ai.jetbrains.code.prompt.params/LLMParams // ai.jetbrains.code.prompt.params/LLMParams.default|default(ai.jetbrains.code.prompt.params.LLMParams){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.params/LLMParams.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.params/LLMParams.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.toString|toString(){}[0]
+
+    sealed interface Schema { // ai.jetbrains.code.prompt.params/LLMParams.Schema|null[0]
+        abstract val name // ai.jetbrains.code.prompt.params/LLMParams.Schema.name|{}name[0]
+            abstract fun <get-name>(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.Schema.name.<get-name>|<get-name>(){}[0]
+
+        sealed interface JSON : ai.jetbrains.code.prompt.params/LLMParams.Schema { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON|null[0]
+            abstract val schema // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.schema|{}schema[0]
+                abstract fun <get-schema>(): kotlinx.serialization.json/JsonObject // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.schema.<get-schema>|<get-schema>(){}[0]
+
+            final class Full : ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full|null[0]
+                constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+                final val name // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.name.<get-name>|<get-name>(){}[0]
+                final val schema // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.schema|{}schema[0]
+                    final fun <get-schema>(): kotlinx.serialization.json/JsonObject // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.schema.<get-schema>|<get-schema>(){}[0]
+
+                final fun component1(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.component1|component1(){}[0]
+                final fun component2(): kotlinx.serialization.json/JsonObject // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.component2|component2(){}[0]
+                final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.toString|toString(){}[0]
+
+                final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full> { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.$serializer|null[0]
+                    final val descriptor // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.$serializer.descriptor|{}descriptor[0]
+                        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                    final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.$serializer.childSerializers|childSerializers(){}[0]
+                    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full) // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.params.LLMParams.Schema.JSON.Full){}[0]
+                }
+
+                final object Companion { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.Companion|null[0]
+                    final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full> // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Full.Companion.serializer|serializer(){}[0]
+                }
+            }
+
+            final class Simple : ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple|null[0]
+                constructor <init>(kotlin/String, kotlinx.serialization.json/JsonObject) // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+
+                final val name // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.name|{}name[0]
+                    final fun <get-name>(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.name.<get-name>|<get-name>(){}[0]
+                final val schema // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.schema|{}schema[0]
+                    final fun <get-schema>(): kotlinx.serialization.json/JsonObject // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.schema.<get-schema>|<get-schema>(){}[0]
+
+                final fun component1(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.component1|component1(){}[0]
+                final fun component2(): kotlinx.serialization.json/JsonObject // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.component2|component2(){}[0]
+                final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonObject = ...): ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.copy|copy(kotlin.String;kotlinx.serialization.json.JsonObject){}[0]
+                final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.equals|equals(kotlin.Any?){}[0]
+                final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.hashCode|hashCode(){}[0]
+                final fun toString(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.toString|toString(){}[0]
+
+                final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple> { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.$serializer|null[0]
+                    final val descriptor // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.$serializer.descriptor|{}descriptor[0]
+                        final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                    final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.$serializer.childSerializers|childSerializers(){}[0]
+                    final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                    final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple) // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.params.LLMParams.Schema.JSON.Simple){}[0]
+                }
+
+                final object Companion { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.Companion|null[0]
+                    final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple> // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Simple.Companion.serializer|serializer(){}[0]
+                }
+            }
+
+            final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON> // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Companion.serializer|serializer(){}[0]
+                final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+            }
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.params/LLMParams.Schema.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.Schema> // ai.jetbrains.code.prompt.params/LLMParams.Schema.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.params/LLMParams.Schema.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    sealed class ToolChoice { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice|null[0]
+        final class Named : ai.jetbrains.code.prompt.params/LLMParams.ToolChoice { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named|null[0]
+            constructor <init>(kotlin/String) // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.<init>|<init>(kotlin.String){}[0]
+
+            final val name // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.name|{}name[0]
+                final fun <get-name>(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.name.<get-name>|<get-name>(){}[0]
+
+            final fun component1(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.component1|component1(){}[0]
+            final fun copy(kotlin/String = ...): ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.copy|copy(kotlin.String){}[0]
+            final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.equals|equals(kotlin.Any?){}[0]
+            final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.hashCode|hashCode(){}[0]
+            final fun toString(): kotlin/String // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.toString|toString(){}[0]
+
+            final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named> { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.$serializer|null[0]
+                final val descriptor // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.$serializer.descriptor|{}descriptor[0]
+                    final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+                final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.$serializer.childSerializers|childSerializers(){}[0]
+                final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+                final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named) // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.params.LLMParams.ToolChoice.Named){}[0]
+            }
+
+            final object Companion { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.Companion|null[0]
+                final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Named.Companion.serializer|serializer(){}[0]
+            }
+        }
+
+        final object Auto : ai.jetbrains.code.prompt.params/LLMParams.ToolChoice, kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Auto|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Auto> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Auto.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Auto.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.ToolChoice> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Companion.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object None : ai.jetbrains.code.prompt.params/LLMParams.ToolChoice, kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.None|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.None> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.None.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.None.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+
+        final object Required : ai.jetbrains.code.prompt.params/LLMParams.ToolChoice, kotlinx.serialization.internal/SerializerFactory { // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Required|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Required> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Required.serializer|serializer(){}[0]
+            final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.jetbrains.code.prompt.params/LLMParams.ToolChoice.Required.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.params/LLMParams> { // ai.jetbrains.code.prompt.params/LLMParams.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.params/LLMParams.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.params/LLMParams.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.params/LLMParams.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.params/LLMParams // ai.jetbrains.code.prompt.params/LLMParams.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.params/LLMParams) // ai.jetbrains.code.prompt.params/LLMParams.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.params.LLMParams){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.params/LLMParams.Companion|null[0]
+        final val $childSerializers // ai.jetbrains.code.prompt.params/LLMParams.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.params/LLMParams> // ai.jetbrains.code.prompt.params/LLMParams.Companion.serializer|serializer(){}[0]
+    }
+}
+
+open class ai.jetbrains.code.prompt.text/TextContentBuilder { // ai.jetbrains.code.prompt.text/TextContentBuilder|null[0]
+    constructor <init>() // ai.jetbrains.code.prompt.text/TextContentBuilder.<init>|<init>(){}[0]
+
+    final val caret // ai.jetbrains.code.prompt.text/TextContentBuilder.caret|{}caret[0]
+        final fun <get-caret>(): ai.jetbrains.code.prompt.text/TextContentBuilder.Caret // ai.jetbrains.code.prompt.text/TextContentBuilder.caret.<get-caret>|<get-caret>(){}[0]
+
+    final fun (kotlin/String).not() // ai.jetbrains.code.prompt.text/TextContentBuilder.not|not@kotlin.String(){}[0]
+    final fun br() // ai.jetbrains.code.prompt.text/TextContentBuilder.br|br(){}[0]
+    final fun build(): kotlin/String // ai.jetbrains.code.prompt.text/TextContentBuilder.build|build(){}[0]
+    final fun newline() // ai.jetbrains.code.prompt.text/TextContentBuilder.newline|newline(){}[0]
+    final fun padding(kotlin/String, kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>) // ai.jetbrains.code.prompt.text/TextContentBuilder.padding|padding(kotlin.String;kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+    final fun text(kotlin/String) // ai.jetbrains.code.prompt.text/TextContentBuilder.text|text(kotlin.String){}[0]
+    final fun textWithNewLine(kotlin/String) // ai.jetbrains.code.prompt.text/TextContentBuilder.textWithNewLine|textWithNewLine(kotlin.String){}[0]
+    open fun (kotlin/String).unaryPlus() // ai.jetbrains.code.prompt.text/TextContentBuilder.unaryPlus|unaryPlus@kotlin.String(){}[0]
+
+    final class Caret { // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret|null[0]
+        constructor <init>(kotlin/Int, kotlin/Int) // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+        final val line // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.line|{}line[0]
+            final fun <get-line>(): kotlin/Int // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.line.<get-line>|<get-line>(){}[0]
+        final val offset // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.offset|{}offset[0]
+            final fun <get-offset>(): kotlin/Int // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.offset.<get-offset>|<get-offset>(){}[0]
+
+        final fun component1(): kotlin/Int // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.component2|component2(){}[0]
+        final fun copy(kotlin/Int = ..., kotlin/Int = ...): ai.jetbrains.code.prompt.text/TextContentBuilder.Caret // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.copy|copy(kotlin.Int;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.text/TextContentBuilder.Caret.toString|toString(){}[0]
+    }
+}
+
+final fun (ai.jetbrains.code.prompt.text/TextContentBuilder).ai.jetbrains.code.prompt.text/numbered(kotlin/Int = ..., kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>): ai.jetbrains.code.prompt.text/TextContentBuilder // ai.jetbrains.code.prompt.text/numbered|numbered@ai.jetbrains.code.prompt.text.TextContentBuilder(kotlin.Int;kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]
+final fun ai.jetbrains.code.prompt.dsl/prompt(ai.jetbrains.code.prompt.dsl/Prompt, kotlin/Function1<ai.jetbrains.code.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/prompt|prompt(ai.jetbrains.code.prompt.dsl.Prompt;kotlin.Function1<ai.jetbrains.code.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+final fun ai.jetbrains.code.prompt.dsl/prompt(kotlin/String, ai.jetbrains.code.prompt.params/LLMParams = ..., kotlin/Function1<ai.jetbrains.code.prompt.dsl/PromptBuilder, kotlin/Unit>): ai.jetbrains.code.prompt.dsl/Prompt // ai.jetbrains.code.prompt.dsl/prompt|prompt(kotlin.String;ai.jetbrains.code.prompt.params.LLMParams;kotlin.Function1<ai.jetbrains.code.prompt.dsl.PromptBuilder,kotlin.Unit>){}[0]
+final fun ai.jetbrains.code.prompt.text/text(kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>): kotlin/String // ai.jetbrains.code.prompt.text/text|text(kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>){}[0]

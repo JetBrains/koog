@@ -1,0 +1,478 @@
+public final class ai/jetbrains/code/prompt/dsl/Prompt {
+	public static final field Companion Lai/jetbrains/code/prompt/dsl/Prompt$Companion;
+	public fun <init> (Ljava/util/List;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lai/jetbrains/code/prompt/params/LLMParams;
+	public final fun copy (Ljava/util/List;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;ILjava/lang/Object;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public final fun getMessages ()Ljava/util/List;
+	public final fun getParams ()Lai/jetbrains/code/prompt/params/LLMParams;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun withMessages (Ljava/util/List;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public final fun withParams (Lai/jetbrains/code/prompt/params/LLMParams;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public final fun withUpdatedMessages (Lkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public final fun withUpdatedParams (Lkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/dsl/Prompt;
+}
+
+public final class ai/jetbrains/code/prompt/dsl/Prompt$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/dsl/Prompt$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/dsl/Prompt;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/dsl/Prompt$Companion {
+	public final fun build (Lai/jetbrains/code/prompt/dsl/Prompt;Lkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public final fun build (Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;Lkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public static synthetic fun build$default (Lai/jetbrains/code/prompt/dsl/Prompt$Companion;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public final fun getEmpty ()Lai/jetbrains/code/prompt/dsl/Prompt;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/dsl/Prompt$LLMParamsUpdateContext {
+	public final fun getSchema ()Lai/jetbrains/code/prompt/params/LLMParams$Schema;
+	public final fun getSpeculation ()Ljava/lang/String;
+	public final fun getTemperature ()Ljava/lang/Double;
+	public final fun getToolChoice ()Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;
+	public final fun setSchema (Lai/jetbrains/code/prompt/params/LLMParams$Schema;)V
+	public final fun setSpeculation (Ljava/lang/String;)V
+	public final fun setTemperature (Ljava/lang/Double;)V
+	public final fun setToolChoice (Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;)V
+	public final fun toParams ()Lai/jetbrains/code/prompt/params/LLMParams;
+}
+
+public final class ai/jetbrains/code/prompt/dsl/PromptBuilder {
+	public final fun assistant (Ljava/lang/String;)V
+	public final fun assistant (Lkotlin/jvm/functions/Function1;)V
+	public final fun message (Lai/jetbrains/code/prompt/message/Message;)V
+	public final fun messages (Ljava/util/List;)V
+	public final fun system (Ljava/lang/String;)V
+	public final fun system (Lkotlin/jvm/functions/Function1;)V
+	public final fun tool (Lkotlin/jvm/functions/Function1;)V
+	public final fun user (Ljava/lang/String;)V
+	public final fun user (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class ai/jetbrains/code/prompt/dsl/PromptBuilder$ToolMessageBuilder {
+	public fun <init> (Lai/jetbrains/code/prompt/dsl/PromptBuilder;)V
+	public final fun call (Lai/jetbrains/code/prompt/message/Message$Tool$Call;)V
+	public final fun result (Lai/jetbrains/code/prompt/message/Message$Tool$Result;)V
+}
+
+public abstract interface annotation class ai/jetbrains/code/prompt/dsl/PromptDSL : java/lang/annotation/Annotation {
+}
+
+public final class ai/jetbrains/code/prompt/dsl/PromptDSLKt {
+	public static final fun prompt (Lai/jetbrains/code/prompt/dsl/Prompt;Lkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public static final fun prompt (Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;Lkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public static synthetic fun prompt$default (Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/jetbrains/code/prompt/dsl/Prompt;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/message/Message {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Companion;
+	public abstract fun getContent ()Ljava/lang/String;
+	public abstract fun getRole ()Lai/jetbrains/code/prompt/message/Message$Role;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Assistant : ai/jetbrains/code/prompt/message/Message$Response {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Assistant$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/jetbrains/code/prompt/message/Message$Assistant;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/message/Message$Assistant;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/message/Message$Assistant;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public fun getRole ()Lai/jetbrains/code/prompt/message/Message$Role;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Assistant$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/message/Message$Assistant$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/message/Message$Assistant;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/message/Message$Assistant;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Assistant$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/message/Message$Request : ai/jetbrains/code/prompt/message/Message {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Request$Companion;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Request$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/message/Message$Response : ai/jetbrains/code/prompt/message/Message {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Response$Companion;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Response$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Role : java/lang/Enum {
+	public static final field Assistant Lai/jetbrains/code/prompt/message/Message$Role;
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Role$Companion;
+	public static final field System Lai/jetbrains/code/prompt/message/Message$Role;
+	public static final field Tool Lai/jetbrains/code/prompt/message/Message$Role;
+	public static final field User Lai/jetbrains/code/prompt/message/Message$Role;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/jetbrains/code/prompt/message/Message$Role;
+	public static fun values ()[Lai/jetbrains/code/prompt/message/Message$Role;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Role$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$System : ai/jetbrains/code/prompt/message/Message$Request {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$System$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/jetbrains/code/prompt/message/Message$System;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/message/Message$System;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/message/Message$System;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public fun getRole ()Lai/jetbrains/code/prompt/message/Message$Role;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$System$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/message/Message$System$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/message/Message$System;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/message/Message$System;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$System$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/message/Message$Tool : ai/jetbrains/code/prompt/message/Message {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Tool$Companion;
+	public abstract fun getId ()Ljava/lang/String;
+	public abstract fun getTool ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Tool$Call : ai/jetbrains/code/prompt/message/Message$Response, ai/jetbrains/code/prompt/message/Message$Tool {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Tool$Call$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/jetbrains/code/prompt/message/Message$Tool$Call;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/message/Message$Tool$Call;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/message/Message$Tool$Call;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public final fun getContentJson ()Lkotlinx/serialization/json/JsonObject;
+	public fun getId ()Ljava/lang/String;
+	public fun getRole ()Lai/jetbrains/code/prompt/message/Message$Role;
+	public fun getTool ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Tool$Call$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/message/Message$Tool$Call$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/message/Message$Tool$Call;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/message/Message$Tool$Call;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Tool$Call$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Tool$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Tool$Result : ai/jetbrains/code/prompt/message/Message$Request, ai/jetbrains/code/prompt/message/Message$Tool {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$Tool$Result$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/jetbrains/code/prompt/message/Message$Tool$Result;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/message/Message$Tool$Result;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/message/Message$Tool$Result;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public fun getId ()Ljava/lang/String;
+	public fun getRole ()Lai/jetbrains/code/prompt/message/Message$Role;
+	public fun getTool ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Tool$Result$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/message/Message$Tool$Result$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/message/Message$Tool$Result;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/message/Message$Tool$Result;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$Tool$Result$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$User : ai/jetbrains/code/prompt/message/Message$Request {
+	public static final field Companion Lai/jetbrains/code/prompt/message/Message$User$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/jetbrains/code/prompt/message/Message$User;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/message/Message$User;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/message/Message$User;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public fun getRole ()Lai/jetbrains/code/prompt/message/Message$Role;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$User$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/message/Message$User$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/message/Message$User;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/message/Message$User;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/message/Message$User$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams {
+	public static final field Companion Lai/jetbrains/code/prompt/params/LLMParams$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Double;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams$Schema;Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;)V
+	public synthetic fun <init> (Ljava/lang/Double;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams$Schema;Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Double;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lai/jetbrains/code/prompt/params/LLMParams$Schema;
+	public final fun component4 ()Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;
+	public final fun copy (Ljava/lang/Double;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams$Schema;Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;)Lai/jetbrains/code/prompt/params/LLMParams;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/params/LLMParams;Ljava/lang/Double;Ljava/lang/String;Lai/jetbrains/code/prompt/params/LLMParams$Schema;Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;ILjava/lang/Object;)Lai/jetbrains/code/prompt/params/LLMParams;
+	public final fun default (Lai/jetbrains/code/prompt/params/LLMParams;)Lai/jetbrains/code/prompt/params/LLMParams;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSchema ()Lai/jetbrains/code/prompt/params/LLMParams$Schema;
+	public final fun getSpeculation ()Ljava/lang/String;
+	public final fun getTemperature ()Ljava/lang/Double;
+	public final fun getToolChoice ()Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/params/LLMParams$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/params/LLMParams;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/params/LLMParams;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/params/LLMParams$Schema {
+	public static final field Companion Lai/jetbrains/code/prompt/params/LLMParams$Schema$Companion;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON : ai/jetbrains/code/prompt/params/LLMParams$Schema {
+	public static final field Companion Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Companion;
+	public abstract fun getSchema ()Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full : ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON {
+	public static final field Companion Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getName ()Ljava/lang/String;
+	public fun getSchema ()Lkotlinx/serialization/json/JsonObject;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Full$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple : ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON {
+	public static final field Companion Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getName ()Ljava/lang/String;
+	public fun getSchema ()Lkotlinx/serialization/json/JsonObject;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$Schema$JSON$Simple$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice {
+	public static final field Companion Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Companion;
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public static final synthetic fun write$Self (Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Auto : ai/jetbrains/code/prompt/params/LLMParams$ToolChoice {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Auto;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named : ai/jetbrains/code/prompt/params/LLMParams$ToolChoice {
+	public static final field Companion Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named;Ljava/lang/String;ILjava/lang/Object;)Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Named$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice$None : ai/jetbrains/code/prompt/params/LLMParams$ToolChoice {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$None;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Required : ai/jetbrains/code/prompt/params/LLMParams$ToolChoice {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice$Required;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public class ai/jetbrains/code/prompt/text/TextContentBuilder {
+	public fun <init> ()V
+	public final fun br ()V
+	public final fun build ()Ljava/lang/String;
+	public final fun getCaret ()Lai/jetbrains/code/prompt/text/TextContentBuilder$Caret;
+	public final fun newline ()V
+	public final fun not (Ljava/lang/String;)V
+	public final fun padding (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun text (Ljava/lang/String;)V
+	public final fun textWithNewLine (Ljava/lang/String;)V
+	public fun unaryPlus (Ljava/lang/String;)V
+}
+
+public final class ai/jetbrains/code/prompt/text/TextContentBuilder$Caret {
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun copy (II)Lai/jetbrains/code/prompt/text/TextContentBuilder$Caret;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/text/TextContentBuilder$Caret;IIILjava/lang/Object;)Lai/jetbrains/code/prompt/text/TextContentBuilder$Caret;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLine ()I
+	public final fun getOffset ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/text/TextContentBuilderExtKt {
+	public static final fun numbered (Lai/jetbrains/code/prompt/text/TextContentBuilder;ILkotlin/jvm/functions/Function1;)Lai/jetbrains/code/prompt/text/TextContentBuilder;
+	public static synthetic fun numbered$default (Lai/jetbrains/code/prompt/text/TextContentBuilder;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/jetbrains/code/prompt/text/TextContentBuilder;
+}
+
+public final class ai/jetbrains/code/prompt/text/TextKt {
+	public static final fun text (Lkotlin/jvm/functions/Function1;)Ljava/lang/String;
+}
+

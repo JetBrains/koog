@@ -1,0 +1,144 @@
+public abstract interface class ai/grazie/code/prompt/structure/DescriptionMetadata {
+	public fun allDescriptions ()Ljava/util/Map;
+	public abstract fun getClassDescription ()Ljava/lang/String;
+	public abstract fun getClassName ()Ljava/lang/String;
+	public abstract fun getFieldDescriptions ()Ljava/util/Map;
+}
+
+public final class ai/grazie/code/prompt/structure/ExtensionsKt {
+	public static final fun executeStructured (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/grazie/code/prompt/structure/StructuredData;ILai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun executeStructured$default (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/grazie/code/prompt/structure/StructuredData;ILai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun executeStructuredOneShot (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/grazie/code/prompt/structure/StructuredData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun structure (Lai/jetbrains/code/prompt/text/TextContentBuilder;Lai/grazie/code/prompt/structure/json/JsonStructureLanguage;Ljava/lang/Object;Lkotlinx/serialization/KSerializer;)V
+}
+
+public final class ai/grazie/code/prompt/structure/LLMStructuredParsingError : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/prompt/structure/StructureParser {
+	public fun <init> (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/jetbrains/code/prompt/llm/LLModel;)V
+	public synthetic fun <init> (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/jetbrains/code/prompt/llm/LLModel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun parse (Lai/grazie/code/prompt/structure/StructuredData;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class ai/grazie/code/prompt/structure/StructuredData : ai/grazie/code/prompt/structure/StructuredDataDefinition {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lai/jetbrains/code/prompt/params/LLMParams$Schema;)V
+	public final fun getExamples ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getSchema ()Lai/jetbrains/code/prompt/params/LLMParams$Schema;
+	public abstract fun parse (Ljava/lang/String;)Ljava/lang/Object;
+	public abstract fun pretty (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public abstract interface class ai/grazie/code/prompt/structure/StructuredDataDefinition {
+	public abstract fun definition (Lai/jetbrains/code/prompt/text/TextContentBuilder;)Lai/jetbrains/code/prompt/text/TextContentBuilder;
+}
+
+public final class ai/grazie/code/prompt/structure/StructuredOutputPrompts {
+	public static final field INSTANCE Lai/grazie/code/prompt/structure/StructuredOutputPrompts;
+	public final fun output (Lai/grazie/code/prompt/markdown/MarkdownContentBuilder;Lai/grazie/code/prompt/structure/StructuredData;)Lai/jetbrains/code/prompt/text/TextContentBuilder;
+}
+
+public final class ai/grazie/code/prompt/structure/StructuredResponse {
+	public fun <init> (Ljava/lang/Object;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/Object;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/Object;Ljava/lang/String;)Lai/grazie/code/prompt/structure/StructuredResponse;
+	public static synthetic fun copy$default (Lai/grazie/code/prompt/structure/StructuredResponse;Ljava/lang/Object;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/prompt/structure/StructuredResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRaw ()Ljava/lang/String;
+	public final fun getStructure ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/prompt/structure/json/JsonSchemaGenerator {
+	public static final field ADDITIONAL_PROPERTIES_KEY Ljava/lang/String;
+	public static final field CONST_KEY Ljava/lang/String;
+	public static final field DEFS_KEY Ljava/lang/String;
+	public static final field DESCRIPTION_KEY Ljava/lang/String;
+	public static final field ENUM_KEY Ljava/lang/String;
+	public static final field ID_KEY Ljava/lang/String;
+	public static final field ITEMS_KEY Ljava/lang/String;
+	public static final field NULLABLE_KEY Ljava/lang/String;
+	public static final field ONE_OF_KEY Ljava/lang/String;
+	public static final field PROPERTIES_KEY Ljava/lang/String;
+	public static final field REF_KEY Ljava/lang/String;
+	public static final field REQUIRED_KEY Ljava/lang/String;
+	public static final field SCHEMA_KEY Ljava/lang/String;
+	public static final field TYPE_KEY Ljava/lang/String;
+	public fun <init> (Lkotlinx/serialization/json/Json;Lai/grazie/code/prompt/structure/json/JsonSchemaGenerator$SchemaFormat;I)V
+	public final fun generate (Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;)Lkotlinx/serialization/json/JsonObject;
+	public static synthetic fun generate$default (Lai/grazie/code/prompt/structure/json/JsonSchemaGenerator;Ljava/lang/String;Lkotlinx/serialization/KSerializer;Ljava/util/Map;ILjava/lang/Object;)Lkotlinx/serialization/json/JsonObject;
+}
+
+public final class ai/grazie/code/prompt/structure/json/JsonSchemaGenerator$SchemaFormat : java/lang/Enum {
+	public static final field JsonSchema Lai/grazie/code/prompt/structure/json/JsonSchemaGenerator$SchemaFormat;
+	public static final field Simple Lai/grazie/code/prompt/structure/json/JsonSchemaGenerator$SchemaFormat;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/prompt/structure/json/JsonSchemaGenerator$SchemaFormat;
+	public static fun values ()[Lai/grazie/code/prompt/structure/json/JsonSchemaGenerator$SchemaFormat;
+}
+
+public final class ai/grazie/code/prompt/structure/json/JsonStructureLanguage {
+	public static final field Companion Lai/grazie/code/prompt/structure/json/JsonStructureLanguage$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlinx/serialization/json/Json;)V
+	public synthetic fun <init> (Lkotlinx/serialization/json/Json;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun parse (Ljava/lang/String;Lkotlinx/serialization/KSerializer;)Ljava/lang/Object;
+	public final fun pretty (Ljava/lang/Object;Lkotlinx/serialization/KSerializer;)Ljava/lang/String;
+	public final fun string (Ljava/lang/Object;Lkotlinx/serialization/KSerializer;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/prompt/structure/json/JsonStructureLanguage$Companion {
+	public final fun getDefaultJson ()Lkotlinx/serialization/json/Json;
+}
+
+public final class ai/grazie/code/prompt/structure/json/JsonStructuredData : ai/grazie/code/prompt/structure/StructuredData {
+	public static final field Companion Lai/grazie/code/prompt/structure/json/JsonStructuredData$Companion;
+	public fun <init> (Ljava/lang/String;Lkotlinx/serialization/KSerializer;Lai/grazie/code/prompt/structure/json/JsonStructureLanguage;Ljava/util/List;Lai/jetbrains/code/prompt/params/LLMParams$Schema$JSON;)V
+	public fun definition (Lai/jetbrains/code/prompt/text/TextContentBuilder;)Lai/jetbrains/code/prompt/text/TextContentBuilder;
+	public fun parse (Ljava/lang/String;)Ljava/lang/Object;
+	public fun pretty (Ljava/lang/Object;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/prompt/structure/json/JsonStructuredData$Companion {
+	public final fun getDescriptionMetadata (Lkotlinx/serialization/KSerializer;)Lai/grazie/code/prompt/structure/DescriptionMetadata;
+}
+
+public final class ai/grazie/code/prompt/structure/json/JsonStructuredData$JsonSchemaType : java/lang/Enum {
+	public static final field FULL Lai/grazie/code/prompt/structure/json/JsonStructuredData$JsonSchemaType;
+	public static final field SIMPLE Lai/grazie/code/prompt/structure/json/JsonStructuredData$JsonSchemaType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/prompt/structure/json/JsonStructuredData$JsonSchemaType;
+	public static fun values ()[Lai/grazie/code/prompt/structure/json/JsonStructuredData$JsonSchemaType;
+}
+
+public final class ai/grazie/code/prompt/structure/markdown/MarkdownParserBuilder {
+	public fun <init> ()V
+	public final fun build ()Lkotlin/jvm/functions/Function2;
+	public final fun buildStreaming ()Lai/grazie/code/prompt/structure/markdown/MarkdownParserBuilder$MarkdownStreamingParser;
+	public final fun onBullet (Lkotlin/jvm/functions/Function2;)V
+	public final fun onCodeBlock (Lkotlin/jvm/functions/Function2;)V
+	public final fun onFinishStream (Lkotlin/jvm/functions/Function2;)V
+	public final fun onHeader (ILkotlin/jvm/functions/Function2;)V
+	public final fun onLineMatching (Lkotlin/text/Regex;Lkotlin/jvm/functions/Function2;)V
+}
+
+public final class ai/grazie/code/prompt/structure/markdown/MarkdownParserBuilder$MarkdownStreamingParser {
+	public fun <init> (Lai/grazie/code/prompt/structure/markdown/MarkdownParserBuilder;Lkotlin/jvm/functions/Function2;)V
+	public final fun parseStream (Lkotlinx/coroutines/flow/Flow;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/prompt/structure/markdown/MarkdownParserKt {
+	public static final fun markdownParser (Lkotlin/jvm/functions/Function1;)Lkotlin/jvm/functions/Function2;
+	public static final fun markdownStreamingParser (Lkotlin/jvm/functions/Function1;)Lai/grazie/code/prompt/structure/markdown/MarkdownParserBuilder$MarkdownStreamingParser;
+}
+
+public final class ai/grazie/code/prompt/structure/markdown/MarkdownStructuredDataDefinition : ai/grazie/code/prompt/structure/StructuredDataDefinition {
+	public fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun definition (Lai/jetbrains/code/prompt/text/TextContentBuilder;)Lai/jetbrains/code/prompt/text/TextContentBuilder;
+}
+

@@ -1,0 +1,451 @@
+public final class ai/grazie/code/agents/local/memory/config/MemoryScopeType : java/lang/Enum {
+	public static final field AGENT Lai/grazie/code/agents/local/memory/config/MemoryScopeType;
+	public static final field Companion Lai/grazie/code/agents/local/memory/config/MemoryScopeType$Companion;
+	public static final field FEATURE Lai/grazie/code/agents/local/memory/config/MemoryScopeType;
+	public static final field ORGANIZATION Lai/grazie/code/agents/local/memory/config/MemoryScopeType;
+	public static final field PRODUCT Lai/grazie/code/agents/local/memory/config/MemoryScopeType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/agents/local/memory/config/MemoryScopeType;
+	public static fun values ()[Lai/grazie/code/agents/local/memory/config/MemoryScopeType;
+}
+
+public final class ai/grazie/code/agents/local/memory/config/MemoryScopeType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/config/MemoryScopesProfile {
+	public static final field Companion Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> ([Lkotlin/Pair;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun copy (Ljava/util/Map;)Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile;Ljava/util/Map;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNames ()Ljava/util/Map;
+	public final fun getScope (Lai/grazie/code/agents/local/memory/config/MemoryScopeType;)Lai/grazie/code/agents/local/memory/model/MemoryScope;
+	public fun hashCode ()I
+	public final fun nameOf (Lai/grazie/code/agents/local/memory/config/MemoryScopeType;)Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/config/MemoryScopesProfile$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/config/MemoryScopesProfile$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/feature/AgentMemory {
+	public static final field Feature Lai/grazie/code/agents/local/memory/feature/AgentMemory$Feature;
+	public fun <init> (Lai/grazie/code/agents/local/memory/providers/AgentMemoryProvider;Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;Lai/grazie/code/agents/local/memory/config/MemoryScopesProfile;)V
+	public final fun loadAllFactsToAgent (Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun loadAllFactsToAgent$default (Lai/grazie/code/agents/local/memory/feature/AgentMemory;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun loadFactsToAgent (Lai/grazie/code/agents/local/memory/model/Concept;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun loadFactsToAgent$default (Lai/grazie/code/agents/local/memory/feature/AgentMemory;Lai/grazie/code/agents/local/memory/model/Concept;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun saveFactsFromHistory (Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun saveFactsFromHistory$default (Lai/grazie/code/agents/local/memory/feature/AgentMemory;Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/memory/feature/AgentMemory$Config : ai/grazie/code/agents/local/features/common/config/FeatureConfig {
+	public static final field UNKNOWN_NAME Ljava/lang/String;
+	public fun <init> ()V
+	public final fun getAgentName ()Ljava/lang/String;
+	public final fun getFeatureName ()Ljava/lang/String;
+	public final fun getMemoryProvider ()Lai/grazie/code/agents/local/memory/providers/AgentMemoryProvider;
+	public final fun getOrganizationName ()Ljava/lang/String;
+	public final fun getProductName ()Ljava/lang/String;
+	public final fun setAgentName (Ljava/lang/String;)V
+	public final fun setFeatureName (Ljava/lang/String;)V
+	public final fun setMemoryProvider (Lai/grazie/code/agents/local/memory/providers/AgentMemoryProvider;)V
+	public final fun setOrganizationName (Ljava/lang/String;)V
+	public final fun setProductName (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/local/memory/feature/AgentMemory$Feature : ai/grazie/code/agents/core/feature/AIAgentFeature {
+	public synthetic fun createInitialConfig ()Lai/grazie/code/agents/local/features/common/config/FeatureConfig;
+	public fun createInitialConfig ()Lai/grazie/code/agents/local/memory/feature/AgentMemory$Config;
+	public fun getKey ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/grazie/code/agents/local/features/common/config/FeatureConfig;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+	public fun install (Lai/grazie/code/agents/local/memory/feature/AgentMemory$Config;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+}
+
+public final class ai/grazie/code/agents/local/memory/feature/AgentMemoryKt {
+	public static final fun memory (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;)Lai/grazie/code/agents/local/memory/feature/AgentMemory;
+	public static final fun withMemory (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/memory/feature/history/RetrieveFactsFromHistory : ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> ([Lai/grazie/code/agents/local/memory/model/Concept;)V
+	public fun compress (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;ZLjava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getConcepts ()Ljava/util/List;
+}
+
+public final class ai/grazie/code/agents/local/memory/feature/nodes/MemoryNodesKt {
+	public static final fun nodeLoadAllFactsFromMemory (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLoadAllFactsFromMemory$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLoadFromMemory (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLoadFromMemory (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLoadFromMemory (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLoadFromMemory$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLoadFromMemory$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLoadFromMemory$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeSaveToMemory (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeSaveToMemory (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;Ljava/util/List;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeSaveToMemory$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeSaveToMemory$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/config/MemoryScopeType;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeSaveToMemoryAutoDetectFacts (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Ljava/util/List;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeSaveToMemoryAutoDetectFacts$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/Concept {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/Concept$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/FactType;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lai/grazie/code/agents/local/memory/model/FactType;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/FactType;)Lai/grazie/code/agents/local/memory/model/Concept;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/model/Concept;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/FactType;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/model/Concept;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getFactType ()Lai/grazie/code/agents/local/memory/model/FactType;
+	public final fun getKeyword ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/Concept$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/Concept$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/model/Concept;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/model/Concept;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/Concept$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/DefaultTimeProvider : ai/grazie/code/agents/local/memory/model/TimeProvider {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/DefaultTimeProvider;
+	public fun getCurrentTimestamp ()J
+}
+
+public abstract interface class ai/grazie/code/agents/local/memory/model/Fact {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/Fact$Companion;
+	public abstract fun getConcept ()Lai/grazie/code/agents/local/memory/model/Concept;
+	public abstract fun getTimestamp ()J
+}
+
+public final class ai/grazie/code/agents/local/memory/model/Fact$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/FactType : java/lang/Enum {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/FactType$Companion;
+	public static final field MULTIPLE Lai/grazie/code/agents/local/memory/model/FactType;
+	public static final field SINGLE Lai/grazie/code/agents/local/memory/model/FactType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/agents/local/memory/model/FactType;
+	public static fun values ()[Lai/grazie/code/agents/local/memory/model/FactType;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/FactType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/local/memory/model/MemoryScope {
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Agent : ai/grazie/code/agents/local/memory/model/MemoryScope {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/MemoryScope$Agent$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Agent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/model/MemoryScope$Agent;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Agent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Agent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/MemoryScope$Agent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Agent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/model/MemoryScope$Agent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Agent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$CrossProduct : ai/grazie/code/agents/local/memory/model/MemoryScope {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/MemoryScope$CrossProduct;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Feature : ai/grazie/code/agents/local/memory/model/MemoryScope {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/MemoryScope$Feature$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Feature;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/model/MemoryScope$Feature;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Feature;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Feature$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/MemoryScope$Feature$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Feature;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/model/MemoryScope$Feature;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Feature$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Product : ai/grazie/code/agents/local/memory/model/MemoryScope {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/MemoryScope$Product$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Product;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/model/MemoryScope$Product;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Product;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Product$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/MemoryScope$Product$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/model/MemoryScope$Product;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/model/MemoryScope$Product;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemoryScope$Product$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/grazie/code/agents/local/memory/model/MemorySubject {
+	public fun <init> ()V
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getPriorityLevel ()I
+	public abstract fun getPromptDescription ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MemorySubject$Everything : ai/grazie/code/agents/local/memory/model/MemorySubject {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/MemorySubject$Everything;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getName ()Ljava/lang/String;
+	public fun getPriorityLevel ()I
+	public fun getPromptDescription ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MultipleFacts : ai/grazie/code/agents/local/memory/model/Fact {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/MultipleFacts$Companion;
+	public fun <init> (Lai/grazie/code/agents/local/memory/model/Concept;JLjava/util/List;)V
+	public final fun component1 ()Lai/grazie/code/agents/local/memory/model/Concept;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Lai/grazie/code/agents/local/memory/model/Concept;JLjava/util/List;)Lai/grazie/code/agents/local/memory/model/MultipleFacts;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/model/MultipleFacts;Lai/grazie/code/agents/local/memory/model/Concept;JLjava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/model/MultipleFacts;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConcept ()Lai/grazie/code/agents/local/memory/model/Concept;
+	public fun getTimestamp ()J
+	public final fun getValues ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MultipleFacts$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/MultipleFacts$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/model/MultipleFacts;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/model/MultipleFacts;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/MultipleFacts$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/SingleFact : ai/grazie/code/agents/local/memory/model/Fact {
+	public static final field Companion Lai/grazie/code/agents/local/memory/model/SingleFact$Companion;
+	public fun <init> (Lai/grazie/code/agents/local/memory/model/Concept;JLjava/lang/String;)V
+	public final fun component1 ()Lai/grazie/code/agents/local/memory/model/Concept;
+	public final fun component2 ()J
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Lai/grazie/code/agents/local/memory/model/Concept;JLjava/lang/String;)Lai/grazie/code/agents/local/memory/model/SingleFact;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/model/SingleFact;Lai/grazie/code/agents/local/memory/model/Concept;JLjava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/model/SingleFact;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getConcept ()Lai/grazie/code/agents/local/memory/model/Concept;
+	public fun getTimestamp ()J
+	public final fun getValue ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/SingleFact$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/model/SingleFact$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/model/SingleFact;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/model/SingleFact;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/model/SingleFact$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/local/memory/model/TimeProvider {
+	public abstract fun getCurrentTimestamp ()J
+}
+
+public abstract interface class ai/grazie/code/agents/local/memory/providers/AgentMemoryProvider {
+	public abstract fun load (Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun loadAll (Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun loadByDescription (Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun save (Lai/grazie/code/agents/local/memory/model/Fact;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/memory/providers/LocalFileMemoryProvider : ai/grazie/code/agents/local/memory/providers/AgentMemoryProvider {
+	public fun <init> (Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;Lai/grazie/code/agents/local/memory/storage/Storage;Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Ljava/lang/Object;)V
+	public final fun copy (Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;Lai/grazie/code/agents/local/memory/storage/Storage;Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Ljava/lang/Object;)Lai/grazie/code/agents/local/memory/providers/LocalFileMemoryProvider;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/providers/LocalFileMemoryProvider;Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;Lai/grazie/code/agents/local/memory/storage/Storage;Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Ljava/lang/Object;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/providers/LocalFileMemoryProvider;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun load (Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun loadAll (Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun loadByDescription (Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun save (Lai/grazie/code/agents/local/memory/model/Fact;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/providers/LocalMemoryConfig : ai/grazie/code/agents/local/memory/providers/MemoryProviderConfig {
+	public static final field Companion Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig$Companion;
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemoryScope;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemoryScope;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/grazie/code/agents/local/memory/model/MemoryScope;
+	public final fun copy (Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemoryScope;)Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemoryScope;ILjava/lang/Object;)Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDefaultScope ()Lai/grazie/code/agents/local/memory/model/MemoryScope;
+	public final fun getStorageDirectory ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/providers/LocalMemoryConfig$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/memory/providers/LocalMemoryConfig;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/providers/LocalMemoryConfig$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/local/memory/providers/MemoryProviderConfig {
+	public static final field Companion Lai/grazie/code/agents/local/memory/providers/MemoryProviderConfig$Companion;
+	public abstract fun getDefaultScope ()Lai/grazie/code/agents/local/memory/model/MemoryScope;
+}
+
+public final class ai/grazie/code/agents/local/memory/providers/MemoryProviderConfig$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/memory/providers/NoMemory : ai/grazie/code/agents/local/memory/providers/AgentMemoryProvider {
+	public static final field INSTANCE Lai/grazie/code/agents/local/memory/providers/NoMemory;
+	public fun load (Lai/grazie/code/agents/local/memory/model/Concept;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun loadAll (Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun loadByDescription (Ljava/lang/String;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun save (Lai/grazie/code/agents/local/memory/model/Fact;Lai/grazie/code/agents/local/memory/model/MemorySubject;Lai/grazie/code/agents/local/memory/model/MemoryScope;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/memory/storage/Aes256GCMEncryptor : ai/grazie/code/agents/local/memory/storage/Encryption {
+	public static final field Companion Lai/grazie/code/agents/local/memory/storage/Aes256GCMEncryptor$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public fun decrypt (Ljava/lang/String;)Ljava/lang/String;
+	public fun encrypt (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/storage/Aes256GCMEncryptor$Companion {
+	public final fun generateRandomKey ()Ljavax/crypto/SecretKey;
+	public final fun keyFromString (Ljava/lang/String;)Ljavax/crypto/SecretKey;
+	public final fun keyToString (Ljavax/crypto/SecretKey;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/memory/storage/EncryptedStorage : ai/grazie/code/agents/local/memory/storage/Storage {
+	public fun <init> (Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Lai/grazie/code/agents/local/memory/storage/Encryption;)V
+	public fun createDirectories (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun exists (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun read (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun write (Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/local/memory/storage/Encryption {
+	public abstract fun decrypt (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun encrypt (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public class ai/grazie/code/agents/local/memory/storage/SimpleStorage : ai/grazie/code/agents/local/memory/storage/Storage {
+	public fun <init> (Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;)V
+	public fun createDirectories (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun exists (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getFs ()Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;
+	public fun read (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun write (Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/local/memory/storage/Storage {
+	public abstract fun createDirectories (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun exists (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun read (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun write (Ljava/lang/Object;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

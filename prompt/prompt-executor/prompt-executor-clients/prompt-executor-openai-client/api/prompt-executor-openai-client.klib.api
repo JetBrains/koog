@@ -1,0 +1,70 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-openai-client>
+final class ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings { // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings|null[0]
+    constructor <init>(kotlin/String = ..., ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final val baseUrl // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings.baseUrl|{}baseUrl[0]
+        final fun <get-baseUrl>(): kotlin/String // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    final val timeoutConfig // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings.timeoutConfig|{}timeoutConfig[0]
+        final fun <get-timeoutConfig>(): ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings.timeoutConfig.<get-timeoutConfig>|<get-timeoutConfig>(){}[0]
+}
+
+open class ai.jetbrains.code.prompt.executor.clients.openai/OpenAILLMClient : ai.jetbrains.code.prompt.executor.clients/LLMClient, ai.jetbrains.code.prompt.executor.clients/LLMEmbeddingProvider { // ai.jetbrains.code.prompt.executor.clients.openai/OpenAILLMClient|null[0]
+    constructor <init>(kotlin/String, ai.jetbrains.code.prompt.executor.clients.openai/OpenAIClientSettings = ..., io.ktor.client/HttpClient = ...) // ai.jetbrains.code.prompt.executor.clients.openai/OpenAILLMClient.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.clients.openai.OpenAIClientSettings;io.ktor.client.HttpClient){}[0]
+
+    open suspend fun embed(kotlin/String, ai.jetbrains.code.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.jetbrains.code.prompt.executor.clients.openai/OpenAILLMClient.embed|embed(kotlin.String;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+    open suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.clients.openai/OpenAILLMClient.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.clients.openai/OpenAILLMClient.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}
+
+final object ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels { // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels|null[0]
+    final object Chat { // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Chat|null[0]
+        final val GPT4_1 // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1|{}GPT4_1[0]
+            final fun <get-GPT4_1>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4_1.<get-GPT4_1>|<get-GPT4_1>(){}[0]
+        final val GPT4o // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4o|{}GPT4o[0]
+            final fun <get-GPT4o>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Chat.GPT4o.<get-GPT4o>|<get-GPT4o>(){}[0]
+    }
+
+    final object CostOptimized { // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized|null[0]
+        final val GPT4_1Mini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.GPT4_1Mini|{}GPT4_1Mini[0]
+            final fun <get-GPT4_1Mini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.GPT4_1Mini.<get-GPT4_1Mini>|<get-GPT4_1Mini>(){}[0]
+        final val GPT4_1Nano // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.GPT4_1Nano|{}GPT4_1Nano[0]
+            final fun <get-GPT4_1Nano>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.GPT4_1Nano.<get-GPT4_1Nano>|<get-GPT4_1Nano>(){}[0]
+        final val GPT4oMini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.GPT4oMini|{}GPT4oMini[0]
+            final fun <get-GPT4oMini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.GPT4oMini.<get-GPT4oMini>|<get-GPT4oMini>(){}[0]
+        final val O1Mini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.O1Mini|{}O1Mini[0]
+            final fun <get-O1Mini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.O1Mini.<get-O1Mini>|<get-O1Mini>(){}[0]
+        final val O3Mini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.O3Mini|{}O3Mini[0]
+            final fun <get-O3Mini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.O3Mini.<get-O3Mini>|<get-O3Mini>(){}[0]
+        final val O4Mini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.O4Mini|{}O4Mini[0]
+            final fun <get-O4Mini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.CostOptimized.O4Mini.<get-O4Mini>|<get-O4Mini>(){}[0]
+    }
+
+    final object Embeddings { // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Embeddings|null[0]
+        final val TextEmbeddingAda002 // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda002|{}TextEmbeddingAda002[0]
+            final fun <get-TextEmbeddingAda002>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda002.<get-TextEmbeddingAda002>|<get-TextEmbeddingAda002>(){}[0]
+        final val TextEmbeddingAda3Large // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda3Large|{}TextEmbeddingAda3Large[0]
+            final fun <get-TextEmbeddingAda3Large>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda3Large.<get-TextEmbeddingAda3Large>|<get-TextEmbeddingAda3Large>(){}[0]
+        final val TextEmbeddingAda3Small // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda3Small|{}TextEmbeddingAda3Small[0]
+            final fun <get-TextEmbeddingAda3Small>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Embeddings.TextEmbeddingAda3Small.<get-TextEmbeddingAda3Small>|<get-TextEmbeddingAda3Small>(){}[0]
+    }
+
+    final object Reasoning { // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning|null[0]
+        final val GPT4oMini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.GPT4oMini|{}GPT4oMini[0]
+            final fun <get-GPT4oMini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.GPT4oMini.<get-GPT4oMini>|<get-GPT4oMini>(){}[0]
+        final val O1 // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O1|{}O1[0]
+            final fun <get-O1>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O1.<get-O1>|<get-O1>(){}[0]
+        final val O1Mini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O1Mini|{}O1Mini[0]
+            final fun <get-O1Mini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O1Mini.<get-O1Mini>|<get-O1Mini>(){}[0]
+        final val O3 // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O3|{}O3[0]
+            final fun <get-O3>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O3.<get-O3>|<get-O3>(){}[0]
+        final val O3Mini // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O3Mini|{}O3Mini[0]
+            final fun <get-O3Mini>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openai/OpenAIModels.Reasoning.O3Mini.<get-O3Mini>|<get-O3Mini>(){}[0]
+    }
+}

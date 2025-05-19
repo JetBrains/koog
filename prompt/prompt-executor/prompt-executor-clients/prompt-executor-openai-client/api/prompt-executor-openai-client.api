@@ -1,0 +1,52 @@
+public final class ai/jetbrains/code/prompt/executor/clients/openai/OpenAIClientSettings {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getTimeoutConfig ()Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;
+}
+
+public class ai/jetbrains/code/prompt/executor/clients/openai/OpenAILLMClient : ai/jetbrains/code/prompt/executor/clients/LLMClient, ai/jetbrains/code/prompt/executor/clients/LLMEmbeddingProvider {
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/openai/OpenAIClientSettings;Lio/ktor/client/HttpClient;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/openai/OpenAIClientSettings;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun embed (Ljava/lang/String;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$Chat {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$Chat;
+	public final fun getGPT4_1 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGPT4o ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$CostOptimized {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$CostOptimized;
+	public final fun getGPT4_1Mini ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGPT4_1Nano ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getGPT4oMini ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getO1Mini ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getO3Mini ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getO4Mini ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$Embeddings {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$Embeddings;
+	public final fun getTextEmbeddingAda002 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getTextEmbeddingAda3Large ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getTextEmbeddingAda3Small ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$Reasoning {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/openai/OpenAIModels$Reasoning;
+	public final fun getGPT4oMini ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getO1 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getO1Mini ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getO3 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getO3Mini ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+

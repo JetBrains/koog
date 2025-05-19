@@ -1,0 +1,569 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.agents:agents-test>
+abstract interface ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase : ai.grazie.code.agents.core.dsl.builder/BaseBuilder<ai.grazie.code.agents.core.agent.entity/AIAgentContextBase> { // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase|null[0]
+    abstract var agentInput // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.agentInput|{}agentInput[0]
+        abstract fun <get-agentInput>(): kotlin/String? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+        abstract fun <set-agentInput>(kotlin/String?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.agentInput.<set-agentInput>|<set-agentInput>(kotlin.String?){}[0]
+    abstract var config // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.config|{}config[0]
+        abstract fun <get-config>(): ai.grazie.code.agents.core.agent.config/AIAgentConfig? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.config.<get-config>|<get-config>(){}[0]
+        abstract fun <set-config>(ai.grazie.code.agents.core.agent.config/AIAgentConfig?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.config.<set-config>|<set-config>(ai.grazie.code.agents.core.agent.config.AIAgentConfig?){}[0]
+    abstract var environment // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.environment|{}environment[0]
+        abstract fun <get-environment>(): ai.grazie.code.agents.core.environment/AIAgentEnvironment? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.environment.<get-environment>|<get-environment>(){}[0]
+        abstract fun <set-environment>(ai.grazie.code.agents.core.environment/AIAgentEnvironment?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.environment.<set-environment>|<set-environment>(ai.grazie.code.agents.core.environment.AIAgentEnvironment?){}[0]
+    abstract var llm // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.llm|{}llm[0]
+        abstract fun <get-llm>(): ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.llm.<get-llm>|<get-llm>(){}[0]
+        abstract fun <set-llm>(ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.llm.<set-llm>|<set-llm>(ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext?){}[0]
+    abstract var sessionUuid // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.sessionUuid|{}sessionUuid[0]
+        abstract fun <get-sessionUuid>(): ai.grazie.utils.mpp/UUID? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.sessionUuid.<get-sessionUuid>|<get-sessionUuid>(){}[0]
+        abstract fun <set-sessionUuid>(ai.grazie.utils.mpp/UUID?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.sessionUuid.<set-sessionUuid>|<set-sessionUuid>(ai.grazie.utils.mpp.UUID?){}[0]
+    abstract var stateManager // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.stateManager|{}stateManager[0]
+        abstract fun <get-stateManager>(): ai.grazie.code.agents.core.agent.entity/AIAgentStateManager? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+        abstract fun <set-stateManager>(ai.grazie.code.agents.core.agent.entity/AIAgentStateManager?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.stateManager.<set-stateManager>|<set-stateManager>(ai.grazie.code.agents.core.agent.entity.AIAgentStateManager?){}[0]
+    abstract var storage // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.storage|{}storage[0]
+        abstract fun <get-storage>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorage? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.storage.<get-storage>|<get-storage>(){}[0]
+        abstract fun <set-storage>(ai.grazie.code.agents.core.agent.entity/AIAgentStorage?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.storage.<set-storage>|<set-storage>(ai.grazie.code.agents.core.agent.entity.AIAgentStorage?){}[0]
+    abstract var strategyId // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.strategyId|{}strategyId[0]
+        abstract fun <get-strategyId>(): kotlin/String? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.strategyId.<get-strategyId>|<get-strategyId>(){}[0]
+        abstract fun <set-strategyId>(kotlin/String?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.strategyId.<set-strategyId>|<set-strategyId>(kotlin.String?){}[0]
+
+    abstract fun build(): ai.grazie.code.agents.core.agent.entity/AIAgentContextBase // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.build|build(){}[0]
+    abstract fun copy(): ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase.copy|copy(){}[0]
+}
+
+sealed interface ai.grazie.code.agents.testing.feature/AssertionResult { // ai.grazie.code.agents.testing.feature/AssertionResult|null[0]
+    final class False : ai.grazie.code.agents.testing.feature/AssertionResult { // ai.grazie.code.agents.testing.feature/AssertionResult.False|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.testing.feature/AssertionResult.False.<init>|<init>(kotlin.String){}[0]
+
+        final val message // ai.grazie.code.agents.testing.feature/AssertionResult.False.message|{}message[0]
+            final fun <get-message>(): kotlin/String // ai.grazie.code.agents.testing.feature/AssertionResult.False.message.<get-message>|<get-message>(){}[0]
+    }
+
+    final class NotEqual : ai.grazie.code.agents.testing.feature/AssertionResult { // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual|null[0]
+        constructor <init>(kotlin/Any?, kotlin/Any?, kotlin/String) // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual.<init>|<init>(kotlin.Any?;kotlin.Any?;kotlin.String){}[0]
+
+        final val actual // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual.actual|{}actual[0]
+            final fun <get-actual>(): kotlin/Any? // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual.actual.<get-actual>|<get-actual>(){}[0]
+        final val expected // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual.expected|{}expected[0]
+            final fun <get-expected>(): kotlin/Any? // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual.expected.<get-expected>|<get-expected>(){}[0]
+        final val message // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual.message|{}message[0]
+            final fun <get-message>(): kotlin/String // ai.grazie.code.agents.testing.feature/AssertionResult.NotEqual.message.<get-message>|<get-message>(){}[0]
+    }
+}
+
+final class <#A: ai.grazie.code.agents.core.tools/Tool.Args, #B: ai.grazie.code.agents.core.tools/ToolResult> ai.grazie.code.agents.testing.tools/ToolCondition { // ai.grazie.code.agents.testing.tools/ToolCondition|null[0]
+    constructor <init>(ai.grazie.code.agents.core.tools/Tool<#A, #B>, kotlin.coroutines/SuspendFunction1<#A, kotlin/Boolean>, kotlin.coroutines/SuspendFunction1<#A, #B>) // ai.grazie.code.agents.testing.tools/ToolCondition.<init>|<init>(ai.grazie.code.agents.core.tools.Tool<1:0,1:1>;kotlin.coroutines.SuspendFunction1<1:0,kotlin.Boolean>;kotlin.coroutines.SuspendFunction1<1:0,1:1>){}[0]
+
+    final val argsCondition // ai.grazie.code.agents.testing.tools/ToolCondition.argsCondition|{}argsCondition[0]
+        final fun <get-argsCondition>(): kotlin.coroutines/SuspendFunction1<#A, kotlin/Boolean> // ai.grazie.code.agents.testing.tools/ToolCondition.argsCondition.<get-argsCondition>|<get-argsCondition>(){}[0]
+    final val produceResult // ai.grazie.code.agents.testing.tools/ToolCondition.produceResult|{}produceResult[0]
+        final fun <get-produceResult>(): kotlin.coroutines/SuspendFunction1<#A, #B> // ai.grazie.code.agents.testing.tools/ToolCondition.produceResult.<get-produceResult>|<get-produceResult>(){}[0]
+    final val tool // ai.grazie.code.agents.testing.tools/ToolCondition.tool|{}tool[0]
+        final fun <get-tool>(): ai.grazie.code.agents.core.tools/Tool<#A, #B> // ai.grazie.code.agents.testing.tools/ToolCondition.tool.<get-tool>|<get-tool>(){}[0]
+}
+
+final class <#A: kotlin/Any?, #B: kotlin/Any?> ai.grazie.code.agents.testing.feature/EdgeAssertion { // ai.grazie.code.agents.testing.feature/EdgeAssertion|null[0]
+    constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference<#A, #B>, ai.grazie.code.agents.core.agent.entity/AIAgentContextBase, #B, ai.grazie.code.agents.testing.feature/NodeReference<*, *>) // ai.grazie.code.agents.testing.feature/EdgeAssertion.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference<1:0,1:1>;ai.grazie.code.agents.core.agent.entity.AIAgentContextBase;1:1;ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+
+    final val context // ai.grazie.code.agents.testing.feature/EdgeAssertion.context|{}context[0]
+        final fun <get-context>(): ai.grazie.code.agents.core.agent.entity/AIAgentContextBase // ai.grazie.code.agents.testing.feature/EdgeAssertion.context.<get-context>|<get-context>(){}[0]
+    final val expectedNode // ai.grazie.code.agents.testing.feature/EdgeAssertion.expectedNode|{}expectedNode[0]
+        final fun <get-expectedNode>(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/EdgeAssertion.expectedNode.<get-expectedNode>|<get-expectedNode>(){}[0]
+    final val node // ai.grazie.code.agents.testing.feature/EdgeAssertion.node|{}node[0]
+        final fun <get-node>(): ai.grazie.code.agents.testing.feature/NodeReference<#A, #B> // ai.grazie.code.agents.testing.feature/EdgeAssertion.node.<get-node>|<get-node>(){}[0]
+    final val output // ai.grazie.code.agents.testing.feature/EdgeAssertion.output|{}output[0]
+        final fun <get-output>(): #B // ai.grazie.code.agents.testing.feature/EdgeAssertion.output.<get-output>|<get-output>(){}[0]
+
+    final fun component1(): ai.grazie.code.agents.testing.feature/NodeReference<#A, #B> // ai.grazie.code.agents.testing.feature/EdgeAssertion.component1|component1(){}[0]
+    final fun component2(): ai.grazie.code.agents.core.agent.entity/AIAgentContextBase // ai.grazie.code.agents.testing.feature/EdgeAssertion.component2|component2(){}[0]
+    final fun component3(): #B // ai.grazie.code.agents.testing.feature/EdgeAssertion.component3|component3(){}[0]
+    final fun component4(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/EdgeAssertion.component4|component4(){}[0]
+    final fun copy(ai.grazie.code.agents.testing.feature/NodeReference<#A, #B> = ..., ai.grazie.code.agents.core.agent.entity/AIAgentContextBase = ..., #B = ..., ai.grazie.code.agents.testing.feature/NodeReference<*, *> = ...): ai.grazie.code.agents.testing.feature/EdgeAssertion<#A, #B> // ai.grazie.code.agents.testing.feature/EdgeAssertion.copy|copy(ai.grazie.code.agents.testing.feature.NodeReference<1:0,1:1>;ai.grazie.code.agents.core.agent.entity.AIAgentContextBase;1:1;ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.testing.feature/EdgeAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.testing.feature/EdgeAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.testing.feature/EdgeAssertion.toString|toString(){}[0]
+}
+
+final class <#A: kotlin/Any?, #B: kotlin/Any?> ai.grazie.code.agents.testing.feature/NodeOutputAssertion { // ai.grazie.code.agents.testing.feature/NodeOutputAssertion|null[0]
+    constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference<#A, #B>, ai.grazie.code.agents.testing.feature/DummyAgentContext, #A, #B) // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference<1:0,1:1>;ai.grazie.code.agents.testing.feature.DummyAgentContext;1:0;1:1){}[0]
+
+    final val context // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.context|{}context[0]
+        final fun <get-context>(): ai.grazie.code.agents.testing.feature/DummyAgentContext // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.context.<get-context>|<get-context>(){}[0]
+    final val expectedOutput // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.expectedOutput|{}expectedOutput[0]
+        final fun <get-expectedOutput>(): #B // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.expectedOutput.<get-expectedOutput>|<get-expectedOutput>(){}[0]
+    final val input // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.input|{}input[0]
+        final fun <get-input>(): #A // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.input.<get-input>|<get-input>(){}[0]
+    final val node // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.node|{}node[0]
+        final fun <get-node>(): ai.grazie.code.agents.testing.feature/NodeReference<#A, #B> // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.node.<get-node>|<get-node>(){}[0]
+
+    final fun component1(): ai.grazie.code.agents.testing.feature/NodeReference<#A, #B> // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.component1|component1(){}[0]
+    final fun component2(): ai.grazie.code.agents.testing.feature/DummyAgentContext // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.component2|component2(){}[0]
+    final fun component3(): #A // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.component3|component3(){}[0]
+    final fun component4(): #B // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.component4|component4(){}[0]
+    final fun copy(ai.grazie.code.agents.testing.feature/NodeReference<#A, #B> = ..., ai.grazie.code.agents.testing.feature/DummyAgentContext = ..., #A = ..., #B = ...): ai.grazie.code.agents.testing.feature/NodeOutputAssertion<#A, #B> // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.copy|copy(ai.grazie.code.agents.testing.feature.NodeReference<1:0,1:1>;ai.grazie.code.agents.testing.feature.DummyAgentContext;1:0;1:1){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.testing.feature/NodeOutputAssertion.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder : ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase { // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder|null[0]
+    constructor <init>() // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.<init>|<init>(){}[0]
+
+    final var agentInput // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.agentInput|{}agentInput[0]
+        final fun <get-agentInput>(): kotlin/String? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+        final fun <set-agentInput>(kotlin/String?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.agentInput.<set-agentInput>|<set-agentInput>(kotlin.String?){}[0]
+    final var config // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.config|{}config[0]
+        final fun <get-config>(): ai.grazie.code.agents.core.agent.config/AIAgentConfig? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.config.<get-config>|<get-config>(){}[0]
+        final fun <set-config>(ai.grazie.code.agents.core.agent.config/AIAgentConfig?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.config.<set-config>|<set-config>(ai.grazie.code.agents.core.agent.config.AIAgentConfig?){}[0]
+    final var environment // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.environment|{}environment[0]
+        final fun <get-environment>(): ai.grazie.code.agents.core.environment/AIAgentEnvironment? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.environment.<get-environment>|<get-environment>(){}[0]
+        final fun <set-environment>(ai.grazie.code.agents.core.environment/AIAgentEnvironment?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.environment.<set-environment>|<set-environment>(ai.grazie.code.agents.core.environment.AIAgentEnvironment?){}[0]
+    final var llm // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.llm|{}llm[0]
+        final fun <get-llm>(): ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.llm.<get-llm>|<get-llm>(){}[0]
+        final fun <set-llm>(ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.llm.<set-llm>|<set-llm>(ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext?){}[0]
+    final var sessionUuid // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.sessionUuid|{}sessionUuid[0]
+        final fun <get-sessionUuid>(): ai.grazie.utils.mpp/UUID? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.sessionUuid.<get-sessionUuid>|<get-sessionUuid>(){}[0]
+        final fun <set-sessionUuid>(ai.grazie.utils.mpp/UUID?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.sessionUuid.<set-sessionUuid>|<set-sessionUuid>(ai.grazie.utils.mpp.UUID?){}[0]
+    final var stateManager // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.stateManager|{}stateManager[0]
+        final fun <get-stateManager>(): ai.grazie.code.agents.core.agent.entity/AIAgentStateManager? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+        final fun <set-stateManager>(ai.grazie.code.agents.core.agent.entity/AIAgentStateManager?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.stateManager.<set-stateManager>|<set-stateManager>(ai.grazie.code.agents.core.agent.entity.AIAgentStateManager?){}[0]
+    final var storage // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.storage|{}storage[0]
+        final fun <get-storage>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorage? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.storage.<get-storage>|<get-storage>(){}[0]
+        final fun <set-storage>(ai.grazie.code.agents.core.agent.entity/AIAgentStorage?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.storage.<set-storage>|<set-storage>(ai.grazie.code.agents.core.agent.entity.AIAgentStorage?){}[0]
+    final var strategyId // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.strategyId|{}strategyId[0]
+        final fun <get-strategyId>(): kotlin/String? // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.strategyId.<get-strategyId>|<get-strategyId>(){}[0]
+        final fun <set-strategyId>(kotlin/String?) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.strategyId.<set-strategyId>|<set-strategyId>(kotlin.String?){}[0]
+
+    final fun build(): ai.grazie.code.agents.testing.feature/DummyAgentContext // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.build|build(){}[0]
+    final fun copy(): ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.copy|copy(){}[0]
+
+    final class <#A1: kotlin/Any> ProxyHandler { // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.ProxyHandler|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.ProxyHandler.<init>|<init>(kotlin.String){}[0]
+
+        final fun createProxy(): #A1 // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.ProxyHandler.createProxy|createProxy(){}[0]
+    }
+
+    final object Companion // ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder.Companion|null[0]
+}
+
+final class ai.grazie.code.agents.testing.feature/DummyAgentContext : ai.grazie.code.agents.core.agent.entity/AIAgentContextBase { // ai.grazie.code.agents.testing.feature/DummyAgentContext|null[0]
+    constructor <init>(ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder) // ai.grazie.code.agents.testing.feature/DummyAgentContext.<init>|<init>(ai.grazie.code.agents.testing.feature.AIAgentContextMockBuilder){}[0]
+
+    final val agentInput // ai.grazie.code.agents.testing.feature/DummyAgentContext.agentInput|{}agentInput[0]
+        final fun <get-agentInput>(): kotlin/String // ai.grazie.code.agents.testing.feature/DummyAgentContext.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+    final val config // ai.grazie.code.agents.testing.feature/DummyAgentContext.config|{}config[0]
+        final fun <get-config>(): ai.grazie.code.agents.core.agent.config/AIAgentConfig // ai.grazie.code.agents.testing.feature/DummyAgentContext.config.<get-config>|<get-config>(){}[0]
+    final val environment // ai.grazie.code.agents.testing.feature/DummyAgentContext.environment|{}environment[0]
+        final fun <get-environment>(): ai.grazie.code.agents.core.environment/AIAgentEnvironment // ai.grazie.code.agents.testing.feature/DummyAgentContext.environment.<get-environment>|<get-environment>(){}[0]
+    final val isEnvironmentDefined // ai.grazie.code.agents.testing.feature/DummyAgentContext.isEnvironmentDefined|{}isEnvironmentDefined[0]
+        final fun <get-isEnvironmentDefined>(): kotlin/Boolean // ai.grazie.code.agents.testing.feature/DummyAgentContext.isEnvironmentDefined.<get-isEnvironmentDefined>|<get-isEnvironmentDefined>(){}[0]
+    final val isLLMDefined // ai.grazie.code.agents.testing.feature/DummyAgentContext.isLLMDefined|{}isLLMDefined[0]
+        final fun <get-isLLMDefined>(): kotlin/Boolean // ai.grazie.code.agents.testing.feature/DummyAgentContext.isLLMDefined.<get-isLLMDefined>|<get-isLLMDefined>(){}[0]
+    final val llm // ai.grazie.code.agents.testing.feature/DummyAgentContext.llm|{}llm[0]
+        final fun <get-llm>(): ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext // ai.grazie.code.agents.testing.feature/DummyAgentContext.llm.<get-llm>|<get-llm>(){}[0]
+    final val pipeline // ai.grazie.code.agents.testing.feature/DummyAgentContext.pipeline|{}pipeline[0]
+        final fun <get-pipeline>(): ai.grazie.code.agents.core.feature/AIAgentPipeline // ai.grazie.code.agents.testing.feature/DummyAgentContext.pipeline.<get-pipeline>|<get-pipeline>(){}[0]
+    final val sessionUuid // ai.grazie.code.agents.testing.feature/DummyAgentContext.sessionUuid|{}sessionUuid[0]
+        final fun <get-sessionUuid>(): ai.grazie.utils.mpp/UUID // ai.grazie.code.agents.testing.feature/DummyAgentContext.sessionUuid.<get-sessionUuid>|<get-sessionUuid>(){}[0]
+    final val stateManager // ai.grazie.code.agents.testing.feature/DummyAgentContext.stateManager|{}stateManager[0]
+        final fun <get-stateManager>(): ai.grazie.code.agents.core.agent.entity/AIAgentStateManager // ai.grazie.code.agents.testing.feature/DummyAgentContext.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+    final val storage // ai.grazie.code.agents.testing.feature/DummyAgentContext.storage|{}storage[0]
+        final fun <get-storage>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorage // ai.grazie.code.agents.testing.feature/DummyAgentContext.storage.<get-storage>|<get-storage>(){}[0]
+    final val strategyId // ai.grazie.code.agents.testing.feature/DummyAgentContext.strategyId|{}strategyId[0]
+        final fun <get-strategyId>(): kotlin/String // ai.grazie.code.agents.testing.feature/DummyAgentContext.strategyId.<get-strategyId>|<get-strategyId>(){}[0]
+
+    final fun <#A1: kotlin/Any> feature(ai.grazie.code.agents.core.agent.entity/AIAgentStorageKey<#A1>): #A1? // ai.grazie.code.agents.testing.feature/DummyAgentContext.feature|feature(ai.grazie.code.agents.core.agent.entity.AIAgentStorageKey<0:0>){0§<kotlin.Any>}[0]
+    final fun <#A1: kotlin/Any> feature(ai.grazie.code.agents.core.feature/AIAgentFeature<*, #A1>): #A1? // ai.grazie.code.agents.testing.feature/DummyAgentContext.feature|feature(ai.grazie.code.agents.core.feature.AIAgentFeature<*,0:0>){0§<kotlin.Any>}[0]
+    final fun copy(ai.grazie.code.agents.core.environment/AIAgentEnvironment?, kotlin/String?, ai.grazie.code.agents.core.agent.config/AIAgentConfig?, ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext?, ai.grazie.code.agents.core.agent.entity/AIAgentStateManager?, ai.grazie.code.agents.core.agent.entity/AIAgentStorage?, ai.grazie.utils.mpp/UUID?, kotlin/String?, ai.grazie.code.agents.core.feature/AIAgentPipeline?): ai.grazie.code.agents.core.agent.entity/AIAgentContextBase // ai.grazie.code.agents.testing.feature/DummyAgentContext.copy|copy(ai.grazie.code.agents.core.environment.AIAgentEnvironment?;kotlin.String?;ai.grazie.code.agents.core.agent.config.AIAgentConfig?;ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext?;ai.grazie.code.agents.core.agent.entity.AIAgentStateManager?;ai.grazie.code.agents.core.agent.entity.AIAgentStorage?;ai.grazie.utils.mpp.UUID?;kotlin.String?;ai.grazie.code.agents.core.feature.AIAgentPipeline?){}[0]
+}
+
+final class ai.grazie.code.agents.testing.feature/GraphAssertions { // ai.grazie.code.agents.testing.feature/GraphAssertions|null[0]
+    constructor <init>(kotlin/String, ai.grazie.code.agents.testing.feature/NodeReference.Start<*>, ai.grazie.code.agents.testing.feature/NodeReference.Finish<*>, kotlin.collections/Map<kotlin/String, ai.grazie.code.agents.testing.feature/NodeReference<*, *>>, kotlin.collections/List<ai.grazie.code.agents.testing.feature/NodeOutputAssertion<*, *>>, kotlin.collections/List<ai.grazie.code.agents.testing.feature/EdgeAssertion<*, *>>, kotlin.collections/List<ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion>, kotlin.collections/List<ai.grazie.code.agents.testing.feature/ReachabilityAssertion>, kotlin.collections/MutableList<ai.grazie.code.agents.testing.feature/SubGraphAssertions>) // ai.grazie.code.agents.testing.feature/GraphAssertions.<init>|<init>(kotlin.String;ai.grazie.code.agents.testing.feature.NodeReference.Start<*>;ai.grazie.code.agents.testing.feature.NodeReference.Finish<*>;kotlin.collections.Map<kotlin.String,ai.grazie.code.agents.testing.feature.NodeReference<*,*>>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.NodeOutputAssertion<*,*>>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.EdgeAssertion<*,*>>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.UnconditionalEdgeAssertion>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.ReachabilityAssertion>;kotlin.collections.MutableList<ai.grazie.code.agents.testing.feature.SubGraphAssertions>){}[0]
+
+    final val edgeAssertions // ai.grazie.code.agents.testing.feature/GraphAssertions.edgeAssertions|{}edgeAssertions[0]
+        final fun <get-edgeAssertions>(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/EdgeAssertion<*, *>> // ai.grazie.code.agents.testing.feature/GraphAssertions.edgeAssertions.<get-edgeAssertions>|<get-edgeAssertions>(){}[0]
+    final val finish // ai.grazie.code.agents.testing.feature/GraphAssertions.finish|{}finish[0]
+        final fun <get-finish>(): ai.grazie.code.agents.testing.feature/NodeReference.Finish<*> // ai.grazie.code.agents.testing.feature/GraphAssertions.finish.<get-finish>|<get-finish>(){}[0]
+    final val name // ai.grazie.code.agents.testing.feature/GraphAssertions.name|{}name[0]
+        final fun <get-name>(): kotlin/String // ai.grazie.code.agents.testing.feature/GraphAssertions.name.<get-name>|<get-name>(){}[0]
+    final val nodeOutputAssertions // ai.grazie.code.agents.testing.feature/GraphAssertions.nodeOutputAssertions|{}nodeOutputAssertions[0]
+        final fun <get-nodeOutputAssertions>(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/NodeOutputAssertion<*, *>> // ai.grazie.code.agents.testing.feature/GraphAssertions.nodeOutputAssertions.<get-nodeOutputAssertions>|<get-nodeOutputAssertions>(){}[0]
+    final val nodes // ai.grazie.code.agents.testing.feature/GraphAssertions.nodes|{}nodes[0]
+        final fun <get-nodes>(): kotlin.collections/Map<kotlin/String, ai.grazie.code.agents.testing.feature/NodeReference<*, *>> // ai.grazie.code.agents.testing.feature/GraphAssertions.nodes.<get-nodes>|<get-nodes>(){}[0]
+    final val reachabilityAssertions // ai.grazie.code.agents.testing.feature/GraphAssertions.reachabilityAssertions|{}reachabilityAssertions[0]
+        final fun <get-reachabilityAssertions>(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/ReachabilityAssertion> // ai.grazie.code.agents.testing.feature/GraphAssertions.reachabilityAssertions.<get-reachabilityAssertions>|<get-reachabilityAssertions>(){}[0]
+    final val start // ai.grazie.code.agents.testing.feature/GraphAssertions.start|{}start[0]
+        final fun <get-start>(): ai.grazie.code.agents.testing.feature/NodeReference.Start<*> // ai.grazie.code.agents.testing.feature/GraphAssertions.start.<get-start>|<get-start>(){}[0]
+    final val subgraphAssertions // ai.grazie.code.agents.testing.feature/GraphAssertions.subgraphAssertions|{}subgraphAssertions[0]
+        final fun <get-subgraphAssertions>(): kotlin.collections/MutableList<ai.grazie.code.agents.testing.feature/SubGraphAssertions> // ai.grazie.code.agents.testing.feature/GraphAssertions.subgraphAssertions.<get-subgraphAssertions>|<get-subgraphAssertions>(){}[0]
+    final val unconditionalEdgeAssertions // ai.grazie.code.agents.testing.feature/GraphAssertions.unconditionalEdgeAssertions|{}unconditionalEdgeAssertions[0]
+        final fun <get-unconditionalEdgeAssertions>(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion> // ai.grazie.code.agents.testing.feature/GraphAssertions.unconditionalEdgeAssertions.<get-unconditionalEdgeAssertions>|<get-unconditionalEdgeAssertions>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.testing.feature/GraphAssertions.component1|component1(){}[0]
+    final fun component2(): ai.grazie.code.agents.testing.feature/NodeReference.Start<*> // ai.grazie.code.agents.testing.feature/GraphAssertions.component2|component2(){}[0]
+    final fun component3(): ai.grazie.code.agents.testing.feature/NodeReference.Finish<*> // ai.grazie.code.agents.testing.feature/GraphAssertions.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/Map<kotlin/String, ai.grazie.code.agents.testing.feature/NodeReference<*, *>> // ai.grazie.code.agents.testing.feature/GraphAssertions.component4|component4(){}[0]
+    final fun component5(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/NodeOutputAssertion<*, *>> // ai.grazie.code.agents.testing.feature/GraphAssertions.component5|component5(){}[0]
+    final fun component6(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/EdgeAssertion<*, *>> // ai.grazie.code.agents.testing.feature/GraphAssertions.component6|component6(){}[0]
+    final fun component7(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion> // ai.grazie.code.agents.testing.feature/GraphAssertions.component7|component7(){}[0]
+    final fun component8(): kotlin.collections/List<ai.grazie.code.agents.testing.feature/ReachabilityAssertion> // ai.grazie.code.agents.testing.feature/GraphAssertions.component8|component8(){}[0]
+    final fun component9(): kotlin.collections/MutableList<ai.grazie.code.agents.testing.feature/SubGraphAssertions> // ai.grazie.code.agents.testing.feature/GraphAssertions.component9|component9(){}[0]
+    final fun copy(kotlin/String = ..., ai.grazie.code.agents.testing.feature/NodeReference.Start<*> = ..., ai.grazie.code.agents.testing.feature/NodeReference.Finish<*> = ..., kotlin.collections/Map<kotlin/String, ai.grazie.code.agents.testing.feature/NodeReference<*, *>> = ..., kotlin.collections/List<ai.grazie.code.agents.testing.feature/NodeOutputAssertion<*, *>> = ..., kotlin.collections/List<ai.grazie.code.agents.testing.feature/EdgeAssertion<*, *>> = ..., kotlin.collections/List<ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion> = ..., kotlin.collections/List<ai.grazie.code.agents.testing.feature/ReachabilityAssertion> = ..., kotlin.collections/MutableList<ai.grazie.code.agents.testing.feature/SubGraphAssertions> = ...): ai.grazie.code.agents.testing.feature/GraphAssertions // ai.grazie.code.agents.testing.feature/GraphAssertions.copy|copy(kotlin.String;ai.grazie.code.agents.testing.feature.NodeReference.Start<*>;ai.grazie.code.agents.testing.feature.NodeReference.Finish<*>;kotlin.collections.Map<kotlin.String,ai.grazie.code.agents.testing.feature.NodeReference<*,*>>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.NodeOutputAssertion<*,*>>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.EdgeAssertion<*,*>>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.UnconditionalEdgeAssertion>;kotlin.collections.List<ai.grazie.code.agents.testing.feature.ReachabilityAssertion>;kotlin.collections.MutableList<ai.grazie.code.agents.testing.feature.SubGraphAssertions>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.testing.feature/GraphAssertions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.testing.feature/GraphAssertions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.testing.feature/GraphAssertions.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.agents.testing.feature/ReachabilityAssertion { // ai.grazie.code.agents.testing.feature/ReachabilityAssertion|null[0]
+    constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference<*, *>, ai.grazie.code.agents.testing.feature/NodeReference<*, *>) // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference<*,*>;ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+
+    final val from // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.from|{}from[0]
+        final fun <get-from>(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.from.<get-from>|<get-from>(){}[0]
+    final val to // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.to|{}to[0]
+        final fun <get-to>(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.to.<get-to>|<get-to>(){}[0]
+
+    final fun component1(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.component1|component1(){}[0]
+    final fun component2(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.component2|component2(){}[0]
+    final fun copy(ai.grazie.code.agents.testing.feature/NodeReference<*, *> = ..., ai.grazie.code.agents.testing.feature/NodeReference<*, *> = ...): ai.grazie.code.agents.testing.feature/ReachabilityAssertion // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.copy|copy(ai.grazie.code.agents.testing.feature.NodeReference<*,*>;ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.testing.feature/ReachabilityAssertion.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.agents.testing.feature/SubGraphAssertions { // ai.grazie.code.agents.testing.feature/SubGraphAssertions|null[0]
+    constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<*, *>, ai.grazie.code.agents.testing.feature/GraphAssertions) // ai.grazie.code.agents.testing.feature/SubGraphAssertions.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference.SubgraphNode<*,*>;ai.grazie.code.agents.testing.feature.GraphAssertions){}[0]
+
+    final val graphAssertions // ai.grazie.code.agents.testing.feature/SubGraphAssertions.graphAssertions|{}graphAssertions[0]
+        final fun <get-graphAssertions>(): ai.grazie.code.agents.testing.feature/GraphAssertions // ai.grazie.code.agents.testing.feature/SubGraphAssertions.graphAssertions.<get-graphAssertions>|<get-graphAssertions>(){}[0]
+    final val subgraphRef // ai.grazie.code.agents.testing.feature/SubGraphAssertions.subgraphRef|{}subgraphRef[0]
+        final fun <get-subgraphRef>(): ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<*, *> // ai.grazie.code.agents.testing.feature/SubGraphAssertions.subgraphRef.<get-subgraphRef>|<get-subgraphRef>(){}[0]
+
+    final fun component1(): ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<*, *> // ai.grazie.code.agents.testing.feature/SubGraphAssertions.component1|component1(){}[0]
+    final fun component2(): ai.grazie.code.agents.testing.feature/GraphAssertions // ai.grazie.code.agents.testing.feature/SubGraphAssertions.component2|component2(){}[0]
+    final fun copy(ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<*, *> = ..., ai.grazie.code.agents.testing.feature/GraphAssertions = ...): ai.grazie.code.agents.testing.feature/SubGraphAssertions // ai.grazie.code.agents.testing.feature/SubGraphAssertions.copy|copy(ai.grazie.code.agents.testing.feature.NodeReference.SubgraphNode<*,*>;ai.grazie.code.agents.testing.feature.GraphAssertions){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.testing.feature/SubGraphAssertions.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.testing.feature/SubGraphAssertions.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.testing.feature/SubGraphAssertions.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.agents.testing.feature/Testing { // ai.grazie.code.agents.testing.feature/Testing|null[0]
+    constructor <init>() // ai.grazie.code.agents.testing.feature/Testing.<init>|<init>(){}[0]
+
+    final class Config : ai.grazie.code.agents.local.features.common.config/FeatureConfig { // ai.grazie.code.agents.testing.feature/Testing.Config|null[0]
+        constructor <init>() // ai.grazie.code.agents.testing.feature/Testing.Config.<init>|<init>(){}[0]
+
+        final var enableGraphTesting // ai.grazie.code.agents.testing.feature/Testing.Config.enableGraphTesting|{}enableGraphTesting[0]
+            final fun <get-enableGraphTesting>(): kotlin/Boolean // ai.grazie.code.agents.testing.feature/Testing.Config.enableGraphTesting.<get-enableGraphTesting>|<get-enableGraphTesting>(){}[0]
+            final fun <set-enableGraphTesting>(kotlin/Boolean) // ai.grazie.code.agents.testing.feature/Testing.Config.enableGraphTesting.<set-enableGraphTesting>|<set-enableGraphTesting>(kotlin.Boolean){}[0]
+
+        final fun handleAssertion(kotlin/Function1<ai.grazie.code.agents.testing.feature/AssertionResult, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/Testing.Config.handleAssertion|handleAssertion(kotlin.Function1<ai.grazie.code.agents.testing.feature.AssertionResult,kotlin.Unit>){}[0]
+        final fun verifyStrategy(kotlin/String, kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<kotlin/String, kotlin/String>, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/Testing.Config.verifyStrategy|verifyStrategy(kotlin.String;kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<kotlin.String,kotlin.String>,kotlin.Unit>){}[0]
+
+        final class <#A2: kotlin/Any?, #B2: kotlin/Any?> SubgraphAssertionsBuilder { // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder|null[0]
+            constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<#A2, #B2>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference.SubgraphNode<1:0,1:1>){}[0]
+
+            final fun <#A3: kotlin/Any?, #B3: kotlin/Any?> assertNodeByName(kotlin/String): ai.grazie.code.agents.testing.feature/NodeReference.NamedNode<#A3, #B3> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertNodeByName|assertNodeByName(kotlin.String){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+            final fun <#A3: kotlin/Any?, #B3: kotlin/Any?> assertSubgraphByName(kotlin/String): ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<#A3, #B3> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertSubgraphByName|assertSubgraphByName(kotlin.String){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+            final fun <#A3: kotlin/Any?, #B3: kotlin/Any?> verifySubgraph(ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<#A3, #B3>, kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<#A3, #B3>, kotlin/Unit> = ...) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.verifySubgraph|verifySubgraph(ai.grazie.code.agents.testing.feature.NodeReference.SubgraphNode<0:0,0:1>;kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<0:0,0:1>,kotlin.Unit>){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+            final fun assertEdges(kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertEdges|assertEdges(kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder,kotlin.Unit>){}[0]
+            final fun assertNodes(kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertNodes|assertNodes(kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder,kotlin.Unit>){}[0]
+            final fun assertReachable(ai.grazie.code.agents.testing.feature/NodeReference<*, *>, ai.grazie.code.agents.testing.feature/NodeReference<*, *>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.assertReachable|assertReachable(ai.grazie.code.agents.testing.feature.NodeReference<*,*>;ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+            final fun finishNode(): ai.grazie.code.agents.testing.feature/NodeReference.Finish<#B2> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.finishNode|finishNode(){}[0]
+            final fun startNode(): ai.grazie.code.agents.testing.feature/NodeReference.Start<#A2> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.startNode|startNode(){}[0]
+
+            final class EdgeAssertionsBuilder : ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase { // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder|null[0]
+                constructor <init>(ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>, ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder = ...) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.<init>|<init>(ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>;ai.grazie.code.agents.testing.feature.AIAgentContextMockBuilder){}[0]
+
+                final val assertions // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.assertions|{}assertions[0]
+                    final fun <get-assertions>(): kotlin.collections/MutableList<ai.grazie.code.agents.testing.feature/EdgeAssertion<*, *>> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.assertions.<get-assertions>|<get-assertions>(){}[0]
+                final val unconditionalEdgeAssertions // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.unconditionalEdgeAssertions|{}unconditionalEdgeAssertions[0]
+                    final fun <get-unconditionalEdgeAssertions>(): kotlin.collections/MutableList<ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.unconditionalEdgeAssertions.<get-unconditionalEdgeAssertions>|<get-unconditionalEdgeAssertions>(){}[0]
+
+                final var agentInput // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInput|{}agentInput[0]
+                    final fun <get-agentInput>(): kotlin/String? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+                    final fun <set-agentInput>(kotlin/String?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.agentInput.<set-agentInput>|<set-agentInput>(kotlin.String?){}[0]
+                final var config // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.config|{}config[0]
+                    final fun <get-config>(): ai.grazie.code.agents.core.agent.config/AIAgentConfig? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.config.<get-config>|<get-config>(){}[0]
+                    final fun <set-config>(ai.grazie.code.agents.core.agent.config/AIAgentConfig?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.config.<set-config>|<set-config>(ai.grazie.code.agents.core.agent.config.AIAgentConfig?){}[0]
+                final var environment // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.environment|{}environment[0]
+                    final fun <get-environment>(): ai.grazie.code.agents.core.environment/AIAgentEnvironment? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.environment.<get-environment>|<get-environment>(){}[0]
+                    final fun <set-environment>(ai.grazie.code.agents.core.environment/AIAgentEnvironment?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.environment.<set-environment>|<set-environment>(ai.grazie.code.agents.core.environment.AIAgentEnvironment?){}[0]
+                final var llm // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.llm|{}llm[0]
+                    final fun <get-llm>(): ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.llm.<get-llm>|<get-llm>(){}[0]
+                    final fun <set-llm>(ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.llm.<set-llm>|<set-llm>(ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext?){}[0]
+                final var sessionUuid // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.sessionUuid|{}sessionUuid[0]
+                    final fun <get-sessionUuid>(): ai.grazie.utils.mpp/UUID? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.sessionUuid.<get-sessionUuid>|<get-sessionUuid>(){}[0]
+                    final fun <set-sessionUuid>(ai.grazie.utils.mpp/UUID?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.sessionUuid.<set-sessionUuid>|<set-sessionUuid>(ai.grazie.utils.mpp.UUID?){}[0]
+                final var stateManager // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.stateManager|{}stateManager[0]
+                    final fun <get-stateManager>(): ai.grazie.code.agents.core.agent.entity/AIAgentStateManager? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+                    final fun <set-stateManager>(ai.grazie.code.agents.core.agent.entity/AIAgentStateManager?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.stateManager.<set-stateManager>|<set-stateManager>(ai.grazie.code.agents.core.agent.entity.AIAgentStateManager?){}[0]
+                final var storage // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.storage|{}storage[0]
+                    final fun <get-storage>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorage? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.storage.<get-storage>|<get-storage>(){}[0]
+                    final fun <set-storage>(ai.grazie.code.agents.core.agent.entity/AIAgentStorage?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.storage.<set-storage>|<set-storage>(ai.grazie.code.agents.core.agent.entity.AIAgentStorage?){}[0]
+                final var strategyId // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.strategyId|{}strategyId[0]
+                    final fun <get-strategyId>(): kotlin/String? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.strategyId.<get-strategyId>|<get-strategyId>(){}[0]
+                    final fun <set-strategyId>(kotlin/String?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.strategyId.<set-strategyId>|<set-strategyId>(kotlin.String?){}[0]
+
+                final fun (ai.grazie.code.agents.testing.feature/NodeReference<*, *>).alwaysGoesTo(ai.grazie.code.agents.testing.feature/NodeReference<*, *>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.alwaysGoesTo|alwaysGoesTo@ai.grazie.code.agents.testing.feature.NodeReference<*,*>(ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+                final fun <#A4: kotlin/Any?, #B4: kotlin/Any?> (ai.grazie.code.agents.testing.feature/NodeReference<#A4, #B4>).withOutput(#B4): ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair<#A4, #B4> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.withOutput|withOutput@ai.grazie.code.agents.testing.feature.NodeReference<0:0,0:1>(0:1){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+                final fun build(): ai.grazie.code.agents.core.agent.entity/AIAgentContextBase // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.build|build(){}[0]
+                final fun copy(): ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.copy|copy(){}[0]
+                final fun withContext(kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.withContext|withContext(kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder,kotlin.Unit>){}[0]
+
+                final inner class <#A4: kotlin/Any?, #B4: kotlin/Any?> EdgeOutputPair { // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair|null[0]
+                    constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference<#A4, #B4>, #B4) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference<1:0,1:1>;1:1){}[0]
+
+                    final val node // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.node|{}node[0]
+                        final fun <get-node>(): ai.grazie.code.agents.testing.feature/NodeReference<#A4, #B4> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.node.<get-node>|<get-node>(){}[0]
+                    final val output // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.output|{}output[0]
+                        final fun <get-output>(): #B4 // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.output.<get-output>|<get-output>(){}[0]
+
+                    final fun goesTo(ai.grazie.code.agents.testing.feature/NodeReference<*, *>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.EdgeAssertionsBuilder.EdgeOutputPair.goesTo|goesTo(ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+                }
+            }
+
+            final class NodeOutputAssertionsBuilder : ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilderBase { // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder|null[0]
+                constructor <init>(ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>, ai.grazie.code.agents.testing.feature/AIAgentContextMockBuilder = ...) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.<init>|<init>(ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>;ai.grazie.code.agents.testing.feature.AIAgentContextMockBuilder){}[0]
+
+                final val assertions // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.assertions|{}assertions[0]
+                    final fun <get-assertions>(): kotlin.collections/MutableList<ai.grazie.code.agents.testing.feature/NodeOutputAssertion<*, *>> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.assertions.<get-assertions>|<get-assertions>(){}[0]
+
+                final var agentInput // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInput|{}agentInput[0]
+                    final fun <get-agentInput>(): kotlin/String? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInput.<get-agentInput>|<get-agentInput>(){}[0]
+                    final fun <set-agentInput>(kotlin/String?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.agentInput.<set-agentInput>|<set-agentInput>(kotlin.String?){}[0]
+                final var config // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.config|{}config[0]
+                    final fun <get-config>(): ai.grazie.code.agents.core.agent.config/AIAgentConfig? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.config.<get-config>|<get-config>(){}[0]
+                    final fun <set-config>(ai.grazie.code.agents.core.agent.config/AIAgentConfig?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.config.<set-config>|<set-config>(ai.grazie.code.agents.core.agent.config.AIAgentConfig?){}[0]
+                final var environment // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.environment|{}environment[0]
+                    final fun <get-environment>(): ai.grazie.code.agents.core.environment/AIAgentEnvironment? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.environment.<get-environment>|<get-environment>(){}[0]
+                    final fun <set-environment>(ai.grazie.code.agents.core.environment/AIAgentEnvironment?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.environment.<set-environment>|<set-environment>(ai.grazie.code.agents.core.environment.AIAgentEnvironment?){}[0]
+                final var llm // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.llm|{}llm[0]
+                    final fun <get-llm>(): ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.llm.<get-llm>|<get-llm>(){}[0]
+                    final fun <set-llm>(ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.llm.<set-llm>|<set-llm>(ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext?){}[0]
+                final var sessionUuid // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.sessionUuid|{}sessionUuid[0]
+                    final fun <get-sessionUuid>(): ai.grazie.utils.mpp/UUID? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.sessionUuid.<get-sessionUuid>|<get-sessionUuid>(){}[0]
+                    final fun <set-sessionUuid>(ai.grazie.utils.mpp/UUID?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.sessionUuid.<set-sessionUuid>|<set-sessionUuid>(ai.grazie.utils.mpp.UUID?){}[0]
+                final var stateManager // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.stateManager|{}stateManager[0]
+                    final fun <get-stateManager>(): ai.grazie.code.agents.core.agent.entity/AIAgentStateManager? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.stateManager.<get-stateManager>|<get-stateManager>(){}[0]
+                    final fun <set-stateManager>(ai.grazie.code.agents.core.agent.entity/AIAgentStateManager?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.stateManager.<set-stateManager>|<set-stateManager>(ai.grazie.code.agents.core.agent.entity.AIAgentStateManager?){}[0]
+                final var storage // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.storage|{}storage[0]
+                    final fun <get-storage>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorage? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.storage.<get-storage>|<get-storage>(){}[0]
+                    final fun <set-storage>(ai.grazie.code.agents.core.agent.entity/AIAgentStorage?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.storage.<set-storage>|<set-storage>(ai.grazie.code.agents.core.agent.entity.AIAgentStorage?){}[0]
+                final var strategyId // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.strategyId|{}strategyId[0]
+                    final fun <get-strategyId>(): kotlin/String? // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.strategyId.<get-strategyId>|<get-strategyId>(){}[0]
+                    final fun <set-strategyId>(kotlin/String?) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.strategyId.<set-strategyId>|<set-strategyId>(kotlin.String?){}[0]
+
+                final fun <#A4: kotlin/Any?, #B4: kotlin/Any?> (ai.grazie.code.agents.testing.feature/NodeReference<#A4, #B4>).withInput(#A4): ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair<#A4, #B4> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.withInput|withInput@ai.grazie.code.agents.testing.feature.NodeReference<0:0,0:1>(0:0){0§<kotlin.Any?>;1§<kotlin.Any?>}[0]
+                final fun build(): ai.grazie.code.agents.core.agent.entity/AIAgentContextBase // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.build|build(){}[0]
+                final fun copy(): ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.copy|copy(){}[0]
+                final fun withContext(kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.withContext|withContext(kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder,kotlin.Unit>){}[0]
+
+                final inner class <#A4: kotlin/Any?, #B4: kotlin/Any?> NodeOutputPair { // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair|null[0]
+                    constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference<#A4, #B4>, #A4) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference<1:0,1:1>;1:0){}[0]
+
+                    final val input // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.input|{}input[0]
+                        final fun <get-input>(): #A4 // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.input.<get-input>|<get-input>(){}[0]
+                    final val node // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.node|{}node[0]
+                        final fun <get-node>(): ai.grazie.code.agents.testing.feature/NodeReference<#A4, #B4> // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.node.<get-node>|<get-node>(){}[0]
+
+                    final fun outputs(#B4) // ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder.NodeOutputAssertionsBuilder.NodeOutputPair.outputs|outputs(1:1){}[0]
+                }
+            }
+        }
+    }
+
+    final object Feature : ai.grazie.code.agents.core.feature/AIAgentFeature<ai.grazie.code.agents.testing.feature/Testing.Config, ai.grazie.code.agents.testing.feature/Testing> { // ai.grazie.code.agents.testing.feature/Testing.Feature|null[0]
+        final val key // ai.grazie.code.agents.testing.feature/Testing.Feature.key|{}key[0]
+            final fun <get-key>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorageKey<ai.grazie.code.agents.testing.feature/Testing> // ai.grazie.code.agents.testing.feature/Testing.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(): ai.grazie.code.agents.testing.feature/Testing.Config // ai.grazie.code.agents.testing.feature/Testing.Feature.createInitialConfig|createInitialConfig(){}[0]
+        final fun install(ai.grazie.code.agents.testing.feature/Testing.Config, ai.grazie.code.agents.core.feature/AIAgentPipeline) // ai.grazie.code.agents.testing.feature/Testing.Feature.install|install(ai.grazie.code.agents.testing.feature.Testing.Config;ai.grazie.code.agents.core.feature.AIAgentPipeline){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion { // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion|null[0]
+    constructor <init>(ai.grazie.code.agents.testing.feature/NodeReference<*, *>, ai.grazie.code.agents.testing.feature/NodeReference<*, *>) // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.<init>|<init>(ai.grazie.code.agents.testing.feature.NodeReference<*,*>;ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+
+    final val expectedNode // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.expectedNode|{}expectedNode[0]
+        final fun <get-expectedNode>(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.expectedNode.<get-expectedNode>|<get-expectedNode>(){}[0]
+    final val node // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.node|{}node[0]
+        final fun <get-node>(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.node.<get-node>|<get-node>(){}[0]
+
+    final fun component1(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.component1|component1(){}[0]
+    final fun component2(): ai.grazie.code.agents.testing.feature/NodeReference<*, *> // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.component2|component2(){}[0]
+    final fun copy(ai.grazie.code.agents.testing.feature/NodeReference<*, *> = ..., ai.grazie.code.agents.testing.feature/NodeReference<*, *> = ...): ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.copy|copy(ai.grazie.code.agents.testing.feature.NodeReference<*,*>;ai.grazie.code.agents.testing.feature.NodeReference<*,*>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.testing.feature/UnconditionalEdgeAssertion.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.agents.testing.tools/DefaultResponseReceiver { // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver|null[0]
+    constructor <init>(kotlin/String) // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.<init>|<init>(kotlin.String){}[0]
+
+    final val asDefaultResponse // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.asDefaultResponse|{}asDefaultResponse[0]
+        final fun <get-asDefaultResponse>(): kotlin/String // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.asDefaultResponse.<get-asDefaultResponse>|<get-asDefaultResponse>(){}[0]
+    final val response // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.response|{}response[0]
+        final fun <get-response>(): kotlin/String // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.response.<get-response>|<get-response>(){}[0]
+
+    final fun onCondition(kotlin/Function1<kotlin/String, kotlin/Boolean>): kotlin/String // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.onCondition|onCondition(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+    final fun onRequestContains(kotlin/String): kotlin/String // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.onRequestContains|onRequestContains(kotlin.String){}[0]
+    final fun onRequestEquals(kotlin/String): kotlin/String // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+
+    final object Companion { // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.Companion|null[0]
+        final fun clearMatches() // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.Companion.clearMatches|clearMatches(){}[0]
+        final fun getConditionalMatches(): kotlin.collections/Map<kotlin/Function1<kotlin/String, kotlin/Boolean>, kotlin/String> // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.Companion.getConditionalMatches|getConditionalMatches(){}[0]
+        final fun getDefaultResponse(): kotlin/String? // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.Companion.getDefaultResponse|getDefaultResponse(){}[0]
+        final fun getExactMatches(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.Companion.getExactMatches|getExactMatches(){}[0]
+        final fun getPartialMatches(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.grazie.code.agents.testing.tools/DefaultResponseReceiver.Companion.getPartialMatches|getPartialMatches(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.testing.tools/DummyTool : ai.grazie.code.agents.core.tools/SimpleTool<ai.grazie.code.agents.testing.tools/DummyTool.Args> { // ai.grazie.code.agents.testing.tools/DummyTool|null[0]
+    constructor <init>() // ai.grazie.code.agents.testing.tools/DummyTool.<init>|<init>(){}[0]
+
+    final val argsSerializer // ai.grazie.code.agents.testing.tools/DummyTool.argsSerializer|{}argsSerializer[0]
+        final fun <get-argsSerializer>(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.testing.tools/DummyTool.Args> // ai.grazie.code.agents.testing.tools/DummyTool.argsSerializer.<get-argsSerializer>|<get-argsSerializer>(){}[0]
+    final val descriptor // ai.grazie.code.agents.testing.tools/DummyTool.descriptor|{}descriptor[0]
+        final fun <get-descriptor>(): ai.grazie.code.agents.core.tools/ToolDescriptor // ai.grazie.code.agents.testing.tools/DummyTool.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+    final suspend fun doExecute(ai.grazie.code.agents.testing.tools/DummyTool.Args): kotlin/String // ai.grazie.code.agents.testing.tools/DummyTool.doExecute|doExecute(ai.grazie.code.agents.testing.tools.DummyTool.Args){}[0]
+
+    final class Args : ai.grazie.code.agents.core.tools/Tool.Args { // ai.grazie.code.agents.testing.tools/DummyTool.Args|null[0]
+        constructor <init>(kotlin/String = ...) // ai.grazie.code.agents.testing.tools/DummyTool.Args.<init>|<init>(kotlin.String){}[0]
+
+        final val dummy // ai.grazie.code.agents.testing.tools/DummyTool.Args.dummy|{}dummy[0]
+            final fun <get-dummy>(): kotlin/String // ai.grazie.code.agents.testing.tools/DummyTool.Args.dummy.<get-dummy>|<get-dummy>(){}[0]
+
+        final fun component1(): kotlin/String // ai.grazie.code.agents.testing.tools/DummyTool.Args.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.grazie.code.agents.testing.tools/DummyTool.Args // ai.grazie.code.agents.testing.tools/DummyTool.Args.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.testing.tools/DummyTool.Args.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.testing.tools/DummyTool.Args.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.testing.tools/DummyTool.Args.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.testing.tools/DummyTool.Args> { // ai.grazie.code.agents.testing.tools/DummyTool.Args.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.testing.tools/DummyTool.Args.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.testing.tools/DummyTool.Args.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.testing.tools/DummyTool.Args.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.testing.tools/DummyTool.Args // ai.grazie.code.agents.testing.tools/DummyTool.Args.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.testing.tools/DummyTool.Args) // ai.grazie.code.agents.testing.tools/DummyTool.Args.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.testing.tools.DummyTool.Args){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.testing.tools/DummyTool.Args.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.testing.tools/DummyTool.Args> // ai.grazie.code.agents.testing.tools/DummyTool.Args.Companion.serializer|serializer(){}[0]
+        }
+    }
+}
+
+final class ai.grazie.code.agents.testing.tools/MockEnvironment : ai.grazie.code.agents.core.environment/AIAgentEnvironment { // ai.grazie.code.agents.testing.tools/MockEnvironment|null[0]
+    constructor <init>(ai.grazie.code.agents.core.tools/ToolRegistry, ai.jetbrains.code.prompt.executor.model/PromptExecutor, ai.grazie.code.agents.core.environment/AIAgentEnvironment? = ...) // ai.grazie.code.agents.testing.tools/MockEnvironment.<init>|<init>(ai.grazie.code.agents.core.tools.ToolRegistry;ai.jetbrains.code.prompt.executor.model.PromptExecutor;ai.grazie.code.agents.core.environment.AIAgentEnvironment?){}[0]
+
+    final val baseEnvironment // ai.grazie.code.agents.testing.tools/MockEnvironment.baseEnvironment|{}baseEnvironment[0]
+        final fun <get-baseEnvironment>(): ai.grazie.code.agents.core.environment/AIAgentEnvironment? // ai.grazie.code.agents.testing.tools/MockEnvironment.baseEnvironment.<get-baseEnvironment>|<get-baseEnvironment>(){}[0]
+    final val promptExecutor // ai.grazie.code.agents.testing.tools/MockEnvironment.promptExecutor|{}promptExecutor[0]
+        final fun <get-promptExecutor>(): ai.jetbrains.code.prompt.executor.model/PromptExecutor // ai.grazie.code.agents.testing.tools/MockEnvironment.promptExecutor.<get-promptExecutor>|<get-promptExecutor>(){}[0]
+    final val toolRegistry // ai.grazie.code.agents.testing.tools/MockEnvironment.toolRegistry|{}toolRegistry[0]
+        final fun <get-toolRegistry>(): ai.grazie.code.agents.core.tools/ToolRegistry // ai.grazie.code.agents.testing.tools/MockEnvironment.toolRegistry.<get-toolRegistry>|<get-toolRegistry>(){}[0]
+
+    final suspend fun executeTools(kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Tool.Call>): kotlin.collections/List<ai.grazie.code.agents.core.environment/ReceivedToolResult> // ai.grazie.code.agents.testing.tools/MockEnvironment.executeTools|executeTools(kotlin.collections.List<ai.jetbrains.code.prompt.message.Message.Tool.Call>){}[0]
+    final suspend fun reportProblem(kotlin/Throwable) // ai.grazie.code.agents.testing.tools/MockEnvironment.reportProblem|reportProblem(kotlin.Throwable){}[0]
+    final suspend fun sendTermination(kotlin/String?) // ai.grazie.code.agents.testing.tools/MockEnvironment.sendTermination|sendTermination(kotlin.String?){}[0]
+}
+
+final class ai.grazie.code.agents.testing.tools/MockLLMBuilder { // ai.grazie.code.agents.testing.tools/MockLLMBuilder|null[0]
+    constructor <init>() // ai.grazie.code.agents.testing.tools/MockLLMBuilder.<init>|<init>(){}[0]
+
+    final fun (kotlin/String).onCondition(kotlin/Function1<kotlin/String, kotlin/Boolean>): ai.grazie.code.agents.testing.tools/MockLLMBuilder // ai.grazie.code.agents.testing.tools/MockLLMBuilder.onCondition|onCondition@kotlin.String(kotlin.Function1<kotlin.String,kotlin.Boolean>){}[0]
+    final fun (kotlin/String).onUserRequestContains(kotlin/String): ai.grazie.code.agents.testing.tools/MockLLMBuilder // ai.grazie.code.agents.testing.tools/MockLLMBuilder.onUserRequestContains|onUserRequestContains@kotlin.String(kotlin.String){}[0]
+    final fun (kotlin/String).onUserRequestEquals(kotlin/String): ai.grazie.code.agents.testing.tools/MockLLMBuilder // ai.grazie.code.agents.testing.tools/MockLLMBuilder.onUserRequestEquals|onUserRequestEquals@kotlin.String(kotlin.String){}[0]
+    final fun <#A1: ai.grazie.code.agents.core.tools/Tool.Args, #B1: ai.grazie.code.agents.core.tools/ToolResult> addToolAction(ai.grazie.code.agents.core.tools/Tool<#A1, #B1>, kotlin.coroutines/SuspendFunction1<#A1, kotlin/Boolean> = ..., kotlin.coroutines/SuspendFunction1<#A1, #B1>) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.addToolAction|addToolAction(ai.grazie.code.agents.core.tools.Tool<0:0,0:1>;kotlin.coroutines.SuspendFunction1<0:0,kotlin.Boolean>;kotlin.coroutines.SuspendFunction1<0:0,0:1>){0§<ai.grazie.code.agents.core.tools.Tool.Args>;1§<ai.grazie.code.agents.core.tools.ToolResult>}[0]
+    final fun <#A1: ai.grazie.code.agents.core.tools/Tool.Args, #B1: ai.grazie.code.agents.core.tools/ToolResult> mockTool(ai.grazie.code.agents.core.tools/Tool<#A1, #B1>): ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver<#A1, #B1> // ai.grazie.code.agents.testing.tools/MockLLMBuilder.mockTool|mockTool(ai.grazie.code.agents.core.tools.Tool<0:0,0:1>){0§<ai.grazie.code.agents.core.tools.Tool.Args>;1§<ai.grazie.code.agents.core.tools.ToolResult>}[0]
+    final fun <#A1: ai.grazie.code.agents.core.tools/Tool.Args> (ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver<#A1, ai.grazie.code.agents.core.tools/ToolResult.Text>).alwaysReturns(kotlin/String) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.alwaysReturns|alwaysReturns@ai.grazie.code.agents.testing.tools.MockLLMBuilder.MockToolReceiver<0:0,ai.grazie.code.agents.core.tools.ToolResult.Text>(kotlin.String){0§<ai.grazie.code.agents.core.tools.Tool.Args>}[0]
+    final fun <#A1: ai.grazie.code.agents.core.tools/Tool.Args> (ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver<#A1, ai.grazie.code.agents.core.tools/ToolResult.Text>).alwaysTells(kotlin.coroutines/SuspendFunction0<kotlin/String>) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.alwaysTells|alwaysTells@ai.grazie.code.agents.testing.tools.MockLLMBuilder.MockToolReceiver<0:0,ai.grazie.code.agents.core.tools.ToolResult.Text>(kotlin.coroutines.SuspendFunction0<kotlin.String>){0§<ai.grazie.code.agents.core.tools.Tool.Args>}[0]
+    final fun <#A1: ai.grazie.code.agents.core.tools/Tool.Args> (ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver<#A1, ai.grazie.code.agents.core.tools/ToolResult.Text>).doesStr(kotlin.coroutines/SuspendFunction0<kotlin/String>): ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<#A1, ai.grazie.code.agents.core.tools/ToolResult.Text> // ai.grazie.code.agents.testing.tools/MockLLMBuilder.doesStr|doesStr@ai.grazie.code.agents.testing.tools.MockLLMBuilder.MockToolReceiver<0:0,ai.grazie.code.agents.core.tools.ToolResult.Text>(kotlin.coroutines.SuspendFunction0<kotlin.String>){0§<ai.grazie.code.agents.core.tools.Tool.Args>}[0]
+    final fun <#A1: ai.grazie.code.agents.core.tools/Tool.Args> addLLMAnswerExactPattern(kotlin/String, ai.grazie.code.agents.core.tools/Tool<#A1, *>, #A1) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.addLLMAnswerExactPattern|addLLMAnswerExactPattern(kotlin.String;ai.grazie.code.agents.core.tools.Tool<0:0,*>;0:0){0§<ai.grazie.code.agents.core.tools.Tool.Args>}[0]
+    final fun <#A1: ai.grazie.code.agents.core.tools/Tool.Args> mockLLMToolCall(ai.grazie.code.agents.core.tools/Tool<#A1, *>, #A1): ai.grazie.code.agents.testing.tools/MockLLMBuilder.ToolCallReceiver<#A1> // ai.grazie.code.agents.testing.tools/MockLLMBuilder.mockLLMToolCall|mockLLMToolCall(ai.grazie.code.agents.core.tools.Tool<0:0,*>;0:0){0§<ai.grazie.code.agents.core.tools.Tool.Args>}[0]
+    final fun build(): ai.jetbrains.code.prompt.executor.model/PromptExecutor // ai.grazie.code.agents.testing.tools/MockLLMBuilder.build|build(){}[0]
+    final fun setDefaultResponse(kotlin/String) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.setDefaultResponse|setDefaultResponse(kotlin.String){}[0]
+    final fun setToolRegistry(ai.grazie.code.agents.core.tools/ToolRegistry) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.setToolRegistry|setToolRegistry(ai.grazie.code.agents.core.tools.ToolRegistry){}[0]
+
+    final class <#A1: ai.grazie.code.agents.core.tools/Tool.Args, #B1: ai.grazie.code.agents.core.tools/ToolResult> MockToolReceiver { // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver|null[0]
+        constructor <init>(ai.grazie.code.agents.core.tools/Tool<#A1, #B1>, ai.grazie.code.agents.testing.tools/MockLLMBuilder) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.<init>|<init>(ai.grazie.code.agents.core.tools.Tool<1:0,1:1>;ai.grazie.code.agents.testing.tools.MockLLMBuilder){}[0]
+
+        final fun alwaysDoes(kotlin.coroutines/SuspendFunction0<#B1>) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.alwaysDoes|alwaysDoes(kotlin.coroutines.SuspendFunction0<1:1>){}[0]
+        final fun alwaysReturns(#B1) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.alwaysReturns|alwaysReturns(1:1){}[0]
+        final fun does(kotlin.coroutines/SuspendFunction0<#B1>): ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<#A1, #B1> // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.does|does(kotlin.coroutines.SuspendFunction0<1:1>){}[0]
+        final fun returns(#B1): ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<#A1, #B1> // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.returns|returns(1:1){}[0]
+
+        final class <#A2: ai.grazie.code.agents.core.tools/Tool.Args, #B2: ai.grazie.code.agents.core.tools/ToolResult> MockToolResponseBuilder { // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder|null[0]
+            constructor <init>(ai.grazie.code.agents.core.tools/Tool<#A2, #B2>, kotlin.coroutines/SuspendFunction0<#B2>, ai.grazie.code.agents.testing.tools/MockLLMBuilder) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder.<init>|<init>(ai.grazie.code.agents.core.tools.Tool<1:0,1:1>;kotlin.coroutines.SuspendFunction0<1:1>;ai.grazie.code.agents.testing.tools.MockLLMBuilder){}[0]
+
+            final fun onArguments(#A2) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder.onArguments|onArguments(1:0){}[0]
+            final fun onArgumentsMatching(kotlin.coroutines/SuspendFunction1<#A2, kotlin/Boolean>) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder.onArgumentsMatching|onArgumentsMatching(kotlin.coroutines.SuspendFunction1<1:0,kotlin.Boolean>){}[0]
+        }
+    }
+
+    final class <#A1: ai.grazie.code.agents.core.tools/Tool.Args> ToolCallReceiver { // ai.grazie.code.agents.testing.tools/MockLLMBuilder.ToolCallReceiver|null[0]
+        constructor <init>(ai.grazie.code.agents.core.tools/Tool<#A1, *>, #A1, ai.grazie.code.agents.testing.tools/MockLLMBuilder) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.ToolCallReceiver.<init>|<init>(ai.grazie.code.agents.core.tools.Tool<1:0,*>;1:0;ai.grazie.code.agents.testing.tools.MockLLMBuilder){}[0]
+
+        final fun onRequestEquals(kotlin/String): kotlin/String // ai.grazie.code.agents.testing.tools/MockLLMBuilder.ToolCallReceiver.onRequestEquals|onRequestEquals(kotlin.String){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.testing.tools/MockLLMBuilder.Companion|null[0]
+        final var currentBuilder // ai.grazie.code.agents.testing.tools/MockLLMBuilder.Companion.currentBuilder|{}currentBuilder[0]
+            final fun <get-currentBuilder>(): ai.grazie.code.agents.testing.tools/MockLLMBuilder? // ai.grazie.code.agents.testing.tools/MockLLMBuilder.Companion.currentBuilder.<get-currentBuilder>|<get-currentBuilder>(){}[0]
+            final fun <set-currentBuilder>(ai.grazie.code.agents.testing.tools/MockLLMBuilder?) // ai.grazie.code.agents.testing.tools/MockLLMBuilder.Companion.currentBuilder.<set-currentBuilder>|<set-currentBuilder>(ai.grazie.code.agents.testing.tools.MockLLMBuilder?){}[0]
+    }
+}
+
+sealed class <#A: kotlin/Any?, #B: kotlin/Any?> ai.grazie.code.agents.testing.feature/NodeReference { // ai.grazie.code.agents.testing.feature/NodeReference|null[0]
+    abstract fun resolve(ai.grazie.code.agents.core.agent.entity/AIAgentSubgraph<*, *>): ai.grazie.code.agents.core.agent.entity/AIAgentNodeBase<#A, #B> // ai.grazie.code.agents.testing.feature/NodeReference.resolve|resolve(ai.grazie.code.agents.core.agent.entity.AIAgentSubgraph<*,*>){}[0]
+
+    final class <#A1: kotlin/Any?> Finish : ai.grazie.code.agents.testing.feature/NodeReference<#A1, #A1> { // ai.grazie.code.agents.testing.feature/NodeReference.Finish|null[0]
+        constructor <init>() // ai.grazie.code.agents.testing.feature/NodeReference.Finish.<init>|<init>(){}[0]
+
+        final fun resolve(ai.grazie.code.agents.core.agent.entity/AIAgentSubgraph<*, *>): ai.grazie.code.agents.core.agent.entity/AIAgentNodeBase<#A1, #A1> // ai.grazie.code.agents.testing.feature/NodeReference.Finish.resolve|resolve(ai.grazie.code.agents.core.agent.entity.AIAgentSubgraph<*,*>){}[0]
+    }
+
+    final class <#A1: kotlin/Any?> Start : ai.grazie.code.agents.testing.feature/NodeReference<#A1, #A1> { // ai.grazie.code.agents.testing.feature/NodeReference.Start|null[0]
+        constructor <init>() // ai.grazie.code.agents.testing.feature/NodeReference.Start.<init>|<init>(){}[0]
+
+        final fun resolve(ai.grazie.code.agents.core.agent.entity/AIAgentSubgraph<*, *>): ai.grazie.code.agents.core.agent.entity/AIAgentNodeBase<#A1, #A1> // ai.grazie.code.agents.testing.feature/NodeReference.Start.resolve|resolve(ai.grazie.code.agents.core.agent.entity.AIAgentSubgraph<*,*>){}[0]
+    }
+
+    final class Strategy : ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode<kotlin/String, kotlin/String> { // ai.grazie.code.agents.testing.feature/NodeReference.Strategy|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.testing.feature/NodeReference.Strategy.<init>|<init>(kotlin.String){}[0]
+
+        final fun resolve(ai.grazie.code.agents.core.agent.entity/AIAgentSubgraph<*, *>): ai.grazie.code.agents.core.agent.entity/AIAgentStrategy // ai.grazie.code.agents.testing.feature/NodeReference.Strategy.resolve|resolve(ai.grazie.code.agents.core.agent.entity.AIAgentSubgraph<*,*>){}[0]
+    }
+
+    open class <#A1: kotlin/Any?, #B1: kotlin/Any?> NamedNode : ai.grazie.code.agents.testing.feature/NodeReference<#A1, #B1> { // ai.grazie.code.agents.testing.feature/NodeReference.NamedNode|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.testing.feature/NodeReference.NamedNode.<init>|<init>(kotlin.String){}[0]
+
+        final val name // ai.grazie.code.agents.testing.feature/NodeReference.NamedNode.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.grazie.code.agents.testing.feature/NodeReference.NamedNode.name.<get-name>|<get-name>(){}[0]
+
+        open fun resolve(ai.grazie.code.agents.core.agent.entity/AIAgentSubgraph<*, *>): ai.grazie.code.agents.core.agent.entity/AIAgentNodeBase<#A1, #B1> // ai.grazie.code.agents.testing.feature/NodeReference.NamedNode.resolve|resolve(ai.grazie.code.agents.core.agent.entity.AIAgentSubgraph<*,*>){}[0]
+    }
+
+    open class <#A1: kotlin/Any?, #B1: kotlin/Any?> SubgraphNode : ai.grazie.code.agents.testing.feature/NodeReference.NamedNode<#A1, #B1> { // ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode.<init>|<init>(kotlin.String){}[0]
+
+        open fun resolve(ai.grazie.code.agents.core.agent.entity/AIAgentSubgraph<*, *>): ai.grazie.code.agents.core.agent.entity/AIAgentSubgraph<#A1, #B1> // ai.grazie.code.agents.testing.feature/NodeReference.SubgraphNode.resolve|resolve(ai.grazie.code.agents.core.agent.entity.AIAgentSubgraph<*,*>){}[0]
+    }
+}
+
+final fun (ai.grazie.code.agents.core.agent/AIAgent.FeatureContext).ai.grazie.code.agents.testing.feature/testGraph(kotlin/String, kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config.SubgraphAssertionsBuilder<*, *>, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/testGraph|testGraph@ai.grazie.code.agents.core.agent.AIAgent.FeatureContext(kotlin.String;kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config.SubgraphAssertionsBuilder<*,*>,kotlin.Unit>){}[0]
+final fun (ai.grazie.code.agents.core.agent/AIAgent.FeatureContext).ai.grazie.code.agents.testing.feature/withTesting(kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config, kotlin/Unit> = ...) // ai.grazie.code.agents.testing.feature/withTesting|withTesting@ai.grazie.code.agents.core.agent.AIAgent.FeatureContext(kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config,kotlin.Unit>){}[0]
+final fun (ai.grazie.code.agents.testing.feature/Testing.Config).ai.grazie.code.agents.testing.feature/graph(kotlin/Function1<ai.grazie.code.agents.testing.feature/Testing.Config, kotlin/Unit>) // ai.grazie.code.agents.testing.feature/graph|graph@ai.grazie.code.agents.testing.feature.Testing.Config(kotlin.Function1<ai.grazie.code.agents.testing.feature.Testing.Config,kotlin.Unit>){}[0]
+final fun <#A: ai.grazie.code.agents.core.tools/Tool.Args> ai.grazie.code.agents.testing.feature/toolCallMessage(ai.grazie.code.agents.core.tools/Tool<#A, *>, #A): ai.jetbrains.code.prompt.message/Message.Tool.Call // ai.grazie.code.agents.testing.feature/toolCallMessage|toolCallMessage(ai.grazie.code.agents.core.tools.Tool<0:0,*>;0:0){0§<ai.grazie.code.agents.core.tools.Tool.Args>}[0]
+final fun <#A: ai.grazie.code.agents.core.tools/Tool.Args> ai.grazie.code.agents.testing.feature/toolCallSignature(ai.grazie.code.agents.core.tools/Tool<#A, *>, #A): ai.jetbrains.code.prompt.message/Message.Tool.Call // ai.grazie.code.agents.testing.feature/toolCallSignature|toolCallSignature(ai.grazie.code.agents.core.tools.Tool<0:0,*>;0:0){0§<ai.grazie.code.agents.core.tools.Tool.Args>}[0]
+final fun <#A: ai.grazie.code.agents.core.tools/ToolResult> ai.grazie.code.agents.testing.feature/toolResult(ai.grazie.code.agents.core.tools/Tool<*, #A>, #A): ai.grazie.code.agents.core.environment/ReceivedToolResult // ai.grazie.code.agents.testing.feature/toolResult|toolResult(ai.grazie.code.agents.core.tools.Tool<*,0:0>;0:0){0§<ai.grazie.code.agents.core.tools.ToolResult>}[0]
+final fun ai.grazie.code.agents.testing.feature/toolResult(ai.grazie.code.agents.core.tools/SimpleTool<*>, kotlin/String): ai.grazie.code.agents.core.environment/ReceivedToolResult // ai.grazie.code.agents.testing.feature/toolResult|toolResult(ai.grazie.code.agents.core.tools.SimpleTool<*>;kotlin.String){}[0]
+final fun ai.grazie.code.agents.testing.tools/getMockExecutor(ai.grazie.code.agents.core.tools/ToolRegistry? = ..., kotlin/Function1<ai.grazie.code.agents.testing.tools/MockLLMBuilder, kotlin/Unit>): ai.jetbrains.code.prompt.executor.model/PromptExecutor // ai.grazie.code.agents.testing.tools/getMockExecutor|getMockExecutor(ai.grazie.code.agents.core.tools.ToolRegistry?;kotlin.Function1<ai.grazie.code.agents.testing.tools.MockLLMBuilder,kotlin.Unit>){}[0]
+final fun ai.grazie.code.agents.testing.tools/mockLLMAnswer(kotlin/String): ai.grazie.code.agents.testing.tools/DefaultResponseReceiver // ai.grazie.code.agents.testing.tools/mockLLMAnswer|mockLLMAnswer(kotlin.String){}[0]

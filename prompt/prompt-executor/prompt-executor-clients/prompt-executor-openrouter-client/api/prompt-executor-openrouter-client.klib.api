@@ -1,0 +1,60 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-openrouter-client>
+final class ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings { // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings|null[0]
+    constructor <init>(kotlin/String = ..., ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final val baseUrl // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings.baseUrl|{}baseUrl[0]
+        final fun <get-baseUrl>(): kotlin/String // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    final val timeoutConfig // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings.timeoutConfig|{}timeoutConfig[0]
+        final fun <get-timeoutConfig>(): ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings.timeoutConfig.<get-timeoutConfig>|<get-timeoutConfig>(){}[0]
+}
+
+final class ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterLLMClient : ai.jetbrains.code.prompt.executor.clients/LLMClient { // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterLLMClient|null[0]
+    constructor <init>(kotlin/String, ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterClientSettings = ..., io.ktor.client/HttpClient = ...) // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterLLMClient.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.clients.openrouter.OpenRouterClientSettings;io.ktor.client.HttpClient){}[0]
+
+    final suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterLLMClient.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterLLMClient.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}
+
+final object ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels { // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels|null[0]
+    final val Claude3Haiku // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Haiku|{}Claude3Haiku[0]
+        final fun <get-Claude3Haiku>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Haiku.<get-Claude3Haiku>|<get-Claude3Haiku>(){}[0]
+    final val Claude3Opus // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Opus|{}Claude3Opus[0]
+        final fun <get-Claude3Opus>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Opus.<get-Claude3Opus>|<get-Claude3Opus>(){}[0]
+    final val Claude3Sonnet // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Sonnet|{}Claude3Sonnet[0]
+        final fun <get-Claude3Sonnet>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3Sonnet.<get-Claude3Sonnet>|<get-Claude3Sonnet>(){}[0]
+    final val Claude3VisionHaiku // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionHaiku|{}Claude3VisionHaiku[0]
+        final fun <get-Claude3VisionHaiku>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionHaiku.<get-Claude3VisionHaiku>|<get-Claude3VisionHaiku>(){}[0]
+    final val Claude3VisionOpus // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionOpus|{}Claude3VisionOpus[0]
+        final fun <get-Claude3VisionOpus>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionOpus.<get-Claude3VisionOpus>|<get-Claude3VisionOpus>(){}[0]
+    final val Claude3VisionSonnet // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionSonnet|{}Claude3VisionSonnet[0]
+        final fun <get-Claude3VisionSonnet>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Claude3VisionSonnet.<get-Claude3VisionSonnet>|<get-Claude3VisionSonnet>(){}[0]
+    final val GPT35Turbo // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT35Turbo|{}GPT35Turbo[0]
+        final fun <get-GPT35Turbo>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT35Turbo.<get-GPT35Turbo>|<get-GPT35Turbo>(){}[0]
+    final val GPT4 // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT4|{}GPT4[0]
+        final fun <get-GPT4>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT4.<get-GPT4>|<get-GPT4>(){}[0]
+    final val GPT4Turbo // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT4Turbo|{}GPT4Turbo[0]
+        final fun <get-GPT4Turbo>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT4Turbo.<get-GPT4Turbo>|<get-GPT4Turbo>(){}[0]
+    final val GPT4o // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT4o|{}GPT4o[0]
+        final fun <get-GPT4o>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.GPT4o.<get-GPT4o>|<get-GPT4o>(){}[0]
+    final val Gemini14Pro // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Gemini14Pro|{}Gemini14Pro[0]
+        final fun <get-Gemini14Pro>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Gemini14Pro.<get-Gemini14Pro>|<get-Gemini14Pro>(){}[0]
+    final val Gemini15Flash // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Gemini15Flash|{}Gemini15Flash[0]
+        final fun <get-Gemini15Flash>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Gemini15Flash.<get-Gemini15Flash>|<get-Gemini15Flash>(){}[0]
+    final val Llama3 // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Llama3|{}Llama3[0]
+        final fun <get-Llama3>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Llama3.<get-Llama3>|<get-Llama3>(){}[0]
+    final val Llama3Instruct // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Llama3Instruct|{}Llama3Instruct[0]
+        final fun <get-Llama3Instruct>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Llama3Instruct.<get-Llama3Instruct>|<get-Llama3Instruct>(){}[0]
+    final val Mistral7B // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Mistral7B|{}Mistral7B[0]
+        final fun <get-Mistral7B>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Mistral7B.<get-Mistral7B>|<get-Mistral7B>(){}[0]
+    final val Mixtral8x7B // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Mixtral8x7B|{}Mixtral8x7B[0]
+        final fun <get-Mixtral8x7B>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Mixtral8x7B.<get-Mixtral8x7B>|<get-Mixtral8x7B>(){}[0]
+    final val Phi4Reasoning // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Phi4Reasoning|{}Phi4Reasoning[0]
+        final fun <get-Phi4Reasoning>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.openrouter/OpenRouterModels.Phi4Reasoning.<get-Phi4Reasoning>|<get-Phi4Reasoning>(){}[0]
+}

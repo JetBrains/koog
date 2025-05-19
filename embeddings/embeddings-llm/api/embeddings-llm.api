@@ -1,0 +1,15 @@
+public final class ai/jetbrains/embeddings/local/LLMEmbedder : ai/jetbrains/embeddings/base/Embedder {
+	public fun <init> (Lai/jetbrains/code/prompt/executor/clients/LLMEmbeddingProvider;Lai/jetbrains/code/prompt/llm/LLModel;)V
+	public fun diff (Lai/jetbrains/embeddings/base/Vector;Lai/jetbrains/embeddings/base/Vector;)D
+	public fun embed (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/embeddings/local/OllamaEmbeddingModels {
+	public static final field INSTANCE Lai/jetbrains/embeddings/local/OllamaEmbeddingModels;
+	public final fun getALL_MINI_LM ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getBGE_LARGE ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getMULTILINGUAL_E5 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getMXBAI_EMBED_LARGE ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getNOMIC_EMBED_TEXT ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+

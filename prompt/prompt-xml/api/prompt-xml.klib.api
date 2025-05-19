@@ -1,0 +1,24 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-xml>
+final class ai.grazie.code.prompt.xml/XmlContentBuilder : ai.jetbrains.code.prompt.text/TextContentBuilder { // ai.grazie.code.prompt.xml/XmlContentBuilder|null[0]
+    constructor <init>(kotlin/Boolean) // ai.grazie.code.prompt.xml/XmlContentBuilder.<init>|<init>(kotlin.Boolean){}[0]
+
+    final fun (kotlin/String).unaryPlus() // ai.grazie.code.prompt.xml/XmlContentBuilder.unaryPlus|unaryPlus@kotlin.String(){}[0]
+    final fun cdata(kotlin/String) // ai.grazie.code.prompt.xml/XmlContentBuilder.cdata|cdata(kotlin.String){}[0]
+    final fun comment(kotlin/String) // ai.grazie.code.prompt.xml/XmlContentBuilder.comment|comment(kotlin.String){}[0]
+    final fun doctype(kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // ai.grazie.code.prompt.xml/XmlContentBuilder.doctype|doctype(kotlin.String;kotlin.String?;kotlin.String?){}[0]
+    final fun processingInstruction(kotlin/String, kotlin/String) // ai.grazie.code.prompt.xml/XmlContentBuilder.processingInstruction|processingInstruction(kotlin.String;kotlin.String){}[0]
+    final fun selfClosingTag(kotlin/String, kotlin.collections/LinkedHashMap<kotlin/String, kotlin/String> = ...) // ai.grazie.code.prompt.xml/XmlContentBuilder.selfClosingTag|selfClosingTag(kotlin.String;kotlin.collections.LinkedHashMap<kotlin.String,kotlin.String>){}[0]
+    final fun tag(kotlin/String, kotlin.collections/LinkedHashMap<kotlin/String, kotlin/String> = ..., kotlin/Function1<ai.grazie.code.prompt.xml/XmlContentBuilder, kotlin/Unit> = ...) // ai.grazie.code.prompt.xml/XmlContentBuilder.tag|tag(kotlin.String;kotlin.collections.LinkedHashMap<kotlin.String,kotlin.String>;kotlin.Function1<ai.grazie.code.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
+    final fun xmlDeclaration(kotlin/String = ..., kotlin/String = ..., kotlin/Boolean? = ...) // ai.grazie.code.prompt.xml/XmlContentBuilder.xmlDeclaration|xmlDeclaration(kotlin.String;kotlin.String;kotlin.Boolean?){}[0]
+}
+
+final fun ai.grazie.code.prompt.xml/xml(kotlin/Boolean = ..., kotlin/Function1<ai.grazie.code.prompt.xml/XmlContentBuilder, kotlin/Unit>): kotlin/String // ai.grazie.code.prompt.xml/xml|xml(kotlin.Boolean;kotlin.Function1<ai.grazie.code.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
+final inline fun (ai.jetbrains.code.prompt.text/TextContentBuilder).ai.grazie.code.prompt.xml/xml(kotlin/Boolean = ..., kotlin/Function1<ai.grazie.code.prompt.xml/XmlContentBuilder, kotlin/Unit>) // ai.grazie.code.prompt.xml/xml|xml@ai.jetbrains.code.prompt.text.TextContentBuilder(kotlin.Boolean;kotlin.Function1<ai.grazie.code.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]
+final inline fun (kotlin.text/StringBuilder).ai.grazie.code.prompt.xml/xml(kotlin/Boolean = ..., kotlin/Function1<ai.grazie.code.prompt.xml/XmlContentBuilder, kotlin/Unit>) // ai.grazie.code.prompt.xml/xml|xml@kotlin.text.StringBuilder(kotlin.Boolean;kotlin.Function1<ai.grazie.code.prompt.xml.XmlContentBuilder,kotlin.Unit>){}[0]

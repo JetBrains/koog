@@ -1,0 +1,338 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-ollama-client>
+final class ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest { // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest|null[0]
+    constructor <init>(kotlin/String, kotlin/String) // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val model // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.model.<get-model>|<get-model>(){}[0]
+    final val prompt // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.prompt|{}prompt[0]
+        final fun <get-prompt>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.prompt.<get-prompt>|<get-prompt>(){}[0]
+
+    final fun component1(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest) // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.EmbeddingRequest){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest> // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingRequest.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse { // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse|null[0]
+    constructor <init>(kotlin.collections/List<kotlin/Double>, kotlin/String? = ...) // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.<init>|<init>(kotlin.collections.List<kotlin.Double>;kotlin.String?){}[0]
+
+    final val embedding // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.embedding|{}embedding[0]
+        final fun <get-embedding>(): kotlin.collections/List<kotlin/Double> // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.embedding.<get-embedding>|<get-embedding>(){}[0]
+    final val modelId // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.modelId|{}modelId[0]
+        final fun <get-modelId>(): kotlin/String? // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.modelId.<get-modelId>|<get-modelId>(){}[0]
+
+    final fun component1(): kotlin.collections/List<kotlin/Double> // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.component2|component2(){}[0]
+    final fun copy(kotlin.collections/List<kotlin/Double> = ..., kotlin/String? = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.copy|copy(kotlin.collections.List<kotlin.Double>;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse) // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.EmbeddingResponse){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.Companion|null[0]
+        final val $childSerializers // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse> // ai.jetbrains.code.prompt.executor.ollama.client.dto/EmbeddingResponse.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO>? = ...) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>?;kotlin.collections.List<ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolCallDTO>?){}[0]
+
+    final val content // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.content|{}content[0]
+        final fun <get-content>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.content.<get-content>|<get-content>(){}[0]
+    final val images // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.images|{}images[0]
+        final fun <get-images>(): kotlin.collections/List<kotlin/String>? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.images.<get-images>|<get-images>(){}[0]
+    final val role // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.role|{}role[0]
+        final fun <get-role>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.role.<get-role>|<get-role>(){}[0]
+    final val toolCalls // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.toolCalls|{}toolCalls[0]
+        final fun <get-toolCalls>(): kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO>? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.toolCalls.<get-toolCalls>|<get-toolCalls>(){}[0]
+
+    final fun component1(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<kotlin/String>? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO>? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.component4|component4(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin.collections/List<kotlin/String>? = ..., kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO>? = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.copy|copy(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>?;kotlin.collections.List<ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolCallDTO>?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatMessageDTO){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.Companion|null[0]
+        final val $childSerializers // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO>, kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO>? = ..., kotlinx.serialization.json/JsonElement? = ..., ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options? = ..., kotlin/Boolean, kotlin/String? = ...) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.<init>|<init>(kotlin.String;kotlin.collections.List<ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatMessageDTO>;kotlin.collections.List<ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolDTO>?;kotlinx.serialization.json.JsonElement?;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatRequestDTO.Options?;kotlin.Boolean;kotlin.String?){}[0]
+
+    final val format // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.format|{}format[0]
+        final fun <get-format>(): kotlinx.serialization.json/JsonElement? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.format.<get-format>|<get-format>(){}[0]
+    final val keepAlive // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.keepAlive|{}keepAlive[0]
+        final fun <get-keepAlive>(): kotlin/String? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.keepAlive.<get-keepAlive>|<get-keepAlive>(){}[0]
+    final val messages // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.messages|{}messages[0]
+        final fun <get-messages>(): kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.messages.<get-messages>|<get-messages>(){}[0]
+    final val model // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.model.<get-model>|<get-model>(){}[0]
+    final val options // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.options|{}options[0]
+        final fun <get-options>(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.options.<get-options>|<get-options>(){}[0]
+    final val stream // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.stream|{}stream[0]
+        final fun <get-stream>(): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.stream.<get-stream>|<get-stream>(){}[0]
+    final val tools // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.tools|{}tools[0]
+        final fun <get-tools>(): kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO>? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.tools.<get-tools>|<get-tools>(){}[0]
+
+    final fun component1(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.component1|component1(){}[0]
+    final fun component2(): kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO>? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.component3|component3(){}[0]
+    final fun component4(): kotlinx.serialization.json/JsonElement? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.component4|component4(){}[0]
+    final fun component5(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.component5|component5(){}[0]
+    final fun component6(): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.component6|component6(){}[0]
+    final fun component7(): kotlin/String? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.component7|component7(){}[0]
+    final fun copy(kotlin/String = ..., kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO> = ..., kotlin.collections/List<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO>? = ..., kotlinx.serialization.json/JsonElement? = ..., ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options? = ..., kotlin/Boolean = ..., kotlin/String? = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.copy|copy(kotlin.String;kotlin.collections.List<ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatMessageDTO>;kotlin.collections.List<ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolDTO>?;kotlinx.serialization.json.JsonElement?;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatRequestDTO.Options?;kotlin.Boolean;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.toString|toString(){}[0]
+
+    final class Options { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options|null[0]
+        constructor <init>(kotlin/Double? = ...) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.<init>|<init>(kotlin.Double?){}[0]
+
+        final val temperature // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.temperature|{}temperature[0]
+            final fun <get-temperature>(): kotlin/Double? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.temperature.<get-temperature>|<get-temperature>(){}[0]
+
+        final fun component1(): kotlin/Double? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.component1|component1(){}[0]
+        final fun copy(kotlin/Double? = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.copy|copy(kotlin.Double?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.$serializer|null[0]
+            final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatRequestDTO.Options){}[0]
+        }
+
+        final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Options.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatRequestDTO){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Companion|null[0]
+        final val $childSerializers // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatRequestDTO.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO|null[0]
+    constructor <init>(kotlin/String, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO? = ..., kotlin/Boolean) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatMessageDTO?;kotlin.Boolean){}[0]
+
+    final val done // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.done|{}done[0]
+        final fun <get-done>(): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.done.<get-done>|<get-done>(){}[0]
+    final val message // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.message|{}message[0]
+        final fun <get-message>(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.message.<get-message>|<get-message>(){}[0]
+    final val model // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.model|{}model[0]
+        final fun <get-model>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.model.<get-model>|<get-model>(){}[0]
+
+    final fun component1(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.component1|component1(){}[0]
+    final fun component2(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO? // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatMessageDTO? = ..., kotlin/Boolean = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.copy|copy(kotlin.String;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatMessageDTO?;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaChatResponseDTO){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaChatResponseDTO.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO|null[0]
+    constructor <init>(ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.<init>|<init>(ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolCallDTO.Call){}[0]
+
+    final val function // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.function|{}function[0]
+        final fun <get-function>(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.function.<get-function>|<get-function>(){}[0]
+
+    final fun component1(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.component1|component1(){}[0]
+    final fun copy(ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.copy|copy(ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolCallDTO.Call){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.toString|toString(){}[0]
+
+    final class Call { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call|null[0]
+        constructor <init>(kotlin/String, kotlinx.serialization.json/JsonElement) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.<init>|<init>(kotlin.String;kotlinx.serialization.json.JsonElement){}[0]
+
+        final val arguments // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.arguments|{}arguments[0]
+            final fun <get-arguments>(): kotlinx.serialization.json/JsonElement // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.arguments.<get-arguments>|<get-arguments>(){}[0]
+        final val name // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.name.<get-name>|<get-name>(){}[0]
+
+        final fun component1(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.component1|component1(){}[0]
+        final fun component2(): kotlinx.serialization.json/JsonElement // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlinx.serialization.json/JsonElement = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.copy|copy(kotlin.String;kotlinx.serialization.json.JsonElement){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.$serializer|null[0]
+            final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolCallDTO.Call){}[0]
+        }
+
+        final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Call.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolCallDTO){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolCallDTO.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO|null[0]
+    constructor <init>(kotlin/String, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition){}[0]
+
+    final val function // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.function|{}function[0]
+        final fun <get-function>(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.function.<get-function>|<get-function>(){}[0]
+    final val type // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.type|{}type[0]
+        final fun <get-type>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.component1|component1(){}[0]
+    final fun component2(): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.copy|copy(kotlin.String;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.toString|toString(){}[0]
+
+    final class Definition { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition|null[0]
+        constructor <init>(kotlin/String, kotlin/String, kotlinx.serialization.json/JsonElement) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.<init>|<init>(kotlin.String;kotlin.String;kotlinx.serialization.json.JsonElement){}[0]
+
+        final val description // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.description|{}description[0]
+            final fun <get-description>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.description.<get-description>|<get-description>(){}[0]
+        final val name // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.name.<get-name>|<get-name>(){}[0]
+        final val parameters // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.parameters|{}parameters[0]
+            final fun <get-parameters>(): kotlinx.serialization.json/JsonElement // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.parameters.<get-parameters>|<get-parameters>(){}[0]
+
+        final fun component1(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.component1|component1(){}[0]
+        final fun component2(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.component2|component2(){}[0]
+        final fun component3(): kotlinx.serialization.json/JsonElement // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.component3|component3(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/String = ..., kotlinx.serialization.json/JsonElement = ...): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.copy|copy(kotlin.String;kotlin.String;kotlinx.serialization.json.JsonElement){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.$serializer|null[0]
+            final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition){}[0]
+        }
+
+        final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Definition.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO> { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.$serializer|null[0]
+        final val descriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO) // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.jetbrains.code.prompt.executor.ollama.client.dto.OllamaToolDTO){}[0]
+    }
+
+    final object Companion { // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO> // ai.jetbrains.code.prompt.executor.ollama.client.dto/OllamaToolDTO.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.jetbrains.code.prompt.executor.ollama.client/OllamaClient : ai.jetbrains.code.prompt.executor.clients/LLMClient, ai.jetbrains.code.prompt.executor.clients/LLMEmbeddingProvider { // ai.jetbrains.code.prompt.executor.ollama.client/OllamaClient|null[0]
+    constructor <init>(kotlin/String = ..., io.ktor.client/HttpClient = ..., ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.jetbrains.code.prompt.executor.ollama.client/OllamaClient.<init>|<init>(kotlin.String;io.ktor.client.HttpClient;ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final suspend fun embed(kotlin/String, ai.jetbrains.code.prompt.llm/LLModel): kotlin.collections/List<kotlin/Double> // ai.jetbrains.code.prompt.executor.ollama.client/OllamaClient.embed|embed(kotlin.String;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+    final suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.ollama.client/OllamaClient.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.ollama.client/OllamaClient.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}
+
+final object ai.jetbrains.code.prompt.executor.ollama.client/OllamaCustomModelConverters { // ai.jetbrains.code.prompt.executor.ollama.client/OllamaCustomModelConverters|null[0]
+    final fun qwq(kotlin/String): kotlin/String // ai.jetbrains.code.prompt.executor.ollama.client/OllamaCustomModelConverters.qwq|qwq(kotlin.String){}[0]
+}
+
+final fun (ai.grazie.code.agents.core.tools/ToolDescriptor).ai.jetbrains.code.prompt.executor.ollama.tools.json/toJSONSchema(): kotlinx.serialization.json/JsonObject // ai.jetbrains.code.prompt.executor.ollama.tools.json/toJSONSchema|toJSONSchema@ai.grazie.code.agents.core.tools.ToolDescriptor(){}[0]

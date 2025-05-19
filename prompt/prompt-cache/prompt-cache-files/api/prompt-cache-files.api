@@ -1,0 +1,12 @@
+public final class ai/jetbrains/code/prompt/cache/files/FilePromptCache : ai/jetbrains/code/prompt/cache/model/PromptCache {
+	public fun <init> (Ljava/nio/file/Path;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Ljava/nio/file/Path;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun get (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/cache/files/FilePromptCache$Factory : ai/jetbrains/code/prompt/cache/model/PromptCache$Factory$Named {
+	public fun <init> (Ljava/nio/file/Path;)V
+	public fun create (Ljava/lang/String;)Lai/jetbrains/code/prompt/cache/model/PromptCache;
+}
+

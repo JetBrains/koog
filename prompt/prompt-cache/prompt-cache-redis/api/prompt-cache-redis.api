@@ -1,0 +1,17 @@
+public final class ai/jetbrains/code/prompt/cache/redis/RedisCacheException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/jetbrains/code/prompt/cache/redis/RedisPromptCache : ai/jetbrains/code/prompt/cache/model/PromptCache {
+	public static final field Companion Lai/jetbrains/code/prompt/cache/redis/RedisPromptCache$Companion;
+	public synthetic fun <init> (Lio/lettuce/core/RedisClient;Ljava/lang/String;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun close ()V
+	public fun get (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/cache/redis/RedisPromptCache$Companion : ai/jetbrains/code/prompt/cache/model/PromptCache$Factory$Named {
+	public fun create (Ljava/lang/String;)Lai/jetbrains/code/prompt/cache/model/PromptCache;
+}
+

@@ -1,0 +1,154 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-structure>
+abstract interface ai.grazie.code.prompt.structure/DescriptionMetadata { // ai.grazie.code.prompt.structure/DescriptionMetadata|null[0]
+    abstract val classDescription // ai.grazie.code.prompt.structure/DescriptionMetadata.classDescription|{}classDescription[0]
+        abstract fun <get-classDescription>(): kotlin/String? // ai.grazie.code.prompt.structure/DescriptionMetadata.classDescription.<get-classDescription>|<get-classDescription>(){}[0]
+    abstract val className // ai.grazie.code.prompt.structure/DescriptionMetadata.className|{}className[0]
+        abstract fun <get-className>(): kotlin/String // ai.grazie.code.prompt.structure/DescriptionMetadata.className.<get-className>|<get-className>(){}[0]
+    abstract val fieldDescriptions // ai.grazie.code.prompt.structure/DescriptionMetadata.fieldDescriptions|{}fieldDescriptions[0]
+        abstract fun <get-fieldDescriptions>(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.grazie.code.prompt.structure/DescriptionMetadata.fieldDescriptions.<get-fieldDescriptions>|<get-fieldDescriptions>(){}[0]
+
+    open fun allDescriptions(): kotlin.collections/Map<kotlin/String, kotlin/String> // ai.grazie.code.prompt.structure/DescriptionMetadata.allDescriptions|allDescriptions(){}[0]
+}
+
+abstract interface ai.grazie.code.prompt.structure/StructuredDataDefinition { // ai.grazie.code.prompt.structure/StructuredDataDefinition|null[0]
+    abstract fun definition(ai.jetbrains.code.prompt.text/TextContentBuilder): ai.jetbrains.code.prompt.text/TextContentBuilder // ai.grazie.code.prompt.structure/StructuredDataDefinition.definition|definition(ai.jetbrains.code.prompt.text.TextContentBuilder){}[0]
+}
+
+abstract class <#A: kotlin/Any?> ai.grazie.code.prompt.structure/StructuredData : ai.grazie.code.prompt.structure/StructuredDataDefinition { // ai.grazie.code.prompt.structure/StructuredData|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<#A>, ai.jetbrains.code.prompt.params/LLMParams.Schema) // ai.grazie.code.prompt.structure/StructuredData.<init>|<init>(kotlin.String;kotlin.collections.List<1:0>;ai.jetbrains.code.prompt.params.LLMParams.Schema){}[0]
+
+    final val examples // ai.grazie.code.prompt.structure/StructuredData.examples|{}examples[0]
+        final fun <get-examples>(): kotlin.collections/List<#A> // ai.grazie.code.prompt.structure/StructuredData.examples.<get-examples>|<get-examples>(){}[0]
+    final val id // ai.grazie.code.prompt.structure/StructuredData.id|{}id[0]
+        final fun <get-id>(): kotlin/String // ai.grazie.code.prompt.structure/StructuredData.id.<get-id>|<get-id>(){}[0]
+    final val schema // ai.grazie.code.prompt.structure/StructuredData.schema|{}schema[0]
+        final fun <get-schema>(): ai.jetbrains.code.prompt.params/LLMParams.Schema // ai.grazie.code.prompt.structure/StructuredData.schema.<get-schema>|<get-schema>(){}[0]
+
+    abstract fun parse(kotlin/String): #A // ai.grazie.code.prompt.structure/StructuredData.parse|parse(kotlin.String){}[0]
+    abstract fun pretty(#A): kotlin/String // ai.grazie.code.prompt.structure/StructuredData.pretty|pretty(1:0){}[0]
+}
+
+final class <#A: kotlin/Any?> ai.grazie.code.prompt.structure.json/JsonStructuredData : ai.grazie.code.prompt.structure/StructuredData<#A> { // ai.grazie.code.prompt.structure.json/JsonStructuredData|null[0]
+    constructor <init>(kotlin/String, kotlinx.serialization/KSerializer<#A>, ai.grazie.code.prompt.structure.json/JsonStructureLanguage, kotlin.collections/List<#A>, ai.jetbrains.code.prompt.params/LLMParams.Schema.JSON) // ai.grazie.code.prompt.structure.json/JsonStructuredData.<init>|<init>(kotlin.String;kotlinx.serialization.KSerializer<1:0>;ai.grazie.code.prompt.structure.json.JsonStructureLanguage;kotlin.collections.List<1:0>;ai.jetbrains.code.prompt.params.LLMParams.Schema.JSON){}[0]
+
+    final fun definition(ai.jetbrains.code.prompt.text/TextContentBuilder): ai.jetbrains.code.prompt.text/TextContentBuilder // ai.grazie.code.prompt.structure.json/JsonStructuredData.definition|definition(ai.jetbrains.code.prompt.text.TextContentBuilder){}[0]
+    final fun parse(kotlin/String): #A // ai.grazie.code.prompt.structure.json/JsonStructuredData.parse|parse(kotlin.String){}[0]
+    final fun pretty(#A): kotlin/String // ai.grazie.code.prompt.structure.json/JsonStructuredData.pretty|pretty(1:0){}[0]
+
+    final enum class JsonSchemaType : kotlin/Enum<ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType> { // ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType|null[0]
+        enum entry FULL // ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType.FULL|null[0]
+        enum entry SIMPLE // ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType.SIMPLE|null[0]
+
+        final val entries // ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType> // ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType // ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType> // ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType.values|values#static(){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.prompt.structure.json/JsonStructuredData.Companion|null[0]
+        final fun <#A2: kotlin/Any?> getDescriptionMetadata(kotlinx.serialization/KSerializer<#A2>): ai.grazie.code.prompt.structure/DescriptionMetadata? // ai.grazie.code.prompt.structure.json/JsonStructuredData.Companion.getDescriptionMetadata|getDescriptionMetadata(kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
+        final inline fun <#A2: reified kotlin/Any?> createJsonStructure(kotlin/String = ..., kotlinx.serialization/KSerializer<#A2> = ..., kotlinx.serialization.json/Json = ..., ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat = ..., kotlin/Int = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin.collections/List<#A2> = ..., ai.grazie.code.prompt.structure.json/JsonStructuredData.JsonSchemaType = ...): ai.grazie.code.prompt.structure/StructuredData<#A2> // ai.grazie.code.prompt.structure.json/JsonStructuredData.Companion.createJsonStructure|createJsonStructure(kotlin.String;kotlinx.serialization.KSerializer<0:0>;kotlinx.serialization.json.Json;ai.grazie.code.prompt.structure.json.JsonSchemaGenerator.SchemaFormat;kotlin.Int;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.collections.List<0:0>;ai.grazie.code.prompt.structure.json.JsonStructuredData.JsonSchemaType){0§<kotlin.Any?>}[0]
+    }
+}
+
+final class <#A: kotlin/Any?> ai.grazie.code.prompt.structure/StructuredResponse { // ai.grazie.code.prompt.structure/StructuredResponse|null[0]
+    constructor <init>(#A, kotlin/String) // ai.grazie.code.prompt.structure/StructuredResponse.<init>|<init>(1:0;kotlin.String){}[0]
+
+    final val raw // ai.grazie.code.prompt.structure/StructuredResponse.raw|{}raw[0]
+        final fun <get-raw>(): kotlin/String // ai.grazie.code.prompt.structure/StructuredResponse.raw.<get-raw>|<get-raw>(){}[0]
+    final val structure // ai.grazie.code.prompt.structure/StructuredResponse.structure|{}structure[0]
+        final fun <get-structure>(): #A // ai.grazie.code.prompt.structure/StructuredResponse.structure.<get-structure>|<get-structure>(){}[0]
+
+    final fun component1(): #A // ai.grazie.code.prompt.structure/StructuredResponse.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.grazie.code.prompt.structure/StructuredResponse.component2|component2(){}[0]
+    final fun copy(#A = ..., kotlin/String = ...): ai.grazie.code.prompt.structure/StructuredResponse<#A> // ai.grazie.code.prompt.structure/StructuredResponse.copy|copy(1:0;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.prompt.structure/StructuredResponse.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.prompt.structure/StructuredResponse.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.prompt.structure/StructuredResponse.toString|toString(){}[0]
+}
+
+final class ai.grazie.code.prompt.structure.json/JsonSchemaGenerator { // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator|null[0]
+    constructor <init>(kotlinx.serialization.json/Json, ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat, kotlin/Int) // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.<init>|<init>(kotlinx.serialization.json.Json;ai.grazie.code.prompt.structure.json.JsonSchemaGenerator.SchemaFormat;kotlin.Int){}[0]
+
+    final fun generate(kotlin/String, kotlinx.serialization/KSerializer<*>, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlinx.serialization.json/JsonObject // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.generate|generate(kotlin.String;kotlinx.serialization.KSerializer<*>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+    final enum class SchemaFormat : kotlin/Enum<ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat> { // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat|null[0]
+        enum entry JsonSchema // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat.JsonSchema|null[0]
+        enum entry Simple // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat.Simple|null[0]
+
+        final val entries // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat.entries|#static{}entries[0]
+            final fun <get-entries>(): kotlin.enums/EnumEntries<ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat> // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat.entries.<get-entries>|<get-entries>#static(){}[0]
+
+        final fun valueOf(kotlin/String): ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat.valueOf|valueOf#static(kotlin.String){}[0]
+        final fun values(): kotlin/Array<ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat> // ai.grazie.code.prompt.structure.json/JsonSchemaGenerator.SchemaFormat.values|values#static(){}[0]
+    }
+}
+
+final class ai.grazie.code.prompt.structure.json/JsonStructureLanguage { // ai.grazie.code.prompt.structure.json/JsonStructureLanguage|null[0]
+    constructor <init>(kotlinx.serialization.json/Json = ...) // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.<init>|<init>(kotlinx.serialization.json.Json){}[0]
+
+    final fun <#A1: kotlin/Any?> parse(kotlin/String, kotlinx.serialization/KSerializer<#A1>): #A1 // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.parse|parse(kotlin.String;kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> pretty(#A1, kotlinx.serialization/KSerializer<#A1>): kotlin/String // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.pretty|pretty(0:0;kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
+    final fun <#A1: kotlin/Any?> string(#A1, kotlinx.serialization/KSerializer<#A1>): kotlin/String // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.string|string(0:0;kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
+    final inline fun <#A1: reified kotlin/Any?> parse(kotlin/String): #A1 // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.parse|parse(kotlin.String){0§<kotlin.Any?>}[0]
+    final inline fun <#A1: reified kotlin/Any?> pretty(#A1): kotlin/String // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.pretty|pretty(0:0){0§<kotlin.Any?>}[0]
+    final inline fun <#A1: reified kotlin/Any?> string(#A1): kotlin/String // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.string|string(0:0){0§<kotlin.Any?>}[0]
+
+    final object Companion { // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.Companion|null[0]
+        final val defaultJson // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.Companion.defaultJson|{}defaultJson[0]
+            final fun <get-defaultJson>(): kotlinx.serialization.json/Json // ai.grazie.code.prompt.structure.json/JsonStructureLanguage.Companion.defaultJson.<get-defaultJson>|<get-defaultJson>(){}[0]
+    }
+}
+
+final class ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder { // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder|null[0]
+    constructor <init>() // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.<init>|<init>(){}[0]
+
+    final fun build(): kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit> // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.build|build(){}[0]
+    final fun buildStreaming(): ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.buildStreaming|buildStreaming(){}[0]
+    final fun onBullet(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.onBullet|onBullet(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onCodeBlock(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.onCodeBlock|onCodeBlock(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onFinishStream(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.onFinishStream|onFinishStream(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onHeader(kotlin/Int, kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.onHeader|onHeader(kotlin.Int;kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+    final fun onLineMatching(kotlin.text/Regex?, kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.onLineMatching|onLineMatching(kotlin.text.Regex?;kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+
+    final inner class MarkdownStreamingParser { // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser|null[0]
+        constructor <init>(kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit>) // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser.<init>|<init>(kotlin.coroutines.SuspendFunction1<kotlin.String,kotlin.Unit>){}[0]
+
+        final suspend fun parseStream(kotlinx.coroutines.flow/Flow<kotlin/String>) // ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser.parseStream|parseStream(kotlinx.coroutines.flow.Flow<kotlin.String>){}[0]
+    }
+}
+
+final class ai.grazie.code.prompt.structure.markdown/MarkdownStructuredDataDefinition : ai.grazie.code.prompt.structure/StructuredDataDefinition { // ai.grazie.code.prompt.structure.markdown/MarkdownStructuredDataDefinition|null[0]
+    constructor <init>(kotlin/String, kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>, kotlin/Function1<ai.jetbrains.code.prompt.text/TextContentBuilder, kotlin/Unit>? = ...) // ai.grazie.code.prompt.structure.markdown/MarkdownStructuredDataDefinition.<init>|<init>(kotlin.String;kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>;kotlin.Function1<ai.jetbrains.code.prompt.text.TextContentBuilder,kotlin.Unit>?){}[0]
+
+    final fun definition(ai.jetbrains.code.prompt.text/TextContentBuilder): ai.jetbrains.code.prompt.text/TextContentBuilder // ai.grazie.code.prompt.structure.markdown/MarkdownStructuredDataDefinition.definition|definition(ai.jetbrains.code.prompt.text.TextContentBuilder){}[0]
+}
+
+final class ai.grazie.code.prompt.structure/LLMStructuredParsingError : kotlin/Exception { // ai.grazie.code.prompt.structure/LLMStructuredParsingError|null[0]
+    constructor <init>(kotlin/String) // ai.grazie.code.prompt.structure/LLMStructuredParsingError.<init>|<init>(kotlin.String){}[0]
+}
+
+final class ai.grazie.code.prompt.structure/StructureParser { // ai.grazie.code.prompt.structure/StructureParser|null[0]
+    constructor <init>(ai.jetbrains.code.prompt.executor.model/PromptExecutor, ai.jetbrains.code.prompt.llm/LLModel = ...) // ai.grazie.code.prompt.structure/StructureParser.<init>|<init>(ai.jetbrains.code.prompt.executor.model.PromptExecutor;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+
+    final suspend fun <#A1: kotlin/Any?> parse(ai.grazie.code.prompt.structure/StructuredData<#A1>, kotlin/String): #A1 // ai.grazie.code.prompt.structure/StructureParser.parse|parse(ai.grazie.code.prompt.structure.StructuredData<0:0>;kotlin.String){0§<kotlin.Any?>}[0]
+}
+
+final object ai.grazie.code.prompt.structure/StructuredOutputPrompts { // ai.grazie.code.prompt.structure/StructuredOutputPrompts|null[0]
+    final fun output(ai.grazie.code.prompt.markdown/MarkdownContentBuilder, ai.grazie.code.prompt.structure/StructuredData<*>): ai.jetbrains.code.prompt.text/TextContentBuilder // ai.grazie.code.prompt.structure/StructuredOutputPrompts.output|output(ai.grazie.code.prompt.markdown.MarkdownContentBuilder;ai.grazie.code.prompt.structure.StructuredData<*>){}[0]
+}
+
+final fun <#A: kotlin/Any?> (ai.jetbrains.code.prompt.text/TextContentBuilder).ai.grazie.code.prompt.structure/structure(ai.grazie.code.prompt.structure.json/JsonStructureLanguage, #A, kotlinx.serialization/KSerializer<#A>) // ai.grazie.code.prompt.structure/structure|structure@ai.jetbrains.code.prompt.text.TextContentBuilder(ai.grazie.code.prompt.structure.json.JsonStructureLanguage;0:0;kotlinx.serialization.KSerializer<0:0>){0§<kotlin.Any?>}[0]
+final fun ai.grazie.code.prompt.structure.markdown/markdownParser(kotlin/Function1<ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder, kotlin/Unit>): kotlin.coroutines/SuspendFunction1<kotlin/String, kotlin/Unit> // ai.grazie.code.prompt.structure.markdown/markdownParser|markdownParser(kotlin.Function1<ai.grazie.code.prompt.structure.markdown.MarkdownParserBuilder,kotlin.Unit>){}[0]
+final fun ai.grazie.code.prompt.structure.markdown/markdownStreamingParser(kotlin/Function1<ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder, kotlin/Unit>): ai.grazie.code.prompt.structure.markdown/MarkdownParserBuilder.MarkdownStreamingParser // ai.grazie.code.prompt.structure.markdown/markdownStreamingParser|markdownStreamingParser(kotlin.Function1<ai.grazie.code.prompt.structure.markdown.MarkdownParserBuilder,kotlin.Unit>){}[0]
+final inline fun <#A: reified kotlin/Any?> (ai.jetbrains.code.prompt.text/TextContentBuilder).ai.grazie.code.prompt.structure/structure(ai.grazie.code.prompt.structure.json/JsonStructureLanguage, #A) // ai.grazie.code.prompt.structure/structure|structure@ai.jetbrains.code.prompt.text.TextContentBuilder(ai.grazie.code.prompt.structure.json.JsonStructureLanguage;0:0){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.jetbrains.code.prompt.executor.model/PromptExecutor).ai.grazie.code.prompt.structure/executeStructured(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, ai.grazie.code.prompt.structure/StructuredData<#A>, kotlin/Int = ..., ai.jetbrains.code.prompt.llm/LLModel = ...): kotlin/Result<ai.grazie.code.prompt.structure/StructuredResponse<#A>> // ai.grazie.code.prompt.structure/executeStructured|executeStructured@ai.jetbrains.code.prompt.executor.model.PromptExecutor(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;ai.grazie.code.prompt.structure.StructuredData<0:0>;kotlin.Int;ai.jetbrains.code.prompt.llm.LLModel){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.jetbrains.code.prompt.executor.model/PromptExecutor).ai.grazie.code.prompt.structure/executeStructuredOneShot(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, ai.grazie.code.prompt.structure/StructuredData<#A>): ai.grazie.code.prompt.structure/StructuredResponse<#A> // ai.grazie.code.prompt.structure/executeStructuredOneShot|executeStructuredOneShot@ai.jetbrains.code.prompt.executor.model.PromptExecutor(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;ai.grazie.code.prompt.structure.StructuredData<0:0>){0§<kotlin.Any?>}[0]

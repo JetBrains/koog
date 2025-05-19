@@ -1,0 +1,13 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.agents:agents-utils>
+abstract interface ai.grazie.code.agents.utils/Closeable { // ai.grazie.code.agents.utils/Closeable|null[0]
+    abstract suspend fun close() // ai.grazie.code.agents.utils/Closeable.close|close(){}[0]
+}
+
+final suspend inline fun <#A: ai.grazie.code.agents.utils/Closeable, #B: kotlin/Any?> (#A).ai.grazie.code.agents.utils/use(kotlin.coroutines/SuspendFunction1<#A, #B>): #B // ai.grazie.code.agents.utils/use|use@0:0(kotlin.coroutines.SuspendFunction1<0:0,0:1>){0§<ai.grazie.code.agents.utils.Closeable>;1§<kotlin.Any?>}[0]

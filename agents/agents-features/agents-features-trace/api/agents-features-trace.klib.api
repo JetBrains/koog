@@ -1,0 +1,43 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.agents:agents-features-trace>
+final class <#A: kotlin/Any?> ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageFileWriter : ai.grazie.code.agents.local.features.common.writer/FeatureMessageFileWriter<#A> { // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageFileWriter|null[0]
+    constructor <init>(ai.grazie.code.files.model/FileSystemProvider.ReadWrite<#A>, #A, kotlin/Function1<ai.grazie.code.agents.local.features.common.message/FeatureMessage, kotlin/String>? = ...) // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageFileWriter.<init>|<init>(ai.grazie.code.files.model.FileSystemProvider.ReadWrite<1:0>;1:0;kotlin.Function1<ai.grazie.code.agents.local.features.common.message.FeatureMessage,kotlin.String>?){}[0]
+
+    final fun (ai.grazie.code.agents.local.features.common.message/FeatureMessage).toFileString(): kotlin/String // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageFileWriter.toFileString|toFileString@ai.grazie.code.agents.local.features.common.message.FeatureMessage(){}[0]
+}
+
+final class ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig : ai.grazie.code.agents.local.features.common.config/FeatureConfig { // ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig|null[0]
+    constructor <init>() // ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig.<init>|<init>(){}[0]
+
+    final var messageFilter // ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig.messageFilter|{}messageFilter[0]
+        final fun <get-messageFilter>(): kotlin/Function1<ai.grazie.code.agents.local.features.common.message/FeatureMessage, kotlin/Boolean> // ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig.messageFilter.<get-messageFilter>|<get-messageFilter>(){}[0]
+        final fun <set-messageFilter>(kotlin/Function1<ai.grazie.code.agents.local.features.common.message/FeatureMessage, kotlin/Boolean>) // ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig.messageFilter.<set-messageFilter>|<set-messageFilter>(kotlin.Function1<ai.grazie.code.agents.local.features.common.message.FeatureMessage,kotlin.Boolean>){}[0]
+}
+
+final class ai.grazie.code.agents.local.features.tracing.feature/Tracing { // ai.grazie.code.agents.local.features.tracing.feature/Tracing|null[0]
+    constructor <init>() // ai.grazie.code.agents.local.features.tracing.feature/Tracing.<init>|<init>(){}[0]
+
+    final object Feature : ai.grazie.code.agents.core.feature/AIAgentFeature<ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig, ai.grazie.code.agents.local.features.tracing.feature/Tracing> { // ai.grazie.code.agents.local.features.tracing.feature/Tracing.Feature|null[0]
+        final val key // ai.grazie.code.agents.local.features.tracing.feature/Tracing.Feature.key|{}key[0]
+            final fun <get-key>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorageKey<ai.grazie.code.agents.local.features.tracing.feature/Tracing> // ai.grazie.code.agents.local.features.tracing.feature/Tracing.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(): ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig // ai.grazie.code.agents.local.features.tracing.feature/Tracing.Feature.createInitialConfig|createInitialConfig(){}[0]
+        final fun install(ai.grazie.code.agents.local.features.tracing.feature/TraceFeatureConfig, ai.grazie.code.agents.core.feature/AIAgentPipeline) // ai.grazie.code.agents.local.features.tracing.feature/Tracing.Feature.install|install(ai.grazie.code.agents.local.features.tracing.feature.TraceFeatureConfig;ai.grazie.code.agents.core.feature.AIAgentPipeline){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageLogWriter : ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter { // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageLogWriter|null[0]
+    constructor <init>(ai.grazie.utils.mpp/MPPLogger, ai.grazie.code.agents.local.features.common.writer/FeatureMessageLogWriter.LogLevel = ..., kotlin/Function1<ai.grazie.code.agents.local.features.common.message/FeatureMessage, kotlin/String>? = ...) // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageLogWriter.<init>|<init>(ai.grazie.utils.mpp.MPPLogger;ai.grazie.code.agents.local.features.common.writer.FeatureMessageLogWriter.LogLevel;kotlin.Function1<ai.grazie.code.agents.local.features.common.message.FeatureMessage,kotlin.String>?){}[0]
+
+    final fun (ai.grazie.code.agents.local.features.common.message/FeatureMessage).toLoggerMessage(): kotlin/String // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageLogWriter.toLoggerMessage|toLoggerMessage@ai.grazie.code.agents.local.features.common.message.FeatureMessage(){}[0]
+}
+
+final class ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageRemoteWriter : ai.grazie.code.agents.local.features.common.writer/FeatureMessageRemoteWriter { // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageRemoteWriter|null[0]
+    constructor <init>(ai.grazie.code.agents.local.features.common.remote.server.config/ServerConnectionConfig? = ...) // ai.grazie.code.agents.local.features.tracing.writer/TraceFeatureMessageRemoteWriter.<init>|<init>(ai.grazie.code.agents.local.features.common.remote.server.config.ServerConnectionConfig?){}[0]
+}

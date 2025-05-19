@@ -1,0 +1,8 @@
+public abstract interface class ai/grazie/code/agents/utils/Closeable {
+	public abstract fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/utils/CloseableKt {
+	public static final fun use (Lai/grazie/code/agents/utils/Closeable;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

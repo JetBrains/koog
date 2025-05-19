@@ -1,0 +1,207 @@
+public abstract class ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field Companion Lai/jetbrains/code/prompt/llm/LLMCapability$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getId ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/jetbrains/code/prompt/llm/LLMCapability;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Completion : ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Completion;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Embed : ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Embed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/jetbrains/code/prompt/llm/LLMCapability$Schema : ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field Companion Lai/jetbrains/code/prompt/llm/LLMCapability$Schema$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getLang ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/jetbrains/code/prompt/llm/LLMCapability$Schema;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Schema$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON : ai/jetbrains/code/prompt/llm/LLMCapability$Schema {
+	public static final field Companion Lai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getSupport ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON$Full : ai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON$Full;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON$Simple : ai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Schema$JSON$Simple;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Speculation : ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Speculation;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Temperature : ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Temperature;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Tools : ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Tools;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMCapability$Vision : ai/jetbrains/code/prompt/llm/LLMCapability {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMCapability$Vision;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class ai/jetbrains/code/prompt/llm/LLMProvider {
+	public static final field Companion Lai/jetbrains/code/prompt/llm/LLMProvider$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getDisplay ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/jetbrains/code/prompt/llm/LLMProvider;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMProvider$Alibaba : ai/jetbrains/code/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMProvider$Alibaba;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMProvider$Anthropic : ai/jetbrains/code/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMProvider$Anthropic;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMProvider$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMProvider$Google : ai/jetbrains/code/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMProvider$Google;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMProvider$Meta : ai/jetbrains/code/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMProvider$Meta;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMProvider$OpenAI : ai/jetbrains/code/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMProvider$OpenAI;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLMProvider$OpenRouter : ai/jetbrains/code/prompt/llm/LLMProvider {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLMProvider$OpenRouter;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLModel {
+	public static final field Companion Lai/jetbrains/code/prompt/llm/LLModel$Companion;
+	public fun <init> (Lai/jetbrains/code/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;)V
+	public final fun component1 ()Lai/jetbrains/code/prompt/llm/LLMProvider;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Lai/jetbrains/code/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;)Lai/jetbrains/code/prompt/llm/LLModel;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/llm/LLModel;Lai/jetbrains/code/prompt/llm/LLMProvider;Ljava/lang/String;Ljava/util/List;ILjava/lang/Object;)Lai/jetbrains/code/prompt/llm/LLModel;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCapabilities ()Ljava/util/List;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getProvider ()Lai/jetbrains/code/prompt/llm/LLMProvider;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLModel$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/LLModel$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/jetbrains/code/prompt/llm/LLModel;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/jetbrains/code/prompt/llm/LLModel;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/llm/LLModel$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/jetbrains/code/prompt/llm/OllamaModels {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/OllamaModels;
+}
+
+public final class ai/jetbrains/code/prompt/llm/OllamaModels$Alibaba {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/OllamaModels$Alibaba;
+	public final fun getQWEN_CODER_2_5_32B ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getQWQ ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+
+public final class ai/jetbrains/code/prompt/llm/OllamaModels$Meta {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/llm/OllamaModels$Meta;
+	public final fun getLLAMA_3_2 ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+

@@ -1,0 +1,59 @@
+public final class ai/grazie/code/agents/mcp/DefaultMcpToolDescriptorParser : ai/grazie/code/agents/mcp/McpToolDescriptorParser {
+	public static final field INSTANCE Lai/grazie/code/agents/mcp/DefaultMcpToolDescriptorParser;
+	public fun parse (Lio/modelcontextprotocol/kotlin/sdk/Tool;)Lai/grazie/code/agents/core/tools/ToolDescriptor;
+}
+
+public final class ai/grazie/code/agents/mcp/McpTool : ai/grazie/code/agents/core/tools/Tool {
+	public fun <init> (Lio/modelcontextprotocol/kotlin/sdk/client/Client;Lai/grazie/code/agents/core/tools/ToolDescriptor;)V
+	public synthetic fun execute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getArgsSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun getDescriptor ()Lai/grazie/code/agents/core/tools/ToolDescriptor;
+}
+
+public final class ai/grazie/code/agents/mcp/McpTool$Args : ai/grazie/code/agents/core/tools/Tool$Args {
+	public static final field Companion Lai/grazie/code/agents/mcp/McpTool$Args$Companion;
+	public fun <init> (Lkotlinx/serialization/json/JsonObject;)V
+	public final fun component1 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Lkotlinx/serialization/json/JsonObject;)Lai/grazie/code/agents/mcp/McpTool$Args;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/mcp/McpTool$Args;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/grazie/code/agents/mcp/McpTool$Args;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArguments ()Lkotlinx/serialization/json/JsonObject;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/mcp/McpTool$Args$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/mcp/McpTool$ArgsSerializer : kotlinx/serialization/KSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/mcp/McpTool$Args;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/mcp/McpTool$Args;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/mcp/McpTool$Result : ai/grazie/code/agents/core/tools/ToolResult {
+	public fun <init> (Ljava/util/List;)V
+	public final fun getPromptMessageContents ()Ljava/util/List;
+	public fun toStringDefault ()Ljava/lang/String;
+}
+
+public abstract interface class ai/grazie/code/agents/mcp/McpToolDescriptorParser {
+	public abstract fun parse (Lio/modelcontextprotocol/kotlin/sdk/Tool;)Lai/grazie/code/agents/core/tools/ToolDescriptor;
+}
+
+public final class ai/grazie/code/agents/mcp/McpToolRegistryProvider {
+	public static final field DEFAULT_MCP_CLIENT_NAME Ljava/lang/String;
+	public static final field DEFAULT_MCP_CLIENT_VERSION Ljava/lang/String;
+	public static final field INSTANCE Lai/grazie/code/agents/mcp/McpToolRegistryProvider;
+	public final fun defaultSseTransport (Ljava/lang/String;)Lio/modelcontextprotocol/kotlin/sdk/client/SseClientTransport;
+	public final fun defaultStdioTransport (Ljava/lang/Process;)Lio/modelcontextprotocol/kotlin/sdk/client/StdioClientTransport;
+	public final fun fromClient (Lio/modelcontextprotocol/kotlin/sdk/client/Client;Lai/grazie/code/agents/mcp/McpToolDescriptorParser;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fromClient$default (Lai/grazie/code/agents/mcp/McpToolRegistryProvider;Lio/modelcontextprotocol/kotlin/sdk/client/Client;Lai/grazie/code/agents/mcp/McpToolDescriptorParser;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun fromTransport (Lio/modelcontextprotocol/kotlin/sdk/shared/Transport;Lai/grazie/code/agents/mcp/McpToolDescriptorParser;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun fromTransport$default (Lai/grazie/code/agents/mcp/McpToolRegistryProvider;Lio/modelcontextprotocol/kotlin/sdk/shared/Transport;Lai/grazie/code/agents/mcp/McpToolDescriptorParser;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+

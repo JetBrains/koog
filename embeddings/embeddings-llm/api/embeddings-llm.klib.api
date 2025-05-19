@@ -1,0 +1,27 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.embeddings:embeddings-llm>
+final class ai.jetbrains.embeddings.local/LLMEmbedder : ai.jetbrains.embeddings.base/Embedder { // ai.jetbrains.embeddings.local/LLMEmbedder|null[0]
+    constructor <init>(ai.jetbrains.code.prompt.executor.clients/LLMEmbeddingProvider, ai.jetbrains.code.prompt.llm/LLModel) // ai.jetbrains.embeddings.local/LLMEmbedder.<init>|<init>(ai.jetbrains.code.prompt.executor.clients.LLMEmbeddingProvider;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+
+    final fun diff(ai.jetbrains.embeddings.base/Vector, ai.jetbrains.embeddings.base/Vector): kotlin/Double // ai.jetbrains.embeddings.local/LLMEmbedder.diff|diff(ai.jetbrains.embeddings.base.Vector;ai.jetbrains.embeddings.base.Vector){}[0]
+    final suspend fun embed(kotlin/String): ai.jetbrains.embeddings.base/Vector // ai.jetbrains.embeddings.local/LLMEmbedder.embed|embed(kotlin.String){}[0]
+}
+
+final object ai.jetbrains.embeddings.local/OllamaEmbeddingModels { // ai.jetbrains.embeddings.local/OllamaEmbeddingModels|null[0]
+    final val ALL_MINI_LM // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.ALL_MINI_LM|{}ALL_MINI_LM[0]
+        final fun <get-ALL_MINI_LM>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.ALL_MINI_LM.<get-ALL_MINI_LM>|<get-ALL_MINI_LM>(){}[0]
+    final val BGE_LARGE // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.BGE_LARGE|{}BGE_LARGE[0]
+        final fun <get-BGE_LARGE>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.BGE_LARGE.<get-BGE_LARGE>|<get-BGE_LARGE>(){}[0]
+    final val MULTILINGUAL_E5 // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.MULTILINGUAL_E5|{}MULTILINGUAL_E5[0]
+        final fun <get-MULTILINGUAL_E5>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.MULTILINGUAL_E5.<get-MULTILINGUAL_E5>|<get-MULTILINGUAL_E5>(){}[0]
+    final val MXBAI_EMBED_LARGE // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.MXBAI_EMBED_LARGE|{}MXBAI_EMBED_LARGE[0]
+        final fun <get-MXBAI_EMBED_LARGE>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.MXBAI_EMBED_LARGE.<get-MXBAI_EMBED_LARGE>|<get-MXBAI_EMBED_LARGE>(){}[0]
+    final val NOMIC_EMBED_TEXT // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.NOMIC_EMBED_TEXT|{}NOMIC_EMBED_TEXT[0]
+        final fun <get-NOMIC_EMBED_TEXT>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.embeddings.local/OllamaEmbeddingModels.NOMIC_EMBED_TEXT.<get-NOMIC_EMBED_TEXT>|<get-NOMIC_EMBED_TEXT>(){}[0]
+}

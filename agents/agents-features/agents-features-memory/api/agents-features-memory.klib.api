@@ -1,0 +1,460 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.agents:agents-features-memory>
+final enum class ai.grazie.code.agents.local.memory.config/MemoryScopeType : kotlin/Enum<ai.grazie.code.agents.local.memory.config/MemoryScopeType> { // ai.grazie.code.agents.local.memory.config/MemoryScopeType|null[0]
+    enum entry AGENT // ai.grazie.code.agents.local.memory.config/MemoryScopeType.AGENT|null[0]
+    enum entry FEATURE // ai.grazie.code.agents.local.memory.config/MemoryScopeType.FEATURE|null[0]
+    enum entry ORGANIZATION // ai.grazie.code.agents.local.memory.config/MemoryScopeType.ORGANIZATION|null[0]
+    enum entry PRODUCT // ai.grazie.code.agents.local.memory.config/MemoryScopeType.PRODUCT|null[0]
+
+    final val entries // ai.grazie.code.agents.local.memory.config/MemoryScopeType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.grazie.code.agents.local.memory.config/MemoryScopeType> // ai.grazie.code.agents.local.memory.config/MemoryScopeType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.grazie.code.agents.local.memory.config/MemoryScopeType // ai.grazie.code.agents.local.memory.config/MemoryScopeType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.grazie.code.agents.local.memory.config/MemoryScopeType> // ai.grazie.code.agents.local.memory.config/MemoryScopeType.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.grazie.code.agents.local.memory.config/MemoryScopeType.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.config/MemoryScopeType> // ai.grazie.code.agents.local.memory.config/MemoryScopeType.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.grazie.code.agents.local.memory.config/MemoryScopeType.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class ai.grazie.code.agents.local.memory.model/FactType : kotlin/Enum<ai.grazie.code.agents.local.memory.model/FactType> { // ai.grazie.code.agents.local.memory.model/FactType|null[0]
+    enum entry MULTIPLE // ai.grazie.code.agents.local.memory.model/FactType.MULTIPLE|null[0]
+    enum entry SINGLE // ai.grazie.code.agents.local.memory.model/FactType.SINGLE|null[0]
+
+    final val entries // ai.grazie.code.agents.local.memory.model/FactType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<ai.grazie.code.agents.local.memory.model/FactType> // ai.grazie.code.agents.local.memory.model/FactType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): ai.grazie.code.agents.local.memory.model/FactType // ai.grazie.code.agents.local.memory.model/FactType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<ai.grazie.code.agents.local.memory.model/FactType> // ai.grazie.code.agents.local.memory.model/FactType.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.grazie.code.agents.local.memory.model/FactType.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/FactType> // ai.grazie.code.agents.local.memory.model/FactType.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.grazie.code.agents.local.memory.model/FactType.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+abstract interface <#A: kotlin/Any?> ai.grazie.code.agents.local.memory.storage/Storage { // ai.grazie.code.agents.local.memory.storage/Storage|null[0]
+    abstract suspend fun createDirectories(#A) // ai.grazie.code.agents.local.memory.storage/Storage.createDirectories|createDirectories(1:0){}[0]
+    abstract suspend fun exists(#A): kotlin/Boolean // ai.grazie.code.agents.local.memory.storage/Storage.exists|exists(1:0){}[0]
+    abstract suspend fun read(#A): kotlin/String? // ai.grazie.code.agents.local.memory.storage/Storage.read|read(1:0){}[0]
+    abstract suspend fun write(#A, kotlin/String) // ai.grazie.code.agents.local.memory.storage/Storage.write|write(1:0;kotlin.String){}[0]
+}
+
+abstract interface ai.grazie.code.agents.local.memory.model/TimeProvider { // ai.grazie.code.agents.local.memory.model/TimeProvider|null[0]
+    abstract fun getCurrentTimestamp(): kotlin/Long // ai.grazie.code.agents.local.memory.model/TimeProvider.getCurrentTimestamp|getCurrentTimestamp(){}[0]
+}
+
+abstract interface ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider { // ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider|null[0]
+    abstract suspend fun load(ai.grazie.code.agents.local.memory.model/Concept, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider.load|load(ai.grazie.code.agents.local.memory.model.Concept;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    abstract suspend fun loadAll(ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider.loadAll|loadAll(ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    abstract suspend fun loadByDescription(kotlin/String, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider.loadByDescription|loadByDescription(kotlin.String;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    abstract suspend fun save(ai.grazie.code.agents.local.memory.model/Fact, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope) // ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider.save|save(ai.grazie.code.agents.local.memory.model.Fact;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+}
+
+abstract interface ai.grazie.code.agents.local.memory.storage/Encryption { // ai.grazie.code.agents.local.memory.storage/Encryption|null[0]
+    abstract fun decrypt(kotlin/String): kotlin/String // ai.grazie.code.agents.local.memory.storage/Encryption.decrypt|decrypt(kotlin.String){}[0]
+    abstract fun encrypt(kotlin/String): kotlin/String // ai.grazie.code.agents.local.memory.storage/Encryption.encrypt|encrypt(kotlin.String){}[0]
+}
+
+sealed interface ai.grazie.code.agents.local.memory.model/Fact { // ai.grazie.code.agents.local.memory.model/Fact|null[0]
+    abstract val concept // ai.grazie.code.agents.local.memory.model/Fact.concept|{}concept[0]
+        abstract fun <get-concept>(): ai.grazie.code.agents.local.memory.model/Concept // ai.grazie.code.agents.local.memory.model/Fact.concept.<get-concept>|<get-concept>(){}[0]
+    abstract val timestamp // ai.grazie.code.agents.local.memory.model/Fact.timestamp|{}timestamp[0]
+        abstract fun <get-timestamp>(): kotlin/Long // ai.grazie.code.agents.local.memory.model/Fact.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.grazie.code.agents.local.memory.model/Fact.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.model/Fact.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.grazie.code.agents.local.memory.model/Fact.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.grazie.code.agents.local.memory.model/MemoryScope { // ai.grazie.code.agents.local.memory.model/MemoryScope|null[0]
+    final class Agent : ai.grazie.code.agents.local.memory.model/MemoryScope { // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.<init>|<init>(kotlin.String){}[0]
+
+        final val name // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.name.<get-name>|<get-name>(){}[0]
+
+        final fun component1(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.grazie.code.agents.local.memory.model/MemoryScope.Agent // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.model/MemoryScope.Agent> { // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.model/MemoryScope.Agent // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.model/MemoryScope.Agent) // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.model.MemoryScope.Agent){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/MemoryScope.Agent> // ai.grazie.code.agents.local.memory.model/MemoryScope.Agent.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Feature : ai.grazie.code.agents.local.memory.model/MemoryScope { // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.<init>|<init>(kotlin.String){}[0]
+
+        final val id // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.id|{}id[0]
+            final fun <get-id>(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.id.<get-id>|<get-id>(){}[0]
+
+        final fun component1(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.grazie.code.agents.local.memory.model/MemoryScope.Feature // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.model/MemoryScope.Feature> { // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.model/MemoryScope.Feature // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.model/MemoryScope.Feature) // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.model.MemoryScope.Feature){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/MemoryScope.Feature> // ai.grazie.code.agents.local.memory.model/MemoryScope.Feature.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final class Product : ai.grazie.code.agents.local.memory.model/MemoryScope { // ai.grazie.code.agents.local.memory.model/MemoryScope.Product|null[0]
+        constructor <init>(kotlin/String) // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.<init>|<init>(kotlin.String){}[0]
+
+        final val name // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.name.<get-name>|<get-name>(){}[0]
+
+        final fun component1(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): ai.grazie.code.agents.local.memory.model/MemoryScope.Product // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.toString|toString(){}[0]
+
+        final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.model/MemoryScope.Product> { // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.$serializer|null[0]
+            final val descriptor // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.$serializer.descriptor|{}descriptor[0]
+                final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+            final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.$serializer.childSerializers|childSerializers(){}[0]
+            final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.model/MemoryScope.Product // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+            final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.model/MemoryScope.Product) // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.model.MemoryScope.Product){}[0]
+        }
+
+        final object Companion { // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.Companion|null[0]
+            final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/MemoryScope.Product> // ai.grazie.code.agents.local.memory.model/MemoryScope.Product.Companion.serializer|serializer(){}[0]
+        }
+    }
+
+    final object CrossProduct : ai.grazie.code.agents.local.memory.model/MemoryScope, kotlinx.serialization.internal/SerializerFactory { // ai.grazie.code.agents.local.memory.model/MemoryScope.CrossProduct|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/MemoryScope.CrossProduct> // ai.grazie.code.agents.local.memory.model/MemoryScope.CrossProduct.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.grazie.code.agents.local.memory.model/MemoryScope.CrossProduct.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+sealed interface ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig { // ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig|null[0]
+    abstract val defaultScope // ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig.defaultScope|{}defaultScope[0]
+        abstract fun <get-defaultScope>(): ai.grazie.code.agents.local.memory.model/MemoryScope // ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig.defaultScope.<get-defaultScope>|<get-defaultScope>(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig> // ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+abstract class ai.grazie.code.agents.local.memory.model/MemorySubject { // ai.grazie.code.agents.local.memory.model/MemorySubject|null[0]
+    constructor <init>() // ai.grazie.code.agents.local.memory.model/MemorySubject.<init>|<init>(){}[0]
+
+    abstract val name // ai.grazie.code.agents.local.memory.model/MemorySubject.name|{}name[0]
+        abstract fun <get-name>(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemorySubject.name.<get-name>|<get-name>(){}[0]
+    abstract val priorityLevel // ai.grazie.code.agents.local.memory.model/MemorySubject.priorityLevel|{}priorityLevel[0]
+        abstract fun <get-priorityLevel>(): kotlin/Int // ai.grazie.code.agents.local.memory.model/MemorySubject.priorityLevel.<get-priorityLevel>|<get-priorityLevel>(){}[0]
+    abstract val promptDescription // ai.grazie.code.agents.local.memory.model/MemorySubject.promptDescription|{}promptDescription[0]
+        abstract fun <get-promptDescription>(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemorySubject.promptDescription.<get-promptDescription>|<get-promptDescription>(){}[0]
+
+    final object Everything : ai.grazie.code.agents.local.memory.model/MemorySubject, kotlinx.serialization.internal/SerializerFactory { // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything|null[0]
+        final val name // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.name|{}name[0]
+            final fun <get-name>(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.name.<get-name>|<get-name>(){}[0]
+        final val priorityLevel // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.priorityLevel|{}priorityLevel[0]
+            final fun <get-priorityLevel>(): kotlin/Int // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.priorityLevel.<get-priorityLevel>|<get-priorityLevel>(){}[0]
+        final val promptDescription // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.promptDescription|{}promptDescription[0]
+            final fun <get-promptDescription>(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.promptDescription.<get-promptDescription>|<get-promptDescription>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.hashCode|hashCode(){}[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/MemorySubject.Everything> // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+        final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.model/MemorySubject.Everything.toString|toString(){}[0]
+    }
+}
+
+final class <#A: kotlin/Any?> ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider : ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider { // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider|null[0]
+    constructor <init>(ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig, ai.grazie.code.agents.local.memory.storage/Storage<#A>, ai.grazie.code.files.model/FileSystemProvider.ReadWrite<#A>, #A) // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.<init>|<init>(ai.grazie.code.agents.local.memory.providers.LocalMemoryConfig;ai.grazie.code.agents.local.memory.storage.Storage<1:0>;ai.grazie.code.files.model.FileSystemProvider.ReadWrite<1:0>;1:0){}[0]
+
+    final fun copy(ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig = ..., ai.grazie.code.agents.local.memory.storage/Storage<#A> = ..., ai.grazie.code.files.model/FileSystemProvider.ReadWrite<#A> = ..., #A = ...): ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider<#A> // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.copy|copy(ai.grazie.code.agents.local.memory.providers.LocalMemoryConfig;ai.grazie.code.agents.local.memory.storage.Storage<1:0>;ai.grazie.code.files.model.FileSystemProvider.ReadWrite<1:0>;1:0){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.toString|toString(){}[0]
+    final suspend fun load(ai.grazie.code.agents.local.memory.model/Concept, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.load|load(ai.grazie.code.agents.local.memory.model.Concept;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    final suspend fun loadAll(ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.loadAll|loadAll(ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    final suspend fun loadByDescription(kotlin/String, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.loadByDescription|loadByDescription(kotlin.String;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    final suspend fun save(ai.grazie.code.agents.local.memory.model/Fact, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope) // ai.grazie.code.agents.local.memory.providers/LocalFileMemoryProvider.save|save(ai.grazie.code.agents.local.memory.model.Fact;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+}
+
+final class <#A: kotlin/Any?> ai.grazie.code.agents.local.memory.storage/EncryptedStorage : ai.grazie.code.agents.local.memory.storage/Storage<#A> { // ai.grazie.code.agents.local.memory.storage/EncryptedStorage|null[0]
+    constructor <init>(ai.grazie.code.files.model/FileSystemProvider.ReadWrite<#A>, ai.grazie.code.agents.local.memory.storage/Encryption) // ai.grazie.code.agents.local.memory.storage/EncryptedStorage.<init>|<init>(ai.grazie.code.files.model.FileSystemProvider.ReadWrite<1:0>;ai.grazie.code.agents.local.memory.storage.Encryption){}[0]
+
+    final suspend fun createDirectories(#A) // ai.grazie.code.agents.local.memory.storage/EncryptedStorage.createDirectories|createDirectories(1:0){}[0]
+    final suspend fun exists(#A): kotlin/Boolean // ai.grazie.code.agents.local.memory.storage/EncryptedStorage.exists|exists(1:0){}[0]
+    final suspend fun read(#A): kotlin/String? // ai.grazie.code.agents.local.memory.storage/EncryptedStorage.read|read(1:0){}[0]
+    final suspend fun write(#A, kotlin/String) // ai.grazie.code.agents.local.memory.storage/EncryptedStorage.write|write(1:0;kotlin.String){}[0]
+}
+
+final class ai.grazie.code.agents.local.memory.config/MemoryScopesProfile { // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile|null[0]
+    constructor <init>(kotlin.collections/MutableMap<ai.grazie.code.agents.local.memory.config/MemoryScopeType, kotlin/String> = ...) // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.<init>|<init>(kotlin.collections.MutableMap<ai.grazie.code.agents.local.memory.config.MemoryScopeType,kotlin.String>){}[0]
+    constructor <init>(kotlin/Array<out kotlin/Pair<ai.grazie.code.agents.local.memory.config/MemoryScopeType, kotlin/String>>...) // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.<init>|<init>(kotlin.Array<out|kotlin.Pair<ai.grazie.code.agents.local.memory.config.MemoryScopeType,kotlin.String>>...){}[0]
+
+    final val names // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.names|{}names[0]
+        final fun <get-names>(): kotlin.collections/MutableMap<ai.grazie.code.agents.local.memory.config/MemoryScopeType, kotlin/String> // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.names.<get-names>|<get-names>(){}[0]
+
+    final fun component1(): kotlin.collections/MutableMap<ai.grazie.code.agents.local.memory.config/MemoryScopeType, kotlin/String> // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.component1|component1(){}[0]
+    final fun copy(kotlin.collections/MutableMap<ai.grazie.code.agents.local.memory.config/MemoryScopeType, kotlin/String> = ...): ai.grazie.code.agents.local.memory.config/MemoryScopesProfile // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.copy|copy(kotlin.collections.MutableMap<ai.grazie.code.agents.local.memory.config.MemoryScopeType,kotlin.String>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.equals|equals(kotlin.Any?){}[0]
+    final fun getScope(ai.grazie.code.agents.local.memory.config/MemoryScopeType): ai.grazie.code.agents.local.memory.model/MemoryScope? // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.getScope|getScope(ai.grazie.code.agents.local.memory.config.MemoryScopeType){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.hashCode|hashCode(){}[0]
+    final fun nameOf(ai.grazie.code.agents.local.memory.config/MemoryScopeType): kotlin/String? // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.nameOf|nameOf(ai.grazie.code.agents.local.memory.config.MemoryScopeType){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.config/MemoryScopesProfile> { // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.config/MemoryScopesProfile // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.config/MemoryScopesProfile) // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.config.MemoryScopesProfile){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.Companion|null[0]
+        final val $childSerializers // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.config/MemoryScopesProfile> // ai.grazie.code.agents.local.memory.config/MemoryScopesProfile.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.memory.feature.history/RetrieveFactsFromHistory : ai.grazie.code.agents.core.dsl.extension/HistoryCompressionStrategy { // ai.grazie.code.agents.local.memory.feature.history/RetrieveFactsFromHistory|null[0]
+    constructor <init>(kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Concept>) // ai.grazie.code.agents.local.memory.feature.history/RetrieveFactsFromHistory.<init>|<init>(kotlin.collections.List<ai.grazie.code.agents.local.memory.model.Concept>){}[0]
+    constructor <init>(kotlin/Array<out ai.grazie.code.agents.local.memory.model/Concept>...) // ai.grazie.code.agents.local.memory.feature.history/RetrieveFactsFromHistory.<init>|<init>(kotlin.Array<out|ai.grazie.code.agents.local.memory.model.Concept>...){}[0]
+
+    final val concepts // ai.grazie.code.agents.local.memory.feature.history/RetrieveFactsFromHistory.concepts|{}concepts[0]
+        final fun <get-concepts>(): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Concept> // ai.grazie.code.agents.local.memory.feature.history/RetrieveFactsFromHistory.concepts.<get-concepts>|<get-concepts>(){}[0]
+
+    final suspend fun compress(ai.grazie.code.agents.core.agent.entity/AIAgentLLMWriteSession, kotlin/Boolean, kotlin.collections/List<ai.jetbrains.code.prompt.message/Message>) // ai.grazie.code.agents.local.memory.feature.history/RetrieveFactsFromHistory.compress|compress(ai.grazie.code.agents.core.agent.entity.AIAgentLLMWriteSession;kotlin.Boolean;kotlin.collections.List<ai.jetbrains.code.prompt.message.Message>){}[0]
+}
+
+final class ai.grazie.code.agents.local.memory.feature/AgentMemory { // ai.grazie.code.agents.local.memory.feature/AgentMemory|null[0]
+    constructor <init>(ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider, ai.grazie.code.agents.core.agent.entity/AIAgentLLMContext, ai.grazie.code.agents.local.memory.config/MemoryScopesProfile) // ai.grazie.code.agents.local.memory.feature/AgentMemory.<init>|<init>(ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider;ai.grazie.code.agents.core.agent.entity.AIAgentLLMContext;ai.grazie.code.agents.local.memory.config.MemoryScopesProfile){}[0]
+
+    final suspend fun loadAllFactsToAgent(kotlin.collections/List<ai.grazie.code.agents.local.memory.config/MemoryScopeType> = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.model/MemorySubject> = ...) // ai.grazie.code.agents.local.memory.feature/AgentMemory.loadAllFactsToAgent|loadAllFactsToAgent(kotlin.collections.List<ai.grazie.code.agents.local.memory.config.MemoryScopeType>;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.MemorySubject>){}[0]
+    final suspend fun loadFactsToAgent(ai.grazie.code.agents.local.memory.model/Concept, kotlin.collections/List<ai.grazie.code.agents.local.memory.config/MemoryScopeType> = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.model/MemorySubject> = ...) // ai.grazie.code.agents.local.memory.feature/AgentMemory.loadFactsToAgent|loadFactsToAgent(ai.grazie.code.agents.local.memory.model.Concept;kotlin.collections.List<ai.grazie.code.agents.local.memory.config.MemoryScopeType>;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.MemorySubject>){}[0]
+    final suspend fun saveFactsFromHistory(ai.grazie.code.agents.local.memory.model/Concept, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope, kotlin/Boolean = ...) // ai.grazie.code.agents.local.memory.feature/AgentMemory.saveFactsFromHistory|saveFactsFromHistory(ai.grazie.code.agents.local.memory.model.Concept;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope;kotlin.Boolean){}[0]
+
+    final class Config : ai.grazie.code.agents.local.features.common.config/FeatureConfig { // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config|null[0]
+        constructor <init>() // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.<init>|<init>(){}[0]
+
+        final var agentName // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.agentName|{}agentName[0]
+            final fun <get-agentName>(): kotlin/String // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.agentName.<get-agentName>|<get-agentName>(){}[0]
+            final fun <set-agentName>(kotlin/String) // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.agentName.<set-agentName>|<set-agentName>(kotlin.String){}[0]
+        final var featureName // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.featureName|{}featureName[0]
+            final fun <get-featureName>(): kotlin/String // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.featureName.<get-featureName>|<get-featureName>(){}[0]
+            final fun <set-featureName>(kotlin/String) // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.featureName.<set-featureName>|<set-featureName>(kotlin.String){}[0]
+        final var memoryProvider // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.memoryProvider|{}memoryProvider[0]
+            final fun <get-memoryProvider>(): ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.memoryProvider.<get-memoryProvider>|<get-memoryProvider>(){}[0]
+            final fun <set-memoryProvider>(ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider) // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.memoryProvider.<set-memoryProvider>|<set-memoryProvider>(ai.grazie.code.agents.local.memory.providers.AgentMemoryProvider){}[0]
+        final var organizationName // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.organizationName|{}organizationName[0]
+            final fun <get-organizationName>(): kotlin/String // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.organizationName.<get-organizationName>|<get-organizationName>(){}[0]
+            final fun <set-organizationName>(kotlin/String) // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.organizationName.<set-organizationName>|<set-organizationName>(kotlin.String){}[0]
+        final var productName // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.productName|{}productName[0]
+            final fun <get-productName>(): kotlin/String // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.productName.<get-productName>|<get-productName>(){}[0]
+            final fun <set-productName>(kotlin/String) // ai.grazie.code.agents.local.memory.feature/AgentMemory.Config.productName.<set-productName>|<set-productName>(kotlin.String){}[0]
+    }
+
+    final object Feature : ai.grazie.code.agents.core.feature/AIAgentFeature<ai.grazie.code.agents.local.memory.feature/AgentMemory.Config, ai.grazie.code.agents.local.memory.feature/AgentMemory> { // ai.grazie.code.agents.local.memory.feature/AgentMemory.Feature|null[0]
+        final val key // ai.grazie.code.agents.local.memory.feature/AgentMemory.Feature.key|{}key[0]
+            final fun <get-key>(): ai.grazie.code.agents.core.agent.entity/AIAgentStorageKey<ai.grazie.code.agents.local.memory.feature/AgentMemory> // ai.grazie.code.agents.local.memory.feature/AgentMemory.Feature.key.<get-key>|<get-key>(){}[0]
+
+        final fun createInitialConfig(): ai.grazie.code.agents.local.memory.feature/AgentMemory.Config // ai.grazie.code.agents.local.memory.feature/AgentMemory.Feature.createInitialConfig|createInitialConfig(){}[0]
+        final fun install(ai.grazie.code.agents.local.memory.feature/AgentMemory.Config, ai.grazie.code.agents.core.feature/AIAgentPipeline) // ai.grazie.code.agents.local.memory.feature/AgentMemory.Feature.install|install(ai.grazie.code.agents.local.memory.feature.AgentMemory.Config;ai.grazie.code.agents.core.feature.AIAgentPipeline){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.memory.model/Concept { // ai.grazie.code.agents.local.memory.model/Concept|null[0]
+    constructor <init>(kotlin/String, kotlin/String, ai.grazie.code.agents.local.memory.model/FactType) // ai.grazie.code.agents.local.memory.model/Concept.<init>|<init>(kotlin.String;kotlin.String;ai.grazie.code.agents.local.memory.model.FactType){}[0]
+
+    final val description // ai.grazie.code.agents.local.memory.model/Concept.description|{}description[0]
+        final fun <get-description>(): kotlin/String // ai.grazie.code.agents.local.memory.model/Concept.description.<get-description>|<get-description>(){}[0]
+    final val factType // ai.grazie.code.agents.local.memory.model/Concept.factType|{}factType[0]
+        final fun <get-factType>(): ai.grazie.code.agents.local.memory.model/FactType // ai.grazie.code.agents.local.memory.model/Concept.factType.<get-factType>|<get-factType>(){}[0]
+    final val keyword // ai.grazie.code.agents.local.memory.model/Concept.keyword|{}keyword[0]
+        final fun <get-keyword>(): kotlin/String // ai.grazie.code.agents.local.memory.model/Concept.keyword.<get-keyword>|<get-keyword>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.local.memory.model/Concept.component1|component1(){}[0]
+    final fun component2(): kotlin/String // ai.grazie.code.agents.local.memory.model/Concept.component2|component2(){}[0]
+    final fun component3(): ai.grazie.code.agents.local.memory.model/FactType // ai.grazie.code.agents.local.memory.model/Concept.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., ai.grazie.code.agents.local.memory.model/FactType = ...): ai.grazie.code.agents.local.memory.model/Concept // ai.grazie.code.agents.local.memory.model/Concept.copy|copy(kotlin.String;kotlin.String;ai.grazie.code.agents.local.memory.model.FactType){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.model/Concept.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.model/Concept.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.model/Concept.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.model/Concept> { // ai.grazie.code.agents.local.memory.model/Concept.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.local.memory.model/Concept.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.model/Concept.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.model/Concept.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.model/Concept // ai.grazie.code.agents.local.memory.model/Concept.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.model/Concept) // ai.grazie.code.agents.local.memory.model/Concept.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.model.Concept){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.local.memory.model/Concept.Companion|null[0]
+        final val $childSerializers // ai.grazie.code.agents.local.memory.model/Concept.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/Concept> // ai.grazie.code.agents.local.memory.model/Concept.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.memory.model/MultipleFacts : ai.grazie.code.agents.local.memory.model/Fact { // ai.grazie.code.agents.local.memory.model/MultipleFacts|null[0]
+    constructor <init>(ai.grazie.code.agents.local.memory.model/Concept, kotlin/Long, kotlin.collections/List<kotlin/String>) // ai.grazie.code.agents.local.memory.model/MultipleFacts.<init>|<init>(ai.grazie.code.agents.local.memory.model.Concept;kotlin.Long;kotlin.collections.List<kotlin.String>){}[0]
+
+    final val concept // ai.grazie.code.agents.local.memory.model/MultipleFacts.concept|{}concept[0]
+        final fun <get-concept>(): ai.grazie.code.agents.local.memory.model/Concept // ai.grazie.code.agents.local.memory.model/MultipleFacts.concept.<get-concept>|<get-concept>(){}[0]
+    final val timestamp // ai.grazie.code.agents.local.memory.model/MultipleFacts.timestamp|{}timestamp[0]
+        final fun <get-timestamp>(): kotlin/Long // ai.grazie.code.agents.local.memory.model/MultipleFacts.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+    final val values // ai.grazie.code.agents.local.memory.model/MultipleFacts.values|{}values[0]
+        final fun <get-values>(): kotlin.collections/List<kotlin/String> // ai.grazie.code.agents.local.memory.model/MultipleFacts.values.<get-values>|<get-values>(){}[0]
+
+    final fun component1(): ai.grazie.code.agents.local.memory.model/Concept // ai.grazie.code.agents.local.memory.model/MultipleFacts.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // ai.grazie.code.agents.local.memory.model/MultipleFacts.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<kotlin/String> // ai.grazie.code.agents.local.memory.model/MultipleFacts.component3|component3(){}[0]
+    final fun copy(ai.grazie.code.agents.local.memory.model/Concept = ..., kotlin/Long = ..., kotlin.collections/List<kotlin/String> = ...): ai.grazie.code.agents.local.memory.model/MultipleFacts // ai.grazie.code.agents.local.memory.model/MultipleFacts.copy|copy(ai.grazie.code.agents.local.memory.model.Concept;kotlin.Long;kotlin.collections.List<kotlin.String>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.model/MultipleFacts.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.model/MultipleFacts.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.model/MultipleFacts.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.model/MultipleFacts> { // ai.grazie.code.agents.local.memory.model/MultipleFacts.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.local.memory.model/MultipleFacts.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.model/MultipleFacts.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.model/MultipleFacts.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.model/MultipleFacts // ai.grazie.code.agents.local.memory.model/MultipleFacts.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.model/MultipleFacts) // ai.grazie.code.agents.local.memory.model/MultipleFacts.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.model.MultipleFacts){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.local.memory.model/MultipleFacts.Companion|null[0]
+        final val $childSerializers // ai.grazie.code.agents.local.memory.model/MultipleFacts.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/MultipleFacts> // ai.grazie.code.agents.local.memory.model/MultipleFacts.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.memory.model/SingleFact : ai.grazie.code.agents.local.memory.model/Fact { // ai.grazie.code.agents.local.memory.model/SingleFact|null[0]
+    constructor <init>(ai.grazie.code.agents.local.memory.model/Concept, kotlin/Long, kotlin/String) // ai.grazie.code.agents.local.memory.model/SingleFact.<init>|<init>(ai.grazie.code.agents.local.memory.model.Concept;kotlin.Long;kotlin.String){}[0]
+
+    final val concept // ai.grazie.code.agents.local.memory.model/SingleFact.concept|{}concept[0]
+        final fun <get-concept>(): ai.grazie.code.agents.local.memory.model/Concept // ai.grazie.code.agents.local.memory.model/SingleFact.concept.<get-concept>|<get-concept>(){}[0]
+    final val timestamp // ai.grazie.code.agents.local.memory.model/SingleFact.timestamp|{}timestamp[0]
+        final fun <get-timestamp>(): kotlin/Long // ai.grazie.code.agents.local.memory.model/SingleFact.timestamp.<get-timestamp>|<get-timestamp>(){}[0]
+    final val value // ai.grazie.code.agents.local.memory.model/SingleFact.value|{}value[0]
+        final fun <get-value>(): kotlin/String // ai.grazie.code.agents.local.memory.model/SingleFact.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): ai.grazie.code.agents.local.memory.model/Concept // ai.grazie.code.agents.local.memory.model/SingleFact.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // ai.grazie.code.agents.local.memory.model/SingleFact.component2|component2(){}[0]
+    final fun component3(): kotlin/String // ai.grazie.code.agents.local.memory.model/SingleFact.component3|component3(){}[0]
+    final fun copy(ai.grazie.code.agents.local.memory.model/Concept = ..., kotlin/Long = ..., kotlin/String = ...): ai.grazie.code.agents.local.memory.model/SingleFact // ai.grazie.code.agents.local.memory.model/SingleFact.copy|copy(ai.grazie.code.agents.local.memory.model.Concept;kotlin.Long;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.model/SingleFact.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.model/SingleFact.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.model/SingleFact.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.model/SingleFact> { // ai.grazie.code.agents.local.memory.model/SingleFact.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.local.memory.model/SingleFact.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.model/SingleFact.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.model/SingleFact.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.model/SingleFact // ai.grazie.code.agents.local.memory.model/SingleFact.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.model/SingleFact) // ai.grazie.code.agents.local.memory.model/SingleFact.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.model.SingleFact){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.local.memory.model/SingleFact.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.model/SingleFact> // ai.grazie.code.agents.local.memory.model/SingleFact.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig : ai.grazie.code.agents.local.memory.providers/MemoryProviderConfig { // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig|null[0]
+    constructor <init>(kotlin/String, ai.grazie.code.agents.local.memory.model/MemoryScope = ...) // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.<init>|<init>(kotlin.String;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+
+    final val defaultScope // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.defaultScope|{}defaultScope[0]
+        final fun <get-defaultScope>(): ai.grazie.code.agents.local.memory.model/MemoryScope // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.defaultScope.<get-defaultScope>|<get-defaultScope>(){}[0]
+    final val storageDirectory // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.storageDirectory|{}storageDirectory[0]
+        final fun <get-storageDirectory>(): kotlin/String // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.storageDirectory.<get-storageDirectory>|<get-storageDirectory>(){}[0]
+
+    final fun component1(): kotlin/String // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.component1|component1(){}[0]
+    final fun component2(): ai.grazie.code.agents.local.memory.model/MemoryScope // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., ai.grazie.code.agents.local.memory.model/MemoryScope = ...): ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.copy|copy(kotlin.String;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig> { // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.$serializer|null[0]
+        final val descriptor // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig) // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;ai.grazie.code.agents.local.memory.providers.LocalMemoryConfig){}[0]
+    }
+
+    final object Companion { // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.Companion|null[0]
+        final val $childSerializers // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig> // ai.grazie.code.agents.local.memory.providers/LocalMemoryConfig.Companion.serializer|serializer(){}[0]
+    }
+}
+
+open class <#A: kotlin/Any?> ai.grazie.code.agents.local.memory.storage/SimpleStorage : ai.grazie.code.agents.local.memory.storage/Storage<#A> { // ai.grazie.code.agents.local.memory.storage/SimpleStorage|null[0]
+    constructor <init>(ai.grazie.code.files.model/FileSystemProvider.ReadWrite<#A>) // ai.grazie.code.agents.local.memory.storage/SimpleStorage.<init>|<init>(ai.grazie.code.files.model.FileSystemProvider.ReadWrite<1:0>){}[0]
+
+    final val fs // ai.grazie.code.agents.local.memory.storage/SimpleStorage.fs|{}fs[0]
+        final fun <get-fs>(): ai.grazie.code.files.model/FileSystemProvider.ReadWrite<#A> // ai.grazie.code.agents.local.memory.storage/SimpleStorage.fs.<get-fs>|<get-fs>(){}[0]
+
+    open suspend fun createDirectories(#A) // ai.grazie.code.agents.local.memory.storage/SimpleStorage.createDirectories|createDirectories(1:0){}[0]
+    open suspend fun exists(#A): kotlin/Boolean // ai.grazie.code.agents.local.memory.storage/SimpleStorage.exists|exists(1:0){}[0]
+    open suspend fun read(#A): kotlin/String? // ai.grazie.code.agents.local.memory.storage/SimpleStorage.read|read(1:0){}[0]
+    open suspend fun write(#A, kotlin/String) // ai.grazie.code.agents.local.memory.storage/SimpleStorage.write|write(1:0;kotlin.String){}[0]
+}
+
+final object ai.grazie.code.agents.local.memory.model/DefaultTimeProvider : ai.grazie.code.agents.local.memory.model/TimeProvider { // ai.grazie.code.agents.local.memory.model/DefaultTimeProvider|null[0]
+    final fun getCurrentTimestamp(): kotlin/Long // ai.grazie.code.agents.local.memory.model/DefaultTimeProvider.getCurrentTimestamp|getCurrentTimestamp(){}[0]
+}
+
+final object ai.grazie.code.agents.local.memory.providers/NoMemory : ai.grazie.code.agents.local.memory.providers/AgentMemoryProvider { // ai.grazie.code.agents.local.memory.providers/NoMemory|null[0]
+    final suspend fun load(ai.grazie.code.agents.local.memory.model/Concept, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/NoMemory.load|load(ai.grazie.code.agents.local.memory.model.Concept;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    final suspend fun loadAll(ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/NoMemory.loadAll|loadAll(ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    final suspend fun loadByDescription(kotlin/String, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope): kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Fact> // ai.grazie.code.agents.local.memory.providers/NoMemory.loadByDescription|loadByDescription(kotlin.String;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+    final suspend fun save(ai.grazie.code.agents.local.memory.model/Fact, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.model/MemoryScope) // ai.grazie.code.agents.local.memory.providers/NoMemory.save|save(ai.grazie.code.agents.local.memory.model.Fact;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.model.MemoryScope){}[0]
+}
+
+final fun (ai.grazie.code.agents.core.agent.entity/AIAgentContextBase).ai.grazie.code.agents.local.memory.feature/memory(): ai.grazie.code.agents.local.memory.feature/AgentMemory // ai.grazie.code.agents.local.memory.feature/memory|memory@ai.grazie.code.agents.core.agent.entity.AIAgentContextBase(){}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadAllFactsFromMemory(kotlin/String? = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.model/MemorySubject> = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.config/MemoryScopeType> = ...): ai.grazie.code.agents.core.dsl.builder/AIAgentNodeDelegateBase<#A, #A> // ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadAllFactsFromMemory|nodeLoadAllFactsFromMemory@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.String?;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.MemorySubject>;kotlin.collections.List<ai.grazie.code.agents.local.memory.config.MemoryScopeType>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadFromMemory(kotlin/String? = ..., ai.grazie.code.agents.local.memory.model/Concept, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.config/MemoryScopeType = ...): ai.grazie.code.agents.core.dsl.builder/AIAgentNodeDelegateBase<#A, #A> // ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadFromMemory|nodeLoadFromMemory@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.String?;ai.grazie.code.agents.local.memory.model.Concept;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.config.MemoryScopeType){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadFromMemory(kotlin/String? = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Concept>, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.config/MemoryScopeType = ...): ai.grazie.code.agents.core.dsl.builder/AIAgentNodeDelegateBase<#A, #A> // ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadFromMemory|nodeLoadFromMemory@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.String?;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.Concept>;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.config.MemoryScopeType){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadFromMemory(kotlin/String? = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Concept>, kotlin.collections/List<ai.grazie.code.agents.local.memory.model/MemorySubject> = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.config/MemoryScopeType> = ...): ai.grazie.code.agents.core.dsl.builder/AIAgentNodeDelegateBase<#A, #A> // ai.grazie.code.agents.local.memory.feature.nodes/nodeLoadFromMemory|nodeLoadFromMemory@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.String?;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.Concept>;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.MemorySubject>;kotlin.collections.List<ai.grazie.code.agents.local.memory.config.MemoryScopeType>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.local.memory.feature.nodes/nodeSaveToMemory(kotlin/String? = ..., ai.grazie.code.agents.local.memory.model/Concept, ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.config/MemoryScopeType): ai.grazie.code.agents.core.dsl.builder/AIAgentNodeDelegateBase<#A, #A> // ai.grazie.code.agents.local.memory.feature.nodes/nodeSaveToMemory|nodeSaveToMemory@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.String?;ai.grazie.code.agents.local.memory.model.Concept;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.config.MemoryScopeType){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.local.memory.feature.nodes/nodeSaveToMemory(kotlin/String? = ..., ai.grazie.code.agents.local.memory.model/MemorySubject, ai.grazie.code.agents.local.memory.config/MemoryScopeType, kotlin.collections/List<ai.grazie.code.agents.local.memory.model/Concept>): ai.grazie.code.agents.core.dsl.builder/AIAgentNodeDelegateBase<#A, #A> // ai.grazie.code.agents.local.memory.feature.nodes/nodeSaveToMemory|nodeSaveToMemory@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.String?;ai.grazie.code.agents.local.memory.model.MemorySubject;ai.grazie.code.agents.local.memory.config.MemoryScopeType;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.Concept>){0§<kotlin.Any?>}[0]
+final fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.dsl.builder/AIAgentSubgraphBuilderBase<*, *>).ai.grazie.code.agents.local.memory.feature.nodes/nodeSaveToMemoryAutoDetectFacts(kotlin/String? = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.config/MemoryScopeType> = ..., kotlin.collections/List<ai.grazie.code.agents.local.memory.model/MemorySubject> = ...): ai.grazie.code.agents.core.dsl.builder/AIAgentNodeDelegateBase<#A, #A> // ai.grazie.code.agents.local.memory.feature.nodes/nodeSaveToMemoryAutoDetectFacts|nodeSaveToMemoryAutoDetectFacts@ai.grazie.code.agents.core.dsl.builder.AIAgentSubgraphBuilderBase<*,*>(kotlin.String?;kotlin.collections.List<ai.grazie.code.agents.local.memory.config.MemoryScopeType>;kotlin.collections.List<ai.grazie.code.agents.local.memory.model.MemorySubject>){0§<kotlin.Any?>}[0]
+final suspend fun <#A: kotlin/Any?> (ai.grazie.code.agents.core.agent.entity/AIAgentContextBase).ai.grazie.code.agents.local.memory.feature/withMemory(kotlin.coroutines/SuspendFunction1<ai.grazie.code.agents.local.memory.feature/AgentMemory, #A>): #A // ai.grazie.code.agents.local.memory.feature/withMemory|withMemory@ai.grazie.code.agents.core.agent.entity.AIAgentContextBase(kotlin.coroutines.SuspendFunction1<ai.grazie.code.agents.local.memory.feature.AgentMemory,0:0>){0§<kotlin.Any?>}[0]

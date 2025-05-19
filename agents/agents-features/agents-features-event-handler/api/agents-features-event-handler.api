@@ -1,0 +1,51 @@
+public final class ai/grazie/code/agents/local/features/eventHandler/feature/EventHandler {
+	public static final field Feature Lai/grazie/code/agents/local/features/eventHandler/feature/EventHandler$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/grazie/code/agents/local/features/eventHandler/feature/EventHandler$Feature : ai/grazie/code/agents/core/feature/AIAgentFeature {
+	public synthetic fun createInitialConfig ()Lai/grazie/code/agents/local/features/common/config/FeatureConfig;
+	public fun createInitialConfig ()Lai/grazie/code/agents/local/features/eventHandler/feature/EventHandlerConfig;
+	public fun getKey ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/grazie/code/agents/local/features/common/config/FeatureConfig;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+	public fun install (Lai/grazie/code/agents/local/features/eventHandler/feature/EventHandlerConfig;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+}
+
+public final class ai/grazie/code/agents/local/features/eventHandler/feature/EventHandlerConfig : ai/grazie/code/agents/local/features/common/config/FeatureConfig {
+	public fun <init> ()V
+	public final fun getOnAfterLLMCall ()Lkotlin/jvm/functions/Function1;
+	public final fun getOnAfterLLMWithToolsCall ()Lkotlin/jvm/functions/Function2;
+	public final fun getOnAfterNode ()Lkotlin/jvm/functions/Function5;
+	public final fun getOnAgentFinished ()Lkotlin/jvm/functions/Function3;
+	public final fun getOnAgentRunError ()Lkotlin/jvm/functions/Function3;
+	public final fun getOnBeforeAgentStarted ()Lkotlin/jvm/functions/Function3;
+	public final fun getOnBeforeLLMCall ()Lkotlin/jvm/functions/Function1;
+	public final fun getOnBeforeLLMWithToolsCall ()Lkotlin/jvm/functions/Function2;
+	public final fun getOnBeforeNode ()Lkotlin/jvm/functions/Function4;
+	public final fun getOnStrategyFinished ()Lkotlin/jvm/functions/Function3;
+	public final fun getOnStrategyStarted ()Lkotlin/jvm/functions/Function2;
+	public final fun getOnToolCall ()Lkotlin/jvm/functions/Function3;
+	public final fun getOnToolCallFailure ()Lkotlin/jvm/functions/Function4;
+	public final fun getOnToolCallResult ()Lkotlin/jvm/functions/Function4;
+	public final fun getOnToolValidationError ()Lkotlin/jvm/functions/Function4;
+	public final fun setOnAfterLLMCall (Lkotlin/jvm/functions/Function1;)V
+	public final fun setOnAfterLLMWithToolsCall (Lkotlin/jvm/functions/Function2;)V
+	public final fun setOnAfterNode (Lkotlin/jvm/functions/Function5;)V
+	public final fun setOnAgentFinished (Lkotlin/jvm/functions/Function3;)V
+	public final fun setOnAgentRunError (Lkotlin/jvm/functions/Function3;)V
+	public final fun setOnBeforeAgentStarted (Lkotlin/jvm/functions/Function3;)V
+	public final fun setOnBeforeLLMCall (Lkotlin/jvm/functions/Function1;)V
+	public final fun setOnBeforeLLMWithToolsCall (Lkotlin/jvm/functions/Function2;)V
+	public final fun setOnBeforeNode (Lkotlin/jvm/functions/Function4;)V
+	public final fun setOnStrategyFinished (Lkotlin/jvm/functions/Function3;)V
+	public final fun setOnStrategyStarted (Lkotlin/jvm/functions/Function2;)V
+	public final fun setOnToolCall (Lkotlin/jvm/functions/Function3;)V
+	public final fun setOnToolCallFailure (Lkotlin/jvm/functions/Function4;)V
+	public final fun setOnToolCallResult (Lkotlin/jvm/functions/Function4;)V
+	public final fun setOnToolValidationError (Lkotlin/jvm/functions/Function4;)V
+}
+
+public final class ai/grazie/code/agents/local/features/eventHandler/feature/EventHandlerKt {
+	public static final fun handleEvents (Lai/grazie/code/agents/core/agent/AIAgent$FeatureContext;Lkotlin/jvm/functions/Function1;)V
+}
+

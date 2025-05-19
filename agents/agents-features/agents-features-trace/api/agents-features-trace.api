@@ -1,0 +1,37 @@
+public final class ai/grazie/code/agents/local/features/tracing/feature/TraceFeatureConfig : ai/grazie/code/agents/local/features/common/config/FeatureConfig {
+	public fun <init> ()V
+	public final fun getMessageFilter ()Lkotlin/jvm/functions/Function1;
+	public final fun setMessageFilter (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class ai/grazie/code/agents/local/features/tracing/feature/Tracing {
+	public static final field Feature Lai/grazie/code/agents/local/features/tracing/feature/Tracing$Feature;
+	public fun <init> ()V
+}
+
+public final class ai/grazie/code/agents/local/features/tracing/feature/Tracing$Feature : ai/grazie/code/agents/core/feature/AIAgentFeature {
+	public synthetic fun createInitialConfig ()Lai/grazie/code/agents/local/features/common/config/FeatureConfig;
+	public fun createInitialConfig ()Lai/grazie/code/agents/local/features/tracing/feature/TraceFeatureConfig;
+	public fun getKey ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;
+	public synthetic fun install (Lai/grazie/code/agents/local/features/common/config/FeatureConfig;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+	public fun install (Lai/grazie/code/agents/local/features/tracing/feature/TraceFeatureConfig;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+}
+
+public final class ai/grazie/code/agents/local/features/tracing/writer/TraceFeatureMessageFileWriter : ai/grazie/code/agents/local/features/common/writer/FeatureMessageFileWriter {
+	public fun <init> (Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Ljava/lang/Object;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun toFileString (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/features/tracing/writer/TraceFeatureMessageLogWriter : ai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter {
+	public fun <init> (Lai/grazie/utils/mpp/MPPLogger;Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lai/grazie/utils/mpp/MPPLogger;Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun toLoggerMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/features/tracing/writer/TraceFeatureMessageRemoteWriter : ai/grazie/code/agents/local/features/common/writer/FeatureMessageRemoteWriter {
+	public fun <init> ()V
+	public fun <init> (Lai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig;)V
+	public synthetic fun <init> (Lai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+

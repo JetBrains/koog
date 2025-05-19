@@ -1,0 +1,42 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-anthropic-client>
+final class ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings { // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings|null[0]
+    constructor <init>(kotlin.collections/Map<ai.jetbrains.code.prompt.llm/LLModel, kotlin/String> = ..., kotlin/String = ..., kotlin/String = ..., ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig = ...) // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.<init>|<init>(kotlin.collections.Map<ai.jetbrains.code.prompt.llm.LLModel,kotlin.String>;kotlin.String;kotlin.String;ai.jetbrains.code.prompt.executor.clients.ConnectionTimeoutConfig){}[0]
+
+    final val apiVersion // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.apiVersion|{}apiVersion[0]
+        final fun <get-apiVersion>(): kotlin/String // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.apiVersion.<get-apiVersion>|<get-apiVersion>(){}[0]
+    final val baseUrl // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.baseUrl|{}baseUrl[0]
+        final fun <get-baseUrl>(): kotlin/String // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+    final val modelVersionsMap // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.modelVersionsMap|{}modelVersionsMap[0]
+        final fun <get-modelVersionsMap>(): kotlin.collections/Map<ai.jetbrains.code.prompt.llm/LLModel, kotlin/String> // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.modelVersionsMap.<get-modelVersionsMap>|<get-modelVersionsMap>(){}[0]
+    final val timeoutConfig // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.timeoutConfig|{}timeoutConfig[0]
+        final fun <get-timeoutConfig>(): ai.jetbrains.code.prompt.executor.clients/ConnectionTimeoutConfig // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings.timeoutConfig.<get-timeoutConfig>|<get-timeoutConfig>(){}[0]
+}
+
+open class ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicLLMClient : ai.jetbrains.code.prompt.executor.clients/LLMClient { // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicLLMClient|null[0]
+    constructor <init>(kotlin/String, ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicClientSettings = ..., io.ktor.client/HttpClient = ...) // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicLLMClient.<init>|<init>(kotlin.String;ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicClientSettings;io.ktor.client.HttpClient){}[0]
+
+    open suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicLLMClient.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    open suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicLLMClient.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}
+
+final object ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels { // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels|null[0]
+    final val Haiku_3 // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Haiku_3|{}Haiku_3[0]
+        final fun <get-Haiku_3>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Haiku_3.<get-Haiku_3>|<get-Haiku_3>(){}[0]
+    final val Haiku_3_5 // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Haiku_3_5|{}Haiku_3_5[0]
+        final fun <get-Haiku_3_5>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Haiku_3_5.<get-Haiku_3_5>|<get-Haiku_3_5>(){}[0]
+    final val Opus // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Opus|{}Opus[0]
+        final fun <get-Opus>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Opus.<get-Opus>|<get-Opus>(){}[0]
+    final val Sonnet_3 // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_3|{}Sonnet_3[0]
+        final fun <get-Sonnet_3>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_3.<get-Sonnet_3>|<get-Sonnet_3>(){}[0]
+    final val Sonnet_3_5 // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_3_5|{}Sonnet_3_5[0]
+        final fun <get-Sonnet_3_5>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_3_5.<get-Sonnet_3_5>|<get-Sonnet_3_5>(){}[0]
+    final val Sonnet_3_7 // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_3_7|{}Sonnet_3_7[0]
+        final fun <get-Sonnet_3_7>(): ai.jetbrains.code.prompt.llm/LLModel // ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicModels.Sonnet_3_7.<get-Sonnet_3_7>|<get-Sonnet_3_7>(){}[0]
+}

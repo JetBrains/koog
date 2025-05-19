@@ -1,0 +1,27 @@
+public final class ai/jetbrains/code/prompt/executor/clients/anthropic/AnthropicClientSettings {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getApiVersion ()Ljava/lang/String;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getModelVersionsMap ()Ljava/util/Map;
+	public final fun getTimeoutConfig ()Lai/jetbrains/code/prompt/executor/clients/ConnectionTimeoutConfig;
+}
+
+public class ai/jetbrains/code/prompt/executor/clients/anthropic/AnthropicLLMClient : ai/jetbrains/code/prompt/executor/clients/LLMClient {
+	public fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/anthropic/AnthropicClientSettings;Lio/ktor/client/HttpClient;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/jetbrains/code/prompt/executor/clients/anthropic/AnthropicClientSettings;Lio/ktor/client/HttpClient;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/executor/clients/anthropic/AnthropicModels {
+	public static final field INSTANCE Lai/jetbrains/code/prompt/executor/clients/anthropic/AnthropicModels;
+	public final fun getHaiku_3 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getHaiku_3_5 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getOpus ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getSonnet_3 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getSonnet_3_5 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getSonnet_3_7 ()Lai/jetbrains/code/prompt/llm/LLModel;
+}
+

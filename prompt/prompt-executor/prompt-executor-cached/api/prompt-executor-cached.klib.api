@@ -1,0 +1,15 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-cached>
+final class ai.jetbrains.code.prompt.executor.cached/CachedPromptExecutor : ai.jetbrains.code.prompt.executor.model/PromptExecutor { // ai.jetbrains.code.prompt.executor.cached/CachedPromptExecutor|null[0]
+    constructor <init>(ai.jetbrains.code.prompt.cache.model/PromptCache, ai.jetbrains.code.prompt.executor.model/PromptExecutor) // ai.jetbrains.code.prompt.executor.cached/CachedPromptExecutor.<init>|<init>(ai.jetbrains.code.prompt.cache.model.PromptCache;ai.jetbrains.code.prompt.executor.model.PromptExecutor){}[0]
+
+    final suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlin/String // ai.jetbrains.code.prompt.executor.cached/CachedPromptExecutor.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+    final suspend fun execute(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel, kotlin.collections/List<ai.grazie.code.agents.core.tools/ToolDescriptor>): kotlin.collections/List<ai.jetbrains.code.prompt.message/Message.Response> // ai.jetbrains.code.prompt.executor.cached/CachedPromptExecutor.execute|execute(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel;kotlin.collections.List<ai.grazie.code.agents.core.tools.ToolDescriptor>){}[0]
+    final suspend fun executeStreaming(ai.jetbrains.code.prompt.dsl/Prompt, ai.jetbrains.code.prompt.llm/LLModel): kotlinx.coroutines.flow/Flow<kotlin/String> // ai.jetbrains.code.prompt.executor.cached/CachedPromptExecutor.executeStreaming|executeStreaming(ai.jetbrains.code.prompt.dsl.Prompt;ai.jetbrains.code.prompt.llm.LLModel){}[0]
+}

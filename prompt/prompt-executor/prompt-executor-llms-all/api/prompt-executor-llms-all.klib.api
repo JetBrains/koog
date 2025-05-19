@@ -1,0 +1,17 @@
+// Klib ABI Dump
+// Targets: [js]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <ai.jetbrains.code.prompt:prompt-executor-llms-all>
+final class ai.jetbrains.code.prompt.executor.llms.all/DefaultMultiLLMPromptExecutor : ai.jetbrains.code.prompt.executor.llms/MultiLLMPromptExecutor { // ai.jetbrains.code.prompt.executor.llms.all/DefaultMultiLLMPromptExecutor|null[0]
+    constructor <init>(ai.jetbrains.code.prompt.executor.clients.openai/OpenAILLMClient, ai.jetbrains.code.prompt.executor.clients.anthropic/AnthropicLLMClient, ai.jetbrains.code.prompt.executor.clients.google/GoogleLLMClient) // ai.jetbrains.code.prompt.executor.llms.all/DefaultMultiLLMPromptExecutor.<init>|<init>(ai.jetbrains.code.prompt.executor.clients.openai.OpenAILLMClient;ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient;ai.jetbrains.code.prompt.executor.clients.google.GoogleLLMClient){}[0]
+}
+
+final fun ai.jetbrains.code.prompt.executor.llms.all/simpleAnthropicExecutor(kotlin/String): ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor // ai.jetbrains.code.prompt.executor.llms.all/simpleAnthropicExecutor|simpleAnthropicExecutor(kotlin.String){}[0]
+final fun ai.jetbrains.code.prompt.executor.llms.all/simpleGoogleAIExecutor(kotlin/String): ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor // ai.jetbrains.code.prompt.executor.llms.all/simpleGoogleAIExecutor|simpleGoogleAIExecutor(kotlin.String){}[0]
+final fun ai.jetbrains.code.prompt.executor.llms.all/simpleOllamaAIExecutor(kotlin/String = ...): ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor // ai.jetbrains.code.prompt.executor.llms.all/simpleOllamaAIExecutor|simpleOllamaAIExecutor(kotlin.String){}[0]
+final fun ai.jetbrains.code.prompt.executor.llms.all/simpleOpenAIExecutor(kotlin/String): ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor // ai.jetbrains.code.prompt.executor.llms.all/simpleOpenAIExecutor|simpleOpenAIExecutor(kotlin.String){}[0]
+final fun ai.jetbrains.code.prompt.executor.llms.all/simpleOpenRouterExecutor(kotlin/String): ai.jetbrains.code.prompt.executor.llms/SingleLLMPromptExecutor // ai.jetbrains.code.prompt.executor.llms.all/simpleOpenRouterExecutor|simpleOpenRouterExecutor(kotlin.String){}[0]

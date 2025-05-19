@@ -1,0 +1,209 @@
+public abstract class ai/grazie/code/agents/local/features/common/config/FeatureConfig {
+	public fun <init> ()V
+	public final fun addMessageProcessor (Lai/grazie/code/agents/local/features/common/message/FeatureMessageProcessor;)V
+	public final fun getMessageProcessor ()Ljava/util/List;
+}
+
+public abstract interface class ai/grazie/code/agents/local/features/common/message/FeatureEvent : ai/grazie/code/agents/local/features/common/message/FeatureMessage {
+	public abstract fun getEventId ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureEventMessage : ai/grazie/code/agents/local/features/common/message/FeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/local/features/common/message/FeatureEventMessage$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/local/features/common/message/FeatureEventMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/features/common/message/FeatureEventMessage;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/local/features/common/message/FeatureEventMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public fun getMessageType ()Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+	public fun getTimestamp ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureEventMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/features/common/message/FeatureEventMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/features/common/message/FeatureEventMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/features/common/message/FeatureEventMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureEventMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/local/features/common/message/FeatureMessage {
+	public abstract fun getMessageType ()Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+	public abstract fun getTimestamp ()J
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureMessage$Type : java/lang/Enum {
+	public static final field Event Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+	public static final field Message Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getValue ()Ljava/lang/String;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+	public static fun values ()[Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+}
+
+public abstract class ai/grazie/code/agents/local/features/common/message/FeatureMessageProcessor : ai/grazie/code/agents/utils/Closeable {
+	public fun <init> ()V
+	public fun initialize (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun processMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureMessageProcessorUtil {
+	public static final field INSTANCE Lai/grazie/code/agents/local/features/common/message/FeatureMessageProcessorUtil;
+	public final fun onMessageForEachSafe (Ljava/util/List;Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureStringMessage : ai/grazie/code/agents/local/features/common/message/FeatureMessage {
+	public static final field Companion Lai/grazie/code/agents/local/features/common/message/FeatureStringMessage$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/local/features/common/message/FeatureStringMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/local/features/common/message/FeatureStringMessage;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/local/features/common/message/FeatureStringMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public fun getMessageType ()Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+	public fun getTimestamp ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureStringMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/local/features/common/message/FeatureStringMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/local/features/common/message/FeatureStringMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/local/features/common/message/FeatureStringMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/local/features/common/message/FeatureStringMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/grazie/code/agents/local/features/common/remote/ConnectionConfig {
+	public fun <init> ()V
+	public final fun appendSerializersModule (Lkotlinx/serialization/modules/SerializersModule;)V
+	public final fun getJsonConfig ()Lkotlinx/serialization/json/Json;
+}
+
+public abstract interface class ai/grazie/code/agents/local/features/common/remote/client/FeatureMessageClient : ai/grazie/code/agents/utils/Closeable {
+	public abstract fun connect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun healthCheck (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isConnected ()Z
+	public abstract fun send (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/features/common/remote/client/FeatureMessageRemoteClient : ai/grazie/code/agents/local/features/common/remote/client/FeatureMessageClient {
+	public fun <init> (Lai/grazie/code/agents/local/features/common/remote/client/config/ClientConnectionConfig;Lkotlinx/coroutines/CoroutineScope;Lio/ktor/client/HttpClient;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lai/grazie/code/agents/local/features/common/remote/client/config/ClientConnectionConfig;Lkotlinx/coroutines/CoroutineScope;Lio/ktor/client/HttpClient;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun connect (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getConnectionConfig ()Lai/grazie/code/agents/local/features/common/remote/client/config/ClientConnectionConfig;
+	public final fun getReceivedMessages ()Lkotlinx/coroutines/channels/Channel;
+	public fun healthCheck (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun isConnected ()Z
+	public fun send (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract class ai/grazie/code/agents/local/features/common/remote/client/config/ClientConnectionConfig : ai/grazie/code/agents/local/features/common/remote/ConnectionConfig {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;Ljava/util/Map;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;Ljava/util/Map;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getConnectTimeout-FghU774 ()Lkotlin/time/Duration;
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getHealthCheckUrl ()Ljava/lang/String;
+	public final fun getHost ()Ljava/lang/String;
+	public final fun getMessageUrl ()Ljava/lang/String;
+	public final fun getPort ()I
+	public final fun getProtocol ()Lio/ktor/http/URLProtocol;
+	public final fun getReconnectionDelay-FghU774 ()Lkotlin/time/Duration;
+	public final fun getRequestTimeout-FghU774 ()Lkotlin/time/Duration;
+	public final fun getSseUrl ()Ljava/lang/String;
+	public final fun getUrl ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/features/common/remote/client/config/DefaultClientConnectionConfig : ai/grazie/code/agents/local/features/common/remote/client/config/ClientConnectionConfig {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/grazie/code/agents/local/features/common/remote/server/FeatureMessageRemoteServer : ai/grazie/code/agents/local/features/common/remote/server/FeatureMessageServer {
+	public fun <init> (Lai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getConnectionConfig ()Lai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig;
+	public final fun getReceivedMessages ()Lkotlinx/coroutines/channels/Channel;
+	public fun isStarted ()Z
+	public fun sendMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun start (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun toServerEventData (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;)Ljava/lang/String;
+}
+
+public abstract interface class ai/grazie/code/agents/local/features/common/remote/server/FeatureMessageServer : ai/grazie/code/agents/utils/Closeable {
+	public abstract fun isStarted ()Z
+	public abstract fun sendMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun start (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/local/features/common/remote/server/config/DefaultServerConnectionConfig : ai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract class ai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig : ai/grazie/code/agents/local/features/common/remote/ConnectionConfig {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPort ()I
+}
+
+public abstract class ai/grazie/code/agents/local/features/common/writer/FeatureMessageFileWriter : ai/grazie/code/agents/local/features/common/message/FeatureMessageProcessor {
+	public fun <init> (Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Ljava/lang/Object;Z)V
+	public synthetic fun <init> (Lai/grazie/code/files/model/FileSystemProvider$ReadWrite;Ljava/lang/Object;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getTargetPath ()Ljava/lang/Object;
+	public fun initialize (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun isOpen ()Z
+	public fun processMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun toFileString (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;)Ljava/lang/String;
+}
+
+public abstract class ai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter : ai/grazie/code/agents/local/features/common/message/FeatureMessageProcessor {
+	public fun <init> (Lai/grazie/utils/mpp/MPPLogger;Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;)V
+	public synthetic fun <init> (Lai/grazie/utils/mpp/MPPLogger;Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getLogLevel ()Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;
+	protected final fun getTargetLogger ()Lai/grazie/utils/mpp/MPPLogger;
+	public fun processMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun toLoggerMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;)Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel : java/lang/Enum {
+	public static final field DEBUG Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;
+	public static final field INFO Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;
+	public static fun values ()[Lai/grazie/code/agents/local/features/common/writer/FeatureMessageLogWriter$LogLevel;
+}
+
+public abstract class ai/grazie/code/agents/local/features/common/writer/FeatureMessageRemoteWriter : ai/grazie/code/agents/local/features/common/message/FeatureMessageProcessor {
+	public fun <init> ()V
+	public fun <init> (Lai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig;)V
+	public synthetic fun <init> (Lai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun initialize (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun isOpen ()Z
+	public fun processMessage (Lai/grazie/code/agents/local/features/common/message/FeatureMessage;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

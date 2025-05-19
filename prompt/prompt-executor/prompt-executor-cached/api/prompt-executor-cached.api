@@ -1,0 +1,7 @@
+public final class ai/jetbrains/code/prompt/executor/cached/CachedPromptExecutor : ai/jetbrains/code/prompt/executor/model/PromptExecutor {
+	public fun <init> (Lai/jetbrains/code/prompt/cache/model/PromptCache;Lai/jetbrains/code/prompt/executor/model/PromptExecutor;)V
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+

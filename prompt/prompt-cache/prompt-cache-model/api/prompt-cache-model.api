@@ -1,0 +1,35 @@
+public final class ai/jetbrains/code/prompt/cache/memory/InMemoryPromptCache : ai/jetbrains/code/prompt/cache/model/PromptCache {
+	public static final field Companion Lai/jetbrains/code/prompt/cache/memory/InMemoryPromptCache$Companion;
+	public fun <init> (Ljava/lang/Integer;)V
+	public fun get (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/cache/memory/InMemoryPromptCache$Companion : ai/jetbrains/code/prompt/cache/model/PromptCache$Factory$Named {
+	public fun create (Ljava/lang/String;)Lai/jetbrains/code/prompt/cache/model/PromptCache;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/cache/model/PromptCache {
+	public abstract fun get (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun get$default (Lai/jetbrains/code/prompt/cache/model/PromptCache;Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public abstract fun put (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun put$default (Lai/jetbrains/code/prompt/cache/model/PromptCache;Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/jetbrains/code/prompt/cache/model/PromptCache$Factory {
+	public abstract fun create (Ljava/lang/String;)Lai/jetbrains/code/prompt/cache/model/PromptCache;
+	public fun elements (Ljava/lang/String;)Ljava/util/List;
+}
+
+public final class ai/jetbrains/code/prompt/cache/model/PromptCache$Factory$Aggregated : ai/jetbrains/code/prompt/cache/model/PromptCache$Factory {
+	public fun <init> (Ljava/util/List;)V
+	public fun <init> ([Lai/jetbrains/code/prompt/cache/model/PromptCache$Factory$Named;)V
+	public fun create (Ljava/lang/String;)Lai/jetbrains/code/prompt/cache/model/PromptCache;
+}
+
+public abstract class ai/jetbrains/code/prompt/cache/model/PromptCache$Factory$Named : ai/jetbrains/code/prompt/cache/model/PromptCache$Factory {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getName ()Ljava/lang/String;
+	public final fun supports (Ljava/lang/String;)Z
+}
+

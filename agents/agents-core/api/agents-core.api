@@ -1,0 +1,1811 @@
+public class ai/grazie/code/agents/core/agent/AIAgent : ai/grazie/code/agents/core/agent/AIAgentBase, ai/grazie/code/agents/core/environment/AIAgentEnvironment, ai/grazie/code/agents/utils/Closeable {
+	public fun <init> (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;Lai/grazie/code/agents/core/tools/ToolRegistry;Lkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;Lai/grazie/code/agents/core/tools/ToolRegistry;Lkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeTools (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getAgentConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public final fun getPromptExecutor ()Lai/jetbrains/code/prompt/executor/model/PromptExecutor;
+	public final fun getToolRegistry ()Lai/grazie/code/agents/core/tools/ToolRegistry;
+	public fun reportProblem (Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun run (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun run (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun runAndGetResult (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun sendTermination (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgent$FeatureContext {
+	public final fun install (Lai/grazie/code/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function1;)V
+	public static synthetic fun install$default (Lai/grazie/code/agents/core/agent/AIAgent$FeatureContext;Lai/grazie/code/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V
+}
+
+public abstract interface class ai/grazie/code/agents/core/agent/AIAgentBase {
+	public abstract fun run (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun runAndGetResult (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public class ai/grazie/code/agents/core/agent/AIAgentException : java/lang/Throwable {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentTool : ai/grazie/code/agents/core/tools/Tool {
+	public fun <init> (Lai/grazie/code/agents/core/agent/AIAgentBase;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lai/grazie/code/agents/core/agent/AIAgentBase;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun execute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getArgsSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun getDescriptor ()Lai/grazie/code/agents/core/tools/ToolDescriptor;
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs : ai/grazie/code/agents/core/tools/Tool$Args {
+	public static final field Companion Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs$Companion;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getRequest ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentTool$AgentToolArgs$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult : ai/grazie/code/agents/core/tools/ToolResult {
+	public static final field Companion Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult$Companion;
+	public fun <init> (ZLjava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (ZLjava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (ZLjava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult;ZLjava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrorMessage ()Ljava/lang/String;
+	public final fun getResult ()Ljava/lang/String;
+	public final fun getSuccessful ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public fun toStringDefault ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentTool$AgentToolResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/agent/AIAgentToolKt {
+	public static final fun asTool (Lai/grazie/code/agents/core/agent/AIAgentBase;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/tools/Tool;
+	public static synthetic fun asTool$default (Lai/grazie/code/agents/core/agent/AIAgentBase;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/tools/Tool;
+}
+
+public class ai/grazie/code/agents/core/agent/config/AIAgentConfig : ai/grazie/code/agents/core/model/agent/AIAgentConfig {
+	public static final field Companion Lai/grazie/code/agents/core/agent/config/AIAgentConfig$Companion;
+	public fun <init> (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;ILai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy;)V
+	public synthetic fun <init> (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;ILai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getMaxAgentIterations ()I
+	public final fun getMissingToolsConversionStrategy ()Lai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy;
+	public final fun getModel ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getPrompt ()Lai/jetbrains/code/prompt/dsl/Prompt;
+}
+
+public final class ai/grazie/code/agents/core/agent/config/AIAgentConfig$Companion {
+	public final fun withSystemPrompt (Ljava/lang/String;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/lang/String;I)Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public static synthetic fun withSystemPrompt$default (Lai/grazie/code/agents/core/agent/config/AIAgentConfig$Companion;Ljava/lang/String;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/lang/String;IILjava/lang/Object;)Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+}
+
+public abstract class ai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy {
+	public fun <init> (Lai/grazie/code/agents/core/agent/config/ToolCallDescriber;)V
+	public final fun convertMessage (Lai/jetbrains/code/prompt/message/Message;)Lai/jetbrains/code/prompt/message/Message;
+	public abstract fun convertPrompt (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;)Lai/jetbrains/code/prompt/dsl/Prompt;
+}
+
+public final class ai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy$All : ai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy {
+	public fun <init> (Lai/grazie/code/agents/core/agent/config/ToolCallDescriber;)V
+	public fun convertPrompt (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;)Lai/jetbrains/code/prompt/dsl/Prompt;
+}
+
+public final class ai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy$Missing : ai/grazie/code/agents/core/agent/config/MissingToolsConversionStrategy {
+	public fun <init> (Lai/grazie/code/agents/core/agent/config/ToolCallDescriber;)V
+	public fun convertPrompt (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;)Lai/jetbrains/code/prompt/dsl/Prompt;
+}
+
+public abstract interface class ai/grazie/code/agents/core/agent/config/ToolCallDescriber {
+	public abstract fun describeToolCall (Lai/jetbrains/code/prompt/message/Message$Tool$Call;)Lai/jetbrains/code/prompt/message/Message;
+	public abstract fun describeToolResult (Lai/jetbrains/code/prompt/message/Message$Tool$Result;)Lai/jetbrains/code/prompt/message/Message;
+}
+
+public final class ai/grazie/code/agents/core/agent/config/ToolCallDescriber$JSON : ai/grazie/code/agents/core/agent/config/ToolCallDescriber {
+	public static final field INSTANCE Lai/grazie/code/agents/core/agent/config/ToolCallDescriber$JSON;
+	public fun describeToolCall (Lai/jetbrains/code/prompt/message/Message$Tool$Call;)Lai/jetbrains/code/prompt/message/Message;
+	public fun describeToolResult (Lai/jetbrains/code/prompt/message/Message$Tool$Result;)Lai/jetbrains/code/prompt/message/Message;
+}
+
+public abstract interface class ai/grazie/code/agents/core/agent/entity/AIAgentContextBase {
+	public abstract fun copy (Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Ljava/lang/String;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;Lai/grazie/utils/mpp/UUID;Ljava/lang/String;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Ljava/lang/String;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;Lai/grazie/utils/mpp/UUID;Ljava/lang/String;Lai/grazie/code/agents/core/feature/AIAgentPipeline;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public fun copyWithTools (Ljava/util/List;)Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;
+	public abstract fun feature (Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;)Ljava/lang/Object;
+	public abstract fun feature (Lai/grazie/code/agents/core/feature/AIAgentFeature;)Ljava/lang/Object;
+	public abstract fun getAgentInput ()Ljava/lang/String;
+	public abstract fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public abstract fun getEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public abstract fun getLlm ()Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public abstract fun getPipeline ()Lai/grazie/code/agents/core/feature/AIAgentPipeline;
+	public abstract fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public abstract fun getStateManager ()Lai/grazie/code/agents/core/agent/entity/AIAgentStateManager;
+	public abstract fun getStorage ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorage;
+	public abstract fun getStrategyId ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentEdge {
+	public final fun getToNode ()Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentLLMContext {
+	public fun <init> (Ljava/util/List;Lai/grazie/code/agents/core/tools/ToolRegistry;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)V
+	public synthetic fun <init> (Ljava/util/List;Lai/grazie/code/agents/core/tools/ToolRegistry;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component2 ()Lai/grazie/code/agents/core/tools/ToolRegistry;
+	public final fun copy (Ljava/util/List;Lai/grazie/code/agents/core/tools/ToolRegistry;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;Ljava/util/List;Lai/grazie/code/agents/core/tools/ToolRegistry;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/AIAgentLLMContext;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getToolRegistry ()Lai/grazie/code/agents/core/tools/ToolRegistry;
+	public fun hashCode ()I
+	public final fun readSession (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+	public final fun writeSession (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentLLMReadSession : ai/grazie/code/agents/core/agent/entity/AIAgentLLMSession {
+}
+
+public abstract class ai/grazie/code/agents/core/agent/entity/AIAgentLLMSession : java/lang/AutoCloseable {
+	public synthetic fun <init> (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Ljava/util/List;Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun close ()V
+	protected final fun executeMultiple (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun executeSingle (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	protected final fun getExecutor ()Lai/jetbrains/code/prompt/executor/model/PromptExecutor;
+	public fun getModel ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public fun getPrompt ()Lai/jetbrains/code/prompt/dsl/Prompt;
+	public fun getTools ()Ljava/util/List;
+	protected final fun isActive ()Z
+	protected final fun preparePrompt (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;)Lai/jetbrains/code/prompt/dsl/Prompt;
+	public fun requestLLM (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMForceOneTool (Lai/grazie/code/agents/core/tools/Tool;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMForceOneTool (Lai/grazie/code/agents/core/tools/ToolDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMOnlyCallingTools (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMStructured-BWLJW6A (Lai/grazie/code/prompt/structure/StructuredData;ILai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun requestLLMStructured-BWLJW6A$default (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMSession;Lai/grazie/code/prompt/structure/StructuredData;ILai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun requestLLMStructuredOneShot (Lai/grazie/code/prompt/structure/StructuredData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMWithoutTools (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun setActive (Z)V
+	protected final fun validateSession ()V
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession : ai/grazie/code/agents/core/agent/entity/AIAgentLLMSession {
+	public final fun changeLLMParams (Lai/jetbrains/code/prompt/params/LLMParams;)V
+	public final fun changeModel (Lai/jetbrains/code/prompt/llm/LLModel;)V
+	public final fun getEnvironment ()Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+	public fun getModel ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public fun getPrompt ()Lai/jetbrains/code/prompt/dsl/Prompt;
+	public final fun getToolRegistry ()Lai/grazie/code/agents/core/tools/ToolRegistry;
+	public fun getTools ()Ljava/util/List;
+	public fun requestLLM (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMForceOneTool (Lai/grazie/code/agents/core/tools/Tool;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMForceOneTool (Lai/grazie/code/agents/core/tools/ToolDescriptor;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMMultiple (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMOnlyCallingTools (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun requestLLMStreaming (Lai/grazie/code/prompt/structure/StructuredDataDefinition;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun requestLLMStreaming$default (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;Lai/grazie/code/prompt/structure/StructuredDataDefinition;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public fun requestLLMStructured-BWLJW6A (Lai/grazie/code/prompt/structure/StructuredData;ILai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMStructuredOneShot (Lai/grazie/code/prompt/structure/StructuredData;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun requestLLMWithoutTools (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun rewritePrompt (Lkotlin/jvm/functions/Function1;)V
+	public fun setModel (Lai/jetbrains/code/prompt/llm/LLModel;)V
+	public fun setPrompt (Lai/jetbrains/code/prompt/dsl/Prompt;)V
+	public fun setTools (Ljava/util/List;)V
+	public final fun updatePrompt (Lkotlin/jvm/functions/Function1;)V
+}
+
+public abstract class ai/grazie/code/agents/core/agent/entity/AIAgentNodeBase {
+	public fun addEdge (Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;)V
+	public abstract fun execute (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun executeUnsafe (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getEdges ()Ljava/util/List;
+	public abstract fun getName ()Ljava/lang/String;
+	public final fun resolveEdge (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun resolveEdgeUnsafe (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentNodeBase$ResolvedEdge {
+	public fun <init> (Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;Ljava/lang/Object;)V
+	public final fun component1 ()Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;
+	public final fun component2 ()Ljava/lang/Object;
+	public final fun copy (Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;Ljava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase$ResolvedEdge;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase$ResolvedEdge;Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;Ljava/lang/Object;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase$ResolvedEdge;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEdge ()Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;
+	public final fun getOutput ()Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentStateManager {
+	public fun <init> ()V
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentStorage {
+	public final fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun get (Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun putAll (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun remove (Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun set (Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun toMap (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentStorageKey {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/AIAgentStrategy : ai/grazie/code/agents/core/agent/entity/AIAgentSubgraph {
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/FinishAIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy;)V
+	public synthetic fun execute (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getName ()Ljava/lang/String;
+	public final fun getNodeFinish ()Lai/grazie/code/agents/core/agent/entity/FinishAIAgentNodeBase;
+	public final fun getNodeStart ()Lai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase;
+}
+
+public class ai/grazie/code/agents/core/agent/entity/AIAgentSubgraph : ai/grazie/code/agents/core/agent/entity/AIAgentNodeBase {
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/FinishAIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy;)V
+	protected final fun doExecute (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getFinish ()Lai/grazie/code/agents/core/agent/entity/FinishAIAgentNodeBase;
+	public fun getName ()Ljava/lang/String;
+	public final fun getStart ()Lai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase;
+}
+
+public class ai/grazie/code/agents/core/agent/entity/FinishAIAgentNodeBase : ai/grazie/code/agents/core/agent/entity/AIAgentNodeBase {
+	public fun <init> ()V
+	public fun addEdge (Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;)V
+	public fun execute (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getName ()Ljava/lang/String;
+	public final fun getSubgraphName ()Ljava/lang/String;
+}
+
+public class ai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase : ai/grazie/code/agents/core/agent/entity/AIAgentNodeBase {
+	public fun <init> ()V
+	public fun execute (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun getName ()Ljava/lang/String;
+	public final fun getSubgraphName ()Ljava/lang/String;
+}
+
+public abstract interface class ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy {
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$ALL : ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy {
+	public static final field INSTANCE Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$ALL;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$AutoSelectForTask : ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy {
+	public fun <init> (Ljava/lang/String;I)V
+	public synthetic fun <init> (Ljava/lang/String;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun copy (Ljava/lang/String;I)Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$AutoSelectForTask;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$AutoSelectForTask;Ljava/lang/String;IILjava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$AutoSelectForTask;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMaxRetries ()I
+	public final fun getSubtaskDescription ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$NONE : ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy {
+	public static final field INSTANCE Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$NONE;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$Tools : ai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$Tools;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$Tools;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy$Tools;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getTools ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface annotation class ai/grazie/code/agents/core/annotation/InternalAgentsApi : java/lang/annotation/Annotation {
+}
+
+public abstract interface annotation class ai/grazie/code/agents/core/dsl/builder/AIAgentBuilderMarker : java/lang/annotation/Annotation {
+}
+
+public final class ai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilder : ai/grazie/code/agents/core/dsl/builder/BaseBuilder {
+	public fun build ()Lai/grazie/code/agents/core/agent/entity/AIAgentEdge;
+	public synthetic fun build ()Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate {
+	public final fun onCondition (Lkotlin/jvm/functions/Function3;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+	public final fun transformed (Lkotlin/jvm/functions/Function3;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+}
+
+public class ai/grazie/code/agents/core/dsl/builder/AIAgentNodeBuilder : ai/grazie/code/agents/core/dsl/builder/BaseBuilder {
+	public field name Ljava/lang/String;
+	public fun build ()Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+	public synthetic fun build ()Ljava/lang/Object;
+	public final fun getName ()Ljava/lang/String;
+	public final fun setName (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/core/dsl/builder/AIAgentNodeBuilderKt {
+	public static final fun forwardTo (Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+}
+
+public abstract interface class ai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase {
+	public abstract fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public final class ai/grazie/code/agents/core/dsl/builder/AIAgentStrategyBuilder : ai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase, ai/grazie/code/agents/core/dsl/builder/BaseBuilder {
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy;)V
+	public fun build ()Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public synthetic fun build ()Ljava/lang/Object;
+	public fun getNodeFinish ()Lai/grazie/code/agents/core/agent/entity/FinishAIAgentNodeBase;
+	public fun getNodeStart ()Lai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase;
+}
+
+public final class ai/grazie/code/agents/core/dsl/builder/AIAgentStrategyBuilderKt {
+	public static final fun strategy (Ljava/lang/String;Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy;Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public static synthetic fun strategy$default (Ljava/lang/String;Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+}
+
+public abstract class ai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase {
+	public fun <init> ()V
+	public final fun edge (Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;)V
+	public abstract fun getNodeFinish ()Lai/grazie/code/agents/core/agent/entity/FinishAIAgentNodeBase;
+	public abstract fun getNodeStart ()Lai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase;
+	protected final fun isFinishReachable (Lai/grazie/code/agents/core/agent/entity/StartAIAgentNodeBase;)Z
+	public final fun node (Ljava/lang/String;Lkotlin/jvm/functions/Function3;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun node$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public final fun subgraph (Ljava/lang/String;Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy;Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphDelegateBase;
+	public final fun subgraph (Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphDelegateBase;
+	public static synthetic fun subgraph$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/core/agent/entity/ToolSelectionStrategy;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphDelegateBase;
+	public static synthetic fun subgraph$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphDelegateBase;
+	public final fun then (Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;)Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;
+}
+
+public abstract interface class ai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphDelegateBase {
+	public abstract fun getValue (Ljava/lang/Object;Lkotlin/reflect/KProperty;)Lai/grazie/code/agents/core/agent/entity/AIAgentSubgraph;
+}
+
+public abstract interface class ai/grazie/code/agents/core/dsl/builder/BaseBuilder {
+	public abstract fun build ()Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/dsl/extension/AIAgentEdgesKt {
+	public static final fun onAssistantMessage (Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;Lkotlin/jvm/functions/Function2;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+	public static final fun onMultipleToolCalls (Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;Lkotlin/jvm/functions/Function2;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+	public static final fun onMultipleToolResults (Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;Lkotlin/jvm/functions/Function2;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+	public static final fun onToolCall (Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;Lai/grazie/code/agents/core/tools/Tool;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+	public static final fun onToolCall (Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;Lkotlin/jvm/functions/Function2;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+	public static final fun onToolNotCalled (Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;Lai/grazie/code/agents/core/tools/Tool;)Lai/grazie/code/agents/core/dsl/builder/AIAgentEdgeBuilderIntermediate;
+}
+
+public final class ai/grazie/code/agents/core/dsl/extension/AIAgentLLMActionsKt {
+	public static final fun clearHistory (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;)V
+	public static final fun leaveLastNMessages (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;I)V
+	public static final fun replaceHistoryWithTLDR (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy;ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun replaceHistoryWithTLDR$default (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public static final fun setToolChoice (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;Lai/jetbrains/code/prompt/params/LLMParams$ToolChoice;)V
+	public static final fun setToolChoiceAuto (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;)V
+	public static final fun setToolChoiceNamed (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;Ljava/lang/String;)V
+	public static final fun setToolChoiceNone (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;)V
+	public static final fun setToolChoiceRequired (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;)V
+	public static final fun unsetToolChoice (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;)V
+}
+
+public final class ai/grazie/code/agents/core/dsl/extension/AIAgentNodesKt {
+	public static final fun nodeDoNothing (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeDoNothing$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeExecuteMultipleTools (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Z)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeExecuteMultipleTools$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ZILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeExecuteTool (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeExecuteTool$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMCompressHistory (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy;Z)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMCompressHistory$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy;ZILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMRequest (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Z)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMRequest$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ZILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMRequestMultiple (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMRequestMultiple$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMRequestStreaming (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/prompt/structure/StructuredDataDefinition;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMRequestStreaming (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/prompt/structure/StructuredDataDefinition;Lkotlin/jvm/functions/Function2;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMRequestStreaming$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/prompt/structure/StructuredDataDefinition;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMRequestStreaming$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/prompt/structure/StructuredDataDefinition;Lkotlin/jvm/functions/Function2;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMRequestStructured (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/prompt/structure/StructuredData;ILai/jetbrains/code/prompt/llm/LLModel;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMRequestStructured$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/prompt/structure/StructuredData;ILai/jetbrains/code/prompt/llm/LLModel;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMSendMessageForceOneTool (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMSendMessageForceOneTool (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolDescriptor;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMSendMessageForceOneTool$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMSendMessageForceOneTool$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolDescriptor;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMSendMessageOnlyCallingTools (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMSendMessageOnlyCallingTools$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMSendMultipleToolResults (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMSendMultipleToolResults$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeLLMSendToolResult (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeLLMSendToolResult$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static final fun nodeUpdatePrompt (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+	public static synthetic fun nodeUpdatePrompt$default (Lai/grazie/code/agents/core/dsl/builder/AIAgentSubgraphBuilderBase;Ljava/lang/String;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/builder/AIAgentNodeDelegateBase;
+}
+
+public abstract class ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy {
+	public fun <init> ()V
+	protected final fun composePromptWithRequiredMessages (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;Ljava/util/List;ZLjava/util/List;)V
+	public abstract fun compress (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;ZLjava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	protected final fun compressPromptIntoTLDR (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$Chunked : ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun compress (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;ZLjava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun copy (I)Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$Chunked;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$Chunked;IILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$Chunked;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChunkSize ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$FromLastNMessages : ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public fun compress (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;ZLjava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun copy (I)Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$FromLastNMessages;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$FromLastNMessages;IILjava/lang/Object;)Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$FromLastNMessages;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getN ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$WholeHistory : ai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy {
+	public static final field INSTANCE Lai/grazie/code/agents/core/dsl/extension/HistoryCompressionStrategy$WholeHistory;
+	public fun compress (Lai/grazie/code/agents/core/agent/entity/AIAgentLLMWriteSession;ZLjava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/environment/AIAgentEnvironment {
+	public abstract fun executeTools (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun reportProblem (Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun sendTermination (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/environment/AIAgentEnvironmentKt {
+	public static final fun executeTool (Lai/grazie/code/agents/core/environment/AIAgentEnvironment;Lai/jetbrains/code/prompt/message/Message$Tool$Call;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/environment/ReceivedToolResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolResult;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolResult;)Lai/grazie/code/agents/core/environment/ReceivedToolResult;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/environment/ReceivedToolResult;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolResult;ILjava/lang/Object;)Lai/grazie/code/agents/core/environment/ReceivedToolResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getResult ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public final fun getTool ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun toMessage ()Lai/jetbrains/code/prompt/message/Message$Tool$Result;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/environment/ReceivedToolResultKt {
+	public static final fun result (Lai/jetbrains/code/prompt/dsl/PromptBuilder$ToolMessageBuilder;Lai/grazie/code/agents/core/environment/ReceivedToolResult;)V
+	public static final fun toResult (Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentToolResultToAgentContent;)Lai/grazie/code/agents/core/environment/ReceivedToolResult;
+	public static final fun toResult (Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent;)Lai/grazie/code/agents/core/environment/ReceivedToolResult;
+}
+
+public final class ai/grazie/code/agents/core/environment/SafeTool {
+	public fun <init> (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)V
+	public final fun copy (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)Lai/grazie/code/agents/core/environment/SafeTool;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/environment/SafeTool;Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;ILjava/lang/Object;)Lai/grazie/code/agents/core/environment/SafeTool;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun execute (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun executeRaw (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun executeUnsafe (Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class ai/grazie/code/agents/core/environment/SafeTool$Result {
+	public fun asFailure ()Lai/grazie/code/agents/core/environment/SafeTool$Result$Failure;
+	public fun asSuccessful ()Lai/grazie/code/agents/core/environment/SafeTool$Result$Success;
+	public abstract fun getContent ()Ljava/lang/String;
+	public fun isFailure ()Z
+	public fun isSuccessful ()Z
+}
+
+public final class ai/grazie/code/agents/core/environment/SafeTool$Result$Failure : ai/grazie/code/agents/core/environment/SafeTool$Result {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lai/grazie/code/agents/core/environment/SafeTool$Result$Failure;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/environment/SafeTool$Result$Failure;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/environment/SafeTool$Result$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/environment/SafeTool$Result$Success : ai/grazie/code/agents/core/environment/SafeTool$Result {
+	public fun <init> (Lai/grazie/code/agents/core/tools/ToolResult;Ljava/lang/String;)V
+	public final fun component1 ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lai/grazie/code/agents/core/tools/ToolResult;Ljava/lang/String;)Lai/grazie/code/agents/core/environment/SafeTool$Result$Success;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/environment/SafeTool$Result$Success;Lai/grazie/code/agents/core/tools/ToolResult;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/environment/SafeTool$Result$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getContent ()Ljava/lang/String;
+	public final fun getResult ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/environment/SafeToolKt {
+	public static final fun toSafeResult (Lai/grazie/code/agents/core/environment/ReceivedToolResult;)Lai/grazie/code/agents/core/environment/SafeTool$Result;
+}
+
+public final class ai/grazie/code/agents/core/environment/TerminationTool {
+	public static final field ARG Ljava/lang/String;
+	public static final field INSTANCE Lai/grazie/code/agents/core/environment/TerminationTool;
+	public static final field NAME Ljava/lang/String;
+}
+
+public abstract class ai/grazie/code/agents/core/exception/AgentEngineException : ai/grazie/code/agents/core/exception/AgentRuntimeException {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/grazie/code/agents/core/exception/AgentNotFoundException : ai/grazie/code/agents/core/exception/AgentEngineException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract class ai/grazie/code/agents/core/exception/AgentRuntimeException : java/lang/RuntimeException {
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/grazie/code/agents/core/exception/MalformedMessageException : ai/grazie/code/agents/core/exception/AgentEngineException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/core/exception/ToolNotRegisteredException : ai/grazie/code/agents/core/exception/AgentRuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/core/exception/UnexpectedMessageTypeException : ai/grazie/code/agents/core/exception/AgentEngineException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/core/exception/UnexpectedServerException : ai/grazie/code/agents/core/exception/AgentEngineException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/AIAgentFeature {
+	public abstract fun createInitialConfig ()Lai/grazie/code/agents/local/features/common/config/FeatureConfig;
+	public abstract fun getKey ()Lai/grazie/code/agents/core/agent/entity/AIAgentStorageKey;
+	public abstract fun install (Lai/grazie/code/agents/local/features/common/config/FeatureConfig;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+	public fun installUnsafe (Ljava/lang/Object;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/AIAgentPipeline {
+	public fun <init> ()V
+	public final fun getAgentFeatures (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;)Ljava/util/Map;
+	public final fun install (Lai/grazie/code/agents/core/feature/AIAgentFeature;Lkotlin/jvm/functions/Function1;)V
+	public final fun interceptAfterLLMCall (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function3;)V
+	public final fun interceptAfterLLMCallWithTools (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function4;)V
+	public final fun interceptAfterNode (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function6;)V
+	public final fun interceptAgentFinished (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function4;)V
+	public final fun interceptAgentRunError (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function4;)V
+	public final fun interceptBeforeAgentStarted (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function2;)V
+	public final fun interceptBeforeLLMCall (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function3;)V
+	public final fun interceptBeforeLLMCallWithTools (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function4;)V
+	public final fun interceptBeforeNode (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function5;)V
+	public final fun interceptContextAgentFeature (Lai/grazie/code/agents/core/feature/AIAgentFeature;Lai/grazie/code/agents/core/feature/handler/AgentContextHandler;)V
+	public final fun interceptEnvironmentCreated (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function2;)V
+	public final fun interceptStrategyFinished (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function4;)V
+	public final fun interceptStrategyStarted (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function2;)V
+	public final fun interceptToolCall (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function4;)V
+	public final fun interceptToolCallFailure (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function5;)V
+	public final fun interceptToolCallResult (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function5;)V
+	public final fun interceptToolValidationError (Lai/grazie/code/agents/core/feature/AIAgentFeature;Ljava/lang/Object;Lkotlin/jvm/functions/Function5;)V
+	public final fun onAfterLLMCall (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onAfterLLMWithToolsCall (Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onAfterNode (Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onAgentFinished (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onAgentRunError (Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onBeforeAgentStarted (Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Lai/grazie/code/agents/core/agent/AIAgent;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onBeforeLLMCall (Lai/jetbrains/code/prompt/dsl/Prompt;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onBeforeLLMWithToolsCall (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onBeforeNode (Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onStrategyFinished (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onStrategyStarted (Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onToolCall (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onToolCallFailure (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onToolCallResult (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/tools/ToolResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun onToolValidationError (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun transformEnvironment (Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Lai/grazie/code/agents/core/agent/AIAgent;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+}
+
+public final class ai/grazie/code/agents/core/feature/JsonConfigKt {
+	public static final fun getAgentFeatureMessageSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
+}
+
+public final class ai/grazie/code/agents/core/feature/PromptExecutorProxy : ai/jetbrains/code/prompt/executor/model/PromptExecutor {
+	public fun <init> (Lai/jetbrains/code/prompt/executor/model/PromptExecutor;Lai/grazie/code/agents/core/feature/AIAgentPipeline;)V
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/AfterLLMCallHandler {
+	public abstract fun handle (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/AfterLLMCallWithToolsHandler {
+	public abstract fun handle (Ljava/util/List;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/AfterNodeHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/AgentContextHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/AgentCreateContext {
+	public fun <init> (Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Lai/grazie/code/agents/core/agent/AIAgent;Ljava/lang/Object;)V
+	public final fun getAgent ()Lai/grazie/code/agents/core/agent/AIAgent;
+	public final fun getFeature ()Ljava/lang/Object;
+	public final fun getStrategy ()Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public final fun readStrategy (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/AgentEnvironmentTransformer {
+	public abstract fun transform (Lai/grazie/code/agents/core/feature/handler/AgentCreateContext;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/AgentFinishedHandler {
+	public abstract fun handle (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/AgentHandler {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun getAgentFinishedHandler ()Lai/grazie/code/agents/core/feature/handler/AgentFinishedHandler;
+	public final fun getAgentRunErrorHandler ()Lai/grazie/code/agents/core/feature/handler/AgentRunErrorHandler;
+	public final fun getBeforeAgentStartedHandler ()Lai/grazie/code/agents/core/feature/handler/BeforeAgentStartedHandler;
+	public final fun getEnvironmentTransformer ()Lai/grazie/code/agents/core/feature/handler/AgentEnvironmentTransformer;
+	public final fun getFeature ()Ljava/lang/Object;
+	public final fun handleBeforeAgentStarted (Lai/grazie/code/agents/core/feature/handler/AgentStartContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun handleBeforeAgentStartedUnsafe (Lai/grazie/code/agents/core/feature/handler/AgentStartContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setAgentFinishedHandler (Lai/grazie/code/agents/core/feature/handler/AgentFinishedHandler;)V
+	public final fun setAgentRunErrorHandler (Lai/grazie/code/agents/core/feature/handler/AgentRunErrorHandler;)V
+	public final fun setBeforeAgentStartedHandler (Lai/grazie/code/agents/core/feature/handler/BeforeAgentStartedHandler;)V
+	public final fun setEnvironmentTransformer (Lai/grazie/code/agents/core/feature/handler/AgentEnvironmentTransformer;)V
+	public final fun transformEnvironment (Lai/grazie/code/agents/core/feature/handler/AgentCreateContext;Lai/grazie/code/agents/core/environment/AIAgentEnvironment;)Lai/grazie/code/agents/core/environment/AIAgentEnvironment;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/AgentRunErrorHandler {
+	public abstract fun handle (Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/AgentStartContext {
+	public fun <init> (Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Lai/grazie/code/agents/core/agent/AIAgent;Ljava/lang/Object;)V
+	public final fun getAgent ()Lai/grazie/code/agents/core/agent/AIAgent;
+	public final fun getFeature ()Ljava/lang/Object;
+	public final fun getStrategy ()Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public final fun readStrategy (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/BeforeAgentStartedHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/feature/handler/AgentStartContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/BeforeLLMCallHandler {
+	public abstract fun handle (Lai/jetbrains/code/prompt/dsl/Prompt;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/BeforeLLMCallWithToolsHandler {
+	public abstract fun handle (Lai/jetbrains/code/prompt/dsl/Prompt;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/BeforeNodeHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/agent/entity/AIAgentNodeBase;Lai/grazie/code/agents/core/agent/entity/AIAgentContextBase;Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/ExecuteLLMHandler {
+	public fun <init> ()V
+	public final fun getAfterLLMCallHandler ()Lai/grazie/code/agents/core/feature/handler/AfterLLMCallHandler;
+	public final fun getAfterLLMCallWithToolsHandler ()Lai/grazie/code/agents/core/feature/handler/AfterLLMCallWithToolsHandler;
+	public final fun getBeforeLLMCallHandler ()Lai/grazie/code/agents/core/feature/handler/BeforeLLMCallHandler;
+	public final fun getBeforeLLMCallWithToolsHandler ()Lai/grazie/code/agents/core/feature/handler/BeforeLLMCallWithToolsHandler;
+	public final fun setAfterLLMCallHandler (Lai/grazie/code/agents/core/feature/handler/AfterLLMCallHandler;)V
+	public final fun setAfterLLMCallWithToolsHandler (Lai/grazie/code/agents/core/feature/handler/AfterLLMCallWithToolsHandler;)V
+	public final fun setBeforeLLMCallHandler (Lai/grazie/code/agents/core/feature/handler/BeforeLLMCallHandler;)V
+	public final fun setBeforeLLMCallWithToolsHandler (Lai/grazie/code/agents/core/feature/handler/BeforeLLMCallWithToolsHandler;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/ExecuteNodeHandler {
+	public fun <init> ()V
+	public final fun getAfterNodeHandler ()Lai/grazie/code/agents/core/feature/handler/AfterNodeHandler;
+	public final fun getBeforeNodeHandler ()Lai/grazie/code/agents/core/feature/handler/BeforeNodeHandler;
+	public final fun setAfterNodeHandler (Lai/grazie/code/agents/core/feature/handler/AfterNodeHandler;)V
+	public final fun setBeforeNodeHandler (Lai/grazie/code/agents/core/feature/handler/BeforeNodeHandler;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/ExecuteToolHandler {
+	public fun <init> ()V
+	public final fun getToolCallFailureHandler ()Lai/grazie/code/agents/core/feature/handler/ToolCallFailureHandler;
+	public final fun getToolCallHandler ()Lai/grazie/code/agents/core/feature/handler/ToolCallHandler;
+	public final fun getToolCallResultHandler ()Lai/grazie/code/agents/core/feature/handler/ToolCallResultHandler;
+	public final fun getToolValidationErrorHandler ()Lai/grazie/code/agents/core/feature/handler/ToolValidationErrorHandler;
+	public final fun setToolCallFailureHandler (Lai/grazie/code/agents/core/feature/handler/ToolCallFailureHandler;)V
+	public final fun setToolCallHandler (Lai/grazie/code/agents/core/feature/handler/ToolCallHandler;)V
+	public final fun setToolCallResultHandler (Lai/grazie/code/agents/core/feature/handler/ToolCallResultHandler;)V
+	public final fun setToolValidationErrorHandler (Lai/grazie/code/agents/core/feature/handler/ToolValidationErrorHandler;)V
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/StrategyFinishedHandler {
+	public abstract fun handle (Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/StrategyHandler {
+	public fun <init> (Ljava/lang/Object;)V
+	public final fun getFeature ()Ljava/lang/Object;
+	public final fun getStrategyFinishedHandler ()Lai/grazie/code/agents/core/feature/handler/StrategyFinishedHandler;
+	public final fun getStrategyStartedHandler ()Lai/grazie/code/agents/core/feature/handler/StrategyStartedHandler;
+	public final fun handleStrategyStarted (Lai/grazie/code/agents/core/feature/handler/StrategyUpdateContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun handleStrategyStartedUnsafe (Lai/grazie/code/agents/core/feature/handler/StrategyUpdateContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun setStrategyFinishedHandler (Lai/grazie/code/agents/core/feature/handler/StrategyFinishedHandler;)V
+	public final fun setStrategyStartedHandler (Lai/grazie/code/agents/core/feature/handler/StrategyStartedHandler;)V
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/StrategyStartedHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/feature/handler/StrategyUpdateContext;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/feature/handler/StrategyUpdateContext {
+	public fun <init> (Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;Ljava/lang/Object;)V
+	public final fun getFeature ()Ljava/lang/Object;
+	public final fun getStrategy ()Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public final fun readStrategy (Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/ToolCallFailureHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/Throwable;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/ToolCallHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/ToolCallResultHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/tools/ToolResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class ai/grazie/code/agents/core/feature/handler/ToolValidationErrorHandler {
+	public abstract fun handle (Lai/grazie/code/agents/core/tools/Tool;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentError {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentError$Companion;
+	public fun <init> (Ljava/lang/Throwable;)V
+	public final fun getCause ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getStackTrace ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentError$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentError;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentError;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentError$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentErrorKt {
+	public static final fun toAgentError (Ljava/lang/Throwable;)Lai/grazie/code/agents/core/feature/model/AIAgentError;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getResult ()Ljava/lang/String;
+	public final fun getStrategyName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentFinishedEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getInput ()Ljava/lang/String;
+	public final fun getNodeName ()Ljava/lang/String;
+	public final fun getOutput ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionEndEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getInput ()Ljava/lang/String;
+	public final fun getNodeName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentNodeExecutionStartEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent$Companion;
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/grazie/code/agents/core/feature/model/AIAgentError;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent;Ljava/lang/String;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lai/grazie/code/agents/core/feature/model/AIAgentError;
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getStrategyName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentRunErrorEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStartedEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentStartedEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/AIAgentStartedEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/AIAgentStartedEvent;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/AIAgentStartedEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getStrategyName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStartedEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentStartedEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentStartedEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentStartedEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStartedEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getResult ()Ljava/lang/String;
+	public final fun getStrategyName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStrategyFinishedEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getStrategyName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/AIAgentStrategyStartEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent : ai/grazie/code/agents/local/features/common/message/FeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/DefinedFeatureEvent$Companion;
+	public synthetic fun <init> (IJLai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun getMessageType ()Lai/grazie/code/agents/local/features/common/message/FeatureMessage$Type;
+	public fun getTimestamp ()J
+	public static final synthetic fun write$Self (Lai/grazie/code/agents/core/feature/model/DefinedFeatureEvent;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallEndEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/LLMCallEndEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/LLMCallEndEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/LLMCallEndEvent;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/LLMCallEndEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getResponse ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallEndEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/LLMCallEndEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/LLMCallEndEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/LLMCallEndEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallEndEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallStartEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/LLMCallStartEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/LLMCallStartEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/LLMCallStartEvent;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/LLMCallStartEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getPrompt ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallStartEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/LLMCallStartEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/LLMCallStartEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/LLMCallStartEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallStartEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent$Companion;
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/List;Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/List;Ljava/util/List;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent;Ljava/util/List;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getResponses ()Ljava/util/List;
+	public final fun getTools ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallWithToolsEndEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/util/List;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getPrompt ()Ljava/lang/String;
+	public final fun getTools ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/LLMCallWithToolsStartEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/ToolCallEvent$Companion;
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/ToolCallEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/ToolCallEvent;Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/ToolCallEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getToolArgs ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun getToolName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/ToolCallEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/ToolCallEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/ToolCallEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallFailureEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/ToolCallFailureEvent$Companion;
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun component3 ()Lai/grazie/code/agents/core/feature/model/AIAgentError;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/ToolCallFailureEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/ToolCallFailureEvent;Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/feature/model/AIAgentError;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/ToolCallFailureEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lai/grazie/code/agents/core/feature/model/AIAgentError;
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getToolArgs ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun getToolName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallFailureEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/ToolCallFailureEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/ToolCallFailureEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/ToolCallFailureEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallFailureEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallResultEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/ToolCallResultEvent$Companion;
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/tools/ToolResult;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/tools/ToolResult;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun component3 ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/tools/ToolResult;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/ToolCallResultEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/ToolCallResultEvent;Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Lai/grazie/code/agents/core/tools/ToolResult;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/ToolCallResultEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getResult ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public final fun getToolArgs ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun getToolName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallResultEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/ToolCallResultEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/ToolCallResultEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/ToolCallResultEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolCallResultEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent : ai/grazie/code/agents/core/feature/model/DefinedFeatureEvent {
+	public static final field Companion Lai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent$Companion;
+	public fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent;Ljava/lang/String;Lai/grazie/code/agents/core/tools/Tool$Args;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getErrorMessage ()Ljava/lang/String;
+	public fun getEventId ()Ljava/lang/String;
+	public final fun getToolArgs ()Lai/grazie/code/agents/core/tools/Tool$Args;
+	public final fun getToolName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/model/ToolValidationErrorEvent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/feature/remote/client/config/AIAgentFeatureClientConnectionConfig : ai/grazie/code/agents/local/features/common/remote/client/config/ClientConnectionConfig {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Integer;Lio/ktor/http/URLProtocol;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class ai/grazie/code/agents/core/feature/remote/server/config/AIAgentFeatureServerConnectionConfig : ai/grazie/code/agents/local/features/common/remote/server/config/ServerConnectionConfig {
+	public fun <init> (I)V
+}
+
+public final class ai/grazie/code/agents/core/model/AgentServiceError {
+	public static final field Companion Lai/grazie/code/agents/core/model/AgentServiceError$Companion;
+	public fun <init> (Lai/grazie/code/agents/core/model/AgentServiceErrorType;Ljava/lang/String;)V
+	public final fun asException ()Lai/grazie/code/agents/core/exception/AgentEngineException;
+	public final fun component1 ()Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Lai/grazie/code/agents/core/model/AgentServiceErrorType;Ljava/lang/String;)Lai/grazie/code/agents/core/model/AgentServiceError;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/AgentServiceError;Lai/grazie/code/agents/core/model/AgentServiceErrorType;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/AgentServiceError;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public final fun getType ()Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/AgentServiceError$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/AgentServiceError$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/AgentServiceError;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/AgentServiceError;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/AgentServiceError$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/AgentServiceErrorType : java/lang/Enum {
+	public static final field AGENT_NOT_FOUND Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+	public static final field Companion Lai/grazie/code/agents/core/model/AgentServiceErrorType$Companion;
+	public static final field MALFORMED_MESSAGE Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+	public static final field UNEXPECTED_ERROR Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+	public static final field UNEXPECTED_MESSAGE_TYPE Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+	public static fun values ()[Lai/grazie/code/agents/core/model/AgentServiceErrorType;
+}
+
+public final class ai/grazie/code/agents/core/model/AgentServiceErrorType$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/core/model/agent/AIAgentConfig {
+}
+
+public final class ai/grazie/code/agents/core/model/agent/AIAgentSystemPrompt {
+	public static final field Companion Lai/grazie/code/agents/core/model/agent/AIAgentSystemPrompt$Companion;
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class ai/grazie/code/agents/core/model/agent/AIAgentSystemPrompt$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/agent/AIAgentSystemPrompt$Serializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/agent/AIAgentSystemPrompt$Serializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/agent/AIAgentSystemPrompt;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/agent/AIAgentSystemPrompt;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent : ai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentContent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;)Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/agent/config/AIAgentConfig;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAgentId ()Ljava/lang/String;
+	public final fun getConfig ()Lai/grazie/code/agents/core/agent/config/AIAgentConfig;
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AIAgentEnvironmentToAgentInitializeMessage : ai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentMessage {
+	public fun <init> (Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;Ljava/util/Map;Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;)V
+	public final fun component1 ()Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public final fun copy (Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;Ljava/util/Map;Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;)Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentToAgentInitializeMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentToAgentInitializeMessage;Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;Ljava/util/Map;Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentToAgentInitializeMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAgent ()Lai/grazie/code/agents/core/agent/entity/AIAgentStrategy;
+	public fun getContent ()Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentInitializeMessageContent;
+	public synthetic fun getContent ()Lai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentContent;
+	public final fun getToolsForStages ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AIAgentEnvironmentToolResultToAgentContent : ai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolResult;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolResult;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolResult;)Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentToolResultToAgentContent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentToolResultToAgentContent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lai/grazie/code/agents/core/tools/ToolResult;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/AIAgentEnvironmentToolResultToAgentContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAgentId ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+	public fun getToolCallId ()Ljava/lang/String;
+	public fun getToolName ()Ljava/lang/String;
+	public final fun getToolResult ()Lai/grazie/code/agents/core/tools/ToolResult;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage : ai/grazie/code/agents/core/model/message/AgentToEnvironmentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage$Companion;
+	public fun <init> (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/AgentServiceError;)V
+	public final fun component1 ()Lai/grazie/utils/mpp/UUID;
+	public final fun component2 ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public final fun copy (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/AgentServiceError;)Lai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage;Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/AgentServiceError;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentErrorToEnvironmentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage : ai/grazie/code/agents/core/model/message/AgentToEnvironmentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage$Companion;
+	public fun <init> (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;Lai/grazie/code/agents/core/model/AgentServiceError;)V
+	public synthetic fun <init> (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;Lai/grazie/code/agents/core/model/AgentServiceError;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/grazie/utils/mpp/UUID;
+	public final fun component2 ()Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;
+	public final fun component3 ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public final fun copy (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;Lai/grazie/code/agents/core/model/AgentServiceError;)Lai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage;Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;Lai/grazie/code/agents/core/model/AgentServiceError;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;
+	public final fun getError ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentTerminationToEnvironmentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/core/model/message/AgentToEnvironmentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/AgentToEnvironmentMessage$Companion;
+	public abstract fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToEnvironmentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lkotlinx/serialization/json/JsonObject;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;)Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/json/JsonObject;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAgentId ()Ljava/lang/String;
+	public final fun getToolArgs ()Lkotlinx/serialization/json/JsonObject;
+	public final fun getToolCallId ()Ljava/lang/String;
+	public final fun getToolName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentMessage : ai/grazie/code/agents/core/model/message/AgentToEnvironmentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentMessage$Companion;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage : ai/grazie/code/agents/core/model/message/AgentToolCallToEnvironmentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage$Companion;
+	public fun <init> (Lai/grazie/utils/mpp/UUID;Ljava/util/List;)V
+	public final fun component1 ()Lai/grazie/utils/mpp/UUID;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lai/grazie/utils/mpp/UUID;Ljava/util/List;)Lai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage;Lai/grazie/utils/mpp/UUID;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Ljava/util/List;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/AgentToolCallsToEnvironmentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentContent : ai/grazie/code/agents/core/model/message/EnvironmentToAgentContent {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentContent$Companion;
+	public fun <init> ()V
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public abstract fun getAgentId ()Ljava/lang/String;
+	public abstract fun getMessage ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentContent;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentMessage : ai/grazie/code/agents/core/model/message/EnvironmentToAgentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentMessage$Companion;
+	public fun <init> ()V
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public abstract fun getContent ()Lai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentContent;
+	public static final synthetic fun write$Self (Lai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentMessage;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentInitializeToAgentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/core/model/message/EnvironmentToAgentContent {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToAgentContent$Companion;
+	public abstract fun getAgentId ()Ljava/lang/String;
+	public abstract fun getMessage ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage : ai/grazie/code/agents/core/model/message/EnvironmentToAgentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage$Companion;
+	public fun <init> (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/AgentServiceError;)V
+	public final fun component1 ()Lai/grazie/utils/mpp/UUID;
+	public final fun component2 ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public final fun copy (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/AgentServiceError;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage;Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/AgentServiceError;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public final fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentErrorMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/core/model/message/EnvironmentToAgentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToAgentMessage$Companion;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent : ai/grazie/code/agents/core/model/message/EnvironmentToAgentContent {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAgentId ()Ljava/lang/String;
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage : ai/grazie/code/agents/core/model/message/EnvironmentToAgentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage$Companion;
+	public fun <init> (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;Lai/grazie/code/agents/core/model/AgentServiceError;)V
+	public synthetic fun <init> (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;Lai/grazie/code/agents/core/model/AgentServiceError;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lai/grazie/utils/mpp/UUID;
+	public final fun component2 ()Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;
+	public final fun component3 ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public final fun copy (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;Lai/grazie/code/agents/core/model/AgentServiceError;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage;Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;Lai/grazie/code/agents/core/model/AgentServiceError;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationContent;
+	public final fun getError ()Lai/grazie/code/agents/core/model/AgentServiceError;
+	public final fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToAgentTerminationMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage : ai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage$Companion;
+	public fun <init> (Lai/grazie/utils/mpp/UUID;Ljava/util/List;)V
+	public final fun component1 ()Lai/grazie/utils/mpp/UUID;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Lai/grazie/utils/mpp/UUID;Ljava/util/List;)Lai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage;Lai/grazie/utils/mpp/UUID;Ljava/util/List;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Ljava/util/List;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultMultipleToAgentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage : ai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage$Companion;
+	public fun <init> (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent;)V
+	public final fun component1 ()Lai/grazie/utils/mpp/UUID;
+	public final fun component2 ()Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent;
+	public final fun copy (Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent;)Lai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage;
+	public static synthetic fun copy$default (Lai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage;Lai/grazie/utils/mpp/UUID;Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent;ILjava/lang/Object;)Lai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getContent ()Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent;
+	public fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultSingleToAgentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract class ai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent : ai/grazie/code/agents/core/model/message/EnvironmentToAgentContent {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent$Companion;
+	public fun <init> ()V
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public abstract fun getAgentId ()Ljava/lang/String;
+	public abstract fun getMessage ()Ljava/lang/String;
+	public abstract fun getToolCallId ()Ljava/lang/String;
+	public abstract fun getToolName ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentContent$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class ai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentMessage : ai/grazie/code/agents/core/model/message/EnvironmentToAgentMessage {
+	public static final field Companion Lai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentMessage$Companion;
+	public abstract fun getSessionUuid ()Lai/grazie/utils/mpp/UUID;
+}
+
+public final class ai/grazie/code/agents/core/model/message/EnvironmentToolResultToAgentMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+

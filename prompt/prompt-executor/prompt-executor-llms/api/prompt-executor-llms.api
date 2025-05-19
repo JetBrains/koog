@@ -1,0 +1,27 @@
+public class ai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor : ai/jetbrains/code/prompt/executor/model/PromptExecutor {
+	public fun <init> (Ljava/util/Map;Lai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings;)V
+	public synthetic fun <init> (Ljava/util/Map;Lai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> ([Lkotlin/Pair;)V
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class ai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings {
+	public fun <init> (Lai/jetbrains/code/prompt/llm/LLMProvider;Lai/jetbrains/code/prompt/llm/LLModel;)V
+	public final fun component1 ()Lai/jetbrains/code/prompt/llm/LLMProvider;
+	public final fun component2 ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun copy (Lai/jetbrains/code/prompt/llm/LLMProvider;Lai/jetbrains/code/prompt/llm/LLModel;)Lai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings;
+	public static synthetic fun copy$default (Lai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings;Lai/jetbrains/code/prompt/llm/LLMProvider;Lai/jetbrains/code/prompt/llm/LLModel;ILjava/lang/Object;)Lai/jetbrains/code/prompt/executor/llms/MultiLLMPromptExecutor$FallbackPromptExecutorSettings;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFallbackModel ()Lai/jetbrains/code/prompt/llm/LLModel;
+	public final fun getFallbackProvider ()Lai/jetbrains/code/prompt/llm/LLMProvider;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public class ai/jetbrains/code/prompt/executor/llms/SingleLLMPromptExecutor : ai/jetbrains/code/prompt/executor/model/PromptExecutor {
+	public fun <init> (Lai/jetbrains/code/prompt/executor/clients/LLMClient;)V
+	public fun execute (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun executeStreaming (Lai/jetbrains/code/prompt/dsl/Prompt;Lai/jetbrains/code/prompt/llm/LLModel;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
