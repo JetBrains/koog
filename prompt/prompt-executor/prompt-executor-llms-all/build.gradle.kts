@@ -18,21 +18,21 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
-                implementation(project(":agents:agents-core"))
-                implementation(project(":agents:agents-ext"))
-                implementation(project(":agents:agents-tools"))
-                implementation(project(":agents:agents-features:agents-features-event-handler"))
-                implementation(project(":agents:agents-features:agents-features-trace"))
-                implementation(project(":prompt:prompt-llm"))
-                implementation(project(":prompt:prompt-model"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.ktor.client.content.negotiation)
+                api(project(":agents:agents-core"))
+                api(project(":agents:agents-ext"))
+                api(project(":agents:agents-tools"))
+                api(project(":agents:agents-features:agents-features-event-handler"))
+                api(project(":agents:agents-features:agents-features-trace"))
+                api(project(":prompt:prompt-llm"))
+                api(project(":prompt:prompt-model"))
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
+                api(libs.ktor.client.content.negotiation)
             }
         }
         jvmMain {
             dependencies {
-                implementation(libs.ktor.client.cio)
+                api(libs.ktor.client.cio)
             }
         }
         commonTest {

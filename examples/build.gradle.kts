@@ -19,22 +19,22 @@ application {
 }
 
 dependencies {
-    implementation(project(":agents:agents-ext"))
-    implementation(project(":agents:agents-mcp"))
-    implementation(project(":agents:agents-features:agents-features-event-handler"))
-    implementation(project(":agents:agents-features:agents-features-memory"))
+    api(project(":agents:agents-ext"))
+    api(project(":agents:agents-mcp"))
+    api(project(":agents:agents-features:agents-features-event-handler"))
+    api(project(":agents:agents-features:agents-features-memory"))
 
-    implementation(project(":prompt:prompt-markdown"))
-    implementation(project(":prompt:prompt-structure"))
-    implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-    implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
-    implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
-    implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+    api(project(":prompt:prompt-markdown"))
+    api(project(":prompt:prompt-structure"))
+    api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+    api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+    api(project(":prompt:prompt-executor:prompt-executor-llms"))
+    api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
-    implementation(libs.code.engine.files.jvm)
+    api(libs.code.engine.files.jvm)
 
-    implementation(libs.kotlinx.datetime)
-    implementation(libs.logback.classic)
+    api(libs.kotlinx.datetime)
+    api(libs.logback.classic)
 
     testImplementation(kotlin("test"))
     testImplementation(project(":agents:agents-test"))

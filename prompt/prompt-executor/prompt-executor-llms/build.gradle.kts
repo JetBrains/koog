@@ -13,11 +13,11 @@ kotlin {
             dependencies {
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
-                implementation(project(":agents:agents-tools"))
-                implementation(project(":prompt:prompt-llm"))
-                implementation(project(":prompt:prompt-model"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.oshai.kotlin.logging)
+                api(project(":agents:agents-tools"))
+                api(project(":prompt:prompt-llm"))
+                api(project(":prompt:prompt-model"))
+                api(libs.kotlinx.coroutines.core)
+                api(libs.oshai.kotlin.logging)
             }
         }
         commonTest {
