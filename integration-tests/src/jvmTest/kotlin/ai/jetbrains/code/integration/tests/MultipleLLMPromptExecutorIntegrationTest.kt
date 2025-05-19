@@ -5,7 +5,7 @@ import ai.grazie.code.agents.core.tools.ToolParameterDescriptor
 import ai.grazie.code.agents.core.tools.ToolParameterType
 import ai.jetbrains.code.integration.tests.Models.modelsWithoutToolsSupport
 import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.integration.tests.TestUtils.readTestGeminiKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.dsl.Prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class MultipleLLMPromptExecutorIntegrationTest {
     // API keys for testing
-    private val geminiApiKey: String get() = readTestGeminiKeyFromEnv()
+    private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
 

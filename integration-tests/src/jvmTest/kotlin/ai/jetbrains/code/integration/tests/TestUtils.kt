@@ -16,7 +16,7 @@ internal object TestUtils {
             ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` is not set")
     }
 
-    fun readTestGeminiKeyFromEnv(): String {
+    fun readTestGoogleAIKeyFromEnv(): String {
         return System.getenv("GEMINI_API_TEST_KEY")
             ?: error("ERROR: environment variable `GEMINI_API_TEST_KEY` is not set")
     }

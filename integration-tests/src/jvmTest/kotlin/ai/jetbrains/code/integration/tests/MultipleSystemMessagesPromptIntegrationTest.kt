@@ -1,7 +1,7 @@
 package ai.jetbrains.code.integration.tests
 
 import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.integration.tests.TestUtils.readTestGeminiKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.dsl.prompt
 import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
 class MultipleSystemMessagesPromptIntegrationTest {
     private val openAIToken = readTestOpenAIKeyFromEnv()
     private val anthropicToken = readTestAnthropicKeyFromEnv()
-    private val googleToken = readTestGeminiKeyFromEnv()
+    private val googleToken = readTestGoogleAIKeyFromEnv()
 
     @Test
     fun integration_testMultipleSystemMessages() = runBlocking {
