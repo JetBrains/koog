@@ -6,12 +6,8 @@ import ai.grazie.code.agents.ext.agent.simpleSingleRunAgent
 import ai.grazie.code.agents.ext.tool.SayToUser
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandler
 import ai.grazie.code.agents.local.features.eventHandler.feature.EventHandlerConfig
-import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.integration.tests.TestUtils.readTestGeminiKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
-import ai.jetbrains.code.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.jetbrains.code.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
@@ -23,7 +19,7 @@ import java.util.stream.Stream
 import kotlin.test.AfterTest
 import kotlin.test.assertTrue
 
-@Disabled("Due to JBAI-13980 and JBAI-13981")
+@Disabled("JBAI-13981, JBAI-13980, JBAI-14070, JBAI-14071")
 class SimpleAgentIntegrationTest {
     val systemPrompt = """
             You are a helpful assistant. 
@@ -76,9 +72,9 @@ class SimpleAgentIntegrationTest {
 
 
     @ParameterizedTest
-    @MethodSource("openAIModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleChatAgentShouldCallDefaultToolsOpenAI(model: LLModel) = runBlocking {
-        // o1-mini doesn't support tools
+        // model doesn't support tools
         assumeTrue(model != OpenAIModels.Reasoning.O1Mini)
 
         val agent = simpleChatAgent(
@@ -95,42 +91,9 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("anthropicModels")
-    fun integration_simpleChatAgentShouldCallDefaultToolsAnthropic(model: LLModel) = runBlocking {
-        val agent = simpleChatAgent(
-            executor = simpleAnthropicExecutor(readTestAnthropicKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Please exit.")
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-    }
-
-    @ParameterizedTest
-    @MethodSource("googleModels")
-    fun integration_simpleChatAgentShouldCallDefaultToolsGoogle(model: LLModel) = runBlocking {
-        val agent = simpleChatAgent(
-            executor = simpleGoogleAIExecutor(readTestGeminiKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Please exit.")
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-    }
-
-
-    @ParameterizedTest
-    @MethodSource("openAIModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleChatAgentShouldCallCustomToolsOpenAI(model: LLModel) = runBlocking {
-        // o1-mini doesn't support tools
+        // model doesn't support tools
         assumeTrue(model != OpenAIModels.Reasoning.O1Mini)
 
         val toolRegistry = ToolRegistry.Companion {
@@ -157,59 +120,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("anthropicModels")
-    fun integration_simpleChatAgentShouldCallCustomToolsAnthropic(model: LLModel) = runBlocking {
-        val toolRegistry = ToolRegistry.Companion {
-            tool(SayToUser)
-        }
-
-        val agent = simpleChatAgent(
-            executor = simpleAnthropicExecutor(readTestAnthropicKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            toolRegistry = toolRegistry,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Hello, how are you?")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-        assertTrue(
-            actualToolCalls.contains("__say_to_user__"),
-            "The __say_to_user__ tool was not called for model $model"
-        )
-    }
-
-    @ParameterizedTest
-    @MethodSource("googleModels")
-    fun integration_simpleChatAgentShouldCallCustomToolsGoogle(model: LLModel) = runBlocking {
-        val toolRegistry = ToolRegistry.Companion {
-            tool(SayToUser)
-        }
-
-        val agent = simpleChatAgent(
-            executor = simpleGoogleAIExecutor(readTestGeminiKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            toolRegistry = toolRegistry,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Hello, how are you?")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-        assertTrue(
-            actualToolCalls.contains("__say_to_user__"),
-            "The __say_to_user__ tool was not called for model $model"
-        )
-    }
-
-    @ParameterizedTest
-    @MethodSource("openAIModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefaultOpenAI(model: LLModel) = runBlocking {
         val agent = simpleSingleRunAgent(
             executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
@@ -228,46 +139,9 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("anthropicModels")
-    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefaultAnthropic(model: LLModel) = runBlocking {
-        val agent = simpleSingleRunAgent(
-            executor = simpleAnthropicExecutor(readTestAnthropicKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Repeat what I say: hello, I'm good.")
-
-        // by default, simpleSingleRunAgent has no tools underneath
-        assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
-    }
-
-    @ParameterizedTest
-    @MethodSource("googleModels")
-    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefaultGoogle(model: LLModel) = runBlocking {
-        val agent = simpleSingleRunAgent(
-            executor = simpleGoogleAIExecutor(readTestGeminiKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Repeat what I say: hello, I'm good.")
-
-        // by default, simpleSingleRunAgent has no tools underneath
-        assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
-    }
-
-
-    @ParameterizedTest
-    @MethodSource("openAIModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldCallCustomToolOpenAI(model: LLModel) = runBlocking {
-        // o1-mini doesn't support tools
+        // model doesn't support tools
         assumeTrue(model != OpenAIModels.Reasoning.O1Mini)
 
         val toolRegistry = ToolRegistry.Companion {
@@ -276,58 +150,6 @@ class SimpleAgentIntegrationTest {
 
         val agent = simpleSingleRunAgent(
             executor = simpleOpenAIExecutor(readTestOpenAIKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            toolRegistry = toolRegistry,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Write a Kotlin function to calculate factorial.")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-        assertTrue(
-            actualToolCalls.contains("__say_to_user__"),
-            "The __say_to_user__ tool was not called for model $model"
-        )
-    }
-
-    @ParameterizedTest
-    @MethodSource("anthropicModels")
-    fun integration_simpleSingleRunAgentShouldCallCustomToolAnthropic(model: LLModel) = runBlocking {
-        val toolRegistry = ToolRegistry.Companion {
-            tool(SayToUser)
-        }
-
-        val agent = simpleSingleRunAgent(
-            executor = simpleAnthropicExecutor(readTestAnthropicKeyFromEnv()),
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            toolRegistry = toolRegistry,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Write a Kotlin function to calculate factorial.")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-        assertTrue(
-            actualToolCalls.contains("__say_to_user__"),
-            "The __say_to_user__ tool was not called for model $model"
-        )
-    }
-
-    @ParameterizedTest
-    @MethodSource("googleModels")
-    fun integration_simpleSingleRunAgentShouldCallCustomToolGoogle(model: LLModel) = runBlocking {
-        val toolRegistry = ToolRegistry.Companion {
-            tool(SayToUser)
-        }
-
-        val agent = simpleSingleRunAgent(
-            executor = simpleGoogleAIExecutor(readTestGeminiKeyFromEnv()),
             systemPrompt = systemPrompt,
             llmModel = model,
             temperature = 1.0,

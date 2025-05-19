@@ -13,11 +13,9 @@ import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.jetbrains.code.prompt.llm.LLMProvider
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-@Disabled("TODO: pass the `OPEN_AI_API_TEST_KEY`, `ANTHROPIC_API_TEST_KEY`, `GEMINI_API_TEST_KEY`")
 class MultipleSystemMessagesPromptIntegrationTest {
     private val openAIToken = readTestOpenAIKeyFromEnv()
     private val anthropicToken = readTestAnthropicKeyFromEnv()
