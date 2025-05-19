@@ -297,6 +297,7 @@ public open class AnthropicLLMClient(
                 ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
             maxTokens = 2048, // This is required by the API
+            // TODO why 0.7 and not 0.0?
             temperature = prompt.params.temperature ?: 0.7, // Default temperature if not provided
             system = systemMessage,
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
@@ -305,32 +306,30 @@ public open class AnthropicLLMClient(
     }
 
     private fun processAnthropicResponse(response: AnthropicResponse): List<Message.Response> {
-        val responses = mutableListOf<Message.Response>()
-
-        for (content in response.content) {
+        val responses = response.content.map { content ->
             when (content) {
                 is AnthropicResponseContent.Text -> {
-                    responses.add(Message.Assistant(content.text))
+                    Message.Assistant(content.text, response.stopReason)
                 }
 
                 is AnthropicResponseContent.ToolUse -> {
-                    responses.add(
-                        Message.Tool.Call(
-                            id = content.id,
-                            tool = content.name,
-                            content = content.input.toString()
-                        )
+                    Message.Tool.Call(
+                        id = content.id,
+                        tool = content.name,
+                        content = content.input.toString()
                     )
                 }
             }
         }
 
-        // Fix the situation when the model decides to both call tools and talk
-        if (responses.any { it is Message.Tool.Call }) {
-            return responses.filterIsInstance<Message.Tool.Call>()
+        return when {
+            // Fix the situation when the model decides to both call tools and talk
+            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+            // If no messages where returned, return an empty message and check stopReason
+            responses.isEmpty() -> listOf(Message.Assistant("", response.stopReason))
+            // Just return responses
+            else -> responses
         }
-
-        return responses
     }
 
     /**
