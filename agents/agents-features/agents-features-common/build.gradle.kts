@@ -22,7 +22,7 @@ kotlin {
                 api(libs.ktor.client.logging)
                 api(libs.ktor.serialization.kotlinx.json)
                 api(libs.ktor.server.sse)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
