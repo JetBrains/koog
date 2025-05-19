@@ -1,7 +1,7 @@
 package ai.jetbrains.code.integration.tests
 
-import ai.grazie.code.agents.local.features.common.message.FeatureMessage
-import ai.grazie.code.agents.local.features.common.message.FeatureMessageProcessor
+import ai.koog.agents.local.features.common.message.FeatureMessage
+import ai.koog.agents.local.features.common.message.FeatureMessageProcessor
 
 
 class TestLogPrinter : FeatureMessageProcessor() {

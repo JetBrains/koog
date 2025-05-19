@@ -1,16 +1,15 @@
 package ai.jetbrains.code.integration.tests
 
-import ai.jetbrains.code.prompt.executor.clients.anthropic.AnthropicModels
-import ai.jetbrains.code.prompt.executor.clients.google.GoogleModels
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
-import ai.jetbrains.code.prompt.llm.LLModel
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.llm.LLModel
 import java.util.stream.Stream
 
 object Models {
     val modelsWithoutToolsSupport = listOf(
         OpenAIModels.Reasoning.O1Mini,
         GoogleModels.Gemini2_5ProPreview0506,
-        GoogleModels.GeminiProVision,
         GoogleModels.Gemini2_0FlashLite,
         GoogleModels.Gemini2_0FlashLite001,
         GoogleModels.Gemini1_5FlashLatest,

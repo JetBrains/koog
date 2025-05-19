@@ -1,6 +1,6 @@
 package ai.jetbrains.code.integration.tests
 
-import ai.grazie.code.agents.core.tools.*
+import ai.koog.agents.core.tools.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
