@@ -38,6 +38,10 @@ so do familiarize yourself with the following guidelines.
       name test functions as `testXxx`. Don't use backticks in test names.
 * Comment on the existing issue if you want to work on it. Ensure that the issue not only describes a problem but also describes a solution that has received positive feedback. Propose a solution if none has been suggested.
 
+## Documentation
+
+To propose documentation changes, please go to https://github.com/JetBrains/koog-docs
+
 ## Building
 
 This library is built with Gradle.
