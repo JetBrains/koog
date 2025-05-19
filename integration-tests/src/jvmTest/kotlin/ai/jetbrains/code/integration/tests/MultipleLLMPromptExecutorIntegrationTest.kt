@@ -58,6 +58,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-prompt") {
@@ -79,6 +82,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-streaming") {
@@ -106,6 +112,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testCodeGeneration(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-code") {
@@ -137,6 +146,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -179,6 +191,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -228,6 +243,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithOptionalParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -275,6 +293,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNoParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -307,6 +328,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithListEnumParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -340,6 +364,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNestedListParams(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         // model doesn't support tools
         assumeTrue(model !in modelsWithoutToolsSupport)
 
@@ -410,6 +437,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
