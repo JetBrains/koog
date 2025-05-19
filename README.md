@@ -64,22 +64,10 @@ fun main() = runBlocking {
 ## Using in your projects
 
 - supported targets (JVM and JS)
-- how to use with Gradle (Kotlin DSL)
+### How to use with Gradle (Kotlin DSL)
   To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
 ```kotlin
 implementation("ai.koog.agents:koog-agents:0.1.0-alpha.5+0.4.49")
-```
-
-- how to use with Gradle (Groovy)
-  To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
-```groovy
-implementation 'ai.koog.agents:koog-agents:0.1.0-alpha.5+0.4.49'
-```
-
-- how to use with Maven
-  To include all Koog dependencies together (useful for a quickstart), please add the following to your pom.xml:
-```xml
-<dependency>
     <groupId>ai.koog.agents</groupId>
     <artifactId>koog-agents</artifactId>
     <version>0.1.0-alpha.5+0.4.49</version>
