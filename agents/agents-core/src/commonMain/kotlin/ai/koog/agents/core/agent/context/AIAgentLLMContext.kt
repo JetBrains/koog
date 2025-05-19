@@ -17,7 +17,7 @@ import ai.koog.prompt.llm.LLModel
  * through sessions, ensuring thread safety.
  *
  * @property tools A list of tool descriptors available for the context.
- * @property toolRegistry A registry that contains metadata about tools and their organization across stages.
+ * @property toolRegistry A registry that contains metadata about available tools.
  * @property prompt The current LLM prompt being used or updated in write sessions.
  * @property model The current LLM model being used or updated in write sessions.
  * @property promptExecutor The executor responsible for performing operations based on the current prompt.

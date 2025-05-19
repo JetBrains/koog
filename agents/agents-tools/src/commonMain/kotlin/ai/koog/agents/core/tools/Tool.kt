@@ -62,7 +62,7 @@ public abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
     /**
      * Represents the name property of the tool, derived from the tool's descriptor.
      * This property provides an immutable reference to the tool's unique name,
-     * which is used for identification within tool stages or registries.
+     * which is used for identification within tool registries.
      */
     public val name: String get() = descriptor.name
 

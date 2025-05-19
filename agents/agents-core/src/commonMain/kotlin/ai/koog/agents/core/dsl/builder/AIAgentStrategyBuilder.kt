@@ -6,8 +6,8 @@ public class AIAgentStrategyBuilder(
     private val name: String,
     private val toolSelectionStrategy: ToolSelectionStrategy,
 ) : AIAgentSubgraphBuilderBase<String, String>(), BaseBuilder<AIAgentStrategy> {
-    public override val nodeStart: StartAIAgentNodeBase<String> = StartAIAgentNode()
-    public override val nodeFinish: FinishAIAgentNodeBase<String> = FinishAIAgentNode()
+    public override val nodeStart: StartAIAgentNodeBase<String> = StartNode()
+    public override val nodeFinish: FinishAIAgentNodeBase<String> = FinishNode()
 
     override fun build(): AIAgentStrategy {
         return AIAgentStrategy(

@@ -34,9 +34,9 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
         get() = _tools.toList()
 
     /**
-     * Retrieves a tool by its name from any stage in the registry.
+     * Retrieves a tool by its name from the registry.
      *
-     * This method searches across all stages for a tool with the specified name.
+     * This method searches for a tool with the specified name.
      *
      * @param toolName The name of the tool to retrieve
      * @return The tool with the specified name
@@ -49,9 +49,9 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
     }
 
     /**
-     * Retrieves a tool by its type from any stage in the registry.
+     * Retrieves a tool by its type from registry.
      *
-     * This method searches across all stages for a tool of the specified type.
+     * This method searches for a tool of the specified type.
      *
      * @param T The type of tool to retrieve
      * @return The tool of the specified type
@@ -108,13 +108,13 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
         /**
          * Creates a new ToolRegistry using the provided builder initialization block.
          *
-         * @param init A lambda that configures the registry by adding stages and tools
+         * @param init A lambda that configures the registry by adding tools
          * @return A new ToolRegistry instance configured according to the initialization block
          */
         public operator fun invoke(init: Builder.() -> Unit): ToolRegistry = Builder().apply(init).build()
 
         /**
-         * A constant representing an empty registry with no stages or tools.
+         * A constant representing an empty registry with no tools.
          */
         public val EMPTY: ToolRegistry = ToolRegistry(emptyList())
     }

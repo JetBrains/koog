@@ -57,7 +57,6 @@ public fun AIAgentLLMWriteSession.unsetToolChoice() {
 /**
  * Rewrites LLM message history, leaving only user message and resulting TLDR.
  *
- * @param fromLastN Number of last messages used as a context for TLDR.
  * Default is `null`, which means entire history will be used.
  * @param preserveMemory Whether to preserve memory-related messages in the history.
  */

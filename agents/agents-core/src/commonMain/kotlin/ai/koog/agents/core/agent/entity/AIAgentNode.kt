@@ -144,20 +144,33 @@ public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Outp
     override suspend fun execute(context: AIAgentContextBase, input: Output): Output = input
 }
 
-
-internal class StartAIAgentNode internal constructor() : StartAIAgentNodeBase<String>()
+/**
+ * Represents the starting node in an AI agent's graph structure.
+ *
+ * This node serves as the initial entry point of execution within the strategy.
+ * It inherits behavior from `StartAIAgentNodeBase` and uses `String` as the input
+ * type. The `StartNode` is responsible for initiating the subgraph where it resides.
+ *
+ * The `name` property of the node reflects a uniquely identifiable pattern using
+ * the prefix "__start__" and the optional subgraph name, enabling traceability of
+ * execution flow in multi-subgraph setups.
+ *
+ * This node effectively passes its input as-is to the next node in the execution
+ * pipeline, allowing downstream nodes to transform or handle the data further.
+ */
+internal class StartNode internal constructor() : StartAIAgentNodeBase<String>()
 
 /**
- * A specialized implementation of `FinishNode` that finalizes the execution of a local agent subgraph.
+ * A specialized implementation of [FinishNode] that finalizes the execution of an AI agent subgraph.
  *
  * This object represents the terminal node within a subgraph structure that returns the final output.
  * It is parameterized to work with output data of type `String`.
  *
- * The `FinishAgentNode` enforces the following constraints:
+ * The [FinishNode] enforces the following constraints:
  * - It cannot have outgoing edges, meaning no further nodes can follow it in the execution graph.
  * - It simply returns the input it receives as its output, ensuring no modification occurs at the end of execution.
  *
  * This node is critical to denote the completion of localized processing within a subgraph context.
  */
-internal class FinishAIAgentNode : FinishAIAgentNodeBase<String>()
+internal class FinishNode internal constructor() : FinishAIAgentNodeBase<String>()
 
