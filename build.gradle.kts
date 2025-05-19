@@ -1,5 +1,4 @@
 import ai.grazie.gradle.fixups.DisableDistTasks.disableDistTasks
-import ai.grazie.gradle.publish.maven.graziePublic
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 
 group = "ai.koog"
@@ -48,7 +47,6 @@ plugins {
 allprojects {
     repositories {
         mavenCentral()
-        graziePublic(project)
     }
 }
 

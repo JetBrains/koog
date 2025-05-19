@@ -1,7 +1,7 @@
 package ai.koog.agents.local.memory.storage
 
-import ai.grazie.code.files.model.FileMetadata
-import ai.grazie.code.files.model.FileSystemProvider
+import ai.koog.agents.local.memory.providers.FileMetadata
+import ai.koog.agents.local.memory.providers.FileSystemProvider
 
 /**
  * Platform-independent encryption abstraction for secure data storage.

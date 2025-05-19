@@ -31,8 +31,6 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
-    api(libs.code.engine.files.jvm)
-
     api(libs.kotlinx.datetime)
     api(libs.logback.classic)
 
