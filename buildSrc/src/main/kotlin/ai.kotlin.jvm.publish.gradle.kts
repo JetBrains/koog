@@ -1,8 +1,10 @@
 import ai.grazie.gradle.publish.maven.configureJvmJarManifest
+import jetbrains.sign.GpgSignSignatoryProvider
 
 plugins {
     kotlin("jvm")
     `maven-publish`
+    id("signing")
 }
 
 java {
@@ -18,3 +20,11 @@ publishing {
 }
 
 configureJvmJarManifest("jar")
+
+val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
+signing {
+    if (isUnderTeamCity) {
+        signatories = GpgSignSignatoryProvider()
+        sign(publishing.publications)
+    }
+}
