@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.openrouter
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmInline
 
 @Serializable
 internal data class OpenRouterRequest(
@@ -10,7 +11,8 @@ internal data class OpenRouterRequest(
     val messages: List<OpenRouterMessage>,
     val temperature: Double? = null,
     val tools: List<OpenRouterTool>? = null,
-    val stream: Boolean = false
+    val stream: Boolean = false,
+    val toolChoice: OpenRouterToolChoice? = null
 )
 
 @Serializable
@@ -94,3 +96,22 @@ internal data class OpenRouterStreamDelta(
     val content: String? = null,
     val toolCalls: List<OpenRouterToolCall>? = null
 )
+
+
+@Serializable
+internal sealed interface OpenRouterToolChoice{
+    @JvmInline
+    @Serializable
+    value class Choice(val value: String): OpenRouterToolChoice
+
+    @Serializable
+    data class FunctionName(val name: String)
+    @Serializable
+    data class Function(val name: FunctionName, val type: String = "function"):  OpenRouterToolChoice
+
+    companion object {
+        val Auto = Choice("auto")
+        val Required = Choice("required")
+        val None = Choice("none")
+    }
+}

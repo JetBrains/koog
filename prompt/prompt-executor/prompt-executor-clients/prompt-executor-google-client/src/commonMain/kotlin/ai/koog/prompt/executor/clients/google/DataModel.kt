@@ -29,6 +29,7 @@ internal class GoogleRequest(
     val tools: List<GoogleTool>? = null,
     val systemInstruction: GoogleContent? = null,
     val generationConfig: GoogleGenerationConfig? = null,
+    val toolConfig: GoogleToolConfig? = null,
 )
 
 /**
@@ -234,6 +235,54 @@ internal class GoogleGenerationConfig(
     val topP: Double? = null,
     val topK: Int? = null,
 )
+
+/**
+ * Configuration for tool calling
+ *
+ * Allows specifying the tool calling mode (AUTO, ANY, NONE)
+ *
+ * @property functionCallingConfig See [GoogleFunctionCallingConfig]
+ */
+@Serializable
+internal class GoogleToolConfig(
+    val functionCallingConfig: GoogleFunctionCallingConfig? = null,
+)
+
+/**
+ * Configuration for tool calling
+ *
+ * @property mode AUTO, ANY or NONE
+ * @property allowedFunctionNames Allowlist of functions LLMis allowed to call
+ */
+@Serializable
+internal class GoogleFunctionCallingConfig(
+    val mode: GoogleFunctionCallingMode? = null,
+    val allowedFunctionNames: List<String>? = null,
+)
+
+/**
+ * Modes of tool calling: [AUTO], [ANY], [NONE]
+ */
+@Serializable
+internal enum class GoogleFunctionCallingMode {
+    /**
+     * LLM automatically decides whether to call tool or generate text
+     */
+    @SerialName("auto")
+    AUTO,
+
+    /**
+     * LLM will only call tools
+     */
+    @SerialName("any")
+    ANY,
+
+    /**
+     * LLM will only generate text
+     */
+    @SerialName("none")
+    NONE,
+}
 
 /**
  * Represents the response from the Google AI.

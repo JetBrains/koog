@@ -14,6 +14,7 @@ public object OpenRouterModels {
         LLMCapability.Schema.JSON.Full,
         LLMCapability.Speculation,
         LLMCapability.Tools,
+        LLMCapability.ToolChoice,
         LLMCapability.Completion
     )
 

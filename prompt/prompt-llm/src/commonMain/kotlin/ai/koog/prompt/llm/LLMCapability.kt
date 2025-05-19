@@ -46,6 +46,18 @@ public sealed class LLMCapability(public val id: String) {
     public data object Tools : LLMCapability("tools")
 
     /**
+     * Represents how tools calling can be configured for the LLM.
+     *
+     * Depending on the LLM, will configure it to generate:
+     * - Automatically choose to generate either text or tool call
+     * - Generate only tool calls, never text
+     * - Generate only text, never tool calls
+     * - Force to call one specific tool among the defined tools
+     */
+    @Serializable
+    public data object ToolChoice : LLMCapability("tools")
+
+    /**
      * Represents a large language model (LLM) capability associated with vision-based tasks.
      * This capability is typically used in models that can process, analyze, and infer insights
      * from visual data or visual representations.

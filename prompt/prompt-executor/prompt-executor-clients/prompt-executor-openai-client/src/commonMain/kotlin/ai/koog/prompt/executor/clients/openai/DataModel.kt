@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.openai
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmInline
 
 @Serializable
 internal data class OpenAIRequest(
@@ -10,7 +11,8 @@ internal data class OpenAIRequest(
     val messages: List<OpenAIMessage>,
     val temperature: Double? = null,
     val tools: List<OpenAITool>? = null,
-    val stream: Boolean = false
+    val stream: Boolean = false,
+    val toolChoice: OpenAIToolChoice? = null
 )
 
 @Serializable
@@ -113,3 +115,21 @@ internal data class OpenAIStreamDelta(
     val content: String? = null,
     val toolCalls: List<OpenAIToolCall>? = null
 )
+
+@Serializable
+internal sealed interface OpenAIToolChoice{
+    @JvmInline
+    @Serializable
+    value class Choice(val value: String): OpenAIToolChoice
+
+    @Serializable
+    data class FunctionName(val name: String)
+    @Serializable
+    data class Function(val name: FunctionName, val type: String = "function"): OpenAIToolChoice
+
+    companion object {
+        val Auto = Choice("auto")
+        val Required = Choice("required")
+        val None = Choice("none")
+    }
+}

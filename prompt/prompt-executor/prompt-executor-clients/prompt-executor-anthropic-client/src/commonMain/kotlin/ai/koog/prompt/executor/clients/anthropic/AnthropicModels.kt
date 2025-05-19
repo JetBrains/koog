@@ -24,6 +24,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -45,6 +46,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -66,6 +68,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -87,6 +90,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -108,6 +112,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -129,6 +134,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion

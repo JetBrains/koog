@@ -14,7 +14,8 @@ internal data class AnthropicMessageRequest(
     val temperature: Double? = null,
     val system: List<SystemAnthropicMessage>? = null,
     val tools: List<AnthropicTool>? = null,
-    val stream: Boolean = false
+    val stream: Boolean = false,
+    val toolChoice: AnthropicToolChoice? = null,
 )
 
 @Serializable
@@ -110,3 +111,18 @@ internal data class AnthropicStreamDelta(
     val text: String? = null,
     val toolUse: AnthropicResponseContent.ToolUse? = null
 )
+
+
+@Serializable
+internal sealed interface AnthropicToolChoice{
+    @Serializable
+    data class Choice(val type: String): AnthropicToolChoice
+    @Serializable
+    data class Tool(val name: String, val type: String = "tool"): AnthropicToolChoice
+
+    companion object {
+        val Auto = Choice("auto")
+        val Any = Choice("any")
+        val None = Choice("none")
+    }
+}
