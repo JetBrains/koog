@@ -1,13 +1,16 @@
 //import ai.grazie.gradle.tests.setupKarmaConfigs
 import ai.grazie.gradle.publish.maven.configureJvmJarManifest
 import ai.grazie.gradle.tests.configureTests
+import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
 plugins {
     kotlin("multiplatform")
+    `maven-publish`
     id("ai.kotlin.configuration")
     id("ai.kotlin.dokka")
+    id("signing")
 }
 
 kotlin {
@@ -25,6 +28,14 @@ kotlin {
 }
 
 configureJvmJarManifest("jvmJar")
+
+val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
+signing {
+    if (isUnderTeamCity) {
+        signatories = GpgSignSignatoryProvider()
+        sign(publishing.publications)
+    }
+}
 
 //setupKarmaConfigs()
 

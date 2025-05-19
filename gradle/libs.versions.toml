@@ -15,6 +15,7 @@ mockk = "1.13.8"
 shadow = "8.1.1"
 mcp = "0.5.0"
 dokka = "2.0.0"
+jetsign = "45.47"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -41,6 +42,7 @@ oshai-kotlin-logging = { module= "io.github.oshai:kotlin-logging", version.ref =
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
+jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 
 [plugins]
 grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }
