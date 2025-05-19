@@ -1,6 +1,6 @@
 package ai.koog.agents.local.memory.storage
 
-import ai.grazie.code.files.jvm.JVMFileSystemProvider
+import ai.koog.agents.local.memory.providers.JVMFileSystemProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
