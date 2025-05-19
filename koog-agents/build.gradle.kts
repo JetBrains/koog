@@ -10,6 +10,7 @@ plugins {
 val excluded = setOf(
     ":agents:agents-test",
     ":examples",
+    ":integration-tests",
     project.path, // the current project should not depend on itself
 )
 

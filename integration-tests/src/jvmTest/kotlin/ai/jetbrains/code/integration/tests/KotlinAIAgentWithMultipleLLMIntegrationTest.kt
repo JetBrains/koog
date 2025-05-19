@@ -1,5 +1,8 @@
-package ai.koog.prompt.executor.llms.all
+package ai.jetbrains.code.integration.tests
 
+import ai.jetbrains.code.integration.tests.ReportingLLMLLMClient.Event
+import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
+import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -19,7 +22,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.all.ReportingLLMLLMClient.Event
+import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -92,7 +95,7 @@ internal fun LLMClient.reportingTo(
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
 @Suppress("SSBasedInspection")
-class AIAgentWithMultipleLLMTest {
+class KotlinAIAgentWithMultipleLLMIntegrationTestTest {
 
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
@@ -289,7 +292,7 @@ class AIAgentWithMultipleLLMTest {
     }
 
     @Test
-    fun integration_testAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+    fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
@@ -605,8 +608,6 @@ class AIAgentWithMultipleLLMTest {
 
     @Test
     fun integration_testAnthropicAgent() = runTest {
-        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
-
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
