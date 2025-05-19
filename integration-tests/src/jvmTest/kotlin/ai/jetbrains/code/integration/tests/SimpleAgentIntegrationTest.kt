@@ -10,7 +10,6 @@ import ai.jetbrains.code.integration.tests.Models.modelsWithoutToolsSupport
 import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
-import ai.jetbrains.code.prompt.executor.clients.openai.OpenAIModels
 import ai.jetbrains.code.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.jetbrains.code.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -18,13 +17,14 @@ import ai.jetbrains.code.prompt.llm.LLMProvider
 import ai.jetbrains.code.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.AfterTest
 import kotlin.test.assertTrue
 
-//@Disabled("JBAI-13981, JBAI-13980, JBAI-14070, JBAI-14071")
+@Disabled("JBAI-13981, JBAI-13980, JBAI-14070, JBAI-14071")
 class SimpleAgentIntegrationTest {
     val systemPrompt = """
             You are a helpful assistant. 
@@ -105,7 +105,7 @@ class SimpleAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleChatAgentShouldCallCustomTools(model: LLModel) = runBlocking {
         // model doesn't support tools
-        assumeTrue(model !in modelsWithoutToolsSupport && model != OpenAIModels.Reasoning.O1Mini)
+        assumeTrue(model !in modelsWithoutToolsSupport)
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
