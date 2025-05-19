@@ -13,8 +13,8 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-cache:prompt-cache-model"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
             }
         }
         

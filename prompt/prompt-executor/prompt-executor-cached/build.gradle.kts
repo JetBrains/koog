@@ -14,8 +14,8 @@ kotlin {
             dependencies {
                 api(project(":prompt:prompt-cache:prompt-cache-model"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
             }
         }
         

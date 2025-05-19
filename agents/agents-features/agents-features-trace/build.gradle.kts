@@ -15,20 +15,20 @@ kotlin {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
 
-                implementation(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.serialization.json)
 
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.ktor.server.sse)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.ktor.server.sse)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
         jvmMain {
             dependencies {
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                implementation(libs.ktor.client.cio)
-                implementation(libs.ktor.server.cio)
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                api(libs.ktor.client.cio)
+                api(libs.ktor.server.cio)
             }
         }
 

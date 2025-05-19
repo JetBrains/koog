@@ -12,8 +12,8 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-model"))
-                implementation(project(":agents:agents-tools"))
-                implementation(libs.kotlinx.coroutines.core)
+                api(project(":agents:agents-tools"))
+                api(libs.kotlinx.coroutines.core)
             }
         }
     }

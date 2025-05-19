@@ -12,32 +12,32 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":agents:agents-tools"))
-                implementation(project(":prompt:prompt-llm"))
-                implementation(project(":prompt:prompt-model"))
-                implementation(project(":agents:agents-tools"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-model"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-llms"))
-                implementation(project(":embeddings:embeddings-base"))
+                api(project(":agents:agents-tools"))
+                api(project(":prompt:prompt-llm"))
+                api(project(":prompt:prompt-model"))
+                api(project(":agents:agents-tools"))
+                api(project(":prompt:prompt-executor:prompt-executor-model"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients"))
+                api(project(":prompt:prompt-executor:prompt-executor-llms"))
+                api(project(":embeddings:embeddings-base"))
 
-                implementation(libs.ktor.client.logging)
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.ktor.client.logging)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
         jvmMain {
             dependencies {
-                implementation(libs.ktor.client.cio)
+                api(libs.ktor.client.cio)
             }
         }
 
         jsMain {
             dependencies {
-                implementation(libs.ktor.client.js)
+                api(libs.ktor.client.js)
             }
         }
 

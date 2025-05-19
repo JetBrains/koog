@@ -12,24 +12,24 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":agents:agents-utils"))
+                api(project(":agents:agents-utils"))
 
-                implementation(libs.kotlinx.datetime)
-                implementation(libs.kotlinx.io.core)
-                implementation(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.datetime)
+                api(libs.kotlinx.io.core)
+                api(libs.kotlinx.serialization.json)
 
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.ktor.server.sse)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.client.logging)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.ktor.server.sse)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
         jvmMain {
             dependencies {
-                implementation(libs.ktor.client.cio)
-                implementation(libs.ktor.server.cio)
+                api(libs.ktor.client.cio)
+                api(libs.ktor.server.cio)
             }
         }
 

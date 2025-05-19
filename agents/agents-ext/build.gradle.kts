@@ -17,7 +17,7 @@ kotlin {
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-utils"))
 
-                implementation(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.serialization.json)
             }
         }
 

@@ -12,13 +12,13 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(project(":prompt:prompt-llm"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients"))
-                implementation(project(":embeddings:embeddings-base"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.serialization.kotlinx.json)
+                api(project(":prompt:prompt-llm"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients"))
+                api(project(":embeddings:embeddings-base"))
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
             }
         }
 

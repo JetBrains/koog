@@ -19,21 +19,21 @@ kotlin {
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-structure"))
 
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                implementation(project(":prompt:prompt-markdown"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                api(project(":prompt:prompt-markdown"))
 
-                implementation(libs.kotlinx.datetime)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.ktor.client.content.negotiation)
-                implementation(libs.ktor.client.logging)
-                implementation(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.kotlinx.datetime)
+                api(libs.kotlinx.serialization.json)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.client.logging)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
         commonTest {
             dependencies {
-                api(project(":agents:agents-features:agents-features-event-handler"))
+                implementation(project(":agents:agents-features:agents-features-event-handler"))
 
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)

@@ -12,18 +12,18 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                implementation(kotlin("test"))
+                api(kotlin("test"))
 
-                implementation(project(":agents:agents-core"))
-                implementation(project(":agents:agents-ext"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+                api(project(":agents:agents-core"))
+                api(project(":agents:agents-ext"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
-                implementation(libs.jetbrains.annotations)
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.serialization.json)
-                implementation(libs.logback.classic)
-                implementation(libs.oshai.kotlin.logging)
+                api(libs.jetbrains.annotations)
+                api(libs.kotlinx.coroutines.core)
+                api(libs.kotlinx.serialization.json)
+                api(libs.logback.classic)
+                api(libs.oshai.kotlin.logging)
             }
         }
 
