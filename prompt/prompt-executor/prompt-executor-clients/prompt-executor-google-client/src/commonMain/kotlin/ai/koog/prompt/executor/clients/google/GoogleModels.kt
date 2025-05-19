@@ -185,16 +185,6 @@ public object GoogleModels {
     )
 
     /**
-     * Gemini Pro Vision is the multimodal version of the Gemini 1.0 Pro model.
-     * Capable of processing both text and images.
-     */
-    public val GeminiProVision: LLModel = LLModel(
-        provider = LLMProvider.Google,
-        id = "gemini-pro-vision",
-        capabilities = multimodalCapabilities
-    )
-
-    /**
      * Gemini 2.5 Pro Preview 05-06 is one of the Gemini 2.5 Pro preview versions.
      * It offers advanced capabilities for complex tasks.
      */
