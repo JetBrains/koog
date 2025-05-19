@@ -63,7 +63,11 @@ fun main() = runBlocking {
 
 ## Using in your projects
 
-- supported targets (JVM and JS)
+### Supported targets
+
+Currently, the framework supports two targets: JVM and JS.
+
+On JVM, JDK 17 or higher is required to use the framework.
 ### How to use with Gradle (Kotlin DSL)
   To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
 ```kotlin
