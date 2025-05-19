@@ -133,10 +133,9 @@ task("printConfigForLocalCodeEngine") {
 apiValidation {
     ignoredProjects.addAll(listOf(
         "examples",
+        "koog-agents"
     ))
     klib.enabled = true
-    // Disable validation for now
-    validationDisabled = true
 }
 
 dependencies {
