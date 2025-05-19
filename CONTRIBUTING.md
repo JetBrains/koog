@@ -6,13 +6,13 @@ One can contribute to the project by reporting issues or submitting changes via 
 
 ## Reporting issues
 
-Please use [GitHub issues](https://github.com/JetBrains/koog-agents/issues) for filing feature requests and bug reports.
+Please use [GitHub issues](https://github.com/JetBrains/koog/issues) for filing feature requests and bug reports.
 
 Questions about usage and general inquiries are better suited for StackOverflow <!-- TODO: are we going to track it? --> or the <!-- TODO: channel name --> channel in KotlinLang Slack.
 
 ## Submitting changes
 
-Submit pull requests [here](https://github.com/JetBrains/koog-agents/pulls).
+Submit pull requests [here](https://github.com/JetBrains/koog/pulls).
 However, please keep in mind that maintainers will have to support the resulting code of the project,
 so do familiarize yourself with the following guidelines.
 
@@ -37,6 +37,10 @@ so do familiarize yourself with the following guidelines.
     * Follow the style of writing tests that is used in this project:
       name test functions as `testXxx`. Don't use backticks in test names.
 * Comment on the existing issue if you want to work on it. Ensure that the issue not only describes a problem but also describes a solution that has received positive feedback. Propose a solution if none has been suggested.
+
+## Documentation
+
+To propose documentation changes, please go to https://github.com/JetBrains/koog-docs
 
 ## Building
 
