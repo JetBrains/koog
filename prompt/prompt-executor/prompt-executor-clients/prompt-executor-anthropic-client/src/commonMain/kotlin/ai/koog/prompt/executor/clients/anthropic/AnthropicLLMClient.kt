@@ -88,6 +88,7 @@ public open class AnthropicLLMClient(
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true // Ensure default values are included in serialization
+        explicitNulls = false
         namingStrategy = JsonNamingStrategy.SnakeCase
     }
 

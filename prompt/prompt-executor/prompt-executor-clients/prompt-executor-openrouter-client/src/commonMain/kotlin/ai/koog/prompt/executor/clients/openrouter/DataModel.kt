@@ -102,14 +102,18 @@ internal data class OpenRouterStreamDelta(
 internal sealed interface OpenRouterToolChoice{
     @JvmInline
     @Serializable
-    value class Choice(val value: String): OpenRouterToolChoice
+    value class Choice internal constructor(val value: String): OpenRouterToolChoice
 
     @Serializable
     data class FunctionName(val name: String)
     @Serializable
-    data class Function(val name: FunctionName, val type: String = "function"):  OpenRouterToolChoice
+    data class Function(val name: FunctionName) : OpenRouterToolChoice {
+        val type: String = "function"
+    }
+
 
     companion object {
+        // OpenAI api is too "dynamic", have to inline value here, so alas, no proper classes hierarchy, creating "objects" instead
         val Auto = Choice("auto")
         val Required = Choice("required")
         val None = Choice("none")

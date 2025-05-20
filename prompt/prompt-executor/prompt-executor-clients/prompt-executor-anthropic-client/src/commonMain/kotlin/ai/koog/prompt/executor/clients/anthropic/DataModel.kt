@@ -116,13 +116,18 @@ internal data class AnthropicStreamDelta(
 @Serializable
 internal sealed interface AnthropicToolChoice{
     @Serializable
-    data class Choice(val type: String): AnthropicToolChoice
-    @Serializable
-    data class Tool(val name: String, val type: String = "tool"): AnthropicToolChoice
+    @SerialName("auto")
+    data object Auto : AnthropicToolChoice
 
-    companion object {
-        val Auto = Choice("auto")
-        val Any = Choice("any")
-        val None = Choice("none")
-    }
+    @Serializable
+    @SerialName("any")
+    data object Any : AnthropicToolChoice
+
+    @Serializable
+    @SerialName("none")
+    data object None : AnthropicToolChoice
+
+    @Serializable
+    @SerialName("tool")
+    data class Tool(val name: String): AnthropicToolChoice
 }
