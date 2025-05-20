@@ -13,29 +13,33 @@ import kotlinx.coroutines.runBlocking
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.images.PullPolicy
 
-class OllamaTestFixture {
+class OllamaTestFixture : AutoCloseable {
     private val PORT = 11434
-    private val ollamaContainer =
-        GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
-            withExposedPorts(PORT)
-            withImagePullPolicy(PullPolicy.alwaysPull())
-        }
 
-    lateinit var executor: SingleLLMPromptExecutor
-    val model = OllamaModels.Meta.LLAMA_3_2
+    private val container: GenericContainer<*> by lazy { startContainer() }
 
-    fun setUp() {
-        ollamaContainer.start()
-        val host = ollamaContainer.host
-        val port = ollamaContainer.getMappedPort(PORT)
-        val baseUrl = "http://$host:$port"
-        waitForOllamaServer(baseUrl)
-
-        executor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
+    private val baseUrl: String by lazy {
+        val host = container.host
+        val port = container.getMappedPort(PORT)
+        "http://$host:$port"
     }
 
-    fun tearDown() {
-        ollamaContainer.stop()
+    val executor: SingleLLMPromptExecutor by lazy {
+        waitForOllamaServer(baseUrl)
+        SingleLLMPromptExecutor(OllamaClient(baseUrl))
+    }
+
+    val model = OllamaModels.Meta.LLAMA_3_2
+
+    override fun close() {
+        container.stop()
+    }
+
+    private fun startContainer(): GenericContainer<*> {
+        return GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
+            withExposedPorts(PORT)
+            withImagePullPolicy(PullPolicy.alwaysPull())
+        }.apply { start() }
     }
 
     private fun waitForOllamaServer(baseUrl: String) {
