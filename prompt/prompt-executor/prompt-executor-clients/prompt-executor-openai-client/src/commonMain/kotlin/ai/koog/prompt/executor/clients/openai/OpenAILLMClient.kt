@@ -8,9 +8,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -66,6 +68,8 @@ public open class OpenAILLMClient(
         encodeDefaults = true
         explicitNulls = false
         namingStrategy = JsonNamingStrategy.SnakeCase
+        // OpenAI API is not polymorphic, it's "dynamic". Don't add polymorphic discriminators
+        classDiscriminatorMode = ClassDiscriminatorMode.NONE
     }
 
     private val httpClient = baseClient.config {
@@ -253,12 +257,21 @@ public open class OpenAILLMClient(
             )
         }
 
+        val toolChoice = when (val toolChoice = prompt.params.toolChoice) {
+            LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
+            LLMParams.ToolChoice.None -> OpenAIToolChoice.None
+            LLMParams.ToolChoice.Required -> OpenAIToolChoice.Required
+            is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(function=FunctionName(toolChoice.name))
+            null -> null
+        }
+
         return OpenAIRequest(
             model = model.id,
             messages = messages,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
-            stream = stream
+            stream = stream,
+            toolChoice = toolChoice,
         )
     }
 

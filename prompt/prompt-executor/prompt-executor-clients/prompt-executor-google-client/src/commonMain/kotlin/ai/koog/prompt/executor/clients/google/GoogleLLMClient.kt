@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -281,11 +282,26 @@ public open class GoogleLLMClient(
             maxOutputTokens = 2048,
         )
 
+
+        val functionCallingConfig = when (val toolChoice = prompt.params.toolChoice) {
+            LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
+            LLMParams.ToolChoice.None -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.NONE)
+            LLMParams.ToolChoice.Required -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.ANY)
+            is LLMParams.ToolChoice.Named -> {
+                GoogleFunctionCallingConfig(
+                    GoogleFunctionCallingMode.ANY,
+                    allowedFunctionNames = listOf(toolChoice.name)
+                )
+            }
+            null -> null
+        }
+
         return GoogleRequest(
             contents = contents,
             systemInstruction = googleSystemInstruction,
             tools = googleTools,
-            generationConfig = generationConfig
+            generationConfig = generationConfig,
+            toolConfig = GoogleToolConfig(functionCallingConfig),
         )
     }
 

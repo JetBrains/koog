@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -87,6 +88,7 @@ public open class AnthropicLLMClient(
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true // Ensure default values are included in serialization
+        explicitNulls = false
         namingStrategy = JsonNamingStrategy.SnakeCase
     }
 
@@ -291,6 +293,14 @@ public open class AnthropicLLMClient(
             )
         }
 
+        val toolChoice = when (val toolChoice = prompt.params.toolChoice) {
+            LLMParams.ToolChoice.Auto -> AnthropicToolChoice.Auto
+            LLMParams.ToolChoice.None -> AnthropicToolChoice.None
+            LLMParams.ToolChoice.Required -> AnthropicToolChoice.Any
+            is LLMParams.ToolChoice.Named -> AnthropicToolChoice.Tool(name=toolChoice.name)
+            null -> null
+        }
+
         // Always include max_tokens as it's required by the API
         return AnthropicMessageRequest(
             model = settings.modelVersionsMap[model]
@@ -301,7 +311,8 @@ public open class AnthropicLLMClient(
             temperature = prompt.params.temperature ?: 0.7, // Default temperature if not provided
             system = systemMessage,
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
-            stream = stream
+            stream = stream,
+            toolChoice = toolChoice,
         )
     }
 

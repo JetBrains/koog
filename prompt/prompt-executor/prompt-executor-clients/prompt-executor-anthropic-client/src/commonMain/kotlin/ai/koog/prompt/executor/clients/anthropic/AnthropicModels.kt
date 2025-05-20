@@ -24,27 +24,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
-            LLMCapability.Vision,
-            LLMCapability.Schema.JSON.Full,
-            LLMCapability.Completion
-        )
-    )
-
-    /**
-     * Claude 3 Sonnet is Anthropic's balanced model, offering a combination of intelligence and speed.
-     * It's well-suited for a wide range of tasks across business and personal use cases.
-     *
-     * 200K context window
-     * Knowledge cutoff: August 2023
-     *
-     * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
-     */
-    public val Sonnet_3: LLModel = LLModel(
-        provider = LLMProvider.Anthropic,
-        id = "claude-3-sonnet",
-        capabilities = listOf(
-            LLMCapability.Temperature,
-            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -66,6 +46,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -87,6 +68,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -108,6 +90,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -129,6 +112,7 @@ public object AnthropicModels {
         capabilities = listOf(
             LLMCapability.Temperature,
             LLMCapability.Tools,
+            LLMCapability.ToolChoice,
             LLMCapability.Vision,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
@@ -138,7 +122,6 @@ public object AnthropicModels {
 
 internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
     AnthropicModels.Opus to "claude-3-opus-20240229",
-    AnthropicModels.Sonnet_3 to "claude-3-sonnet-20240229",
     AnthropicModels.Haiku_3 to "claude-3-haiku-20240307",
     AnthropicModels.Sonnet_3_5 to "claude-3-5-sonnet-20241022",
     AnthropicModels.Haiku_3_5 to "claude-3-5-haiku-20241022",
