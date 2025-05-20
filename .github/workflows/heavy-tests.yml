@@ -9,7 +9,7 @@ name: Heavy Tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
 
 jobs:
   integration-tests:
