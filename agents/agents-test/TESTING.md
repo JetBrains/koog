@@ -1,6 +1,6 @@
-# Testing Agents in Code Engine
+# Testing Agents in Koog
 
-This guide explains how to effectively test AI agents in the Code Engine framework. It covers various testing approaches, from simple mocking of LLM responses to complex graph structure validation.
+This guide explains how to effectively test AI agents in the Koog framework. It covers various testing approaches, from simple mocking of LLM responses to complex graph structure validation.
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -17,7 +17,7 @@ This guide explains how to effectively test AI agents in the Code Engine framewo
 
 ## Introduction
 
-Testing AI agents can be challenging due to their complex behavior and dependencies on external systems like LLMs. The Code Engine framework provides specialized tools to make testing agents more predictable and reliable.
+Testing AI agents can be challenging due to their complex behavior and dependencies on external systems like LLMs. The Koog framework provides specialized tools to make testing agents more predictable and reliable.
 
 ## Basic Testing Concepts
 
