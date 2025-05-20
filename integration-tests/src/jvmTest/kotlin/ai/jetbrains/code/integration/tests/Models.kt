@@ -7,20 +7,6 @@ import ai.koog.prompt.llm.LLModel
 import java.util.stream.Stream
 
 object Models {
-    val modelsWithoutToolsSupport = listOf(
-        OpenAIModels.Reasoning.O1Mini,
-        GoogleModels.Gemini2_5ProPreview0506,
-        GoogleModels.Gemini2_0FlashLite,
-        GoogleModels.Gemini2_0FlashLite001,
-        GoogleModels.Gemini1_5FlashLatest,
-        GoogleModels.Gemini1_5Flash001,
-        GoogleModels.Gemini1_5Flash002,
-        GoogleModels.Gemini1_5Flash8B,
-        GoogleModels.Gemini1_5Flash8B001,
-        GoogleModels.Gemini1_5Flash8BLatest,
-        GoogleModels.Gemini2_5FlashPreview0417,
-    )
-
     @JvmStatic
     fun openAIModels(): Stream<LLModel> {
         return Stream.of(
