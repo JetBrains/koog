@@ -68,7 +68,8 @@ public open class OpenAILLMClient(
         encodeDefaults = true
         explicitNulls = false
         namingStrategy = JsonNamingStrategy.SnakeCase
-        classDiscriminator = "__type__"
+        // OpenAI API is not polymorphic, it's "dynamic". Don't add polymorphic discriminators
+        classDiscriminatorMode = ClassDiscriminatorMode.NONE
     }
 
     private val httpClient = baseClient.config {

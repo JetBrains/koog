@@ -37,6 +37,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -85,6 +86,8 @@ public class OpenRouterLLMClient(
         encodeDefaults = true
         explicitNulls = false
         namingStrategy = JsonNamingStrategy.SnakeCase
+        // OpenRouter API is not polymorphic, it's "dynamic". Don't add polymorphic discriminators
+        classDiscriminatorMode = ClassDiscriminatorMode.NONE
     }
 
     private val httpClient = baseClient.config {
