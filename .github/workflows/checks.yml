@@ -9,9 +9,8 @@ name: Checks
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main" ]
 
 jobs:
   compilation:
