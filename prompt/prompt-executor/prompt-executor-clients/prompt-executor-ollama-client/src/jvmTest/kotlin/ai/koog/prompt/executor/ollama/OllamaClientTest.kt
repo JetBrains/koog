@@ -8,28 +8,21 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 @EnabledOnOs(OS.LINUX)
+@ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaClientTest {
     companion object {
-        private val fixture = OllamaTestFixture()
+        @field:InjectOllamaTestFixture
+        private lateinit var fixture: OllamaTestFixture
         private val executor get() = fixture.executor
         private val model get() = fixture.model
-
-        @JvmStatic
-        @BeforeAll
-        fun setUp() = fixture.setUp()
-
-        @JvmStatic
-        @AfterAll
-        fun tearDown() = fixture.tearDown()
     }
 
     @Test
