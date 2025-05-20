@@ -75,6 +75,20 @@ task("reportProjectVersionToTeamCity") {
     }
 }
 
+tasks {
+    val packSonatypeCentralBundle by registering(Zip::class) {
+        group = "publishing"
+
+        subprojects {
+            dependsOn(tasks.withType<PublishToMavenRepository>())
+        }
+
+        from(rootProject.layout.buildDirectory.dir("artifacts/maven"))
+        archiveFileName.set("bundle.zip")
+        destinationDirectory.set(layout.buildDirectory)
+    }
+}
+
 dependencies {
     dokka(project(":agents:agents-core"))
     dokka(project(":agents:agents-features:agents-features-common"))
