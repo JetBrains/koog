@@ -40,7 +40,7 @@ so do familiarize yourself with the following guidelines.
 
 ## Documentation
 
-To propose documentation changes, please go to https://github.com/JetBrains/koog-docs
+The documentation is published on https://docs.koog.ai/. To propose changes or improvements to the documentation, go to the https://github.com/JetBrains/koog-docs repository.
 
 ## Building
 
