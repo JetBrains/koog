@@ -22,7 +22,8 @@ public object GoogleModels {
      * Capabilities for models that support tools/function calling
      */
     private val toolCapabilities: List<LLMCapability> = standardCapabilities + listOf(
-        LLMCapability.Tools
+        LLMCapability.Tools,
+        LLMCapability.ToolChoice,
     )
 
     /**
@@ -33,7 +34,7 @@ public object GoogleModels {
     /**
      * Full capabilities including multimodal and tools
      */
-    private val fullCapabilities: List<LLMCapability> = multimodalCapabilities + listOf(LLMCapability.Tools)
+    private val fullCapabilities: List<LLMCapability> = multimodalCapabilities + toolCapabilities
 
     /**
      * Gemini 2.0 Flash is a fast, efficient model for a wide range of tasks.

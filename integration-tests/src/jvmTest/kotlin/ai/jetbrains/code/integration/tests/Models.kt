@@ -47,7 +47,6 @@ object Models {
             AnthropicModels.Haiku_3,
             AnthropicModels.Haiku_3_5,
 
-            AnthropicModels.Sonnet_3,
             AnthropicModels.Sonnet_3_5,
             AnthropicModels.Sonnet_3_7,
         )
