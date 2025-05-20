@@ -15,17 +15,19 @@ import org.testcontainers.images.PullPolicy
 
 class OllamaTestFixture {
     private val PORT = 11434
-    private val ollamaContainer =
-        GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
-            withExposedPorts(PORT)
-            withImagePullPolicy(PullPolicy.alwaysPull())
-        }
+
+    private lateinit var ollamaContainer: GenericContainer<*>
 
     lateinit var executor: SingleLLMPromptExecutor
     val model = OllamaModels.Meta.LLAMA_3_2
 
     fun setUp() {
+        ollamaContainer = GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
+            withExposedPorts(PORT)
+            withImagePullPolicy(PullPolicy.alwaysPull())
+        }
         ollamaContainer.start()
+
         val host = ollamaContainer.host
         val port = ollamaContainer.getMappedPort(PORT)
         val baseUrl = "http://$host:$port"
