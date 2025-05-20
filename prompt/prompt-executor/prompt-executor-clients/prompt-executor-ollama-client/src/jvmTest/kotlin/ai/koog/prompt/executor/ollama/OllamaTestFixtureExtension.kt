@@ -32,14 +32,14 @@ class OllamaTestFixtureExtension : BeforeAllCallback, AfterAllCallback {
     private fun setupFields(testClass: Class<*>) {
         findFields(testClass).forEach { field ->
             field.isAccessible = true
-            field.set(null, OllamaTestFixture())
+            field.set(null, OllamaTestFixture().apply { setUp() })
         }
     }
 
     private fun tearDownFields(testClass: Class<*>) {
         findFields(testClass).forEach { field ->
             field.isAccessible = true
-            (field.get(null) as OllamaTestFixture).close()
+            (field.get(null) as OllamaTestFixture).tearDown()
             field.set(null, null)
         }
     }
