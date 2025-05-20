@@ -36,7 +36,7 @@ val markdown: String = markdown {
         "Extensible"
     )
     
-    link("Code Engine", "https://github.com/JetBrains/code-engine")
+    link("Koog", "https://github.com/JetBrains/koog")
 }
 ```
 
