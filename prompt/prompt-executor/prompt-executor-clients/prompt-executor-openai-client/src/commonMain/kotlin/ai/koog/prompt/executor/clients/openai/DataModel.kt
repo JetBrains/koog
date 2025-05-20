@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.openai
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonObject
 import kotlin.jvm.JvmInline
 
@@ -125,10 +126,9 @@ internal sealed interface OpenAIToolChoice{
     @Serializable
     data class FunctionName(val name: String)
     @Serializable
-    data class Function(val name: FunctionName): OpenAIToolChoice {
+    data class Function(val function: FunctionName): OpenAIToolChoice {
         val type: String = "function"
     }
-
 
     companion object {
         // OpenAI api is too "dynamic", have to inline value here, so alas, no proper classes hierarchy, creating "objects" instead

@@ -6,15 +6,12 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
-import kotlin.test.BeforeTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Reads the Gemini API key from environment variables.
@@ -184,5 +181,127 @@ class GoogleLLMClientTest {
         val content = (response.first() as Message.Assistant).content
         assertTrue(content.contains("fun factorial"), "Response should contain a factorial function")
         assertTrue(content.contains("return"), "Response should contain a return statement")
+    }
+
+
+
+    /**
+     * Tests function calling capabilities with a simple calculator tool.
+     */
+    @Disabled("TODO: pass the `GEMINI_API_TEST_KEY`")
+    @Test
+    fun testToolChoice() = runTest {
+        if (model.capabilities.contains(LLMCapability.ToolChoice)) {
+            val client = GoogleLLMClient(apiKey)
+
+            val calculatorTool = ToolDescriptor(
+                name = "calculator",
+                description = "A calculator tool that performs basic arithmetic operations on two integer numbers.",
+                requiredParameters = listOf(
+                    ToolParameterDescriptor(
+                        name = "operation",
+                        description = "The arithmetic operation to perform (ADD, SUBTRACT, MULTIPLY, or DIVIDE).",
+                        type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    ),
+                    ToolParameterDescriptor(
+                        name = "a",
+                        description = "The first integer argument for the calculation.",
+                        type = ToolParameterType.Integer
+                    ),
+                    ToolParameterDescriptor(
+                        name = "b",
+                        description = "The second integer argument for the calculation.",
+                        type = ToolParameterType.Integer
+                    )
+                )
+            )
+
+            val prompt = Prompt.build("test-tools") {
+                system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
+                user("What is 123 + 456?")
+            }
+
+            /** tool choice auto is default and thus is tested by [testExecuteWithTools] */
+
+            // tool choice required
+            run {
+                val response = client.execute(
+                    prompt.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.Required
+                        )
+                    ),
+                    model,
+                    listOf(calculatorTool)
+                )
+
+                assertNotNull(response, "Response should not be null")
+                assertTrue(response.isNotEmpty(), "Response should not be empty")
+
+                assertTrue(response.first() is Message.Tool.Call)
+
+                val toolCall = response.first() as Message.Tool.Call
+                assertEquals("calculator", toolCall.tool, "Tool name should be 'calculator'")
+                assertTrue(
+                    toolCall.content.contains("ADD", ignoreCase = true) ||
+                            toolCall.content.contains("add", ignoreCase = true),
+                    "Tool call should use 'ADD' operation"
+                )
+                assertTrue(toolCall.content.contains("123"), "Tool call should include first number")
+                assertTrue(toolCall.content.contains("456"), "Tool call should include second number")
+            }
+
+            // tool choice none
+            run {
+                val response = client.execute(
+                    Prompt.build("test-tools") {
+                        system("You are a helpful assistant. Do not use calculator tool, it's broken!")
+                        user("What is 123 + 456?")
+                    }.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.None
+                        )
+                    ),
+                    model,
+                    listOf(calculatorTool)
+                )
+
+                assertNotNull(response, "Response should not be null")
+                assertTrue(response.isNotEmpty(), "Response should not be empty")
+
+                assertTrue(response.first() is Message.Assistant)
+
+                assertTrue(
+                    (response.first() as Message.Assistant).content.contains("579"),
+                    "Response should contain the correct answer '579'"
+                )
+            }
+
+            // tool choice named
+            run {
+                val nothingTool = ToolDescriptor(
+                    name = "nothing",
+                    description = "A tool that does nothing",
+                )
+
+                val response = client.execute(
+                    prompt.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.Named(nothingTool.name)
+                        )
+                    ),
+                    model,
+                    listOf(calculatorTool, nothingTool)
+                )
+
+                assertNotNull(response, "Response should not be null")
+                assertTrue(response.isNotEmpty(), "Response should not be empty")
+
+                assertTrue(response.first() is Message.Tool.Call)
+
+                val toolCall = response.first() as Message.Tool.Call
+                assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
+            }
+        }
     }
 }

@@ -68,6 +68,7 @@ public open class OpenAILLMClient(
         encodeDefaults = true
         explicitNulls = false
         namingStrategy = JsonNamingStrategy.SnakeCase
+        classDiscriminator = "__type__"
     }
 
     private val httpClient = baseClient.config {
@@ -259,7 +260,7 @@ public open class OpenAILLMClient(
             LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
             LLMParams.ToolChoice.None -> OpenAIToolChoice.None
             LLMParams.ToolChoice.Required -> OpenAIToolChoice.Required
-            is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(name=FunctionName(toolChoice.name))
+            is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(function=FunctionName(toolChoice.name))
             null -> null
         }
 
