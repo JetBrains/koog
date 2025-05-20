@@ -38,14 +38,14 @@ publishing {
         if (name.contains("jvm", ignoreCase = true)) {
             artifact(javadocJar)
         }
+    }
+}
 
-        val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
-        if (isUnderTeamCity) {
-            the<SigningExtension>().apply {
-                signatories = GpgSignSignatoryProvider()
-                sign(this@all)
-            }
-        }
+val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
+signing {
+    if (isUnderTeamCity) {
+        signatories = GpgSignSignatoryProvider()
+        sign(publishing.publications)
     }
 }
 
