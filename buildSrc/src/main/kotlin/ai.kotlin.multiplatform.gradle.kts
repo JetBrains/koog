@@ -35,7 +35,9 @@ val javadocJar by tasks.registering(Jar::class) {
 
 publishing {
     publications.withType(MavenPublication::class).all {
-        artifact(javadocJar)
+        if (name.contains("jvm", ignoreCase = true)) {
+            artifact(javadocJar)
+        }
 
         val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
         if (isUnderTeamCity) {
