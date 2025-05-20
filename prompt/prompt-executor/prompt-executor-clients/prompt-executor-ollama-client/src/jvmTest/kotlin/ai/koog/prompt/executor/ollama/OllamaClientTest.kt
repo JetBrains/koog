@@ -411,7 +411,7 @@ class OllamaClientTest {
     }
 
     @Test
-    fun testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
+    fun integration_testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words.")
