@@ -59,7 +59,7 @@ kotlin {
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
-                implementation("org.testcontainers:testcontainers:1.19.7")
+                implementation(libs.testcontainers)
             }
         }
     }
