@@ -6,6 +6,7 @@
 [![CI status](https://img.shields.io/github/checks-status/JetBrains/koog/main)](https://github.com/JetBrains/koog/actions?query=branch%3Amain)
 [![GitHub license](https://img.shields.io/github/license/JetBrains/koog)](LICENSE)
 [![docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
+[![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
 <!-- TODO: maven central link -->
 
 
