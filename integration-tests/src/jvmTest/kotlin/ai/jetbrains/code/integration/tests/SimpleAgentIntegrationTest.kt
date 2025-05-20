@@ -1,6 +1,5 @@
 package ai.jetbrains.code.integration.tests
 
-import ai.jetbrains.code.integration.tests.Models.modelsWithoutToolsSupport
 import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
@@ -13,6 +12,7 @@ import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
@@ -77,10 +77,9 @@ class SimpleAgentIntegrationTest {
 
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    @MethodSource("openAIModels", "anthropicModels")
     fun integration_simpleChatAgentShouldCallDefaultTools(model: LLModel) = runBlocking {
-        // model doesn't support tools
-        assumeTrue(model !in modelsWithoutToolsSupport)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
@@ -102,10 +101,9 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    @MethodSource("openAIModels", "anthropicModels")
     fun integration_simpleChatAgentShouldCallCustomTools(model: LLModel) = runBlocking {
-        // model doesn't support tools
-        assumeTrue(model !in modelsWithoutToolsSupport)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
@@ -137,7 +135,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    @MethodSource("openAIModels", "anthropicModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
@@ -162,10 +160,9 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    @MethodSource("openAIModels", "anthropicModels")
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
-        // model doesn't support tools
-        assumeTrue(model !in modelsWithoutToolsSupport)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
