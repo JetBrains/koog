@@ -24,19 +24,30 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.utility.DockerImageName
+import org.testcontainers.images.PullPolicy
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 class OllamaIntegrationTest {
     companion object {
-        const val IMAGE_NAME = "ollama-local:llama3.2"
         const val PORT = 11434
-        private val ollamaContainer = GenericContainer(DockerImageName.parse(IMAGE_NAME)).withExposedPorts(PORT)
+        private val ollamaContainer =
+            GenericContainer("registry.jetbrains.team/p/grazi/grazie-infra-public/koog-ollama:1.9").apply {
+                withExposedPorts(PORT)
+                withImagePullPolicy(PullPolicy.alwaysPull())
+                // Uncomment to run locally on MacOS
+                /*withCreateContainerCmdModifier { cmd ->
+                    cmd.withPlatform("linux/amd64")
+                }*/
+            }
 
         private lateinit var baseUrl: String
+        private lateinit var client: OllamaClient
+        private lateinit var executor: SingleLLMPromptExecutor
+        private val model = OllamaModels.Meta.LLAMA_3_2
 
         @JvmStatic
         @BeforeAll
@@ -46,6 +57,9 @@ class OllamaIntegrationTest {
             val port = ollamaContainer.getMappedPort(PORT)
             baseUrl = "http://$host:$port"
             waitForOllamaServer()
+
+            client = OllamaClient(baseUrl)
+            executor = SingleLLMPromptExecutor(client)
         }
 
         @JvmStatic
@@ -61,7 +75,7 @@ class OllamaIntegrationTest {
                 }
             }
 
-            val maxAttempts = 10
+            val maxAttempts = 100
 
             runBlocking {
                 for (attempt in 1..maxAttempts) {
@@ -84,10 +98,6 @@ class OllamaIntegrationTest {
             }
         }
     }
-
-    private val model = OllamaModels.Meta.LLAMA_3_2
-    val client = OllamaClient()
-    val executor = SingleLLMPromptExecutor(client)
 
     private fun createTestStrategy(policyName: String) =
         strategy("test-ollama-$policyName") {
@@ -207,7 +217,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun integration_testOllamaAgentClearContext() = runTest {
+    fun integration_testOllamaAgentClearContext() = runTest(timeout = 600.seconds) {
         val strategy = createTestStrategy("clear")
         val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
@@ -219,7 +229,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun integration_testOllamaAgentPersistContext() = runTest {
+    fun integration_testOllamaAgentPersistContext() = runTest(timeout = 600.seconds) {
         val strategy = createTestStrategy("persist")
         val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
@@ -232,7 +242,7 @@ class OllamaIntegrationTest {
     }
 
     @Test
-    fun integration_testOllamaAgentCompressContext() = runTest {
+    fun integration_testOllamaAgentCompressContext() = runTest(timeout = 600.seconds) {
         val strategy = createTestStrategy("compress")
         val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
