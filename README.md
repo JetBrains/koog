@@ -9,39 +9,31 @@
 [![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
 <!-- TODO: maven central link -->
 
-
-Koog is a Kotlin-based framework for creating and running AI agents locally without requiring external services.
-It provides a pure Kotlin implementation for building intelligent agents that can interact with tools,
-handle complex workflows, and communicate with users.
-
 ## Overview
 
-Koog is a Kotlin-based framework designed to create and run AI agents locally without external
-services. It provides a pure Kotlin implementation for building intelligent agents that can interact with
-tools, handle complex workflows, and communicate with users.
+Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin. It lets you create agents that can interact with tools, handle complex workflows, and communicate with users.
 
 ### Key features
 
 Key features of Koog include:
 
-- **Pure Kotlin Implementation**: Build AI agents entirely in Kotlin with no external dependencies, giving you full control.
-- **MCP Integration**: Connect to Model Control Protocol for enhanced model management.
-- **Embedding Capabilities**: Use vector embeddings for semantic search and knowledge retrieval.
-- **Custom Tool Creation**: Extend your agents with tools that access external systems and APIs.
-- **Ready-to-Use Components**: Speed up development with pre-built solutions for common AI engineering challenges.
-- **Intelligent History Compression**: Optimize token usage while maintaining conversation context using various pre-built strategies.
-- **Powerful Streaming API**: Process responses in real-time with Markdown streams support and parallel tool calls.
-- **Persistent Agent Memory**: Enable knowledge retention across sessions and even different agents.
-- **Comprehensive Tracing**: Debug and monitor agent execution with detailed and configurable tracing.
-- **Flexible Graph Workflows**: Design complex agent behaviors using intuitive graph-based workflows.
-- **Modular Feature System**: Customize agent capabilities through a composable architecture.
-- **Scalable Architecture**: Handle workloads from simple chatbots to enterprise applications.
+- **Pure Kotlin implementation**: Build AI agents entirely in natural and idiomatic Kotlin.
+- **MCP integration**: Connect to Model Control Protocol for enhanced model management.
+- **Embedding capabilities**: Use vector embeddings for semantic search and knowledge retrieval.
+- **Custom tool creation**: Extend your agents with tools that access external systems and APIs.
+- **Ready-to-use components**: Speed up development with pre-built solutions for common AI engineering challenges.
+- **Intelligent history compression**: Optimize token usage while maintaining conversation context using various pre-built strategies.
+- **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
+- **Persistent agent memory**: Enable knowledge retention across sessions and even different agents.
+- **Comprehensive tracing**: Debug and monitor agent execution with detailed and configurable tracing.
+- **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
+- **Modular feature system**: Customize agent capabilities through a composable architecture.
+- **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
 - **Multiplatform**: Run agents on both JVM and JS targets with Kotlin Multiplatform.
-
 
 ### Available LLM providers and platforms
 
-We support the following LLM providers and platforms whose LLMs you can use to power your agent capabilities:
+The LLM providers and platforms whose LLMs you can use to power your agent capabilities:
 
 - Google
 - OpenAI
@@ -51,16 +43,17 @@ We support the following LLM providers and platforms whose LLMs you can use to p
 
 ### Quickstart example
 
-The `simpleChatAgent` (or `simpleSingleRunAgent`) rovides the easiest way to get started with AI agents:
+To help you get started with AI agents, here is a quick example:
 
 ```kotlin
-fun main() = runBlocking {
-    // Before you run the example, assign a corresponding API key as the `YOUR_API_TOKEN` environment variable. For details, see [Getting started](simple-api-getting-started.md).
+fun main() {
+    // Before you run the example, assign a corresponding API key as an environment variable.
     val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
     val agent = simpleChatAgent(
         executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
-        systemPrompt = "You are a helpful assistant. Answer user questions concisely."
+        systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
+        llmModel = OpenAIModels.Chat.GPT4o
     )
 
     val result = agent.runAndGetResult("Hello, how can you help me?")
@@ -68,35 +61,72 @@ fun main() = runBlocking {
 }
 ```
 
-
 ## Using in your projects
 
 ### Supported targets
 
-Currently, the framework supports two targets: JVM and JS.
+Currently, the framework supports the JVM and JS targets.
 
 On JVM, JDK 17 or higher is required to use the framework.
-### How to use with Gradle (Kotlin DSL)
-To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
-```kotlin
-implementation("ai.koog:koog-agents:0.1.0-alpha.5+0.4.49")
-```
 
-### How to use with Gradle (Groovy)
-To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
-```groovy
-implementation 'ai.koog:koog-agents:0.1.0-alpha.5+0.4.49'
-```
+### Gradle (Kotlin DSL)
 
-### How to use with Maven
-To include all Koog dependencies together (useful for a quickstart), please add the following to your pom.xml:
-```xml
-<dependency>
-    <groupId>ai.koog</groupId>
-    <artifactId>koog-agents</artifactId>
-    <version>0.1.0-alpha.5+0.4.49</version>
-</dependency>
-```
+1. Add dependencies to the `build.gradle.kts` file:
+
+    ```
+    dependencies {
+        implementation("ai.koog:koog-agents:VERSION")
+    }
+    ```
+
+2. Add the address of the Maven repository where the package takes from:
+
+    ```
+    repositories {
+        maven("https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/")
+    }
+    ```
+
+### Gradle (Groovy)
+
+1. Add dependencies to the `build.gradle` file:
+
+    ```
+    dependencies {
+        implementation 'ai.koog:koog-agents:VERSION'
+    }
+    ```
+
+2. Add the address of the Maven repository where the package takes from:
+
+    ```
+    repositories {
+        maven {
+            url 'https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/'
+        }
+    }
+    ```
+
+### Maven
+
+1. Add dependencies to the `pom.xml` file:
+
+    ```
+    <dependency>
+        <groupId>ai.koog</groupId>
+        <artifactId>koog-agents</artifactId>
+        <version>VERSION</version>
+    </dependency>
+    ```
+
+2. Add the address of the Maven repository where the package takes from:
+
+    ```
+    <repository>
+        <id>mavenCustom</id>
+        <url>https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public/</url>
+    </repository>
+    ```
 
 ## Contributing
 Read the [Contributing Guidelines](CONTRIBUTING.md).
