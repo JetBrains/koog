@@ -345,9 +345,14 @@ public open class GoogleLLMClient(
             error("Empty candidates in Gemini response")
         }
 
-        val responses = response.candidates.firstOrNull()?.content?.parts?.map { part ->
+        val (candidate, parts) = response.candidates
+            .firstOrNull()
+            ?.let { it to it.content?.parts.orEmpty() }
+            ?: throw IllegalArgumentException("No responses found in Gemini response")
+
+        val responses = parts.map { part ->
             when (part) {
-                is GooglePart.Text -> Message.Assistant(part.text)
+                is GooglePart.Text -> Message.Assistant(part.text, candidate.finishReason)
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     Uuid.random().toString(),
                     part.functionCall.name,
@@ -358,12 +363,13 @@ public open class GoogleLLMClient(
             }
         }
 
-        check(responses != null) { "No responses found in Gemini response" }
-
-        if (responses.any { it is Message.Tool.Call }) {
-            return responses.filterIsInstance<Message.Tool.Call>()
+        return when {
+            // Fix the situation when the model decides to both call tools and talk
+            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
+            // If no messages where returned, return an empty message and check finishReason
+            responses.isEmpty() -> listOf(Message.Assistant("", candidate.finishReason))
+            // Just return responses
+            else -> responses
         }
-
-        return responses
     }
 }
