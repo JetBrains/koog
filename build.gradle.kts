@@ -42,7 +42,6 @@ version = run {
 plugins {
     alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
-    `maven-publish`
 }
 
 allprojects {
@@ -80,7 +79,9 @@ tasks {
     val packSonatypeCentralBundle by registering(Zip::class) {
         group = "publishing"
 
-        dependsOn(":publish")
+        subprojects {
+            dependsOn(tasks.withType<PublishToMavenRepository>())
+        }
 
         from(rootProject.layout.buildDirectory.dir("artifacts/maven"))
         archiveFileName.set("bundle.zip")
