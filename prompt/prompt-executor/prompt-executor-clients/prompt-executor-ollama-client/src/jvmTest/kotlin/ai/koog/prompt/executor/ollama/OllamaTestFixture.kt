@@ -16,7 +16,7 @@ import org.testcontainers.images.PullPolicy
 class OllamaTestFixture {
     private val PORT = 11434
     private val ollamaContainer =
-        GenericContainer("registry.jetbrains.team/p/grazi/grazie-infra-public/koog-ollama:1.9").apply {
+        GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
             withExposedPorts(PORT)
             withImagePullPolicy(PullPolicy.alwaysPull())
         }

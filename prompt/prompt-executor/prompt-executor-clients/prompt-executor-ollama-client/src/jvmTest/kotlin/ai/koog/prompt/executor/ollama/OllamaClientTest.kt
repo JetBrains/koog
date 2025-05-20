@@ -10,10 +10,13 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@EnabledOnOs(OS.LINUX)
 class OllamaClientTest {
     companion object {
         private val fixture = OllamaTestFixture()

@@ -14,12 +14,15 @@ import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@EnabledOnOs(OS.LINUX)
 class OllamaIntegrationTest {
     companion object {
         private val fixture = OllamaTestFixture()
