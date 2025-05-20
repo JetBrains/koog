@@ -36,14 +36,14 @@ val javadocJar by tasks.registering(Jar::class) {
 publishing {
     publications.withType(MavenPublication::class).all {
         artifact(javadocJar)
-    }
-}
 
-val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
-signing {
-    if (isUnderTeamCity) {
-        signatories = GpgSignSignatoryProvider()
-        sign(publishing.publications)
+        val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
+        if (isUnderTeamCity) {
+            the<SigningExtension>().apply {
+                signatories = GpgSignSignatoryProvider()
+                sign(this@all)
+            }
+        }
     }
 }
 
