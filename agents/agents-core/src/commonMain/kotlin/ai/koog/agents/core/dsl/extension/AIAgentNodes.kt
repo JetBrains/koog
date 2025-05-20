@@ -18,10 +18,9 @@ import ai.koog.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 
 /**
- * A node in that performs no actions. The input is directly passed as the output without any processing.
+ * A pass-through node that does nothing and returns input as output
  *
- * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
- * @return A delegate for the created node, representing a no-operation transformation where the input is returned as output.
+ * @param name Optional node name, defaults to delegate's property name.
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null): AIAgentNodeDelegateBase<T, T> =
     node(name) { input -> input }
@@ -31,11 +30,10 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = nu
 // ================
 
 /**
- * A node that just updates the prompt without asking the LLM
+ * A node that adds messages to the LLM prompt using the provided prompt builder.
  *
- * @param name An optional name for the node. If not provided, the name will default to the delegate's property name.
- * @param body A lambda block specifying the logic to update the prompt using the [ai.koog.prompt.dsl.PromptBuilder].
- * @return A delegate that represents the created node, which takes no input and produces no output.
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param body Lambda to modify the prompt using PromptBuilder.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     name: String? = null,
@@ -50,7 +48,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     }
 
 /**
- * Creates a node that sends a user message to the LLM and gets a response with LLM allowed ONLY to call tools.
+ * A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools.
  *
  * @param name Optional name for the node.
  */
@@ -66,11 +64,10 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(n
     }
 
 /**
- * Creates a node that sends a user message to the LLM and gets a response,
- * with LLM forced to call specifically the provided tool.
+ * A node that that appends a user message to the LLM prompt and forces the LLM to use a specific tool.
  *
- * @param name Optional name for the node.
- * @param tool Tool that LLM is forced to call.
+ * @param name Optional node name.
+ * @param tool Tool descriptor the LLM is required to use.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
@@ -87,11 +84,10 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     }
 
 /**
- * Creates a node that sends a user message to the LLM and gets a response,
- * with LLM forced to call specifically the provided tool.
+ * A node that appends a user message to the LLM prompt and forces the LLM to use a specific tool.
  *
- * @param name Optional name for the node.
- * @param tool Tool that LLM is forced to call.
+ * @param name Optional node name.
+ * @param tool Tool the LLM is required to use.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
@@ -100,15 +96,10 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     nodeLLMSendMessageForceOneTool(name, tool.descriptor)
 
 /**
- * LLM node that processes user messages and returns a response from LLM. The node configuration determines whether tool
- * calls are allowed during the processing of the message.
+ * A node that appends a user message to the LLM prompt and gets a response with optional tool usage.
  *
- * @param name An optional name for the node. If not provided, the name will default to the
- * property name of the delegate.
- * @param allowToolCalls A flag indicating whether tool calls are permitted during
- * the execution of the LLM process. Defaults to `true`.
- * @return A `AIAgentNodeDelegate` that delegates the execution of an LLM call,
- * processing an input message and returning a `Message.Response`.
+ * @param name Optional node name.
+ * @param allowToolCalls Controls whether LLM can use tools (default: true).
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     name: String? = null,
@@ -126,14 +117,12 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     }
 
 /**
- * Defines a node that sends a structured data request to an LLM (Language Model) to generate a structured response.
- * The response is based on the specified structure, with retries and error correction capabilities.
+ * A node that appends a user message to the LLM prompt and requests structured data from the LLM with error correction capabilities.
  *
- * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
- * @param structure The structured data definition specifying the expected structured output format, schema, and parsing logic.
- * @param retries The number of retry attempts to allow in case of generation failures.
- * @param fixingModel The language model to use for re-parsing or error correction during retries.
- * @return A `AIAgentNodeDelegate` that produces a structured response containing both the parsed structure and the raw response text.
+ * @param name Optional node name.
+ * @param structure Definition of expected output format and parsing logic.
+ * @param retries Number of retry attempts for failed generations.
+ * @param fixingModel LLM used for error correction.
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     name: String? = null,
@@ -156,15 +145,11 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     }
 
 /**
- * Creates a node within the subgraph that streams data from an LLM (Language Learning Model) request,
- * processes the streamed data using a transformation function, and outputs the resulting flow.
+ * A node that appends a user message to the LLM prompt, streams LLM response and transforms the stream data.
  *
- * @param name Optional name for the node. If not provided, the delegate's property name will be used.
- * @param structureDefinition Optional structured data definition which provides additional context for the LLM request.
- *                             When provided, this definition is incorporated into the LLM request's prompt.
- * @param transformStreamData A suspendable transformation function that processes a flow of strings
- *                            obtained from the LLM request and returns a new flow of transformed data.
- * @return A delegate for the created node, which can be used to include it in the subgraph.
+ * @param name Optional node name.
+ * @param structureDefinition Optional structure to guide the LLM response.
+ * @param transformStreamData Function to process the streamed data.
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
@@ -184,11 +169,10 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     }
 
 /**
- * Adds a node to the agent's subgraph that executes an LLM request and streams the output.
+ * A node that appends a user message to the LLM prompt and streams LLM response without transformation.
  *
- * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
- * @param structureDefinition An optional definition to structure the LLM request data.
- * @return A delegate representing the node, where the input is a String message and the output is a Flow of String representing the streamed LLM responses.
+ * @param name Optional node name.
+ * @param structureDefinition Optional structure to guide the LLM response.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
@@ -196,10 +180,9 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
 ): AIAgentNodeDelegateBase<String, Flow<String>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
 
 /**
- * LLM node that sends a user message to the LLM and gets a response with tools enabled,
- * potentially receiving multiple tool calls.
+ * A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled.
  *
- * @param name Optional name for the node.
+ * @param name Optional node name.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = null): AIAgentNodeDelegateBase<String, List<Message.Response>> =
     node(name) { message ->
@@ -213,10 +196,11 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String?
     }
 
 /**
- * LLM node that rewrites message history, leaving only user message and resulting TLDR.
+ * A node that compresses the current LLM prompt (message history) into a summary, replacing messages with a TLDR.
  *
- * @param fromLastN Number of last messages used as a context for TLDR.
- * Default is `null`, which means entire history will be used.
+ * @param name Optional node name.
+ * @param strategy Determines which messages to include in compression.
+ * @param preserveMemory Whether to retain message memory after compression.
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
@@ -235,9 +219,9 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
 // ==========
 
 /**
- * A node that executes a single tool call and returns its result.
+ * A node that executes a tool call and returns its result.
  *
- * @param name Optional name for the node.
+ * @param name Optional node name.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
     name: String? = null
@@ -247,11 +231,9 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
     }
 
 /**
- * An LLM node in the that processes a `ToolCall.Result` and generates a `Message.Response`.
- * The tool result is incorporated into the prompt, and a request is made to the LLM for a response.
+ * A node that adds a tool result to the prompt and requests an LLM response.
  *
- * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
- * @return A delegate representing the node, handling the transformation from `ToolCall.Result` to `Message.Response`.
+ * @param name Optional node name.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     name: String? = null
@@ -269,10 +251,10 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     }
 
 /**
- * A node that executes multiple tool calls and returns their results.
+ * A node that executes multiple tool calls, optionally in parallel.
  *
- * @param name Optional name for the node.
- * @param parallelTools Should tools be called in environment in parallel (`false` by default)
+ * @param name Optional node name.
+ * @param parallelTools Whether to execute tools in parallel (default: false).
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     name: String? = null,
@@ -287,9 +269,9 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     }
 
 /**
- * A node that sends multiple tool execution results to the LLM and gets multiple responses.
+ * A node that adds multiple tool results to the prompt and gets multiple LLM responses.
  *
- * @param name Optional name for the node.
+ * @param name Optional node name.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
     name: String? = null
@@ -307,10 +289,11 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
     }
 
 /**
- * Creates a node that calls a specific tool with passed arguments.
+ * A node that directly calls a specific tool with provided arguments.
  *
- * @param name Optional name for the node.
- * @param tool The tool call to execute.
+ * @param name Optional node name.
+ * @param tool The tool to execute.
+ * @param doUpdatePrompt Whether to add tool call details to the prompt.
  */
 public inline fun <reified ToolArg : Tool.Args, reified TResult : ToolResult> AIAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
     name: String? = null,
