@@ -15,7 +15,7 @@ kotlin {
                 api(project(":prompt:prompt-cache:prompt-cache-model"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

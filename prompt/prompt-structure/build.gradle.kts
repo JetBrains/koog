@@ -18,7 +18,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

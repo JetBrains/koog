@@ -15,7 +15,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
-                api(libs.oshai.kotlin.logging)
             }
         }
 

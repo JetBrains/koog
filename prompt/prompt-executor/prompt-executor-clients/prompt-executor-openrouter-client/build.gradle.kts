@@ -21,7 +21,7 @@ kotlin {
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
                 api(libs.ktor.client.logging)
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

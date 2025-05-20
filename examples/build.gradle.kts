@@ -32,7 +32,7 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
     api(libs.kotlinx.datetime)
-    api(libs.logback.classic)
+    implementation(libs.logback.classic)
 
     testImplementation(kotlin("test"))
     testImplementation(project(":agents:agents-test"))
