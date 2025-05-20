@@ -71,9 +71,14 @@ public class OllamaClient(
             )
         }.body<OllamaChatResponseDTO>()
 
-        if (response.message?.content != null)
-            return listOf(Message.Assistant(response.message.content))
-        return emptyList()
+        return if (response.message?.content != null) {
+            listOf(Message.Assistant(
+                content = response.message.content,
+                finishReason = null // Ollama does not provide a stop reason
+            ))
+        } else {
+            emptyList()
+        }
     }
 
     override suspend fun executeStreaming(
