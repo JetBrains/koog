@@ -310,7 +310,9 @@ public open class OpenAILLMClient(
             error("Empty choices in OpenAI response")
         }
 
-        val (choice, message) = response.choices.first().let { it to it.message }
+        val (choice, message) = response.choices
+            .firstOrNull()
+            ?.let { it to it.message } ?: throw IllegalStateException("No choice found in OpenAI response")
 
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
