@@ -29,6 +29,23 @@ kotlin {
 
 configureJvmJarManifest("jvmJar")
 
+publishing {
+    val javadocJar = configureEmptyJavadocArtifact()
+
+    publications.withType(MavenPublication::class).all {
+        artifact(javadocJar)
+    }
+}
+
+fun configureEmptyJavadocArtifact(): org.gradle.jvm.tasks.Jar {
+    val javadocJar by project.tasks.creating(Jar::class) {
+        archiveClassifier.set("javadoc")
+        // contents are deliberately left empty
+        // https://central.sonatype.org/publish/requirements/#supply-javadoc-and-sources
+    }
+    return javadocJar
+}
+
 val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
 signing {
     if (isUnderTeamCity) {
