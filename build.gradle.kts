@@ -42,6 +42,7 @@ version = run {
 plugins {
     alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
+    `maven-publish`
 }
 
 allprojects {
@@ -72,6 +73,18 @@ subprojects {
 task("reportProjectVersionToTeamCity") {
     doLast {
         println("##teamcity[buildNumber '${project.version}']")
+    }
+}
+
+tasks {
+    val packSonatypeCentralBundle by registering(Zip::class) {
+        group = "publishing"
+
+        dependsOn(":publish")
+
+        from(rootProject.layout.buildDirectory.dir("artifacts/maven"))
+        archiveFileName.set("bundle.zip")
+        destinationDirectory.set(layout.buildDirectory)
     }
 }
 
