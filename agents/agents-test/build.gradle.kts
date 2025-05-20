@@ -22,8 +22,8 @@ kotlin {
                 api(libs.jetbrains.annotations)
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(libs.logback.classic)
-                api(libs.oshai.kotlin.logging)
+                implementation(libs.logback.classic)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
