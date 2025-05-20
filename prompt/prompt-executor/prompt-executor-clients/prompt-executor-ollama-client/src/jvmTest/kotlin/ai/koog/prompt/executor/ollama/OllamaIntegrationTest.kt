@@ -12,27 +12,21 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.extension.ExtendWith
+import kotlin.properties.Delegates
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaIntegrationTest {
     companion object {
-        private val fixture = OllamaTestFixture()
+        @InjectOllamaTestFixture
+        private val fixture: OllamaTestFixture by Delegates.notNull<OllamaTestFixture>()
         private val executor get() = fixture.executor
         private val model get() = fixture.model
-
-        @JvmStatic
-        @BeforeAll
-        fun setUp() = fixture.setUp()
-
-        @JvmStatic
-        @AfterAll
-        fun tearDown() = fixture.tearDown()
     }
 
     private fun createTestStrategy(policyName: String) =
