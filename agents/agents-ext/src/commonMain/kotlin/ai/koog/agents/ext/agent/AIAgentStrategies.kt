@@ -31,12 +31,15 @@ public fun chatAgentStrategy(): AIAgentStrategy = strategy("chat") {
 
     edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
     edge(nodeCallLLM forwardTo giveFeedbackToCallTools onAssistantMessage { true })
+
     edge(giveFeedbackToCallTools forwardTo giveFeedbackToCallTools onAssistantMessage { true })
     edge(giveFeedbackToCallTools forwardTo nodeExecuteTool onToolCall { true })
+
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
+
     edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeSendToolResult forwardTo nodeFinish onToolCall { tc -> tc.tool == "__exit__" } transformed { "Chat finished" })
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeExecuteTool forwardTo nodeFinish onToolCall { tc -> tc.tool == "__exit__" } transformed { "Chat finished" })
 }
 
 /**
