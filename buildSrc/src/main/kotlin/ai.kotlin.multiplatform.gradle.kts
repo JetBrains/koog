@@ -29,6 +29,18 @@ kotlin {
 
 configureJvmJarManifest("jvmJar")
 
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+}
+
+publishing {
+    publications.withType(MavenPublication::class).all {
+        if (name.contains("jvm", ignoreCase = true)) {
+            artifact(javadocJar)
+        }
+    }
+}
+
 val isUnderTeamCity = System.getenv("TEAMCITY_VERSION") != null
 signing {
     if (isUnderTeamCity) {
