@@ -14,15 +14,18 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -476,6 +479,116 @@ class MultipleLLMPromptExecutorIntegrationTest {
             println("  Population: ${country.population}")
             println("  Language: ${country.language}")
             println()
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testToolChoice(model: LLModel) = runTest {
+        // skip until JBAI-14082 is fixed
+        assumeTrue { model != GoogleModels.Gemini2_5FlashPreview0417 }
+
+        // model doesn't support tools
+        assumeTrue(model !in modelsWithoutToolsSupport)
+
+        assumeTrue(model.capabilities.contains(LLMCapability.ToolChoice))
+
+        val calculatorTool = ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operation",
+                    description = "The operation to perform.",
+                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor(
+                    name = "a",
+                    description = "The first argument (number)",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "b",
+                    description = "The second argument (number)",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+
+        val client = when (model.provider) {
+            is LLMProvider.Anthropic -> anthropicClient
+            is LLMProvider.Google -> googleClient
+            else -> openAIClient
+        }
+
+        val prompt = Prompt.build("test-tools") {
+            system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
+            user("What is 123 + 456?")
+        }
+
+        /** tool choice auto is default and thus is tested by [integration_testToolsWithRequiredParams] */
+
+        // tool choice required
+        run {
+            val response = client.execute(
+                prompt.withParams(
+                    prompt.params.copy(
+                        toolChoice = ToolChoice.Required
+                    )
+                ),
+                model,
+                listOf(calculatorTool)
+            )
+
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+
+            assertTrue(response.first() is Message.Tool.Call)
+        }
+
+        // tool choice none
+        run {
+            val response = client.execute(
+                Prompt.build("test-tools") {
+                    system("You are a helpful assistant. Do not use calculator tool, it's broken!")
+                    user("What is 123 + 456?")
+                }.withParams(
+                    prompt.params.copy(
+                        toolChoice = ToolChoice.None
+                    )
+                ),
+                model,
+                listOf(calculatorTool)
+            )
+
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+
+            assertTrue(response.first() is Message.Assistant)
+        }
+
+        // tool choice named
+        run {
+            val nothingTool = ToolDescriptor(
+                name = "nothing",
+                description = "A tool that does nothing",
+            )
+
+            val response = client.execute(
+                prompt.withParams(
+                    prompt.params.copy(
+                        toolChoice = ToolChoice.Named(nothingTool.name)
+                    )
+                ),
+                model,
+                listOf(calculatorTool, nothingTool)
+            )
+
+            assertNotNull(response, "Response should not be null")
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+
+            assertTrue(response.first() is Message.Tool.Call)
+
+            val toolCall = response.first() as Message.Tool.Call
+            assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
         }
     }
 }
