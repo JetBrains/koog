@@ -16,16 +16,17 @@ import kotlin.time.Duration.Companion.seconds
 
 class OllamaClientTest {
     companion object {
-        private val executor get() = OllamaTestFixture.executor
-        private val model = OllamaTestFixture.model
+        private val fixture = OllamaTestFixture()
+        private val executor get() = fixture.executor
+        private val model get() = fixture.model
 
         @JvmStatic
         @BeforeAll
-        fun setUp() = OllamaTestFixture.setUp()
+        fun setUp() = fixture.setUp()
 
         @JvmStatic
         @AfterAll
-        fun tearDown() = OllamaTestFixture.tearDown()
+        fun tearDown() = fixture.tearDown()
     }
 
     @Test

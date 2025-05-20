@@ -3,51 +3,42 @@ package ai.koog.prompt.executor.ollama
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.OllamaModels
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.request.get
-import io.ktor.http.isSuccess
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.BeforeAll
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.images.PullPolicy
 
-object OllamaTestFixture {
-    const val PORT = 11434
+class OllamaTestFixture {
+    private val PORT = 11434
     private val ollamaContainer =
         GenericContainer("registry.jetbrains.team/p/grazi/grazie-infra-public/koog-ollama:1.9").apply {
             withExposedPorts(PORT)
             withImagePullPolicy(PullPolicy.alwaysPull())
         }
 
-    lateinit var baseUrl: String
-    lateinit var client: OllamaClient
     lateinit var executor: SingleLLMPromptExecutor
     val model = OllamaModels.Meta.LLAMA_3_2
 
-    @JvmStatic
-    @BeforeAll
     fun setUp() {
         ollamaContainer.start()
         val host = ollamaContainer.host
         val port = ollamaContainer.getMappedPort(PORT)
-        baseUrl = "http://$host:$port"
-        waitForOllamaServer()
+        val baseUrl = "http://$host:$port"
+        waitForOllamaServer(baseUrl)
 
-        client = OllamaClient(baseUrl)
-        executor = SingleLLMPromptExecutor(client)
+        executor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
     }
 
-    @JvmStatic
-    @AfterAll
     fun tearDown() {
         ollamaContainer.stop()
     }
 
-    private fun waitForOllamaServer() {
+    private fun waitForOllamaServer(baseUrl: String) {
         val httpClient = HttpClient(CIO) {
             install(HttpTimeout) {
                 connectTimeoutMillis = 1000
