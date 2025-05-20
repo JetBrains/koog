@@ -8,7 +8,7 @@ One can contribute to the project by reporting issues or submitting changes via 
 
 Please use [GitHub issues](https://github.com/JetBrains/koog/issues) for filing feature requests and bug reports.
 
-Questions about usage and general inquiries are better suited for StackOverflow <!-- TODO: are we going to track it? --> or the <!-- TODO: channel name --> channel in KotlinLang Slack.
+Questions about usage and general inquiries are better suited for StackOverflow or the [#koog-agentic-framework](https://kotlinlang.slack.com/messages/koog-agentic-framework/) channel in KotlinLang Slack.
 
 ## Submitting changes
 
