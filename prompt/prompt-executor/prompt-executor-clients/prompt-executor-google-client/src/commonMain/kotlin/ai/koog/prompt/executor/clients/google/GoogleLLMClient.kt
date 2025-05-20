@@ -347,7 +347,7 @@ public open class GoogleLLMClient(
 
         val (candidate, parts) = response.candidates
             .firstOrNull()
-            ?.let { it to it.content.parts }
+            ?.let { it to it.content?.parts.orEmpty() }
             ?: throw IllegalArgumentException("No responses found in Gemini response")
 
         val responses = parts.map { part ->
