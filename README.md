@@ -22,7 +22,7 @@ Key features of Koog include:
 - **Custom tool creation**: Extend your agents with tools that access external systems and APIs.
 - **Ready-to-use components**: Speed up development with pre-built solutions for common AI engineering challenges.
 - **Intelligent history compression**: Optimize token usage while maintaining conversation context using various pre-built strategies.
-- **Powerful Streaming API**: Process responses in real-time with Markdown streams support and parallel tool calls.
+- **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
 - **Persistent agent memory**: Enable knowledge retention across sessions and even different agents.
 - **Comprehensive tracing**: Debug and monitor agent execution with detailed and configurable tracing.
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
@@ -88,11 +88,11 @@ On JVM, JDK 17 or higher is required to use the framework.
 
 ### Gradle (Groovy)
 
-1. Add dependencies to the `build.gradle.kts` file:
+1. Add dependencies to the `build.gradle` file:
 
     ```
     dependencies {
-        implementation('ai.koog:koog-agents:VERSION')
+        implementation 'ai.koog:koog-agents:VERSION'
     }
     ```
 
