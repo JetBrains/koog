@@ -11,7 +11,7 @@ The SimpleAPI provides an easy way to create and run AI agents using the JetBrai
 
 ## Installation
 
-Add the Code Engine dependencies to your project:
+Add the Koog dependencies to your project:
 
 ```kotlin
 dependencies {

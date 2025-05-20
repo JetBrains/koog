@@ -9,8 +9,8 @@
 <!-- TODO: maven central link -->
 
 
-Koog is a Kotlin-based framework for creating and running AI agents locally without requiring external services. 
-It provides a pure Kotlin implementation for building intelligent agents that can interact with tools, 
+Koog is a Kotlin-based framework for creating and running AI agents locally without requiring external services.
+It provides a pure Kotlin implementation for building intelligent agents that can interact with tools,
 handle complex workflows, and communicate with users.
 
 ## Overview
@@ -23,12 +23,20 @@ tools, handle complex workflows, and communicate with users.
 
 Key features of Koog include:
 
-- A pure Kotlin implementation that lets you create and run AI agents entirely in Kotlin without relying on external service dependencies.
-- A modular and composable feature system that lets you extend AI agent capabilities.
-- The ability to create custom tools that give agents access to external systems and resources.
-- Support for both conversational agents and single-query (one-shot) agents.
-- The ability to intercept and modify agent behavior at different stages of operation.
-- Optional persistent memory support for agents through a separate module.
+- **Pure Kotlin Implementation**: Build AI agents entirely in Kotlin with no external dependencies, giving you full control.
+- **MCP Integration**: Connect to Model Control Protocol for enhanced model management.
+- **Embedding Capabilities**: Use vector embeddings for semantic search and knowledge retrieval.
+- **Custom Tool Creation**: Extend your agents with tools that access external systems and APIs.
+- **Ready-to-Use Components**: Speed up development with pre-built solutions for common AI engineering challenges.
+- **Intelligent History Compression**: Optimize token usage while maintaining conversation context using various pre-built strategies.
+- **Powerful Streaming API**: Process responses in real-time with Markdown streams support and parallel tool calls.
+- **Persistent Agent Memory**: Enable knowledge retention across sessions and even different agents.
+- **Comprehensive Tracing**: Debug and monitor agent execution with detailed and configurable tracing.
+- **Flexible Graph Workflows**: Design complex agent behaviors using intuitive graph-based workflows.
+- **Modular Feature System**: Customize agent capabilities through a composable architecture.
+- **Scalable Architecture**: Handle workloads from simple chatbots to enterprise applications.
+- **Multiplatform**: Run agents on both JVM and JS targets with Kotlin Multiplatform.
+
 
 ### Available LLM providers and platforms
 
@@ -39,7 +47,6 @@ We support the following LLM providers and platforms whose LLMs you can use to p
 - Anthropic
 - OpenRouter
 - Ollama
-- LightLLM
 
 ### Quickstart example
 
@@ -54,7 +61,7 @@ fun main() = runBlocking {
         executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
         systemPrompt = "You are a helpful assistant. Answer user questions concisely."
     )
-    
+
     val result = agent.runAndGetResult("Hello, how can you help me?")
     println(result)
 }
@@ -69,19 +76,19 @@ Currently, the framework supports two targets: JVM and JS.
 
 On JVM, JDK 17 or higher is required to use the framework.
 ### How to use with Gradle (Kotlin DSL)
-  To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
+To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
 ```kotlin
 implementation("ai.koog:koog-agents:0.1.0-alpha.5+0.4.49")
 ```
 
 ### How to use with Gradle (Groovy)
-  To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
+To include all Koog dependencies together (useful for a quickstart), please add the following to your buildscript:
 ```groovy
 implementation 'ai.koog:koog-agents:0.1.0-alpha.5+0.4.49'
 ```
 
 ### How to use with Maven
-  To include all Koog dependencies together (useful for a quickstart), please add the following to your pom.xml:
+To include all Koog dependencies together (useful for a quickstart), please add the following to your pom.xml:
 ```xml
 <dependency>
     <groupId>ai.koog</groupId>
