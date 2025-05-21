@@ -1,12 +1,12 @@
 package ai.koog.agents.example.banking.tools
 
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.TokenService
-import ai.koog.agents.ext.agent.simpleChatAgent
+import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -169,7 +169,7 @@ fun main() = runBlocking {
         tools(MoneyTransferTools().asTools())
     }
 
-    val agent = simpleChatAgent(
+    val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor(apiKey),
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
@@ -191,5 +191,4 @@ fun main() = runBlocking {
 
     val result = agent.runAndGetResult(message)
     println(result)
-
 }

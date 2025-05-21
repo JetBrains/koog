@@ -4,7 +4,6 @@ import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.simpleChatAgent
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.local.features.eventHandler.feature.EventHandler
@@ -73,65 +72,6 @@ class SimpleAgentIntegrationTest {
         actualToolCalls.clear()
         errors.clear()
         results.clear()
-    }
-
-
-    @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
-    fun integration_simpleChatAgentShouldCallDefaultTools(model: LLModel) = runBlocking {
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
-
-        val agent = simpleChatAgent(
-            executor = executor,
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Please exit.")
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-    }
-
-    @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
-    fun integration_simpleChatAgentShouldCallCustomTools(model: LLModel) = runBlocking {
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val toolRegistry = ToolRegistry.Companion {
-            tool(SayToUser)
-        }
-
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
-
-        val agent = simpleChatAgent(
-            executor = executor,
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            toolRegistry = toolRegistry,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        agent.run("Hello, how are you?")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-        assertTrue(
-            actualToolCalls.contains("__say_to_user__"),
-            "The __say_to_user__ tool was not called for model $model"
-        )
     }
 
     @ParameterizedTest

@@ -11,50 +11,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 
 /**
- * Creates and configures a simple chat agent.
- *
- * @param executor [PromptExecutor] that would be executing all prompts (usually, using one or more LLM clients)
- * @param systemPrompt System-level instructions provided to the agent (default is an empty string).
- * @param llmModel The language model to be used by the agent (default is `OpenAIModels.Chat.GPT4o`).
- * @param temperature A value between 0.0 and 1.0 controlling the randomness of the responses (default is 1.0).
- * @param toolRegistry Optional registry of tools available to the agent (default includes basic tools such as AskUser and ExitTool).
- * @param maxIterations Maximum number of iterations the agent will perform in a single interaction loop (default is 50).
- * @param installFeatures A suspending lambda to install additional features for the agent's functionality (default is an empty lambda).
- * @return A configured instance of AIAgent ready for use.
- */
-public fun simpleChatAgent(
-    executor: PromptExecutor,
-    systemPrompt: String = "",
-    llmModel: LLModel,
-    temperature: Double = 1.0,
-    toolRegistry: ToolRegistry? = null,
-    maxIterations: Int = 50,
-    installFeatures: AIAgent.FeatureContext.() -> Unit = {}
-): AIAgent {
-
-    val agentConfig = AIAgentConfig(
-        prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
-            system(systemPrompt)
-        },
-        model = llmModel,
-        maxAgentIterations = maxIterations,
-    )
-
-    toolRegistry
-
-    val resultingToolRegistry = toolRegistry ?: ToolRegistry { }
-    resultingToolRegistry.addAll(AskUser, ExitTool)
-
-    return AIAgent(
-        promptExecutor = executor,
-        strategy = chatAgentStrategy(),
-        agentConfig = agentConfig,
-        toolRegistry = resultingToolRegistry,
-        installFeatures = installFeatures
-    )
-}
-
-/**
  * Creates and configures a `AIAgent` instance with a single-run strategy.
  *
  * @param executor The `PromptExecutor` responsible for executing the prompts.

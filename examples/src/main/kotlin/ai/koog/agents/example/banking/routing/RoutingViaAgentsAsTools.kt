@@ -8,7 +8,6 @@ import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools
 import ai.koog.agents.example.banking.tools.bankingAssistantSystemPrompt
 import ai.koog.agents.example.banking.tools.transactionAnalysisPrompt
-import ai.koog.agents.ext.agent.simpleChatAgent
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -19,7 +18,7 @@ fun main() = runBlocking {
     val apiKey = TokenService.openAIToken // Your OpenAI API key
     val openAIExecutor = simpleOpenAIExecutor(apiKey)
 
-    val transferAgent = simpleChatAgent(
+    val transferAgent = simpleSingleRunAgent(
         executor = openAIExecutor,
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
@@ -27,7 +26,7 @@ fun main() = runBlocking {
         toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
     )
 
-    val analysisAgent = simpleChatAgent(
+    val analysisAgent = simpleSingleRunAgent(
         executor = openAIExecutor,
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,

@@ -1,7 +1,6 @@
 package ai.koog.agents.test
 
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.simpleChatAgent
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.ExitTool
 import ai.koog.agents.ext.tool.SayToUser
@@ -56,53 +55,6 @@ class SimpleAgentMockedTest {
         actualToolCalls.clear()
         errors.clear()
         results.clear()
-    }
-
-    @Test
-    fun `simpleChatAgent should call default tools`() = runBlocking {
-        val agent = simpleChatAgent(
-            systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
-            temperature = 1.0,
-            maxIterations = 10,
-            executor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
-        )
-
-        agent.run("Please exit.")
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-        assertTrue(results.isNotEmpty(), "No agent run results were received")
-        assertTrue(
-            errors.isEmpty(),
-            "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
-        )
-    }
-
-    @Test
-    fun `simpleChatAgent should call a custom tool`() = runBlocking {
-        val toolRegistry = ToolRegistry {
-            tool(SayToUser)
-        }
-
-        val agent = simpleChatAgent(
-            systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
-            temperature = 1.0,
-            maxIterations = 10,
-            toolRegistry = toolRegistry,
-            executor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
-        )
-
-        agent.run("Hello, how are you?")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
-        assertTrue(results.isNotEmpty(), "No agent run results were received")
-        assertTrue(
-            errors.isEmpty(),
-            "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
-        )
     }
 
     @Test
