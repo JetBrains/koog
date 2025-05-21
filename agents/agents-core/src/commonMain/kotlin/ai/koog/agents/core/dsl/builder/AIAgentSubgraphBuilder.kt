@@ -91,7 +91,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 }
 
-internal class AIAgentSubgraphBuilder<Input, Output>(
+public class AIAgentSubgraphBuilder<Input, Output>(
     public val name: String? = null,
     private val toolSelectionStrategy: ToolSelectionStrategy
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
@@ -113,7 +113,7 @@ public interface AIAgentSubgraphDelegateBase<Input, Output> {
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentSubgraph<Input, Output>
 }
 
-internal open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
+public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
     public val nodeStart: StartAIAgentNodeBase<Input>,
     public val nodeFinish: FinishAIAgentNodeBase<Output>,
