@@ -10,7 +10,7 @@ group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.1.0-alpha.8"
+    val main = "0.1.0-alpha.9"
 
     val feat = run {
         val releaseBuild = !System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH").isNullOrBlank()
