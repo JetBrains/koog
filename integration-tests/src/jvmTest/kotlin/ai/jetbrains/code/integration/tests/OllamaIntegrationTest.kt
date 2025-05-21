@@ -31,15 +31,22 @@ class OllamaIntegrationTest {
         private val model get() = fixture.model
     }
 
-    private fun createTestStrategy(policyName: String) =
-        strategy("test-ollama-$policyName") {
+    private fun createTestStrategy() =
+        strategy("test-ollama") {
             val askCapitalSubgraph by subgraph<String, String>("ask-capital") {
                 val definePrompt by node<Unit, Unit> {
                     llm.writeSession {
                         model = OllamaModels.Meta.LLAMA_3_2
                         rewritePrompt {
                             prompt("test-ollama") {
-                                system("You are a helpful assistant. You need to answer the question about the capital of France. Before answering, use the generic_parameter_tool with a required argument 'requiredArg' set to 'ask-capital' and an optional argument 'optionalArg' if you want. Also, use the geography_query_tool with a required argument 'query' set to 'capital of France'.")
+                                system(
+                                    "You are a helpful assistant. " +
+                                            "You need to answer the question about the capital of France. " +
+                                            "Before answering, use the generic_parameter_tool with a required argument " +
+                                            "'requiredArg' set to 'ask-capital' and an optional argument 'optionalArg' " +
+                                            "if you want. Also, use the geography_query_tool with a required argument " +
+                                            "'query' set to 'capital of France'."
+                                )
                             }
                         }
                     }
@@ -64,7 +71,13 @@ class OllamaIntegrationTest {
                         model = OllamaModels.Meta.LLAMA_3_2
                         rewritePrompt {
                             prompt("test-ollama") {
-                                system("You are a helpful assistant. You need to verify that the answer about the capital of France is correct. The correct answer is Paris. Before verifying, use the generic_parameter_tool with a required argument 'requiredArg' set to 'verify-answer' and an optional argument 'optionalArg' if you want. Also, use the answer_verification_tool with a required argument 'answer' set to 'Paris'.")
+                                system(
+                                    "You are a helpful assistant. You need to verify that the answer about " +
+                                            "the capital of France is correct. The correct answer is Paris. " +
+                                            "Before verifying, use the generic_parameter_tool with a required argument " +
+                                            "'requiredArg' set to 'verify-answer' and an optional argument 'optionalArg' " +
+                                            "if you want. Also, use the answer_verification_tool."
+                                )
                             }
                         }
                     }
@@ -150,32 +163,7 @@ class OllamaIntegrationTest {
 
     @Test
     fun integration_testOllamaAgentClearContext() = runTest(timeout = 600.seconds) {
-        val strategy = createTestStrategy("clear")
-        val toolRegistry = createToolRegistry()
-        val agent = createAgent(executor, strategy, toolRegistry)
-
-        val result = agent.runAndGetResult("What is the capital of France?")
-
-        assertNotNull(result, "Result should not be empty")
-        assertTrue(result.isNotEmpty(), "Result should not be empty")
-    }
-
-    @Test
-    fun integration_testOllamaAgentPersistContext() = runTest(timeout = 600.seconds) {
-        val strategy = createTestStrategy("persist")
-        val toolRegistry = createToolRegistry()
-        val agent = createAgent(executor, strategy, toolRegistry)
-
-        val result = agent.runAndGetResult("What is the capital of France?")
-
-        assertNotNull(result, "Result should not be empty")
-        assertTrue(result.isNotEmpty(), "Result should not be empty")
-        assertContains(result, "Paris", ignoreCase = true, "Result should contain the answer 'Paris'")
-    }
-
-    @Test
-    fun integration_testOllamaAgentCompressContext() = runTest(timeout = 600.seconds) {
-        val strategy = createTestStrategy("compress")
+        val strategy = createTestStrategy()
         val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
