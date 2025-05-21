@@ -21,27 +21,7 @@ dependencies {
 ```
 
 ## Basic Usage
-
-### Creating a Chat Agent
-
-A chat agent maintains a conversation with the user until explicitly terminated:
-
-```kotlin
-fun main() = runBlocking {
-    val apiToken = "YOUR_API_TOKEN"
-
-    val agent = simpleChatAgent(
-        executor = simpleOpenAIExecutor("API_TOKEN"),
-        systemPrompt = "You are a helpful assistant. Answer user questions concisely."
-    )
-
-    agent.run("Hello, how can you help me?")
-}
-```
-
-The chat agent has 2 built-in tools by default: `AskUser` and `Exit`.
-
-### Creating a Single-Run Agent
+### Creating a Simple Agent
 
 A single-run agent processes a single input and provides a response:
 
@@ -62,7 +42,7 @@ Please note that the single-run agent doesn't have any tools by default.
 
 ## Configuration Options
 
-Both `simpleChatAgent` and `simpleSingleRunAgent` accept the following parameters:
+`simpleSingleRunAgent` accept the following parameters:
 
 - `executor` (required): Your LLM prompt executor
 - `systemPrompt`: Initial system prompt for the agent (default: empty string)
@@ -136,24 +116,12 @@ val toolRegistry = ToolRegistry {
     // Add more tools as needed
 }
 
-val agent = simpleChatAgent(
+val agent = simpleSingleRunAgent(
     executor = simpleOpenAIExecutor("API_TOKEN"),
     systemPrompt = "You are a helpful assistant with calculator capabilities.",
     toolRegistry = toolRegistry
 )
 ```
-
-## Agent Strategies
-
-The SimpleAPI uses two types of agent strategies:
-
-1. **Chat Agent Strategy**: Used by `simpleChatAgent`
-   - Maintains a conversation until the ExitTool is called
-   - Enforces tool usage instead of plain text responses
-
-2. **Single-Run Strategy**: Used by `simpleSingleRunAgent`
-   - Processes a single input and provides a response
-   - Can return either a message or a tool result
 
 ## Best Practices
 
@@ -207,7 +175,7 @@ fun main() = runBlocking {
         tool(GenerateCodeTool)
     }
 
-    val agent = simpleChatAgent(
+    val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor("API_TOKEN"),
         systemPrompt = "You are a code assistant. Use the generate_code tool to create code examples.",
         toolRegistry = toolRegistry
