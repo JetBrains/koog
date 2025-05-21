@@ -107,7 +107,16 @@ tasks {
 
         doLast {
             val uriBase = "https://central.sonatype.com/api/v1/publisher/upload"
-            val publishingType = "USER_MANAGED"
+
+            val defaultBranch = System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH") == "true"
+            val publishingType = if (defaultBranch) {
+                println("Publishing from the default branch, so publishing as AUTOMATIC.")
+                "AUTOMATIC"
+            } else {
+                println("Publishing from the non-default branch, so publishing as USER_MANAGED.")
+                "USER_MANAGED" // do not publish releases from non-main branches without approval
+            }
+
             val deploymentName = "${project.name}-$version"
             val uri = "$uriBase?name=$deploymentName&publishingType=$publishingType"
 
