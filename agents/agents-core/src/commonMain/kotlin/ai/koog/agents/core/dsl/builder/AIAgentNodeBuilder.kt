@@ -33,7 +33,7 @@ public interface AIAgentNodeDelegateBase<Input, Output> {
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<Input, Output>
 }
 
-internal open class AIAgentNodeDelegate<Input, Output> internal constructor(
+public open class AIAgentNodeDelegate<Input, Output> internal constructor(
     private val name: String?,
     private val nodeBuilder: AIAgentNodeBuilder<Input, Output>,
 ) : AIAgentNodeDelegateBase<Input, Output> {
