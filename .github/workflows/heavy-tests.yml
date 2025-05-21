@@ -43,6 +43,7 @@ jobs:
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
           OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
           GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
+          OLLAMA_IMAGE_URL: ${{ vars.OLLAMA_IMAGE_URL }}
         run: ./gradlew jvmIntegrationTest --continue
 
       - name: Collect reports

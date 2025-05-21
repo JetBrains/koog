@@ -59,6 +59,7 @@ kotlin {
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
+                implementation(project(":integration-tests"))
             }
         }
     }
