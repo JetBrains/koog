@@ -16,6 +16,7 @@ shadow = "8.1.1"
 mcp = "0.5.0"
 dokka = "2.0.0"
 jetsign = "45.47"
+testcontainers = "1.19.7"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -38,11 +39,12 @@ ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-oshai-kotlin-logging = { module= "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
+oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 
 [plugins]
 grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }

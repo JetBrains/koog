@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.ollama
+package ai.jetbrains.code.integration.tests
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
