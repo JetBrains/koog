@@ -1,5 +1,8 @@
 package ai.koog.prompt.executor.ollama
 
+import ai.jetbrains.code.integration.tests.InjectOllamaTestFixture
+import ai.jetbrains.code.integration.tests.OllamaTestFixture
+import ai.jetbrains.code.integration.tests.OllamaTestFixtureExtension
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType

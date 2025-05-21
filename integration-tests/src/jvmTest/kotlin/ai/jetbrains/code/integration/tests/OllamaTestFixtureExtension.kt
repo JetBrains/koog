@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.ollama
+package ai.jetbrains.code.integration.tests
 
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback

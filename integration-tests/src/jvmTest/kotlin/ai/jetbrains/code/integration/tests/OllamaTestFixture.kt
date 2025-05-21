@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.ollama
+package ai.jetbrains.code.integration.tests
 
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient

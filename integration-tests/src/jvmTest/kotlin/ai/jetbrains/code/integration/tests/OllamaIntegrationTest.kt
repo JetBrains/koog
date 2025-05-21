@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.ollama
+package ai.jetbrains.code.integration.tests
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -21,7 +21,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-@EnabledOnOs(OS.LINUX)
+//@EnabledOnOs(OS.LINUX)
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaIntegrationTest {
     companion object {
