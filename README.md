@@ -88,7 +88,7 @@ On JVM, JDK 17 or higher is required to use the framework.
         implementation 'ai.koog:koog-agents:VERSION'
     }
     ```
-
+2. Make sure that you have `mavenCentral()` in the list of repositories.
 ### Maven
 
 1. Add dependencies to the `pom.xml` file:
