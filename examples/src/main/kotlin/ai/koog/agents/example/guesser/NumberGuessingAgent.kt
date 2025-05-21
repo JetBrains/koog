@@ -2,7 +2,7 @@ package ai.koog.agents.example.guesser
 
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.TokenService
-import ai.koog.agents.ext.agent.simpleChatAgent
+import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -24,7 +24,7 @@ fun main() = runBlocking {
     }
 
     // Create a chat agent with a system prompt and the tool registry
-    val agent = simpleChatAgent(
+    val agent = simpleSingleRunAgent(
         executor = simpleOpenAIExecutor(TokenService.openAIToken),
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = """
