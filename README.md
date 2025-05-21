@@ -100,7 +100,7 @@ On JVM, JDK 17 or higher is required to use the framework.
         <version>VERSION</version>
     </dependency>
     ```
-
+2. Make sure that you have `mavenCentral` in the list of repositories.
 ## Contributing
 Read the [Contributing Guidelines](CONTRIBUTING.md).
 
