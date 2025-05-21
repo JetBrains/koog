@@ -1,6 +1,7 @@
 # Koog
 
 [![Kotlin Alpha](https://kotl.in/badges/alpha.svg)](https://kotlinlang.org/docs/components-stability.html)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://github.com/JetBrains#jetbrains-on-github)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![CI status](https://img.shields.io/github/checks-status/JetBrains/koog/main)](https://github.com/JetBrains/koog/actions?query=branch%3Amain)
@@ -46,18 +47,18 @@ The LLM providers and platforms whose LLMs you can use to power your agent capab
 To help you get started with AI agents, here is a quick example:
 
 ```kotlin
-fun main() {
+fun main() = runBlocking {
     // Before you run the example, assign a corresponding API key as an environment variable.
-    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
-
-    val agent = simpleChatAgent(
-        executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
-        systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
-        llmModel = OpenAIModels.Chat.GPT4o
-    )
-
-    val result = agent.runAndGetResult("Hello, how can you help me?")
-    println(result)
+   val apiKey = System.getenv("OPEN_AI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
+   
+   val agent = simpleSingleRunAgent(
+      executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
+      systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
+      llmModel = OpenAIModels.Chat.GPT4o
+   )
+   
+   val result = agent.runAndGetResult("Hello! How can you help me?")
+   println(result)
 }
 ```
 
@@ -75,7 +76,7 @@ On JVM, JDK 17 or higher is required to use the framework.
 
     ```
     dependencies {
-        implementation("ai.koog:koog-agents:VERSION")
+        implementation("ai.koog:koog-agents:0.1.0")
     }
     ```
 
@@ -93,7 +94,7 @@ On JVM, JDK 17 or higher is required to use the framework.
 
     ```
     dependencies {
-        implementation 'ai.koog:koog-agents:VERSION'
+        implementation 'ai.koog:koog-agents:0.1.0'
     }
     ```
 
@@ -115,7 +116,7 @@ On JVM, JDK 17 or higher is required to use the framework.
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents</artifactId>
-        <version>VERSION</version>
+        <version>0.1.0</version>
     </dependency>
     ```
 
@@ -140,3 +141,4 @@ Koog is licensed under the [Apache 2.0 License](LICENSE).
 ## Support
 
 Please feel free to ask any questions in our official Slack channel ([link](https://kotlinlang.slack.com/archives/C08SLB97W23))
+
