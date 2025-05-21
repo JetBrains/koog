@@ -4,7 +4,7 @@
 [![JetBrains incubator project](https://jb.gg/badges/incubator.svg)](https://github.com/JetBrains#jetbrains-on-github)
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![CI status](https://img.shields.io/github/checks-status/JetBrains/koog/main)](https://github.com/JetBrains/koog/actions?query=branch%3Amain)
-[![GitHub license](https://img.shields.io/github/license/JetBrains/koog)](LICENSE.txt)
+[![GitHub license](https://img.shields.io/github/license/JetBrains/koog?)](LICENSE.txt)
 [![docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
 [![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
 <!-- TODO: maven central link -->
