@@ -90,6 +90,10 @@ tasks {
     val packSonatypeCentralBundle by registering(Zip::class) {
         group = "publishing"
 
+        println("MVN_CENTRAL")
+        println(System.getenv("CE_MVN_CLIENT_USERNAME").length)
+        println(System.getenv("CE_MVN_CLIENT_PASSWORD").orEmpty().length)
+
         subprojects {
             dependsOn(tasks.withType<PublishToMavenRepository>())
         }
