@@ -200,7 +200,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String?
  *
  * @param name Optional node name.
  * @param strategy Determines which messages to include in compression.
- * @param preserveMemory Whether to retain message memory after compression.
+ * @param preserveMemory Specifies whether to retain message memory after compression.
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
@@ -251,10 +251,10 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     }
 
 /**
- * A node that executes multiple tool calls, optionally in parallel.
+ * A node that executes multiple tool calls. These calls can optionally be executed in parallel.
  *
  * @param name Optional node name.
- * @param parallelTools Whether to execute tools in parallel (default: false).
+ * @param parallelTools Specifies whether tools should be executed in parallel, defaults to false.
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     name: String? = null,
@@ -289,11 +289,11 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
     }
 
 /**
- * A node that directly calls a specific tool with provided arguments.
+ * A node that calls a specific tool directly using the provided arguments.
  *
  * @param name Optional node name.
  * @param tool The tool to execute.
- * @param doUpdatePrompt Whether to add tool call details to the prompt.
+ * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
  */
 public inline fun <reified ToolArg : Tool.Args, reified TResult : ToolResult> AIAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
     name: String? = null,
