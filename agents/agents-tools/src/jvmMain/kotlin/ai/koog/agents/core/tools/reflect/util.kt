@@ -3,6 +3,7 @@ package ai.koog.agents.core.tools.reflect
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import kotlinx.serialization.json.Json
@@ -166,6 +167,16 @@ public fun KFunction<*>.asTool(
     val toolDescriptor = this.asToolDescriptor(name = name, description = description)
     if (instanceParameter != null && thisRef == null) error("Instance parameter is not null, but no 'this' object is provided")
     return ToolFromCallable(callable = this, thisRef = thisRef, descriptor = toolDescriptor, json = json)
+}
+
+public fun ToolRegistry.Builder.tool(
+    toolFunction: KFunction<*>,
+    json: Json = Json,
+    thisRef: Any? = null,
+    name: String? = null,
+    description: String? = null
+) {
+    tool(toolFunction.asTool(json, thisRef, name, description))
 }
 
 /**
