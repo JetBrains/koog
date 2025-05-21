@@ -114,8 +114,8 @@ tasks {
             val deploymentName = "${project.name}-$version"
             val uri = "$uriBase?name=$deploymentName&publishingType=$publishingType"
 
-            val userName = rootProject.extra["centralPortalUserName"] as String
-            val token = rootProject.extra["centralPortalToken"] as String
+            val userName = System.getenv("CE_MVN_CLIENT_USERNAME") as String
+            val token = System.getenv("CE_MVN_CLIENT_PASSWORD") as String
             val base64Auth = Base64.getEncoder().encode("$userName:$token".toByteArray()).toString(Charsets.UTF_8)
             val bundleFile = packSonatypeCentralBundle.get().archiveFile.get().asFile
 
