@@ -39,11 +39,10 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
 
             return Stream.concat(
-                Stream.concat(
                     Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
                     Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
-                ),
-                Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
+            // Will enable when there're models that support tool calls
+            /*Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }*/
             )
         }
     }
