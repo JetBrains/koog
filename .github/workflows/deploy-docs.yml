@@ -19,7 +19,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Build Dokka docs
-        run: ./gradlew dokkaHtml
+        run: ./gradlew dokkaGenerate
 
       - name: Push to docs repo
         run: |
