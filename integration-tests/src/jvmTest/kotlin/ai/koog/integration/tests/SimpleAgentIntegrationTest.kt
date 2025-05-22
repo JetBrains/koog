@@ -1,9 +1,9 @@
-package ai.jetbrains.code.integration.tests
+package ai.koog.integration.tests
 
-import ai.jetbrains.code.integration.tests.utils.Models
-import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser

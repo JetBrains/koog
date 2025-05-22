@@ -1,8 +1,8 @@
-package ai.jetbrains.code.integration.tests
+package ai.koog.integration.tests
 
-import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels

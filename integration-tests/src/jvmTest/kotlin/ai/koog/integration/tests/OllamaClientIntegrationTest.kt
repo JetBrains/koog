@@ -1,4 +1,4 @@
-package ai.jetbrains.code.integration.tests
+package ai.koog.integration.tests
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -27,7 +27,7 @@ class OllamaClientIntegrationTest {
 
     @Test
     fun `integration_test execute simple prompt`() = runTest(timeout = 600.seconds) {
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }

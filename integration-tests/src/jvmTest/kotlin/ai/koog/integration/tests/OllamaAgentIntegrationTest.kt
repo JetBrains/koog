@@ -1,8 +1,8 @@
-package ai.jetbrains.code.integration.tests
+package ai.koog.integration.tests
 
-import ai.jetbrains.code.integration.tests.tools.AnswerVerificationTool
-import ai.jetbrains.code.integration.tests.tools.GenericParameterTool
-import ai.jetbrains.code.integration.tests.tools.GeographyQueryTool
+import ai.koog.integration.tests.tools.AnswerVerificationTool
+import ai.koog.integration.tests.tools.GenericParameterTool
+import ai.koog.integration.tests.tools.GeographyQueryTool
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy

@@ -1,4 +1,4 @@
-package ai.jetbrains.code.integration.tests
+package ai.koog.integration.tests
 
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback

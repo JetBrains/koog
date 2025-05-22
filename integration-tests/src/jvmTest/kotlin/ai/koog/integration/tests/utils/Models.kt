@@ -1,4 +1,4 @@
-package ai.jetbrains.code.integration.tests.utils
+package ai.koog.integration.tests.utils
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
