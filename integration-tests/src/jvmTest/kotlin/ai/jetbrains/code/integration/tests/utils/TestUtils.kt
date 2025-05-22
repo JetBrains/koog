@@ -21,6 +21,11 @@ internal object TestUtils {
             ?: error("ERROR: environment variable `GEMINI_API_TEST_KEY` is not set")
     }
 
+    fun readTestOpenRouterKeyFromEnv(): String {
+        return System.getenv("OPEN_ROUTER_API_TEST_KEY")
+            ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` is not set")
+    }
+
     @Serializable
     enum class CalculatorOperation {
         ADD, SUBTRACT, MULTIPLY, DIVIDE

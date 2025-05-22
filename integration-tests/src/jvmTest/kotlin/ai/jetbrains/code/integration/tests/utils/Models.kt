@@ -3,6 +3,7 @@ package ai.jetbrains.code.integration.tests.utils
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLModel
 import java.util.stream.Stream
 
@@ -60,5 +61,9 @@ object Models {
         )
     }
 
-
+    // Adding only free LLM profile until more are bought
+    @JvmStatic
+    fun openRouterModels(): Stream<LLModel> = Stream.of(
+        OpenRouterModels.Phi4Reasoning
+    )
 }
