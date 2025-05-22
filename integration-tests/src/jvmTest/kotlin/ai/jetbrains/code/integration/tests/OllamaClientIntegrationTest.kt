@@ -1,8 +1,5 @@
-package ai.koog.prompt.executor.ollama
+package ai.jetbrains.code.integration.tests
 
-import ai.jetbrains.code.integration.tests.InjectOllamaTestFixture
-import ai.jetbrains.code.integration.tests.OllamaTestFixture
-import ai.jetbrains.code.integration.tests.OllamaTestFixtureExtension
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -20,7 +17,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @EnabledOnOs(OS.LINUX)
 @ExtendWith(OllamaTestFixtureExtension::class)
-class OllamaClientTest {
+class OllamaClientIntegrationTest {
     companion object {
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture
@@ -30,7 +27,7 @@ class OllamaClientTest {
 
     @Test
     fun `integration_test execute simple prompt`() = runTest(timeout = 600.seconds) {
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
@@ -60,7 +57,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = Prompt.Companion.build("test-tools") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
@@ -91,7 +88,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
@@ -121,7 +118,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
@@ -138,7 +135,7 @@ class OllamaClientTest {
             description = "Get the current time"
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("What time is it?")
         }
@@ -162,7 +159,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the limit to 42")
         }
@@ -186,7 +183,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant.")
             user("What's the value of 2/3")
         }
@@ -210,7 +207,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the name to John")
         }
@@ -234,7 +231,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the color to blue")
         }
@@ -273,7 +270,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
@@ -297,7 +294,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the tags to important, urgent, and critical")
         }
@@ -321,7 +318,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the values to 1, 2, and 3")
         }
@@ -345,7 +342,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the min, the max and the avg values in range from 0 to 1 with a step of 0.01.")
         }
@@ -378,7 +375,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Select two tags of the highest priority.")
         }
@@ -402,7 +399,7 @@ class OllamaClientTest {
             )
         )
 
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Select two tags of the highest priority.")
             user("Then select two tags of the lowest priority.")
@@ -415,7 +412,7 @@ class OllamaClientTest {
 
     @Test
     fun integration_testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
-        val prompt = Prompt.build("test") {
+        val prompt = Prompt.Companion.build("test") {
             system("You are a helpful assistant.")
             user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words.")
         }
@@ -580,7 +577,7 @@ class OllamaClientTest {
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
 
-        val prompt = Prompt.build("test-structured-streaming") {
+        val prompt = Prompt.Companion.build("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
                 """

@@ -1,5 +1,8 @@
 package ai.jetbrains.code.integration.tests
 
+import ai.jetbrains.code.integration.tests.tools.AnswerVerificationTool
+import ai.jetbrains.code.integration.tests.tools.GenericParameterTool
+import ai.jetbrains.code.integration.tests.tools.GeographyQueryTool
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
@@ -23,7 +26,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @EnabledOnOs(OS.LINUX)
 @ExtendWith(OllamaTestFixtureExtension::class)
-class OllamaIntegrationTest {
+class OllamaAgentIntegrationTest {
     companion object {
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture

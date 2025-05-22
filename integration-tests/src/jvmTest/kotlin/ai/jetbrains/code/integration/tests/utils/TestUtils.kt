@@ -1,4 +1,4 @@
-package ai.jetbrains.code.integration.tests
+package ai.jetbrains.code.integration.tests.utils
 
 import ai.koog.agents.core.tools.*
 import kotlinx.coroutines.flow.Flow

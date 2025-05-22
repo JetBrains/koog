@@ -1,6 +1,6 @@
 package ai.jetbrains.code.integration.tests
 
-import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
+import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.test.runTest

@@ -1,4 +1,4 @@
-package ai.jetbrains.code.integration.tests
+package ai.jetbrains.code.integration.tests.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool

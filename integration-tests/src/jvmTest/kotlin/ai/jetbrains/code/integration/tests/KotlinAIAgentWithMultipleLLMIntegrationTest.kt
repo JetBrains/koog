@@ -1,8 +1,9 @@
 package ai.jetbrains.code.integration.tests
 
 import ai.jetbrains.code.integration.tests.ReportingLLMLLMClient.Event
-import ai.jetbrains.code.integration.tests.TestUtils.readTestAnthropicKeyFromEnv
-import ai.jetbrains.code.integration.tests.TestUtils.readTestOpenAIKeyFromEnv
+import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.jetbrains.code.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.jetbrains.code.integration.tests.utils.TestLogPrinter
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
