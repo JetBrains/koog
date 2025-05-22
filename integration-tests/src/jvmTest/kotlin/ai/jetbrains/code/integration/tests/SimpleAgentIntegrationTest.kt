@@ -8,6 +8,7 @@ import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.local.features.eventHandler.feature.EventHandler
 import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -16,14 +17,12 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.AfterTest
 import kotlin.test.assertTrue
 
-@Disabled("JBAI-13981, JBAI-13980, JBAI-14070, JBAI-14071")
 class SimpleAgentIntegrationTest {
     val systemPrompt = """
             You are a helpful assistant. 
@@ -103,6 +102,7 @@ class SimpleAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels")
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.id != OpenAIModels.Reasoning.O1.id, "JBAI-13980")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
