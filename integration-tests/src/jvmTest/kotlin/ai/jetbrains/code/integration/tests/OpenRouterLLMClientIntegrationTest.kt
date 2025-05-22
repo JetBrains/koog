@@ -10,6 +10,7 @@ import ai.koog.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,13 +35,13 @@ class OpenRouterLLMClientIntegrationTest {
     private val testModel = OpenRouterModels.Phi4Reasoning
 
     @Test
-    fun testCreateClient() {
+    fun integration_testCreateClient() {
         val client = OpenRouterLLMClient(apiKey)
         assertNotNull(client, "Client should be created successfully")
     }
 
     @Test
-    fun testExecuteSimplePrompt() = runTest {
+    fun integration_testExecuteSimplePrompt() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
         val prompt = Prompt.build("test-prompt") {
@@ -60,7 +61,7 @@ class OpenRouterLLMClientIntegrationTest {
     }
 
     @Test
-    fun testExecuteStreamingPrompt() = runTest {
+    fun integration_testExecuteStreamingPrompt() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
         val prompt = Prompt.build("test-streaming") {
@@ -90,8 +91,9 @@ class OpenRouterLLMClientIntegrationTest {
         ADD, SUBTRACT, MULTIPLY, DIVIDE
     }
 
+    @Disabled("Waiting for paid LLMs to be purchased")
     @Test
-    fun testExecuteWithTools() = runTest {
+    fun integration_testExecuteWithTools() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
         // Define a simple calculator tool
@@ -144,7 +146,7 @@ class OpenRouterLLMClientIntegrationTest {
     }
 
     @Test
-    fun testCodeGeneration() = runTest {
+    fun integration_testCodeGeneration() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
         val prompt = Prompt.build("test-code") {
