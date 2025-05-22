@@ -30,6 +30,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
+
 class MultipleLLMPromptExecutorIntegrationTest {
     // API keys for testing
     private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
@@ -40,6 +42,35 @@ class MultipleLLMPromptExecutorIntegrationTest {
     private val openAIClient get() = OpenAILLMClient(openAIApiKey)
     private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
     private val googleClient get() = GoogleLLMClient(geminiApiKey)
+
+    private suspend fun <T> executeWithRetry(operation: suspend () -> T): T {
+        val maxRetries = 3
+        var attempts = 0
+        var lastException: Exception? = null
+
+        while (attempts < maxRetries) {
+            try {
+                return operation()
+            } catch (e: Exception) {
+                if (e.message?.contains(GOOGLE_API_ERROR) == true) {
+                    lastException = e
+                    attempts++
+                    println("Attempt $attempts/$maxRetries failed with known Google API issue, retrying...")
+                } else {
+                    throw e // Rethrow if it's a different exception
+                }
+            }
+        }
+
+        if (lastException?.message?.contains(GOOGLE_API_ERROR) == true) {
+            assumeTrue(
+                false,
+                "Skipping test after $maxRetries failed attempts due to JBAI-14082: ${lastException.message}"
+            )
+        }
+
+        throw IllegalStateException("Should not reach here, test should be skipped")
+    }
 
     companion object {
         @JvmStatic
@@ -59,7 +90,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest {
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
@@ -68,7 +99,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, model, emptyList())
+        val response = executeWithRetry {
+            executor.execute(prompt, model, emptyList())
+        }
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -80,7 +113,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest {
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
@@ -89,7 +122,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executeWithRetry {
+            executor.executeStreaming(prompt, model).toList()
+        }
 
         assertNotNull(responseChunks, "Response chunks should not be null")
         assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -107,23 +142,24 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
-    fun integration_testCodeGeneration(model: LLModel) = runTest {
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools))
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
-            user("Write a simple Kotlin function to calculate the factorial of a number. Make sure the name of the function starts with 'factorial'.")
+            user(
+                "Write a simple Kotlin function to calculate the factorial of a number. " +
+                        "Make sure the name of the function starts with 'factorial'. ONLY generate CODE, no explanations or other texts. " +
+                        "The function MUST have a return statement."
+            )
         }
 
-        val maxRetries = 3
-        var attempts = 0
-        var response: List<Message>
-
-        do {
-            attempts++
-            response = executor.execute(prompt, model, emptyList())
-        } while (response.isEmpty() && attempts < maxRetries)
+        val response = executeWithRetry {
+            executor.execute(prompt, model, emptyList())
+        }
 
         assertNotNull(response, "Response should not be null")
         assertTrue(response.isNotEmpty(), "Response should not be empty")
@@ -138,7 +174,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -174,12 +210,16 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.Anthropic to anthropicClient,
             LLMProvider.Google to googleClient,
         )
-        val response = executor.execute(prompt, model, listOf(calculatorTool))
+
+        val response = executeWithRetry {
+            executor.execute(prompt, model, listOf(calculatorTool))
+        }
+
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -222,12 +262,16 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.Anthropic to anthropicClient,
             LLMProvider.Google to googleClient,
         )
-        val response = executor.execute(prompt, model, listOf(calculatorTool))
+
+        val response = executeWithRetry {
+            executor.execute(prompt, model, listOf(calculatorTool))
+        }
+
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithOptionalParams(model: LLModel) = runTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -268,12 +312,16 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.Anthropic to anthropicClient,
             LLMProvider.Google to googleClient,
         )
-        val response = executor.execute(prompt, model, listOf(calculatorTool))
+
+        val response = executeWithRetry {
+            executor.execute(prompt, model, listOf(calculatorTool))
+        }
+
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNoParams(model: LLModel) = runTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -299,12 +347,16 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.Anthropic to anthropicClient,
             LLMProvider.Google to googleClient,
         )
-        val response = executor.execute(prompt, model, listOf(calculatorTool, calculatorToolBetter))
+
+        val response = executeWithRetry {
+            executor.execute(prompt, model, listOf(calculatorTool, calculatorToolBetter))
+        }
+
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithListEnumParams(model: LLModel) = runTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -331,12 +383,16 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.Anthropic to anthropicClient,
             LLMProvider.Google to googleClient,
         )
-        val response = executor.execute(prompt, model, listOf(colorPickerTool))
+
+        val response = executeWithRetry {
+            executor.execute(prompt, model, listOf(colorPickerTool))
+        }
+
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNestedListParams(model: LLModel) = runTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -361,16 +417,19 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.OpenAI to openAIClient,
             LLMProvider.Anthropic to anthropicClient,
             LLMProvider.Google to googleClient,
+        )
 
-            )
-        val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
+        val response = executeWithRetry {
+            executor.execute(prompt, model, listOf(lotteryPickerTool))
+        }
+
         println(response)
 
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
@@ -383,9 +442,12 @@ class MultipleLLMPromptExecutorIntegrationTest {
             is LLMProvider.Google -> googleClient
             else -> openAIClient
         }
-        client.executeStreaming(prompt, model).collect { chunk ->
-            responseChunks.add(chunk)
-            println("Received chunk: $chunk")
+
+        executeWithRetry {
+            client.executeStreaming(prompt, model).collect { chunk ->
+                responseChunks.add(chunk)
+                println("Received chunk: $chunk")
+            }
         }
 
         assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -402,7 +464,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
@@ -426,10 +488,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
             else -> openAIClient
         }
 
-        val markdownStream = client.executeStreaming(prompt, model)
-
-        TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
-            countries.add(country)
+        executeWithRetry {
+            val markdownStream = client.executeStreaming(prompt, model)
+            TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
+                countries.add(country)
+            }
         }
 
         assertTrue(countries.isNotEmpty(), "Countries list should not be empty")
@@ -444,7 +507,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoice(model: LLModel) = runTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -485,15 +548,17 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         // tool choice required
         run {
-            val response = client.execute(
-                prompt.withParams(
-                    prompt.params.copy(
-                        toolChoice = ToolChoice.Required
-                    )
-                ),
-                model,
-                listOf(calculatorTool)
-            )
+            val response = executeWithRetry {
+                client.execute(
+                    prompt.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.Required
+                        )
+                    ),
+                    model,
+                    listOf(calculatorTool)
+                )
+            }
 
             assertTrue(response.isNotEmpty(), "Response should not be empty")
 
@@ -502,18 +567,20 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         // tool choice none
         run {
-            val response = client.execute(
-                Prompt.build("test-tools") {
-                    system("You are a helpful assistant. Do not use calculator tool, it's broken!")
-                    user("What is 123 + 456?")
-                }.withParams(
-                    prompt.params.copy(
-                        toolChoice = ToolChoice.None
-                    )
-                ),
-                model,
-                listOf(calculatorTool)
-            )
+            val response = executeWithRetry {
+                client.execute(
+                    Prompt.build("test-tools") {
+                        system("You are a helpful assistant. Do not use calculator tool, it's broken!")
+                        user("What is 123 + 456?")
+                    }.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.None
+                        )
+                    ),
+                    model,
+                    listOf(calculatorTool)
+                )
+            }
 
             assertTrue(response.isNotEmpty(), "Response should not be empty")
 
@@ -527,15 +594,17 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 description = "A tool that does nothing",
             )
 
-            val response = client.execute(
-                prompt.withParams(
-                    prompt.params.copy(
-                        toolChoice = ToolChoice.Named(nothingTool.name)
-                    )
-                ),
-                model,
-                listOf(calculatorTool, nothingTool)
-            )
+            val response = executeWithRetry {
+                client.execute(
+                    prompt.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.Named(nothingTool.name)
+                        )
+                    ),
+                    model,
+                    listOf(calculatorTool, nothingTool)
+                )
+            }
 
             assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")

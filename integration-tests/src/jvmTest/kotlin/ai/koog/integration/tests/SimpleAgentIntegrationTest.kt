@@ -75,7 +75,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
@@ -92,7 +92,15 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        agent.run("Repeat what I say: hello, I'm good.")
+        try {
+            agent.run("Repeat what I say: hello, I'm good.")
+        } catch (e: Exception) {
+            if (e.message?.contains("Error from GoogleAI API: 500 Internal Server Error") == true) {
+                assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
+            } else {
+                throw e
+            }
+        }
 
         // by default, simpleSingleRunAgent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
@@ -100,10 +108,11 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
+        assumeTrue(!model.id.contains("flash"), "JBAI-14094")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
