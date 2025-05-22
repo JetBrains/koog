@@ -102,7 +102,7 @@ class SimpleAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels")
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(model.id != OpenAIModels.Reasoning.O1.id, "JBAI-13980")
+        assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
 
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
