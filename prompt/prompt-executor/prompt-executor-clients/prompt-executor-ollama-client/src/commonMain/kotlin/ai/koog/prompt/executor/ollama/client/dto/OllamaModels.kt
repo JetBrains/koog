@@ -4,6 +4,51 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
+/**
+ * Response from the /api/tags endpoint.
+ */
+@Serializable
+public data class OllamaListModelsResponseDTO(
+    val models: List<Model>,
+) {
+    /**
+     * Model definition.
+     */
+    @Serializable
+    public data class Model(
+        val name: String,
+    )
+}
+
+/**
+ * Message for the /api/show API.
+ */
+@Serializable
+public data class OllamaShowModelRequestDTO(
+    val model: String,
+)
+
+/**
+ * Response for the /api/show API.
+ */
+@Serializable
+public data class OllamaShowModelResponseDTO(
+    val capabilities: List<Capability>,
+) {
+    @Serializable
+    public enum class Capability {
+        @SerialName("completion")
+        COMPLETION,
+        @SerialName("embedding")
+        EMBEDDING,
+        @SerialName("insert")
+        INSERT,
+        @SerialName("vision")
+        VISION,
+        @SerialName("tools")
+        TOOLS,
+    }
+}
 
 /**
  * Message for the chat API.

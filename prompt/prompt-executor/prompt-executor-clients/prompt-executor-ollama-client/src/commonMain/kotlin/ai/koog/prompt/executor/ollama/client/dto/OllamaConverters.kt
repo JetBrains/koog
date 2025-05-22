@@ -3,20 +3,25 @@ package ai.koog.prompt.executor.ollama.client.dto
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
-import kotlinx.serialization.encodeToString
+import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 /**
- * Converts LLModel to Ollama model ID string.
+ * Extracts a JSON schema format from the prompt, if one is defined.
  */
-internal fun LLModel.toOllamaModelId(): String = when (this.id) {
-    OllamaModels.Meta.LLAMA_3_2.id -> "llama3.2"
-    OllamaModels.Alibaba.QWQ.id -> "qwq"
-    OllamaModels.Alibaba.QWEN_CODER_2_5_32B.id -> "qwen2.5-coder:32b"
-    else -> error("Unknown profile ID ${this.id}")
+internal fun Prompt.toOllamaJsonFormat(): JsonObject? {
+    val schema = params.schema
+    return if (schema is LLMParams.Schema.JSON) schema.schema else null
+}
+
+/**
+ * Extracts some model options from the prompt, if temperature is defined.
+ */
+internal fun Prompt.toOllamaOptions(): OllamaChatRequestDTO.Options? {
+    val temperature = this.params.temperature
+    return if (temperature != null) OllamaChatRequestDTO.Options(temperature) else null
 }
 
 /**
@@ -84,29 +89,5 @@ internal fun ToolDescriptor.toOllamaTool(): OllamaToolDTO {
             description = this.description,
             parameters = jsonSchema
         )
-    )
-}
-
-/**
- * Extracts a tool call from a ChatMessage.
- */
-internal fun OllamaChatMessageDTO.getToolCall(): Message.Tool.Call? {
-    if (this.toolCalls.isNullOrEmpty()) {
-        return null
-    }
-
-    val toolCall = this.toolCalls.first()
-    val name = toolCall.function.name
-    val json = Json {
-        ignoreUnknownKeys = true
-        allowStructuredMapKeys = true
-    }
-    val content = json.encodeToString(toolCall.function.arguments)
-
-    return Message.Tool.Call(
-        // TODO support tool call ids for Ollama
-        id = "id",
-        tool = name,
-        content = content
     )
 }
