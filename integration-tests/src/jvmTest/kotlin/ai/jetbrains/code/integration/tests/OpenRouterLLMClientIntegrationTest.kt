@@ -10,39 +10,36 @@ import ai.koog.prompt.message.Message
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 fun readTestOpenRouterKeyFromEnv(): String {
-    return System.getenv("OPEN_ROUTER_API_TEST_KEY") ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` not set")
+    return System.getenv("OPEN_ROUTER_API_TEST_KEY")
+        ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` not set")
 }
 
 /**
  * Integration tests for the OpenRouter client.
- * 
- * To run these tests, you need a valid OpenRouter API key set in the OPEN_ROUTER_API_TEST_KEY environment variable.
+ *
  * These tests use the free "microsoft/phi-4-reasoning:free" model which is available at no cost.
  */
 class OpenRouterLLMClientTest {
 
     // API key for testing
     private val apiKey: String get() = readTestOpenRouterKeyFromEnv()
-    
+
     // Free model for testing
     private val testModel = OpenRouterModels.Phi4Reasoning
 
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
     fun testCreateClient() {
         val client = OpenRouterLLMClient(apiKey)
         assertNotNull(client, "Client should be created successfully")
     }
 
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteSimplePrompt() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
@@ -63,7 +60,6 @@ class OpenRouterLLMClientTest {
     }
 
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteStreamingPrompt() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
@@ -95,7 +91,6 @@ class OpenRouterLLMClientTest {
     }
 
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
     fun testExecuteWithTools() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
@@ -149,7 +144,6 @@ class OpenRouterLLMClientTest {
     }
 
     @Test
-    @Ignore("This test is ignored because it requires a valid API key.")
     fun testCodeGeneration() = runTest {
         val client = OpenRouterLLMClient(apiKey)
 
