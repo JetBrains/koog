@@ -25,7 +25,7 @@ fun readTestOpenRouterKeyFromEnv(): String {
  *
  * These tests use the free "microsoft/phi-4-reasoning:free" model which is available at no cost.
  */
-class OpenRouterLLMClientTest {
+class OpenRouterLLMClientIntegrationTest {
 
     // API key for testing
     private val apiKey: String get() = readTestOpenRouterKeyFromEnv()

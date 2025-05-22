@@ -97,7 +97,7 @@ internal fun LLMClient.reportingTo(
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
 @Suppress("SSBasedInspection")
-class KotlinAIAgentWithMultipleLLMIntegrationTestTest {
+class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
