@@ -32,6 +32,23 @@ public object OllamaModels {
                 LLMCapability.Tools
             )
         )
+
+        /**
+         * Represents the LLAMA version 4 model provided by Meta.
+         *
+         * The LLAMA 4 collection of models is natively multimodal AI models that enable text and multimodal experiences.
+         * These two models leverage a mixture-of-experts (MoE) architecture and support native multimodality (image input).
+         *
+         */
+        public val LLAMA_4: LLModel = LLModel(
+            provider = LLMProvider.Meta,
+            id = "llama4:latest",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Tools
+            )
+        )
     }
 
     /**
