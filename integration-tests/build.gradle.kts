@@ -29,6 +29,7 @@ kotlin {
                 implementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.ktor.client.content.negotiation)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
     }
