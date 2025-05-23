@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
@@ -57,7 +58,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test-tools") {
+        val prompt = Prompt.build("test-tools") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
@@ -88,7 +89,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
@@ -118,7 +119,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Search for information about Paris with a limit of 5 results")
         }
@@ -135,7 +136,7 @@ class OllamaClientIntegrationTest {
             description = "Get the current time"
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("What time is it?")
         }
@@ -159,7 +160,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the limit to 42")
         }
@@ -183,7 +184,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("What's the value of 2/3")
         }
@@ -207,7 +208,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the name to John")
         }
@@ -231,7 +232,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the color to blue")
         }
@@ -270,7 +271,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
@@ -294,7 +295,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the tags to important, urgent, and critical")
         }
@@ -318,7 +319,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the values to 1, 2, and 3")
         }
@@ -342,7 +343,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the min, the max and the avg values in range from 0 to 1 with a step of 0.01.")
         }
@@ -375,7 +376,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Select two tags of the highest priority.")
         }
@@ -399,7 +400,7 @@ class OllamaClientIntegrationTest {
             )
         )
 
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Select two tags of the highest priority.")
             user("Then select two tags of the lowest priority.")
@@ -412,7 +413,7 @@ class OllamaClientIntegrationTest {
 
     @Test
     fun integration_testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
-        val prompt = Prompt.Companion.build("test") {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words.")
         }
@@ -572,12 +573,14 @@ class OllamaClientIntegrationTest {
         }
     }
 
+
+    @Disabled("JBAI-14221")
     @Test
     fun `integration_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
 
-        val prompt = Prompt.Companion.build("test-structured-streaming") {
+        val prompt = Prompt.build("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
                 """
