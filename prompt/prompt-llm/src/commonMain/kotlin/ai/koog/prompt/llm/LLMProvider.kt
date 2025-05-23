@@ -70,7 +70,7 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      */
     @Serializable
     public data object Alibaba : LLMProvider("alibaba", "Alibaba")
-    
+
     /**
      * Represents the OpenRouter provider within the available set of large language model providers.
      *
@@ -83,4 +83,17 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      */
     @Serializable
     public data object OpenRouter : LLMProvider("openrouter", "OpenRouter")
+
+    /**
+     * Represents the Ollama provider within the available set of large language model providers.
+     *
+     * Ollama is identified by its unique ID ("ollama") and display name ("Ollama").
+     * It extends the `LLMProvider` sealed class, which serves as a base class for all supported language model providers.
+     *
+     * This data object adheres to the structure and serialization requirements defined by the parent class.
+     * It is part of the available LLM provider hierarchy, which is used to configure and identify specific
+     * providers for large language model functionalities and capabilities.
+     */
+    @Serializable
+    public data object Ollama : LLMProvider("ollama", "Ollama")
 }

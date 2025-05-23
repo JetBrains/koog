@@ -1,12 +1,12 @@
 package ai.koog.prompt.llm
 
 /**
- * Represents a collection of predefined Large Language Models (LLM) categorized by providers.
- * Each provider contains specific models with configurations such as unique identifiers and capabilities.
+ * Represents a collection of predefined Large Language Models (LLM) categorized by makers.
+ * Each maker contains specific models with configurations such as unique identifiers and capabilities.
  */
 public object OllamaModels {
     /**
-     * The `Meta` object represents the configuration for the Meta-provided large language models (LLMs).
+     * The `Meta` object represents the configuration for the Meta large language models (LLMs).
      * It contains the predefined model specifications for Meta's LLMs, including their identifiers
      * and supported capabilities.
      */
@@ -14,7 +14,7 @@ public object OllamaModels {
         /**
          * Represents the LLAMA version 3.2 model provided by Meta.
          *
-         * This variable defines an instance of the `LLModel` class with the Meta provider, a unique identifier "meta-llama-3-2",
+         * This variable defines an instance of the `LLModel` class with the Ollama provider, a unique identifier "llama3.2",
          * and a set of capabilities. The supported capabilities include:
          *  - Temperature adjustment.
          *  - JSON Schema-based tasks (Simple Schema).
@@ -24,8 +24,8 @@ public object OllamaModels {
          * that require dynamic behavior adjustments, schema adherence, and tool-based interactions.
          */
         public val LLAMA_3_2: LLModel = LLModel(
-            provider = LLMProvider.Meta,
-            id = "meta-llama-3-2",
+            provider = LLMProvider.Ollama,
+            id = "llama3.2",
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Simple,
@@ -35,16 +35,16 @@ public object OllamaModels {
     }
 
     /**
-     * Represents an object that contains predefined Large Language Models (LLMs) provided by Alibaba.
+     * Represents an object that contains predefined Large Language Models (LLMs) made by Alibaba.
      *
      * The `Alibaba` object provides access to multiple LLM instances, each with specific identifiers and capabilities.
-     * These models are configured with Alibaba as the provider and are characterized by their unique capabilities.
+     * These models are configured with Ollama as the provider and are characterized by their unique capabilities.
      */
     public object Alibaba {
         /**
          * Represents the `QWQ` language model instance provided by Alibaba with specific capabilities.
          *
-         * The model is identified by its unique `id` "alibaba-qwq". It belongs to the Alibaba provider
+         * The model is identified by its unique `id` "qwq". It belongs to the Ollama provider
          * and supports multiple advanced capabilities:
          * - Temperature Adjustment: Enables control over the randomness of the model's output.
          * - JSON Schema (Simple): Supports tasks structured through simple JSON schemas.
@@ -54,8 +54,8 @@ public object OllamaModels {
          * require these capabilities for varied and advanced tasks.
          */
         public val QWQ: LLModel = LLModel(
-            provider = LLMProvider.Alibaba,
-            id = "alibaba-qwq",
+            provider = LLMProvider.Ollama,
+            id = "qwq",
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Simple,
@@ -71,11 +71,11 @@ public object OllamaModels {
          * - `Schema.JSON.Simple`: Supports tasks requiring JSON schema validation and handling in a simplified manner.
          * - `Tools`: Enables interaction with external tools or functionalities within the model's ecosystem.
          *
-         * The model is identified by the unique ID "alibaba-qwen-coder-2-5-32b" and categorized under the Alibaba provider.
+         * The model is identified by the unique ID "qwen2.5-coder:32b" and categorized under the Ollama provider.
          */
         public val QWEN_CODER_2_5_32B: LLModel = LLModel(
-            provider = LLMProvider.Alibaba,
-            id = "alibaba-qwen-coder-2-5-32b",
+            provider = LLMProvider.Ollama,
+            id = "qwen2.5-coder:32b",
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Simple,

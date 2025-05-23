@@ -91,9 +91,9 @@ public class OllamaModelManager(
         val capabilities = detectCapabilities(matchedModel)
         
         return LLModel(
-            provider = LLMProvider.Meta, // Default to Meta for now
-            id = "ollama-${matchedModel.name}",
-            capabilities = capabilities
+            provider = LLMProvider.Ollama,
+            id = matchedModel.name,
+            capabilities = capabilities,
         )
     }
 
@@ -121,8 +121,6 @@ public class OllamaModelManager(
         
         return null
     }
-
-
 
     /**
      * Detects capabilities based on model information - purely dynamic.
@@ -189,9 +187,9 @@ public class OllamaModelManager(
         val capabilities = getCapabilitiesForFamily(family)
         
         return LLModel(
-            provider = LLMProvider.Meta, // Default provider
-            id = "ollama-dynamic-$modelName",
-            capabilities = capabilities
+            provider = LLMProvider.Ollama,
+            id = modelName,
+            capabilities = capabilities,
         )
     }
 

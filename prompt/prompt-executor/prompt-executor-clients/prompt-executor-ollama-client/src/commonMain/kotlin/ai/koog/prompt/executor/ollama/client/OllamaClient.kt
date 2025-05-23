@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.ollama.client.dto.*
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.ktor.client.*
@@ -30,13 +31,11 @@ import kotlinx.serialization.json.Json
  * @property baseUrl The base URL of the Ollama API server.
  * @property baseClient The HTTP client used for making requests.
  * @property timeoutConfig Timeout configuration for HTTP requests.
- * @property enableDynamicModels Whether to enable dynamic model resolution.
  */
 public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-    private val enableDynamicModels: Boolean = true
 ): LLMClient, LLMEmbeddingProvider {
 
     private val ollamaJson = Json {
@@ -65,17 +64,13 @@ public class OllamaClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        val ollamaModelName = if (enableDynamicModels) {
-            modelResolver.resolveToOllamaName(model)
-        } else {
-            model.toOllamaModelId()
-        }
+        require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         val response = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
             setBody(
                 OllamaChatRequestDTO(
-                    model = ollamaModelName,
+                    model = model.id,
                     messages = prompt.toOllamaChatMessages(),
                     stream = false,
                     tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null
@@ -97,17 +92,13 @@ public class OllamaClient(
         prompt: Prompt,
         model: LLModel
     ): Flow<String> = flow {
-        val ollamaModelName = if (enableDynamicModels) {
-            modelResolver.resolveToOllamaName(model)
-        } else {
-            model.toOllamaModelId()
-        }
+        require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         val response = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
             setBody(
                 OllamaChatRequestDTO(
-                    model = ollamaModelName,
+                    model = model.id,
                     messages = prompt.toOllamaChatMessages(),
                     stream = true,
                 )
@@ -127,7 +118,7 @@ public class OllamaClient(
                         emit(content)
                     }
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 // Skip malformed JSON lines
                 continue
             }
@@ -143,19 +134,15 @@ public class OllamaClient(
      * @throws IllegalArgumentException if the model does not have the Embed capability.
      */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
+        require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
+
         if (!model.capabilities.contains(LLMCapability.Embed)) {
             throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
         }
 
-        val ollamaModelName = if (enableDynamicModels) {
-            modelResolver.resolveToOllamaName(model)
-        } else {
-            model.id
-        }
-
         val response = client.post("$baseUrl/api/embeddings") {
             contentType(ContentType.Application.Json)
-            setBody(EmbeddingRequest(model = ollamaModelName, prompt = text))
+            setBody(EmbeddingRequest(model = model.id, prompt = text))
         }
 
         val embeddingResponse = response.body<EmbeddingResponse>()

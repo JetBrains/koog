@@ -3,41 +3,9 @@ package ai.koog.prompt.executor.ollama.client.dto
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-
-/**
- * Converts LLModel to Ollama model ID string.
- * This function provides backward compatibility for hardcoded models.
- * For dynamic model resolution, use OllamaModelResolver instead.
- */
-internal fun LLModel.toOllamaModelId(): String = when (this.id) {
-    OllamaModels.Meta.LLAMA_3_2.id -> "llama3.2"
-    OllamaModels.Alibaba.QWQ.id -> "qwq"
-    OllamaModels.Alibaba.QWEN_CODER_2_5_32B.id -> "qwen2.5-coder:32b"
-    else -> {
-        // Try to extract model name from dynamic model IDs
-        when {
-            this.id.startsWith("ollama-") -> {
-                val extractedName = this.id.removePrefix("ollama-")
-                if (extractedName.startsWith("dynamic-")) {
-                    extractedName.removePrefix("dynamic-")
-                } else {
-                    extractedName
-                }
-            }
-
-            else -> {
-                // Log warning and use ID directly as fallback
-                println("Warning: Unknown model ID ${this.id}, using ID directly. Consider using OllamaModelResolver for dynamic model support.")
-                this.id
-            }
-        }
-    }
-}
 
 /**
  * Converts a Prompt to a list of ChatMessage objects for the Ollama API.
