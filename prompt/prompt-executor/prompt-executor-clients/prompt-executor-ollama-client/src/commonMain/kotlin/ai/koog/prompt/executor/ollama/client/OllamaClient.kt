@@ -25,21 +25,23 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 
 /**
- * Client for interacting with the Ollama API.
+ * Client for interacting with the Ollama API with comprehensive model support.
  *
  * @property baseUrl The base URL of the Ollama API server.
  * @property baseClient The HTTP client used for making requests.
+ * @property timeoutConfig Timeout configuration for HTTP requests.
+ * @property enableDynamicModels Whether to enable dynamic model resolution.
  */
 public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
-    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    private val enableDynamicModels: Boolean = true
 ): LLMClient, LLMEmbeddingProvider {
 
     private val ollamaJson = Json {
         ignoreUnknownKeys = true
         isLenient = true
-
     }
 
     private val client = baseClient.config {
@@ -55,18 +57,28 @@ public class OllamaClient(
         }
     }
 
+    private val modelManager by lazy { OllamaModelManager(client, baseUrl) }
+    private val modelResolver by lazy { OllamaModelResolver(modelManager) }
+
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
+        val ollamaModelName = if (enableDynamicModels) {
+            modelResolver.resolveToOllamaName(model)
+        } else {
+            model.toOllamaModelId()
+        }
+
         val response = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
             setBody(
                 OllamaChatRequestDTO(
-                    model = model.toOllamaModelId(),
+                    model = ollamaModelName,
                     messages = prompt.toOllamaChatMessages(),
                     stream = false,
+                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null
                 )
             )
         }.body<OllamaChatResponseDTO>()
@@ -85,11 +97,17 @@ public class OllamaClient(
         prompt: Prompt,
         model: LLModel
     ): Flow<String> = flow {
+        val ollamaModelName = if (enableDynamicModels) {
+            modelResolver.resolveToOllamaName(model)
+        } else {
+            model.toOllamaModelId()
+        }
+
         val response = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
             setBody(
                 OllamaChatRequestDTO(
-                    model = model.toOllamaModelId(),
+                    model = ollamaModelName,
                     messages = prompt.toOllamaChatMessages(),
                     stream = true,
                 )
@@ -100,8 +118,19 @@ public class OllamaClient(
 
         while (!channel.isClosedForRead) {
             val line = channel.readUTF8Line() ?: break
-            val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
-            emit(chunk.message?.content ?: "")
+            if (line.isBlank()) continue
+
+            try {
+                val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
+                chunk.message?.content?.let { content ->
+                    if (content.isNotEmpty()) {
+                        emit(content)
+                    }
+                }
+            } catch (e: Exception) {
+                // Skip malformed JSON lines
+                continue
+            }
         }
     }
 
@@ -118,13 +147,68 @@ public class OllamaClient(
             throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
         }
 
+        val ollamaModelName = if (enableDynamicModels) {
+            modelResolver.resolveToOllamaName(model)
+        } else {
+            model.id
+        }
+
         val response = client.post("$baseUrl/api/embeddings") {
             contentType(ContentType.Application.Json)
-            setBody(EmbeddingRequest(model = model.id, prompt = text))
+            setBody(EmbeddingRequest(model = ollamaModelName, prompt = text))
         }
 
         val embeddingResponse = response.body<EmbeddingResponse>()
         return embeddingResponse.embedding
+    }
+
+    /**
+     * Gets all available models from the Ollama server.
+     */
+    public suspend fun getAvailableModels(): List<OllamaModelInfo> {
+        return modelManager.getAvailableModels()
+    }
+
+    /**
+     * Resolves a model name to an LLModel with detected capabilities.
+     */
+    public suspend fun resolveModel(modelName: String): LLModel? {
+        return modelManager.resolveModel(modelName)
+    }
+
+    /**
+     * Creates a dynamic model for any Ollama model name.
+     */
+    public suspend fun createDynamicModel(modelName: String): LLModel {
+        return modelManager.createDynamicModel(modelName)
+    }
+
+    /**
+     * Pulls a model from the Ollama registry.
+     */
+    public suspend fun pullModel(modelName: String): Boolean {
+        return modelManager.pullModel(modelName)
+    }
+
+    /**
+     * Validates that a model is available in Ollama.
+     */
+    public suspend fun validateModel(modelName: String): Boolean {
+        return modelResolver.validateModelAvailable(modelName)
+    }
+
+    /**
+     * Suggests similar models for a given model name.
+     */
+    public suspend fun suggestSimilarModels(modelName: String, limit: Int = 5): List<String> {
+        return modelResolver.suggestSimilarModels(modelName, limit)
+    }
+
+    /**
+     * Refreshes the model cache.
+     */
+    public fun refreshModelCache() {
+        modelManager.invalidateCache()
     }
 }
 
