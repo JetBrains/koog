@@ -1,19 +1,19 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.local.features.eventHandler.feature.EventHandler
 import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.TestEnvironment.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.TestEnvironment.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestUtils.configureMockOpenAiCall
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -130,10 +130,20 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+        val seed = IntRange(1, 100500).random()
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            else -> SingleLLMPromptExecutor(TestEnvironment.createOpenAILLMClient())
+        }
+
+        configureMockOpenAiCall { mockOpenAI ->
+            mockOpenAI.completion {
+                model(model.id)
+                userMessageContains("Repeat what I say: hello, I'm good $seed.")
+            } responds {
+                assistantContent = "hello, I'm good $seed."
+            }
         }
 
         val agent = simpleSingleRunAgent(
@@ -146,7 +156,7 @@ class SimpleAgentIntegrationTest {
         )
 
         try {
-            agent.run("Repeat what I say: hello, I'm good.")
+            agent.run("Repeat what I say: hello, I'm good $seed.")
         } catch (e: Exception) {
             if (e.message?.contains("Error from GoogleAI API: 500 Internal Server Error") == true) {
                 assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
@@ -157,7 +167,6 @@ class SimpleAgentIntegrationTest {
 
         // by default, simpleSingleRunAgent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
-
     }
 
     @ParameterizedTest
@@ -174,7 +183,7 @@ class SimpleAgentIntegrationTest {
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            else -> SingleLLMPromptExecutor(TestEnvironment.createOpenAILLMClient())
         }
 
         val agent = simpleSingleRunAgent(

@@ -1,9 +1,5 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.ReportingLLMLLMClient.Event
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestLogPrinter
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -15,12 +11,16 @@ import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.local.features.eventHandler.feature.EventHandler
 import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.local.features.tracing.feature.Tracing
+import ai.koog.integration.tests.ReportingLLMLLMClient.Event
+import ai.koog.integration.tests.TestEnvironment.createOpenAILLMClient
+import ai.koog.integration.tests.TestEnvironment.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.TestEnvironment.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestLogPrinter
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -96,7 +96,6 @@ internal fun LLMClient.reportingTo(
     eventsChannel: Channel<Event>
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
-@Suppress("SSBasedInspection")
 class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     // API keys for testing
@@ -399,7 +398,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int
     ): AIAgent {
-        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        val openAIClient = createOpenAILLMClient().reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
         val executor = MultiLLMPromptExecutor(
@@ -505,7 +504,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int
     ): AIAgent {
-        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        val openAIClient = createOpenAILLMClient().reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
         // Create the executor

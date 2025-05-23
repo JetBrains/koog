@@ -1,30 +1,13 @@
 package ai.koog.integration.tests.utils
 
 import ai.koog.agents.core.tools.*
+import ai.koog.integration.tests.TestEnvironment
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
+import me.kpavlov.aimocks.openai.MockOpenai
 
 internal object TestUtils {
-    fun readTestAnthropicKeyFromEnv(): String {
-        return System.getenv("ANTHROPIC_API_TEST_KEY")
-            ?: error("ERROR: environment variable `ANTHROPIC_API_TEST_KEY` is not set")
-    }
-
-    fun readTestOpenAIKeyFromEnv(): String {
-        return System.getenv("OPEN_AI_API_TEST_KEY")
-            ?: error("ERROR: environment variable `OPEN_AI_API_TEST_KEY` is not set")
-    }
-
-    fun readTestGoogleAIKeyFromEnv(): String {
-        return System.getenv("GEMINI_API_TEST_KEY")
-            ?: error("ERROR: environment variable `GEMINI_API_TEST_KEY` is not set")
-    }
-
-    fun readTestOpenRouterKeyFromEnv(): String {
-        return System.getenv("OPEN_ROUTER_API_TEST_KEY")
-            ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` is not set")
-    }
 
     @Serializable
     enum class CalculatorOperation {
@@ -271,6 +254,12 @@ internal object TestUtils {
             parser.parseStream(markdownStream)
 
             countries.forEach { emit(it) }
+        }
+    }
+
+    fun configureMockOpenAiCall(block: (MockOpenai) -> Unit) {
+        if (TestEnvironment.isMockOpenai) {
+            block(TestEnvironment.mockOpenAI)
         }
     }
 }

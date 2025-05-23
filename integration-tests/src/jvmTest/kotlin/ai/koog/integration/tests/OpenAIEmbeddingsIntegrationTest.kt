@@ -1,6 +1,6 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.TestEnvironment.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.test.runTest
