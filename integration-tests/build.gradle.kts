@@ -30,6 +30,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.mokksy.openai)
                 implementation(libs.ktor.client.content.negotiation)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
     }

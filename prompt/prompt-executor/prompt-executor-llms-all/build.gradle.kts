@@ -44,6 +44,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                runtimeOnly(libs.slf4j.simple)
             }
         }
     }
