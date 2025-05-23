@@ -72,8 +72,9 @@ public class OllamaClient(
                 OllamaChatRequestDTO(
                     model = model.id,
                     messages = prompt.toOllamaChatMessages(),
+                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
+                    format = prompt.extractOllamaJsonFormat(),
                     stream = false,
-                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null
                 )
             )
         }.body<OllamaChatResponseDTO>()
