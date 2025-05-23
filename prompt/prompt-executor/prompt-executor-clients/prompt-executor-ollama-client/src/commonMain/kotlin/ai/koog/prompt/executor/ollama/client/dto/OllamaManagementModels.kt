@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.ollama.client.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Response from the /api/tags endpoint containing a list of available models.
@@ -53,7 +54,8 @@ public data class OllamaShowModelResponse(
     val parameters: String? = null,
     val template: String? = null,
     val details: OllamaModelDetails? = null,
-    @SerialName("model_info") val modelInfo: OllamaModelInfo? = null
+    @SerialName("model_info") val modelInfo: Map<String, JsonElement>? = null,
+    val capabilities: List<String>,
 )
 
 /**
