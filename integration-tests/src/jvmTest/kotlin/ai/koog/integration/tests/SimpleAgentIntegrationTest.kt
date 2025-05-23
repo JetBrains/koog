@@ -1,27 +1,30 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.local.features.eventHandler.feature.EventHandler
 import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.TestEnvironment.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.TestEnvironment.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestUtils.configureMockOpenAiCall
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.AfterTest
+import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class SimpleAgentIntegrationTest {
@@ -49,17 +52,67 @@ class SimpleAgentIntegrationTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onToolCall = { tool, args ->
-            println("Tool called: tool ${tool.name}, args $args")
-            actualToolCalls.add(tool.name)
-        }
-
-        onAgentRunError = { strategyName, throwable ->
-            errors.add(throwable)
+        onBeforeAgentStarted = { strategy, agent ->
+            println("Agent started: strategy=${strategy.javaClass.simpleName}, agent=${agent.javaClass.simpleName}")
         }
 
         onAgentFinished = { strategyName, result ->
+            println("Agent finished: strategy=$strategyName, result=$result")
             results.add(result)
+        }
+
+        onAgentRunError = { strategyName, throwable ->
+            println("Agent error: strategy=$strategyName, error=${throwable.message}")
+            errors.add(throwable)
+        }
+
+        onStrategyStarted = { strategy ->
+            println("Strategy started: ${strategy.javaClass.simpleName}")
+        }
+
+        onStrategyFinished = { strategyName, result ->
+            println("Strategy finished: strategy=$strategyName, result=$result")
+        }
+
+        onBeforeNode = { node, context, input ->
+            println("Before node: node=${node.javaClass.simpleName}, input=$input")
+        }
+
+        onAfterNode = { node, context, input, output ->
+            println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
+        }
+
+        onBeforeLLMCall = { prompt ->
+            println("Before LLM call: prompt=$prompt")
+        }
+
+        onBeforeLLMWithToolsCall = { prompt, tools ->
+            println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
+        }
+
+        onAfterLLMCall = { response ->
+            println("After LLM call: response=${response.take(100)}${if (response.length > 100) "..." else ""}")
+        }
+
+        onAfterLLMWithToolsCall = { response, tools ->
+            println("After LLM call with tools: response=${response.map { it.content?.take(50) }}, tools=${tools.map { it.name }}")
+        }
+
+        onToolCall = { tool, args ->
+            println("Tool called: tool=${tool.name}, args=$args")
+            actualToolCalls.add(tool.name)
+        }
+
+        onToolValidationError = { tool, args, value ->
+            println("Tool validation error: tool=${tool.name}, args=$args, value=$value")
+        }
+
+        onToolCallFailure = { tool, args, throwable ->
+            println("Tool call failure: tool=${tool.name}, args=$args, error=${throwable.message}")
+        }
+
+        onToolCallResult = { tool, args, result ->
+            println("Tool call result: tool=${tool.name}, args=$args, result=$result")
         }
     }
 
@@ -77,10 +130,20 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+        val seed = IntRange(1, 100500).random()
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            else -> SingleLLMPromptExecutor(TestEnvironment.createOpenAILLMClient())
+        }
+
+        configureMockOpenAiCall { mockOpenAI ->
+            mockOpenAI.completion {
+                model(model.id)
+                userMessageContains("Repeat what I say: hello, I'm good $seed.")
+            } responds {
+                assistantContent = "hello, I'm good $seed."
+            }
         }
 
         val agent = simpleSingleRunAgent(
@@ -93,7 +156,7 @@ class SimpleAgentIntegrationTest {
         )
 
         try {
-            agent.run("Repeat what I say: hello, I'm good.")
+            agent.run("Repeat what I say: hello, I'm good $seed.")
         } catch (e: Exception) {
             if (e.message?.contains("Error from GoogleAI API: 500 Internal Server Error") == true) {
                 assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
@@ -104,7 +167,6 @@ class SimpleAgentIntegrationTest {
 
         // by default, simpleSingleRunAgent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
-
     }
 
     @ParameterizedTest
@@ -121,7 +183,7 @@ class SimpleAgentIntegrationTest {
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            else -> SingleLLMPromptExecutor(TestEnvironment.createOpenAILLMClient())
         }
 
         val agent = simpleSingleRunAgent(
@@ -140,6 +202,39 @@ class SimpleAgentIntegrationTest {
         assertTrue(
             actualToolCalls.contains("__say_to_user__"),
             "The __say_to_user__ tool was not called for model $model"
+        )
+    }
+
+    @Test
+    fun integration_simpleOllamaTest() = runBlocking {
+        val toolRegistry = ToolRegistry.Companion {
+            tool(SayToUser)
+        }
+
+        val bookwormPrompt = """
+            You're top librarian, helping user to find books.
+            Only communicate to user via tools.
+            Only use tools you've been provided by system.
+        """.trimIndent()
+
+        val executor = simpleOllamaAIExecutor()
+
+        val agent = simpleSingleRunAgent(
+            executor = executor,
+            systemPrompt = bookwormPrompt,
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
+            temperature = 1.0,
+            toolRegistry = toolRegistry,
+            maxIterations = 10,
+            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+        )
+
+        agent.run("Give me top 10 books of the all time.")
+
+        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model")
+        assertTrue(
+            actualToolCalls.contains("__say_to_user__"),
+            "The __say_to_user__ tool was not called for model"
         )
     }
 }

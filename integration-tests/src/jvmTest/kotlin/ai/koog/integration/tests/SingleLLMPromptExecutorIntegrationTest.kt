@@ -2,12 +2,12 @@ package ai.koog.integration.tests
 
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.TestEnvironment.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.TestEnvironment.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.TestEnvironment.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient

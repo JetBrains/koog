@@ -81,17 +81,13 @@ internal fun ToolDescriptor.toOllamaTool(): OllamaToolDTO {
  * Extracts tool calls from a ChatMessage.
  * Returns the first tool call for compatibility, but logs if multiple calls exist.
  */
-internal fun OllamaChatMessageDTO.getToolCall(): Message.Tool.Call? {
+public fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
     if (this.toolCalls.isNullOrEmpty()) {
         return null
     }
 
-    // Log warning if multiple tool calls exist but we're only returning the first
-    if (this.toolCalls.size > 1) {
-        println("Warning: Multiple tool calls detected (${this.toolCalls.size}), but only returning the first one. Consider using getToolCalls() for full support.")
-    }
+    val toolCall = this.toolCalls.firstOrNull() ?: return null
 
-    val toolCall = this.toolCalls.first()
     val name = toolCall.function.name
     val json = Json {
         ignoreUnknownKeys = true
