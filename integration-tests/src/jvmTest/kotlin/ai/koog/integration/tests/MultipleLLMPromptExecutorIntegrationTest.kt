@@ -1,13 +1,13 @@
 package ai.koog.integration.tests
 
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -91,7 +91,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testExecute(model: LLModel) = runTest {
+    fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-prompt") {
@@ -114,7 +114,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testExecuteStreaming(model: LLModel) = runTest {
+    fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-streaming") {
@@ -175,7 +175,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithRequiredParams(model: LLModel) = runTest {
+    fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -220,7 +220,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest {
+    fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -272,7 +272,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithOptionalParams(model: LLModel) = runTest {
+    fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -322,7 +322,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithNoParams(model: LLModel) = runTest {
+    fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -357,7 +357,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithListEnumParams(model: LLModel) = runTest {
+    fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val colorPickerTool = ToolDescriptor(
@@ -393,7 +393,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolsWithNestedListParams(model: LLModel) = runTest {
+    fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val lotteryPickerTool = ToolDescriptor(
@@ -465,7 +465,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testStructuredDataStreaming(model: LLModel) = runTest {
+    fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
@@ -508,7 +508,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testToolChoice(model: LLModel) = runTest {
+    fun integration_testToolChoice(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
