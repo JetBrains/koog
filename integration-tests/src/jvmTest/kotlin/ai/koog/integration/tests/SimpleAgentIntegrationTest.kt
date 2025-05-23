@@ -202,19 +202,25 @@ class SimpleAgentIntegrationTest {
             tool(SayToUser)
         }
 
+        val bookwormPrompt = """
+            You're top librarian, helping user to find books.
+            Only communicate to user via tools.
+            Only use tools you've been provided by system.
+        """.trimIndent()
+
         val executor = simpleOllamaAIExecutor()
 
         val agent = simpleSingleRunAgent(
             executor = executor,
-            systemPrompt = systemPrompt,
-            llmModel = OllamaModels.Meta.LLAMA_4,
+            systemPrompt = bookwormPrompt,
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        agent.run("Write a Kotlin function to calculate factorial.")
+        agent.run("Give me top 10 books of the all time.")
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model")
         assertTrue(

@@ -24,7 +24,6 @@ public object SayToUser : SimpleTool<SayToUser.Args>() {
 
     override suspend fun doExecute(args: Args): String {
         println("Agent says: ${args.message}")
-
         return "DONE"
     }
 }

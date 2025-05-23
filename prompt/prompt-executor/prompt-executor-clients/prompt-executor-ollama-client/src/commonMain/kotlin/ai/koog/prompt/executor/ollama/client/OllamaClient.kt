@@ -66,7 +66,7 @@ public class OllamaClient(
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response = client.post("$baseUrl/api/chat") {
+        val response: OllamaChatResponseDTO = client.post("$baseUrl/api/chat") {
             contentType(ContentType.Application.Json)
             setBody(
                 OllamaChatRequestDTO(
@@ -78,13 +78,26 @@ public class OllamaClient(
             )
         }.body<OllamaChatResponseDTO>()
 
-        return if (response.message?.content != null) {
-            listOf(Message.Assistant(
-                content = response.message.content,
-                finishReason = null // Ollama does not provide a stop reason
-            ))
-        } else {
-            emptyList()
+        return parseResponse(response)
+    }
+
+    private fun parseResponse(response: OllamaChatResponseDTO): List<Message.Response> {
+        val messages = response.message ?: return emptyList()
+        val content = messages.content
+        val toolCalls = messages.toolCalls ?: emptyList()
+
+        return when {
+            content.isNotEmpty() && toolCalls.isEmpty() -> {
+                listOf(Message.Assistant(content = content))
+            }
+            content.isEmpty() && toolCalls.isNotEmpty() -> {
+                messages.getToolCalls()
+            }
+            else -> {
+                val toolCallMessages = messages.getToolCalls()
+                val assistantMessage = Message.Assistant(content = content)
+                listOf(assistantMessage) + toolCallMessages
+            }
         }
     }
 
