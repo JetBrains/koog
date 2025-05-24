@@ -8,28 +8,28 @@ import kotlinx.serialization.json.JsonElement
  * Response from the /api/tags endpoint containing a list of available models.
  */
 @Serializable
-public data class OllamaModelsListResponse(
-    val models: List<OllamaModelInfo>
+internal data class OllamaModelsListResponseDTO(
+    val models: List<OllamaModelInfoDTO>
 )
 
 /**
  * Information about a model available in Ollama.
  */
 @Serializable
-public data class OllamaModelInfo(
+internal data class OllamaModelInfoDTO(
     val name: String,
     val model: String,
     val size: Long,
     @SerialName("modified_at") val modifiedAt: String,
     val digest: String,
-    val details: OllamaModelDetails? = null
+    val details: OllamaModelDetailsDTO? = null
 )
 
 /**
  * Detailed information about a model's specifications.
  */
 @Serializable
-public data class OllamaModelDetails(
+internal data class OllamaModelDetailsDTO(
     val format: String,
     val family: String,
     val families: List<String>? = null,
@@ -41,7 +41,7 @@ public data class OllamaModelDetails(
  * Request to show information about a specific model.
  */
 @Serializable
-public data class OllamaShowModelRequest(
+internal data class OllamaShowModelRequestDTO(
     val name: String
 )
 
@@ -49,20 +49,29 @@ public data class OllamaShowModelRequest(
  * Response from the /api/show endpoint with detailed model information.
  */
 @Serializable
-public data class OllamaShowModelResponse(
+internal data class OllamaShowModelResponseDTO(
     val modelfile: String? = null,
     val parameters: String? = null,
     val template: String? = null,
-    val details: OllamaModelDetails? = null,
+    val details: OllamaModelDetailsDTO? = null,
     @SerialName("model_info") val modelInfo: Map<String, JsonElement>? = null,
-    val capabilities: List<String>,
-)
+    val capabilities: List<Capability>,
+) {
+    @Serializable
+    enum class Capability {
+        @SerialName("completion") COMPLETION,
+        @SerialName("embedding") EMBEDDING,
+        @SerialName("insert") INSERT,
+        @SerialName("vision") VISION,
+        @SerialName("tools") TOOLS,
+    }
+}
 
 /**
  * Request to pull a model from the Ollama registry.
  */
 @Serializable
-public data class OllamaPullModelRequest(
+internal data class OllamaPullModelRequestDTO(
     val name: String,
     val stream: Boolean = true
 )
@@ -71,25 +80,9 @@ public data class OllamaPullModelRequest(
  * Response from the /api/pull endpoint during model pulling.
  */
 @Serializable
-public data class OllamaPullModelResponse(
+internal data class OllamaPullModelResponseDTO(
     val status: String,
     val digest: String? = null,
     val total: Long? = null,
     val completed: Long? = null
-)
-
-/**
- * Request to delete a model.
- */
-@Serializable
-public data class OllamaDeleteModelRequest(
-    val name: String
-)
-
-/**
- * Response from the /api/delete endpoint.
- */
-@Serializable
-public data class OllamaDeleteModelResponse(
-    val status: String? = null
 )
