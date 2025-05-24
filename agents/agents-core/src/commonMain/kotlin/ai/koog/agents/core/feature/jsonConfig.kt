@@ -1,8 +1,8 @@
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.feature.model.*
-import ai.koog.agents.local.features.common.message.FeatureEvent
-import ai.koog.agents.local.features.common.message.FeatureMessage
+import ai.koog.agents.features.common.message.FeatureEvent
+import ai.koog.agents.features.common.message.FeatureMessage
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 

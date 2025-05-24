@@ -2,8 +2,8 @@ package ai.koog.agents.example.simpleapi
 
 import ai.koog.agents.example.TokenService
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
-import ai.koog.agents.local.features.eventHandler.feature.EventHandler
-import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking

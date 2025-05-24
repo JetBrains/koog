@@ -16,7 +16,7 @@ import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.local.features.common.config.FeatureConfig
+import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext

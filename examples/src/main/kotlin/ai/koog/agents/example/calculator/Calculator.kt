@@ -12,7 +12,7 @@ import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.TokenService
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.local.features.eventHandler.feature.handleEvents
+import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor

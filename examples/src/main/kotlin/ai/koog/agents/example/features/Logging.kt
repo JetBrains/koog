@@ -7,7 +7,7 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.example.TokenService
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
-import ai.koog.agents.local.features.common.config.FeatureConfig
+import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope

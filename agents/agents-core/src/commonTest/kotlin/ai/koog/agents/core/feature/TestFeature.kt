@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.local.features.common.config.FeatureConfig
+import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message

@@ -7,11 +7,11 @@ import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.StringSubgraphResult
-import ai.koog.agents.local.memory.model.Concept
-import ai.koog.agents.local.memory.model.Fact
-import ai.koog.agents.local.memory.model.MemoryScope
-import ai.koog.agents.local.memory.model.MemorySubject
-import ai.koog.agents.local.memory.providers.AgentMemoryProvider
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.Fact
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMToolCall
 import ai.koog.agents.testing.tools.mockTool

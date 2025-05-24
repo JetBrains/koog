@@ -8,7 +8,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.TokenService
-import ai.koog.agents.local.features.eventHandler.feature.handleEvents
+import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.dsl.prompt

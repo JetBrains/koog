@@ -8,8 +8,8 @@ import ai.koog.agents.example.tone.ToneTools.NeutralToneTool
 import ai.koog.agents.example.tone.ToneTools.PositiveToneTool
 import ai.koog.agents.example.tone.ToneTools.ToneTool
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.local.features.eventHandler.feature.EventHandler
-import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer

@@ -9,7 +9,7 @@ import ai.koog.agents.example.tone.ToneTools.NegativeToneTool
 import ai.koog.agents.example.tone.ToneTools.NeutralToneTool
 import ai.koog.agents.example.tone.ToneTools.PositiveToneTool
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.local.features.eventHandler.feature.handleEvents
+import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor

@@ -1,9 +1,9 @@
 package ai.koog.agents.core.feature.message
 
-import ai.koog.agents.local.features.common.message.FeatureEvent
-import ai.koog.agents.local.features.common.message.FeatureMessage
-import ai.koog.agents.local.features.common.message.FeatureMessageProcessor
-import ai.koog.agents.local.features.common.message.FeatureStringMessage
+import ai.koog.agents.features.common.message.FeatureEvent
+import ai.koog.agents.features.common.message.FeatureMessage
+import ai.koog.agents.features.common.message.FeatureMessageProcessor
+import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.utils.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock

@@ -2,8 +2,8 @@ package ai.koog.agents.core.feature.model
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.local.features.common.message.FeatureEvent
-import ai.koog.agents.local.features.common.message.FeatureMessage
+import ai.koog.agents.features.common.message.FeatureEvent
+import ai.koog.agents.features.common.message.FeatureMessage
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 

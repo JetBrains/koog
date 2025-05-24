@@ -12,9 +12,9 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.tools.*
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
-import ai.koog.agents.local.features.eventHandler.feature.EventHandler
-import ai.koog.agents.local.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.agents.local.features.tracing.feature.Tracing
+import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
