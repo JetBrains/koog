@@ -18,6 +18,7 @@ class OllamaTestFixture {
 
     private lateinit var ollamaContainer: GenericContainer<*>
 
+    lateinit var client: OllamaClient
     lateinit var executor: SingleLLMPromptExecutor
     val model = OllamaModels.Meta.LLAMA_3_2
 
@@ -33,7 +34,8 @@ class OllamaTestFixture {
         val baseUrl = "http://$host:$port"
         waitForOllamaServer(baseUrl)
 
-        executor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
+        client = OllamaClient(baseUrl)
+        executor = SingleLLMPromptExecutor(client)
     }
 
     fun tearDown() {

@@ -4,12 +4,11 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
-
 /**
  * Message for the chat API.
  */
 @Serializable
-public data class OllamaChatMessageDTO(
+internal data class OllamaChatMessageDTO(
     val role: String,
     val content: String,
     val images: List<String>? = null,
@@ -20,14 +19,14 @@ public data class OllamaChatMessageDTO(
  * Tool call for the chat API.
  */
 @Serializable
-public data class OllamaToolCallDTO(
+internal data class OllamaToolCallDTO(
     val function: Call
 ) {
     /**
      * Tool function for the chat API.
      */
     @Serializable
-    public data class Call(
+    internal data class Call(
         val name: String,
         val arguments: JsonElement
     )
@@ -38,7 +37,7 @@ public data class OllamaToolCallDTO(
  * Tool definition for the chat API.
  */
 @Serializable
-public data class OllamaToolDTO(
+internal data class OllamaToolDTO(
     val type: String,
     val function: Definition
 ) {
@@ -46,7 +45,7 @@ public data class OllamaToolDTO(
      * Tool definition for the chat API.
      */
     @Serializable
-    public data class Definition(
+    internal data class Definition(
         val name: String,
         val description: String,
         val parameters: JsonElement
@@ -57,7 +56,7 @@ public data class OllamaToolDTO(
  * Request for the /api/chat endpoint.
  */
 @Serializable
-public data class OllamaChatRequestDTO(
+internal data class OllamaChatRequestDTO(
     val model: String,
     val messages: List<OllamaChatMessageDTO>,
     val tools: List<OllamaToolDTO>? = null,
@@ -70,7 +69,7 @@ public data class OllamaChatRequestDTO(
      * Model options for generation.
      */
     @Serializable
-    public data class Options(
+    internal data class Options(
         val temperature: Double? = null,
     )
 }
@@ -79,7 +78,7 @@ public data class OllamaChatRequestDTO(
  * Response from the /api/chat endpoint.
  */
 @Serializable
-public data class OllamaChatResponseDTO(
+internal data class OllamaChatResponseDTO(
     val model: String,
     val message: OllamaChatMessageDTO? = null,
     val done: Boolean
@@ -94,7 +93,7 @@ public data class OllamaChatResponseDTO(
  * @property prompt The input text for which the embedding is to be generated.
  */
 @Serializable
-public data class EmbeddingRequest(
+internal data class EmbeddingRequestDTO(
     val model: String,
     val prompt: String
 )
@@ -110,7 +109,7 @@ public data class EmbeddingRequest(
  * @property modelId An optional identifier for the model that generated the embedding.
  */
 @Serializable
-public data class EmbeddingResponse(
+internal data class EmbeddingResponseDTO(
     val embedding: List<Double>,
     @SerialName("model") val modelId: String? = null
 )

@@ -15,7 +15,6 @@ import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -36,7 +35,7 @@ public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-): LLMClient, LLMEmbeddingProvider {
+) : LLMClient, LLMEmbeddingProvider {
 
     private val ollamaJson = Json {
         ignoreUnknownKeys = true
@@ -44,7 +43,6 @@ public class OllamaClient(
     }
 
     private val client = baseClient.config {
-        install(Logging)
         install(ContentNegotiation) {
             json(ollamaJson)
         }
@@ -52,12 +50,11 @@ public class OllamaClient(
         install(HttpTimeout) {
             requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
             connectTimeoutMillis = timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis  = timeoutConfig.socketTimeoutMillis
+            socketTimeoutMillis = timeoutConfig.socketTimeoutMillis
         }
     }
 
-    private val modelManager by lazy { OllamaModelManager(client, baseUrl) }
-    private val modelResolver by lazy { OllamaModelResolver(modelManager) }
+    private val modelCardCache by lazy { OllamaModelCardCache(client, baseUrl) }
 
     override suspend fun execute(
         prompt: Prompt,
@@ -92,9 +89,11 @@ public class OllamaClient(
             content.isNotEmpty() && toolCalls.isEmpty() -> {
                 listOf(Message.Assistant(content = content))
             }
+
             content.isEmpty() && toolCalls.isNotEmpty() -> {
                 messages.getToolCalls()
             }
+
             else -> {
                 val toolCallMessages = messages.getToolCalls()
                 val assistantMessage = Message.Assistant(content = content)
@@ -158,60 +157,32 @@ public class OllamaClient(
 
         val response = client.post("$baseUrl/api/embeddings") {
             contentType(ContentType.Application.Json)
-            setBody(EmbeddingRequest(model = model.id, prompt = text))
+            setBody(EmbeddingRequestDTO(model = model.id, prompt = text))
         }
 
-        val embeddingResponse = response.body<EmbeddingResponse>()
+        val embeddingResponse = response.body<EmbeddingResponseDTO>()
         return embeddingResponse.embedding
     }
 
     /**
-     * Gets all available models from the Ollama server.
+     * Returns the model cards for all the available models on the server. The model cards are cached.
+     * @param refreshCache true if you want to force refresh the cached model cards, false otherwise
      */
-    public suspend fun getAvailableModels(): List<OllamaModelInfo> {
-        return modelManager.getAvailableModels()
+    public suspend fun getModels(refreshCache: Boolean = false): List<OllamaModelCard> {
+        return modelCardCache.getModels(refreshCache)
     }
 
     /**
-     * Resolves a model name to an LLModel with detected capabilities.
+     * Returns a model card by its model name, on null if no such model exists on the server.
+     * @param refreshCache true if you want to force refresh the cached model cards, false otherwise
+     * @param pullIfMissing true if you want to pull the model from the Ollama registry, false otherwise
      */
-    public suspend fun resolveModel(modelName: String): LLModel? {
-        return modelManager.resolveModel(modelName)
-    }
-
-    /**
-     * Creates a dynamic model for any Ollama model name.
-     */
-    public suspend fun createDynamicModel(modelName: String): LLModel {
-        return modelManager.createDynamicModel(modelName)
-    }
-
-    /**
-     * Pulls a model from the Ollama registry.
-     */
-    public suspend fun pullModel(modelName: String): Boolean {
-        return modelManager.pullModel(modelName)
-    }
-
-    /**
-     * Validates that a model is available in Ollama.
-     */
-    public suspend fun validateModel(modelName: String): Boolean {
-        return modelResolver.validateModelAvailable(modelName)
-    }
-
-    /**
-     * Suggests similar models for a given model name.
-     */
-    public suspend fun suggestSimilarModels(modelName: String, limit: Int = 5): List<String> {
-        return modelResolver.suggestSimilarModels(modelName, limit)
-    }
-
-    /**
-     * Refreshes the model cache.
-     */
-    public fun refreshModelCache() {
-        modelManager.invalidateCache()
+    public suspend fun getModelOrNull(
+        name: String,
+        refreshCache: Boolean = false,
+        pullIfMissing: Boolean = false,
+    ): OllamaModelCard? {
+        return modelCardCache.getModelOrNull(name, refreshCache, pullIfMissing)
     }
 }
 
