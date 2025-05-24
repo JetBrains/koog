@@ -4,8 +4,10 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Converts a Prompt to a list of ChatMessage objects for the Ollama API.
@@ -78,10 +80,26 @@ internal fun ToolDescriptor.toOllamaTool(): OllamaToolDTO {
 }
 
 /**
+ * Extracts a JSON schema format from the prompt, if one is defined.
+ */
+internal fun Prompt.extractOllamaJsonFormat(): JsonObject? {
+    val schema = params.schema
+    return if (schema is LLMParams.Schema.JSON) schema.schema else null
+}
+
+/**
+ * Extracts options from the prompt, if temperature is defined.
+ */
+internal fun Prompt.extractOllamaOptions(): OllamaChatRequestDTO.Options? {
+    val temperature = params.temperature
+    return temperature?.let { OllamaChatRequestDTO.Options(temperature = temperature) }
+}
+
+/**
  * Extracts tool calls from a ChatMessage.
  * Returns the first tool call for compatibility, but logs if multiple calls exist.
  */
-public fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
+internal fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
     if (this.toolCalls.isNullOrEmpty()) {
         return null
     }
