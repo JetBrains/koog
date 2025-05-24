@@ -19,7 +19,7 @@ Koog is a Kotlin-based framework designed to build and run AI agents entirely in
 Key features of Koog include:
 
 - **Pure Kotlin implementation**: Build AI agents entirely in natural and idiomatic Kotlin.
-- **MCP integration**: Connect to Model Control Protocol for enhanced model management.
+- **MCP integration**: Connect to Model Context Protocol for enhanced model management.
 - **Embedding capabilities**: Use vector embeddings for semantic search and knowledge retrieval.
 - **Custom tool creation**: Extend your agents with tools that access external systems and APIs.
 - **Ready-to-use components**: Speed up development with pre-built solutions for common AI engineering challenges.
