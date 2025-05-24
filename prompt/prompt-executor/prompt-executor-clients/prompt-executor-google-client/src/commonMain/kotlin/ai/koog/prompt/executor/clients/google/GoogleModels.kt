@@ -192,7 +192,7 @@ public object GoogleModels {
     public val Gemini2_5ProPreview0506: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-pro-preview-05-06",
-        capabilities = multimodalCapabilities
+        capabilities = fullCapabilities // 2.5 Pro Preview has tool support
     )
 
     /**
