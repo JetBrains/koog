@@ -5,9 +5,13 @@ import ai.koog.prompt.llm.LLMCapability
 /**
  * Finds a model card by name.
  */
-public fun List<OllamaModelCard>.findByNameOrNull(name: String): OllamaModelCard? = firstOrNull {
-    ':' in name && it.name == name || it.nameWithoutTag == name
-}
+public fun List<OllamaModelCard>.findByNameOrNull(name: String): OllamaModelCard? =
+    firstOrNull { it.name.isSameModelAs(name) }
+
+internal fun String.isSameModelAs(name: String): Boolean =
+    ':' in name && this == name || this.withoutTag == name
+
+internal val String.withoutTag: String get() = substringBeforeLast(':')
 
 /**
  * Filters a list of model cards by the given criteria.

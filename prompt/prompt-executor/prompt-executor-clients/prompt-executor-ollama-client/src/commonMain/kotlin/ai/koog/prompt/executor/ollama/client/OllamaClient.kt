@@ -10,6 +10,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -37,24 +38,35 @@ public class OllamaClient(
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
 ) : LLMClient, LLMEmbeddingProvider {
 
+    private companion object {
+        private val logger = KotlinLogging.logger { }
+
+        private const val DEFAULT_MESSAGE_PATH = "api/chat"
+        private const val DEFAULT_EMBEDDINGS_PATH = "api/embeddings"
+        private const val DEFAULT_LIST_MODELS_PATH = "api/tags"
+        private const val DEFAULT_SHOW_MODEL_PATH = "api/show"
+        private const val DEFAULT_PULL_MODEL_PATH = "api/pull"
+    }
+
     private val ollamaJson = Json {
         ignoreUnknownKeys = true
         isLenient = true
     }
 
     private val client = baseClient.config {
+        defaultRequest {
+            url(baseUrl)
+            contentType(ContentType.Application.Json)
+        }
         install(ContentNegotiation) {
             json(ollamaJson)
         }
-
         install(HttpTimeout) {
             requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
             connectTimeoutMillis = timeoutConfig.connectTimeoutMillis
             socketTimeoutMillis = timeoutConfig.socketTimeoutMillis
         }
     }
-
-    private val modelCardCache by lazy { OllamaModelCardCache(client, baseUrl) }
 
     override suspend fun execute(
         prompt: Prompt,
@@ -63,8 +75,7 @@ public class OllamaClient(
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response: OllamaChatResponseDTO = client.post("$baseUrl/api/chat") {
-            contentType(ContentType.Application.Json)
+        val response: OllamaChatResponseDTO = client.post(DEFAULT_MESSAGE_PATH) {
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
@@ -108,8 +119,7 @@ public class OllamaClient(
     ): Flow<String> = flow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response = client.post("$baseUrl/api/chat") {
-            contentType(ContentType.Application.Json)
+        val response = client.post(DEFAULT_MESSAGE_PATH) {
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
@@ -155,8 +165,7 @@ public class OllamaClient(
             throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
         }
 
-        val response = client.post("$baseUrl/api/embeddings") {
-            contentType(ContentType.Application.Json)
+        val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
             setBody(EmbeddingRequestDTO(model = model.id, prompt = text))
         }
 
@@ -165,24 +174,83 @@ public class OllamaClient(
     }
 
     /**
-     * Returns the model cards for all the available models on the server. The model cards are cached.
-     * @param refreshCache true if you want to force refresh the cached model cards, false otherwise
+     * Returns the model cards for all the available models on the server.
      */
-    public suspend fun getModels(refreshCache: Boolean = false): List<OllamaModelCard> {
-        return modelCardCache.getModels(refreshCache)
+    public suspend fun getModels(): List<OllamaModelCard> {
+        return try {
+            val listModelsResponse = listModels()
+
+            val modelCards = listModelsResponse.models.map { model ->
+                showModel(model.name)
+                    .toOllamaModelCard(model.name, model.size)
+            }
+
+            logger.info { "Loaded ${modelCards.size} Ollama model cards" }
+            modelCards
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch model cards from Ollama" }
+            throw e
+        }
     }
 
     /**
      * Returns a model card by its model name, on null if no such model exists on the server.
-     * @param refreshCache true if you want to force refresh the cached model cards, false otherwise
+     * @param name the name of the model to get the model card for
      * @param pullIfMissing true if you want to pull the model from the Ollama registry, false otherwise
      */
-    public suspend fun getModelOrNull(
-        name: String,
-        refreshCache: Boolean = false,
-        pullIfMissing: Boolean = false,
-    ): OllamaModelCard? {
-        return modelCardCache.getModelOrNull(name, refreshCache, pullIfMissing)
+    public suspend fun getModelOrNull(name: String, pullIfMissing: Boolean = false): OllamaModelCard? {
+        var modelCard = loadModelCardOrNull(name)
+
+        if (modelCard == null && pullIfMissing) {
+            pullModel(name)
+            modelCard = loadModelCardOrNull(name)
+        }
+
+        return modelCard
+    }
+
+    private suspend fun loadModelCardOrNull(name: String): OllamaModelCard? {
+        return try {
+            val listModelsResponse = listModels()
+
+            val modelInfo = listModelsResponse.models.firstOrNull { it.name.isSameModelAs(name) }
+                ?: return null
+
+            val modelCard = showModel(modelInfo.name)
+                .toOllamaModelCard(modelInfo.name, modelInfo.size)
+
+            logger.info { "Loaded Ollama model card for $name" }
+            modelCard
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to fetch model card from Ollama" }
+            throw e
+        }
+    }
+
+    private suspend fun listModels(): OllamaModelsListResponseDTO {
+        return client.get(DEFAULT_LIST_MODELS_PATH)
+            .body<OllamaModelsListResponseDTO>()
+    }
+
+    private suspend fun showModel(name: String): OllamaShowModelResponseDTO {
+        return client.post(DEFAULT_SHOW_MODEL_PATH) {
+            setBody(OllamaShowModelRequestDTO(name = name))
+        }.body<OllamaShowModelResponseDTO>()
+    }
+
+    private suspend fun pullModel(name: String) {
+        try {
+            val response = client.post(DEFAULT_PULL_MODEL_PATH) {
+                setBody(OllamaPullModelRequestDTO(name = name, stream = false))
+            }.body<OllamaPullModelResponseDTO>()
+
+            if ("success" !in response.status) error("Failed to pull model: '$name'")
+
+            logger.info { "Pulled model '$name'" }
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to pull model '$name'" }
+            throw e
+        }
     }
 }
 
