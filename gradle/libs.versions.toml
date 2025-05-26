@@ -12,8 +12,10 @@ lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
 oshai-logging = "7.0.7"
 mockk = "1.13.8"
+mokksy = "0.4.1"
 shadow = "8.1.1"
 slf4j = "2.0.17"
+spring-ai = "1.0.0"
 mcp = "0.5.0"
 dokka = "2.0.0"
 jetsign = "45.47"
@@ -42,9 +44,12 @@ lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mokksy-openai = { group = "me.kpavlov.aimocks", name = "ai-mocks-openai", version.ref = "mokksy" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
+spring-ai-client-chat = { group = "org.springframework.ai", name = "spring-ai-client-chat", version.ref = "spring-ai" }
+spring-ai-openai = { group = "org.springframework.ai", name = "spring-ai-openai", version.ref = "spring-ai" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 
