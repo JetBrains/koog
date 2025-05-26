@@ -50,13 +50,13 @@ To help you get started with AI agents, here is a quick example:
 fun main() = runBlocking {
     // Before you run the example, assign a corresponding API key as an environment variable.
    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
-   
+
    val agent = simpleSingleRunAgent(
       executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
       systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
       llmModel = OpenAIModels.Chat.GPT4o
    )
-   
+
    val result = agent.runAndGetResult("Hello! How can you help me?")
    println(result)
 }
@@ -113,5 +113,5 @@ Koog is licensed under the [Apache 2.0 License](LICENSE.txt).
 
 ## Support
 
-Please feel free to ask any questions in our official Slack channel ([link](https://kotlinlang.slack.com/archives/C08SLB97W23))
+Please feel free to ask any questions in our official Slack channel ([link](https://kotlinlang.slack.com/messages/koog-agentic-framework/))
 
