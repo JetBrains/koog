@@ -98,7 +98,7 @@ class SimpleAgentMockedTest {
         agent.run("Write a Kotlin function to calculate factorial.")
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-        assertTrue(actualToolCalls.contains("__say_to_user__"), "The __say_to_user__ tool was not called")
+        assertTrue(actualToolCalls.contains(SayToUser.name), "The ${SayToUser.name} tool was not called")
         assertTrue(results.isNotEmpty(), "No agent run results were received")
         assertTrue(
             errors.isEmpty(),
