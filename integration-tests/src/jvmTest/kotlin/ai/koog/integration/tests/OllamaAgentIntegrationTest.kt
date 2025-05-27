@@ -53,9 +53,9 @@ class OllamaAgentIntegrationTest {
                                             
                                             Example tool call:
                                             {
-                                                "id"="ollama_tool_call_3743609160",
-                                                "tool"="geography_query_tool",
-                                                "content"={"query":"capital of France"}
+                                                "id":"ollama_tool_call_3743609160",
+                                                "tool":"geography_query_tool",
+                                                "content":{"query":"capital of France"}
                                             }
                                             """.trimIndent()
                             )
@@ -94,9 +94,9 @@ class OllamaAgentIntegrationTest {
                                       
                                         Example tool call:
                                         {
-                                            "id"="ollama_tool_call_3743609160"
-                                            "tool"="answer_verification_tool"
-                                            "content"={"answer":"Paris"}
+                                            "id":"ollama_tool_call_3743609160"
+                                            "tool":"answer_verification_tool"
+                                            "content":{"answer":"Paris"}
                                         }.""".trimIndent()
                             )
                         }
