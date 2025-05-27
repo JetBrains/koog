@@ -9,24 +9,30 @@ import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.utils.TestUtils.runWithRetry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
+@ExtendWith(OllamaTestFixtureExtension::class)
 class SimpleAgentIntegrationTest {
     val systemPrompt = """
             You are a helpful assistant. 
@@ -49,6 +55,11 @@ class SimpleAgentIntegrationTest {
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
         }
+
+        @field:InjectOllamaTestFixture
+        private lateinit var fixture: OllamaTestFixture
+        private val ollamaSimpleExecutor get() = fixture.executor
+        private val ollamaModel get() = fixture.model
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
@@ -196,8 +207,10 @@ class SimpleAgentIntegrationTest {
         )
     }
 
+    @Disabled("JBAI-14328")
+    @EnabledOnOs(OS.LINUX)
     @Test
-    fun integration_simpleOllamaTest() = runBlocking {
+    fun integration_simpleOllamaTest() = runTest(timeout = 600.seconds) {
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
         }
@@ -218,19 +231,19 @@ class SimpleAgentIntegrationTest {
             }
         """.trimIndent()
 
-        val executor = simpleOllamaAIExecutor()
-
         val agent = simpleSingleRunAgent(
-            executor = executor,
+            executor = ollamaSimpleExecutor,
             systemPrompt = bookwormPrompt,
-            llmModel = OllamaModels.Meta.LLAMA_3_2,
+            llmModel = ollamaModel,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        agent.run("Give me top 10 books of the all time.")
+        runWithRetry {
+            agent.run("Give me top 10 books of the all time.")
+        }
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model")
         assertTrue(

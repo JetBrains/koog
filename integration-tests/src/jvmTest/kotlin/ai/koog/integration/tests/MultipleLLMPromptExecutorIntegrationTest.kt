@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.executeWithRetry
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
@@ -30,8 +31,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
-
 class MultipleLLMPromptExecutorIntegrationTest {
     // API keys for testing
     private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
@@ -42,35 +41,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     private val openAIClient get() = OpenAILLMClient(openAIApiKey)
     private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
     private val googleClient get() = GoogleLLMClient(geminiApiKey)
-
-    private suspend fun <T> executeWithRetry(operation: suspend () -> T): T {
-        val maxRetries = 3
-        var attempts = 0
-        var lastException: Exception? = null
-
-        while (attempts < maxRetries) {
-            try {
-                return operation()
-            } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_API_ERROR) == true) {
-                    lastException = e
-                    attempts++
-                    println("Attempt $attempts/$maxRetries failed with known Google API issue, retrying...")
-                } else {
-                    throw e // Rethrow if it's a different exception
-                }
-            }
-        }
-
-        if (lastException?.message?.contains(GOOGLE_API_ERROR) == true) {
-            assumeTrue(
-                false,
-                "Skipping test after $maxRetries failed attempts due to JBAI-14082: ${lastException.message}"
-            )
-        }
-
-        throw IllegalStateException("Should not reach here, test should be skipped")
-    }
 
     companion object {
         @JvmStatic

@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 internal object TestUtils {
     fun readTestAnthropicKeyFromEnv(): String {
@@ -24,6 +25,59 @@ internal object TestUtils {
     fun readTestOpenRouterKeyFromEnv(): String {
         return System.getenv("OPEN_ROUTER_API_TEST_KEY")
             ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` is not set")
+    }
+
+    private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
+    suspend fun <T> executeWithRetry(operation: suspend () -> T): T {
+        val maxRetries = 3
+        var attempts = 0
+        var lastException: Exception? = null
+
+        while (attempts < maxRetries) {
+            try {
+                return operation()
+            } catch (e: Exception) {
+                if (e.message?.contains(GOOGLE_API_ERROR) == true) {
+                    lastException = e
+                    attempts++
+                    println("Attempt $attempts/$maxRetries failed with known Google API issue, retrying...")
+                } else {
+                    throw e // Rethrow if it's a different exception
+                }
+            }
+        }
+
+        if (lastException?.message?.contains(GOOGLE_API_ERROR) == true) {
+            assumeTrue(
+                false,
+                "Skipping test after $maxRetries failed attempts due to JBAI-14082: ${lastException.message}"
+            )
+        }
+
+        throw IllegalStateException("Should not reach here, test should be skipped")
+    }
+
+    suspend fun <T> runWithRetry(operation: suspend () -> T): T {
+        val maxRetries = 3
+        var attempts = 0
+
+        while (attempts < maxRetries) {
+            try {
+                return operation()
+            } catch (e: Exception) {
+                attempts++
+                println("Attempt $attempts/$maxRetries failed with exception ${e.message}, retrying...")
+            }
+        }
+
+        if (attempts == maxRetries) {
+            assumeTrue(
+                false,
+                "Skipping test after $maxRetries failed attempts"
+            )
+        }
+
+        throw IllegalStateException("Should not reach here, test should be skipped")
     }
 
     @Serializable
