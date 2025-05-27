@@ -151,7 +151,7 @@ fun main() = runBlocking {
 
     println("Transaction Analysis Assistant started")
     val message = "How much have I spent on restaurants this month?"
-    // You can try other messages like:
+//     You can try other messages like:
 //         "What's my maximum check at a restaurant this month?"
 //         "How much did I spend on groceries in the first week of May?"
 //         "What's my total spending on entertainment in May?"

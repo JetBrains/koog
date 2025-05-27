@@ -118,15 +118,14 @@ fun main() = runBlocking {
         strategy = strategy,
         agentConfig = agentConfig,
         promptExecutor = simpleOpenAIExecutor(apiKey),
-//        promptExecutor = simpleAnthropicExecutor(apiKey),
     )
 
     println("Banking Assistant started")
     val message = "Send 25 euros to Daniel for dinner at the restaurant."
-    // transfer messages
+//     transfer messages
 //        "Send 50 euros to Alice for the concert tickets"
 //        "What's my current balance?"
-    // analysis messages
+//     analysis messages
 //        "How much have I spent on restaurants this month?"
 //         "What's my maximum check at a restaurant this month?"
 //         "How much did I spend on groceries in the first week of May?"
