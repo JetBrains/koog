@@ -5,6 +5,10 @@ import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.tools.Tool
 import kotlin.reflect.KProperty
 
+@DslMarker
+@Target(AnnotationTarget.FUNCTION)
+public annotation class GraphComponent
+
 // TODO: rename *BuilderBase to *Builder and use specific prefixes (or suffixes) for subclasses
 public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     public abstract val nodeStart: StartAIAgentNodeBase<Input>
@@ -16,6 +20,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
      * @param execute A suspendable function that defines the node's execution logic.
      */
+    @GraphComponent
     public fun <Input, Output> node(
         name: String? = null,
         execute: suspend AIAgentContextBase.(input: Input) -> Output
@@ -29,6 +34,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param toolSelectionStrategy Strategy for tool selection
      * @param define Subgraph definition function
      */
+    @GraphComponent
     public fun <Input, Output> subgraph(
         name: String? = null,
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
@@ -43,6 +49,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param tools List of tools available to the subgraph
      * @param define Subgraph definition function
      */
+    @GraphComponent
     public fun <Input, Output> subgraph(
         name: String? = null,
         tools: List<Tool<*, *>>,
@@ -56,6 +63,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param nextNode Node to connect to
      * @return The next node
      */
+    @GraphComponent
     public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
         edge(this forwardTo nextNode)
         return nextNode
@@ -65,6 +73,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Creates an edge between nodes.
      * @param edgeIntermediate Intermediate edge builder
      */
+    @GraphComponent
     public fun <IncomingOutput, OutgoingInput> edge(
         edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>
     ) {

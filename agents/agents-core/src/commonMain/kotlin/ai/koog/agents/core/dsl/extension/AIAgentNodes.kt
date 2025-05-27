@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.dsl.builder.GraphComponent
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * @param name Optional node name, defaults to delegate's property name.
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null): AIAgentNodeDelegateBase<T, T> =
     node(name) { input -> input }
 
@@ -35,6 +37,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = nu
  * @param name Optional node name, defaults to delegate's property name.
  * @param body Lambda to modify the prompt using PromptBuilder.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     name: String? = null,
     body: PromptBuilder.() -> Unit
@@ -52,6 +55,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
  *
  * @param name Optional name for the node.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name: String? = null): AIAgentNodeDelegateBase<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
@@ -69,6 +73,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(n
  * @param name Optional node name.
  * @param tool Tool descriptor the LLM is required to use.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: ToolDescriptor
@@ -89,6 +94,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
  * @param name Optional node name.
  * @param tool Tool the LLM is required to use.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: Tool<*, *>
@@ -101,6 +107,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
  * @param name Optional node name.
  * @param allowToolCalls Controls whether LLM can use tools (default: true).
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     name: String? = null,
     allowToolCalls: Boolean = true
@@ -124,6 +131,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
  * @param retries Number of retry attempts for failed generations.
  * @param fixingModel LLM used for error correction.
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     name: String? = null,
     structure: StructuredData<T>,
@@ -151,6 +159,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
  * @param structureDefinition Optional structure to guide the LLM response.
  * @param transformStreamData Function to process the streamed data.
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
@@ -174,6 +183,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
  * @param name Optional node name.
  * @param structureDefinition Optional structure to guide the LLM response.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
@@ -184,6 +194,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
  *
  * @param name Optional node name.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = null): AIAgentNodeDelegateBase<String, List<Message.Response>> =
     node(name) { message ->
         llm.writeSession {
@@ -202,6 +213,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String?
  * @param strategy Determines which messages to include in compression.
  * @param preserveMemory Specifies whether to retain message memory after compression.
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
     strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
@@ -223,6 +235,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
  *
  * @param name Optional node name.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
     name: String? = null
 ): AIAgentNodeDelegateBase<Message.Tool.Call, ReceivedToolResult> =
@@ -235,6 +248,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
  *
  * @param name Optional node name.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     name: String? = null
 ): AIAgentNodeDelegateBase<ReceivedToolResult, Message.Response> =
@@ -256,6 +270,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
  * @param name Optional node name.
  * @param parallelTools Specifies whether tools should be executed in parallel, defaults to false.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     name: String? = null,
     parallelTools: Boolean = false,
@@ -273,6 +288,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
  *
  * @param name Optional node name.
  */
+@GraphComponent
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
     name: String? = null
 ): AIAgentNodeDelegateBase<List<ReceivedToolResult>, List<Message.Response>> =
@@ -295,6 +311,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
  * @param tool The tool to execute.
  * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
  */
+@GraphComponent
 public inline fun <reified ToolArg : Tool.Args, reified TResult : ToolResult> AIAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
     name: String? = null,
     tool: Tool<ToolArg, TResult>,

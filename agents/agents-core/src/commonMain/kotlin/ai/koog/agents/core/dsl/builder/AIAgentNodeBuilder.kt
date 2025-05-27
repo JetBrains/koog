@@ -19,6 +19,7 @@ public open class AIAgentNodeBuilder<Input, Output> internal constructor(
     }
 }
 
+@EdgeTransformation
 public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutput>.forwardTo(
     otherNode: AIAgentNodeBase<OutgoingInput, *>
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IncomingOutput, OutgoingInput> {

@@ -5,6 +5,10 @@ import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 
+@DslMarker
+@Target(AnnotationTarget.FUNCTION)
+public annotation class EdgeTransformation
+
 public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput> internal constructor(
     private val edgeIntermediateBuilder: AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>,
 ) : BaseBuilder<AIAgentEdge<IncomingOutput, OutgoingInput>> {
@@ -21,6 +25,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
     internal val toNode: AIAgentNodeBase<OutgoingInput, *>,
     internal val forwardOutputComposition: suspend (AIAgentContextBase, IncomingOutput) -> Option<IntermediateOutput>
 ) {
+    @EdgeTransformation
     public infix fun onCondition(
         block: suspend AIAgentContextBase.(output: IntermediateOutput) -> Boolean
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
@@ -34,6 +39,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
         )
     }
 
+    @EdgeTransformation
     public infix fun <NewIntermediateOutput> transformed(
         block: suspend AIAgentContextBase.(IntermediateOutput) -> NewIntermediateOutput
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {

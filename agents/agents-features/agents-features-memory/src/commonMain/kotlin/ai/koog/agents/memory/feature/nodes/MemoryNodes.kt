@@ -2,6 +2,7 @@ package ai.koog.agents.memory.feature.nodes
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.builder.GraphComponent
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.*
@@ -20,6 +21,7 @@ import kotlinx.serialization.json.Json
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concept A concept to load facts for
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     name: String? = null,
     concept: Concept,
@@ -34,6 +36,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concepts A list of concepts to load facts for
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     name: String? = null,
     concepts: List<Concept>,
@@ -49,6 +52,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
  * @param scopes List of memory scopes (Agent, Feature, etc.). By default all scopes would be chosen
  * @param subjects List of subjects (user, project, organization, etc.) to look for. By default all subjects would be chosen
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     name: String? = null,
     concepts: List<Concept>,
@@ -70,6 +74,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
  * @param scopes List of memory scopes (Agent, Feature, etc.). By default only Agent scope would be chosen
  * @param subjects List of subjects (user, project, organization, etc.) to look for.
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
     name: String? = null,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
@@ -89,6 +94,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concepts List of concepts to save in memory
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     name: String? = null,
     subject: MemorySubject,
@@ -116,6 +122,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concept The concept to save in memory
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     name: String? = null,
     concept: Concept,
@@ -132,6 +139,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  * @param subjects List of subjects (user, project, organization, etc.) to look for.
  * By default, all subjects will be included and looked for.
  */
+@GraphComponent
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),

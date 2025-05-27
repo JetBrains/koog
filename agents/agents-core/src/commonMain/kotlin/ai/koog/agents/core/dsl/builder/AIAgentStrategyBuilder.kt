@@ -26,6 +26,7 @@ public class AIAgentStrategyBuilder(
  * @property name The unique identifier for this agent.
  * @param init Lambda that defines stages and nodes of this agent
  */
+@GraphComponent
 public fun strategy(
     name: String,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
