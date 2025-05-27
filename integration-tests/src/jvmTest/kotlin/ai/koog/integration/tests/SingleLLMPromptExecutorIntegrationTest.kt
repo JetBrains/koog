@@ -49,7 +49,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testExecute(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testExecute(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         val executor = SingleLLMPromptExecutor(client)
 
         val prompt = Prompt.build("test-prompt") {
@@ -70,7 +70,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testExecuteStreaming(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testExecuteStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         val executor = SingleLLMPromptExecutor(client)
 
         val prompt = Prompt.build("test-streaming") {
@@ -97,7 +97,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testCodeGeneration(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testCodeGeneration(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         val executor = SingleLLMPromptExecutor(client)
 
         val prompt = Prompt.build("test-code") {
@@ -128,7 +128,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithRequiredParams(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testToolsWithRequiredParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -166,7 +166,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithRequiredOptionalParams(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testToolsWithRequiredOptionalParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -211,7 +211,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithOptionalParams(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testToolsWithOptionalParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -254,7 +254,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithNoParams(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testToolsWithNoParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -282,7 +282,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithListEnumParams(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testToolsWithListEnumParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val colorPickerTool = ToolDescriptor(
@@ -311,7 +311,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithNestedListParams(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testToolsWithNestedListParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val lotteryPickerTool = ToolDescriptor(
@@ -369,7 +369,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
@@ -405,7 +405,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testToolChoice(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testToolChoice(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
