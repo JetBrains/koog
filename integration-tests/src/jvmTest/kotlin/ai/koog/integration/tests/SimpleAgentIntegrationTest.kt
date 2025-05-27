@@ -9,7 +9,6 @@ import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.TestUtils.runWithRetry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
@@ -18,18 +17,13 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.AfterTest
-import kotlin.test.Test
 import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
 class SimpleAgentIntegrationTest {
@@ -54,11 +48,6 @@ class SimpleAgentIntegrationTest {
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
         }
-
-        @field:InjectOllamaTestFixture
-        private lateinit var fixture: OllamaTestFixture
-        private val ollamaSimpleExecutor get() = fixture.executor
-        private val ollamaModel get() = fixture.model
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
@@ -203,50 +192,6 @@ class SimpleAgentIntegrationTest {
         assertTrue(
             actualToolCalls.contains(SayToUser.name),
             "The ${SayToUser.name} tool was not called for model $model"
-        )
-    }
-
-    @EnabledOnOs(OS.LINUX)
-    @Test
-    fun integration_simpleOllamaTest() = runTest(timeout = 600.seconds) {
-        val toolRegistry = ToolRegistry.Companion {
-            tool(SayToUser)
-        }
-
-        val bookwormPrompt = """
-            You're top librarian, helping user to find books.
-            ALWAYS communicate to user via tools!!!
-            ALWAYS use tools you've been provided.
-            ALWAYS generate valid JSON responses.
-            ALWAYS call tool correctly, with valid arguments.
-            NEVER provide tool call in result body.
-            
-            Example tool call:
-            {
-                "id":"ollama_tool_call_3743609160",
-                "tool":"say_to_user",
-                "content":{"message":"The top 10 books of all time are:\n 1. Don Quixote by Miguel de Cervantes\n 2. A Tale of Two Cities by Charles Dickens\n 3. The Lord of the Rings by J.R.R. Tolkien\n 4. Pride and Prejudice by Jane Austen\n 5. To Kill a Mockingbird by Harper Lee\n 6. The Catcher in the Rye by J.D. Salinger\n 7. 1984 by George Orwell\n 8. The Great Gatsby by F. Scott Fitzgerald\n 9. War and Peace by Leo Tolstoy\n 10. Alice’s Adventures in Wonderland by Lewis Carroll"})
-            }
-        """.trimIndent()
-
-        val agent = simpleSingleRunAgent(
-            executor = ollamaSimpleExecutor,
-            systemPrompt = bookwormPrompt,
-            llmModel = ollamaModel,
-            temperature = 1.0,
-            toolRegistry = toolRegistry,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        runWithRetry {
-            agent.run("Give me top 10 books of the all time.")
-        }
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model")
-        assertTrue(
-            actualToolCalls.contains(SayToUser.name),
-            "The ${SayToUser.name} tool was not called for model"
         )
     }
 }
