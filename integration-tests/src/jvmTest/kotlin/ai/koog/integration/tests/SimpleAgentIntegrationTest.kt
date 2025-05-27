@@ -201,8 +201,8 @@ class SimpleAgentIntegrationTest {
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
         assertTrue(
-            actualToolCalls.contains("__say_to_user__"),
-            "The __say_to_user__ tool was not called for model $model"
+            actualToolCalls.contains(SayToUser.name),
+            "The ${SayToUser.name} tool was not called for model $model"
         )
     }
 
@@ -245,8 +245,8 @@ class SimpleAgentIntegrationTest {
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model")
         assertTrue(
-            actualToolCalls.contains("say_to_user"),
-            "The say_to_user tool was not called for model"
+            actualToolCalls.contains(SayToUser.name),
+            "The ${SayToUser.name} tool was not called for model"
         )
     }
 }
