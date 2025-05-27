@@ -17,15 +17,15 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 class MultipleSystemMessagesPromptIntegrationTest {
-    private val openAIToken = readTestOpenAIKeyFromEnv()
-    private val anthropicToken = readTestAnthropicKeyFromEnv()
-    private val googleToken = readTestGoogleAIKeyFromEnv()
+    private val openAIApiKey = readTestOpenAIKeyFromEnv()
+    private val anthropicApiKey = readTestAnthropicKeyFromEnv()
+    private val googleApiKey = readTestGoogleAIKeyFromEnv()
 
     @Test
     fun integration_testMultipleSystemMessages() = runBlocking {
-        val openAIClient = OpenAILLMClient(openAIToken)
-        val anthropicClient = AnthropicLLMClient(anthropicToken)
-        val googleClient = GoogleLLMClient(googleToken)
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(googleApiKey)
 
         val executor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to openAIClient,

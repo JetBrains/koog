@@ -1,7 +1,7 @@
 package ai.koog.agents.example.guesser
 
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -25,7 +25,7 @@ fun main() = runBlocking {
 
     // Create a chat agent with a system prompt and the tool registry
     val agent = simpleSingleRunAgent(
-        executor = simpleOpenAIExecutor(TokenService.openAIToken),
+        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = """
             You are a number guessing agent. Your goal is to guess a number that the user is thinking of.

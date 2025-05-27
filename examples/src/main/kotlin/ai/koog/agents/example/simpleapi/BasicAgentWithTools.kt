@@ -2,7 +2,7 @@ package ai.koog.agents.example.simpleapi
 
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -23,7 +23,7 @@ fun main() = runBlocking {
         tools(SwitchTools(switch).asTools())
     }
     val agent = simpleSingleRunAgent(
-        executor = simpleOpenAIExecutor(TokenService.openAIToken),
+        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
         temperature = 0.0,

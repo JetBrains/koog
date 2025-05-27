@@ -1,7 +1,7 @@
 package ai.koog.agents.example.tone
 
 import ai.koog.agents.core.tools.*
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -35,7 +35,7 @@ object ToneTools {
         )
 
         override suspend fun doExecute(args: Args): String {
-            val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
+            val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
             // Create a prompt to analyze the tone
             val prompt = prompt("analyze_tone") {

@@ -9,7 +9,7 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.handleEvents
@@ -20,7 +20,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
+    val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
     // Create tool registry with calculator tools
     val toolRegistry = ToolRegistry {

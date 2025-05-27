@@ -7,7 +7,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools
 import ai.koog.agents.example.banking.tools.bankingAssistantSystemPrompt
@@ -22,7 +22,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val apiKey = TokenService.openAIToken // Your OpenAI API key
+    val apiKey = ApiKeyService.openAIApiKey // Your OpenAI API key
 
     val toolRegistry = ToolRegistry {
         tool(AskUser)

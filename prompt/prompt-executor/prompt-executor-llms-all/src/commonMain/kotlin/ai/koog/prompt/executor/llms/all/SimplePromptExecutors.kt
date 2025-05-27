@@ -12,27 +12,27 @@ public fun simpleOpenAIExecutor(apiToken: String): SingleLLMPromptExecutor = Sin
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `AnthropicLLMClient`.
  *
- * @param apiToken The API token used for authentication with the Anthropic LLM client.
+ * @param apiKey The API token used for authentication with the Anthropic LLM client.
  */
-public fun simpleAnthropicExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(AnthropicLLMClient(apiToken))
+public fun simpleAnthropicExecutor(apiKey: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(AnthropicLLMClient(apiKey))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OpenRouterLLMClient`.
  *
- * @param apiToken The API token used for authentication with the OpenRouter API.
+ * @param apiKey The API token used for authentication with the OpenRouter API.
  */
-public fun simpleOpenRouterExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenRouterLLMClient(apiToken))
+public fun simpleOpenRouterExecutor(apiKey: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenRouterLLMClient(apiKey))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `GoogleLLMClient`.
  *
- * @param apiToken The API token used for authentication with the Google AI service.
+ * @param apiKey The API token used for authentication with the Google AI service.
  */
-public fun simpleGoogleAIExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(GoogleLLMClient(apiToken))
+public fun simpleGoogleAIExecutor(apiKey: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(GoogleLLMClient(apiKey))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OllamaClient`.
  *
- * @param apiToken The API token used for authentication with the Google AI service.
+ * @param baseUrl url used to access Ollama server.
  */
 public fun simpleOllamaAIExecutor(baseUrl: String = "http://localhost:11434"): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))

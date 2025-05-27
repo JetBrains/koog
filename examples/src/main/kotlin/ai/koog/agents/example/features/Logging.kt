@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -96,7 +96,7 @@ class Logging(val logger: Logger) {
 @Suppress("unused")
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = simpleSingleRunAgent(
-        executor = simpleOpenAIExecutor(TokenService.openAIToken),
+        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {

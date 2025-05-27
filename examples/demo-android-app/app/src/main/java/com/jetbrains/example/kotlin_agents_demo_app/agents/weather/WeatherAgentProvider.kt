@@ -29,10 +29,10 @@ object WeatherAgentProvider : AgentProvider {
         onErrorEvent: suspend (String) -> Unit,
         onAssistantMessage: suspend (String) -> String,
     ): AIAgent {
-        val openAiToken = appSettings.getCurrentSettings().openAiToken
-        require(openAiToken.isNotEmpty()) { "OpenAI token is not configured." }
+        val openAiApiKey = appSettings.getCurrentSettings().openAiToken
+        require(openAiApiKey.isNotEmpty()) { "OpenAI api key is not configured." }
 
-        val executor = simpleOpenAIExecutor(openAiToken)
+        val executor = simpleOpenAIExecutor(openAiApiKey)
 
         // Create tool registry with weather tools
         val toolRegistry = ToolRegistry {

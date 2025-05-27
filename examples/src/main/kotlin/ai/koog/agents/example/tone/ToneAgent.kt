@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.tone.ToneTools.NegativeToneTool
 import ai.koog.agents.example.tone.ToneTools.NeutralToneTool
 import ai.koog.agents.example.tone.ToneTools.PositiveToneTool
@@ -17,7 +17,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() {
-    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
+    val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
     /**
      * Describe the list of tools for your agent.

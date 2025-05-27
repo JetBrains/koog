@@ -4,7 +4,7 @@ package ai.koog.agents.example.subgraphwithtask
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.subgraphwithtask.ProjectGeneratorTools.CreateDirectoryTool
 import ai.koog.agents.example.subgraphwithtask.ProjectGeneratorTools.CreateFileTool
 import ai.koog.agents.example.subgraphwithtask.ProjectGeneratorTools.DeleteDirectoryTool
@@ -65,7 +65,7 @@ fun main() {
         val userRequest = readln()
 
         val agent = AIAgent(
-            promptExecutor = simpleOpenAIExecutor(TokenService.openAIToken),
+            promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
             strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
             agentConfig = AIAgentConfig(
                 prompt = prompt(

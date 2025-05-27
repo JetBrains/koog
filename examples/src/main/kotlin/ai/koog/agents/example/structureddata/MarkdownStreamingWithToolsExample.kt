@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.flow.collect
@@ -13,7 +13,7 @@ import kotlinx.coroutines.runBlocking
 
 
 fun main() = runBlocking {
-    val executor: PromptExecutor = simpleOpenAIExecutor(TokenService.openAIToken)
+    val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
     val agentStrategy = strategy("library-assistant") {
         val getMdOutput by node<String, String> { input ->

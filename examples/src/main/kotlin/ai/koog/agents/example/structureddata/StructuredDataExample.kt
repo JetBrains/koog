@@ -7,7 +7,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
@@ -246,8 +246,8 @@ fun main(): Unit = runBlocking {
 
     val runner = AIAgent(
         promptExecutor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to OpenAILLMClient(TokenService.openAIToken),
-            LLMProvider.Anthropic to AnthropicLLMClient(TokenService.anthropicToken),
+            LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
+            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
         ),
         strategy = agentStrategy, // no tools needed for this example
         agentConfig = agentConfig,

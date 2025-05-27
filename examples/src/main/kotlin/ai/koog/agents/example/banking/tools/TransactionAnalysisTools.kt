@@ -5,7 +5,7 @@ import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -135,7 +135,7 @@ class TransactionAnalysisTools : ToolSet {
  * Example of how to use the TransactionAnalysisTools with a chat agent.
  */
 fun main() = runBlocking {
-    val apiKey = System.getenv("OPENAI_API_KEY") ?: TokenService.openAIToken // Your OpenAI API key
+    val apiKey = System.getenv("OPENAI_API_KEY") ?: ApiKeyService.openAIApiKey // Your OpenAI API key
 
     val toolRegistry = ToolRegistry {
         tools(TransactionAnalysisTools().asTools())

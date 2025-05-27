@@ -5,7 +5,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.example.TokenService
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -163,7 +163,7 @@ class MoneyTransferTools : ToolSet {
  * Example of how to use the MoneyTransferTools with a chat agent.
  */
 fun main() = runBlocking {
-    val apiKey = TokenService.openAIToken // Your OpenAI API key
+    val apiKey = ApiKeyService.openAIApiKey // Your OpenAI API key
 
     val toolRegistry = ToolRegistry {
         tools(MoneyTransferTools().asTools())
