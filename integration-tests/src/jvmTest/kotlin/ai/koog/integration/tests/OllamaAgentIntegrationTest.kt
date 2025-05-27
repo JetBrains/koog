@@ -44,12 +44,19 @@ class OllamaAgentIntegrationTest {
                         rewritePrompt {
                             prompt("test-ollama") {
                                 system(
-                                    "You are a helpful assistant. " +
-                                            "You need to answer the question about the capital of France. " +
-                                            "Before answering, use the generic_parameter_tool with a required argument " +
-                                            "'requiredArg' set to 'ask-capital' and an optional argument 'optionalArg' " +
-                                            "if you want. Also, use the geography_query_tool with a required argument " +
-                                            "'query' set to 'capital of France'."
+                                    "You are a top-tier geographical assistant. " +
+                                            "ALWAYS communicate to user via tools!!!\n" +
+                                            "ALWAYS use tools you've been provided.\n" +
+                                            "ALWAYS generate valid JSON responses.\n" +
+                                            "ALWAYS call tool correctly, with valid arguments.\n" +
+                                            "NEVER provide tool call in result body.\n" +
+                                            "\n" +
+                                            "Example tool call:\n" +
+                                            "{\n" +
+                                            "id=ollama_tool_call_3743609160,\n" +
+                                            "tool=geography_query_tool,\n" +
+                                            "content={\"query\":\"capital of France\"}\n" +
+                                            "}.".trimIndent()
                                 )
                             }
                         }
@@ -76,11 +83,19 @@ class OllamaAgentIntegrationTest {
                         rewritePrompt {
                             prompt("test-ollama") {
                                 system(
-                                    "You are a helpful assistant. You need to verify that the answer about " +
-                                            "the capital of France is correct. The correct answer is Paris. " +
-                                            "Before verifying, use the generic_parameter_tool with a required argument " +
-                                            "'requiredArg' set to 'verify-answer' and an optional argument 'optionalArg' " +
-                                            "if you want. Also, use the answer_verification_tool."
+                                    "You are a top-tier assistant. " +
+                                            "ALWAYS communicate to user via tools!!!\n" +
+                                            "ALWAYS use tools you've been provided.\n" +
+                                            "ALWAYS generate valid JSON responses.\n" +
+                                            "ALWAYS call tool correctly, with valid arguments.\n" +
+                                            "NEVER provide tool call in result body.\n" +
+                                            "\n" +
+                                            "Example tool call:\n" +
+                                            "{\n" +
+                                            "id=ollama_tool_call_3743609160,\n" +
+                                            "tool=answer_verification_tool,\n" +
+                                            "content={\"answer\":\"Paris\"}\n" +
+                                            "}.".trimIndent()
                                 )
                             }
                         }
