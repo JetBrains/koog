@@ -20,7 +20,6 @@ import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
@@ -207,7 +206,6 @@ class SimpleAgentIntegrationTest {
         )
     }
 
-    @Disabled("JBAI-14328")
     @EnabledOnOs(OS.LINUX)
     @Test
     fun integration_simpleOllamaTest() = runTest(timeout = 600.seconds) {
