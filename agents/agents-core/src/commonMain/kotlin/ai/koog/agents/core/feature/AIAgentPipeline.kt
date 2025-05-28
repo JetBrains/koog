@@ -281,37 +281,17 @@ public class AIAgentPipeline {
      *
      * @param prompt The prompt that will be sent to the language model
      */
-    public suspend fun onBeforeLLMCall(prompt: Prompt) {
-        executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt) }
-    }
-
-    /**
-     * Notifies all registered LLM handlers before a language model call with tools is made.
-     *
-     * @param prompt The prompt that will be sent to the language model
-     * @param tools The list of tools that will be available to the language model
-     */
-    public suspend fun onBeforeLLMWithToolsCall(prompt: Prompt, tools: List<ToolDescriptor>) {
-        executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallWithToolsHandler.handle(prompt, tools) }
+    public suspend fun onBeforeLLMCall(prompt: Prompt,  tools: List<ToolDescriptor>) {
+        executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt, tools) }
     }
 
     /**
      * Notifies all registered LLM handlers after a language model call has completed.
      *
-     * @param response The text response received from the language model
+     * @param responses A single or multiple response messages received from the language model
      */
-    public suspend fun onAfterLLMCall(response: String) {
-        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(response) }
-    }
-
-    /**
-     * Notifies all registered LLM handlers after a language model call with tools has completed.
-     *
-     * @param response The structured responses received from the language model
-     * @param tools The list of tools that were available to the language model
-     */
-    public suspend fun onAfterLLMWithToolsCall(response: List<Message.Response>, tools: List<ToolDescriptor>) {
-        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallWithToolsHandler.handle(response, tools) }
+    public suspend fun onAfterLLMCall(responses: List<Message.Response>, tools: List<ToolDescriptor>) {
+        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(responses, tools) }
     }
 
     //endregion Trigger LLM Call Handlers
@@ -629,35 +609,11 @@ public class AIAgentPipeline {
     public fun <TFeature : Any> interceptBeforeLLMCall(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(prompt: Prompt) -> Unit
-    ) {
-        val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
-
-        existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler { prompt ->
-            with(featureImpl) { handle(prompt) }
-        }
-    }
-
-    /**
-     * Intercepts LLM calls with tools before they are made to modify or log the prompt and tools.
-     *
-     * @param handle The handler that processes before-LLM-call-with-tools events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptBeforeLLMCallWithTools(MyFeature, myFeatureImpl) { prompt, tools ->
-     *     // Inspect or modify the tools list before the call
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptBeforeLLMCallWithTools(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
         handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>) -> Unit
     ) {
         val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
 
-        existingHandler.beforeLLMCallWithToolsHandler = BeforeLLMCallWithToolsHandler { prompt, tools ->
+        existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler { prompt, tools ->
             with(featureImpl) { handle(prompt, tools) }
         }
     }
@@ -677,35 +633,11 @@ public class AIAgentPipeline {
     public fun <TFeature : Any> interceptAfterLLMCall(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(response: String) -> Unit
-    ) {
-        val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
-
-        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { response ->
-            with(featureImpl) { handle(response) }
-        }
-    }
-
-    /**
-     * Intercepts LLM calls with tools after they are made to process or log the structured response.
-     *
-     * @param handle The handler that processes after-LLM-call-with-tools events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptAfterLLMCallWithTools(MyFeature, myFeatureImpl) { response ->
-     *     // Process the structured response
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptAfterLLMCallWithTools(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
         handle: suspend TFeature.(responses: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit
     ) {
         val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
 
-        existingHandler.afterLLMCallWithToolsHandler = AfterLLMCallWithToolsHandler { responses, tools ->
+        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { responses, tools ->
             with(featureImpl) { handle(responses, tools) }
         }
     }

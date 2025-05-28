@@ -2,9 +2,11 @@ package ai.koog.agents.core
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.encodeToString
@@ -42,5 +44,16 @@ object CalculatorChatExecutor : PromptExecutor {
         return listOf(result)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow { emit(execute(prompt, model)) }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+        try {
+            val response = execute(prompt, model)
+            emit(response.content)
+        }
+        catch (t: CancellationException) {
+            throw t
+        }
+        catch (t: Throwable) {
+            println("[DEBUG_LOG] Error while emitting response: ${t::class.simpleName}(${t.message})")
+        }
+    }
 }

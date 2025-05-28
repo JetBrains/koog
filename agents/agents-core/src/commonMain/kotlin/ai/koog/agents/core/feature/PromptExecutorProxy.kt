@@ -24,28 +24,16 @@ public class PromptExecutorProxy(
         private val logger = KotlinLogging.logger {  }
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel): String {
-        logger.debug { "Executing LLM call prompt: $prompt" }
-        pipeline.onBeforeLLMCall(prompt)
-
-        val response = executor.execute(prompt, model)
-
-        logger.debug { "Finished LLM call with response: $response" }
-        pipeline.onAfterLLMCall(response)
-
-        return response
-    }
-
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
-        pipeline.onBeforeLLMWithToolsCall(prompt, tools)
+        logger.debug { "Executing LLM call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
+        pipeline.onBeforeLLMCall(prompt, tools)
 
-        val response = executor.execute(prompt, model, tools)
+        val responses = executor.execute(prompt, model, tools)
 
-        logger.debug { "Finished LLM call with response: $response" }
-        pipeline.onAfterLLMWithToolsCall(response, tools)
+        logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" } }]" }
+        pipeline.onAfterLLMCall(responses, tools)
 
-        return response
+        return responses
     }
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {

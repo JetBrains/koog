@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.cached
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -20,10 +21,6 @@ public class CachedPromptExecutor(
     private val nested: PromptExecutor
 ) : PromptExecutor {
 
-    override suspend fun execute(prompt: Prompt, model: LLModel): String {
-        return getOrPut(prompt, model).content
-    }
-
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
@@ -40,7 +37,7 @@ public class CachedPromptExecutor(
             ?.first() as Message.Assistant?
             ?: nested
                 .execute(prompt, model)
-                .let { Message.Assistant(it) }
+                .let { response -> Message.Assistant(response.content) }
                 .also { cache.put(prompt, emptyList(), listOf(it)) }
     }
 

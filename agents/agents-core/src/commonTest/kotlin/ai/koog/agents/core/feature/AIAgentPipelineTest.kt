@@ -47,10 +47,10 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Node: ") }
         val expectedEvents = listOf(
-            "Node: start node (name: '__start__', input: '$agentInput')",
-            "Node: finish node (name: '__start__', input: '$agentInput', output: '$agentInput')",
-            "Node: start node (name: '$dummyNodeName', input: 'kotlin.Unit')",
-            "Node: finish node (name: '$dummyNodeName', input: 'kotlin.Unit', output: 'kotlin.Unit')",
+            "Node: start node (name: __start__, input: $agentInput)",
+            "Node: finish node (name: __start__, input: $agentInput, output: $agentInput)",
+            "Node: start node (name: $dummyNodeName, input: kotlin.Unit)",
+            "Node: finish node (name: $dummyNodeName, input: kotlin.Unit, output: kotlin.Unit)",
         )
 
         assertEquals(
@@ -81,12 +81,12 @@ class AIAgentPipelineTest {
             agent.run("")
         }
 
-        val actualEvents = interceptedEvents.filter { it.startsWith("LLM + Tools: ") || it.startsWith("LLM: ") }
+        val actualEvents = interceptedEvents.filter { it.startsWith("LLM: ") }
         val expectedEvents = listOf(
-            "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [dummy])",
-            "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response, finishReason=null)]', tools: [dummy])",
-            "LLM + Tools: start LLM call with tools (prompt: 'Test user message', tools: [dummy])",
-            "LLM + Tools: finish LLM call with tools (responses: '[Assistant(content=Default test response, finishReason=null)]', tools: [dummy])",
+            "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
+            "LLM: finish LLM call (responses: [Assistant: Default test response], tools: [dummy])",
+            "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
+            "LLM: finish LLM call (responses: [Assistant: Default test response], tools: [dummy])",
         )
 
         assertEquals(
@@ -160,7 +160,7 @@ class AIAgentPipelineTest {
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
             "Agent: before agent started",
-            "Agent: before agent started (strategy name: 'test-interceptors-strategy')",
+            "Agent: before agent started (strategy name: test-interceptors-strategy)",
         )
 
         assertEquals(
@@ -188,7 +188,7 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: strategy started") }
         val expectedEvents = listOf(
-            "Agent: strategy started (strategy name: 'test-interceptors-strategy')",
+            "Agent: strategy started (strategy name: test-interceptors-strategy)",
         )
 
         assertEquals(
@@ -254,9 +254,9 @@ class AIAgentPipelineTest {
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
             "Agent: before agent started",
-            "Agent: before agent started (strategy name: 'test-interceptors-strategy-1')",
+            "Agent: before agent started (strategy name: test-interceptors-strategy-1)",
             "Agent: before agent started",
-            "Agent: before agent started (strategy name: 'test-interceptors-strategy-2')",
+            "Agent: before agent started (strategy name: test-interceptors-strategy-2)",
         )
 
         assertEquals(

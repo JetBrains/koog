@@ -117,20 +117,12 @@ public class EventHandler {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt ->
-                config.onBeforeLLMCall(prompt)
+            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools ->
+                config.onBeforeLLMCall(prompt, tools)
             }
 
-            pipeline.interceptBeforeLLMCallWithTools(this, featureImpl) intercept@{ prompt, tools ->
-                config.onBeforeLLMWithToolsCall(prompt, tools)
-            }
-
-            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ response ->
-                config.onAfterLLMCall(response)
-            }
-
-            pipeline.interceptAfterLLMCallWithTools(this, featureImpl) intercept@{ response, tools ->
-                config.onAfterLLMWithToolsCall(response, tools)
+            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses, tools ->
+                config.onAfterLLMCall(responses, tools)
             }
 
             //endregion Intercept LLM Call Events

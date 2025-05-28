@@ -1,12 +1,13 @@
 package ai.koog.prompt.structure
 
-import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.structure.json.JsonStructureLanguage
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.structure.json.JsonStructureLanguage
 import ai.koog.prompt.text.TextContentBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.KSerializer
@@ -17,7 +18,7 @@ private val logger = KotlinLogging.logger {  }
 /**
  * Adds a structured representation of the given value to the text content using the specified language.
  *
- * The method utilizes the language's formatting capabilities to generate a textual representation
+ * The method uses the language's formatting capabilities to generate a textual representation
  * of the input value and appends it to the content being built by the `TextContentBuilder`.
  *
  * @param T The type of the value to be structured.
@@ -63,10 +64,15 @@ public data class StructuredResponse<T>(val structure: T, val raw: String)
  */
 public suspend fun <T> PromptExecutor.executeStructuredOneShot(
     prompt: Prompt,
-   model: LLModel, structure: StructuredData<T>
+    model: LLModel,
+    structure: StructuredData<T>
 ): StructuredResponse<T> {
-    val text = execute(prompt, model)
-    return StructuredResponse(structure = structure.parse(text), raw = text)
+    val response = this.execute(prompt = prompt, model = model)
+    val responseContent = response.content
+    return StructuredResponse(
+        structure = structure.parse(responseContent),
+        raw = responseContent
+    )
 }
 
 /**
@@ -106,21 +112,25 @@ public suspend fun <T> PromptExecutor.executeStructured(
 
     val structureParser = StructureParser(this, fixingModel)
 
-    repeat(retries) {
-        val text = execute(prompt, mainModel)
+    repeat(retries) { attempt ->
+        logger.debug { "Execute the prompt: <$prompt>" }
+        val response = execute(prompt = prompt, model = mainModel)
+
         try {
+            logger.debug { "$attempt/$retries: Try to parse LLM response content: <${response.content}>" }
+            val structure = structureParser.parse(structure, response.content)
             return Result.success(
                 StructuredResponse(
-                    structure = structureParser.parse(structure, text),
-                    raw = text,
+                    structure = structure,
+                    raw = response.content,
                 )
             )
-        } catch (e: SerializationException) {
-            logger.warn(e) { "Unable to parse structure, retrying: $text" }
+        } catch (t: SerializationException) {
+            logger.warn(t) { "Failed to Unable to parse structure from content: <${response.content}>" }
         }
     }
 
-    return Result.failure(LLMStructuredParsingError("Unable to parse structure after $retries retries"))
+    return Result.failure(
+        exception = LLMStructuredParsingError("Unable to parse structure after <$retries> retries")
+    )
 }
-
-public class LLMStructuredParsingError(message: String) : Exception(message)

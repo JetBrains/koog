@@ -60,7 +60,7 @@ public class TraceFeatureMessageLogWriter(
             get() = "Feature message"
 
         val FeatureEvent.featureEvent
-            get() = "Feature message"
+            get() = "Feature event"
 
         val FeatureStringMessage.featureStringMessage
             get() = "Feature string message (message: ${this.message})"
@@ -81,15 +81,9 @@ public class TraceFeatureMessageLogWriter(
             get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
 
         val LLMCallStartEvent.llmCallStartEventFormat
-            get() = "${this.eventId} (prompt: ${this.prompt})"
-
-        val LLMCallEndEvent.llmCallEndEventFormat
-            get() = "${this.eventId} (response: ${this.response})"
-
-        val LLMCallWithToolsStartEvent.llmCallWithToolsStartEventFormat
             get() = "${this.eventId} (prompt: ${this.prompt}, tools: [${this.tools.joinToString(", ")}])"
 
-        val LLMCallWithToolsEndEvent.llmCallWithToolsEndEventFormat
+        val LLMCallEndEvent.llmCallEndEventFormat
             get() = "${this.eventId} (responses: ${this.responses}, tools: [${this.tools.joinToString(", ")}])"
 
         val ToolCallEvent.toolCallEventFormat
@@ -124,8 +118,6 @@ public class TraceFeatureMessageLogWriter(
             is AIAgentStrategyFinishedEvent   -> { this.strategyFinishedEventFormat }
             is LLMCallStartEvent              -> { this.llmCallStartEventFormat}
             is LLMCallEndEvent                -> { this.llmCallEndEventFormat}
-            is LLMCallWithToolsStartEvent     -> { this.llmCallWithToolsStartEventFormat }
-            is LLMCallWithToolsEndEvent       -> { this.llmCallWithToolsEndEventFormat }
             is ToolCallEvent                  -> { this.toolCallEventFormat }
             is ToolValidationErrorEvent       -> { this.toolValidationErrorEventFormat }
             is ToolCallFailureEvent           -> { this.toolCallFailureEventFormat }

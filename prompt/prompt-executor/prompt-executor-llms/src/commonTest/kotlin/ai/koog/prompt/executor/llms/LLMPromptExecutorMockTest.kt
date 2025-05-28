@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -74,9 +75,9 @@ class LLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, model)
+        val response = executor.execute(prompt = prompt, model = model)
 
-        assertEquals("OpenAI response", response)
+        assertEquals("OpenAI response", response.content)
     }
 
     @Test
@@ -93,9 +94,9 @@ class LLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, model)
+        val response = executor.execute(prompt = prompt, model = model)
 
-        assertEquals("Anthropic response", response)
+        assertEquals("Anthropic response", response.content)
     }
 
     @Test
@@ -112,9 +113,9 @@ class LLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, model)
+        val response = executor.execute(prompt = prompt, model = model)
 
-        assertEquals("Gemini response", response)
+        assertEquals("Gemini response", response.content)
     }
 
     @Test
@@ -197,7 +198,7 @@ class LLMPromptExecutorMockTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.execute(prompt, model)
+            executor.execute(prompt = prompt, model = model)
         }
     }
 

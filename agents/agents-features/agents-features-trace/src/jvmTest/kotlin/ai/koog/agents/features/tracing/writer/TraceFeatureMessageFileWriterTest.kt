@@ -9,6 +9,8 @@ import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.Sink
 import kotlinx.io.buffered
@@ -40,6 +42,11 @@ class TraceFeatureMessageFileWriterTest {
 
             val strategyName = "tracing-test-strategy"
 
+            val userPrompt = "Test user prompt"
+            val systemPrompt = "Test system prompt"
+            val assistantPrompt = "Test assistant prompt"
+            val promptId = "Test prompt id"
+
             val strategy = strategy(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
@@ -49,7 +56,13 @@ class TraceFeatureMessageFileWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(strategy = strategy) {
+            val agent = createAgent(
+                promptId = promptId,
+                userPrompt = userPrompt,
+                systemPrompt = systemPrompt,
+                assistantPrompt = assistantPrompt,
+                strategy = strategy
+            ) {
                 install(Tracing) {
                     messageFilter = { true }
                     addMessageProcessor(writer)
@@ -59,19 +72,30 @@ class TraceFeatureMessageFileWriterTest {
             val agentInput = "Hello World!"
             agent.run(agentInput)
 
+            val expectedPrompt = Prompt(
+                messages = listOf(
+                    Message.System(systemPrompt),
+                    Message.User(userPrompt),
+                    Message.Assistant(assistantPrompt),
+                ),
+                id = promptId,
+            )
+
+            val expectedResponse = Message.Assistant(content = "Default test response")
+
             val expectedMessages = listOf(
                 "${AIAgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
                 "${AIAgentStrategyStartEvent::class.simpleName} (strategy name: $strategyName)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: __start__, input: $agentInput)",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: __start__, input: $agentInput, output: $agentInput)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, finishReason=null))",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: $expectedResponse)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, finishReason=null))",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(Message.User(content="Test LLM call prompt"), Message.Assistant(content="Default test response"), Message.User(content="Test LLM call with tools prompt")))}, tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: $expectedResponse)",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
                 "${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
             )
@@ -128,12 +152,12 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
-            "CUSTOM. ${LLMCallWithToolsStartEvent::class.simpleName}",
-            "CUSTOM. ${LLMCallWithToolsEndEvent::class.simpleName}",
+            "CUSTOM. ${LLMCallStartEvent::class.simpleName}",
+            "CUSTOM. ${LLMCallEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
-            "CUSTOM. ${LLMCallWithToolsStartEvent::class.simpleName}",
-            "CUSTOM. ${LLMCallWithToolsEndEvent::class.simpleName}",
+            "CUSTOM. ${LLMCallStartEvent::class.simpleName}",
+            "CUSTOM. ${LLMCallEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentStrategyFinishedEvent::class.simpleName}",
             "CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",
@@ -207,6 +231,11 @@ class TraceFeatureMessageFileWriterTest {
 
             val strategyName = "tracing-test-strategy"
 
+            val userPrompt = "Test user prompt"
+            val systemPrompt = "Test system prompt"
+            val assistantPrompt = "Test assistant prompt"
+            val promptId = "Test prompt id"
+
             val strategy = strategy(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
@@ -216,10 +245,16 @@ class TraceFeatureMessageFileWriterTest {
                 edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
             }
 
-            val agent = createAgent(strategy = strategy) {
+            val agent = createAgent(
+                promptId = promptId,
+                userPrompt = userPrompt,
+                systemPrompt = systemPrompt,
+                assistantPrompt = assistantPrompt,
+                strategy = strategy
+            ) {
                 install(Tracing) {
                     messageFilter = { message ->
-                        message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent
+                        message is LLMCallStartEvent || message is LLMCallEndEvent
                     }
                     addMessageProcessor(writer)
                 }
@@ -227,11 +262,26 @@ class TraceFeatureMessageFileWriterTest {
 
             agent.run("")
 
+            val expectedPrompt = Prompt(
+                messages = listOf(
+                    Message.System(systemPrompt),
+                    Message.User(userPrompt),
+                    Message.Assistant(assistantPrompt),
+                ),
+                id = promptId,
+            )
+
+            val expectedResponse = Message.Assistant(content = "Default test response")
+
             val expectedLogMessages = listOf(
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
-                "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
-                "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(
+                    Message.User(content="Test LLM call prompt"), 
+                    Message.Assistant(content="Default test response"), 
+                    Message.User(content="Test LLM call with tools prompt")
+                ))}, tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
             )
 
             val actualMessages = writer.targetPath.readLines()

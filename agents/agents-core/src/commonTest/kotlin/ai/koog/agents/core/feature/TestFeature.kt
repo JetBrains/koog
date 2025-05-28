@@ -28,11 +28,11 @@ class TestFeature(val events: MutableList<String>) {
 
             pipeline.interceptBeforeAgentStarted(this, feature) {
                 feature.events += "Agent: before agent started"
-                readStrategy { strategy -> feature.events += "Agent: before agent started (strategy name: '${strategy.name}')" }
+                readStrategy { strategy -> feature.events += "Agent: before agent started (strategy name: ${strategy.name})" }
             }
 
             pipeline.interceptStrategyStarted(this, feature) {
-                feature.events += "Agent: strategy started (strategy name: '${strategy.name}')"
+                feature.events += "Agent: strategy started (strategy name: ${strategy.name})"
             }
 
             pipeline.interceptContextAgentFeature(this) { agentContext: AIAgentContextBase ->
@@ -40,28 +40,20 @@ class TestFeature(val events: MutableList<String>) {
                 TestFeature(mutableListOf())
             }
 
-            pipeline.interceptBeforeLLMCall(this, feature) { prompt: Prompt ->
-                feature.events += "LLM: start LLM call (prompt: '${prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}')"
+            pipeline.interceptBeforeLLMCall(this, feature) { prompt: Prompt, tools: List<ToolDescriptor> ->
+                feature.events += "LLM: start LLM call (prompt: ${prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}, tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptAfterLLMCall(this, feature) { response: String ->
-                feature.events += "LLM: finish LLM call (response: '$response')"
-            }
-
-            pipeline.interceptBeforeLLMCallWithTools(this, feature) { prompt: Prompt, tools: List<ToolDescriptor> ->
-                feature.events += "LLM + Tools: start LLM call with tools (prompt: '${prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}', tools: [${tools.joinToString { it.name }}])"
-            }
-
-            pipeline.interceptAfterLLMCallWithTools(this, feature) { responses, tools ->
-                feature.events += "LLM + Tools: finish LLM call with tools (responses: '$responses', tools: [${tools.joinToString { it.name }}])"
+            pipeline.interceptAfterLLMCall(this, feature) { responses: List<Message.Response>, tools: List<ToolDescriptor> ->
+                feature.events += "LLM: finish LLM call (responses: [${responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}], tools: [${tools.joinToString { it.name }}])"
             }
 
             pipeline.interceptBeforeNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
-                feature.events += "Node: start node (name: '${node.name}', input: '$input')"
+                feature.events += "Node: start node (name: ${node.name}, input: $input)"
             }
 
             pipeline.interceptAfterNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
-                feature.events += "Node: finish node (name: '${node.name}', input: '$input', output: '$output')"
+                feature.events += "Node: finish node (name: ${node.name}, input: $input, output: $output)"
             }
 
             pipeline.interceptToolCall(this, feature) { tool, toolArgs ->

@@ -29,9 +29,7 @@ public open class SingleLLMPromptExecutor(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-
         val response = llmClient.execute(prompt, model, tools)
-
         logger.debug { "Response: $response" }
 
         return response

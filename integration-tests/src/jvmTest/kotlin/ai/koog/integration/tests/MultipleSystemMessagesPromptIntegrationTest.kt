@@ -4,6 +4,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -48,11 +49,11 @@ class MultipleSystemMessagesPromptIntegrationTest {
         val responseAnthropic = executor.execute(prompt, modelAnthropic)
         val responseGemini = executor.execute(prompt, modelGemini)
 
-        assertTrue(responseOpenAI.isNotEmpty(), "OpenAI response should not be empty")
-        assertTrue(responseAnthropic.isNotEmpty(), "Anthropic response should not be empty")
-        assertTrue(responseGemini.isNotEmpty(), "Gemini response should not be empty")
-        println("OpenAI Response: $responseOpenAI")
-        println("Anthropic Response: $responseAnthropic")
-        println("Gemini Response: $responseGemini")
+        assertTrue(responseOpenAI.content.isNotEmpty(), "OpenAI response should not be empty")
+        assertTrue(responseAnthropic.content.isNotEmpty(), "Anthropic response should not be empty")
+        assertTrue(responseGemini.content.isNotEmpty(), "Gemini response should not be empty")
+        println("OpenAI Response: ${responseOpenAI.content}")
+        println("Anthropic Response: ${responseAnthropic.content}")
+        println("Gemini Response: ${responseGemini.content}")
     }
 }

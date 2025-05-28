@@ -12,6 +12,8 @@ import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.features.tracing.NetUtil.findAvailablePort
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
@@ -101,6 +103,20 @@ class TraceFeatureMessageRemoteWriterTest {
         val clientConfig =
             AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
+        val userPrompt = "Test user prompt"
+        val systemPrompt = "Test system prompt"
+        val assistantPrompt = "Test assistant prompt"
+        val promptId = "Test prompt id"
+
+        val expectedPrompt = Prompt(
+            messages = listOf(
+                Message.System(systemPrompt),
+                Message.User(userPrompt),
+                Message.Assistant(assistantPrompt)
+            ),
+            id = promptId
+        )
+
         val expectedEvents = listOf(
             AIAgentStartedEvent(strategyName = strategyName),
             AIAgentStrategyStartEvent(strategyName = strategyName),
@@ -111,9 +127,9 @@ class TraceFeatureMessageRemoteWriterTest {
                 output = ""
             ),
             AIAgentNodeExecutionStartEvent(nodeName = "test LLM call", input = "Test LLM call prompt"),
-            LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy")),
-            LLMCallWithToolsEndEvent(
-                responses = listOf("Default test response"),
+            LLMCallStartEvent(prompt = expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt")), tools = listOf("dummy")),
+            LLMCallEndEvent(
+                responses = listOf(Message.Assistant("Default test response")),
                 tools = listOf("dummy")
             ),
             AIAgentNodeExecutionEndEvent(
@@ -125,9 +141,9 @@ class TraceFeatureMessageRemoteWriterTest {
                 nodeName = "test LLM call with tools",
                 input = "Test LLM call with tools prompt"
             ),
-            LLMCallWithToolsStartEvent(prompt = "Test user message", tools = listOf("dummy")),
-            LLMCallWithToolsEndEvent(
-                responses = listOf("Default test response"),
+            LLMCallStartEvent(prompt = expectedPrompt.copy(messages = expectedPrompt.messages + listOf(Message.User(content="Test LLM call prompt"), Message.Assistant(content="Default test response"), Message.User(content="Test LLM call with tools prompt"))), tools = listOf("dummy")),
+            LLMCallEndEvent(
+                responses = listOf(Message.Assistant("Default test response")),
                 tools = listOf("dummy")
             ),
             AIAgentNodeExecutionEndEvent(
@@ -156,7 +172,13 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                createAgent(strategy = strategy) {
+                createAgent(
+                    strategy = strategy,
+                    promptId = promptId,
+                    userPrompt = userPrompt,
+                    systemPrompt = systemPrompt,
+                    assistantPrompt = assistantPrompt,
+                ) {
                     install(Tracing) {
                         messageFilter = { true }
                         addMessageProcessor(writer)
@@ -289,11 +311,29 @@ class TraceFeatureMessageRemoteWriterTest {
         val clientConfig =
             AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
+        val userPrompt = "Test user prompt"
+        val systemPrompt = "Test system prompt"
+        val assistantPrompt = "Test assistant prompt"
+        val promptId = "Test prompt id"
+
+        val expectedPrompt = Prompt(
+            messages = listOf(
+                Message.System(systemPrompt),
+                Message.User(userPrompt),
+                Message.Assistant(assistantPrompt)
+            ),
+            id = promptId
+        )
+
         val expectedEvents = listOf(
-            LLMCallWithToolsStartEvent("Test user message", listOf("dummy")),
-            LLMCallWithToolsEndEvent(listOf("Default test response"), listOf("dummy")),
-            LLMCallWithToolsStartEvent("Test user message", listOf("dummy")),
-            LLMCallWithToolsEndEvent(listOf("Default test response"), listOf("dummy")),
+            LLMCallStartEvent(expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt")), listOf("dummy")),
+            LLMCallEndEvent(listOf(Message.Assistant("Default test response")), listOf("dummy")),
+            LLMCallStartEvent(expectedPrompt.copy(messages = expectedPrompt.messages + listOf(
+                Message.User(content="Test LLM call prompt"),
+                Message.Assistant(content="Default test response"),
+                Message.User(content="Test LLM call with tools prompt")
+            )), listOf("dummy")),
+            LLMCallEndEvent(listOf(Message.Assistant("Default test response")), listOf("dummy")),
         )
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
@@ -313,10 +353,16 @@ class TraceFeatureMessageRemoteWriterTest {
                     edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                 }
 
-                createAgent(strategy = strategy) {
+                createAgent(
+                    strategy = strategy,
+                    promptId = promptId,
+                    userPrompt = userPrompt,
+                    systemPrompt = systemPrompt,
+                    assistantPrompt = assistantPrompt,
+                ) {
                     install(Tracing) {
                         messageFilter = { message ->
-                            message is LLMCallWithToolsStartEvent || message is LLMCallWithToolsEndEvent
+                            message is LLMCallStartEvent || message is LLMCallEndEvent
                         }
                         addMessageProcessor(writer)
                     }

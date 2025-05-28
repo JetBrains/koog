@@ -1,5 +1,6 @@
 package ai.koog.integration.tests
 
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
@@ -9,6 +10,7 @@ import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
@@ -81,20 +83,12 @@ class SimpleAgentIntegrationTest {
             println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
         }
 
-        onBeforeLLMCall = { prompt ->
-            println("Before LLM call: prompt=$prompt")
-        }
-
-        onBeforeLLMWithToolsCall = { prompt, tools ->
+        onBeforeLLMCall = { prompt: Prompt, tools: List<ToolDescriptor> ->
             println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
         }
 
-        onAfterLLMCall = { response ->
-            println("After LLM call: response=${response.take(100)}${if (response.length > 100) "..." else ""}")
-        }
-
-        onAfterLLMWithToolsCall = { response, tools ->
-            println("After LLM call with tools: response=${response.map { it.content?.take(50) }}, tools=${tools.map { it.name }}")
+        onAfterLLMCall = { response, tools ->
+            println("After LLM call with tools: response=${response.map { it.content.take(50) }}, tools=${tools.map { it.name }}")
         }
 
         onToolCall = { tool, args ->

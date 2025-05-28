@@ -54,20 +54,13 @@ class OllamaSimpleAgentIntegrationTest {
             println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
         }
 
-        onBeforeLLMCall = { prompt ->
+        onBeforeLLMCall = { prompt, tools ->
             println("Before LLM call: prompt=$prompt")
         }
 
-        onBeforeLLMWithToolsCall = { prompt, tools ->
-            println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
-        }
-
-        onAfterLLMCall = { response ->
-            println("After LLM call: response=${response.take(100)}${if (response.length > 100) "..." else ""}")
-        }
-
-        onAfterLLMWithToolsCall = { response, tools ->
-            println("After LLM call with tools: response=${response.map { it.content?.take(50) }}, tools=${tools.map { it.name }}")
+        onAfterLLMCall = { responses, tools ->
+            val lastResponse = responses.last().content
+            println("After LLM call: response=${lastResponse.take(100)}${if (lastResponse.length > 100) "..." else ""}")
         }
 
         onToolCall = { tool, args ->

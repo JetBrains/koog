@@ -9,13 +9,17 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 
 fun createAgent(
     strategy: AIAgentStrategy,
+    promptId: String? = null,
+    systemPrompt: String? = null,
+    userPrompt: String? = null,
+    assistantPrompt: String? = null,
     installFeatures: AIAgent.FeatureContext.() -> Unit = { }
 ): AIAgent {
     val agentConfig = AIAgentConfig(
-        prompt = prompt("test") {
-            system("Test system message")
-            user("Test user message")
-            assistant("Test assistant response")
+        prompt = prompt(promptId ?: "Test prompt") {
+            system(systemPrompt ?: "Test system message")
+            user(userPrompt ?: "Test user message")
+            assistant(assistantPrompt ?: "Test assistant response")
         },
         model = OpenAIModels.Chat.GPT4o,
         maxAgentIterations = 10

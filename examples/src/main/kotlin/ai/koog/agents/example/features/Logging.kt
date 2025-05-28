@@ -70,20 +70,12 @@ class Logging(val logger: Logger) {
                 logger.info("Node ${node.name} with input: $input produced output: $output")
             }
 
-            pipeline.interceptBeforeLLMCall(this, logging) { prompt ->
-                logger.info("Before LLM call with prompt: $prompt")
+            pipeline.interceptBeforeLLMCall(this, logging) { prompt, tools ->
+                logger.info("Before LLM call with prompt: $prompt, tools: [${tools.joinToString { it.name }}]")
             }
 
-            pipeline.interceptAfterLLMCall(this, logging) { response ->
-                logger.info("After LLM call with response: $response")
-            }
-
-            pipeline.interceptBeforeLLMCallWithTools(this, logging) { prompt, tools ->
-                logger.info("Before LLM call with tools. Prompt: $prompt, Tools: ${tools.map { it.name }}")
-            }
-
-            pipeline.interceptAfterLLMCallWithTools(this, logging) { response, tools ->
-                logger.info("After LLM call with tools. Response: $response, Tools: ${tools.map { it.name }}")
+            pipeline.interceptAfterLLMCall(this, logging) { responses, tools ->
+                logger.info("After LLM call with response: $responses")
             }
         }
     }

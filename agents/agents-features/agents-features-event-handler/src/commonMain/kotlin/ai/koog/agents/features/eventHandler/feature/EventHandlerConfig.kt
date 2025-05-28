@@ -95,26 +95,14 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called before a call is made to the language model.
      */
-    public var onBeforeLLMCall: suspend (prompt: Prompt) -> Unit =
-        { prompt: Prompt -> }
-
-    /**
-     * Handler called before a call is made to the language model with tools.
-     */
-    public var onBeforeLLMWithToolsCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>) -> Unit =
+    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>) -> Unit =
         { prompt: Prompt, tools: List<ToolDescriptor> -> }
 
     /**
      * Handler called after a response is received from the language model.
      */
-    public var onAfterLLMCall: suspend (response: String) -> Unit =
-        { response: String -> }
-
-    /**
-     * Handler called after a response with tool calls is received from the language model.
-     */
-    public var onAfterLLMWithToolsCall: suspend (response: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit =
-        { response: List<Message.Response>, tools: List<ToolDescriptor> -> }
+    public var onAfterLLMCall: suspend (responses: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit =
+        { responses: List<Message.Response>, tools: List<ToolDescriptor> -> }
 
     //endregion Trigger LLM Call Handlers
 

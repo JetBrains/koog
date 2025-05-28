@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
@@ -33,10 +34,10 @@ class OllamaClientIntegrationTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, model)
+        val response = executor.execute(prompt = prompt, model = model)
 
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.contains("Paris"), "Response should contain 'Paris'")
+        assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+        assertTrue(response.content.contains("Paris"), "Response should contain 'Paris'")
     }
 
     @Test

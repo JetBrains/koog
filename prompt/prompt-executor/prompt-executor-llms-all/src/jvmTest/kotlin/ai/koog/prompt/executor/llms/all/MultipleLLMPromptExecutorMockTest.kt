@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.llms.all
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -87,9 +88,13 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, OpenAIModels.Chat.GPT4o)
+        val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
 
-        assertEquals("OpenAI response", response, "Response should be from OpenAI client")
+        assertEquals(
+            "OpenAI response",
+            response.content,
+            "Response should be from OpenAI client"
+        )
     }
 
     @Test
@@ -99,9 +104,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, AnthropicModels.Sonnet_3_7)
+        val response = executor.execute(prompt = prompt, model = AnthropicModels.Sonnet_3_7)
 
-        assertEquals("Anthropic response", response, "Response should be from Anthropic client")
+        assertEquals(
+            "Anthropic response",
+            response.content,
+            "Response should be from Anthropic client")
     }
 
     @Test
@@ -111,9 +119,12 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, GoogleModels.Gemini2_0Flash)
+        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_0Flash)
 
-        assertEquals("Gemini response", response, "Response should be from Google client")
+        assertEquals(
+            "Gemini response",
+            response.content,
+            "Response should be from Google client")
     }
 
     @Test

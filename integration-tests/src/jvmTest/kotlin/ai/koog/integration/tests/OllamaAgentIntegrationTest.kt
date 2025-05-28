@@ -149,28 +149,18 @@ class OllamaAgentIntegrationTest {
                     )
                 }
 
-                onBeforeLLMCall = { prompt ->
-                    val promptText = prompt.messages.joinToString("\n") { "${it.role}: ${it.content}" }
-                    println("Prompt:\n$promptText")
-                    promptsAndResponses.add("PROMPT: $promptText")
-                }
-
-                onAfterLLMCall = { response ->
-                    println("Response: $response")
-                    promptsAndResponses.add("RESPONSE: $response")
-                }
-
-                onBeforeLLMWithToolsCall = { prompt, tools ->
-                    val promptText = prompt.messages.joinToString("\n") { "${it.role}: ${it.content}" }
-                    val toolsText = tools.joinToString("\n") { it.name }
+                onBeforeLLMCall = { prompt, tools ->
+                    val promptText = prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
+                    val toolsText = tools.joinToString{ it.name }
                     println("Prompt with tools:\n$promptText\nAvailable tools:\n$toolsText")
                     promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
                 }
 
-                onAfterLLMWithToolsCall = { responses, tools ->
-                    val responseText = responses.joinToString("\n") { it.content }
-                    println("Response with tools: $responseText")
-                    promptsAndResponses.add("RESPONSE_WITH_TOOLS: $responseText")
+                onAfterLLMCall = { responses, tools ->
+                    val responseText = "[${responses.joinToString { "${it.role.name}: ${it.content}" }}]"
+                    val toolsText = "[${tools.joinToString { it.name }}]"
+                    println("LLM Call response: $responseText, tools: $toolsText")
+                    promptsAndResponses.add("RESPONSE: $responseText, TOOLS: $toolsText")
                 }
 
                 onAgentFinished = { _, _ ->

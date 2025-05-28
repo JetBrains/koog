@@ -3,6 +3,7 @@ package ai.koog.agents.testing.tools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -40,17 +41,6 @@ internal class MockLLMExecutor(
     private val logger: KLogger = KotlinLogging.logger(MockLLMExecutor::class.simpleName!!),
     val toolActions: List<ToolCondition<*, *>> = emptyList()
 ) : PromptExecutor {
-    /**
-     * Executes a prompt without tools and returns a string response.
-     *
-     * @param prompt The prompt to execute
-     * @param model The LLM model to use (ignored in mock implementation)
-     * @return The content of the response as a string
-     */
-    override suspend fun execute(prompt: Prompt, model: LLModel): String {
-        logger.debug { "Executing prompt without tools, prompt: $prompt" }
-        return handlePrompt(prompt).content
-    }
 
     /**
      * Executes a prompt with tools and returns a list of responses.
@@ -77,7 +67,8 @@ internal class MockLLMExecutor(
      * @return A flow containing a single string response
      */
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        return flowOf(execute(prompt, model))
+        val response = execute(prompt = prompt, model = model)
+        return flowOf(response.content)
     }
 
     /**

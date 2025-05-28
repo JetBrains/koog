@@ -16,7 +16,6 @@ import kotlinx.serialization.modules.polymorphic
  * - [DefinedFeatureEvent]
  *
  * It registers the concrete subclasses of these base classes for serialization and deserialization:
- * - [AIAgentCreateEvent]
  * - [AIAgentStartedEvent]
  * - [AIAgentFinishedEvent]
  * - [AIAgentStrategyStartEvent]
@@ -24,9 +23,7 @@ import kotlinx.serialization.modules.polymorphic
  * - [AIAgentNodeExecutionStartEvent]
  * - [AIAgentNodeExecutionEndEvent]
  * - [LLMCallStartEvent]
- * - [LLMCallWithToolsStartEvent]
  * - [LLMCallEndEvent]
- * - [LLMCallWithToolsEndEvent]
  *
  * This configuration enables proper handling of the diverse event types encountered in the system by ensuring
  * that the polymorphic serialization framework can correctly serialize and deserialize each subclass.
@@ -41,9 +38,7 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
-                subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
             }
 
             polymorphic(FeatureEvent::class) {
@@ -54,9 +49,7 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
-                subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
             }
 
             polymorphic(DefinedFeatureEvent::class) {
@@ -67,8 +60,6 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallWithToolsStartEvent::class, LLMCallWithToolsStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
-                subclass(LLMCallWithToolsEndEvent::class, LLMCallWithToolsEndEvent.serializer())
             }
         }

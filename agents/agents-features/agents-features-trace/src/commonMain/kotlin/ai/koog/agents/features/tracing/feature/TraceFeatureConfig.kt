@@ -45,9 +45,7 @@ public class TraceFeatureConfig() : FeatureConfig() {
      * // Only trace LLM-related events
      * messageFilter = { message ->
      *     message is LLMCallStartEvent || 
-     *     message is LLMCallEndEvent || 
-     *     message is LLMCallWithToolsStartEvent || 
-     *     message is LLMCallWithToolsEndEvent
+     *     message is LLMCallEndEvent
      * }
      * ```
      */

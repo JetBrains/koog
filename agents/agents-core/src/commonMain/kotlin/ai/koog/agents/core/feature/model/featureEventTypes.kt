@@ -4,6 +4,8 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
@@ -77,28 +79,16 @@ public data class AIAgentNodeExecutionEndEvent(
 
 @Serializable
 public data class LLMCallStartEvent(
-    val prompt: String,
+    val prompt: Prompt,
+    val tools: List<String>,
     override val eventId: String = LLMCallStartEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 @Serializable
-public data class LLMCallWithToolsStartEvent(
-    val prompt: String,
-    val tools: List<String>,
-    override val eventId: String = LLMCallWithToolsStartEvent::class.simpleName!!,
-) : DefinedFeatureEvent()
-
-@Serializable
 public data class LLMCallEndEvent(
-    val response: String,
-    override val eventId: String = LLMCallEndEvent::class.simpleName!!,
-) : DefinedFeatureEvent()
-
-@Serializable
-public data class LLMCallWithToolsEndEvent(
-    val responses: List<String>,
+    val responses: List<Message.Response>,
     val tools: List<String>,
-    override val eventId: String = LLMCallWithToolsEndEvent::class.simpleName!!,
+    override val eventId: String = LLMCallEndEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 //endregion LLM Call

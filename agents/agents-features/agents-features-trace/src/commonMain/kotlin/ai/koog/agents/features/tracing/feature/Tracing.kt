@@ -3,12 +3,11 @@ package ai.koog.agents.features.tracing.feature
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
-import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -173,34 +172,18 @@ public class Tracing {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt ->
+            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools ->
                 val event = LLMCallStartEvent(
-                    prompt = prompt.messages.firstOrNull { it.role == Message.Role.User }?.content ?: ""
-                )
-                if (!config.messageFilter(event)) { return@intercept }
-                config.messageProcessor.onMessageForEachSafe(event)
-            }
-
-            pipeline.interceptBeforeLLMCallWithTools(this, featureImpl) intercept@{ prompt, tools ->
-                val event = LLMCallWithToolsStartEvent(
-                    prompt = prompt.messages.firstOrNull { it.role == Message.Role.User }?.content ?: "",
+                    prompt = prompt,
                     tools = tools.map { it.name }
                 )
                 if (!config.messageFilter(event)) { return@intercept }
                 config.messageProcessor.onMessageForEachSafe(event)
             }
 
-            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ response ->
+            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses, tools ->
                 val event = LLMCallEndEvent(
-                    response = response
-                )
-                if (!config.messageFilter(event)) { return@intercept }
-                config.messageProcessor.onMessageForEachSafe(event)
-            }
-
-            pipeline.interceptAfterLLMCallWithTools(this, featureImpl) intercept@{ responses, tools ->
-                val event = LLMCallWithToolsEndEvent(
-                    responses = responses.map { it.content },
+                    responses = responses,
                     tools = tools.map { it.name }
                 )
                 if (!config.messageFilter(event)) { return@intercept }
