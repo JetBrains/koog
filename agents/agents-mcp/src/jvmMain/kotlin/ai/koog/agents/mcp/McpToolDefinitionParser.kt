@@ -48,6 +48,9 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         // Extract the type string from the JSON object
         val typeStr = if ("type" in element) {
             element.getValue("type").jsonPrimitive.content
+        } else if ("\$ref" in element) {
+//           TODO("Support \$ref") 
+            "object"
         } else {
             throw IllegalArgumentException("Parameter type must have type property")
         }
