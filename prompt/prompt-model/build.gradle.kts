@@ -20,6 +20,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(kotlin("test-junit5"))
             }
         }
 
@@ -32,6 +33,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
             }
         }
     }
