@@ -8,6 +8,7 @@
 name: Heavy Tests
 
 on:
+  workflow_dispatch:  # Manual trigger
   push:
     branches: [ "main", "develop" ]
 
