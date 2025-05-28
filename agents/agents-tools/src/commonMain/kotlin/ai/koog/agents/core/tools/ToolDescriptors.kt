@@ -89,7 +89,12 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      *
      * @property properties The properties of the object type.
      */
-    public data class Object(val properties: kotlin.collections.List<ToolParameterDescriptor>) : ToolParameterType("OBJECT")
+    public data class Object(
+        val properties: kotlin.collections.List<ToolParameterDescriptor>,
+        val additionalProperties: kotlin.Boolean = false
+
+    ) : ToolParameterType("OBJECT")
+
 
     public companion object {
         public fun Enum(entries: EnumEntries<*>): Enum = Enum(entries.map { it.name }.toTypedArray())

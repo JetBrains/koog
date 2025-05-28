@@ -1,0 +1,117 @@
+package ai.koog.agents.example.mcp
+
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.ext.agent.subgraphWithTask
+import ai.koog.agents.local.features.eventHandler.feature.EventHandler
+import ai.koog.agents.local.features.tracing.feature.Tracing
+import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import kotlinx.coroutines.runBlocking
+
+/**
+ * The entry point of the program orchestrating tool interaction and AI-driven operations.
+ *
+ * This function initializes a Docker-based Google Maps MCP server, sets up tool integration,
+ * and defines an AI agent workflow for interacting with Unity3D tools. It demonstrates the
+ * following key operations:
+ *
+ * 1. Starts the MCP server using a subprocess.
+ * 2. Configures a registry of tools from the MCP server via transport communication.
+ * 3. Defines an agent strategy leveraging OpenAI's GPT model to generate and execute tasks.
+ * 4. Runs the agent to perform a specified task (e.g., creating a scene in Unity without scripts
+ *    or play mode).
+ * 5. Cleans up by shutting down the Docker container after execution.
+ *
+ * This function is intended for advanced AI-driven scenarios requiring tool integration
+ * and task automation.
+ */
+fun main() {
+    // Start the Docker container with the Google Maps MCP server
+    val process = ProcessBuilder(
+        "uv", "--directory",
+        "/Users/Maria.Tigina/Applications/UnityMCP/UnityMcpServer/src",
+        "run",
+        "server.py"
+    )
+        .start()
+
+    // Wait for the server to start
+    Thread.sleep(2000)
+
+    try {
+        runBlocking {
+            // Create the ToolRegistry with tools from the MCP server
+            val toolRegistry = McpToolRegistryProvider.fromTransport(
+                transport = McpToolRegistryProvider.defaultStdioTransport(process)
+            )
+            toolRegistry.tools.forEach { println(it.name) }
+            val agentConfig = AIAgentConfig(
+                prompt = prompt("cook_agent_system_prompt") {
+                    system { "Your are a unity assistant. You can exucute different tasks by interacting with the tools from Unity3d engine." }
+                },
+                model = OpenAIModels.Chat.GPT4o,
+                maxAgentIterations = 1000
+            )
+
+            val token = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable not set")
+            val executor = simpleOpenAIExecutor(token)
+
+
+            val strategy = strategy("unity_interaction") {
+                val nodePlanIngredients by nodeLLMRequest(allowToolCalls = false)
+                val interactionWithUnity by subgraphWithTask<String>(
+                    //work with plan 
+                    tools = toolRegistry.tools,
+                    shouldTLDRHistory = false,
+                ) { input ->
+                    "Start interact with Unity according to the plan: $input"
+                }
+
+                edge(nodeStart forwardTo nodePlanIngredients transformed {
+                    "Create detailed plan for " + agentInput + "" +
+                            "unsing next tools: ${toolRegistry.tools.joinToString("\n") { it.name + "\ndescription:" + it.descriptor }}"
+                })
+                edge(nodePlanIngredients forwardTo interactionWithUnity onAssistantMessage { true })
+                edge(interactionWithUnity forwardTo nodeFinish transformed { it.result })
+            }
+
+            val agent = AIAgent(
+                promptExecutor = executor,
+                strategy = strategy,
+                agentConfig = agentConfig,
+                toolRegistry = toolRegistry,
+                installFeatures = {
+                    install(Tracing)
+
+                    install(EventHandler) {
+                        onToolCallResult = { tool, toolArgs, result ->
+                            println("Tool: ${tool.name}, Args: $toolArgs, Result: $result")
+                        }
+
+                        onAfterLLMWithToolsCall = { response, tools ->
+                            println("LLM response: $response, Tools: $tools")
+                        }
+
+                        onAgentFinished = { strategyName: String, result: String? ->
+                            println("Result: $result")
+                        }
+
+                        onAgentRunError = { strategyName, throwable ->
+                            println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+                        }
+                    }
+                }
+            )
+        }
+    } finally {
+        // Shutdown the Docker container
+        process.destroy()
+    }
+}
