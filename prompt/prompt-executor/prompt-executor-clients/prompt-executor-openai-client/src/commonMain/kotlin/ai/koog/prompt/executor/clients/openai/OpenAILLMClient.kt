@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMessageMetadata
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
@@ -328,19 +329,27 @@ public open class OpenAILLMClient(
             .firstOrNull()
             ?.let { it to it.message } ?: throw IllegalStateException("No choice found in OpenAI response")
 
+        // Extract token count from the response
+        val tokensCount = response.usage?.totalTokens
+
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
                 message.toolCalls.map { toolCall ->
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
-                        content = toolCall.function.arguments
+                        content = toolCall.function.arguments,
+                        metadata = ResponseMessageMetadata(tokensCount = tokensCount)
                     )
                 }
             }
 
             message.content != null -> {
-                listOf(Message.Assistant(message.content, choice.finishReason))
+                listOf(Message.Assistant(
+                    content = message.content, 
+                    finishReason = choice.finishReason,
+                    metadata = ResponseMessageMetadata(tokensCount = tokensCount)
+                ))
             }
 
             else -> {

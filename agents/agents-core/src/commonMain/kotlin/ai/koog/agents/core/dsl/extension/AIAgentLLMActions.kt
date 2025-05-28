@@ -11,6 +11,10 @@ public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
     prompt = prompt.withUpdatedMessages { takeLast(n) }
 }
 
+public fun AIAgentLLMWriteSession.leaveMessagesFromTimestamp(timestamp: Long) {
+    prompt = prompt.withUpdatedMessages { filter { it.metadata.timestamp > timestamp } }
+}
+
 /**
  * Sets the [ai.koog.prompt.params.LLMParams.ToolChoice] for this LLM session.
  */

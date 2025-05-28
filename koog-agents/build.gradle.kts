@@ -43,6 +43,7 @@ val included = setOf(
     ":prompt:prompt-markdown",
     ":prompt:prompt-model",
     ":prompt:prompt-structure",
+    ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml"
 )
 

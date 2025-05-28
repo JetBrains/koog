@@ -10,6 +10,9 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMessageMetadata
+import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
+import ai.koog.prompt.tokenizer.Tokenizer
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -31,12 +34,15 @@ import kotlinx.serialization.json.Json
  * @property baseUrl The base URL of the Ollama API server.
  * @property baseClient The HTTP client used for making requests.
  * @property timeoutConfig Timeout configuration for HTTP requests.
+ * @property tokenizer The tokenizer used to count tokens in text. Ollama does not provide token counts
+ *                    in responses, so this client-side tokenizer is used for estimation.
  */
 public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-): LLMClient, LLMEmbeddingProvider {
+    private val tokenizer: Tokenizer = SimpleRegexBasedTokenizer(),
+) : LLMClient, LLMEmbeddingProvider {
 
     private val ollamaJson = Json {
         ignoreUnknownKeys = true
@@ -52,12 +58,13 @@ public class OllamaClient(
         install(HttpTimeout) {
             requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
             connectTimeoutMillis = timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis  = timeoutConfig.socketTimeoutMillis
+            socketTimeoutMillis = timeoutConfig.socketTimeoutMillis
         }
     }
 
     private val modelManager by lazy { OllamaModelManager(client, baseUrl) }
     private val modelResolver by lazy { OllamaModelResolver(modelManager) }
+
 
     override suspend fun execute(
         prompt: Prompt,
@@ -80,24 +87,52 @@ public class OllamaClient(
             )
         }.body<OllamaChatResponseDTO>()
 
-        return parseResponse(response)
+        return parseResponse(response, prompt)
     }
 
-    private fun parseResponse(response: OllamaChatResponseDTO): List<Message.Response> {
+
+    private fun parseResponse(response: OllamaChatResponseDTO, prompt: Prompt): List<Message.Response> {
         val messages = response.message ?: return emptyList()
         val content = messages.content
         val toolCalls = messages.toolCalls ?: emptyList()
 
+        // Estimate token count for the prompt (without the response)
+        val previousPromptTokenCount = prompt.messages.sumOf { tokenizer.countTokens(it.content) }
+        // Estimate token count for the response
+        val responseTokensCount = tokenizer.countTokens(content)
+        // Calculate total tokens (prompt + response)
+        val totalTokensCount = previousPromptTokenCount + responseTokensCount
+
         return when {
             content.isNotEmpty() && toolCalls.isEmpty() -> {
-                listOf(Message.Assistant(content = content))
+                listOf(
+                    Message.Assistant(
+                        content = content,
+                        metadata = ResponseMessageMetadata(tokensCount = totalTokensCount)
+                    )
+                )
             }
+
             content.isEmpty() && toolCalls.isNotEmpty() -> {
-                messages.getToolCalls()
+                messages.getToolCalls().map { toolCall ->
+                    val toolCallTokens = tokenizer.countTokens(toolCall.content)
+                    toolCall.copy(
+                        metadata = ResponseMessageMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
+                    )
+                }
             }
+
             else -> {
-                val toolCallMessages = messages.getToolCalls()
-                val assistantMessage = Message.Assistant(content = content)
+                val toolCallMessages = messages.getToolCalls().map { toolCall ->
+                    val toolCallTokens = tokenizer.countTokens(toolCall.content)
+                    toolCall.copy(
+                        metadata = ResponseMessageMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
+                    )
+                }
+                val assistantMessage = Message.Assistant(
+                    content = content,
+                    metadata = ResponseMessageMetadata(tokensCount = totalTokensCount)
+                )
                 listOf(assistantMessage) + toolCallMessages
             }
         }

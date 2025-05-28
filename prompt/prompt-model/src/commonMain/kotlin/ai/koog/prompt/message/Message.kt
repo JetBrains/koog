@@ -1,9 +1,11 @@
 package ai.koog.prompt.message
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.datetime.*
 
 
 /**
@@ -25,6 +27,13 @@ public sealed interface Message {
     public val role: Role
 
     /**
+     * Stores metadata information for the current message instance, such as token count and timestamp.
+     * This property is marked as transient, meaning it will not be serialized during the serialization process.
+     */
+    @Transient
+    public val metadata: MessageMetadata
+
+    /**
      * Represents a request message in the chat.
      */
     @Serializable
@@ -34,7 +43,9 @@ public sealed interface Message {
      * Represents a response message in the chat.
      */
     @Serializable
-    public sealed interface Response : Message
+    public sealed interface Response : Message {
+        override val metadata: ResponseMessageMetadata
+    }
 
     /**
      * Defines the role of the message in the chat (e.g., system, user, assistant, tool).
@@ -69,7 +80,9 @@ public sealed interface Message {
      */
     @Serializable
     public data class User(
-        override val content: String
+        override val content: String,
+        @Transient
+        override val metadata: MessageMetadata = MessageMetadata()
     ) : Request {
         override val role: Role = Role.User
     }
@@ -83,7 +96,9 @@ public sealed interface Message {
     @Serializable
     public data class Assistant(
         override val content: String,
-        val finishReason: String? = null
+        val finishReason: String? = null,
+        @Transient
+        override val metadata: ResponseMessageMetadata = ResponseMessageMetadata()
     ) : Response {
         override val role: Role = Role.Assistant
     }
@@ -114,7 +129,9 @@ public sealed interface Message {
         public data class Call(
             override val id: String?,
             override val tool: String,
-            override val content: String
+            override val content: String,
+            @Transient
+            override val metadata: ResponseMessageMetadata = ResponseMessageMetadata()
         ) : Tool, Response {
             override val role: Role = Role.Tool
 
@@ -137,7 +154,9 @@ public sealed interface Message {
         public data class Result(
             override val id: String?,
             override val tool: String,
-            override val content: String
+            override val content: String,
+            @Transient
+            override val metadata: MessageMetadata = MessageMetadata()
         ) : Tool, Request {
             override val role: Role = Role.Tool
         }
@@ -150,8 +169,39 @@ public sealed interface Message {
      */
     @Serializable
     public data class System(
-        override val content: String
+        override val content: String,
+        @Transient
+        override val metadata: MessageMetadata = MessageMetadata()
     ) : Request {
         override val role: Role = Role.System
     }
 }
+
+/**
+ * Metadata associated with a message in a chat system.
+ *
+ * @property timestamp The timestamp of when the message is created, measured in milliseconds
+ * since the Unix epoch. Defaults to the current system time.
+ */
+public open class MessageMetadata(
+    public val timestamp: Long = Clock.System.now().toEpochMilliseconds()
+)
+
+/**
+ * Represents metadata for a response message, extending the base `MessageMetadata`.
+ *
+ * @property tokensCount The total count of tokens used by the time this response message is returned by the LLM.
+ *                       This includes the tokens for the entire chat history up to and including this message,
+ *                       not just the tokens for the current message.
+ * @constructor Creates an instance of `ResponseMessageMetadata` with the specified total token count.
+ *              Optionally, a custom timestamp can be provided; otherwise, the current system time is used.
+ *
+ * Example:
+ * - Message 1: "Hello" (3 tokens) → tokensCount = 3
+ * - Message 2: "How are you?" (4 tokens) → tokensCount = 3 + 4 = 7
+ * - Message 3: "I am fine, thank you." (6 tokens) → tokensCount = 7 + 6 = 13
+ */
+public class ResponseMessageMetadata(
+    public val tokensCount: Int? = null,
+    timestamp: Long = Clock.System.now().toEpochMilliseconds()
+) : MessageMetadata(timestamp)

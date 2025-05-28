@@ -58,13 +58,14 @@ public interface ToolCallDescriber {
          */
         override fun describeToolCall(message: Message.Tool.Call): Message {
             return Assistant(
-                Json.encodeToString(
+                content = Json.encodeToString(
                     buildJsonObject {
                         message.id ?: put("tool_call_id", JsonPrimitive(message.id))
                         put("tool_name", JsonPrimitive(message.tool))
                         put("tool_args", message.contentJson)
                     }
-                )
+                ),
+                metadata = message.metadata
             )
         }
 
@@ -77,13 +78,14 @@ public interface ToolCallDescriber {
          */
         override fun describeToolResult(message: Message.Tool.Result): Message {
             return User(
-                Json.encodeToString(
+                content = Json.encodeToString(
                     buildJsonObject {
                         message.id ?: put("tool_call_id", JsonPrimitive(message.id))
                         put("tool_name", JsonPrimitive(message.tool))
                         put("tool_result", JsonPrimitive(message.content))
                     }
-                )
+                ),
+                metadata = message.metadata
             )
         }
     }

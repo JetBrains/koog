@@ -348,19 +348,27 @@ public class OpenRouterLLMClient(
             .firstOrNull()
             ?.let { it to it.message } ?: throw IllegalStateException("No choice found in OpenRouter response")
 
+        // Extract token count from the response
+        val tokensCount = response.usage?.totalTokens
+
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
                 message.toolCalls.map { toolCall ->
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
-                        content = toolCall.function.arguments
+                        content = toolCall.function.arguments,
+                        metadata = ai.koog.prompt.message.ResponseMessageMetadata(tokensCount = tokensCount)
                     )
                 }
             }
 
             message.content != null -> {
-                listOf(Message.Assistant(message.content, choice.finishReason))
+                listOf(Message.Assistant(
+                    content = message.content, 
+                    finishReason = choice.finishReason,
+                    metadata = ai.koog.prompt.message.ResponseMessageMetadata(tokensCount = tokensCount)
+                ))
             }
 
             else -> {
