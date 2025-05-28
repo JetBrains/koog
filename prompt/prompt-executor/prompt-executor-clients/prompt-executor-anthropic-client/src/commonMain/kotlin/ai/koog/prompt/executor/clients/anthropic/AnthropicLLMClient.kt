@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -35,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -71,15 +73,17 @@ public class AnthropicClientSettings(
  * @param apiKey The API key required to authenticate with the Anthropic service.
  * @param settings Configurable settings for the Anthropic client, which include the base URL and other options.
  * @param baseClient An optional custom configuration for the underlying HTTP client, defaulting to a Ktor client.
+ * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class AnthropicLLMClient(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
-    baseClient: HttpClient = HttpClient()
+    baseClient: HttpClient = HttpClient(),
+    private val clock: Clock = Clock.System
 ) : LLMClient {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         private const val DEFAULT_MESSAGE_PATH = "v1/messages"
     }
@@ -297,7 +301,7 @@ public open class AnthropicLLMClient(
             LLMParams.ToolChoice.Auto -> AnthropicToolChoice.Auto
             LLMParams.ToolChoice.None -> AnthropicToolChoice.None
             LLMParams.ToolChoice.Required -> AnthropicToolChoice.Any
-            is LLMParams.ToolChoice.Named -> AnthropicToolChoice.Tool(name=toolChoice.name)
+            is LLMParams.ToolChoice.Named -> AnthropicToolChoice.Tool(name = toolChoice.name)
             null -> null
         }
 
@@ -317,17 +321,37 @@ public open class AnthropicLLMClient(
     }
 
     private fun processAnthropicResponse(response: AnthropicResponse): List<Message.Response> {
+        // Extract token count from the response
+        val inputTokensCount = response.usage?.inputTokens
+        val outputTokensCount = response.usage?.outputTokens
+        val totalTokensCount = response.usage?.let { it.inputTokens + it.outputTokens }
+
         val responses = response.content.map { content ->
             when (content) {
                 is AnthropicResponseContent.Text -> {
-                    Message.Assistant(content.text, response.stopReason)
+                    Message.Assistant(
+                        content = content.text,
+                        finishReason = response.stopReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock,
+                            totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokensCount,
+                            outputTokensCount = outputTokensCount,
+                        )
+                    )
                 }
 
                 is AnthropicResponseContent.ToolUse -> {
                     Message.Tool.Call(
                         id = content.id,
                         tool = content.name,
-                        content = content.input.toString()
+                        content = content.input.toString(),
+                        metaInfo = ResponseMetaInfo.create(
+                            clock,
+                            totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokensCount,
+                            outputTokensCount = outputTokensCount,
+                        )
                     )
                 }
             }
@@ -337,7 +361,18 @@ public open class AnthropicLLMClient(
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
             // If no messages where returned, return an empty message and check stopReason
-            responses.isEmpty() -> listOf(Message.Assistant("", response.stopReason))
+            responses.isEmpty() -> listOf(
+                Message.Assistant(
+                    content = "",
+                    finishReason = response.stopReason,
+                    metaInfo = ResponseMetaInfo.create(
+                        clock,
+                        totalTokensCount = totalTokensCount,
+                        inputTokensCount = inputTokensCount,
+                        outputTokensCount = outputTokensCount,
+                    )
+                )
+            )
             // Just return responses
             else -> responses
         }

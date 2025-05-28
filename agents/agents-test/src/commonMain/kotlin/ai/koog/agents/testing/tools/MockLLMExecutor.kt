@@ -7,10 +7,13 @@ import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.tokenizer.Tokenizer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.Clock
 
 /**
  * A mock implementation of [PromptExecutor] used for testing.
@@ -31,6 +34,8 @@ import kotlinx.coroutines.flow.flowOf
  * @property toolRegistry Optional tool registry for tool execution
  * @property logger Logger for debugging
  * @property toolActions List of tool conditions and their corresponding actions
+ * @property clock: A clock that is used for mock message timestamps
+ * @property tokenizer: Tokenizer that will be used to estimate token counts in mock messages
  */
 internal class MockLLMExecutor(
     private val partialMatches: Map<String, Message.Response>? = null,
@@ -39,7 +44,9 @@ internal class MockLLMExecutor(
     private val defaultResponse: String = "",
     private val toolRegistry: ToolRegistry? = null,
     private val logger: KLogger = KotlinLogging.logger(MockLLMExecutor::class.simpleName!!),
-    val toolActions: List<ToolCondition<*, *>> = emptyList()
+    val toolActions: List<ToolCondition<*, *>> = emptyList(),
+    private val clock: Clock = Clock.System,
+    private val tokenizer: Tokenizer? = null
 ) : PromptExecutor {
 
     /**
@@ -87,7 +94,17 @@ internal class MockLLMExecutor(
         logger.debug { "Handling prompt with messages:" }
         prompt.messages.forEach { logger.debug { "Message content: ${it.content.take(300)}..." } }
 
-        val lastMessage = prompt.messages.lastOrNull() ?: return Message.Assistant(defaultResponse)
+        val inputTokensCount = tokenizer?.let { prompt.messages.map { it.content }.sumOf(it::countTokens) }
+
+        val lastMessage = prompt.messages.lastOrNull() ?: return Message.Assistant(
+            defaultResponse,
+            metaInfo = ResponseMetaInfo.create(
+                clock,
+                totalTokensCount = tokenizer?.countTokens(defaultResponse)?.let { it + inputTokensCount!! },
+                inputTokensCount = inputTokensCount,
+                outputTokensCount = tokenizer?.countTokens(defaultResponse),
+            )
+        )
 
         // Check the exact response match
         val exactMatchedResponse = findExactResponse(lastMessage, exactMatches)
@@ -113,12 +130,28 @@ internal class MockLLMExecutor(
                 logger.debug { "Returning response for conditional match: $response" }
 
                 // Check if LLM messages contain any of the patterns and call the corresponding tool if they do
-                return Message.Assistant(response)
+                return Message.Assistant(
+                    response,
+                    metaInfo = ResponseMetaInfo.create(
+                        clock,
+                        totalTokensCount = tokenizer?.countTokens(response)?.let { it + inputTokensCount!! },
+                        inputTokensCount = inputTokensCount,
+                        outputTokensCount = tokenizer?.countTokens(response)
+                    )
+                )
             }
         }
 
         // Process the default LLM response
-        return Message.Assistant(defaultResponse)
+        return Message.Assistant(
+            defaultResponse,
+            metaInfo = ResponseMetaInfo.create(
+                clock,
+                totalTokensCount = tokenizer?.countTokens(defaultResponse)?.let { it + inputTokensCount!! },
+                inputTokensCount = inputTokensCount,
+                outputTokensCount = tokenizer?.countTokens(defaultResponse),
+            )
+        )
     }
 
 

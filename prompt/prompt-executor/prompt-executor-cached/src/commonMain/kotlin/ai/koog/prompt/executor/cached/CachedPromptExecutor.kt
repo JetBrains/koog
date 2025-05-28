@@ -36,8 +36,8 @@ public class CachedPromptExecutor(
         return cache.get(prompt)
             ?.first() as Message.Assistant?
             ?: nested
-                .execute(prompt, model)
-                .let { response -> Message.Assistant(response.content) }
+                .execute(prompt, model, emptyList()).first()
+                .let { it as Message.Assistant }
                 .also { cache.put(prompt, emptyList(), listOf(it)) }
     }
 

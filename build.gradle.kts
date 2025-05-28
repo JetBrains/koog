@@ -156,6 +156,7 @@ dependencies {
     dokka(project(":agents:agents-features:agents-features-common"))
     dokka(project(":agents:agents-features:agents-features-memory"))
     dokka(project(":agents:agents-features:agents-features-trace"))
+    dokka(project(":agents:agents-features:agents-features-tokenizer"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))
@@ -181,5 +182,6 @@ dependencies {
     dokka(project(":prompt:prompt-markdown"))
     dokka(project(":prompt:prompt-model"))
     dokka(project(":prompt:prompt-structure"))
+    dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
 }

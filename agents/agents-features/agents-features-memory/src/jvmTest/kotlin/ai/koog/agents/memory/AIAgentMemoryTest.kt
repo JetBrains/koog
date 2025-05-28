@@ -17,6 +17,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -74,6 +76,10 @@ class AIAgentMemoryTest {
         every { id } returns "test-model"
     }
 
+    private val testClock: Clock = object : Clock {
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
+    }
+
     @Test
     fun testNoMemoryLogging() = runTest {
         val concept = Concept("test", "test description", FactType.SINGLE)
@@ -117,6 +123,7 @@ class AIAgentMemoryTest {
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
+            clock = testClock
         )
 
         val memory = AgentMemory(
@@ -207,6 +214,7 @@ class AIAgentMemoryTest {
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
+            clock = testClock
         )
 
         val memory = AgentMemory(
@@ -329,6 +337,7 @@ class AIAgentMemoryTest {
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
+            clock = testClock
         )
 
         val memory = AgentMemory(
@@ -399,6 +408,7 @@ class AIAgentMemoryTest {
             promptExecutor = promptExecutor,
             environment = MockAgentEnvironment(),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
+            clock = testClock
         )
 
         val memory = AgentMemory(

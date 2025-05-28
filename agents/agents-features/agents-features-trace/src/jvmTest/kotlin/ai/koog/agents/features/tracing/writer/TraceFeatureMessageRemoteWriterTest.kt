@@ -25,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
         private val defaultClientServerTimeout = 5.seconds
     }
 
@@ -134,7 +134,7 @@ class TraceFeatureMessageRemoteWriterTest {
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call",
                 input = "Test LLM call prompt",
-                output = "Assistant(content=Default test response, finishReason=null)"
+                output = "{\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"${testClock.now()}\"}}"
             ),
             AIAgentNodeExecutionStartEvent(
                 nodeName = "test LLM call with tools",
@@ -147,7 +147,7 @@ class TraceFeatureMessageRemoteWriterTest {
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call with tools",
                 input = "Test LLM call with tools prompt",
-                output = "Assistant(content=Default test response, finishReason=null)"
+                output = "{\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"${testClock.now()}\"}}"
             ),
             AIAgentStrategyFinishedEvent(strategyName = strategyName, result = "Done"),
             AIAgentFinishedEvent(strategyName = strategyName, result = "Done"),

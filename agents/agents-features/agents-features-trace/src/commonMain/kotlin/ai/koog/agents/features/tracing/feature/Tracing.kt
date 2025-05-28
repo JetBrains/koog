@@ -9,6 +9,7 @@ import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.Json
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
@@ -154,7 +155,7 @@ public class Tracing {
             pipeline.interceptBeforeNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
                 val event = AIAgentNodeExecutionStartEvent(
                     nodeName = node.name,
-                    input = input?.toString() ?: ""
+                    input = dumpMessage(input)
                 )
                 processMessage(config, event)
             }
@@ -162,8 +163,8 @@ public class Tracing {
             pipeline.interceptAfterNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
                 val event = AIAgentNodeExecutionEndEvent(
                     nodeName = node.name,
-                    input = input?.toString() ?: "",
-                    output = output?.toString() ?: ""
+                    input = dumpMessage(input),
+                    output = dumpMessage(output)
                 )
                 processMessage(config, event)
             }
@@ -229,6 +230,11 @@ public class Tracing {
             }
 
             //endregion Intercept Tool Call Events
+        }
+
+        private fun dumpMessage(message: Any?): String = when (message) {
+            is Message -> Json.encodeToString(Message.serializer(), message)
+            else -> message?.toString() ?: ""
         }
 
         //region Private Methods

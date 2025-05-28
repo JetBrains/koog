@@ -6,9 +6,12 @@ import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -21,6 +24,10 @@ object CalculatorChatExecutor : PromptExecutor {
     }
 
     private val plusAliases = listOf("add", "sum", "plus")
+
+    val testClock: Clock = object : Clock {
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
+    }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val input = prompt.messages.filterIsInstance<Message.User>().joinToString("\n") { it.content }
@@ -35,16 +42,18 @@ object CalculatorChatExecutor : PromptExecutor {
                             put("a", numbers[0])
                             put("b", numbers[1])
                         }
-                    )
+                    ),
+                    metaInfo = ResponseMetaInfo.create(testClock)
                 )
             }
 
-            else -> Message.Assistant("Unknown operation")
+            else -> Message.Assistant("Unknown operation", metaInfo = ResponseMetaInfo.create(testClock))
         }
         return listOf(result)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
+        flow {
         try {
             val response = execute(prompt, model)
             emit(response.content)

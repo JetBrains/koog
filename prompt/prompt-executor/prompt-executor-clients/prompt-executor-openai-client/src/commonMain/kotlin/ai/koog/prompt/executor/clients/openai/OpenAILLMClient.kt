@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
@@ -27,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -52,11 +54,13 @@ public class OpenAIClientSettings(
  *
  * @param apiKey The API key for the OpenAI API
  * @param settings The base URL and timeouts for the OpenAI API, defaults to "https://api.openai.com" and 900 s
+ * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class OpenAILLMClient(
     private val apiKey: String,
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
-    baseClient: HttpClient = HttpClient()
+    baseClient: HttpClient = HttpClient(),
+    private val clock: Clock = Clock.System,
 ) : LLMEmbeddingProvider, LLMClient {
 
     private companion object {
@@ -328,19 +332,40 @@ public open class OpenAILLMClient(
             .firstOrNull()
             ?.let { it to it.message } ?: throw IllegalStateException("No choice found in OpenAI response")
 
+        // Extract token count from the response
+        val totalTokensCount = response.usage?.totalTokens
+        val inputTokensCount = response.usage?.inputTokens
+        val outputTokensCount = response.usage?.outputTokens
+
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
                 message.toolCalls.map { toolCall ->
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
-                        content = toolCall.function.arguments
+                        content = toolCall.function.arguments,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock,
+                            totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokensCount,
+                            outputTokensCount = outputTokensCount
+                        )
                     )
                 }
             }
 
             message.content != null -> {
-                listOf(Message.Assistant(message.content, choice.finishReason))
+                listOf(
+                    Message.Assistant(
+                        content = message.content,
+                        finishReason = choice.finishReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock, totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokensCount,
+                            outputTokensCount = outputTokensCount
+                        )
+                    )
+                )
             }
 
             else -> {

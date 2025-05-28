@@ -11,10 +11,13 @@ import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.Sink
 import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
@@ -38,7 +41,10 @@ class TraceFeatureMessageFileWriterTest {
     @Test
     fun `test file stream feature provider collect events on agent run`(@TempDir tempDir: Path) = runBlocking {
 
-        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener).use { writer ->
+        TraceFeatureMessageFileWriter(
+            createTempLogFile(tempDir),
+            TraceFeatureMessageFileWriterTest::sinkOpener
+        ).use { writer ->
 
             val strategyName = "tracing-test-strategy"
 
@@ -81,7 +87,13 @@ class TraceFeatureMessageFileWriterTest {
                 id = promptId,
             )
 
-            val expectedResponse = Message.Assistant(content = "Default test response")
+            val expectedResponse = Json.encodeToString(
+                Message.Assistant.serializer(),
+                Message.Assistant(
+                    content = "Default test response",
+                    metaInfo = ResponseMetaInfo.create(testClock)
+                )
+            )
 
             val expectedMessages = listOf(
                 "${AIAgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
@@ -89,11 +101,25 @@ class TraceFeatureMessageFileWriterTest {
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: __start__, input: $agentInput)",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: __start__, input: $agentInput, output: $agentInput)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
-                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${
+                    expectedPrompt.copy(
+                        messages = expectedPrompt.messages + Message.User(
+                            content = "Test LLM call prompt"
+                        )
+                    )
+                }, tools: [dummy])",
                 "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: $expectedResponse)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
-                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(Message.User(content="Test LLM call prompt"), Message.Assistant(content="Default test response"), Message.User(content="Test LLM call with tools prompt")))}, tools: [dummy])",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${
+                    expectedPrompt.copy(
+                        messages = expectedPrompt.messages + listOf(
+                            Message.User(content = "Test LLM call prompt"),
+                            Message.Assistant(content = "Default test response"),
+                            Message.User(content = "Test LLM call with tools prompt")
+                        )
+                    )
+                }, tools: [dummy])",
                 "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: $expectedResponse)",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
@@ -108,37 +134,42 @@ class TraceFeatureMessageFileWriterTest {
     }
 
     @Test
-    fun `test feature message log writer with custom format function for direct message processing`(@TempDir tempDir: Path) = runBlocking {
+    fun `test feature message log writer with custom format function for direct message processing`(@TempDir tempDir: Path) =
+        runBlocking {
 
-        val customFormat: (FeatureMessage) -> String = { message ->
-            when (message) {
-                is FeatureStringMessage -> "CUSTOM STRING. ${message.message}"
-                is FeatureEvent -> "CUSTOM EVENT. ${message.eventId}"
-                else -> "CUSTOM OTHER: ${message::class.simpleName}"
+            val customFormat: (FeatureMessage) -> String = { message ->
+                when (message) {
+                    is FeatureStringMessage -> "CUSTOM STRING. ${message.message}"
+                    is FeatureEvent -> "CUSTOM EVENT. ${message.eventId}"
+                    else -> "CUSTOM OTHER: ${message::class.simpleName}"
+                }
+            }
+
+            val messagesToProcess = listOf(
+                FeatureStringMessage("Test string message"),
+                AIAgentStartedEvent("test strategy")
+            )
+
+            val expectedMessages = listOf(
+                "CUSTOM STRING. Test string message",
+                "CUSTOM EVENT. ${AIAgentStartedEvent::class.simpleName}",
+            )
+
+            TraceFeatureMessageFileWriter(
+                createTempLogFile(tempDir),
+                TraceFeatureMessageFileWriterTest::sinkOpener,
+                format = customFormat
+            ).use { writer ->
+                writer.initialize()
+
+                messagesToProcess.forEach { message -> writer.processMessage(message) }
+
+                val actualMessage = writer.targetPath.readLines()
+
+                assertEquals(expectedMessages.size, actualMessage.size)
+                assertContentEquals(expectedMessages, actualMessage)
             }
         }
-
-        val messagesToProcess = listOf(
-            FeatureStringMessage("Test string message"),
-            AIAgentStartedEvent("test strategy")
-        )
-
-        val expectedMessages = listOf(
-            "CUSTOM STRING. Test string message",
-            "CUSTOM EVENT. ${AIAgentStartedEvent::class.simpleName}",
-        )
-
-        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener, format = customFormat).use { writer ->
-            writer.initialize()
-
-            messagesToProcess.forEach { message -> writer.processMessage(message) }
-
-            val actualMessage = writer.targetPath.readLines()
-
-            assertEquals(expectedMessages.size, actualMessage.size)
-            assertContentEquals(expectedMessages, actualMessage)
-        }
-    }
 
     @Test
     fun `test feature message log writer with custom format function`(@TempDir tempDir: Path) = runBlocking {
@@ -163,7 +194,11 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",
         )
 
-        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener, format = customFormat).use { writer ->
+        TraceFeatureMessageFileWriter(
+            createTempLogFile(tempDir),
+            TraceFeatureMessageFileWriterTest::sinkOpener,
+            format = customFormat
+        ).use { writer ->
             val strategyName = "tracing-test-strategy"
 
             val strategy = strategy(strategyName) {
@@ -227,7 +262,10 @@ class TraceFeatureMessageFileWriterTest {
     @Test
     fun `test logger stream feature provider message filter`(@TempDir tempDir: Path) = runBlocking {
 
-        TraceFeatureMessageFileWriter(createTempLogFile(tempDir), TraceFeatureMessageFileWriterTest::sinkOpener).use { writer ->
+        TraceFeatureMessageFileWriter(
+            createTempLogFile(tempDir),
+            TraceFeatureMessageFileWriterTest::sinkOpener
+        ).use { writer ->
 
             val strategyName = "tracing-test-strategy"
 
@@ -274,13 +312,26 @@ class TraceFeatureMessageFileWriterTest {
             val expectedResponse = Message.Assistant(content = "Default test response")
 
             val expectedLogMessages = listOf(
-                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${
+                    expectedPrompt.copy(
+                        messages = expectedPrompt.messages + Message.User(
+                            content = "Test LLM call prompt"
+                        )
+                    )
+                }, tools: [dummy])",
                 "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
-                "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(
-                    Message.User(content="Test LLM call prompt"), 
-                    Message.Assistant(content="Default test response"), 
-                    Message.User(content="Test LLM call with tools prompt")
-                ))}, tools: [dummy])",
+                "${LLMCallStartEvent::class.simpleName} (prompt: ${
+                    expectedPrompt.copy(
+                        messages = expectedPrompt.messages + listOf(
+                            Message.User(content = "Test LLM call prompt"),
+                            Message.Assistant(
+                                content = "Default test response",
+                                metaInfo = ResponseMetaInfo.create(testClock)
+                            ),
+                            Message.User(content = "Test LLM call with tools prompt")
+                        )
+                    )
+                }, tools: [dummy])",
                 "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
             )
 

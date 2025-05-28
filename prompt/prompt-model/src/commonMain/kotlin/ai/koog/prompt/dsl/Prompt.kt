@@ -4,18 +4,18 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.Schema
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration
 
 
 /**
- * Represents a structured prompt for an LLM containing a list of messages, an identifier, and optional
- * language model parameters.
+ * Represents a data structure for a prompt, consisting of a list of messages, a unique identifier,
+ * and optional parameters for language model settings.
  *
- * @property messages A list of `Message` objects representing the conversation or content
- * encapsulated by this prompt.
- * @property id A unique identifier for the prompt, which can be used for tracking or categorization.
- * @property params Configuration parameters (`LLMParams`) that control the behavior of the language model
- * when processing this prompt. Defaults to an instance of `LLMParams` with default settings.
+ * @property messages The list of [Message] objects associated with the prompt.
+ * @property id The unique identifier for the prompt.
+ * @property params The language model pa rameters associated with the prompt. Defaults to [LLMParams].
  */
 @Serializable
 public data class Prompt(
@@ -42,11 +42,17 @@ public data class Prompt(
          *
          * @param id The unique identifier for the `Prompt` being built.
          * @param params The configuration parameters for the `Prompt` with a default value of `LLMParams()`.
+         * @param clock The clock to use for generating timestamps, defaults to Clock.System.
          * @param init The initialization logic applied to the `PromptBuilder`.
          * @return The constructed `Prompt` object.
          */
-        public fun build(id: String, params: LLMParams = LLMParams(), init: PromptBuilder.() -> Unit): Prompt {
-            val builder = PromptBuilder(id, params)
+        public fun build(
+            id: String,
+            params: LLMParams = LLMParams(),
+            clock: Clock = Clock.System,
+            init: PromptBuilder.() -> Unit
+        ): Prompt {
+            val builder = PromptBuilder(id, params, clock)
             builder.init()
             return builder.build()
         }
@@ -55,13 +61,44 @@ public data class Prompt(
          * Constructs a new [Prompt] instance by applying the provided initialization logic to a [PromptBuilder].
          *
          * @param prompt The base [Prompt] used for initializing the [PromptBuilder].
+         * @param clock The clock to use for generating timestamps, defaults to Clock.System.
          * @param init The initialization block applied to configure the [PromptBuilder].
          * @return A new [Prompt] instance configured with the specified initialization logic.
          */
-        public fun build(prompt: Prompt, init: PromptBuilder.() -> Unit): Prompt {
-            return PromptBuilder.from(prompt).also(init).build()
+        public fun build(prompt: Prompt, clock: Clock = Clock.System, init: PromptBuilder.() -> Unit): Prompt {
+            return PromptBuilder.from(prompt, clock).also(init).build()
         }
     }
+
+    /**
+     * Represents the total token usage of the most recent response message in the current prompt.
+     *
+     * This value is determined by iterating through the list of `messages` within the prompt and locating
+     * the last message that is of type `Message.Response`. If found, the `tokensCount` from its metadata
+     * is returned. If no response message exists, the value defaults to 0.
+     *
+     * Useful for tracking the token count of the most recently generated LLM response in the LLM chat flow.
+     */
+    public val latestTokenUsage: Int
+        get() = messages
+            .lastOrNull { it is Message.Response }
+            ?.let { it as? Message.Response }
+            ?.metaInfo?.totalTokensCount ?: 0
+
+    /**
+     * Represents the total time spent across all messages within the prompt (measured in milliseconds)
+     *
+     * This property calculates the difference between the timestamp of the first
+     * message and the timestamp of the last message in the list of `messages`.
+     *
+     * If no messages are present, the total time spent is `0`.
+     */
+
+    public val totalTimeSpent: Duration
+        get() = when {
+            messages.isEmpty() -> Duration.ZERO
+            else -> messages.last().metaInfo.timestamp - messages.first().metaInfo.timestamp
+        }
 
     /**
      * Creates a copy of the `Prompt` with updated messages, allowing to modify the existing list of messages or provide a new one.

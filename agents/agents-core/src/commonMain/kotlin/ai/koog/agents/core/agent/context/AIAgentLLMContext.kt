@@ -10,6 +10,7 @@ import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import kotlinx.datetime.Clock
 
 /**
  * Represents the context for an AI agent LLM, managing tools, prompt handling, and interaction with the
@@ -22,6 +23,7 @@ import ai.koog.prompt.llm.LLModel
  * @property model The current LLM model being used or updated in write sessions.
  * @property promptExecutor The executor responsible for performing operations based on the current prompt.
  * @property environment The environment that manages tool execution and interaction with external dependencies.
+ * @property clock The clock used for timestamps of messages
  */
 public data class AIAgentLLMContext(
     internal var tools: List<ToolDescriptor>,
@@ -31,6 +33,7 @@ public data class AIAgentLLMContext(
     internal val promptExecutor: PromptExecutor,
     private val environment: AIAgentEnvironment,
     private val config: AIAgentConfigBase,
+    private val clock: Clock
 ) {
 
     private val rwLock = RWLock()
@@ -41,7 +44,7 @@ public data class AIAgentLLMContext(
      */
     @OptIn(ExperimentalStdlibApi::class)
     public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
-        val session = AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config)
+        val session = AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
 
         session.use {
             val result = it.block()

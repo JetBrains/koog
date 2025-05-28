@@ -1,13 +1,11 @@
 package ai.koog.agents.core.agent.session
 
-import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.SafeToolFromCallable
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
-import kotlin.IllegalArgumentException
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.memberProperties
 
@@ -25,7 +23,7 @@ public inline fun <reified TResult> AIAgentLLMWriteSession.findTool(toolFunction
         .find { it.name == toolFromCallable.name }
         ?: throw IllegalArgumentException("Tool with fromReference ${toolFunction.name} is not defined")
 
-    return SafeToolFromCallable(toolFunction, environment)
+    return SafeToolFromCallable(toolFunction, environment, clock)
 }
 
 /**

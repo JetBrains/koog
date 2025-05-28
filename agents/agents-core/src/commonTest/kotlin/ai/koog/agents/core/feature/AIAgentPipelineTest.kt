@@ -8,7 +8,10 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeDoNothing
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -18,6 +21,8 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -25,7 +30,8 @@ import kotlin.test.assertEquals
 
 class AIAgentPipelineTest {
 
-    @Test @JsName("testPipelineInterceptorsForNodeEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForNodeEvents")
     fun `test pipeline interceptors for node events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -82,6 +88,7 @@ class AIAgentPipelineTest {
         }
 
         val actualEvents = interceptedEvents.filter { it.startsWith("LLM: ") }
+        // , metadata=ResponseMetadata(timestamp=2023-01-01T00:00:00Z, tokensCount=null)
         val expectedEvents = listOf(
             "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
             "LLM: finish LLM call (responses: [Assistant: Default test response])",
@@ -94,10 +101,12 @@ class AIAgentPipelineTest {
             actualEvents.size,
             "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
         )
+
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForToolCallEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForToolCallEvents")
     fun `test pipeline interceptors for tool call events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -142,7 +151,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForAgentCreateEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForAgentCreateEvents")
     fun `test pipeline interceptors before agent started events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -171,7 +181,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForStrategyEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForStrategyEvents")
     fun `test pipeline interceptors for strategy started events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -199,7 +210,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForStageContextEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForStageContextEvents")
     fun `test pipeline interceptors for stage context events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -227,7 +239,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testSeveralAgentsShareOnePipeline")
+    @Test
+    @JsName("testSeveralAgentsShareOnePipeline")
     fun `test several agents share one pipeline`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -269,6 +282,10 @@ class AIAgentPipelineTest {
 
     //region Private Methods
 
+    private val testClock: Clock = object : Clock {
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
+    }
+
     private fun createAgent(
         strategy: AIAgentStrategy,
         userPrompt: String? = null,
@@ -280,7 +297,7 @@ class AIAgentPipelineTest {
     ): AIAgent {
 
         val agentConfig = AIAgentConfig(
-            prompt = prompt("test") {
+            prompt = prompt("test", clock = testClock) {
                 system(systemPrompt ?: "Test system message")
                 user(userPrompt ?: "Test user message")
                 assistant(assistantPrompt ?: "Test assistant response")
@@ -289,7 +306,7 @@ class AIAgentPipelineTest {
             maxAgentIterations = 10
         )
 
-        val testExecutor = getMockExecutor {
+        val testExecutor = getMockExecutor(clock = testClock) {
             mockLLMAnswer("Here's a summary of the conversation: Test user asked questions and received responses.") onRequestContains "Summarize all the main achievements"
             mockLLMAnswer("Default test response").asDefaultResponse
         }

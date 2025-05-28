@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -36,6 +37,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
@@ -67,11 +69,13 @@ public class GoogleClientSettings(
  * @param apiKey The API key for the Google AI API
  * @param settings Custom client settings, defaults to standard API endpoint and timeouts
  * @param baseClient Optional custom HTTP client
+ * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public open class GoogleLLMClient(
     private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
-    baseClient: HttpClient = HttpClient()
+    baseClient: HttpClient = HttpClient(),
+    private val clock: Clock = Clock.System
 ) : LLMClient {
 
     private companion object {
@@ -293,6 +297,7 @@ public open class GoogleLLMClient(
                     allowedFunctionNames = listOf(toolChoice.name)
                 )
             }
+
             null -> null
         }
 
@@ -366,13 +371,34 @@ public open class GoogleLLMClient(
             ?.let { it to it.content?.parts.orEmpty() }
             ?: throw IllegalArgumentException("No responses found in Gemini response")
 
+        // Extract token count from the response
+        val inputTokensCount = response.usageMetadata?.promptTokenCount
+        val outputTokensCount = response.usageMetadata?.candidatesTokenCount
+        val totalTokensCount = response.usageMetadata?.totalTokenCount
+
         val responses = parts.map { part ->
             when (part) {
-                is GooglePart.Text -> Message.Assistant(part.text, candidate.finishReason)
+                is GooglePart.Text -> Message.Assistant(
+                    content = part.text,
+                    finishReason = candidate.finishReason,
+                    metaInfo = ResponseMetaInfo.create(
+                        clock,
+                        totalTokensCount = totalTokensCount,
+                        inputTokensCount = inputTokensCount,
+                        outputTokensCount = outputTokensCount
+                    )
+                )
+
                 is GooglePart.FunctionCall -> Message.Tool.Call(
-                    Uuid.random().toString(),
-                    part.functionCall.name,
-                    part.functionCall.args.toString()
+                    id = Uuid.random().toString(),
+                    tool = part.functionCall.name,
+                    content = part.functionCall.args.toString(),
+                    metaInfo = ResponseMetaInfo.create(
+                        clock,
+                        totalTokensCount = totalTokensCount,
+                        inputTokensCount = inputTokensCount,
+                        outputTokensCount = outputTokensCount
+                    )
                 )
 
                 else -> error("Not supported part type: $part")
@@ -383,7 +409,13 @@ public open class GoogleLLMClient(
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
             // If no messages where returned, return an empty message and check finishReason
-            responses.isEmpty() -> listOf(Message.Assistant("", candidate.finishReason))
+            responses.isEmpty() -> listOf(
+                Message.Assistant(
+                    content = "",
+                    finishReason = candidate.finishReason,
+                    metaInfo = ResponseMetaInfo.create(clock, totalTokensCount = totalTokensCount)
+                )
+            )
             // Just return responses
             else -> responses
         }

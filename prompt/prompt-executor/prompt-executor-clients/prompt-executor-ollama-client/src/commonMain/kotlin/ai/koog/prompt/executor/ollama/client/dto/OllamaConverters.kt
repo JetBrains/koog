@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -99,7 +100,7 @@ internal fun Prompt.extractOllamaOptions(): OllamaChatRequestDTO.Options? {
  * Extracts tool calls from a ChatMessage.
  * Returns the first tool call for compatibility, but logs if multiple calls exist.
  */
-internal fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
+internal fun OllamaChatMessageDTO.getFirstToolCall(responseMetadata: ResponseMetaInfo): Message.Tool.Call? {
     if (this.toolCalls.isNullOrEmpty()) {
         return null
     }
@@ -118,7 +119,8 @@ internal fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
         // Ollama doesn't provide tool call IDs, so we create one based on content
         id = generateToolCallId(name, content),
         tool = name,
-        content = content
+        content = content,
+        metaInfo = responseMetadata
     )
 }
 
@@ -126,7 +128,7 @@ internal fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
  * Extracts all tool calls from a ChatMessage.
  * Use this method when you need to handle multiple simultaneous tool calls.
  */
-internal fun OllamaChatMessageDTO.getToolCalls(): List<Message.Tool.Call> {
+internal fun OllamaChatMessageDTO.getToolCalls(responseMetadata: ResponseMetaInfo): List<Message.Tool.Call> {
     if (this.toolCalls.isNullOrEmpty()) {
         return emptyList()
     }
@@ -138,7 +140,8 @@ internal fun OllamaChatMessageDTO.getToolCalls(): List<Message.Tool.Call> {
         Message.Tool.Call(
             id = generateToolCallId(name, content, index),
             tool = name,
-            content = content
+            content = content,
+            metaInfo = responseMetadata
         )
     }
 }

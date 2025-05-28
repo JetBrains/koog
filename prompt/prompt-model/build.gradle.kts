@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 api(project(":prompt:prompt-llm"))
                 api(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.datetime)
             }
         }
 

@@ -11,6 +11,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
+import ai.koog.prompt.message.ResponseMetaInfo
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -23,19 +24,25 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
  *
- * @property baseUrl The base URL of the Ollama API server.
- * @property baseClient The HTTP client used for making requests.
- * @property timeoutConfig Timeout configuration for HTTP requests.
+ * @param baseUrl The base URL of the Ollama server. Defaults to "http://localhost:11434".
+ * @param baseClient The underlying HTTP client used for making requests.
+ * @param timeoutConfig Configuration for connection, request, and socket timeouts.
+ * @param clock Clock instance used for tracking response metadata timestamps.
+ * Implements:
+ * - LLMClient for executing prompts and streaming responses.
+ * - LLMEmbeddingProvider for generating embeddings from input text.
  */
 public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    private val clock: Clock = Clock.System
 ) : LLMClient, LLMEmbeddingProvider {
 
     private companion object {
@@ -69,9 +76,7 @@ public class OllamaClient(
     }
 
     override suspend fun execute(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>
+        prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
@@ -84,38 +89,63 @@ public class OllamaClient(
                     format = prompt.extractOllamaJsonFormat(),
                     options = prompt.extractOllamaOptions(),
                     stream = false,
-                )
-            )
+                ))
         }.body<OllamaChatResponseDTO>()
 
-        return parseResponse(response)
+        return parseResponse(response, prompt)
     }
 
-    private fun parseResponse(response: OllamaChatResponseDTO): List<Message.Response> {
+
+    private fun parseResponse(response: OllamaChatResponseDTO, prompt: Prompt): List<Message.Response> {
         val messages = response.message ?: return emptyList()
         val content = messages.content
         val toolCalls = messages.toolCalls ?: emptyList()
 
+        // Get token counts from the response, or use null if not available
+        val promptTokenCount = response.promptEvalCount
+        val responseTokenCount = response.evalCount
+
+        // Calculate total tokens (prompt + response) if both are available
+        val totalTokensCount = when {
+            promptTokenCount != null && responseTokenCount != null -> promptTokenCount + responseTokenCount
+            promptTokenCount != null -> promptTokenCount
+            responseTokenCount != null -> responseTokenCount
+            else -> null
+        }
+
+        val responseMetadata = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokensCount,
+            inputTokensCount = promptTokenCount,
+            outputTokensCount = responseTokenCount,
+        )
+
         return when {
             content.isNotEmpty() && toolCalls.isEmpty() -> {
-                listOf(Message.Assistant(content = content))
+                listOf(
+                    Message.Assistant(
+                        content = content, metaInfo = responseMetadata
+                    )
+                )
             }
 
             content.isEmpty() && toolCalls.isNotEmpty() -> {
-                messages.getToolCalls()
+                messages.getToolCalls(responseMetadata)
             }
 
             else -> {
-                val toolCallMessages = messages.getToolCalls()
-                val assistantMessage = Message.Assistant(content = content)
+                val toolCallMessages = messages.getToolCalls(responseMetadata)
+                val assistantMessage = Message.Assistant(
+                    content = content,
+                    metaInfo = responseMetadata
+                )
                 listOf(assistantMessage) + toolCallMessages
             }
         }
     }
 
     override suspend fun executeStreaming(
-        prompt: Prompt,
-        model: LLModel
+        prompt: Prompt, model: LLModel
     ): Flow<String> = flow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 

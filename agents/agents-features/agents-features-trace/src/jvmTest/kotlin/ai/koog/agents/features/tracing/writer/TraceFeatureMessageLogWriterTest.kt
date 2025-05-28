@@ -81,11 +81,11 @@ class TraceFeatureMessageLogWriterTest {
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
                 "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
-                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, finishReason=null))",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"${testClock.now()}\"}})",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(Message.User(content="Test LLM call prompt"), Message.Assistant(content="Default test response"), Message.User(content="Test LLM call with tools prompt")))}, tools: [dummy])",
                 "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
-                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, finishReason=null))",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"${testClock.now()}\"}})",
                 "[INFO] Received feature message [event]: ${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
                 "[INFO] Received feature message [event]: ${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
             )

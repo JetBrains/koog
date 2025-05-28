@@ -8,6 +8,7 @@ import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 
 /**
  * A history compression strategy for retrieving and incorporating factual knowledge about specific concepts from past
@@ -50,7 +51,7 @@ public class RetrieveFactsFromHistory(public val concepts: List<Concept>) : Hist
                         is SingleFact -> item(fact.value)
                     }
                 }
-            })
+            }, metaInfo = ResponseMetaInfo.create(llmSession.clock))
         }
 
         composePromptWithRequiredMessages(llmSession, factMessages, preserveMemory, memoryMessages)

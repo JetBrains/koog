@@ -5,6 +5,8 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.datetime.Clock
 
 /**
  * A wrapper class designed to safely execute a tool within a given AI agent environment.
@@ -14,11 +16,13 @@ import ai.koog.prompt.message.Message
  * @param TArgs The type of arguments accepted by the underlying tool. Must extend [Tool.Args].
  * @param TResult The type of result produced by the underlying tool. Must extend [ToolResult].
  * @property tool The tool instance to be executed. Defines the operation and its required input/output behavior.
+ * @property clock The clock used to determine tool call message timestamps
  * @property environment The environment in which the tool operates. Handles the execution of tool logic.
  */
 public data class SafeTool<TArgs : Tool.Args, TResult : ToolResult>(
     private val tool: Tool<TArgs, TResult>,
-    private val environment: AIAgentEnvironment
+    private val environment: AIAgentEnvironment,
+    private val clock: Clock
 ) {
     /**
      * Represents a sealed interface for results, which can either be a success or a failure.
@@ -121,7 +125,8 @@ public data class SafeTool<TArgs : Tool.Args, TResult : ToolResult>(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgs(args).toString()
+                content = tool.encodeArgs(args).toString(),
+                metaInfo = ResponseMetaInfo.create(clock)
             )
         ).toSafeResult()
     }
@@ -137,7 +142,8 @@ public data class SafeTool<TArgs : Tool.Args, TResult : ToolResult>(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgs(args).toString()
+                content = tool.encodeArgs(args).toString(),
+                metaInfo = ResponseMetaInfo.create(clock)
             )
         ).content
     }
@@ -155,7 +161,8 @@ public data class SafeTool<TArgs : Tool.Args, TResult : ToolResult>(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgs(args as TArgs).toString()
+                content = tool.encodeArgs(args as TArgs).toString(),
+                metaInfo = ResponseMetaInfo.create(clock)
             )
         ).toSafeResult()
     }

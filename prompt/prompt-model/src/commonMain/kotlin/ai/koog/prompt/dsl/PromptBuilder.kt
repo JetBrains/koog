@@ -1,8 +1,11 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
+import kotlinx.datetime.Clock
 
 /**
  * A builder class for creating prompts using a DSL approach.
@@ -20,15 +23,21 @@ import ai.koog.prompt.text.TextContentBuilder
  *
  * @property id The identifier for the prompt
  * @property params The parameters for the language model
+ * @property clock The clock used for timestamps of messages
  */
 @PromptDSL
-public class PromptBuilder internal constructor(private val id: String, private val params: LLMParams = LLMParams()) {
+public class PromptBuilder internal constructor(
+    private val id: String, 
+    private val params: LLMParams = LLMParams(),
+    private val clock: Clock = Clock.System
+) {
     private val messages = mutableListOf<Message>()
 
     internal companion object {
-        internal fun from(prompt: Prompt): PromptBuilder = PromptBuilder(
+        internal fun from(prompt: Prompt, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(
             prompt.id,
-            prompt.params
+            prompt.params,
+            clock
         ).apply {
             messages.addAll(prompt.messages)
         }
@@ -48,7 +57,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * @param content The content of the system message
      */
     public fun system(content: String) {
-        messages.add(Message.System(content))
+        messages.add(Message.System(content, RequestMetaInfo.create(clock)))
     }
 
     /**
@@ -83,7 +92,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * @param content The content of the user message
      */
     public fun user(content: String) {
-        messages.add(Message.User(content))
+        messages.add(Message.User(content, RequestMetaInfo.create(clock)))
     }
 
     /**
@@ -118,7 +127,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * @param content The content of the assistant message
      */
     public fun assistant(content: String) {
-        messages.add(Message.Assistant(content))
+        messages.add(Message.Assistant(content, finishReason = null, metaInfo = ResponseMetaInfo.create(clock)))
     }
 
     /**
