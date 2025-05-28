@@ -12,11 +12,16 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class PromptTest {
+    val systemMessage = "You are a helpful assistant"
+    val userMessage = "Hello"
+
+    val originalPrompt = Prompt.build("test") {
+        system(systemMessage)
+        user(userMessage)
+    }
 
     @Test
     fun testPromptBuilding() {
-        val systemMessage = "You are a helpful assistant"
-        val userMessage = "Hello"
         val assistantMessage = "Hi! How can I help you?"
         val toolCallId = "tool_call_dummy_123"
         val toolName = "search"
@@ -51,15 +56,10 @@ class PromptTest {
 
     @Test
     fun testSerialization() {
-        val prompt = Prompt.build("test") {
-            system("You are a helpful assistant")
-            user("Hello")
-        }
-
-        val json = Json.encodeToString(prompt)
+        val json = Json.encodeToString(originalPrompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
-        assertEquals(prompt, decoded)
+        assertEquals(originalPrompt, decoded)
         assertEquals(2, decoded.messages.size)
         assertTrue(decoded.messages[0] is Message.System)
         assertTrue(decoded.messages[1] is Message.User)
@@ -67,11 +67,6 @@ class PromptTest {
 
     @Test
     fun testUpdatePromptWithNewMessages() {
-        val originalPrompt = Prompt.build("test") {
-            system("You are a helpful assistant")
-            user("Hello")
-        }
-
         val systemMessage = "You are a coding assistant"
         val userMessage = "Help me with Kotlin"
         val assistantMessage = "I'll help you with Kotlin programming"
@@ -92,11 +87,6 @@ class PromptTest {
 
     @Test
     fun testUpdatePromptWithNewParams() {
-        val originalPrompt = Prompt.build("test") {
-            system("You are a helpful assistant")
-            user("Hello")
-        }
-
         val speculation = "test speculation"
         val schemaName = "test-schema"
         val newParams = LLMParams(
@@ -120,11 +110,6 @@ class PromptTest {
 
     @Test
     fun testUpdatePromptWithUpdatedMessages() {
-        val originalPrompt = Prompt.build("test") {
-            system("You are a helpful assistant")
-            user("Hello")
-        }
-
         val assistantMessage = "Hi there! How can I assist you today?"
         val userMessage = "I need help with coding"
 
@@ -144,11 +129,6 @@ class PromptTest {
 
     @Test
     fun testUpdatePromptWithUpdatedParams() {
-        val originalPrompt = Prompt.build("test") {
-            system("You are a helpful assistant")
-            user("Hello")
-        }
-
         val newSpeculation = "improved speculation"
         val schemaName = "full-schema"
         val updatedPrompt = originalPrompt.withUpdatedParams {
