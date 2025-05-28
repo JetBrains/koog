@@ -6,9 +6,6 @@ import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.contains
 import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 
 /**
@@ -77,16 +74,27 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
             // Object type
             "object" -> {
-                val properties = if ("properties" in element) {
-                    element.getValue("properties").jsonObject
+                if ("additionalProperties" in element) {
+                    ToolParameterType.Object(
+                        emptyList(),
+                        true)
                 } else {
-                    throw IllegalArgumentException("Object type parameters must have properties property")
-                }
+                    val properties = if ("properties" in element) {
+                        element.getValue("properties").jsonObject
+                    } else {
+                        return ToolParameterType.Object(
+                            emptyList(),
+                            true)
+                    }
 
-                ToolParameterType.Object(properties.map { (name, property) ->
-                    val description = element["description"]?.jsonPrimitive?.content.orEmpty()
-                    ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
-                })
+                    ToolParameterType.Object(
+                        properties.map { (name, property) ->
+                            val description = element["description"]?.jsonPrimitive?.content.orEmpty()
+                            ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
+                        },
+                        additionalProperties = true
+                    )
+                }
             }
 
             // Unsupported type

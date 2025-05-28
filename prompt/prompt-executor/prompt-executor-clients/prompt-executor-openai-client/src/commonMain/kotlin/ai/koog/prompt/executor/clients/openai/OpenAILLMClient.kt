@@ -261,7 +261,7 @@ public open class OpenAILLMClient(
             LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
             LLMParams.ToolChoice.None -> OpenAIToolChoice.None
             LLMParams.ToolChoice.Required -> OpenAIToolChoice.Required
-            is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(function=FunctionName(toolChoice.name))
+            is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(function = FunctionName(toolChoice.name))
             null -> null
         }
 
@@ -304,15 +304,19 @@ public open class OpenAILLMClient(
 
             is ToolParameterType.Object -> {
                 put("type", JsonPrimitive("object"))
-                put("properties", buildJsonObject {
-                    type.properties.forEach { property ->
-                        put(property.name, buildJsonObject {
-                            fillOpenAIParamType(property.type)
-                            put("description", property.description)
-                        })
+                if (type.additionalProperties) {
+                    put("additionalProperties", true)
+                } else {
+                    put("properties", buildJsonObject {
+                        type.properties.forEach { property ->
+                            put(property.name, buildJsonObject {
+                                fillOpenAIParamType(property.type)
+                                put("description", property.description)
+                            })
+                        }
                     }
+                    )
                 }
-                )
             }
         }
     }
