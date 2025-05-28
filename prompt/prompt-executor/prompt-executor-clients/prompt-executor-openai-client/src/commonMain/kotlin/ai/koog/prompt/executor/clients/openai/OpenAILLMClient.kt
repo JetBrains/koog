@@ -34,12 +34,16 @@ import kotlin.uuid.Uuid
 /**
  * Represents the settings for configuring an OpenAI client.
  *
- * @property baseUrl The base URL of the OpenAI API. Defaults to "https://api.openai.com/v1".
+ * @property baseUrl The base URL of the OpenAI API. Defaults to "https://api.openai.com".
  * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ * @property chatCompletionsPath The path of the OpenAI Chat Completions API. Defaults to "v1/chat/completions".
+ * @property embeddingsPath The path of the OpenAI Embeddings API. Defaults to "v1/embeddings".
  */
 public class OpenAIClientSettings(
     public val baseUrl: String = "https://api.openai.com",
-    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val chatCompletionsPath: String = "v1/chat/completions",
+    public val embeddingsPath: String = "v1/embeddings",
 )
 
 /**
@@ -56,10 +60,7 @@ public open class OpenAILLMClient(
 ) : LLMEmbeddingProvider, LLMClient {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
-
-        private const val DEFAULT_MESSAGE_PATH = "v1/chat/completions"
-        private const val DEFAULT_EMBEDDINGS_PATH = "v1/embeddings"
+        private val logger = KotlinLogging.logger { }
     }
 
     private val json = Json {
@@ -101,7 +102,7 @@ public open class OpenAILLMClient(
         val request = createOpenAIRequest(prompt, tools, model, false)
 
         return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(DEFAULT_MESSAGE_PATH) {
+            val response = httpClient.post(settings.chatCompletionsPath) {
                 setBody(request)
             }
 
@@ -127,7 +128,7 @@ public open class OpenAILLMClient(
         return flow {
             try {
                 httpClient.sse(
-                    urlString = DEFAULT_MESSAGE_PATH,
+                    urlString = settings.chatCompletionsPath,
                     request = {
                         method = HttpMethod.Post
                         accept(ContentType.Text.EventStream)
@@ -261,7 +262,7 @@ public open class OpenAILLMClient(
             LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
             LLMParams.ToolChoice.None -> OpenAIToolChoice.None
             LLMParams.ToolChoice.Required -> OpenAIToolChoice.Required
-            is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(function=FunctionName(toolChoice.name))
+            is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(function = FunctionName(toolChoice.name))
             null -> null
         }
 
@@ -369,7 +370,7 @@ public open class OpenAILLMClient(
         )
 
         return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(DEFAULT_EMBEDDINGS_PATH) {
+            val response = httpClient.post(settings.embeddingsPath) {
                 setBody(request)
             }
 
