@@ -41,6 +41,13 @@ fun main() {
         "server.py"
     )
         .start()
+    
+    // MCP github: https://github.com/IvanMurzak/Unity-MCP
+    // Demo project: https://github.com/citizenmatt/TowerDefense
+//    val process = ProcessBuilder(
+//        "/Users/heorhii.lemeshko/projects/unity/Unity-MCP/Library/com.ivanmurzak.unity.mcp.server/bin~/Release/net9.0/com.IvanMurzak.Unity.MCP.Server",
+//        "60606"
+//    )
 
     // Wait for the server to start
     Thread.sleep(2000)
@@ -96,7 +103,7 @@ fun main() {
                         }
 
                         onAfterLLMWithToolsCall = { response, tools ->
-                            println("LLM response: $response, Tools: $tools")
+                            println("LLM response: $response, Tools: ${tools.map{it.name}}")
                         }
 
                         onAgentFinished = { strategyName: String, result: String? ->
@@ -109,6 +116,12 @@ fun main() {
                     }
                 }
             )
+            
+            val runAndGetResult = agent.runAndGetResult(" extend current opened scene for the towerdefence game. " +
+                    "Add more placements for the towers, change the path for the enemies")
+            println(runAndGetResult)
+
+
         }
     } finally {
         // Shutdown the Docker container
