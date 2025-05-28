@@ -3,6 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
+import kotlinx.datetime.Instant
 
 /**
  * Represents an abstract strategy for compressing the history of messages in a `AIAgentLLMWriteSession`.
@@ -146,7 +147,7 @@ public abstract class HistoryCompressionStrategy {
      *
      * @param timestamp The timestamp indicating the earliest point to retain messages from.
      */
-    public data class FromTimestamp(val timestamp: Long) : HistoryCompressionStrategy() {
+    public data class FromTimestamp(val timestamp: Instant) : HistoryCompressionStrategy() {
         /**
          * Compresses the message history in the provided session according to the specified strategy.
          *

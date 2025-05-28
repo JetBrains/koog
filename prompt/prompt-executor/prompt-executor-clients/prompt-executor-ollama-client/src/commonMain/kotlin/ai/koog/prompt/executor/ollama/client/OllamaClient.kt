@@ -10,7 +10,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMessageMetadata
+import ai.koog.prompt.message.ResponseMetadata
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.prompt.tokenizer.Tokenizer
 import io.ktor.client.*
@@ -108,7 +108,7 @@ public class OllamaClient(
                 listOf(
                     Message.Assistant(
                         content = content,
-                        metadata = ResponseMessageMetadata(tokensCount = totalTokensCount)
+                        metadata = ResponseMetadata(tokensCount = totalTokensCount)
                     )
                 )
             }
@@ -117,7 +117,7 @@ public class OllamaClient(
                 messages.getToolCalls().map { toolCall ->
                     val toolCallTokens = tokenizer.countTokens(toolCall.content)
                     toolCall.copy(
-                        metadata = ResponseMessageMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
+                        metadata = ResponseMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
                     )
                 }
             }
@@ -126,12 +126,12 @@ public class OllamaClient(
                 val toolCallMessages = messages.getToolCalls().map { toolCall ->
                     val toolCallTokens = tokenizer.countTokens(toolCall.content)
                     toolCall.copy(
-                        metadata = ResponseMessageMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
+                        metadata = ResponseMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
                     )
                 }
                 val assistantMessage = Message.Assistant(
                     content = content,
-                    metadata = ResponseMessageMetadata(tokensCount = totalTokensCount)
+                    metadata = ResponseMetadata(tokensCount = totalTokensCount)
                 )
                 listOf(assistantMessage) + toolCallMessages
             }

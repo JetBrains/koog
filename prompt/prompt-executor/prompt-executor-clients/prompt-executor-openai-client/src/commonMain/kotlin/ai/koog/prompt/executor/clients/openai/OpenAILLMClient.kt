@@ -12,7 +12,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMessageMetadata
+import ai.koog.prompt.message.ResponseMetadata
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
@@ -339,7 +339,7 @@ public open class OpenAILLMClient(
                         id = toolCall.id,
                         tool = toolCall.function.name,
                         content = toolCall.function.arguments,
-                        metadata = ResponseMessageMetadata(tokensCount = tokensCount)
+                        metadata = ResponseMetadata(tokensCount = tokensCount)
                     )
                 }
             }
@@ -348,7 +348,7 @@ public open class OpenAILLMClient(
                 listOf(Message.Assistant(
                     content = message.content, 
                     finishReason = choice.finishReason,
-                    metadata = ResponseMessageMetadata(tokensCount = tokensCount)
+                    metadata = ResponseMetadata(tokensCount = tokensCount)
                 ))
             }
 

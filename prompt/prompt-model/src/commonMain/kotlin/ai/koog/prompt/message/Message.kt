@@ -1,7 +1,6 @@
 package ai.koog.prompt.message
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -28,23 +27,23 @@ public sealed interface Message {
 
     /**
      * Stores metadata information for the current message instance, such as token count and timestamp.
-     * This property is marked as transient, meaning it will not be serialized during the serialization process.
      */
-    @Transient
     public val metadata: MessageMetadata
 
     /**
      * Represents a request message in the chat.
      */
     @Serializable
-    public sealed interface Request : Message
+    public sealed interface Request : Message {
+        override val metadata: RequestMetadata
+    }
 
     /**
      * Represents a response message in the chat.
      */
     @Serializable
     public sealed interface Response : Message {
-        override val metadata: ResponseMessageMetadata
+        override val metadata: ResponseMetadata
     }
 
     /**
@@ -81,8 +80,7 @@ public sealed interface Message {
     @Serializable
     public data class User(
         override val content: String,
-        @Transient
-        override val metadata: MessageMetadata = MessageMetadata()
+        override val metadata: RequestMetadata = RequestMetadata()
     ) : Request {
         override val role: Role = Role.User
     }
@@ -97,8 +95,7 @@ public sealed interface Message {
     public data class Assistant(
         override val content: String,
         val finishReason: String? = null,
-        @Transient
-        override val metadata: ResponseMessageMetadata = ResponseMessageMetadata()
+        override val metadata: ResponseMetadata = ResponseMetadata()
     ) : Response {
         override val role: Role = Role.Assistant
     }
@@ -130,8 +127,7 @@ public sealed interface Message {
             override val id: String?,
             override val tool: String,
             override val content: String,
-            @Transient
-            override val metadata: ResponseMessageMetadata = ResponseMessageMetadata()
+            override val metadata: ResponseMetadata = ResponseMetadata()
         ) : Tool, Response {
             override val role: Role = Role.Tool
 
@@ -155,8 +151,7 @@ public sealed interface Message {
             override val id: String?,
             override val tool: String,
             override val content: String,
-            @Transient
-            override val metadata: MessageMetadata = MessageMetadata()
+            override val metadata: RequestMetadata = RequestMetadata()
         ) : Tool, Request {
             override val role: Role = Role.Tool
         }
@@ -170,8 +165,7 @@ public sealed interface Message {
     @Serializable
     public data class System(
         override val content: String,
-        @Transient
-        override val metadata: MessageMetadata = MessageMetadata()
+        override val metadata: RequestMetadata = RequestMetadata()
     ) : Request {
         override val role: Role = Role.System
     }
@@ -183,12 +177,33 @@ public sealed interface Message {
  * @property timestamp The timestamp of when the message is created, measured in milliseconds
  * since the Unix epoch. Defaults to the current system time.
  */
-public open class MessageMetadata(
-    public val timestamp: Long = Clock.System.now().toEpochMilliseconds()
-)
+@Serializable
+public sealed interface MessageMetadata {
+    /**
+     * Represents the timestamp of a message
+     *
+     * This property indicates the precise time when a message was created. It defaults
+     * to the current system time if not explicitly set.
+     */
+    public val timestamp: Instant
+}
 
 /**
- * Represents metadata for a response message, extending the base `MessageMetadata`.
+ * Represents [MessageMetadata] specific to a request within the system.
+ *
+ * This class is an implementation of the [MessageMetadata] interface and provides
+ * timestamp information for a request.
+ *
+ * @property timestamp The time at which the request metadata was created.
+ * Defaults to the current system time if not provided.
+ */
+@Serializable
+public data class RequestMetadata(
+    override val timestamp: Instant = Clock.System.now()
+) : MessageMetadata
+
+/**
+ * Represents [MessageMetadata] for a response message.
  *
  * @property tokensCount The total count of tokens used by the time this response message is returned by the LLM.
  *                       This includes the tokens for the entire chat history up to and including this message,
@@ -201,7 +216,8 @@ public open class MessageMetadata(
  * - Message 2: "How are you?" (4 tokens) → tokensCount = 3 + 4 = 7
  * - Message 3: "I am fine, thank you." (6 tokens) → tokensCount = 7 + 6 = 13
  */
-public class ResponseMessageMetadata(
+@Serializable
+public data class ResponseMetadata(
     public val tokensCount: Int? = null,
-    timestamp: Long = Clock.System.now().toEpochMilliseconds()
-) : MessageMetadata(timestamp)
+    override val timestamp: Instant = Clock.System.now()
+) : MessageMetadata

@@ -12,18 +12,23 @@ import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.features.tracing.NetUtil.findAvailablePort
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
+import ai.koog.prompt.message.RequestMetadata
+import ai.koog.prompt.message.ResponseMetadata
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.plugins.sse.*
 import io.ktor.http.*
+import io.mockk.coEvery
+import io.mockk.mockkConstructor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.datetime.Instant
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
 
 class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
         private val defaultClientServerTimeout = 5.seconds
     }
 
@@ -36,6 +41,16 @@ class TraceFeatureMessageRemoteWriterTest {
         }
 
         override suspend fun close() {}
+    }
+
+    private val testTimestamp = Instant.parse("2023-01-01T00:00:00Z")
+
+    @BeforeTest
+    fun setMockTimestamps() {
+        mockkConstructor(RequestMetadata::class)
+        mockkConstructor(ResponseMetadata::class)
+        coEvery { anyConstructed<RequestMetadata>().timestamp } returns testTimestamp
+        coEvery { anyConstructed<ResponseMetadata>().timestamp } returns testTimestamp
     }
 
     @Test
@@ -119,7 +134,7 @@ class TraceFeatureMessageRemoteWriterTest {
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call",
                 input = "Test LLM call prompt",
-                output = "{\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\"}"
+                output = "{\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"$testTimestamp\"}}"
             ),
             AIAgentNodeExecutionStartEvent(
                 nodeName = "test LLM call with tools",
@@ -133,7 +148,7 @@ class TraceFeatureMessageRemoteWriterTest {
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call with tools",
                 input = "Test LLM call with tools prompt",
-                output = "{\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\"}"
+                output = "{\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"$testTimestamp\"}}"
             ),
             AIAgentStrategyFinishedEvent(strategyName = strategyName, result = "Done"),
             AIAgentFinishedEvent(strategyName = strategyName, result = "Done"),

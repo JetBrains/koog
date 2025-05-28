@@ -10,7 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMessageMetadata
+import ai.koog.prompt.message.ResponseMetadata
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -375,13 +375,13 @@ public open class GoogleLLMClient(
                 is GooglePart.Text -> Message.Assistant(
                     content = part.text, 
                     finishReason = candidate.finishReason,
-                    metadata = ResponseMessageMetadata(tokensCount = tokensCount)
+                    metadata = ResponseMetadata(tokensCount = tokensCount)
                 )
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     id = Uuid.random().toString(),
                     tool = part.functionCall.name,
                     content = part.functionCall.args.toString(),
-                    metadata = ResponseMessageMetadata(tokensCount = tokensCount)
+                    metadata = ResponseMetadata(tokensCount = tokensCount)
                 )
 
                 else -> error("Not supported part type: $part")
@@ -395,7 +395,7 @@ public open class GoogleLLMClient(
             responses.isEmpty() -> listOf(Message.Assistant(
                 content = "", 
                 finishReason = candidate.finishReason,
-                metadata = ResponseMessageMetadata(tokensCount = tokensCount)
+                metadata = ResponseMetadata(tokensCount = tokensCount)
             ))
             // Just return responses
             else -> responses

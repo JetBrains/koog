@@ -358,7 +358,7 @@ public class OpenRouterLLMClient(
                         id = toolCall.id,
                         tool = toolCall.function.name,
                         content = toolCall.function.arguments,
-                        metadata = ai.koog.prompt.message.ResponseMessageMetadata(tokensCount = tokensCount)
+                        metadata = ai.koog.prompt.message.ResponseMetadata(tokensCount = tokensCount)
                     )
                 }
             }
@@ -367,7 +367,7 @@ public class OpenRouterLLMClient(
                 listOf(Message.Assistant(
                     content = message.content, 
                     finishReason = choice.finishReason,
-                    metadata = ai.koog.prompt.message.ResponseMessageMetadata(tokensCount = tokensCount)
+                    metadata = ai.koog.prompt.message.ResponseMetadata(tokensCount = tokensCount)
                 ))
             }
 
