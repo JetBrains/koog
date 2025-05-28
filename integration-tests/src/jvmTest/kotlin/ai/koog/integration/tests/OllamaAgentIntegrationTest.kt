@@ -25,7 +25,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-@EnabledOnOs(OS.LINUX)
+@EnabledOnOs(OS.LINUX, OS.MAC)
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaAgentIntegrationTest {
     companion object {
