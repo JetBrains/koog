@@ -5,6 +5,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.Schema
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration
 
 
 /**
@@ -85,10 +86,10 @@ public data class Prompt(
      * If no messages are present, the total time spent is `0`.
      */
 
-    public val totalTimeSpent: Long
+    public val totalTimeSpent: Duration
         get() = when {
-            messages.isEmpty() -> 0
-            else -> messages.last().metadata.timestamp.toEpochMilliseconds() - messages.first().metadata.timestamp.toEpochMilliseconds()
+            messages.isEmpty() -> Duration.ZERO
+            else -> messages.last().metadata.timestamp - messages.first().metadata.timestamp
         }
 
     /**
