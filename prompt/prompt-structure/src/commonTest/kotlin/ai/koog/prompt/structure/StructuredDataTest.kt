@@ -1,5 +1,6 @@
 package ai.koog.prompt.structure
 
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.text.TextContentBuilder
 import kotlinx.serialization.SerialName
@@ -13,7 +14,11 @@ import kotlin.test.assertTrue
 class JsonStructuredDataTest {
     // Simple data structure for basic tests
     @Serializable
-    data class SimpleData(val value: String)
+    @LLMDescription("SimpleData description")
+    data class SimpleData(
+        @property:LLMDescription("SimpleData.value description")
+        val value: String
+    )
 
     // Array data structure
     @Serializable
@@ -124,6 +129,8 @@ class JsonStructuredDataTest {
         val content = builder.build()
 
         assertTrue(content.contains("DEFINITION OF simple"))
+        assertTrue(content.contains("SimpleData description"))
+        assertTrue(content.contains("SimpleData.value description"))
         assertTrue(content.contains("is defined only and solely with JSON, without any additional characters, backticks or anything similar."))
     }
 
