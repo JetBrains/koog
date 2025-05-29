@@ -290,8 +290,8 @@ public class AIAgentPipeline {
      *
      * @param responses A single or multiple response messages received from the language model
      */
-    public suspend fun onAfterLLMCall(responses: List<Message.Response>, tools: List<ToolDescriptor>) {
-        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(responses, tools) }
+    public suspend fun onAfterLLMCall(responses: List<Message.Response>) {
+        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(responses) }
     }
 
     //endregion Trigger LLM Call Handlers
@@ -633,12 +633,12 @@ public class AIAgentPipeline {
     public fun <TFeature : Any> interceptAfterLLMCall(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(responses: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit
+        handle: suspend TFeature.(responses: List<Message.Response>) -> Unit
     ) {
         val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
 
-        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { responses, tools ->
-            with(featureImpl) { handle(responses, tools) }
+        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { responses ->
+            with(featureImpl) { handle(responses) }
         }
     }
 

@@ -101,8 +101,8 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called after a response is received from the language model.
      */
-    public var onAfterLLMCall: suspend (responses: List<Message.Response>, tools: List<ToolDescriptor>) -> Unit =
-        { responses: List<Message.Response>, tools: List<ToolDescriptor> -> }
+    public var onAfterLLMCall: suspend (responses: List<Message.Response>) -> Unit =
+        { responses: List<Message.Response> -> }
 
     //endregion Trigger LLM Call Handlers
 

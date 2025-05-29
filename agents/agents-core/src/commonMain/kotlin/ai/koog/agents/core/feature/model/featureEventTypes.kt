@@ -87,7 +87,6 @@ public data class LLMCallStartEvent(
 @Serializable
 public data class LLMCallEndEvent(
     val responses: List<Message.Response>,
-    val tools: List<String>,
     override val eventId: String = LLMCallEndEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 

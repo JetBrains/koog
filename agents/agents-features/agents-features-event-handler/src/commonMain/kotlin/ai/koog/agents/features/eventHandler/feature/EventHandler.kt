@@ -121,8 +121,8 @@ public class EventHandler {
                 config.onBeforeLLMCall(prompt, tools)
             }
 
-            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses, tools ->
-                config.onAfterLLMCall(responses, tools)
+            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses ->
+                config.onAfterLLMCall(responses)
             }
 
             //endregion Intercept LLM Call Events

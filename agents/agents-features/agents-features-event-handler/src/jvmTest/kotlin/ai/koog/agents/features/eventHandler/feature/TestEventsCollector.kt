@@ -54,8 +54,8 @@ class TestEventsCollector {
             _collectedEvents.add("OnBeforeLLMCall (prompt: ${prompt.messages}, tools: [${tools.joinToString { it.name } }])")
         }
 
-        onAfterLLMCall = { responses: List<Message.Response>, tools: List<ToolDescriptor> ->
-            _collectedEvents.add("OnAfterLLMCall (responses: [${responses.joinToString { "${it.role.name}: ${it.content}" }}], tools: [${tools.joinToString { it.name } }])")
+        onAfterLLMCall = { responses: List<Message.Response> ->
+            _collectedEvents.add("OnAfterLLMCall (responses: [${responses.joinToString { "${it.role.name}: ${it.content}" }}])")
         }
 
         onToolCall = { tool: Tool<*, *>, toolArgs: Tool.Args ->

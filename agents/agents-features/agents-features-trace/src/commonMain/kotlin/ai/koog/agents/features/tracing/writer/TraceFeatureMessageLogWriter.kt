@@ -84,7 +84,7 @@ public class TraceFeatureMessageLogWriter(
             get() = "${this.eventId} (prompt: ${this.prompt}, tools: [${this.tools.joinToString(", ")}])"
 
         val LLMCallEndEvent.llmCallEndEventFormat
-            get() = "${this.eventId} (responses: ${this.responses}, tools: [${this.tools.joinToString(", ")}])"
+            get() = "${this.eventId} (responses: ${this.responses})"
 
         val ToolCallEvent.toolCallEventFormat
             get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs})"

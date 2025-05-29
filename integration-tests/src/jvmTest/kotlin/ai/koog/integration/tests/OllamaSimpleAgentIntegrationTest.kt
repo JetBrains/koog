@@ -58,7 +58,7 @@ class OllamaSimpleAgentIntegrationTest {
             println("Before LLM call: prompt=$prompt")
         }
 
-        onAfterLLMCall = { responses, tools ->
+        onAfterLLMCall = { responses ->
             val lastResponse = responses.last().content
             println("After LLM call: response=${lastResponse.take(100)}${if (lastResponse.length > 100) "..." else ""}")
         }

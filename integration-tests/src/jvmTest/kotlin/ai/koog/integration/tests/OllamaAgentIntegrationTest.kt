@@ -156,11 +156,10 @@ class OllamaAgentIntegrationTest {
                     promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
                 }
 
-                onAfterLLMCall = { responses, tools ->
+                onAfterLLMCall = { responses ->
                     val responseText = "[${responses.joinToString { "${it.role.name}: ${it.content}" }}]"
-                    val toolsText = "[${tools.joinToString { it.name }}]"
-                    println("LLM Call response: $responseText, tools: $toolsText")
-                    promptsAndResponses.add("RESPONSE: $responseText, TOOLS: $toolsText")
+                    println("LLM Call response: $responseText")
+                    promptsAndResponses.add("RESPONSE: $responseText")
                 }
 
                 onAgentFinished = { _, _ ->

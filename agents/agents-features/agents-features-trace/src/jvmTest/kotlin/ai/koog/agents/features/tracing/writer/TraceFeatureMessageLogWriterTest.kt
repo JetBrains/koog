@@ -80,11 +80,11 @@ class TraceFeatureMessageLogWriterTest {
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: __start__, input: $agentInput, output: $agentInput)",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
-                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, finishReason=null))",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(Message.User(content="Test LLM call prompt"), Message.Assistant(content="Default test response"), Message.User(content="Test LLM call with tools prompt")))}, tools: [dummy])",
-                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, finishReason=null))",
                 "[INFO] Received feature message [event]: ${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
                 "[INFO] Received feature message [event]: ${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
@@ -258,13 +258,13 @@ class TraceFeatureMessageLogWriterTest {
 
             val expectedLogMessages = listOf(
                 "[INFO] Received feature message [event]: ${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
-                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "[INFO] Received feature message [event]: ${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(
                     Message.User(content="Test LLM call prompt"), 
                     Message.Assistant(content="Default test response"), 
                     Message.User(content="Test LLM call with tools prompt")
                 ))}, tools: [dummy])",
-                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "[INFO] Received feature message [event]: ${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
             )
 
             assertEquals(expectedLogMessages.size, targetLogger.messages.size)

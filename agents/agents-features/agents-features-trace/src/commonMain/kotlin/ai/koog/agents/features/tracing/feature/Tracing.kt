@@ -181,10 +181,9 @@ public class Tracing {
                 config.messageProcessor.onMessageForEachSafe(event)
             }
 
-            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses, tools ->
+            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses ->
                 val event = LLMCallEndEvent(
-                    responses = responses,
-                    tools = tools.map { it.name }
+                    responses = responses
                 )
                 if (!config.messageFilter(event)) { return@intercept }
                 config.messageProcessor.onMessageForEachSafe(event)

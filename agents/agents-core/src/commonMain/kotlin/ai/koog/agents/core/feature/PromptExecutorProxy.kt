@@ -31,7 +31,7 @@ public class PromptExecutorProxy(
         val responses = executor.execute(prompt, model, tools)
 
         logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" } }]" }
-        pipeline.onAfterLLMCall(responses, tools)
+        pipeline.onAfterLLMCall(responses)
 
         return responses
     }

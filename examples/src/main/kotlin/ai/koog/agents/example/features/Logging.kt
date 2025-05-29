@@ -74,7 +74,7 @@ class Logging(val logger: Logger) {
                 logger.info("Before LLM call with prompt: $prompt, tools: [${tools.joinToString { it.name }}]")
             }
 
-            pipeline.interceptAfterLLMCall(this, logging) { responses, tools ->
+            pipeline.interceptAfterLLMCall(this, logging) { responses ->
                 logger.info("After LLM call with response: $responses")
             }
         }

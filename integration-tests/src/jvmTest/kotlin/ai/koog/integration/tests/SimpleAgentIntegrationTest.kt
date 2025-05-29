@@ -87,8 +87,8 @@ class SimpleAgentIntegrationTest {
             println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
         }
 
-        onAfterLLMCall = { response, tools ->
-            println("After LLM call with tools: response=${response.map { it.content.take(50) }}, tools=${tools.map { it.name }}")
+        onAfterLLMCall = { response ->
+            println("After LLM call with tools: response=${response.map { it.content.take(50) }}")
         }
 
         onToolCall = { tool, args ->

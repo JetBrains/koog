@@ -130,7 +130,6 @@ class TraceFeatureMessageRemoteWriterTest {
             LLMCallStartEvent(prompt = expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt")), tools = listOf("dummy")),
             LLMCallEndEvent(
                 responses = listOf(Message.Assistant("Default test response")),
-                tools = listOf("dummy")
             ),
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call",
@@ -144,7 +143,6 @@ class TraceFeatureMessageRemoteWriterTest {
             LLMCallStartEvent(prompt = expectedPrompt.copy(messages = expectedPrompt.messages + listOf(Message.User(content="Test LLM call prompt"), Message.Assistant(content="Default test response"), Message.User(content="Test LLM call with tools prompt"))), tools = listOf("dummy")),
             LLMCallEndEvent(
                 responses = listOf(Message.Assistant("Default test response")),
-                tools = listOf("dummy")
             ),
             AIAgentNodeExecutionEndEvent(
                 nodeName = "test LLM call with tools",
@@ -327,13 +325,13 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val expectedEvents = listOf(
             LLMCallStartEvent(expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt")), listOf("dummy")),
-            LLMCallEndEvent(listOf(Message.Assistant("Default test response")), listOf("dummy")),
+            LLMCallEndEvent(listOf(Message.Assistant("Default test response"))),
             LLMCallStartEvent(expectedPrompt.copy(messages = expectedPrompt.messages + listOf(
                 Message.User(content="Test LLM call prompt"),
                 Message.Assistant(content="Default test response"),
                 Message.User(content="Test LLM call with tools prompt")
             )), listOf("dummy")),
-            LLMCallEndEvent(listOf(Message.Assistant("Default test response")), listOf("dummy")),
+            LLMCallEndEvent(listOf(Message.Assistant("Default test response"))),
         )
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()

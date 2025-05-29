@@ -44,8 +44,8 @@ class TestFeature(val events: MutableList<String>) {
                 feature.events += "LLM: start LLM call (prompt: ${prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}, tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptAfterLLMCall(this, feature) { responses: List<Message.Response>, tools: List<ToolDescriptor> ->
-                feature.events += "LLM: finish LLM call (responses: [${responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}], tools: [${tools.joinToString { it.name }}])"
+            pipeline.interceptAfterLLMCall(this, feature) { responses: List<Message.Response> ->
+                feature.events += "LLM: finish LLM call (responses: [${responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}])"
             }
 
             pipeline.interceptBeforeNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->

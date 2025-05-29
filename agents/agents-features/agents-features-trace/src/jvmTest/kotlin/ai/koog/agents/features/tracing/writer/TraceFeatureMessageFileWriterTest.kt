@@ -90,11 +90,11 @@ class TraceFeatureMessageFileWriterTest {
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: __start__, input: $agentInput, output: $agentInput)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
-                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: $expectedResponse)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(Message.User(content="Test LLM call prompt"), Message.Assistant(content="Default test response"), Message.User(content="Test LLM call with tools prompt")))}, tools: [dummy])",
-                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: $expectedResponse)",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
                 "${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
@@ -275,13 +275,13 @@ class TraceFeatureMessageFileWriterTest {
 
             val expectedLogMessages = listOf(
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + Message.User(content="Test LLM call prompt"))}, tools: [dummy])",
-                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${expectedPrompt.copy(messages = expectedPrompt.messages + listOf(
                     Message.User(content="Test LLM call prompt"), 
                     Message.Assistant(content="Default test response"), 
                     Message.User(content="Test LLM call with tools prompt")
                 ))}, tools: [dummy])",
-                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse], tools: [dummy])",
+                "${LLMCallEndEvent::class.simpleName} (responses: [$expectedResponse])",
             )
 
             val actualMessages = writer.targetPath.readLines()

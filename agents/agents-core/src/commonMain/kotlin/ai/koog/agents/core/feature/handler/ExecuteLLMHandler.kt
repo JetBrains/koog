@@ -10,7 +10,7 @@ public class ExecuteLLMHandler {
         BeforeLLMCallHandler { prompt, tools -> }
 
     public var afterLLMCallHandler: AfterLLMCallHandler =
-        AfterLLMCallHandler { response, tools -> }
+        AfterLLMCallHandler { response -> }
 }
 
 public fun interface BeforeLLMCallHandler {
@@ -18,5 +18,5 @@ public fun interface BeforeLLMCallHandler {
 }
 
 public fun interface AfterLLMCallHandler {
-    public suspend fun handle(responses: List<Message.Response>, tools: List<ToolDescriptor>)
+    public suspend fun handle(responses: List<Message.Response>)
 }
