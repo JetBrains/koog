@@ -11,8 +11,6 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetadata
-import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
-import ai.koog.prompt.tokenizer.Tokenizer
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -34,14 +32,11 @@ import kotlinx.serialization.json.Json
  * @property baseUrl The base URL of the Ollama API server.
  * @property baseClient The HTTP client used for making requests.
  * @property timeoutConfig Timeout configuration for HTTP requests.
- * @property tokenizer The tokenizer used to count tokens in text. Ollama does not provide token counts
- *                    in responses, so this client-side tokenizer is used for estimation.
  */
 public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-    private val tokenizer: Tokenizer = SimpleRegexBasedTokenizer(),
 ) : LLMClient, LLMEmbeddingProvider {
 
     private val ollamaJson = Json {
@@ -96,12 +91,17 @@ public class OllamaClient(
         val content = messages.content
         val toolCalls = messages.toolCalls ?: emptyList()
 
-        // Estimate token count for the prompt (without the response)
-        val previousPromptTokenCount = prompt.messages.sumOf { tokenizer.countTokens(it.content) }
-        // Estimate token count for the response
-        val responseTokensCount = tokenizer.countTokens(content)
-        // Calculate total tokens (prompt + response)
-        val totalTokensCount = previousPromptTokenCount + responseTokensCount
+        // Get token counts from the response, or use null if not available
+        val promptTokenCount = response.promptEvalCount
+        val responseTokenCount = response.evalCount
+
+        // Calculate total tokens (prompt + response) if both are available
+        val totalTokensCount = when {
+            promptTokenCount != null && responseTokenCount != null -> promptTokenCount + responseTokenCount
+            promptTokenCount != null -> promptTokenCount
+            responseTokenCount != null -> responseTokenCount
+            else -> null
+        }
 
         return when {
             content.isNotEmpty() && toolCalls.isEmpty() -> {
@@ -115,18 +115,16 @@ public class OllamaClient(
 
             content.isEmpty() && toolCalls.isNotEmpty() -> {
                 messages.getToolCalls().map { toolCall ->
-                    val toolCallTokens = tokenizer.countTokens(toolCall.content)
                     toolCall.copy(
-                        metadata = ResponseMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
+                        metadata = ResponseMetadata(tokensCount = totalTokensCount)
                     )
                 }
             }
 
             else -> {
                 val toolCallMessages = messages.getToolCalls().map { toolCall ->
-                    val toolCallTokens = tokenizer.countTokens(toolCall.content)
                     toolCall.copy(
-                        metadata = ResponseMetadata(tokensCount = previousPromptTokenCount + toolCallTokens)
+                        metadata = ResponseMetadata(tokensCount = totalTokensCount)
                     )
                 }
                 val assistantMessage = Message.Assistant(

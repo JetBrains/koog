@@ -22,6 +22,7 @@ include(":agents:agents-features:agents-features-common")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-trace")
+include(":agents:agents-features:agents-features-tokenizer")
 
 include(":agents:agents-mcp")
 include(":agents:agents-test")

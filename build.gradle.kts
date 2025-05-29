@@ -156,6 +156,7 @@ dependencies {
     dokka(project(":agents:agents-features:agents-features-common"))
     dokka(project(":agents:agents-features:agents-features-memory"))
     dokka(project(":agents:agents-features:agents-features-trace"))
+    dokka(project(":agents:agents-features:agents-features-tokenizer"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))

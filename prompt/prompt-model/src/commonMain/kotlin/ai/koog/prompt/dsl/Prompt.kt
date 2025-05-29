@@ -84,6 +84,7 @@ public data class Prompt(
      *
      * If no messages are present, the total time spent is `0`.
      */
+
     public val totalTimeSpent: Long
         get() = when {
             messages.isEmpty() -> 0
