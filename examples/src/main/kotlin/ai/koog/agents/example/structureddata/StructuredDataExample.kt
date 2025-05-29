@@ -5,12 +5,11 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.eventHandler.feature.handleEvents
-import ai.koog.prompt.structure.json.JsonSchemaGenerator
-import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -18,7 +17,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.message.Message
+import ai.koog.prompt.structure.json.JsonSchemaGenerator
+import ai.koog.prompt.structure.json.JsonStructuredData
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -210,25 +210,16 @@ fun main(): Unit = runBlocking {
 
     val agentStrategy = strategy("weather-forecast") {
         val setup by nodeLLMRequest()
-
-        val getStructuredForecast by node<Message.Response, String> { _ ->
-            val structuredResponse = llm.writeSession {
-                this.requestLLMStructured(
-                    structure = weatherForecastStructure,
-                    // the model that would handle coercion if the output does not conform to the requested structure
-                    fixingModel = OpenAIModels.Reasoning.GPT4oMini,
-                ).getOrThrow()
-            }
-
-            """
-                Response structure:
-                ${structuredResponse.structure}
-                """.trimIndent()
-        }
+        val getStructuredForecast by nodeLLMRequestStructured(
+            structure = weatherForecastStructure,
+            retries = 1,
+            // the model that would handle coercion if the output does not conform to the requested structure
+            fixingModel = OpenAIModels.Reasoning.GPT4oMini,
+        )
 
         edge(nodeStart forwardTo setup)
-        edge(setup forwardTo getStructuredForecast)
-        edge(getStructuredForecast forwardTo nodeFinish)
+        edge(setup forwardTo getStructuredForecast transformed { it.content })
+        edge(getStructuredForecast forwardTo nodeFinish transformed { "Structured response:\n${it.getOrThrow().structure}" })
     }
 
     val agentConfig = AIAgentConfig(
@@ -269,8 +260,7 @@ fun main(): Unit = runBlocking {
         === Weather Forecast Example ===
         This example demonstrates how to use StructuredData and sendStructuredAndUpdatePrompt
         to get properly structured output from the LLM.
-
-    """.trimIndent()
+        """.trimIndent()
     )
 
     runner.run("Get weather forecast for New York")

@@ -1,10 +1,9 @@
 package ai.koog.prompt.structure.json
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.prompt.structure.DescriptionMetadata
+import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.StructuredData
 import ai.koog.prompt.structure.structure
-import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -67,6 +66,16 @@ public class JsonStructuredData<TStruct>(
         // TODO: Class.simpleName is the only reason to make the function inline, perhaps we can hide most of the implementation
         /**
          * Factory method to create JSON structure with auto-generated JSON schema.
+         *
+         * @param id Unique identifier for the structure.
+         * @param serializer Serializer used for converting the data to and from JSON.
+         * @param json JSON configuration instance used for serialization.
+         * @param schemaFormat Format of the generated schema, can be simple or detailed.
+         * @param maxDepth Maximum recursion depth when generating schema to prevent infinite recursion for circular references.
+         * @param descriptions Optional map of serial class names and property names to descriptions.
+         * If a property/type is already described with [LLMDescription] annotation, value from the map will override this description.
+         * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
+         * @param schemaType Type of JSON schema to generate, determines the level of detail in the schema.
          */
         public inline fun <reified T> createJsonStructure(
             id: String = T::class.simpleName ?: error("Class name is required for JSON structure"),
@@ -74,19 +83,12 @@ public class JsonStructuredData<TStruct>(
             json: Json = JsonStructureLanguage.defaultJson,
             schemaFormat: JsonSchemaGenerator.SchemaFormat = JsonSchemaGenerator.SchemaFormat.Simple,
             maxDepth: Int = 20,
-            propertyDescriptionOverrides: Map<String, String> = emptyMap(),
+            descriptions: Map<String, String> = emptyMap(),
             examples: List<T> = emptyList(),
             schemaType: JsonSchemaType = JsonSchemaType.SIMPLE
         ): StructuredData<T> {
             val structureLanguage = JsonStructureLanguage(json)
-            val metadata = getDescriptionMetadata(serializer)
-
-            // Use platform-specific implementations to get property descriptions
-            val propertyDescriptions = metadata?.allDescriptions().orEmpty()
-                .merge(propertyDescriptionOverrides) { _, _, override -> override }
-
-            val schema =
-                JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, propertyDescriptions)
+            val schema = JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, descriptions)
 
             return JsonStructuredData(
                 id = id,
@@ -99,82 +101,5 @@ public class JsonStructuredData<TStruct>(
                 }
             )
         }
-
-        /**
-         * Retrieves description metadata for a given serializer. The metadata includes
-         * a description of the class (if annotated) and descriptions of its fields
-         * based on the presence of the `LLMDescription` annotation.
-         *
-         * @param T The type of the serializer.
-         * @param serializer The serializer for the type T, used to extract metadata.
-         * @return A `DescriptionMetadata` object containing the class and field descriptions,
-         *         or `null` if no descriptions are found.
-         */
-        @PublishedApi
-        internal fun <T> getDescriptionMetadata(serializer: KSerializer<T>): DescriptionMetadata? {
-            // Try to find the class in the registry
-            val className = serializer.descriptor.serialName
-
-            // Check if the class has LLMDescription annotation
-            val classDescription = serializer.descriptor.annotations
-                .filterIsInstance<LLMDescription>()
-                .firstOrNull()
-                ?.description
-
-            // Collect field descriptions
-            val fieldDescriptions = mutableMapOf<String, String>()
-            val descriptor = serializer.descriptor
-
-            for (i in 0 until descriptor.elementsCount) {
-                val propertyName = descriptor.getElementName(i)
-                val propertyAnnotations = descriptor.getElementAnnotations(i)
-
-                val description = propertyAnnotations
-                    .filterIsInstance<LLMDescription>()
-                    .firstOrNull()
-                    ?.description
-
-                if (description != null) {
-                    // Use the format expected by JsonSchemaGenerator: "${descriptor.serialName}.$propertyName"
-                    fieldDescriptions["$className.$propertyName"] = description
-                }
-            }
-
-            // If no class description and no field descriptions, return null
-            if (classDescription == null && fieldDescriptions.isEmpty()) {
-                return null
-            }
-
-            // Create a new DescriptionMetadata object with the class description and field descriptions
-            return object : DescriptionMetadata {
-                override val className: String = className
-                override val classDescription: String? = classDescription
-                override val fieldDescriptions: Map<String, String> = fieldDescriptions
-            }
-        }
-
-        /**
-         * Merges [other] into the current map.
-         * If the key already exists, it calls [merger] and puts its result,
-         * otherwise it simply adds a new pair.
-         */
-        @PublishedApi
-        internal inline fun <K, V> MutableMap<K, V>.mergeInPlace(
-            other: Map<K, V>,
-            merger: (key: K, first: V, second: V) -> V
-        ): MutableMap<K, V> = apply {
-            other.forEach { (k, v) ->
-                this[k] = get(k)?.let { merger(k, it, v) } ?: v
-            }
-        }
-
-        /**
-         * Non-blocking merge: returns a new map, leaving the original collections unchanged.
-         */
-        @PublishedApi
-        internal inline fun <K, V> Map<K, V>.merge(
-            other: Map<K, V>,
-            merger: (key: K, first: V, second: V) -> V
-        ): Map<K, V> = toMutableMap().mergeInPlace(other, merger)
     }
 }

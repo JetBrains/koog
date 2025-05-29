@@ -1,5 +1,6 @@
 package ai.koog.prompt.structure.json
 
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -34,7 +35,9 @@ class JsonSchemaGeneratorTest {
 
     @Serializable
     @SerialName("TestClass")
+    @LLMDescription("A test class")
     data class TestClass(
+        @property:LLMDescription("A string property")
         val stringProperty: String,
         val intProperty: Int,
         val booleanProperty: Boolean,
@@ -45,7 +48,9 @@ class JsonSchemaGeneratorTest {
 
     @Serializable
     @SerialName("NestedTestClass")
+    @LLMDescription("Nested test class")
     data class NestedTestClass(
+        @LLMDescription("The name")
         val name: String,
         val nested: NestedProperty,
         val nestedList: List<NestedProperty> = emptyList(),
@@ -53,7 +58,9 @@ class JsonSchemaGeneratorTest {
     ) {
         @Serializable
         @SerialName("NestedProperty")
+        @LLMDescription("Nested property class")
         data class NestedProperty(
+            @property:LLMDescription("Nested foo property")
             val foo: String,
             val bar: Int
         )
@@ -117,9 +124,11 @@ class JsonSchemaGeneratorTest {
               "${"$"}defs": {
                 "TestClass": {
                   "type": "object",
+                  "description": "A test class",
                   "properties": {
                     "stringProperty": {
-                      "type": "string"
+                      "type": "string",
+                      "description": "A string property"
                     },
                     "intProperty": {
                       "type": "integer"
@@ -166,9 +175,11 @@ class JsonSchemaGeneratorTest {
         val expectedSchema = """
             {
               "type": "object",
+              "description": "A test class",
               "properties": {
                 "stringProperty": {
-                  "type": "string"
+                  "type": "string",
+                  "description": "A string property"
                 },
                 "intProperty": {
                   "type": "integer"
@@ -207,8 +218,7 @@ class JsonSchemaGeneratorTest {
     @Test
     fun testGenerateJsonSchemaWithDescriptions() {
         val descriptions = mapOf(
-            "TestClass" to "A test class",
-            "TestClass.stringProperty" to "A string property",
+            "TestClass" to "A test class (override)",
             "TestClass.intProperty" to "An integer property"
         )
 
@@ -221,7 +231,7 @@ class JsonSchemaGeneratorTest {
               "${"$"}defs": {
                 "TestClass": {
                   "type": "object",
-                  "description": "A test class",
+                  "description": "A test class (override)",
                   "properties": {
                     "stringProperty": {
                       "type": "string",
@@ -269,8 +279,7 @@ class JsonSchemaGeneratorTest {
     @Test
     fun testGenerateSimpleSchemaWithDescriptions() {
         val descriptions = mapOf(
-            "TestClass" to "A test class",
-            "TestClass.stringProperty" to "A string property",
+            "TestClass" to "A test class (override)",
             "TestClass.intProperty" to "An integer property"
         )
 
@@ -279,7 +288,7 @@ class JsonSchemaGeneratorTest {
         val expectedSchema = """
             {
               "type": "object",
-              "description": "A test class",
+              "description": "A test class (override)",
               "properties": {
                 "stringProperty": {
                   "type": "string",
@@ -323,11 +332,10 @@ class JsonSchemaGeneratorTest {
     @Test
     fun testJsonSchemaNestedDescriptions() {
         val descriptions = mapOf(
-            "NestedTestClass.name" to "The name",
+            "NestedTestClass.name" to "The name (override)",
             "NestedTestClass.nestedList" to "List of nested properties",
             "NestedTestClass.nestedMap" to "Map of nested properties",
 
-            "NestedProperty.foo" to "Nested foo property",
             "NestedProperty.bar" to "Nested bar property",
         )
 
@@ -340,6 +348,7 @@ class JsonSchemaGeneratorTest {
               "${"$"}defs": {
                 "NestedProperty": {
                   "type": "object",
+                  "description": "Nested property class",
                   "properties": {
                     "foo": {
                       "type": "string",
@@ -357,10 +366,11 @@ class JsonSchemaGeneratorTest {
                 },
                 "NestedTestClass": {
                   "type": "object",
+                  "description": "Nested test class",
                   "properties": {
                     "name": {
                       "type": "string",
-                      "description": "The name"
+                      "description": "The name (override)"
                     },
                     "nested": {
                       "${"$"}ref": "#/defs/NestedProperty"
@@ -397,26 +407,28 @@ class JsonSchemaGeneratorTest {
     @Test
     fun testSimpleSchemaNestedDescriptions() {
         val descriptions = mapOf(
-            "NestedTestClass.name" to "The name",
+            "NestedTestClass.name" to "The name (override)",
             "NestedTestClass.nestedList" to "List of nested properties",
             "NestedTestClass.nestedMap" to "Map of nested properties",
 
-            "NestedProperty.foo" to "Nested foo property",
             "NestedProperty.bar" to "Nested bar property",
         )
+
 
         val schema = json.encodeToString(simpleSchemaGenerator.generate("NestedTestClass", serializer<NestedTestClass>(), descriptions))
 
         val expectedDotSchema = """
             {
               "type": "object",
+              "description": "Nested test class",
               "properties": {
                 "name": {
                   "type": "string",
-                  "description": "The name"
+                  "description": "The name (override)"
                 },
                 "nested": {
                   "type": "object",
+                  "description": "Nested property class",
                   "properties": {
                     "foo": {
                       "type": "string",
@@ -436,6 +448,7 @@ class JsonSchemaGeneratorTest {
                   "type": "array",
                   "items": {
                     "type": "object",
+                    "description": "Nested property class",
                     "properties": {
                       "foo": {
                         "type": "string",
@@ -457,6 +470,7 @@ class JsonSchemaGeneratorTest {
                   "type": "object",
                   "additionalProperties": {
                     "type": "object",
+                    "description": "Nested property class",
                     "properties": {
                       "foo": {
                         "type": "string",

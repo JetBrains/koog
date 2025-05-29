@@ -1,5 +1,6 @@
 package ai.koog.prompt.structure.json
 
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.*
 import kotlinx.serialization.json.*
@@ -65,7 +66,8 @@ public class JsonSchemaGenerator(
      * Generate a JSON schema for a serializable class.
      *
      * @param serializer The serializer for the class
-     * @param descriptions Optional map of serial class names and property names to descriptions
+     * @param descriptions Optional map of serial class names and property names to descriptions.
+     * If a property/type is already described with [LLMDescription] annotation, value from the map will override this description.
      * @return A JsonObject representing the JSON schema
      */
     public fun generate(
@@ -202,8 +204,18 @@ public class JsonSchemaGenerator(
                             for (i in 0 until descriptor.elementsCount) {
                                 val propertyName = descriptor.getElementName(i)
                                 val propertyDescriptor = descriptor.getElementDescriptor(i)
+                                val propertyAnnotations = descriptor.getElementAnnotations(i)
+
+                                // Description for a property
                                 val lookupKey = "${descriptor.serialName}.$propertyName"
-                                val propertyDescription = descriptions[lookupKey]
+                                val propertyDescriptionMap = descriptions[lookupKey]
+                                val propertyDescriptionAnnotation = propertyAnnotations
+                                    .filterIsInstance<LLMDescription>()
+                                    .firstOrNull()
+                                    ?.description
+
+                                // Look at the explicit map first, then at the annotation
+                                val propertyDescription = propertyDescriptionMap ?: propertyDescriptionAnnotation
 
                                 put(
                                     propertyName,
@@ -243,7 +255,14 @@ public class JsonSchemaGenerator(
                         }
 
                         // Description for a whole type (definition)
-                        val typeDescription = descriptions[descriptor.serialName]
+                        val typeDescriptionMap = descriptions[descriptor.serialName]
+                        val typeDescriptionAnnotation = descriptor.annotations
+                            .filterIsInstance<LLMDescription>()
+                            .firstOrNull()
+                            ?.description
+
+                        // Look at the explicit map first, then at the annotation
+                        val typeDescription = typeDescriptionMap ?: typeDescriptionAnnotation
 
                         // Build type definition
                         val typeDefinition = buildJsonObject {
