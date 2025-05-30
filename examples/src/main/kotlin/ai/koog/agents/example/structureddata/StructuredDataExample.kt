@@ -205,7 +205,7 @@ fun main(): Unit = runBlocking {
         // some models don't work well with json schema, so you may try simple, but it has more limitations (no polymorphism!)
         schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
         examples = exampleForecasts,
-        schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
+        schemaType = JsonStructuredData.JsonSchemaType.FULL
     )
 
     val agentStrategy = strategy("weather-forecast") {

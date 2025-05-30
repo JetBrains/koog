@@ -67,12 +67,64 @@ public class JsonStructuredData<TStruct>(
         /**
          * Factory method to create JSON structure with auto-generated JSON schema.
          *
+         * Example usage:
+         * ```kotlin
+         * @Serializable
+         * @SerialName("LatLon")
+         * @LLMDescription("Coordinates of the location in latitude and longitude format")
+         * data class LatLon(
+         *     @LLMDescription("Latitude of the location")
+         *     val lat: Double,
+         *     @LLMDescription("Longitude of the location")
+         *     val lon: Double
+         * )
+         *
+         * @Serializable
+         * @SerialName("WeatherDatapoint")
+         * @LLMDescription("Weather datapoint for a given timestamp in the given location")
+         * data class WeatherDatapoint(
+         *     @LLMDescription("Forecast timestamp")
+         *     val timestampt: Long,
+         *     @LLMDescription("Forecast temperature in Celsius")
+         *     val temperature: Double,
+         *     @LLMDescription("Precipitation in mm/h")
+         *     val precipitation: Double,
+         * )
+         *
+         * @Serializable
+         * @SerialName("Weather")
+         * data class Weather(
+         *     @LLMDescription("Country code of the location")
+         *     val countryCode: String,
+         *     @LLMDescription("City name of the location")
+         *     val cityName: String,
+         *     @LLMDescription("Coordinates of the location")
+         *     val latLon: LatLon,
+         *     val forecast: List<WeatherDatapoint>,
+         * )
+         *
+         * val weatherStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
+         *     // some models don't work well with full json schema, so you may try simple, but it has more limitations (no polymorphism!)
+         *     schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+         *     schemaType = JsonStructuredData.JsonSchemaType.FULL,
+         *     descriptionOverrides = mapOf(
+         *         // type descriptions
+         *         "Weather" to "Weather forecast for a given location", // the class doesn't have description annotation, this will add description
+         *         "WeatherDatapoint" to "Weather data at a given time", // the class has description annotation, this will override description
+         *
+         *         // property descriptions
+         *         "Weather.forecast" to "List of forecasted weather conditions for a given location", // the property doesn't have description annotation, this will add description
+         *         "Weather.countryCode" to "Country code of the location in the ISO2 format", // the property has description annotation, this will override description
+         *     )
+         * )
+         * ```
+         *
          * @param id Unique identifier for the structure.
          * @param serializer Serializer used for converting the data to and from JSON.
          * @param json JSON configuration instance used for serialization.
          * @param schemaFormat Format of the generated schema, can be simple or detailed.
          * @param maxDepth Maximum recursion depth when generating schema to prevent infinite recursion for circular references.
-         * @param descriptions Optional map of serial class names and property names to descriptions.
+         * @param descriptionOverrides Optional map of serial class names and property names to descriptions.
          * If a property/type is already described with [LLMDescription] annotation, value from the map will override this description.
          * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
          * @param schemaType Type of JSON schema to generate, determines the level of detail in the schema.
@@ -83,12 +135,12 @@ public class JsonStructuredData<TStruct>(
             json: Json = JsonStructureLanguage.defaultJson,
             schemaFormat: JsonSchemaGenerator.SchemaFormat = JsonSchemaGenerator.SchemaFormat.Simple,
             maxDepth: Int = 20,
-            descriptions: Map<String, String> = emptyMap(),
+            descriptionOverrides: Map<String, String> = emptyMap(),
             examples: List<T> = emptyList(),
             schemaType: JsonSchemaType = JsonSchemaType.SIMPLE
         ): StructuredData<T> {
             val structureLanguage = JsonStructureLanguage(json)
-            val schema = JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, descriptions)
+            val schema = JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, descriptionOverrides)
 
             return JsonStructuredData(
                 id = id,
