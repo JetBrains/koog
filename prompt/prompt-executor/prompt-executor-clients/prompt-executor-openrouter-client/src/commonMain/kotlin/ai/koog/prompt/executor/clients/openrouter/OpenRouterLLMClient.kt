@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterToolChoice.FunctionName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -199,53 +200,15 @@ public class OpenRouterLLMClient(
             }
         }
 
-        for (message in prompt.messages) {
-            when (message) {
-                is Message.System -> {
-                    flushCalls()
-                    messages.add(
-                        OpenRouterMessage(
-                            role = "system",
-                            content = message.content
-                        )
-                    )
-                }
-
-                is Message.User -> {
-                    flushCalls()
-                    messages.add(
-                        OpenRouterMessage(
-                            role = "user",
-                            content = message.content
-                        )
-                    )
-                }
-
-                is Message.Assistant -> {
-                    flushCalls()
-                    messages.add(
-                        OpenRouterMessage(
-                            role = "assistant",
-                            content = message.content
-                        )
-                    )
-                }
-
-                is Message.Tool.Result -> {
-                    flushCalls()
-                    messages.add(
-                        OpenRouterMessage(
-                            role = "tool",
-                            content = message.content,
-                            toolCallId = message.id
-                        )
-                    )
-                }
-
-                is Message.Tool.Call -> pendingCalls += OpenRouterToolCall(
+        prompt.messages.forEach { message ->
+            if (message is Message.Tool.Call) {
+                pendingCalls += OpenRouterToolCall(
                     id = message.id ?: Uuid.random().toString(),
                     function = OpenRouterFunction(message.tool, message.content)
                 )
+            } else {
+                flushCalls()
+                messages += message.toOpenRouterMessage(model) ?: return@forEach
             }
         }
         flushCalls()
@@ -298,6 +261,75 @@ public class OpenRouterLLMClient(
             stream = stream,
             toolChoice = toolChoice,
         )
+    }
+
+    private fun Message.toOpenRouterMessage(model: LLModel): OpenRouterMessage? = when (this) {
+        is Message.System -> OpenRouterMessage(role = "system", content = Content.Text(content))
+        is Message.User -> when (val media = mediaContent) {
+            null -> OpenRouterMessage(role = "user", content = Content.Text(content))
+            is MediaContent.Image -> {
+                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    "Model ${model.id} does not support image"
+                }
+                val listOfContent = buildList {
+                    if (content.isNotEmpty()) {
+                        add(ContentPart.Text(content))
+                    }
+                    val imageUrl = if (media.isUrl()) {
+                        media.source
+                    } else {
+                        require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
+                            "Image format ${media.format} not supported"
+                        }
+                        "data:${media.getMimeType()};base64,${media.toBase64()}"
+                    }
+                    add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
+                }
+                OpenRouterMessage(role = "user", content = Content.Parts(listOfContent))
+            }
+
+            is MediaContent.Audio -> {
+                require(model.capabilities.contains(LLMCapability.Audio)) {
+                    "Model ${model.id} does not support audio"
+                }
+                val listOfContent = buildList {
+                    if (content.isNotEmpty()) {
+                        add(ContentPart.Text(content))
+                    }
+                    require(media.format in listOf("wav", "mp3")) {
+                        "Audio format ${media.format} not supported"
+                    }
+                    add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+                }
+                OpenRouterMessage(role = "user", content = Content.Parts(listOfContent))
+            }
+
+            is MediaContent.File -> {
+                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    "Model ${model.id} does not support files"
+                }
+                val listOfContent = buildList {
+                    if (content.isNotEmpty()) {
+                        add(ContentPart.Text(content))
+                    }
+                    require(media.format == "pdf") {
+                        "File format ${media.format} not supported. Supported formats: `pdf`"
+                    }
+                    val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
+                    add(ContentPart.File(ContentPart.FileData(fileData = fileData, filename = media.fileName())))
+                }
+                OpenRouterMessage(role = "user", content = Content.Parts(listOfContent))
+            }
+
+            else -> {
+                logger.warn { "Media content type not supported: $mediaContent" }
+                null
+            }
+        }
+
+        is Message.Assistant -> OpenRouterMessage(role = "assistant", content = Content.Text(content))
+        is Message.Tool.Result -> OpenRouterMessage(role = "tool", content = Content.Text(content), toolCallId = id)
+        is Message.Tool.Call -> null
     }
 
     private fun buildOpenRouterParam(param: ToolParameterDescriptor): JsonObject = buildJsonObject {
@@ -377,7 +409,7 @@ public class OpenRouterLLMClient(
             message.content != null -> {
                 listOf(
                     Message.Assistant(
-                        content = message.content,
+                        content = message.content.text(),
                         finishReason = choice.finishReason,
                         metaInfo = ResponseMetaInfo.create(
                             clock,
