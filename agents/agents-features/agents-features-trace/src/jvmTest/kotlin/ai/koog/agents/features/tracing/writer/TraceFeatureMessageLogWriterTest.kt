@@ -9,27 +9,15 @@ import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
-import ai.koog.prompt.message.RequestMetadata
-import ai.koog.prompt.message.ResponseMetadata
-import io.mockk.coEvery
-import io.mockk.mockkConstructor
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 
 class TraceFeatureMessageLogWriterTest {
 
     private val targetLogger = TestLogger("test-logger")
-
-    private val testTimestamp = Instant.parse("2023-01-01T00:00:00Z")
-
-    @BeforeTest
-    fun setMockTimestamps() {
-        mockkConstructor(RequestMetadata::class)
-        mockkConstructor(ResponseMetadata::class)
-        coEvery { anyConstructed<RequestMetadata>().timestamp } returns testTimestamp
-        coEvery { anyConstructed<ResponseMetadata>().timestamp } returns testTimestamp
-    }
 
     @AfterTest
     fun resetLogger() {
@@ -69,17 +57,22 @@ class TraceFeatureMessageLogWriterTest {
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
-                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"$testTimestamp\"}})",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\"})",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
                 "[INFO] Received feature message [event]: ${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
-                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"$testTimestamp\"}})",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\"})",
                 "[INFO] Received feature message [event]: ${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
                 "[INFO] Received feature message [event]: ${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
             )
 
             assertEquals(expectedLogMessages.size, targetLogger.messages.size)
-            assertContentEquals(expectedLogMessages, targetLogger.messages)
+            assertContentEquals(expectedLogMessages, targetLogger.messages.map {
+                it.replace(
+                    ""","metadata":\{"timestamp":"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)"\}""".toRegex(),
+                    ""
+                )
+            })
         }
     }
 

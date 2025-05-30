@@ -9,12 +9,7 @@ import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
-import ai.koog.prompt.message.RequestMetadata
-import ai.koog.prompt.message.ResponseMetadata
-import io.mockk.coEvery
-import io.mockk.mockkConstructor
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Instant
 import kotlinx.io.Sink
 import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
@@ -24,7 +19,6 @@ import java.nio.file.Path
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.pathString
 import kotlin.io.path.readLines
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -37,16 +31,6 @@ class TraceFeatureMessageFileWriterTest {
         private fun sinkOpener(path: Path): Sink {
             return SystemFileSystem.sink(path = kotlinx.io.files.Path(path.pathString)).buffered()
         }
-    }
-
-    private val testTimestamp = Instant.parse("2023-01-01T00:00:00Z")
-
-    @BeforeTest
-    fun setMockTimestamps() {
-        mockkConstructor(RequestMetadata::class)
-        mockkConstructor(ResponseMetadata::class)
-        coEvery { anyConstructed<RequestMetadata>().timestamp } returns testTimestamp
-        coEvery { anyConstructed<ResponseMetadata>().timestamp } returns testTimestamp
     }
 
     @Test
@@ -83,11 +67,11 @@ class TraceFeatureMessageFileWriterTest {
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
                 "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
                 "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"$testTimestamp\"}})",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\"})",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt)",
                 "${LLMCallWithToolsStartEvent::class.simpleName} (prompt: Test user message, tools: [dummy])",
                 "${LLMCallWithToolsEndEvent::class.simpleName} (responses: [Default test response], tools: [dummy])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\",\"metadata\":{\"timestamp\":\"$testTimestamp\"}})",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (node: test LLM call with tools, input: Test LLM call with tools prompt, output: {\"type\":\"ai.koog.prompt.message.Message.Assistant\",\"content\":\"Default test response\"})",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
                 "${AIAgentFinishedEvent::class.simpleName} (strategy name: $strategyName, result: Done)",
             )
@@ -95,7 +79,12 @@ class TraceFeatureMessageFileWriterTest {
             val actualMessages = writer.targetPath.readLines()
 
             assertEquals(expectedMessages.size, actualMessages.size)
-            assertContentEquals(expectedMessages, actualMessages)
+            assertContentEquals(expectedMessages, actualMessages.map {
+                it.replace(
+                    ""","metadata":\{"timestamp":"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z)"\}""".toRegex(),
+                    ""
+                )
+            })
         }
     }
 
