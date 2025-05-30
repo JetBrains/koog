@@ -87,6 +87,13 @@ internal sealed interface GooglePart {
     ) : GooglePart
 
     @Serializable
+    @SerialName("fileData")
+    data class FileData(
+        val fileData: GoogleData.FileData,
+        override val thought: Boolean? = null,
+    ) : GooglePart
+
+    @Serializable
     @SerialName("functionCall")
     data class FunctionCall(
         val functionCall: GoogleData.FunctionCall,
@@ -128,6 +135,12 @@ internal sealed interface GoogleData {
         val mimeType: String,
         val data: String
     ) : GoogleData
+
+    @Serializable
+    class FileData(
+        val mimeType: String,
+        val fileUri: String,
+    )
 
 
     /**
@@ -372,6 +385,7 @@ internal object GooglePartSerializer : JsonContentPolymorphicSerializer<GooglePa
         return when {
             has("text") -> GooglePart.Text.serializer()
             has("inlineData") -> GooglePart.InlineData.serializer()
+            has("fileData") -> GooglePart.FileData.serializer()
             has("functionCall") -> GooglePart.FunctionCall.serializer()
             has("functionResponse") -> GooglePart.FunctionResponse.serializer()
             else -> throw SerializationException("Unknown Part variant: $element")

@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -185,7 +186,7 @@ public open class GoogleLLMClient(
      * @return A formatted GoogleAI request
      */
     private fun createGoogleRequest(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleRequest {
-        val systemMessageParts = mutableListOf<GooglePart.Text>()
+        val (systemMessages, convMessages) = prompt.messages.partition { it is Message.System }
         val contents = mutableListOf<GoogleContent>()
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
 
@@ -196,60 +197,18 @@ public open class GoogleLLMClient(
             }
         }
 
-        for (message in prompt.messages) {
-            when (message) {
-                is Message.System -> {
-                    systemMessageParts.add(GooglePart.Text(message.content))
-                }
-
-                is Message.User -> {
-                    flushCalls()
-                    // User messages become 'user' role content
-                    contents.add(
-                        GoogleContent(
-                            role = "user",
-                            parts = listOf(GooglePart.Text(message.content))
-                        )
+        convMessages.forEach { message ->
+            if (message is Message.Tool.Call) {
+                pendingCalls += GooglePart.FunctionCall(
+                    functionCall = GoogleData.FunctionCall(
+                        id = message.id,
+                        name = message.tool,
+                        args = json.decodeFromString(message.content)
                     )
-                }
-
-                is Message.Assistant -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "model",
-                            parts = listOf(GooglePart.Text(message.content))
-                        )
-                    )
-                }
-
-                is Message.Tool.Result -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "user",
-                            parts = listOf(
-                                GooglePart.FunctionResponse(
-                                    functionResponse = GoogleData.FunctionResponse(
-                                        id = message.id,
-                                        name = message.tool,
-                                        response = buildJsonObject { put("result", message.content) }
-                                    )
-                                )
-                            )
-                        )
-                    )
-                }
-
-                is Message.Tool.Call -> {
-                    pendingCalls += GooglePart.FunctionCall(
-                        functionCall = GoogleData.FunctionCall(
-                            id = message.id,
-                            name = message.tool,
-                            args = json.decodeFromString(message.content)
-                        )
-                    )
-                }
+                )
+            } else {
+                flushCalls()
+                contents += message.toGoogleContent(model) ?: return@forEach
             }
         }
         flushCalls()
@@ -273,9 +232,9 @@ public open class GoogleLLMClient(
             .takeIf { it.isNotEmpty() }
             ?.let { declarations -> listOf(GoogleTool(functionDeclarations = declarations)) }
 
-        val googleSystemInstruction = systemMessageParts
+        val googleSystemInstruction = systemMessages
             .takeIf { it.isNotEmpty() }
-            ?.let { GoogleContent(parts = it) }
+            ?.let { GoogleContent(parts = it.map { message -> GooglePart.Text(message.content) }) }
 
         val generationConfig = GoogleGenerationConfig(
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
@@ -293,6 +252,7 @@ public open class GoogleLLMClient(
                     allowedFunctionNames = listOf(toolChoice.name)
                 )
             }
+
             null -> null
         }
 
@@ -303,6 +263,86 @@ public open class GoogleLLMClient(
             generationConfig = generationConfig,
             toolConfig = GoogleToolConfig(functionCallingConfig),
         )
+    }
+
+    private fun Message.toGoogleContent(model: LLModel): GoogleContent? = when (this) {
+        is Message.User -> when (val media = mediaContent) {
+            null -> GoogleContent(role = "user", parts = listOf(GooglePart.Text(content)))
+            is MediaContent.Image -> {
+                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    "Model ${model.id} does not support image"
+                }
+                val listOfPart = buildList {
+                    if (content.isNotEmpty()) {
+                        add(GooglePart.Text(content))
+                    }
+                    if (media.isUrl()) {
+                        throw IllegalArgumentException("URL images not supportedfor Gemini models")
+                    }
+                    require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
+                        "Image format ${media.format} not supported"
+                    }
+                    add(GooglePart.InlineData(GoogleData.Blob(mimeType = media.getMimeType(), media.toBase64())))
+                }
+                GoogleContent(role = "user", parts = listOfPart)
+            }
+
+            is MediaContent.Audio -> {
+                require(model.capabilities.contains(LLMCapability.Audio)) {
+                    "Model ${model.id} does not support audio"
+                }
+                val listOfContent = buildList {
+                    if (content.isNotEmpty()) {
+                        add(GooglePart.Text(content))
+                    }
+                    require(media.format in listOf("wav", "mp3", "aiff", "aac", "ogg", "flac")) {
+                        "Audio format ${media.format} not supported"
+                    }
+                    add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+                }
+                GoogleContent(role = "user", parts = listOfContent)
+            }
+
+            is MediaContent.File -> {
+                val listOfContent = buildList {
+                    if (content.isNotEmpty()) {
+                        add(GooglePart.Text(content))
+                    }
+                    if (media.isUrl()) {
+                        throw IllegalArgumentException("URL files not supported for Gemini models")
+                    }
+                    add(GooglePart.InlineData(GoogleData.Blob(mimeType = media.getMimeType(), data = media.toBase64())))
+                }
+                GoogleContent(role = "user", parts = listOfContent)
+            }
+
+            is MediaContent.Video -> {
+                require(model.capabilities.contains(LLMCapability.Vision.Video)) {
+                    "Model ${model.id} does not support video"
+                }
+                val listOfContent = buildList {
+                    if (content.isNotEmpty()) {
+                        add(GooglePart.Text(content))
+                    }
+                    add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+                }
+                GoogleContent(role = "user", parts = listOfContent)
+            }
+        }
+
+        is Message.Assistant -> GoogleContent(role = "model", parts = listOf(GooglePart.Text(content)))
+        is Message.Tool.Result -> GoogleContent(
+            role = "user",
+            parts = listOf(
+                GooglePart.FunctionResponse(
+                    functionResponse = GoogleData.FunctionResponse(
+                        id = id, name = tool, response = buildJsonObject { put("result", content) })
+                )
+            )
+        )
+
+        is Message.Tool.Call -> null
+        is Message.System -> null
     }
 
     /**
@@ -368,7 +408,7 @@ public open class GoogleLLMClient(
 
         val responses = parts.map { part ->
             when (part) {
-                is GooglePart.Text -> Message.Assistant(part.text, candidate.finishReason)
+                is GooglePart.Text -> Message.Assistant(part.text, finishReason = candidate.finishReason)
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     Uuid.random().toString(),
                     part.functionCall.name,
@@ -383,7 +423,7 @@ public open class GoogleLLMClient(
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
             // If no messages where returned, return an empty message and check finishReason
-            responses.isEmpty() -> listOf(Message.Assistant("", candidate.finishReason))
+            responses.isEmpty() -> listOf(Message.Assistant("", finishReason = candidate.finishReason))
             // Just return responses
             else -> responses
         }
