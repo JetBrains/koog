@@ -205,7 +205,7 @@ public open class OpenAILLMClient(
         )
 
         return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(DEFAULT_EMBEDDINGS_PATH) {
+            val response = httpClient.post(settings.embeddingsPath) {
                 setBody(request)
             }
 
