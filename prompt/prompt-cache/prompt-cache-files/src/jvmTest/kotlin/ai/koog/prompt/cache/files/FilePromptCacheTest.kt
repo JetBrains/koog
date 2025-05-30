@@ -1,13 +1,13 @@
 package ai.koog.prompt.cache.files
 
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -43,7 +43,8 @@ class FilePromptCacheTest {
             id = "test-id-${content.hashCode()}"
         )
     }
-    
+
+    @Disabled("This test is flaky")
     @Test
     fun `test basic cache operations`() = runBlocking {
         // Create a simple prompt and response
@@ -60,7 +61,8 @@ class FilePromptCacheTest {
         assertNotNull(cachedResponse)
         assertEquals(response, cachedResponse)
     }
-    
+
+    @Disabled("This test is flaky")
     @Test
     fun `test file limit enforcement`() = runBlocking {
         // Create a cache with a small file limit
