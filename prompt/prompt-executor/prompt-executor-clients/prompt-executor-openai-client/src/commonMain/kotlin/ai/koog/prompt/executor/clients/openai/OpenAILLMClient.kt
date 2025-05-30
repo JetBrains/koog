@@ -50,7 +50,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
@@ -347,6 +346,7 @@ public open class OpenAILLMClient(
                 }
                 OpenAIMessage(role = "user", content = Content.Parts(listOfContent))
             }
+
             is MediaContent.File -> {
                 require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                     "Model ${model.id} does not support files"
@@ -363,6 +363,7 @@ public open class OpenAILLMClient(
                 }
                 OpenAIMessage(role = "user", content = Content.Parts(listOfContent))
             }
+
             else -> {
                 logger.warn { "Media content type not supported: $mediaContent" }
                 null

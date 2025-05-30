@@ -37,6 +37,14 @@ internal sealed class AnthropicContent {
     data class Text(val text: String) : AnthropicContent()
 
     @Serializable
+    @SerialName("image")
+    data class Image(val source: ImageSource) : AnthropicContent()
+
+    @Serializable
+    @SerialName("document")
+    data class Document(val source: DocumentSource) : AnthropicContent()
+
+    @Serializable
     @SerialName("tool_use")
     data class ToolUse(
         val id: String,
@@ -50,6 +58,32 @@ internal sealed class AnthropicContent {
         val toolUseId: String,
         val content: String
     ) : AnthropicContent()
+}
+
+@Serializable
+internal sealed class ImageSource {
+    @Serializable
+    @SerialName("url")
+    data class Url(val url: String) : ImageSource()
+
+    @Serializable
+    @SerialName("base64")
+    data class Base64(val data: String, val mediaType: String) : ImageSource()
+}
+
+@Serializable
+internal sealed class DocumentSource {
+    @Serializable
+    @SerialName("url")
+    data class PDFUrl(val url: String) : DocumentSource()
+
+    @Serializable
+    @SerialName("base64")
+    data class PDFBase64(val data: String, val mediaType: String = "application/pdf") : DocumentSource()
+
+    @Serializable
+    @SerialName("text")
+    data class PlainText(val data: String, val mediaType: String = "text/plain") : DocumentSource()
 }
 
 @Serializable
@@ -114,7 +148,7 @@ internal data class AnthropicStreamDelta(
 
 
 @Serializable
-internal sealed interface AnthropicToolChoice{
+internal sealed interface AnthropicToolChoice {
     @Serializable
     @SerialName("auto")
     data object Auto : AnthropicToolChoice
@@ -129,5 +163,5 @@ internal sealed interface AnthropicToolChoice{
 
     @Serializable
     @SerialName("tool")
-    data class Tool(val name: String): AnthropicToolChoice
+    data class Tool(val name: String) : AnthropicToolChoice
 }
