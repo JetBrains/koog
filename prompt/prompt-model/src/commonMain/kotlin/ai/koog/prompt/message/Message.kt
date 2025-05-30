@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlinx.datetime.*
 
 
 /**
@@ -25,16 +26,25 @@ public sealed interface Message {
     public val role: Role
 
     /**
+     * Stores metadata information for the current message instance, such as token count and timestamp.
+     */
+    public val metadata: MessageMetadata
+
+    /**
      * Represents a request message in the chat.
      */
     @Serializable
-    public sealed interface Request : Message
+    public sealed interface Request : Message {
+        override val metadata: RequestMetadata
+    }
 
     /**
      * Represents a response message in the chat.
      */
     @Serializable
-    public sealed interface Response : Message
+    public sealed interface Response : Message {
+        override val metadata: ResponseMetadata
+    }
 
     /**
      * Defines the role of the message in the chat (e.g., system, user, assistant, tool).
@@ -69,7 +79,8 @@ public sealed interface Message {
      */
     @Serializable
     public data class User(
-        override val content: String
+        override val content: String,
+        override val metadata: RequestMetadata = RequestMetadata()
     ) : Request {
         override val role: Role = Role.User
     }
@@ -83,7 +94,8 @@ public sealed interface Message {
     @Serializable
     public data class Assistant(
         override val content: String,
-        val finishReason: String? = null
+        val finishReason: String? = null,
+        override val metadata: ResponseMetadata = ResponseMetadata()
     ) : Response {
         override val role: Role = Role.Assistant
     }
@@ -114,7 +126,8 @@ public sealed interface Message {
         public data class Call(
             override val id: String?,
             override val tool: String,
-            override val content: String
+            override val content: String,
+            override val metadata: ResponseMetadata = ResponseMetadata()
         ) : Tool, Response {
             override val role: Role = Role.Tool
 
@@ -137,7 +150,8 @@ public sealed interface Message {
         public data class Result(
             override val id: String?,
             override val tool: String,
-            override val content: String
+            override val content: String,
+            override val metadata: RequestMetadata = RequestMetadata()
         ) : Tool, Request {
             override val role: Role = Role.Tool
         }
@@ -150,8 +164,64 @@ public sealed interface Message {
      */
     @Serializable
     public data class System(
-        override val content: String
+        override val content: String,
+        override val metadata: RequestMetadata = RequestMetadata()
     ) : Request {
         override val role: Role = Role.System
     }
 }
+
+/**
+ * Metadata associated with a message in a chat system.
+ *
+ * @property timestamp The timestamp of when the message is created, measured in milliseconds
+ * since the Unix epoch. Defaults to the current system time.
+ */
+@Serializable
+public sealed interface MessageMetadata {
+    /**
+     * Represents the timestamp of a message
+     *
+     * This property indicates the precise time when a message was created. It defaults
+     * to the current system time if not explicitly set.
+     */
+    public val timestamp: Instant
+}
+
+/**
+ * Represents [MessageMetadata] specific to a request within the system.
+ *
+ * This class is an implementation of the [MessageMetadata] interface and provides
+ * timestamp information for a request.
+ *
+ * @property timestamp The time at which the request metadata was created.
+ * Defaults to the current system time if not provided.
+ */
+@Serializable
+public data class RequestMetadata(
+    override val timestamp: Instant = Clock.System.now()
+) : MessageMetadata
+
+/**
+ * Represents metadata associated with a response message in a chat system.
+ *
+ * This class provides details about the response, including the count of tokens
+ * used in the response and the timestamp of when the response was created.
+ * It implements the `MessageMetadata` interface, inheriting the timestamp property.
+ *
+ *
+ * Example:
+ * - Message 1: "Hello" (3 tokens) → tokensCount = 3
+ * - Message 2: "How are you?" (4 tokens) → tokensCount = 3 + 4 = 7
+ * - Message 3: "I am fine, thank you." (6 tokens) → tokensCount = 7 + 6 = 13
+ *
+ * @property tokensCount The number of tokens used in the response. This can be null
+ * if the token count is not available or not applicable.
+ * @property timestamp The timestamp indicating when the response was created.
+ * Defaults to the current system time if not explicitly set.
+ */
+@Serializable
+public data class ResponseMetadata(
+    public val tokensCount: Int? = null,
+    override val timestamp: Instant = Clock.System.now()
+) : MessageMetadata

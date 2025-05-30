@@ -124,8 +124,12 @@ public open class AIAgent(
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
+        // Environment (initially equal to the current agent), transformed by some features
+        //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
+        val preparedEnvironment = pipeline.transformEnvironment(strategy, this, this)
+
         val agentContext = AIAgentContext(
-            this,
+            preparedEnvironment,
             agentInput = agentInput,
             agentConfig,
             llm = AIAgentLLMContext(
@@ -134,7 +138,7 @@ public open class AIAgent(
                 agentConfig.prompt,
                 agentConfig.model,
                 promptExecutor = PromptExecutorProxy(promptExecutor, pipeline),
-                environment = this,
+                environment = preparedEnvironment,
                 agentConfig
             ),
             stateManager = stateManager,

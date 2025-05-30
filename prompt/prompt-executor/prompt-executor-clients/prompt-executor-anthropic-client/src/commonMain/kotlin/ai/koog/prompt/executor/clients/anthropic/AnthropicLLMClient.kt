@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetadata
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -317,17 +318,25 @@ public open class AnthropicLLMClient(
     }
 
     private fun processAnthropicResponse(response: AnthropicResponse): List<Message.Response> {
+        // Extract token count from the response
+        val tokensCount = response.usage?.let { it.inputTokens + it.outputTokens }
+
         val responses = response.content.map { content ->
             when (content) {
                 is AnthropicResponseContent.Text -> {
-                    Message.Assistant(content.text, response.stopReason)
+                    Message.Assistant(
+                        content = content.text, 
+                        finishReason = response.stopReason,
+                        metadata = ResponseMetadata(tokensCount = tokensCount)
+                    )
                 }
 
                 is AnthropicResponseContent.ToolUse -> {
                     Message.Tool.Call(
                         id = content.id,
                         tool = content.name,
-                        content = content.input.toString()
+                        content = content.input.toString(),
+                        metadata = ResponseMetadata(tokensCount = tokensCount)
                     )
                 }
             }
@@ -337,7 +346,11 @@ public open class AnthropicLLMClient(
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
             // If no messages where returned, return an empty message and check stopReason
-            responses.isEmpty() -> listOf(Message.Assistant("", response.stopReason))
+            responses.isEmpty() -> listOf(Message.Assistant(
+                content = "", 
+                finishReason = response.stopReason,
+                metadata = ResponseMetadata(tokensCount = tokensCount)
+            ))
             // Just return responses
             else -> responses
         }

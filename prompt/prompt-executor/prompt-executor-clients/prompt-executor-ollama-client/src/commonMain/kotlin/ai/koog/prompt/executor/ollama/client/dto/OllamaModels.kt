@@ -82,7 +82,9 @@ public data class OllamaChatRequestDTO(
 public data class OllamaChatResponseDTO(
     val model: String,
     val message: OllamaChatMessageDTO? = null,
-    val done: Boolean
+    val done: Boolean,
+    @SerialName("prompt_eval_count") val promptEvalCount: Int? = null,
+    @SerialName("eval_count") val evalCount: Int? = null
 )
 
 /**

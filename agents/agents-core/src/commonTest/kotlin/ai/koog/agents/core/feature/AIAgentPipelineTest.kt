@@ -8,7 +8,10 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeDoNothing
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -25,7 +28,8 @@ import kotlin.test.assertEquals
 
 class AIAgentPipelineTest {
 
-    @Test @JsName("testPipelineInterceptorsForNodeEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForNodeEvents")
     fun `test pipeline interceptors for node events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -94,10 +98,17 @@ class AIAgentPipelineTest {
             actualEvents.size,
             "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
         )
-        assertContentEquals(expectedEvents, actualEvents)
+
+        assertContentEquals(expectedEvents, actualEvents.map {
+            it.replace(
+                """, metadata=ResponseMetadata\(tokensCount=null, timestamp=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\)""".toRegex(),
+                ""
+            )
+        })
     }
 
-    @Test @JsName("testPipelineInterceptorsForToolCallEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForToolCallEvents")
     fun `test pipeline interceptors for tool call events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -142,7 +153,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForAgentCreateEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForAgentCreateEvents")
     fun `test pipeline interceptors before agent started events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -171,7 +183,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForStrategyEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForStrategyEvents")
     fun `test pipeline interceptors for strategy started events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -199,7 +212,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForStageContextEvents")
+    @Test
+    @JsName("testPipelineInterceptorsForStageContextEvents")
     fun `test pipeline interceptors for stage context events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
@@ -227,7 +241,8 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testSeveralAgentsShareOnePipeline")
+    @Test
+    @JsName("testSeveralAgentsShareOnePipeline")
     fun `test several agents share one pipeline`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()

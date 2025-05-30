@@ -19,6 +19,10 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
+
+// Example threshold
+private const val MAX_TOKENS_THRESHOLD = 1000
+
 fun main() = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
@@ -51,14 +55,14 @@ fun main() = runBlocking {
 
         edge(
             (nodeExecuteToolMultiple forwardTo nodeCompressHistory)
-                    onCondition { _ -> llm.readSession { prompt.messages.size > 100 } }
+                    onCondition { llm.readSession { prompt.latestTokenUsage > MAX_TOKENS_THRESHOLD } }
         )
 
         edge(nodeCompressHistory forwardTo nodeSendToolResultMultiple)
 
         edge(
             (nodeExecuteToolMultiple forwardTo nodeSendToolResultMultiple)
-                    onCondition { _ -> llm.readSession { prompt.messages.size <= 100 } }
+                    onCondition { llm.readSession { prompt.latestTokenUsage <= MAX_TOKENS_THRESHOLD } }
         )
 
         edge(

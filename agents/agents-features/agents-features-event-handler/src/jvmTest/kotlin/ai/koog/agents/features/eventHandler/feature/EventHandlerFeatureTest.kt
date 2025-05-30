@@ -133,7 +133,15 @@ class EventHandlerTest {
         println("EXPECTED:\n${expectedEvents.joinToString("\n")}\n\nACTUAL:\n${collectedEvents.joinToString("\n")}")
 
         assertEquals(expectedEvents.size, collectedEvents.size)
-        assertContentEquals(expectedEvents, collectedEvents)
+        assertContentEquals(expectedEvents, collectedEvents.map {
+            it.replace(
+                """, metadata=ResponseMetadata\(tokensCount=null, timestamp=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\)""".toRegex(),
+                ""
+            ).replace(
+                """, metadata=RequestMetadata\(timestamp=\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\)""".toRegex(),
+                ""
+            )
+        })
     }
 
 }

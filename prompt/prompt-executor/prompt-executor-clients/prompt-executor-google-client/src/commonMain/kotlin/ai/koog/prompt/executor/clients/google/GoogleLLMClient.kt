@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetadata
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -366,13 +367,21 @@ public open class GoogleLLMClient(
             ?.let { it to it.content?.parts.orEmpty() }
             ?: throw IllegalArgumentException("No responses found in Gemini response")
 
+        // Extract token count from the response
+        val tokensCount = response.usageMetadata?.totalTokenCount
+
         val responses = parts.map { part ->
             when (part) {
-                is GooglePart.Text -> Message.Assistant(part.text, candidate.finishReason)
+                is GooglePart.Text -> Message.Assistant(
+                    content = part.text, 
+                    finishReason = candidate.finishReason,
+                    metadata = ResponseMetadata(tokensCount = tokensCount)
+                )
                 is GooglePart.FunctionCall -> Message.Tool.Call(
-                    Uuid.random().toString(),
-                    part.functionCall.name,
-                    part.functionCall.args.toString()
+                    id = Uuid.random().toString(),
+                    tool = part.functionCall.name,
+                    content = part.functionCall.args.toString(),
+                    metadata = ResponseMetadata(tokensCount = tokensCount)
                 )
 
                 else -> error("Not supported part type: $part")
@@ -383,7 +392,11 @@ public open class GoogleLLMClient(
             // Fix the situation when the model decides to both call tools and talk
             responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
             // If no messages where returned, return an empty message and check finishReason
-            responses.isEmpty() -> listOf(Message.Assistant("", candidate.finishReason))
+            responses.isEmpty() -> listOf(Message.Assistant(
+                content = "", 
+                finishReason = candidate.finishReason,
+                metadata = ResponseMetadata(tokensCount = tokensCount)
+            ))
             // Just return responses
             else -> responses
         }

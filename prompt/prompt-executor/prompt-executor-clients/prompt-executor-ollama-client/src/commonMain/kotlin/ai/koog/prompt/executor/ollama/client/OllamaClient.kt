@@ -10,6 +10,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetadata
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -36,7 +37,7 @@ public class OllamaClient(
     private val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-): LLMClient, LLMEmbeddingProvider {
+) : LLMClient, LLMEmbeddingProvider {
 
     private val ollamaJson = Json {
         ignoreUnknownKeys = true
@@ -52,12 +53,13 @@ public class OllamaClient(
         install(HttpTimeout) {
             requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
             connectTimeoutMillis = timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis  = timeoutConfig.socketTimeoutMillis
+            socketTimeoutMillis = timeoutConfig.socketTimeoutMillis
         }
     }
 
     private val modelManager by lazy { OllamaModelManager(client, baseUrl) }
     private val modelResolver by lazy { OllamaModelResolver(modelManager) }
+
 
     override suspend fun execute(
         prompt: Prompt,
@@ -80,24 +82,55 @@ public class OllamaClient(
             )
         }.body<OllamaChatResponseDTO>()
 
-        return parseResponse(response)
+        return parseResponse(response, prompt)
     }
 
-    private fun parseResponse(response: OllamaChatResponseDTO): List<Message.Response> {
+
+    private fun parseResponse(response: OllamaChatResponseDTO, prompt: Prompt): List<Message.Response> {
         val messages = response.message ?: return emptyList()
         val content = messages.content
         val toolCalls = messages.toolCalls ?: emptyList()
 
+        // Get token counts from the response, or use null if not available
+        val promptTokenCount = response.promptEvalCount
+        val responseTokenCount = response.evalCount
+
+        // Calculate total tokens (prompt + response) if both are available
+        val totalTokensCount = when {
+            promptTokenCount != null && responseTokenCount != null -> promptTokenCount + responseTokenCount
+            promptTokenCount != null -> promptTokenCount
+            responseTokenCount != null -> responseTokenCount
+            else -> null
+        }
+
         return when {
             content.isNotEmpty() && toolCalls.isEmpty() -> {
-                listOf(Message.Assistant(content = content))
+                listOf(
+                    Message.Assistant(
+                        content = content,
+                        metadata = ResponseMetadata(tokensCount = totalTokensCount)
+                    )
+                )
             }
+
             content.isEmpty() && toolCalls.isNotEmpty() -> {
-                messages.getToolCalls()
+                messages.getToolCalls().map { toolCall ->
+                    toolCall.copy(
+                        metadata = ResponseMetadata(tokensCount = totalTokensCount)
+                    )
+                }
             }
+
             else -> {
-                val toolCallMessages = messages.getToolCalls()
-                val assistantMessage = Message.Assistant(content = content)
+                val toolCallMessages = messages.getToolCalls().map { toolCall ->
+                    toolCall.copy(
+                        metadata = ResponseMetadata(tokensCount = totalTokensCount)
+                    )
+                }
+                val assistantMessage = Message.Assistant(
+                    content = content,
+                    metadata = ResponseMetadata(tokensCount = totalTokensCount)
+                )
                 listOf(assistantMessage) + toolCallMessages
             }
         }

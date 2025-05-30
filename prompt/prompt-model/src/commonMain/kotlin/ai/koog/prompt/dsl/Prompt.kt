@@ -5,17 +5,16 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.Schema
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.serialization.Serializable
+import kotlin.time.Duration
 
 
 /**
- * Represents a structured prompt for an LLM containing a list of messages, an identifier, and optional
- * language model parameters.
+ * Represents a data structure for a prompt, consisting of a list of messages, a unique identifier,
+ * and optional parameters for language model settings.
  *
- * @property messages A list of `Message` objects representing the conversation or content
- * encapsulated by this prompt.
- * @property id A unique identifier for the prompt, which can be used for tracking or categorization.
- * @property params Configuration parameters (`LLMParams`) that control the behavior of the language model
- * when processing this prompt. Defaults to an instance of `LLMParams` with default settings.
+ * @property messages The list of [Message] objects associated with the prompt.
+ * @property id The unique identifier for the prompt.
+ * @property params The language model pa rameters associated with the prompt. Defaults to [LLMParams].
  */
 @Serializable
 public data class Prompt(
@@ -62,6 +61,36 @@ public data class Prompt(
             return PromptBuilder.from(prompt).also(init).build()
         }
     }
+
+    /**
+     * Represents the total token usage of the most recent response message in the current prompt.
+     *
+     * This value is determined by iterating through the list of `messages` within the prompt and locating
+     * the last message that is of type `Message.Response`. If found, the `tokensCount` from its metadata
+     * is returned. If no response message exists, the value defaults to 0.
+     *
+     * Useful for tracking the token count of the most recently generated LLM response in the LLM chat flow.
+     */
+    public val latestTokenUsage: Int
+        get() = messages
+            .lastOrNull { it is Message.Response }
+            ?.let { it as? Message.Response }
+            ?.metadata?.tokensCount ?: 0
+
+    /**
+     * Represents the total time spent across all messages within the prompt (measured in milliseconds)
+     *
+     * This property calculates the difference between the timestamp of the first
+     * message and the timestamp of the last message in the list of `messages`.
+     *
+     * If no messages are present, the total time spent is `0`.
+     */
+
+    public val totalTimeSpent: Duration
+        get() = when {
+            messages.isEmpty() -> Duration.ZERO
+            else -> messages.last().metadata.timestamp - messages.first().metadata.timestamp
+        }
 
     /**
      * Creates a copy of the current Prompt instance with updated messages.

@@ -22,6 +22,7 @@ kotlin {
                 api(project(":embeddings:embeddings-base"))
 
                 api(libs.ktor.client.logging)
+                api(libs.kotlinx.datetime)
                 api(libs.kotlinx.coroutines.core)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
