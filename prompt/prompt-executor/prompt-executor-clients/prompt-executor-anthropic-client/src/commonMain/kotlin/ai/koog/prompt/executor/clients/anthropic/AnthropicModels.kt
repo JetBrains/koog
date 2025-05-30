@@ -1,12 +1,5 @@
 package ai.koog.prompt.executor.clients.anthropic
 
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_3
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_3_5
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_3
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_5
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_7
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
