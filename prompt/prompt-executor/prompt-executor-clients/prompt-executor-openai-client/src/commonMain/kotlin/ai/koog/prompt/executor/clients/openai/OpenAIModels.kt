@@ -8,6 +8,29 @@ import ai.koog.prompt.llm.LLModel
 /**
  * Object containing a collection of predefined OpenAI model configurations.
  * These models span various use cases, including reasoning, chat, and cost-optimized tasks.
+ *
+ * Note: All models with vision (image) capabilities also support sending PDF files.
+ *
+ * | Name                                | Speed     | Price              | Input              | Output             |
+ * |-------------------------------------|-----------|--------------------|--------------------|--------------------|
+ * | [Reasoning.GPT4oMini]               | Medium    | $1.1-$4.4          | Text, Image, Tools | Text, Tools        |
+ * | [Reasoning.O3Mini]                  | Medium    | $1.1-$4.4          | Text, Tools        | Text, Tools        |
+ * | [Reasoning.O1Mini]                  | Slow      | $1.1-$4.4          | Text               | Text               |
+ * | [Reasoning.O3]                      | Slowest   | $10-$40            | Text, Image, Tools | Text, Tools        |
+ * | [Reasoning.O1]                      | Slowest   | $15-$60            | Text, Image, Tools | Text, Tools        |
+ * | [Chat.GPT4o]                        | Medium    | $2.5-$10           | Text, Image, Tools | Text, Tools        |
+ * | [Chat.GPT4_1]                       | Medium    | $2-$8              | Text, Image, Tools | Text, Tools        |
+ * | [Audio.GPT4oMiniAudio]              | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools | Text, Audio, Tools |
+ * | [Audio.GPT4oAudio]                  | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools | Text, Audio, Tools |
+ * | [CostOptimized.O4Mini]              | Medium    | $1.1-$4.4          | Text, Image, Tools | Text, Tools        |
+ * | [CostOptimized.GPT4_1Nano]          | Very fast | $0.1-$0.4          | Text, Image, Tools | Text, Tools        |
+ * | [CostOptimized.GPT4_1Mini]          | Fast      | $0.4-$1.6          | Text, Image, Tools | Text, Tools        |
+ * | [CostOptimized.GPT4oMini]           | Fast      | $0.15-$0.6         | Text, Image, Tools | Text, Tools        |
+ * | [CostOptimized.O1Mini]              | Slow      | $1.1-$4.4          | Text               | Text               |
+ * | [CostOptimized.O3Mini]              | Medium    | $1.1-$4.4          | Text, Tools        | Text, Tools        |
+ * | [Embeddings.TextEmbeddingAda3Small] | Medium    | $0.02              | Text               | Text               |
+ * | [Embeddings.TextEmbeddingAda3Large] | Slow      | $0.13              | Text               | Text               |
+ * | [Embeddings.TextEmbeddingAda002]    | Slow      | $0.1               | Text               | Text               |
  */
 public object OpenAIModels: LLModelDefinitions {
     // TODO: support thinking tokens
@@ -30,7 +53,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4oMini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4o-mini", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
             )
         )
 
@@ -50,7 +73,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val O3Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o3-mini", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Schema.JSON.Full, LLMCapability.Completion
             )
         )
 
@@ -69,8 +92,7 @@ public object OpenAIModels: LLModelDefinitions {
          */
         public val O1Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o1-mini", capabilities = listOf(
-                LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Speculation, LLMCapability.Schema.JSON.Full, LLMCapability.Completion
             )
         )
 
@@ -90,7 +112,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val O3: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o3", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion
             )
         )
 
@@ -109,7 +131,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val O1: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o1", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion
             )
         )
     }
@@ -136,7 +158,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4o: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4o", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.ToolChoice, LLMCapability.Schema.JSON.Full,
-                LLMCapability.Speculation, LLMCapability.Tools, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Speculation, LLMCapability.Tools, LLMCapability.Vision.Image, LLMCapability.Completion
             )
         )
 
@@ -154,7 +176,43 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4_1: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
+            )
+        )
+    }
+
+    public object Audio {
+        /**
+         * GPT-4o mini Audio is a smaller,
+         * more affordable version of `GPT-4o Audio` that maintains high quality while being more cost-effective.
+         * It's designed to input audio or create audio outputs.
+         *
+         * 128,000 context window
+         * 16,384 max output tokens
+         * Oct 01, 2023 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini-audio-preview">
+         */
+        public val GPT4oMiniAudio: LLModel = LLModel(
+            provider = LLMProvider.OpenAI, id = "gpt-4o-mini-audio-preview", capabilities = listOf(
+                LLMCapability.Temperature, LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice,
+                LLMCapability.Audio
+            )
+        )
+
+        /**
+         * GPT-4o Audio is a model designed to input audio or create audio outputs.
+         *
+         * 128,000 context window
+         * 16,384 max output tokens
+         * Oct 01, 2023 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-audio-preview">
+         */
+        public val GPT4oAudio: LLModel = LLModel(
+            provider = LLMProvider.OpenAI, id = "gpt-4o-audio-preview", capabilities = listOf(
+                LLMCapability.Temperature, LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice,
+                LLMCapability.Audio
             )
         )
     }
@@ -181,7 +239,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val O4Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o4-mini", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
             )
         )
 
@@ -198,7 +256,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4_1Nano: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1-nano", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
             )
         )
 
@@ -216,7 +274,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4_1Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1-mini", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
             )
         )
 
