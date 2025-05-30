@@ -31,6 +31,7 @@ public class MessageTokenizerConfig : FeatureConfig() {
      * resource usage or request limits.
      */
     public var tokenizer: Tokenizer = NoTokenizer()
+
     /**
      * Indicates whether caching is enabled for tokenization processes.
      *
@@ -55,7 +56,7 @@ public interface PromptTokenizer {
      * @param message The message for which the token count should be determined.
      * @return The number of tokens required to encode the message.
      */
-    public fun tokensFor(message: Message): Int
+    public fun tokenCountFor(message: Message): Int
 
     /**
      * Calculates the total number of tokens spent in a given prompt.
@@ -63,7 +64,7 @@ public interface PromptTokenizer {
      * @param prompt The prompt for which the total tokens spent need to be calculated.
      * @return The total number of tokens spent as an integer.
      */
-    public fun totalTokensSpent(prompt: Prompt): Int
+    public fun tokenCountFor(prompt: Prompt): Int
 }
 
 /**
@@ -85,7 +86,7 @@ public class OnDemandTokenizer(private val tokenizer: Tokenizer) : PromptTokeniz
      *                The content of the message is analyzed to estimate the token count.
      * @return The estimated number of tokens in the message content.
      */
-    public override fun tokensFor(message: Message): Int = tokenizer.countTokens(message.content)
+    public override fun tokenCountFor(message: Message): Int = tokenizer.countTokens(message.content)
 
     /**
      * Calculates the total number of tokens spent for the given prompt based on its messages.
@@ -93,7 +94,7 @@ public class OnDemandTokenizer(private val tokenizer: Tokenizer) : PromptTokeniz
      * @param prompt The `Prompt` instance containing the list of messages for which the total token count will be calculated.
      * @return The total number of tokens across all messages in the prompt.
      */
-    public override fun totalTokensSpent(prompt: Prompt): Int = prompt.messages.sumOf(::tokensFor)
+    public override fun tokenCountFor(prompt: Prompt): Int = prompt.messages.sumOf(::tokenCountFor)
 }
 
 /**
@@ -115,7 +116,7 @@ public class CachingTokenizer(private val tokenizer: Tokenizer) : PromptTokenize
      * Token counts are computed lazily and stored in the cache when requested via the `tokensFor`
      * method. This cache can be cleared using the `clearCache` method.
      */
-    private val cache = mutableMapOf<Message, Int>()
+    internal val cache = mutableMapOf<Message, Int>()
 
     /**
      * Retrieves the number of tokens contained in the content of the given message.
@@ -125,7 +126,7 @@ public class CachingTokenizer(private val tokenizer: Tokenizer) : PromptTokenize
      * @param message The message whose content's token count is to be retrieved
      * @return The number of tokens in the content of the message
      */
-    public override fun tokensFor(message: Message): Int = cache.getOrPut(message) {
+    public override fun tokenCountFor(message: Message): Int = cache.getOrPut(message) {
         tokenizer.countTokens(message.content)
     }
 
@@ -136,7 +137,7 @@ public class CachingTokenizer(private val tokenizer: Tokenizer) : PromptTokenize
      * @param prompt The prompt containing the list of messages whose token usage will be calculated.
      * @return The total number of tokens spent across all messages in the provided prompt.
      */
-    public override fun totalTokensSpent(prompt: Prompt): Int = prompt.messages.sumOf(::tokensFor)
+    public override fun tokenCountFor(prompt: Prompt): Int = prompt.messages.sumOf(::tokenCountFor)
 
     /**
      * Clears all cached token counts from the internal cache.
@@ -218,4 +219,4 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
  *
  * Throws an exception if the `MessageTokenizer.Feature` is not available in the context.
  */
-public val AIAgentContextBase.tokenizer: PromptTokenizer get() = feature(MessageTokenizer.Feature)!!.promptTokenizer
+public val AIAgentContextBase.tokenizer: PromptTokenizer get() = featureOrThrow(MessageTokenizer.Feature).promptTokenizer

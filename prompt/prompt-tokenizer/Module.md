@@ -12,7 +12,8 @@ The prompt-tokenizer module offers tools for estimating the number of tokens in 
   - `RegexBasedTokenizer`: A simple implementation that provides reasonable approximations for most LLMs
   - `TiktokenEncoder`: An advanced implementation based on OpenAI's tiktoken library, using byte pair encoding (BPE) for more accurate token counting
 
-This module is particularly useful for LLMs like Ollama that don't provide token counts in their responses, requiring client-side estimation.
+This module is particularly useful for LLMs that don't provide token counts in their responses, requiring client-side estimation.
+Also it's allowing to provide more fine-grained token usage estimation for each single request message in the prompt.
 
 ### Example of usage
 

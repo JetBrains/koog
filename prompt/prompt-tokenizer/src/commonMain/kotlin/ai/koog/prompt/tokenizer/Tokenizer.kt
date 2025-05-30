@@ -4,9 +4,10 @@ package ai.koog.prompt.tokenizer
  * Interface for tokenizing text and counting tokens.
  * 
  * Tokenizers are used to estimate the number of tokens in a text string.
- * This is particularly useful for LLMs like Ollama that don't provide token counts
- * in their responses, requiring client-side estimation.
- * 
+ * This is particularly useful for LLMs that don't provide token counts
+ * in their responses, requiring client-side estimation, or if you want to have
+ * more fine-grained tokens estimation for each request message in the prompt.
+ *
  * Different implementations can provide varying levels of accuracy and performance.
  * You can implement your own tokenizer and easily integrate it with Koog.
  */

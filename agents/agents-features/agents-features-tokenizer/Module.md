@@ -45,7 +45,7 @@ val myStrategy = strategy("token-aware-strategy") {
     val checkTokens by node<String, String> {
         // Access the tokenizer through the LLM context
         val totalTokens = llm.readSession {
-            tokenizer.totalTokensSpent(prompt)
+            tokenizer.tokenCountFor(prompt)
         }
 
         // Use token information in your strategy
@@ -71,13 +71,13 @@ val myPrompt = prompt("example-prompt") {
 }
 
 // Count tokens in the entire prompt
-val totalTokens = tokenizer.totalTokensSpent(myPrompt)
+val totalTokens = tokenizer.tokenCountFor(myPrompt)
 println("Total tokens in prompt: $totalTokens")
 
 // Count tokens for individual messages
-val systemTokens = tokenizer.tokensFor(Message.System("You are a helpful assistant."))
-val userTokens = tokenizer.tokensFor(Message.User("What is the capital of France?"))
-val assistantTokens = tokenizer.tokensFor(Message.Assistant("Paris is the capital of France."))
+val systemTokens = tokenizer.tokenCountFor(Message.System("You are a helpful assistant."))
+val userTokens = tokenizer.tokenCountFor(Message.User("What is the capital of France?"))
+val assistantTokens = tokenizer.tokenCountFor(Message.Assistant("Paris is the capital of France."))
 
 println("System message tokens: $systemTokens")
 println("User message tokens: $userTokens")

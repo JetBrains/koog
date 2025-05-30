@@ -203,18 +203,22 @@ public data class RequestMetadata(
 ) : MessageMetadata
 
 /**
- * Represents [MessageMetadata] for a response message.
+ * Represents metadata associated with a response message in a chat system.
  *
- * @property tokensCount The total count of tokens used by the time this response message is returned by the LLM.
- *                       This includes the tokens for the entire chat history up to and including this message,
- *                       not just the tokens for the current message.
- * @constructor Creates an instance of `ResponseMessageMetadata` with the specified total token count.
- *              Optionally, a custom timestamp can be provided; otherwise, the current system time is used.
+ * This class provides details about the response, including the count of tokens
+ * used in the response and the timestamp of when the response was created.
+ * It implements the `MessageMetadata` interface, inheriting the timestamp property.
+ *
  *
  * Example:
  * - Message 1: "Hello" (3 tokens) → tokensCount = 3
  * - Message 2: "How are you?" (4 tokens) → tokensCount = 3 + 4 = 7
  * - Message 3: "I am fine, thank you." (6 tokens) → tokensCount = 7 + 6 = 13
+ *
+ * @property tokensCount The number of tokens used in the response. This can be null
+ * if the token count is not available or not applicable.
+ * @property timestamp The timestamp indicating when the response was created.
+ * Defaults to the current system time if not explicitly set.
  */
 @Serializable
 public data class ResponseMetadata(

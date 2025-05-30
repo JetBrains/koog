@@ -9,7 +9,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
@@ -66,29 +65,13 @@ class MessageTokenizerTest {
         }
     }
 
-    /**
-     * A simple implementation of PromptTokenizer for testing.
-     * This is similar to the OnDemandTokenizer in the main code.
-     */
-    class TestPromptTokenizer(private val tokenizer: Tokenizer) {
-        /**
-         * Counts tokens for a single message.
-         */
-        fun tokensFor(message: Message): Int = tokenizer.countTokens(message.content)
-
-        /**
-         * Counts total tokens for all messages in a prompt.
-         */
-        fun totalTokensSpent(prompt: Prompt): Int = prompt.messages.sumOf { tokensFor(it) }
-    }
-
     @Test
-    fun testTokenizerFeature() = runTest {
+    fun testPromptTokenizer() = runTest {
         // Create a mock tokenizer to track token usage
         val mockTokenizer = MockTokenizer()
 
         // Create a prompt tokenizer with our mock tokenizer
-        val promptTokenizer = TestPromptTokenizer(mockTokenizer)
+        val promptTokenizer = OnDemandTokenizer(mockTokenizer)
 
         // Create a prompt with some messages
         val testPrompt = prompt("test-prompt") {
@@ -98,7 +81,7 @@ class MessageTokenizerTest {
         }
 
         // Count tokens in the prompt
-        val totalTokens = promptTokenizer.totalTokensSpent(testPrompt)
+        val totalTokens = promptTokenizer.tokenCountFor(testPrompt)
 
         // Verify that tokens were counted
         assertTrue(totalTokens > 0, "Total tokens should be greater than 0")
@@ -113,9 +96,9 @@ class MessageTokenizerTest {
         println("[DEBUG_LOG] Total tokens spent: ${mockTokenizer.totalTokens}")
 
         // Count tokens for individual messages
-        val systemTokens = promptTokenizer.tokensFor(Message.System("You are a helpful assistant."))
-        val userTokens = promptTokenizer.tokensFor(Message.User("What is the capital of France?"))
-        val assistantTokens = promptTokenizer.tokensFor(Message.Assistant("Paris is the capital of France."))
+        val systemTokens = promptTokenizer.tokenCountFor(Message.System("You are a helpful assistant."))
+        val userTokens = promptTokenizer.tokenCountFor(Message.User("What is the capital of France?"))
+        val assistantTokens = promptTokenizer.tokenCountFor(Message.Assistant("Paris is the capital of France."))
 
         // Print token counts for each message
         println("[DEBUG_LOG] System message tokens: $systemTokens")
@@ -125,6 +108,33 @@ class MessageTokenizerTest {
         // Verify that the sum of individual message tokens equals the total
         val sumOfMessageTokens = systemTokens + userTokens + assistantTokens
         assertEquals(sumOfMessageTokens, totalTokens, "Sum of message tokens should equal total tokens")
+    }
+
+    @Test
+    fun testCachingPromptTokenizer() = runTest {
+        // Create a mock tokenizer to track token usage
+        val mockTokenizer = MockTokenizer()
+
+        // Create a prompt tokenizer with our mock tokenizer
+        val promptTokenizer = CachingTokenizer(mockTokenizer)
+
+        // Create a prompt with some messages
+        val testPrompt = prompt("test-prompt") {
+            system("You are a helpful assistant.")
+            user("What is the capital of France?")
+            assistant("Paris is the capital of France.")
+        }
+
+        assertEquals(0, promptTokenizer.cache.size)
+        promptTokenizer.tokenCountFor(testPrompt)
+        assertEquals(3, promptTokenizer.cache.size)
+        promptTokenizer.clearCache()
+        assertEquals(0, promptTokenizer.cache.size)
+        promptTokenizer.tokenCountFor(testPrompt.messages[1])
+        promptTokenizer.tokenCountFor(testPrompt.messages[2])
+        assertEquals(2, promptTokenizer.cache.size)
+        promptTokenizer.tokenCountFor(testPrompt)
+        assertEquals(3, promptTokenizer.cache.size)
     }
 
     @Test
@@ -154,7 +164,7 @@ class MessageTokenizerTest {
 
             val checkTokens by node<String, String> {
                 val totalTokens = llm.readSession {
-                    tokenizer.totalTokensSpent(prompt)
+                    tokenizer.tokenCountFor(prompt)
                 }
 
                 "Total tokens: $totalTokens"
