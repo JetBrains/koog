@@ -64,20 +64,12 @@ public data class Prompt(
     }
 
     /**
-     * Creates a copy of the current Prompt instance with updated messages.
+     * Creates a copy of the `Prompt` with updated messages, allowing to modify the existing list of messages or provide a new one.
      *
-     * @param newMessages A list of Message instances that will replace the current messages in the Prompt.
-     * @return A new Prompt instance with the updated list of messages.
-     */
-    public fun withMessages(newMessages: List<Message>): Prompt = copy(messages = newMessages)
-
-    /**
-     * Creates a copy of the `Prompt` with updated messages, allowing modifications to the current messages.
-     *
-     * @param update A lambda function that returns the updated list of messages.
+     * @param update A lambda function that returns the new list of messages.
      * @return A new `Prompt` instance with the modified list of messages.
      */
-    public fun withUpdatedMessages(update: List<Message>.() -> List<Message>): Prompt =
+    public fun withMessages(update: (List<Message>) -> List<Message>): Prompt =
         this.copy(messages = update(this.messages))
 
     /**

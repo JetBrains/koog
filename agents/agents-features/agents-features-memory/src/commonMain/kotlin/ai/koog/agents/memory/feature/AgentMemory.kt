@@ -490,7 +490,7 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     // Remove the fact extraction messages if not preserving them
     if (!preserveQuestionsInLLMChat) {
         rewritePrompt { oldPrompt ->
-            oldPrompt.withUpdatedMessages { dropLast(2) }
+            oldPrompt.withMessages { it.dropLast(2) }
         }
     }
     return facts

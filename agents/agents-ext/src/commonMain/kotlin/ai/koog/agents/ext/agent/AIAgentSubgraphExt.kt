@@ -6,7 +6,6 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegateBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.dsl.extension.onToolNotCalled
@@ -32,7 +31,7 @@ internal suspend fun AIAgentContextBase.promptWithTLDR(
         if (shouldTLDRHistory) replaceHistoryWithTLDR()
         rewritePrompt { prompt ->
             prompt
-                .withUpdatedMessages { filterNot { it is Message.System } }
+                .withMessages { messages -> messages.filterNot { it is Message.System } }
                 .withParams(params ?: prompt.params)
         }
         if (model != null) changeModel(model)

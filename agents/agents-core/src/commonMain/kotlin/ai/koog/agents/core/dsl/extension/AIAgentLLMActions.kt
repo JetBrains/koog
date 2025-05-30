@@ -4,11 +4,11 @@ import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.prompt.params.LLMParams
 
 public fun AIAgentLLMWriteSession.clearHistory() {
-    prompt = prompt.withMessages(emptyList())
+    prompt = prompt.withMessages { emptyList() }
 }
 
 public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
-    prompt = prompt.withUpdatedMessages { takeLast(n) }
+    prompt = prompt.withMessages { it.takeLast(n) }
 }
 
 /**
