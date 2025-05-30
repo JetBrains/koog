@@ -305,7 +305,6 @@ public open class OpenAILLMClient(
         )
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
     private fun Message.toOpenAIMessage(model: LLModel): OpenAIMessage? = when (this) {
         is Message.System -> OpenAIMessage(role = "system", content = Content.Text(content))
         is Message.User -> when (val media = mediaContent) {

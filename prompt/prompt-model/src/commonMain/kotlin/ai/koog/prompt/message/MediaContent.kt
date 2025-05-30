@@ -27,6 +27,8 @@ public sealed class MediaContent {
      */
     public abstract val format: String?
 
+    public abstract fun getMimeType(): String
+
     /**
      * Converts the media content to base64 encoded string.
      * @return Base64 encoded representation of the content.
@@ -65,7 +67,7 @@ public sealed class MediaContent {
          * Gets the MIME type based on the image format.
          * @return MIME type string for the image format.
          */
-        public fun getMimeType(): String = when (format) {
+        public override fun getMimeType(): String = when (format) {
             "png" -> "image/png"
             "jpeg", "jpg" -> "image/jpeg"
             "webp" -> "image/webp"
@@ -88,6 +90,8 @@ public sealed class MediaContent {
      */
     @Serializable
     public class Video(public val data: ByteArray, public override val format: String) : MediaContent() {
+        public override fun getMimeType(): String = "video/$format"
+
         override fun toBase64(): String = Base64.encode(data)
     }
 
@@ -98,6 +102,8 @@ public sealed class MediaContent {
      */
     @Serializable
     public class Audio(public val data: ByteArray, public override val format: String) : MediaContent() {
+        public override fun getMimeType(): String = "audio/$format"
+
         public override fun toBase64(): String = Base64.encode(data)
     }
 
@@ -134,7 +140,7 @@ public sealed class MediaContent {
          * Gets the MIME type based on the file format.
          * @return MIME type string for the file format.
          */
-        public fun getMimeType(): String = when (format) {
+        public override fun getMimeType(): String = when (format) {
             "pdf" -> "application/pdf"
             "js" -> "application/x-javascript"
             "py" -> "application/x-python"
