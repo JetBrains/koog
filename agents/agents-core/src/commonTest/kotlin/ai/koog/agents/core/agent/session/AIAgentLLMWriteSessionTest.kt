@@ -1,0 +1,356 @@
+package ai.koog.agents.core.agent.session
+
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
+import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+@OptIn(InternalAgentToolsApi::class)
+class AIAgentLLMWriteSessionTest {
+
+    private object TestToolsEnabler : DirectToolCallsEnabler
+
+    private class TestEnvironment(private val toolRegistry: ToolRegistry) : AIAgentEnvironment {
+        @OptIn(InternalAgentToolsApi::class)
+        override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
+            return toolCalls.map { toolCall ->
+                val tool = toolRegistry.getTool(toolCall.tool)
+                val args = tool.decodeArgsFromString(toolCall.content)
+                val result = tool.executeUnsafe(args, TestToolsEnabler)
+
+                ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    content = tool.encodeResultToStringUnsafe(result),
+                    result = result
+                )
+            }
+        }
+
+        override suspend fun reportProblem(exception: Throwable) {
+            throw exception
+        }
+
+        override suspend fun sendTermination(result: String?) {
+            // No-op for testing
+        }
+    }
+
+    class TestTool : SimpleTool<TestTool.Args>() {
+        @Serializable
+        data class Args(val input: String) : Tool.Args
+
+        override val argsSerializer: KSerializer<Args> = Args.serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "input",
+                    description = "Input parameter",
+                    type = ToolParameterType.String
+                )
+            )
+        )
+
+        override suspend fun doExecute(args: Args): String {
+            return "Processed: ${args.input}"
+        }
+    }
+
+    class CustomTool : Tool<CustomTool.Args, CustomTool.Result>() {
+        @Serializable
+        data class Args(val input: String) : Tool.Args
+
+        data class Result(val output: String) : ToolResult {
+            override fun toStringDefault(): String = output
+        }
+
+        override val argsSerializer: KSerializer<Args> = Args.serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "custom-tool",
+            description = "A custom tool",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "input",
+                    description = "Input parameter",
+                    type = ToolParameterType.String
+                )
+            )
+        )
+
+        override suspend fun execute(args: Args): Result {
+            return Result("Custom processed: ${args.input}")
+        }
+
+        override fun encodeResultToString(result: Result): String {
+            return """{"output":"${result.output}"}"""
+        }
+    }
+
+    private fun createConversationPrompt(id: String = "test-conversation"): Prompt {
+        return prompt(id) {
+            system("You are a helpful AI assistant that can use tools to accomplish tasks.")
+            user("I need help analyzing some data.")
+            assistant("I'd be happy to help you analyze your data. What kind of data are we working with?")
+            user("I have some text that needs processing.")
+            assistant("I'll use the test-tool to process your text.")
+            tool {
+                call(Message.Tool.Call("call_1", "test-tool", """{"input":"sample data"}"""))
+                result(Message.Tool.Result("call_1", "test-tool", "Processed: sample data"))
+            }
+            assistant("I've processed your sample data. The result was: Processed: sample data. Would you like me to do anything else with it?")
+            user("Can you also use the custom tool to process this data?")
+            assistant("Sure, I'll use the custom tool for additional processing.")
+            tool {
+                call(Message.Tool.Call("call_2", "custom-tool", """{"input":"additional processing"}"""))
+                result(Message.Tool.Result("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}"""))
+            }
+            assistant("I've completed the additional processing. The custom tool returned: Custom processed: additional processing")
+        }
+    }
+
+    private fun createSession(
+        executor: PromptExecutor,
+        tools: List<Tool<*, *>> = listOf(TestTool(), CustomTool()),
+        prompt: Prompt = createConversationPrompt(),
+        model: LLModel = OllamaModels.Meta.LLAMA_3_2
+    ): AIAgentLLMWriteSession {
+        val toolRegistry = ToolRegistry {
+            tools.forEach { tool(it) }
+        }
+
+        val toolDescriptors = tools.map { it.descriptor }
+        val environment = TestEnvironment(toolRegistry)
+        val config = AIAgentConfig(
+            prompt = prompt,
+            model = model,
+            maxAgentIterations = 10
+        )
+
+        return AIAgentLLMWriteSession(
+            environment = environment,
+            executor = executor,
+            tools = toolDescriptors,
+            toolRegistry = toolRegistry,
+            prompt = prompt,
+            model = model,
+            config = config
+        )
+    }
+
+    @Test
+    fun testRequestLLM() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("This is a test response").asDefaultResponse
+        }
+
+        val session = createSession(mockExecutor)
+        val initialMessageCount = session.prompt.messages.size
+
+        val response = session.requestLLM()
+
+        assertEquals("This is a test response", response.content)
+        assertEquals(initialMessageCount + 1, session.prompt.messages.size)
+        assertEquals(Message.Assistant("This is a test response"), session.prompt.messages.last())
+    }
+
+    @Test
+    fun testRequestLLMWithoutTools() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Response without tools").asDefaultResponse
+        }
+
+        val session = createSession(mockExecutor)
+        val initialMessageCount = session.prompt.messages.size
+
+        val response = session.requestLLMWithoutTools()
+
+        assertEquals("Response without tools", response.content)
+        assertEquals(initialMessageCount + 1, session.prompt.messages.size)
+        assertEquals(Message.Assistant("Response without tools"), session.prompt.messages.last())
+    }
+
+    @Test
+    fun testCallTool() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Tool response").asDefaultResponse
+        }
+
+        val testTool = TestTool()
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val result = session.callTool(testTool, TestTool.Args("test input"))
+
+        assertTrue(result.isSuccessful())
+        assertEquals("Processed: test input", result.asSuccessful().result.text)
+    }
+
+    @Test
+    fun testCallToolByName() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Tool response").asDefaultResponse
+        }
+
+        val testTool = TestTool()
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val result = session.callTool("test-tool", TestTool.Args("test input"))
+
+        assertTrue(result.isSuccessful())
+        assertEquals("Processed: test input", (result.asSuccessful().result as ToolResult.Text).text)
+    }
+
+    @Test
+    fun testCallToolRaw() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Tool response").asDefaultResponse
+        }
+
+        val testTool = TestTool()
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val result = session.callToolRaw("test-tool", TestTool.Args("test input"))
+
+        assertEquals("Processed: test input", result)
+    }
+
+    @Test
+    fun testFindTool() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Tool response").asDefaultResponse
+        }
+
+        val testTool = TestTool()
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val safeTool = session.findTool<TestTool.Args, ToolResult.Text>(TestTool::class)
+        assertNotNull(safeTool)
+
+        val result = safeTool.execute(TestTool.Args("test input"))
+        assertTrue(result.isSuccessful())
+        assertEquals("Processed: test input", result.asSuccessful().result.text)
+    }
+
+    @Test
+    fun testCustomTool() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Custom tool response").asDefaultResponse
+        }
+
+        val customTool = CustomTool()
+        val session = createSession(mockExecutor, listOf(customTool))
+
+        val result = session.callTool(customTool, CustomTool.Args("test input"))
+
+        assertTrue(result.isSuccessful())
+        assertEquals("Custom processed: test input", result.asSuccessful().result.output)
+    }
+
+    @Test
+    fun testUpdatePrompt() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Updated prompt response").asDefaultResponse
+        }
+
+        val initialPrompt = prompt("test") { 
+            system("Initial system message")
+            user("Initial user message")
+        }
+
+        val session = createSession(mockExecutor, prompt = initialPrompt)
+
+        session.updatePrompt {
+            user("Additional user message")
+        }
+
+        assertEquals(3, session.prompt.messages.size)
+        assertEquals(Message.System("Initial system message"), session.prompt.messages[0])
+        assertEquals(Message.User("Initial user message"), session.prompt.messages[1])
+        assertEquals(Message.User("Additional user message"), session.prompt.messages[2])
+
+        val response = session.requestLLM()
+        assertEquals("Updated prompt response", response.content)
+    }
+
+    @Test
+    fun testRewritePrompt() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Rewritten prompt response").asDefaultResponse
+        }
+
+        val initialPrompt = prompt("test") { 
+            system("Initial system message")
+            user("Initial user message")
+        }
+
+        val session = createSession(mockExecutor, prompt = initialPrompt)
+
+        session.rewritePrompt { oldPrompt ->
+            prompt("rewritten") {
+                system("Rewritten system message")
+                user("Rewritten user message")
+            }
+        }
+
+        assertEquals(2, session.prompt.messages.size)
+        assertEquals(Message.System("Rewritten system message"), session.prompt.messages[0])
+        assertEquals(Message.User("Rewritten user message"), session.prompt.messages[1])
+
+        val response = session.requestLLM()
+        assertEquals("Rewritten prompt response", response.content)
+    }
+
+    @Test
+    fun testChangeModel() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Changed model response").asDefaultResponse
+        }
+
+        val initialModel = OllamaModels.Meta.LLAMA_3_2
+        val newModel = OllamaModels.Meta.LLAMA_4
+
+        val session = createSession(mockExecutor, model = initialModel)
+        assertEquals(initialModel, session.model)
+
+        session.changeModel(newModel)
+        assertEquals(newModel, session.model)
+
+        val response = session.requestLLM()
+        assertEquals("Changed model response", response.content)
+    }
+
+    @Test
+    fun testChangeLLMParams() = runTest {
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer("Changed params response").asDefaultResponse
+        }
+
+        val session = createSession(mockExecutor)
+
+        session.changeLLMParams(LLMParams(temperature = 0.5))
+        assertEquals(0.5, session.prompt.params.temperature)
+
+        val response = session.requestLLM()
+        assertEquals("Changed params response", response.content)
+    }
+}
