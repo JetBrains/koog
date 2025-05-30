@@ -23,19 +23,24 @@ object Models {
             OpenAIModels.CostOptimized.O4Mini,
             OpenAIModels.CostOptimized.GPT4_1Nano,
             OpenAIModels.CostOptimized.GPT4_1Mini,
+
+            OpenAIModels.Audio.GPT4oMiniAudio,
+            OpenAIModels.Audio.GPT4oAudio,
         )
     }
 
     @JvmStatic
     fun anthropicModels(): Stream<LLModel> {
         return Stream.of(
-            AnthropicModels.Opus,
+            AnthropicModels.Opus_3,
+            AnthropicModels.Opus_4,
 
             AnthropicModels.Haiku_3,
             AnthropicModels.Haiku_3_5,
 
             AnthropicModels.Sonnet_3_5,
             AnthropicModels.Sonnet_3_7,
+            AnthropicModels.Sonnet_4,
         )
     }
 

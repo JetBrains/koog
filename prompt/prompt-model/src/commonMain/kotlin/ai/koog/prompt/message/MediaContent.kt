@@ -6,6 +6,7 @@ import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
 import kotlinx.io.readByteArray
+import kotlinx.io.readString
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlin.io.encoding.Base64
@@ -118,10 +119,16 @@ public sealed class MediaContent {
 
         private val fileSource: FileSource by lazy {
             when {
-                source.matches(urlRegex) -> error("Cannot use URL for file. Download the file first.")
+                source.matches(urlRegex) -> FileSource.Url(source)
                 else -> FileSource.LocalPath(source)
             }
         }
+
+        /**
+         * Checks if the file source is a URL.
+         * @return true if the source is a URL, false if it's a local path.
+         */
+        public fun isUrl(): Boolean = fileSource is FileSource.Url
 
         /**
          * Gets the MIME type based on the file format.
@@ -150,6 +157,10 @@ public sealed class MediaContent {
             is FileSource.Url -> error("Cannot get fileName for URL. Download the file first.")
         }
 
+        public fun readText(): String = when (val src = fileSource) {
+            is FileSource.LocalPath -> src.readText()
+            is FileSource.Url -> error("Cannot read file from URL. Download the file first.")
+        }
         public override fun toBase64(): String = when (val src = fileSource) {
             is FileSource.LocalPath -> src.encodeLocalFile()
             is FileSource.Url -> error("Cannot encode URL to base64. Download the file first.")
@@ -170,15 +181,28 @@ private sealed interface FileSource {
     /**
      * Represents a local file path source.
      */
-    @JvmInline
-    value class LocalPath(val value: String) : FileSource {
+    class LocalPath(val value: String) : FileSource {
+
+        private val path: Path by lazy { Path(value) }
+
+        fun readText(): String {
+            val metadata = requireNotNull(SystemFileSystem.metadataOrNull(path)) {
+                "File not found: $path"
+            }
+            require(metadata.isRegularFile) {
+                "Path is not a regular file: $path"
+            }
+
+            return SystemFileSystem.source(path).buffered().use {
+                it.readString()
+            }
+        }
 
         /**
          * Encodes the local file content to base64.
          * @return Base64 encoded file content.
          */
         fun encodeLocalFile(): String {
-            val path = Path(value)
             val metadata = requireNotNull(SystemFileSystem.metadataOrNull(path)) {
                 "File not found: $path"
             }
