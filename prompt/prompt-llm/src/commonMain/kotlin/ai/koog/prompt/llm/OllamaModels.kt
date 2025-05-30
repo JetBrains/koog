@@ -12,7 +12,7 @@ public object OllamaModels {
      */
     public object Groq {
         /**
-         * Represents the LLAMA version 3.0 model provided by Groq.
+         * Represents the LLAMA version 3.0 model provided by Groq with 8B parameters.
          *
          * This variable defines an instance of the `LLModel` class with the Ollama provider, a unique identifier "llama3",
          * and a set of capabilities. The supported capabilities include:
@@ -23,9 +23,31 @@ public object OllamaModels {
          * LLAMA 3 is designed to support these specified features, enabling developers to utilize the model for tasks
          * that require dynamic behavior adjustments, schema adherence, and tool-based interactions.
          */
-        public val LLAMA_3_GROK_TOOL_USE: LLModel = LLModel(
+        public val LLAMA_3_GROK_TOOL_USE_8B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
-            id = "llama3-groq-tool-use:latest",
+            id = "llama3-groq-tool-use:8b",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Tools
+            )
+        )
+
+        /**
+         * Represents the LLAMA version 3.0 model provided by Groq with 70B parameters.
+         *
+         * This variable defines an instance of the `LLModel` class with the Ollama provider, a unique identifier "llama3",
+         * and a set of capabilities. The supported capabilities include:
+         *  - Temperature adjustment.
+         *  - JSON Schema-based tasks (Not very clear).
+         *  - Tool utilization.
+         *
+         * LLAMA 3 is designed to support these specified features, enabling developers to utilize the model for tasks
+         * that require dynamic behavior adjustments, schema adherence, and tool-based interactions.
+         */
+        public val LLAMA_3_GROK_TOOL_USE_70B: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "llama3-groq-tool-use:70b",
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Full,
