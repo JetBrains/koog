@@ -96,22 +96,23 @@ public class PromptBuilder internal constructor(
     }
 
     /**
-     * Adds a user message to the prompt using a TextContentBuilder.
+     * Adds a user message to the prompt using a UserContentBuilder.
      *
-     * This allows for more complex message construction.
+     * This allows for complex user message construction, supporting features like textual
+     * and media content.
      *
      * Example:
      * ```kotlin
      * user {
-     *     text("I have a question about programming.")
-     *     text("How do I implement a binary search in Kotlin?")
+     *     text("What is in this image?")
+     *     image("https://example.com/image.jpg")
      * }
      * ```
      *
-     * @param init The initialization block for the TextContentBuilder
+     * @param body The initialization block for the UserContentBuilder.
      */
-    public fun user(init: TextContentBuilder.() -> Unit) {
-        user(TextContentBuilder().apply(init).build())
+    public fun user(body: UserContentBuilder.() -> Unit) {
+        messages.addAll(UserContentBuilder().apply(body).build())
     }
 
     /**

@@ -63,7 +63,28 @@ public sealed class LLMCapability(public val id: String) {
      * from visual data or visual representations.
      */
     @Serializable
-    public data object Vision : LLMCapability("vision")
+    public sealed class Vision(public val visionType: String) : LLMCapability(visionType) {
+
+        @Serializable
+        public data object Image : Vision("image")
+
+        @Serializable
+        public data object Video : Vision("video")
+    }
+
+    /**
+     * Represents a specialized capability for audio-related functionalities in the context of a LLM.
+     * This capability is used in models that can involving audio processing,
+     * such as transcription, audio generation, or audio-based interactions.
+     */
+    @Serializable
+    public data object Audio: LLMCapability("audio")
+
+    /**
+     * Represents a specific language model capability associated with handling documents.
+     */
+    @Serializable
+    public data object Document: LLMCapability("document")
 
     /**
      * Represents the capability of generating embeddings within the context of language models.

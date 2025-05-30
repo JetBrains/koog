@@ -44,7 +44,7 @@ public abstract class HistoryCompressionStrategy {
             prompt = prompt.withMessages { messages -> messages.dropLastWhile { it is Message.Tool.Call } }
             updatePrompt {
                 user {
-                    summarizeInTLDR()
+                    text { summarizeInTLDR() }
                 }
             }
             listOf(llmSession.requestLLMWithoutTools())
