@@ -71,7 +71,7 @@ public abstract class HistoryCompressionStrategy {
                 addAll(systemMessages)
                 // Restore memory messages if needed
                 if (preserveMemory && memoryMessages.isNotEmpty()) {
-                    prompt = prompt.withUpdatedMessages { addAll(memoryMessages) }
+                    addAll(memoryMessages)
                 }
 
                 if (firstUserMessage != null) add(firstUserMessage)

@@ -74,11 +74,11 @@ public data class Prompt(
     /**
      * Creates a copy of the `Prompt` with updated messages, allowing modifications to the current messages.
      *
-     * @param update A lambda function that operates on a mutable list of `Message` to apply modifications.
+     * @param update A lambda function that returns the updated list of messages.
      * @return A new `Prompt` instance with the modified list of messages.
      */
-    public fun withUpdatedMessages(update: MutableList<Message>.() -> Unit): Prompt =
-        this.copy(messages = messages.toMutableList().apply { update() })
+    public fun withUpdatedMessages(update: List<Message>.() -> List<Message>): Prompt =
+        this.copy(messages = update(this.messages))
 
     /**
      * Returns a new instance of the `Prompt` class with updated language model parameters.
