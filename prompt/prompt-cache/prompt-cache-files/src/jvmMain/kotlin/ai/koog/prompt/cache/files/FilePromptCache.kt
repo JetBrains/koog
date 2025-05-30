@@ -122,7 +122,9 @@ public class FilePromptCache(
         requestsDir.createDirectories()
 
         // Write the file
-        file(request).writeText(prettyJson.encodeToString(CachedElement(response, request)))
+        file(request).also {
+            println("Writing file: ${it.absolutePathString()}")
+        }.writeText(prettyJson.encodeToString(CachedElement(response, request)))
 
         // Update timestamps
         val now = Instant.now()
@@ -130,7 +132,10 @@ public class FilePromptCache(
     }
 
     private fun getOrNull(request: Request): List<Message.Response>? {
-        val file = file(request)
+        val file = file(request).also {
+            println("Reading file: ${it.absolutePathString()}")
+            println("Exists: ${it.exists()}")
+        }
         if (!file.exists()) return null
 
         return defaultJson.decodeFromString<CachedElement>(file.readText()).response
