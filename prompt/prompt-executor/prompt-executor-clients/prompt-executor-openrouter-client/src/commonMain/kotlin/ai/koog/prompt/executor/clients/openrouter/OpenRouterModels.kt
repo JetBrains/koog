@@ -28,7 +28,7 @@ public object OpenRouterModels {
     )
 
     // Multimodal capabilities (including vision)
-    private val multimodalCapabilities: List<LLMCapability> = standardCapabilities + LLMCapability.Vision
+    private val multimodalCapabilities: List<LLMCapability> = standardCapabilities + LLMCapability.Vision.Image
     
     // Anthropic models
     public val Claude3Opus: LLModel = LLModel(
