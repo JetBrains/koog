@@ -99,7 +99,7 @@ internal fun Prompt.extractOllamaOptions(): OllamaChatRequestDTO.Options? {
  * Extracts tool calls from a ChatMessage.
  * Returns the first tool call for compatibility, but logs if multiple calls exist.
  */
-public fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
+internal fun OllamaChatMessageDTO.getFirstToolCall(): Message.Tool.Call? {
     if (this.toolCalls.isNullOrEmpty()) {
         return null
     }
