@@ -80,9 +80,10 @@ public data class OllamaChatRequestDTO(
  */
 @Serializable
 public data class OllamaChatResponseDTO(
-    val model: String,
+    val model: String?,
     val message: OllamaChatMessageDTO? = null,
-    val done: Boolean
+    val done: Boolean?,
+    val error: String? = null,
 )
 
 /**
