@@ -14,6 +14,8 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class PromptTest {
     companion object {
@@ -224,7 +226,7 @@ class PromptTest {
             Message.Assistant(assistantMessage)
         )
 
-        val updatedPrompt = basicPrompt.withMessages(newMessages)
+        val updatedPrompt = basicPrompt.withMessages({ newMessages })
 
         assertEquals(3, updatedPrompt.messages.size)
         assertEquals(systemMessage, updatedPrompt.messages[0].content)
@@ -253,28 +255,6 @@ class PromptTest {
         assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON.Simple)
         assertEquals(schemaName, updatedPrompt.params.schema?.name)
         assertTrue(updatedPrompt.params.toolChoice is LLMParams.ToolChoice.Auto)
-    }
-
-    @Test
-    fun testUpdatePromptWithUpdatedMessages() {
-        val assistantMessage = "Hi there! How can I assist you today?"
-        val userMessage = "I need help with coding"
-
-        val updatedPrompt = basicPrompt.withUpdatedMessages {
-            add(Message.Assistant(assistantMessage))
-            add(Message.User(userMessage))
-        }
-
-        assertEquals(7, updatedPrompt.messages.size)
-        assertTrue(updatedPrompt.messages[0] is Message.System)
-        assertTrue(updatedPrompt.messages[1] is Message.User)
-        assertTrue(updatedPrompt.messages[2] is Message.Assistant)
-        assertTrue(updatedPrompt.messages[3] is Message.Tool.Call)
-        assertTrue(updatedPrompt.messages[4] is Message.Tool.Result)
-        assertTrue(updatedPrompt.messages[5] is Message.Assistant)
-        assertTrue(updatedPrompt.messages[6] is Message.User)
-        assertEquals(assistantMessage, updatedPrompt.messages[5].content)
-        assertEquals(userMessage, updatedPrompt.messages[6].content)
     }
 
     @Test
@@ -572,5 +552,75 @@ class PromptTest {
         assertTrue(decoded.params.schema is LLMParams.Schema.JSON.Simple)
         assertEquals(emptySchemaName, decoded.params.schema?.name)
         assertTrue((decoded.params.schema as LLMParams.Schema.JSON.Simple).schema.entries.isEmpty())
+    }
+
+    @Test
+    fun testWithMessagesFunctions() {
+        val originalPrompt = Prompt.build("test") {
+            system("You are a helpful assistant")
+            user("Hello")
+        }
+
+        // Test adding a message
+        val updatedPrompt = originalPrompt.withMessages { messages ->
+            messages + Message.Assistant("How can I help you?")
+        }
+
+        assertNotEquals(originalPrompt, updatedPrompt)
+        assertEquals(3, updatedPrompt.messages.size)
+        assertEquals(Message.Assistant("How can I help you?"), updatedPrompt.messages[2])
+
+        // Test replacing messages
+        val replacedPrompt = originalPrompt.withMessages {
+            listOf(Message.System("You are a coding assistant"))
+        }
+
+        assertEquals(1, replacedPrompt.messages.size)
+        assertEquals(Message.System("You are a coding assistant"), replacedPrompt.messages[0])
+    }
+
+    @Test
+    fun testWithParamsFunction() {
+        val originalPrompt = Prompt.build("test") {
+            system("You are a helpful assistant")
+        }
+
+        val newParams = LLMParams(
+            temperature = 0.7,
+            speculation = "test speculation"
+        )
+
+        val updatedPrompt = originalPrompt.withParams(newParams)
+
+        assertNotEquals(originalPrompt, updatedPrompt)
+        assertEquals(newParams, updatedPrompt.params)
+        assertEquals(0.7, updatedPrompt.params.temperature)
+        assertEquals("test speculation", updatedPrompt.params.speculation)
+    }
+
+    @Test
+    fun testWithUpdatedParamsFunction() {
+        val originalPrompt = Prompt.build("test") {
+            system("You are a helpful assistant")
+        }
+
+        // Test updating temperature only
+        val tempUpdatedPrompt = originalPrompt.withUpdatedParams {
+            temperature = 0.8
+        }
+
+        assertNotEquals(originalPrompt, tempUpdatedPrompt)
+        assertEquals(0.8, tempUpdatedPrompt.params.temperature)
+
+        // Test updating multiple parameters
+        val multiUpdatedPrompt = originalPrompt.withUpdatedParams {
+            temperature = 0.5
+            speculation = "new speculation"
+            toolChoice = LLMParams.ToolChoice.Auto
+        }
+
+        assertEquals(0.5, multiUpdatedPrompt.params.temperature)
+        assertEquals("new speculation", multiUpdatedPrompt.params.speculation)
+        assertEquals(LLMParams.ToolChoice.Auto, multiUpdatedPrompt.params.toolChoice)
     }
 }
