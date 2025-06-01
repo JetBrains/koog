@@ -80,6 +80,10 @@ public class OllamaClient(
             )
         }.body<OllamaChatResponseDTO>()
 
+        if (response.error != null) {
+            throw IllegalArgumentException(response.error)
+        }
+
         return parseResponse(response)
     }
 
