@@ -5,6 +5,8 @@ import ai.koog.prompt.executor.model.PromptExecutorExt.firstResponseOrNull
 import ai.koog.prompt.executor.model.PromptExecutorExt.singleResponse
 import ai.koog.prompt.executor.model.PromptExecutorExt.singleResponseOrNull
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -12,11 +14,13 @@ import kotlin.test.assertNull
 
 class PromptExecutorExtTest {
 
+    private val testMetainfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+
     //region Single / SingleOrNull
 
     @Test
     fun testSingleResponseOneResponse() {
-        val response = Message.Assistant("Test response")
+        val response = Message.Assistant("Test response", testMetainfo)
         val responses = listOf(response)
 
         val actualResponse = responses.singleResponse()
@@ -34,8 +38,8 @@ class PromptExecutorExtTest {
 
     @Test
     fun testSingleResponseMultipleResponses() {
-        val response1 = Message.Assistant("Test response 1")
-        val response2 = Message.Assistant("Test response 2")
+        val response1 = Message.Assistant("Test response 1", testMetainfo)
+        val response2 = Message.Assistant("Test response 2", testMetainfo)
         val responses = listOf(response1, response2)
 
         assertFailsWith<IllegalArgumentException> {
@@ -45,7 +49,7 @@ class PromptExecutorExtTest {
 
     @Test
     fun testSingleResponseOrNullOneResponse() {
-        val response = Message.Assistant("Test response")
+        val response = Message.Assistant("Test response", testMetainfo)
         val responses = listOf(response)
         val actualResponse = responses.singleResponseOrNull()
 
@@ -62,8 +66,8 @@ class PromptExecutorExtTest {
 
     @Test
     fun testSingleResponseOrNullMultipleResponses() {
-        val response1 = Message.Assistant("Test response 1")
-        val response2 = Message.Assistant("Test response 2")
+        val response1 = Message.Assistant("Test response 1", testMetainfo)
+        val response2 = Message.Assistant("Test response 2", testMetainfo)
         val responses = listOf(response1, response2)
 
         val actualResponse = responses.singleResponseOrNull()
@@ -76,8 +80,8 @@ class PromptExecutorExtTest {
 
     @Test
     fun testFirstResponseOneResponse() {
-        val response1 = Message.Assistant("Test response 1")
-        val response2 = Message.Assistant("Test response 2")
+        val response1 = Message.Assistant("Test response 1", testMetainfo)
+        val response2 = Message.Assistant("Test response 2", testMetainfo)
         val responses = listOf(response1, response2)
 
         val actualResponse = responses.firstResponse()
@@ -94,7 +98,7 @@ class PromptExecutorExtTest {
 
     @Test
     fun testFirstResponseOrNullOneResponse() {
-        val response = Message.Assistant("Test response")
+        val response = Message.Assistant("Test response", testMetainfo)
         val responses = listOf(response)
 
         val actualResponse = responses.firstResponseOrNull()
@@ -111,8 +115,8 @@ class PromptExecutorExtTest {
 
     @Test
     fun testFirstResponseOrNullMultipleResponses() {
-        val response1 = Message.Assistant("Test response 1")
-        val response2 = Message.Assistant("Test response 2")
+        val response1 = Message.Assistant("Test response 1", testMetainfo)
+        val response2 = Message.Assistant("Test response 2", testMetainfo)
         val responses = listOf(response1, response2)
 
         val actualResponse = responses.firstResponseOrNull()

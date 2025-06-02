@@ -29,12 +29,6 @@ import kotlin.test.assertTrue
 class AIAgentLLMWriteSessionTest {
     private fun systemMessage(content: String) = Message.System(content, RequestMetaInfo.create(testClock))
     private fun userMessage(content: String) = Message.User(content, RequestMetaInfo.create(testClock))
-    private fun toolCall(id: String, name: String, content: String) =
-        Message.Tool.Call(id, name, content, ResponseMetaInfo.create(testClock))
-
-    private fun toolResult(id: String, name: String, content: String) =
-        Message.Tool.Result(id, name, content, RequestMetaInfo.create(testClock))
-
     private fun assistantMessage(content: String) = Message.Assistant(content, ResponseMetaInfo.create(testClock))
 
     private object TestToolsEnabler : DirectToolCallsEnabler
@@ -127,15 +121,15 @@ class AIAgentLLMWriteSessionTest {
             user("I have some text that needs processing.")
             assistant("I'll use the test-tool to process your text.")
             tool {
-                call(toolCall("call_1", "test-tool", """{"input":"sample data"}"""))
-                result(toolResult("call_1", "test-tool", "Processed: sample data"))
+                call("call_1", "test-tool", """{"input":"sample data"}""")
+                result("call_1", "test-tool", "Processed: sample data")
             }
             assistant("I've processed your sample data. The result was: Processed: sample data. Would you like me to do anything else with it?")
             user("Can you also use the custom tool to process this data?")
             assistant("Sure, I'll use the custom tool for additional processing.")
             tool {
-                call(toolCall("call_2", "custom-tool", """{"input":"additional processing"}"""))
-                result(toolResult("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}"""))
+                call("call_2", "custom-tool", """{"input":"additional processing"}""")
+                result("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}""")
             }
             assistant("I've completed the additional processing. The custom tool returned: Custom processed: additional processing")
         }

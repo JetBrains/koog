@@ -27,7 +27,7 @@ import kotlinx.datetime.Clock
  */
 @PromptDSL
 public class PromptBuilder internal constructor(
-    private val id: String, 
+    private val id: String,
     private val params: LLMParams = LLMParams(),
     private val clock: Clock = Clock.System
 ) {
@@ -197,8 +197,23 @@ public class PromptBuilder internal constructor(
          *
          * @param call The tool call message to add
          */
+        @Deprecated("Use call(id, tool, content) instead", ReplaceWith("call(id, tool, content)"))
         public fun call(call: Message.Tool.Call) {
             messages.add(call)
+        }
+
+        /**
+         * Adds a tool call message to the prompt.
+         *
+         * This method creates a `Message.Tool.Call` instance and adds it to the message list.
+         * The tool call represents a request to execute a specific tool with the provided parameters.
+         *
+         * @param id The unique identifier for the tool call message.
+         * @param tool The name of the tool being called.
+         * @param content The content or payload of the tool call.
+         */
+        public fun call(id: String?, tool: String, content: String) {
+            call(Message.Tool.Call(id, tool, content, ResponseMetaInfo.create(clock)))
         }
 
         /**
@@ -208,12 +223,27 @@ public class PromptBuilder internal constructor(
          *
          * @param result The tool result message to add
          */
+        @Deprecated("Use result(id, tool, content) instead", ReplaceWith("result(id, tool, content)"))
         public fun result(result: Message.Tool.Result) {
             messages
                 .indexOfLast { it is Message.Tool.Call && it.id == result.id }
                 .takeIf { it != -1 }
                 ?.let { index -> messages.add(index + 1, result) }
                 ?: throw IllegalStateException("Failed to add tool result: no call message with id ${result.id}")
+        }
+
+        /**
+         * Adds a tool result message to the prompt.
+         *
+         * This method creates a `Message.Tool.Result` instance and adds it to the message list.
+         * Tool results represent the output from executing a tool with the provided parameters.
+         *
+         * @param id The unique identifier for the tool result message.
+         * @param tool The name of the tool that provided the result.
+         * @param content The content or payload of the tool result.
+         */
+        public fun result(id: String?, tool: String, content: String) {
+            result(Message.Tool.Result(id, tool, content, RequestMetaInfo.create(clock)))
         }
     }
 

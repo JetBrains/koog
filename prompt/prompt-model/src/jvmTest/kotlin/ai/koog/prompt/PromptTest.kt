@@ -12,7 +12,8 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -60,8 +61,8 @@ class PromptTest {
             user(userMessage)
             message(Message.Assistant(assistantMessage, testRespMetaInfo, finishReason))
             tool {
-                call(Message.Tool.Call(toolCallId, toolName, toolCallContent, testRespMetaInfo))
-                result(Message.Tool.Result(toolCallId, toolName, toolResultContent, testReqMetaInfo))
+                call(toolCallId, toolName, toolCallContent)
+                result(toolCallId, toolName, toolResultContent)
             }
         }
 
@@ -103,8 +104,8 @@ class PromptTest {
             user(userMessage)
             assistant(assistantMessage)
             tool {
-                call(Message.Tool.Call(toolCallId, toolName, toolContent, testRespMetaInfo))
-                result(Message.Tool.Result(toolCallId, toolName, toolResult, testReqMetaInfo))
+                call(toolCallId, toolName, toolContent,)
+                result(toolCallId, toolName, toolResult)
             }
         }
 
@@ -343,8 +344,8 @@ class PromptTest {
             user("")
             assistant("")
             tool {
-                call(Message.Tool.Call(toolCallId, toolName, "", testRespMetaInfo))
-                result(Message.Tool.Result(toolCallId, toolName, "", testReqMetaInfo))
+                call(toolCallId, toolName, "")
+                result(toolCallId, toolName, "")
             }
         }
 
@@ -372,8 +373,8 @@ class PromptTest {
 
         val prompt = Prompt.build(promptId) {
             tool {
-                call(Message.Tool.Call(null, toolName, toolCallContent, testRespMetaInfo))
-                result(Message.Tool.Result(null, toolName, toolCallContent, testReqMetaInfo))
+                call(null, toolName, toolCallContent)
+                result(null, toolName, toolCallContent)
             }
         }
 
