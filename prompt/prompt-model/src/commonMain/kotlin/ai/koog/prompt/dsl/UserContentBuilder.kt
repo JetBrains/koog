@@ -2,7 +2,9 @@ package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.text.TextContentBuilder
+import kotlinx.datetime.Clock
 
 /**
  * A builder for constructing user messages with support for text and media content.
@@ -11,7 +13,7 @@ import ai.koog.prompt.text.TextContentBuilder
  * and document attachments. The builder pattern enables convenient construction of complex
  * message content with multiple components.
  */
-public class UserContentBuilder {
+public class UserContentBuilder(private val clock: Clock = Clock.System) {
     /**
      * Internal collection to accumulate user messages during the building process.
      *
@@ -26,7 +28,7 @@ public class UserContentBuilder {
      * @param text The text content to be included in the user message.
      */
     public fun text(text: String) {
-        messages.add(Message.User(text))
+        messages.add(Message.User(text, metaInfo = RequestMetaInfo.create(clock)))
     }
 
     /**
@@ -38,7 +40,7 @@ public class UserContentBuilder {
      * @param body A lambda function applied to a [TextContentBuilder] instance for constructing formatted text.
      */
     public fun text(body: TextContentBuilder.() -> Unit) {
-        messages.add(Message.User(TextContentBuilder().apply(body).build()))
+        text(TextContentBuilder().apply(body).build())
     }
 
     /**
@@ -50,7 +52,13 @@ public class UserContentBuilder {
      * @param source The path to the local image file or URL of the image.
      */
     public fun image(source: String) {
-        messages.add(Message.User("", mediaContent = MediaContent.Image(source)))
+        messages.add(
+            Message.User(
+                "",
+                metaInfo = RequestMetaInfo.create(clock),
+                mediaContent = MediaContent.Image(source)
+            )
+        )
     }
 
     /**
@@ -63,7 +71,13 @@ public class UserContentBuilder {
      * @param format The audio file format (e.g., "mp3", "wav").
      */
     public fun audio(data: ByteArray, format: String) {
-        messages.add(Message.User("", mediaContent = MediaContent.Audio(data = data, format = format)))
+        messages.add(
+            Message.User(
+                "",
+                metaInfo = RequestMetaInfo.create(clock),
+                mediaContent = MediaContent.Audio(data = data, format = format)
+            )
+        )
     }
 
     /**
@@ -75,7 +89,13 @@ public class UserContentBuilder {
      * @param source The local file path to the document.
      */
     public fun document(source: String) {
-        messages.add(Message.User("", mediaContent = MediaContent.File(source)))
+        messages.add(
+            Message.User(
+                "",
+                metaInfo = RequestMetaInfo.create(clock),
+                mediaContent = MediaContent.File(source)
+            )
+        )
     }
 
     /**

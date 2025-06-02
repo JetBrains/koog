@@ -112,7 +112,7 @@ public class PromptBuilder internal constructor(
      * @param body The initialization block for the UserContentBuilder.
      */
     public fun user(body: UserContentBuilder.() -> Unit) {
-        messages.addAll(UserContentBuilder().apply(body).build())
+        messages.addAll(UserContentBuilder(clock).apply(body).build())
     }
 
     /**
