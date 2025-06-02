@@ -65,8 +65,12 @@ internal object TestUtils {
             try {
                 return operation()
             } catch (e: Exception) {
-                attempts++
-                println("Attempt $attempts/$maxRetries failed with exception ${e.message}, retrying...")
+                if (e.message?.contains("Error from GoogleAI API: 500 Internal Server Error") == true) {
+                    assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
+                } else {
+                    attempts++
+                    println("Attempt $attempts/$maxRetries failed with exception ${e.message}, retrying...")
+                }
             }
         }
 

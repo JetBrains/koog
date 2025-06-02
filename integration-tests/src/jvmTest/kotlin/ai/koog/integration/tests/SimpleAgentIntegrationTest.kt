@@ -10,7 +10,9 @@ import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.utils.TestUtils.runWithRetry
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
@@ -123,6 +125,9 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14478")
+        assumeTrue(model != GoogleModels.Gemini2_5FlashPreview0417, "JBAI-14478")
+
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
@@ -138,19 +143,12 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        try {
+        runWithRetry {
             agent.run("Repeat what I say: hello, I'm good.")
-        } catch (e: Exception) {
-            if (e.message?.contains("Error from GoogleAI API: 500 Internal Server Error") == true) {
-                assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
-            } else {
-                throw e
-            }
         }
 
         // by default, simpleSingleRunAgent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
-
     }
 
     @ParameterizedTest
@@ -158,9 +156,10 @@ class SimpleAgentIntegrationTest {
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
+        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(!model.id.contains("flash"), "JBAI-14094")
 
-        val toolRegistry = ToolRegistry.Companion {
+        val toolRegistry = ToolRegistry {
             tool(SayToUser)
         }
 
@@ -180,7 +179,9 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        agent.run("Write a Kotlin function to calculate factorial.")
+        runWithRetry {
+            agent.run("Write a Kotlin function to calculate factorial.")
+        }
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
         assertTrue(

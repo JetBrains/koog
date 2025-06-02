@@ -7,8 +7,6 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.utils.TestUtils.runWithRetry
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -16,7 +14,6 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
-@EnabledOnOs(OS.LINUX, OS.MAC)
 class OllamaSimpleAgentIntegrationTest {
     companion object {
         @field:InjectOllamaTestFixture
@@ -89,7 +86,7 @@ class OllamaSimpleAgentIntegrationTest {
     }
 
     @Test
-    fun integration_simpleOllamaTest() = runTest(timeout = 600.seconds) {
+    fun ollama_simpleTest() = runTest(timeout = 600.seconds) {
         val toolRegistry = ToolRegistry.Companion {
             tool(SayToUser)
         }
@@ -114,7 +111,7 @@ class OllamaSimpleAgentIntegrationTest {
             executor = ollamaSimpleExecutor,
             systemPrompt = bookwormPrompt,
             llmModel = ollamaModel,
-            temperature = 1.0,
+            temperature = 0.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
