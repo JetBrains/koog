@@ -442,7 +442,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     public suspend fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
         if (definition != null) {
-            val prompt = prompt(prompt) {
+            val prompt = prompt(prompt, clock) {
                 user {
                     definition.definition(this)
                 }

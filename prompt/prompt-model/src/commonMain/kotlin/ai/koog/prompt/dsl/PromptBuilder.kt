@@ -156,7 +156,7 @@ public class PromptBuilder internal constructor(
      *
      * Example:
      * ```kotlin
-     * message(Message.System("You are a helpful assistant."))
+     * message(Message.System("You are a helpful assistant.", metaInfo = ...))
      * ```
      *
      * @param message The message to add
@@ -173,8 +173,8 @@ public class PromptBuilder internal constructor(
      * Example:
      * ```kotlin
      * messages(listOf(
-     *     Message.System("You are a helpful assistant."),
-     *     Message.User("What is the capital of France?")
+     *     Message.System("You are a helpful assistant.", metaInfo = ...),
+     *     Message.User("What is the capital of France?", metaInfo = ...)
      * ))
      * ```
      *

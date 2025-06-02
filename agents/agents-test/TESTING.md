@@ -151,7 +151,7 @@ Start with simple input/output validations for individual nodes:
 ```kotlin
 assertNodes {
     // Test basic text responses
-    askLLM withInput "Hello" outputs Message.Assistant("Hello!")
+    askLLM withInput "Hello" outputs assistantMessage("Hello!")
 
     // Test tool call responses
     askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
@@ -185,7 +185,7 @@ For more complex scenarios, you can test nodes with structured inputs and output
 ```kotlin
 assertNodes {
     // Test with different inputs to the same node
-    askLLM withInput "Simple query" outputs Message.Assistant("Simple response")
+    askLLM withInput "Simple query" outputs assistantMessage("Simple response")
 
     // Test with complex parameters
     askLLM withInput "Complex query with parameters" outputs toolCallMessage(
@@ -224,7 +224,7 @@ Start with simple edge connection tests:
 ```kotlin
 assertEdges {
     // Test text message routing
-    askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
+    askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
 
     // Test tool call routing
     askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
@@ -242,8 +242,8 @@ You can test more complex routing logic based on the content of outputs:
 ```kotlin
 assertEdges {
     // Different text responses can route to different nodes
-    askLLM withOutput Message.Assistant("Need more information") goesTo askForInfo
-    askLLM withOutput Message.Assistant("Ready to proceed") goesTo processRequest
+    askLLM withOutput assistantMessage("Need more information") goesTo askForInfo
+    askLLM withOutput assistantMessage("Ready to proceed") goesTo processRequest
 }
 ```
 
@@ -488,22 +488,22 @@ fun testMultiSubgraphAgentStructure() = runTest {
                 assertReachable(askLLM, callTool)
 
                 assertNodes {
-                    askLLM withInput "Hello" outputs Message.Assistant("Hello!")
+                    askLLM withInput "Hello" outputs assistantMessage("Hello!")
                     askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
 
-                    callTool withInput toolCallSignature(
+                    callTool withInput toolCallMessage(
                         SolveTool,
                         SolveTool.Args("solve")
                     ) outputs toolResult(SolveTool, "solved")
 
-                    callTool withInput toolCallSignature(
+                    callTool withInput toolCallMessage(
                         CreateTool,
                         CreateTool.Args("solve")
                     ) outputs toolResult(CreateTool, "created")
                 }
 
                 assertEdges {
-                    askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
+                    askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
                     askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
                 }
             }
@@ -555,7 +555,6 @@ fun testMultiSubgraphAgentStructure() = runTest {
 ### Utility Functions
 
 - `toolCallMessage(tool, args)` - Creates a tool call message
-- `toolCallSignature(tool, args)` - Creates a tool call signature
 - `toolResult(tool, result)` - Creates a tool result
 - `withTesting(config)` - Installs the Testing feature with the given configuration
 
