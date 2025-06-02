@@ -1,5 +1,7 @@
 package ai.koog.prompt.text
 
+import ai.koog.prompt.dsl.PromptDSL
+
 /**
  * A utility class for building and manipulating textual content.
  *
@@ -7,6 +9,7 @@ package ai.koog.prompt.text
  * adding new lines, and applying padding. The builder pattern supports a fluent and convenient
  * approach to managing text content.
  */
+@PromptDSL
 public open class TextContentBuilder {
     /**
      * Represents the position of a caret within a text document.

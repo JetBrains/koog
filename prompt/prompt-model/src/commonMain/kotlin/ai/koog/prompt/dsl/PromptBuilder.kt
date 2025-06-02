@@ -180,6 +180,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      *
      * This class provides methods for adding tool calls and tool results.
      */
+    @PromptDSL
     public inner class ToolMessageBuilder() {
         /**
          * Adds a tool call message to the prompt.
@@ -189,7 +190,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
          * @param call The tool call message to add
          */
         public fun call(call: Message.Tool.Call) {
-            messages.add(call)
+            this@PromptBuilder.messages.add(call)
         }
 
         /**
@@ -200,10 +201,10 @@ public class PromptBuilder internal constructor(private val id: String, private 
          * @param result The tool result message to add
          */
         public fun result(result: Message.Tool.Result) {
-            messages
+            this@PromptBuilder.messages
                 .indexOfLast { it is Message.Tool.Call && it.id == result.id }
                 .takeIf { it != -1 }
-                ?.let { index -> messages.add(index + 1, result) }
+                ?.let { index -> this@PromptBuilder.messages.add(index + 1, result) }
                 ?: throw IllegalStateException("Failed to add tool result: no call message with id ${result.id}")
         }
     }
