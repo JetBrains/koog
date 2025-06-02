@@ -22,14 +22,12 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.AfterTest
 import kotlin.test.assertTrue
 
-@ExtendWith(OllamaTestFixtureExtension::class)
 class SimpleAgentIntegrationTest {
     val systemPrompt = """
             You are a helpful assistant. 
