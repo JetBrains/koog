@@ -9,6 +9,7 @@ import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
@@ -87,6 +88,7 @@ public class Tracing {
 
         override fun createInitialConfig(): TraceFeatureConfig = TraceFeatureConfig()
 
+        @OptIn(ExperimentalUuidApi::class)
         override fun install(
             config: TraceFeatureConfig,
             pipeline: AIAgentPipeline,
@@ -118,7 +120,7 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptAgentRunError(this, featureImpl) intercept@{ strategyName, throwable ->
+            pipeline.interceptAgentRunError(this, featureImpl) intercept@{ strategyName, sessionUuid, throwable ->
                 val event = AIAgentRunErrorEvent(
                     strategyName = strategyName,
                     error = throwable.toAgentError(),
@@ -139,9 +141,9 @@ public class Tracing {
                 }
             }
 
-            pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ strategyName, result ->
+            pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ result ->
                 val event = AIAgentStrategyFinishedEvent(
-                    strategyName = strategyName,
+                    strategyName = strategy.name,
                     result = result,
                 )
                 processMessage(config, event)
@@ -172,7 +174,7 @@ public class Tracing {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools ->
+            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools, model, sessionUuid ->
                 val event = LLMCallStartEvent(
                     prompt = prompt,
                     tools = tools.map { it.name }
@@ -181,7 +183,7 @@ public class Tracing {
                 config.messageProcessor.onMessageForEachSafe(event)
             }
 
-            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses ->
+            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ prompt, tools, model, responses, sessionUuid ->
                 val event = LLMCallEndEvent(
                     responses = responses
                 )

@@ -939,7 +939,11 @@ public class Testing {
                         tools = agent.toolRegistry.tools.map { it.descriptor },
                         prompt = agent.agentConfig.prompt,
                         model = agent.agentConfig.model,
-                        promptExecutor = PromptExecutorProxy(agent.promptExecutor, pipeline),
+                        promptExecutor = PromptExecutorProxy(
+                            agent.promptExecutor,
+                            pipeline,
+                            assertion.context.sessionUuid,
+                        ),
                         environment = environment,
                         config = agent.agentConfig,
                         clock = agent.clock

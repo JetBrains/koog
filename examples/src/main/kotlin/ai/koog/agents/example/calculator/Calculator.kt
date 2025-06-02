@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.example.calculator
 
 import ai.koog.agents.core.agent.AIAgent
@@ -18,6 +20,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 // Example threshold
@@ -98,7 +102,7 @@ fun main() = runBlocking {
                 println("Tool called: tool ${tool.name}, args $toolArgs")
             }
 
-            onAgentRunError = { strategyName: String, throwable: Throwable ->
+            onAgentRunError = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
                 println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
             }
 

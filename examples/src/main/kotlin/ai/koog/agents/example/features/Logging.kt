@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.example.features
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -14,6 +16,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * An example of a feature that provides logging capabilities for the agent to trace a particular event
@@ -70,11 +73,11 @@ class Logging(val logger: Logger) {
                 logger.info("Node ${node.name} with input: $input produced output: $output")
             }
 
-            pipeline.interceptBeforeLLMCall(this, logging) { prompt, tools ->
-                logger.info("Before LLM call with prompt: $prompt, tools: [${tools.joinToString { it.name }}]")
+            pipeline.interceptBeforeLLMCall(this, logging) { prompt, tools, model, sessionUuid ->
+                logger.info("Before LLM call with prompt: ${prompt}, tools: [${tools.joinToString { it.name }}]")
             }
 
-            pipeline.interceptAfterLLMCall(this, logging) { responses ->
+            pipeline.interceptAfterLLMCall(this, logging) { prompt, tools, model, responses, sessionUuid ->
                 logger.info("After LLM call with response: $responses")
             }
         }

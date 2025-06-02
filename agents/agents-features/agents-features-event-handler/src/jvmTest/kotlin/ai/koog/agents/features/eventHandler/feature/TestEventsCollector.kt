@@ -8,8 +8,12 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 class TestEventsCollector {
 
     val size: Int
@@ -30,7 +34,7 @@ class TestEventsCollector {
             _collectedEvents.add("OnAgentFinished (strategy: $strategyName, result: $result)")
         }
 
-        onAgentRunError = { strategyName: String, throwable: Throwable ->
+        onAgentRunError = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
             _collectedEvents.add("OnAgentRunError (strategy: $strategyName, throwable: ${throwable.message})")
         }
 
@@ -38,8 +42,8 @@ class TestEventsCollector {
             _collectedEvents.add("OnStrategyStarted (strategy: ${strategy.name})")
         }
 
-        onStrategyFinished = { strategyName: String, result: String ->
-            _collectedEvents.add("OnStrategyFinished (strategy: $strategyName, result: $result)")
+        onStrategyFinished = { strategy: AIAgentStrategy, result: String ->
+            _collectedEvents.add("OnStrategyFinished (strategy: ${strategy.name}, result: $result)")
         }
 
         onBeforeNode = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
@@ -50,11 +54,11 @@ class TestEventsCollector {
             _collectedEvents.add("OnAfterNode (node: ${node.name}, input: $input, output: $output)")
         }
 
-        onBeforeLLMCall = { prompt: Prompt, tools: List<ToolDescriptor> ->
+        onBeforeLLMCall = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid ->
             _collectedEvents.add("OnBeforeLLMCall (prompt: ${prompt.messages}, tools: [${tools.joinToString { it.name } }])")
         }
 
-        onAfterLLMCall = { responses: List<Message.Response> ->
+        onAfterLLMCall = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid ->
             _collectedEvents.add("OnAfterLLMCall (responses: [${responses.joinToString { "${it.role.name}: ${it.content}" }}])")
         }
 

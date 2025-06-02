@@ -4,9 +4,10 @@ import ai.koog.agents.core.agent.AIAgent.FeatureContext
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentPipeline
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * A feature that allows hooking into various events in the agent's lifecycle.
@@ -52,6 +53,7 @@ public class EventHandler {
      *     }
      * }
      */
+    @OptIn(ExperimentalUuidApi::class)
     public companion object Feature : AIAgentFeature<EventHandlerConfig, EventHandler> {
 
         private val logger = KotlinLogging.logger {  }
@@ -79,8 +81,8 @@ public class EventHandler {
                 config.onAgentFinished(strategyName, result)
             }
 
-            pipeline.interceptAgentRunError(this, featureImpl) intercept@{ strategyName, throwable ->
-                config.onAgentRunError(strategyName, throwable)
+            pipeline.interceptAgentRunError(this, featureImpl) intercept@{ strategyName, sessionUuid, throwable ->
+                config.onAgentRunError(strategyName, sessionUuid, throwable)
             }
 
             //endregion Intercept Agent Events
@@ -91,8 +93,8 @@ public class EventHandler {
                 config.onStrategyStarted(strategy)
             }
 
-            pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ strategyName, result ->
-                config.onStrategyFinished(strategyName, result)
+            pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ result ->
+                config.onStrategyFinished(strategy, result)
             }
 
             //endregion Intercept Strategy Events
@@ -117,12 +119,12 @@ public class EventHandler {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools ->
-                config.onBeforeLLMCall(prompt, tools)
+            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools, model, sessionUuid ->
+                config.onBeforeLLMCall(prompt, tools, model, sessionUuid)
             }
 
-            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ responses ->
-                config.onAfterLLMCall(responses)
+            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ prompt, tools, model, responses, sessionUuid ->
+                config.onAfterLLMCall(prompt, tools, model, responses, sessionUuid)
             }
 
             //endregion Intercept LLM Call Events
