@@ -11,10 +11,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 
 class TestLLMExecutor(val clock: Clock) : PromptExecutor {
-    override suspend fun execute(prompt: Prompt, model: LLModel): String {
-        return handlePrompt(prompt).content
-    }
-
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         return listOf(handlePrompt(prompt))
     }

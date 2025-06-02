@@ -189,7 +189,7 @@ public class PromptBuilder internal constructor(
      *
      * This class provides methods for adding tool calls and tool results.
      */
-    public inner class ToolMessageBuilder() {
+    public inner class ToolMessageBuilder(public val clock: Clock) {
         /**
          * Adds a tool call message to the prompt.
          *
@@ -217,7 +217,7 @@ public class PromptBuilder internal constructor(
         }
     }
 
-    private val tool = ToolMessageBuilder()
+    private val tool = ToolMessageBuilder(clock)
 
     /**
      * Adds tool-related messages to the prompt using a ToolMessageBuilder.

@@ -10,14 +10,10 @@ import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.Sink
 import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
@@ -80,20 +76,14 @@ class TraceFeatureMessageFileWriterTest {
 
             val expectedPrompt = Prompt(
                 messages = listOf(
-                    Message.System(systemPrompt),
-                    Message.User(userPrompt),
-                    Message.Assistant(assistantPrompt),
+                    systemMessage(systemPrompt),
+                    userMessage(userPrompt),
+                    assistantMessage(assistantPrompt),
                 ),
                 id = promptId,
             )
 
-            val expectedResponse = Json.encodeToString(
-                Message.Assistant.serializer(),
-                Message.Assistant(
-                    content = "Default test response",
-                    metaInfo = ResponseMetaInfo.create(testClock)
-                )
-            )
+            val expectedResponse = assistantMessage(content = "Default test response")
 
             val expectedMessages = listOf(
                 "${AIAgentStartedEvent::class.simpleName} (strategy name: $strategyName)",
@@ -103,7 +93,7 @@ class TraceFeatureMessageFileWriterTest {
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (node: test LLM call, input: Test LLM call prompt)",
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${
                     expectedPrompt.copy(
-                        messages = expectedPrompt.messages + Message.User(
+                        messages = expectedPrompt.messages + userMessage(
                             content = "Test LLM call prompt"
                         )
                     )
@@ -114,9 +104,9 @@ class TraceFeatureMessageFileWriterTest {
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
-                            Message.User(content = "Test LLM call prompt"),
-                            Message.Assistant(content = "Default test response"),
-                            Message.User(content = "Test LLM call with tools prompt")
+                            userMessage(content = "Test LLM call prompt"),
+                            assistantMessage(content = "Default test response"),
+                            userMessage(content = "Test LLM call with tools prompt")
                         )
                     )
                 }, tools: [dummy])",
@@ -302,19 +292,20 @@ class TraceFeatureMessageFileWriterTest {
 
             val expectedPrompt = Prompt(
                 messages = listOf(
-                    Message.System(systemPrompt),
-                    Message.User(userPrompt),
-                    Message.Assistant(assistantPrompt),
+                    systemMessage(systemPrompt),
+                    userMessage(userPrompt),
+                    assistantMessage(assistantPrompt),
                 ),
                 id = promptId,
             )
 
-            val expectedResponse = Message.Assistant(content = "Default test response")
+            val expectedResponse =
+                assistantMessage(content = "Default test response")
 
             val expectedLogMessages = listOf(
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${
                     expectedPrompt.copy(
-                        messages = expectedPrompt.messages + Message.User(
+                        messages = expectedPrompt.messages + userMessage(
                             content = "Test LLM call prompt"
                         )
                     )
@@ -323,12 +314,9 @@ class TraceFeatureMessageFileWriterTest {
                 "${LLMCallStartEvent::class.simpleName} (prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
-                            Message.User(content = "Test LLM call prompt"),
-                            Message.Assistant(
-                                content = "Default test response",
-                                metaInfo = ResponseMetaInfo.create(testClock)
-                            ),
-                            Message.User(content = "Test LLM call with tools prompt")
+                            userMessage(content = "Test LLM call prompt"),
+                            assistantMessage(content = "Default test response"),
+                            userMessage(content = "Test LLM call with tools prompt")
                         )
                     )
                 }, tools: [dummy])",

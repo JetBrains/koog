@@ -110,6 +110,17 @@ public data class Prompt(
         this.copy(messages = update(this.messages))
 
     /**
+     * Returns a new instance of the `Prompt` class with an updated list of messages.
+     * This function allows modifying the existing list of messages in a mutable way.
+     *
+     * @param update A lambda function that operates on a mutable list of `Message` objects,
+     *               allowing modifications to the current list of messages.
+     * @return A new `Prompt` instance with the modified list of messages.
+     */
+    public fun withUpdatedMessages(update: MutableList<Message>.() -> Unit): Prompt =
+        this.copy(messages = this.messages.toMutableList().apply { update() })
+
+    /**
      * Returns a new instance of the `Prompt` class with updated language model parameters.
      *
      * @param newParams the new `LLMParams` to use for the updated prompt.

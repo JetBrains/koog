@@ -5,6 +5,8 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import kotlinx.datetime.Clock
 
 public data class ReceivedToolResult(
     val id: String?,
@@ -12,14 +14,15 @@ public data class ReceivedToolResult(
     val content: String,
     val result: ToolResult?
 ) {
-    public fun toMessage(): Message.Tool.Result = Message.Tool.Result(
+    internal fun toMessage(clock: Clock): Message.Tool.Result = Message.Tool.Result(
         id = id,
         tool = tool,
         content = content,
+        metaInfo = RequestMetaInfo.create(clock)
     )
 }
 
-public fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
+internal fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
     check(this is AIAgentEnvironmentToolResultToAgentContent) {
         "AI agent must receive AIAgentEnvironmentToolResultToAgentContent," +
                 " but ${this::class.simpleName} was received"
@@ -28,7 +31,7 @@ public fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
     return toResult()
 }
 
-public fun AIAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
+internal fun AIAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
     id = toolCallId,
     tool = toolName,
     content = message,
@@ -36,5 +39,5 @@ public fun AIAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolRe
 )
 
 public fun PromptBuilder.ToolMessageBuilder.result(result: ReceivedToolResult) {
-    result(result.toMessage())
+    result(result.toMessage(clock))
 }

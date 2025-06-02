@@ -1,10 +1,11 @@
 package ai.koog.prompt.message
 
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
-import kotlinx.datetime.*
 
 
 /**
@@ -82,7 +83,7 @@ public sealed interface Message {
     @Serializable
     public data class User(
         override val content: String,
-        override val metaInfo: RequestMetaInfo = RequestMetaInfo()
+        override val metaInfo: RequestMetaInfo
     ) : Request {
         override val role: Role = Role.User
     }
@@ -159,7 +160,7 @@ public sealed interface Message {
             override val id: String?,
             override val tool: String,
             override val content: String,
-            override val metaInfo: RequestMetaInfo = RequestMetaInfo()
+            override val metaInfo: RequestMetaInfo
         ) : Tool, Request {
             override val role: Role = Role.Tool
         }
@@ -175,7 +176,7 @@ public sealed interface Message {
     @Serializable
     public data class System(
         override val content: String,
-        override val metaInfo: RequestMetaInfo = RequestMetaInfo()
+        override val metaInfo: RequestMetaInfo
     ) : Request {
         override val role: Role = Role.System
     }
@@ -209,7 +210,7 @@ public sealed interface MessageMetaInfo {
  */
 @Serializable
 public data class RequestMetaInfo(
-    override val timestamp: Instant = Clock.System.now()
+    override val timestamp: Instant
 ) : MessageMetaInfo {
     public companion object {
         /**
