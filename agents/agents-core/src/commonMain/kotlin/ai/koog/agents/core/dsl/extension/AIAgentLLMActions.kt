@@ -13,7 +13,7 @@ public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
 }
 
 public fun AIAgentLLMWriteSession.leaveMessagesFromTimestamp(timestamp: Instant) {
-    prompt = prompt.withUpdatedMessages { filter { it.metaInfo.timestamp >= timestamp } }
+    prompt = prompt.withMessages { it.filter { it.metaInfo.timestamp >= timestamp } }
 }
 
 /**
