@@ -28,6 +28,8 @@ internal object TestUtils {
     }
 
     private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
+    private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
+
     suspend fun <T> executeWithRetry(operation: suspend () -> T): T {
         val maxRetries = 3
         var attempts = 0
@@ -37,7 +39,9 @@ internal object TestUtils {
             try {
                 return operation()
             } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_API_ERROR) == true) {
+                if (e.message?.contains(GOOGLE_500_ERROR) == true) {
+                    assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
+                } else if (e.message?.contains(GOOGLE_API_ERROR) == true) {
                     lastException = e
                     attempts++
                     println("Attempt $attempts/$maxRetries failed with known Google API issue, retrying...")
@@ -65,7 +69,7 @@ internal object TestUtils {
             try {
                 return operation()
             } catch (e: Exception) {
-                if (e.message?.contains("Error from GoogleAI API: 500 Internal Server Error") == true) {
+                if (e.message?.contains(GOOGLE_500_ERROR) == true) {
                     assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
                 } else {
                     attempts++
