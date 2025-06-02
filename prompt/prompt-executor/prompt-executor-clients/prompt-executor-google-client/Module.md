@@ -10,23 +10,23 @@ Google's API requirements. This client offers the most comprehensive multimodal 
 
 ### Supported Models
 
-| Name                       | Speed     | Context | Input Support                    | Output Support      | Pricing (per 1M tokens)      |
-|----------------------------|-----------|---------|----------------------------------|---------------------|------------------------------|
-| Gemini 2.0 Flash           | Fast      | 1M      | Audio, Image, Video, Text, Tools | Text, Tools, Images | $0.10-$0.70 / $0.40          |
-| Gemini 2.0 Flash-001       | Fast      | 1M      | Audio, Image, Video, Text, Tools | Text, Tools         | $0.10-$0.70 / $0.40          |
-| Gemini 2.0 Flash-Lite      | Very fast | 1M      | Audio, Image, Video, Text        | Text                | $0.075 / $0.30               |
-| Gemini 1.5 Pro             | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools         | $1.25-$2.50 / $5.00-$10.00   |
-| Gemini 1.5 Pro Latest      | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools         | $1.25-$2.50 / $5.00-$10.00   |
-| Gemini 1.5 Pro-001         | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools         | $1.25-$2.50 / $5.00-$10.00   |
-| Gemini 1.5 Pro-002         | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools         | $1.25-$2.50 / $5.00-$10.00   |
-| Gemini 1.5 Flash           | Fast      | 1M      | Audio, Image, Video, Text, Tools | Text, Tools         | $0.075-$0.15 / $0.30-$0.60   |
-| Gemini 1.5 Flash Latest    | Fast      | 1M      | Audio, Image, Video, Text        | Text                | $0.075-$0.15 / $0.30-$0.60   |
-| Gemini 1.5 Flash-001       | Fast      | 1M      | Audio, Image, Video, Text        | Text                | $0.075-$0.15 / $0.30-$0.60   |
-| Gemini 1.5 Flash-002       | Fast      | 1M      | Audio, Image, Video, Text        | Text                | $0.075-$0.15 / $0.30-$0.60   |
-| Gemini 1.5 Flash 8B        | Very fast | 1M      | Audio, Image, Video, Text        | Text                | $0.0375-$0.075 / $0.15-$0.30 |
-| Gemini 1.5 Flash 8B Latest | Very fast | 1M      | Audio, Image, Video, Text        | Text                | $0.0375-$0.075 / $0.15-$0.30 |
-| Gemini 2.5 Pro Preview     | Slow      | 1M      | Audio, Image, Video, Text, Tools | Text                | $1.25-$2.50 / $10.00-$15.00  |
-| Gemini 2.5 Flash Preview   | Medium    | 1M      | Audio, Image, Video, Text        | Text                | $0.15-$1.00 / $0.60-$3.50    |
+| Name                       | Speed     | Context | Input Support                    | Output Support | Pricing (per 1M tokens)      |
+|----------------------------|-----------|---------|----------------------------------|----------------|------------------------------|
+| Gemini 2.0 Flash           | Fast      | 1M      | Audio, Image, Video, Text, Tools | Text, Tools    | $0.10-$0.70 / $0.40          |
+| Gemini 2.0 Flash-001       | Fast      | 1M      | Audio, Image, Video, Text, Tools | Text, Tools    | $0.10-$0.70 / $0.40          |
+| Gemini 2.0 Flash-Lite      | Very fast | 1M      | Audio, Image, Video, Text        | Text           | $0.075 / $0.30               |
+| Gemini 1.5 Pro             | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools    | $1.25-$2.50 / $5.00-$10.00   |
+| Gemini 1.5 Pro Latest      | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools    | $1.25-$2.50 / $5.00-$10.00   |
+| Gemini 1.5 Pro-001         | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools    | $1.25-$2.50 / $5.00-$10.00   |
+| Gemini 1.5 Pro-002         | Medium    | 1M      | Audio, Image, Video, Text, Tools | Text, Tools    | $1.25-$2.50 / $5.00-$10.00   |
+| Gemini 1.5 Flash           | Fast      | 1M      | Audio, Image, Video, Text, Tools | Text, Tools    | $0.075-$0.15 / $0.30-$0.60   |
+| Gemini 1.5 Flash Latest    | Fast      | 1M      | Audio, Image, Video, Text        | Text           | $0.075-$0.15 / $0.30-$0.60   |
+| Gemini 1.5 Flash-001       | Fast      | 1M      | Audio, Image, Video, Text        | Text           | $0.075-$0.15 / $0.30-$0.60   |
+| Gemini 1.5 Flash-002       | Fast      | 1M      | Audio, Image, Video, Text        | Text           | $0.075-$0.15 / $0.30-$0.60   |
+| Gemini 1.5 Flash 8B        | Very fast | 1M      | Audio, Image, Video, Text        | Text           | $0.0375-$0.075 / $0.15-$0.30 |
+| Gemini 1.5 Flash 8B Latest | Very fast | 1M      | Audio, Image, Video, Text        | Text           | $0.0375-$0.075 / $0.15-$0.30 |
+| Gemini 2.5 Pro Preview     | Slow      | 1M      | Audio, Image, Video, Text, Tools | Text           | $1.25-$2.50 / $10.00-$15.00  |
+| Gemini 2.5 Flash Preview   | Medium    | 1M      | Audio, Image, Video, Text        | Text           | $0.15-$1.00 / $0.60-$3.50    |
 
 ### Media Content Support
 

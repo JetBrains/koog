@@ -281,7 +281,7 @@ public open class GoogleLLMClient(
                         add(GooglePart.Text(content))
                     }
                     if (media.isUrl()) {
-                        throw IllegalArgumentException("URL images not supportedfor Gemini models")
+                        throw IllegalArgumentException("URL images not supported for Gemini models")
                     }
                     require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
                         "Image format ${media.format} not supported"

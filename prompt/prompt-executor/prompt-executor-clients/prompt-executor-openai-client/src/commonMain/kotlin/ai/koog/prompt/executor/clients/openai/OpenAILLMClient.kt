@@ -51,6 +51,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -293,11 +295,15 @@ public open class OpenAILLMClient(
             null -> null
         }
 
+        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf("text", "audio") else null
+
         return OpenAIRequest(
             model = model.id,
             messages = messages,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
+            modalities = modalities,
+            audio = modalities?.let { OpenAIAudioConfig() },
             stream = stream,
             toolChoice = toolChoice,
         )
@@ -414,6 +420,7 @@ public open class OpenAILLMClient(
         }
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
     private fun processOpenAIResponse(response: OpenAIResponse): List<Message.Response> {
         if (response.choices.isEmpty()) {
             logger.error { "Empty choices in OpenAI response" }
@@ -450,6 +457,22 @@ public open class OpenAILLMClient(
                 listOf(
                     Message.Assistant(
                         content = message.content.text(),
+                        finishReason = choice.finishReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock, totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokensCount,
+                            outputTokensCount = outputTokensCount
+                        )
+                    )
+                )
+            }
+
+            message.audio != null -> {
+                val audio = Base64.decode(message.audio.data)
+                listOf(
+                    Message.Assistant(
+                        content = message.audio.transcript ?: "",
+                        mediaContent = MediaContent.Audio(audio, format = ""),
                         finishReason = choice.finishReason,
                         metaInfo = ResponseMetaInfo.create(
                             clock, totalTokensCount = totalTokensCount,

@@ -4,55 +4,63 @@ A client implementation for executing prompts using OpenAI's GPT models with sup
 
 ### Overview
 
-This module provides a client implementation for the OpenAI API, allowing you to execute prompts using GPT models. It handles authentication, request formatting, response parsing, and multimodal content encoding specific to OpenAI's API requirements.
+This module provides a client implementation for the OpenAI API, allowing you to execute prompts using GPT models. It
+handles authentication, request formatting, response parsing, and multimodal content encoding specific to OpenAI's API
+requirements.
 
 ### Supported Models
 
 #### Reasoning Models
-| Model | Speed | Context | Input Support | Output Support | Pricing (per 1M tokens) |
-|-------|--------|---------|---------------|----------------|--------------------------|
-| GPT-4o Mini | Medium | 128K | Text, Images, Tools | Text, Tools | $1.1-$4.4 |
-| o3-mini | Medium | 200K | Text, Tools | Text, Tools | $1.1-$4.4 |
-| o1-mini | Slow | 128K | Text | Text | $1.1-$4.4 |
-| o3 | Slowest | 200K | Text, Images, Tools | Text, Tools | $10-$40 |
-| o1 | Slowest | 200K | Text, Images, Tools | Text, Tools | $15-$60 |
+
+| Model       | Speed   | Context | Input Support       | Output Support | Pricing (per 1M tokens) |
+|-------------|---------|---------|---------------------|----------------|-------------------------|
+| GPT-4o Mini | Medium  | 128K    | Text, Images, Tools | Text, Tools    | $1.1-$4.4               |
+| o3-mini     | Medium  | 200K    | Text, Tools         | Text, Tools    | $1.1-$4.4               |
+| o1-mini     | Slow    | 128K    | Text                | Text           | $1.1-$4.4               |
+| o3          | Slowest | 200K    | Text, Images, Tools | Text, Tools    | $10-$40                 |
+| o1          | Slowest | 200K    | Text, Images, Tools | Text, Tools    | $15-$60                 |
 
 #### Chat Models
-| Model | Speed | Context | Input Support | Output Support | Pricing (per 1M tokens) |
-|-------|--------|---------|---------------|----------------|--------------------------|
-| GPT-4o | Medium | 128K | Text, Images, Tools | Text, Tools | $2.5-$10 |
-| GPT-4.1 | Medium | 1M | Text, Images, Tools | Text, Tools | $2-$8 |
+
+| Model   | Speed  | Context | Input Support       | Output Support | Pricing (per 1M tokens) |
+|---------|--------|---------|---------------------|----------------|-------------------------|
+| GPT-4o  | Medium | 128K    | Text, Images, Tools | Text, Tools    | $2.5-$10                |
+| GPT-4.1 | Medium | 1M      | Text, Images, Tools | Text, Tools    | $2-$8                   |
 
 #### Audio Models
-| Model | Speed | Context | Input Support | Output Support | Pricing (per 1M tokens) |
-|-------|--------|---------|---------------|----------------|--------------------------|
-| GPT-4o Mini Audio | Fast | 128K | Text, Audio, Tools | Text, Audio, Tools | $0.15-$0.6/$10-$20 |
-| GPT-4o Audio | Medium | 128K | Text, Audio, Tools | Text, Audio, Tools | $2.5-$10/$40-$80 |
+
+| Model             | Speed  | Context | Input Support      | Output Support     | Pricing (per 1M tokens) |
+|-------------------|--------|---------|--------------------|--------------------|-------------------------|
+| GPT-4o Mini Audio | Fast   | 128K    | Text, Audio, Tools | Text, Audio, Tools | $0.15-$0.6/$10-$20      |
+| GPT-4o Audio      | Medium | 128K    | Text, Audio, Tools | Text, Audio, Tools | $2.5-$10/$40-$80        |
 
 #### Cost-Optimized Models
-| Model | Speed | Context | Input Support | Output Support | Pricing (per 1M tokens) |
-|-------|--------|---------|---------------|----------------|--------------------------|
-| o4-mini | Medium | 200K | Text, Images, Tools | Text, Tools | $1.1-$4.4 |
-| GPT-4.1-nano | Very fast | 1M | Text, Images, Tools | Text, Tools | $0.1-$0.4 |
-| GPT-4.1-mini | Fast | 1M | Text, Images, Tools | Text, Tools | $0.4-$1.6 |
+
+| Model        | Speed     | Context | Input Support       | Output Support | Pricing (per 1M tokens) |
+|--------------|-----------|---------|---------------------|----------------|-------------------------|
+| o4-mini      | Medium    | 200K    | Text, Images, Tools | Text, Tools    | $1.1-$4.4               |
+| GPT-4.1-nano | Very fast | 1M      | Text, Images, Tools | Text, Tools    | $0.1-$0.4               |
+| GPT-4.1-mini | Fast      | 1M      | Text, Images, Tools | Text, Tools    | $0.4-$1.6               |
 
 #### Embedding Models
-| Model | Speed | Dimensions | Input Support | Pricing (per 1M tokens) |
-|-------|--------|------------|---------------|-------------------------|
-| text-embedding-3-small | Medium | 1536 | Text | $0.02 |
-| text-embedding-3-large | Slow | 3072 | Text | $0.13 |
-| text-embedding-ada-002 | Slow | 1536 | Text | $0.1 |
+
+| Model                  | Speed  | Dimensions | Input Support | Pricing (per 1M tokens) |
+|------------------------|--------|------------|---------------|-------------------------|
+| text-embedding-3-small | Medium | 1536       | Text          | $0.02                   |
+| text-embedding-3-large | Slow   | 3072       | Text          | $0.13                   |
+| text-embedding-ada-002 | Slow   | 1536       | Text          | $0.1                    |
 
 ### Media Content Support
 
-| Content Type | Supported Formats | Max Size | Notes |
-|--------------|-------------------|----------|-------|
-| Images | PNG, JPEG, WebP, GIF | 20MB | Base64 encoded or URL |
-| Audio | WAV, MP3 | 25MB | Base64 encoded only (audio models) |
-| Documents | PDF | 20MB | Base64 encoded only (vision models) |
-| Video | ❌ Not supported | - | - |
+| Content Type | Supported Formats    | Max Size | Notes                               |
+|--------------|----------------------|----------|-------------------------------------|
+| Images       | PNG, JPEG, WebP, GIF | 20MB     | Base64 encoded or URL               |
+| Audio        | WAV, MP3             | 25MB     | Base64 encoded only (audio models)  |
+| Documents    | PDF                  | 20MB     | Base64 encoded only (vision models) |
+| Video        | ❌ Not supported      | -        | -                                   |
 
 **Important Details:**
+
 - **Images**: Both URL and base64 supported
 - **Audio**: Only WAV and MP3 formats, base64 only
 - **PDF Documents**: Only PDF format, requires vision capability

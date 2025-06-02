@@ -25,6 +25,8 @@ internal data class OpenAIRequest(
     val messages: List<OpenAIMessage>,
     val temperature: Double? = null,
     val tools: List<OpenAITool>? = null,
+    val modalities: List<String>? = null,
+    val audio: OpenAIAudioConfig? = null,
     val stream: Boolean = false,
     val toolChoice: OpenAIToolChoice? = null
 )
@@ -34,6 +36,7 @@ internal data class OpenAIMessage(
     val role: String,
     @Serializable(with = ContentSerializer::class)
     val content: Content? = null,
+    val audio: OpenAIAudio? = null,
     val toolCalls: List<OpenAIToolCall>? = null,
     val name: String? = null,
     val toolCallId: String? = null
@@ -200,6 +203,18 @@ internal sealed interface OpenAIToolChoice {
         val None = Choice("none")
     }
 }
+
+@Serializable
+internal data class OpenAIAudioConfig(
+    val format: String = "wav",
+    val voice: String = "alloy"
+)
+
+@Serializable
+internal data class OpenAIAudio(
+    val data: String,
+    val transcript: String? = null,
+)
 
 internal object ContentSerializer : KSerializer<Content?> {
     @OptIn(InternalSerializationApi::class)
