@@ -128,6 +128,19 @@ public interface AIAgentContextBase {
      */
     public fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature?
 
+
+    /**
+     * Retrieves a feature of the specified type from the context or throws an exception if it is not available.
+     *
+     * @param feature The [AIAgentFeature] defining the specific feature to be retrieved. This provides
+     *                the configuration and unique identification of the feature.
+     * @return The instance of the requested feature of type [Feature].
+     * @throws IllegalStateException if the requested feature is not installed in the agent.
+     */
+    public fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
+        feature(feature)
+            ?: throw IllegalStateException("Feature `${feature::class.simpleName}` is not installed to the agent")
+
     /**
      * Creates a new instance of [AIAgentContext] with updated tools, while preserving the other properties
      * of the original context.

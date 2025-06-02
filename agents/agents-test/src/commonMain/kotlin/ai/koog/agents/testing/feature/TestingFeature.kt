@@ -5,6 +5,8 @@ package ai.koog.agents.testing.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.BaseBuilder
@@ -18,9 +20,10 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.testing.tools.MockEnvironment
-import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.tokenizer.Tokenizer
+import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -181,7 +184,8 @@ public sealed class NodeReference<Input, Output> {
 
     public class Start<Input> : NodeReference<Input, Input>() {
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Input> = subgraph.start as AIAgentNodeBase<Input, Input>
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Input> =
+            subgraph.start as AIAgentNodeBase<Input, Input>
     }
 
     public class Finish<Output> : NodeReference<Output, Output>() {
@@ -277,11 +281,16 @@ public data class UnconditionalEdgeAssertion(
 public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
 
 @TestOnly
-public data class SubGraphAssertions(val subgraphRef: NodeReference.SubgraphNode<*, *>, val graphAssertions: GraphAssertions)
+public data class SubGraphAssertions(
+    val subgraphRef: NodeReference.SubgraphNode<*, *>,
+    val graphAssertions: GraphAssertions
+)
 
 @TestOnly
 public sealed interface AssertionResult {
-    public class NotEqual(public val expected: Any?, public val actual: Any?, public val message: String) : AssertionResult
+    public class NotEqual(public val expected: Any?, public val actual: Any?, public val message: String) :
+        AssertionResult
+
     public class False(public val message: String) : AssertionResult
 }
 
@@ -353,6 +362,29 @@ public class Testing {
      * and defining stage-specific assertions.
      */
     public class Config : FeatureConfig() {
+        /**
+         * A clock instance used for managing timestamps within the configuration,
+         * primarily for mock message timestamping purposes.
+         *
+         * This enables test scenarios that require precise control over time
+         * by allowing the use of custom clock instances, such as mock or fixed clocks.
+         */
+        public var clock: Clock = Clock.System
+
+        /**
+         * Defines the tokenizer to be used for estimating token counts in text strings.
+         *
+         * Tokenizers are critical for features or applications requiring token-level control
+         * or analysis, such as evaluating text input size relative to limits or optimizing
+         * messages for LLM prompts. By default, this is set to `null`, which disables
+         * token counting, but it can be replaced with a custom implementation of the `Tokenizer`
+         * interface.
+         *
+         * Assigning a different tokenizer allows for customizable token estimation strategies
+         * with varying levels of accuracy and performance depending on the use case.
+         */
+        public var tokenizer: Tokenizer? = null
+
         /**
          * A configuration flag that determines whether graph-related testing features are enabled.
          *
@@ -431,15 +463,22 @@ public class Testing {
          * @param buildAssertions A lambda defining the assertions to be built for the strategy.
          */
         public fun verifyStrategy(name: String, buildAssertions: SubgraphAssertionsBuilder<String, String>.() -> Unit) {
-            assertions = SubgraphAssertionsBuilder(NodeReference.Strategy(name)).apply(buildAssertions).build()
+            assertions =
+                SubgraphAssertionsBuilder(NodeReference.Strategy(name), clock, tokenizer).apply(buildAssertions).build()
         }
 
         /**
-         * Builder class for constructing stage-level assertions.
+         * Builder class for constructing subgraph-level assertions.
          * This includes setup for nodes, edges, reachability assertions, and context-related mock setups.
+         *
+         * @param subgraphRef: A [NodeReference.SubgraphNode] reference to a subgraph of the agent's graph strategy
+         * @param clock: A clock that is used for mock message timestamps
+         * @param tokenizer: Tokenizer that will be used to estimate token counts in mock messages
          */
         public class SubgraphAssertionsBuilder<Input, Output>(
-            private val subgraphRef: NodeReference.SubgraphNode<Input, Output>
+            private val subgraphRef: NodeReference.SubgraphNode<Input, Output>,
+            internal val clock: Clock,
+            internal val tokenizer: Tokenizer?,
         ) {
 
             private val start: NodeReference.Start<Input> = NodeReference.Start<Input>()
@@ -571,7 +610,7 @@ public class Testing {
                 subgraph: NodeReference.SubgraphNode<I, O>,
                 checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}
             ) {
-                val assertions = SubgraphAssertionsBuilder(subgraph).apply(checkSubgraph).build()
+                val assertions = SubgraphAssertionsBuilder(subgraph, clock, tokenizer).apply(checkSubgraph).build()
                 subgraphAssertions.add(SubGraphAssertions(subgraph, assertions))
             }
 
@@ -738,7 +777,8 @@ public class Testing {
                  * This list is populated by adding instances of [UnconditionalEdgeAssertion] through relevant methods,
                  * such as when defining relationships or validating graph behavior.
                  */
-                public val unconditionalEdgeAssertions: MutableList<UnconditionalEdgeAssertion> = mutableListOf<UnconditionalEdgeAssertion>()
+                public val unconditionalEdgeAssertions: MutableList<UnconditionalEdgeAssertion> =
+                    mutableListOf<UnconditionalEdgeAssertion>()
 
                 /**
                  * Creates a deep copy of the current EdgeAssertionsBuilder instance, duplicating its state and context.
@@ -901,7 +941,8 @@ public class Testing {
                         model = agent.agentConfig.model,
                         promptExecutor = PromptExecutorProxy(agent.promptExecutor, pipeline),
                         environment = environment,
-                        config = agent.agentConfig
+                        config = agent.agentConfig,
+                        clock = agent.clock
                     )
                 }
 
@@ -1055,33 +1096,40 @@ public class Testing {
  * }
  * ```
  */
-public fun <Args : Tool.Args> toolCallMessage(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
-    Message.Tool.Call(null, tool.name, tool.encodeArgsToString(args))
+public fun <Args : Tool.Args> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage(
+    tool: Tool<Args, *>,
+    args: Args
+): Message.Tool.Call {
+    val toolContent = tool.encodeArgsToString(args)
+    val tokenCount = tokenizer?.countTokens(toolContent)
+
+    return Message.Tool.Call(
+        id = null,
+        tool = tool.name,
+        content = toolContent,
+        metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
+    )
+}
 
 /**
- * Generates a signature object for a given tool and its arguments.
+ * Creates an assistant message with the provided text and finish reason.
  *
- * This utility function creates a tool call signature that can be used for testing
- * tool execution nodes. It's similar to [toolCallMessage] but is used specifically
- * in the context of testing tool execution.
- *
- * @param tool The tool for which the signature is being generated. This parameter must be an instance of Tool with the specified argument type.
- * @param args The arguments to be passed to the tool. These arguments must comply with the requirements specified by the tool.
- * @return A signature that encapsulates the tool's name and its encoded arguments.
- *
- * Example usage:
- * ```kotlin
- * // Create a tool call signature for testing
- * val signature = toolCallSignature(SolveTool, SolveTool.Args("solve"))
- *
- * // Use in node input assertions
- * assertNodes {
- *     callTool withInput toolCallSignature(SolveTool, SolveTool.Args("solve")) outputs toolResult(SolveTool, "solved")
- * }
- * ```
+ * @param text The content of the assistant message.
+ * @param finishReason The reason indicating why the message was concluded. Defaults to null.
+ * @return A new instance of Message.Assistant containing the provided content, finish reason, and associated metadata.
  */
-public fun <Args : Tool.Args> toolCallSignature(tool: Tool<Args, *>, args: Args): Message.Tool.Call =
-    Message.Tool.Call(null, tool.name, tool.encodeArgsToString(args))
+public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
+    text: String,
+    finishReason: String? = null
+): Message.Assistant {
+    val tokenCount = tokenizer?.countTokens(text)
+
+    return Message.Assistant(
+        content = text,
+        finishReason = finishReason,
+        metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
+    )
+}
 
 /**
  * Converts a tool and its corresponding result into a `ReceivedToolResult` object.
@@ -1128,7 +1176,8 @@ public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Resul
  * }
  * ```
  */
-public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult = toolResult(tool, ToolResult.Text(result))
+public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
+    toolResult(tool, ToolResult.Text(result))
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

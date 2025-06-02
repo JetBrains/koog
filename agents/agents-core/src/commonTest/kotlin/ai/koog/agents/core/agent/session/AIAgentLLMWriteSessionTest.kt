@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent.session
 
+import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -13,6 +14,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
@@ -24,6 +27,9 @@ import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class AIAgentLLMWriteSessionTest {
+    private fun systemMessage(content: String) = Message.System(content, RequestMetaInfo.create(testClock))
+    private fun userMessage(content: String) = Message.User(content, RequestMetaInfo.create(testClock))
+    private fun assistantMessage(content: String) = Message.Assistant(content, ResponseMetaInfo.create(testClock))
 
     private object TestToolsEnabler : DirectToolCallsEnabler
 
@@ -115,15 +121,15 @@ class AIAgentLLMWriteSessionTest {
             user("I have some text that needs processing.")
             assistant("I'll use the test-tool to process your text.")
             tool {
-                call(Message.Tool.Call("call_1", "test-tool", """{"input":"sample data"}"""))
-                result(Message.Tool.Result("call_1", "test-tool", "Processed: sample data"))
+                call("call_1", "test-tool", """{"input":"sample data"}""")
+                result("call_1", "test-tool", "Processed: sample data")
             }
             assistant("I've processed your sample data. The result was: Processed: sample data. Would you like me to do anything else with it?")
             user("Can you also use the custom tool to process this data?")
             assistant("Sure, I'll use the custom tool for additional processing.")
             tool {
-                call(Message.Tool.Call("call_2", "custom-tool", """{"input":"additional processing"}"""))
-                result(Message.Tool.Result("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}"""))
+                call("call_2", "custom-tool", """{"input":"additional processing"}""")
+                result("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}""")
             }
             assistant("I've completed the additional processing. The custom tool returned: Custom processed: additional processing")
         }
@@ -154,13 +160,14 @@ class AIAgentLLMWriteSessionTest {
             toolRegistry = toolRegistry,
             prompt = prompt,
             model = model,
-            config = config
+            config = config,
+            clock = testClock
         )
     }
 
     @Test
     fun testRequestLLM() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(clock = testClock) {
             mockLLMAnswer("This is a test response").asDefaultResponse
         }
 
@@ -171,12 +178,12 @@ class AIAgentLLMWriteSessionTest {
 
         assertEquals("This is a test response", response.content)
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
-        assertEquals(Message.Assistant("This is a test response"), session.prompt.messages.last())
+        assertEquals(assistantMessage("This is a test response"), session.prompt.messages.last())
     }
 
     @Test
     fun testRequestLLMWithoutTools() = runTest {
-        val mockExecutor = getMockExecutor {
+        val mockExecutor = getMockExecutor(clock = testClock) {
             mockLLMAnswer("Response without tools").asDefaultResponse
         }
 
@@ -187,7 +194,7 @@ class AIAgentLLMWriteSessionTest {
 
         assertEquals("Response without tools", response.content)
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
-        assertEquals(Message.Assistant("Response without tools"), session.prompt.messages.last())
+        assertEquals(assistantMessage("Response without tools"), session.prompt.messages.last())
     }
 
     @Test
@@ -272,7 +279,7 @@ class AIAgentLLMWriteSessionTest {
             mockLLMAnswer("Updated prompt response").asDefaultResponse
         }
 
-        val initialPrompt = prompt("test") { 
+        val initialPrompt = prompt("test", clock = testClock) {
             system("Initial system message")
             user("Initial user message")
         }
@@ -284,9 +291,9 @@ class AIAgentLLMWriteSessionTest {
         }
 
         assertEquals(3, session.prompt.messages.size)
-        assertEquals(Message.System("Initial system message"), session.prompt.messages[0])
-        assertEquals(Message.User("Initial user message"), session.prompt.messages[1])
-        assertEquals(Message.User("Additional user message"), session.prompt.messages[2])
+        assertEquals(systemMessage("Initial system message"), session.prompt.messages[0])
+        assertEquals(userMessage("Initial user message"), session.prompt.messages[1])
+        assertEquals(userMessage("Additional user message"), session.prompt.messages[2])
 
         val response = session.requestLLM()
         assertEquals("Updated prompt response", response.content)
@@ -298,7 +305,7 @@ class AIAgentLLMWriteSessionTest {
             mockLLMAnswer("Rewritten prompt response").asDefaultResponse
         }
 
-        val initialPrompt = prompt("test") { 
+        val initialPrompt = prompt("test", clock = testClock) {
             system("Initial system message")
             user("Initial user message")
         }
@@ -306,15 +313,15 @@ class AIAgentLLMWriteSessionTest {
         val session = createSession(mockExecutor, prompt = initialPrompt)
 
         session.rewritePrompt { oldPrompt ->
-            prompt("rewritten") {
+            prompt("rewritten", clock = testClock) {
                 system("Rewritten system message")
                 user("Rewritten user message")
             }
         }
 
         assertEquals(2, session.prompt.messages.size)
-        assertEquals(Message.System("Rewritten system message"), session.prompt.messages[0])
-        assertEquals(Message.User("Rewritten user message"), session.prompt.messages[1])
+        assertEquals(systemMessage("Rewritten system message"), session.prompt.messages[0])
+        assertEquals(userMessage("Rewritten user message"), session.prompt.messages[1])
 
         val response = session.requestLLM()
         assertEquals("Rewritten prompt response", response.content)

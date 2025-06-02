@@ -5,10 +5,18 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.Clock
 
 class TestLLMExecutor : PromptExecutor {
+    companion object {
+        val testClock: Clock = object : Clock {
+            override fun now(): kotlinx.datetime.Instant = kotlinx.datetime.Instant.parse("2023-01-01T00:00:00Z")
+        }
+    }
+
     // Track the number of TLDR messages created
     var tldrCount = 0
         private set
@@ -37,12 +45,12 @@ class TestLLMExecutor : PromptExecutor {
         // For compression test, return a TLDR summary
         if (prompt.messages.any { it.content.contains("Create a comprehensive summary of this conversation") }) {
             tldrCount++
-            val tldrResponse = Message.Assistant("TLDR #$tldrCount: Summary of conversation history")
+            val tldrResponse = Message.Assistant("TLDR #$tldrCount: Summary of conversation history", metaInfo = ResponseMetaInfo.create(testClock))
             messages.add(tldrResponse)
             return tldrResponse
         }
 
-        val response = Message.Assistant("Default test response")
+        val response = Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(testClock))
         messages.add(response)
         return response
     }

@@ -21,7 +21,7 @@ class AIAgentNodesHistoryCompressionTest {
     /**
      * Helper function to create a prompt with the specified number of message pairs
      */
-    private fun createPromptWithMessages(count: Int) = prompt("test") {
+    private fun createPromptWithMessages(count: Int) = prompt("test", clock = TestLLMExecutor.testClock) {
         system("Test system message")
 
         // Add the specified number of user/assistant message pairs

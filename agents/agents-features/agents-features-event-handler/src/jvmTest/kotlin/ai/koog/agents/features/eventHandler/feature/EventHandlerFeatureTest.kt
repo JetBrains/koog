@@ -9,7 +9,6 @@ import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 
 class EventHandlerTest {
-
     @Test
     fun `test event handler for agent without nodes and tools`() = runBlocking {
 
@@ -78,9 +77,9 @@ class EventHandlerTest {
             "OnBeforeNode (node: __start__, input: ${agentInput})",
             "OnAfterNode (node: __start__, input: ${agentInput}, output: ${agentInput})",
             "OnBeforeNode (node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (prompt: [System(content=Test system message), User(content=Test user message), Assistant(content=Test assistant response, finishReason=null), User(content=Test LLM call prompt)], tools: [])",
+            "OnBeforeLLMCall (prompt: [System(content=Test system message, metaInfo=RequestMetaInfo(timestamp=$ts)), User(content=Test user message, metaInfo=RequestMetaInfo(timestamp=$ts)), Assistant(content=Test assistant response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null), User(content=Test LLM call prompt, metaInfo=RequestMetaInfo(timestamp=$ts))], tools: [])",
             "OnAfterLLMCall (responses: [Assistant: Default test response])",
-            "OnAfterNode (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, finishReason=null))",
+            "OnAfterNode (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null))",
             "OnStrategyFinished (strategy: $strategyName, result: Done)",
             "OnAgentFinished (strategy: $strategyName, result: Done)",
         )
@@ -124,9 +123,9 @@ class EventHandlerTest {
             "OnBeforeNode (node: __start__, input: ${agentInput})",
             "OnAfterNode (node: __start__, input: ${agentInput}, output: ${agentInput})",
             "OnBeforeNode (node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (prompt: [System(content=Test system message), User(content=Test user message), Assistant(content=Test assistant response, finishReason=null), User(content=Test LLM call prompt)], tools: [dummy])",
+            "OnBeforeLLMCall (prompt: [System(content=Test system message, metaInfo=RequestMetaInfo(timestamp=$ts)), User(content=Test user message, metaInfo=RequestMetaInfo(timestamp=$ts)), Assistant(content=Test assistant response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null), User(content=Test LLM call prompt, metaInfo=RequestMetaInfo(timestamp=$ts))], tools: [dummy])",
             "OnAfterLLMCall (responses: [Assistant: Default test response])",
-            "OnAfterNode (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, finishReason=null))",
+            "OnAfterNode (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null))",
             "OnStrategyFinished (strategy: $strategyName, result: Done)",
             "OnAgentFinished (strategy: $strategyName, result: Done)",
         )
@@ -172,13 +171,13 @@ class EventHandlerTest {
             "OnBeforeNode (node: __start__, input: ${agentInput})",
             "OnAfterNode (node: __start__, input: ${agentInput}, output: ${agentInput})",
             "OnBeforeNode (node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (prompt: [System(content=Test system message), User(content=Test user message), Assistant(content=Test assistant response, finishReason=null), User(content=Test LLM call prompt)], tools: [dummy])",
+            "OnBeforeLLMCall (prompt: [System(content=Test system message, metaInfo=RequestMetaInfo(timestamp=$ts)), User(content=Test user message, metaInfo=RequestMetaInfo(timestamp=$ts)), Assistant(content=Test assistant response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null), User(content=Test LLM call prompt, metaInfo=RequestMetaInfo(timestamp=$ts))], tools: [dummy])",
             "OnAfterLLMCall (responses: [Assistant: Default test response])",
-            "OnAfterNode (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, finishReason=null))",
+            "OnAfterNode (node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null))",
             "OnBeforeNode (node: test LLM call with tools, input: Test LLM call with tools prompt)",
-            "OnBeforeLLMCall (prompt: [System(content=Test system message), User(content=Test user message), Assistant(content=Test assistant response, finishReason=null), User(content=Test LLM call prompt), Assistant(content=Default test response, finishReason=null), User(content=Test LLM call with tools prompt)], tools: [dummy])",
+            "OnBeforeLLMCall (prompt: [System(content=Test system message, metaInfo=RequestMetaInfo(timestamp=$ts)), User(content=Test user message, metaInfo=RequestMetaInfo(timestamp=$ts)), Assistant(content=Test assistant response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null), User(content=Test LLM call prompt, metaInfo=RequestMetaInfo(timestamp=$ts)), Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null), User(content=Test LLM call with tools prompt, metaInfo=RequestMetaInfo(timestamp=$ts))], tools: [dummy])",
             "OnAfterLLMCall (responses: [Assistant: Default test response])",
-            "OnAfterNode (node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, finishReason=null))",
+            "OnAfterNode (node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null), finishReason=null))",
             "OnStrategyFinished (strategy: $strategyName, result: Done)",
             "OnAgentFinished (strategy: $strategyName, result: Done)",
         )

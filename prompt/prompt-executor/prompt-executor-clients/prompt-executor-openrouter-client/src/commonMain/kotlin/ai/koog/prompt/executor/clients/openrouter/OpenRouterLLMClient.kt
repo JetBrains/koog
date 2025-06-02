@@ -11,6 +11,7 @@ import ai.koog.prompt.executor.clients.openrouter.OpenRouterToolChoice.FunctionN
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -37,6 +38,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -67,15 +69,17 @@ public class OpenRouterClientSettings(
  *
  * @param apiKey The API key for the OpenRouter API
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
+ * @param clock Clock instance used for tracking response metadata timestamps.
  */
 public class OpenRouterLLMClient(
     private val apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
-    baseClient: HttpClient = HttpClient()
+    baseClient: HttpClient = HttpClient(),
+    private val clock: Clock = Clock.System
 ) : LLMClient {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         private const val DEFAULT_MESSAGE_PATH = "api/v1/chat/completions"
     }
@@ -182,7 +186,7 @@ public class OpenRouterLLMClient(
     @OptIn(ExperimentalUuidApi::class)
     private fun createOpenRouterRequest(
         prompt: Prompt,
-       model: LLModel, tools: List<ToolDescriptor>,
+        model: LLModel, tools: List<ToolDescriptor>,
         stream: Boolean
     ): OpenRouterRequest {
         val messages = mutableListOf<OpenRouterMessage>()
@@ -282,7 +286,7 @@ public class OpenRouterLLMClient(
             LLMParams.ToolChoice.Auto -> OpenRouterToolChoice.Auto
             LLMParams.ToolChoice.None -> OpenRouterToolChoice.None
             LLMParams.ToolChoice.Required -> OpenRouterToolChoice.Required
-            is LLMParams.ToolChoice.Named -> OpenRouterToolChoice.Function(name=FunctionName(toolChoice.name))
+            is LLMParams.ToolChoice.Named -> OpenRouterToolChoice.Function(name = FunctionName(toolChoice.name))
             null -> null
         }
 
@@ -348,19 +352,41 @@ public class OpenRouterLLMClient(
             .firstOrNull()
             ?.let { it to it.message } ?: throw IllegalStateException("No choice found in OpenRouter response")
 
+        // Extract token count from the response
+        val inputTokens = response.usage?.promptTokens
+        val outputTokens = response.usage?.completionTokens
+        val totalTokensCount = response.usage?.totalTokens
+
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
                 message.toolCalls.map { toolCall ->
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
-                        content = toolCall.function.arguments
+                        content = toolCall.function.arguments,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock,
+                            totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokens,
+                            outputTokensCount = outputTokens
+                        )
                     )
                 }
             }
 
             message.content != null -> {
-                listOf(Message.Assistant(message.content, choice.finishReason))
+                listOf(
+                    Message.Assistant(
+                        content = message.content,
+                        finishReason = choice.finishReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock,
+                            totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokens,
+                            outputTokensCount = outputTokens
+                        )
+                    )
+                )
             }
 
             else -> {

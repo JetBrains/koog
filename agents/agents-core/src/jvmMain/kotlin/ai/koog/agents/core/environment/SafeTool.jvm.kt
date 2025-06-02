@@ -5,6 +5,8 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.datetime.Clock
 import kotlin.reflect.KFunction
 
 /**
@@ -15,10 +17,12 @@ import kotlin.reflect.KFunction
  * @param TResult The type of the result produced by the tool function.
  * @property toolFunction The Kotlin function to be wrapped and executed.
  * @property environment An environment object responsible for executing tools and handling results.
+ * @property clock The clock used to determine tool call message time
  */
 public data class SafeToolFromCallable<TResult>(
     public val toolFunction: KFunction<TResult>,
-    private val environment: AIAgentEnvironment
+    private val environment: AIAgentEnvironment,
+    private val clock: Clock
 ) {
 
     /**
@@ -148,7 +152,8 @@ public data class SafeToolFromCallable<TResult>(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgsToString(encodeArgs(*args))
+                content = tool.encodeArgsToString(encodeArgs(*args)),
+                metaInfo = ResponseMetaInfo.create(clock = clock)
             )
         ).toSafeResultFromCallable()
     }
@@ -164,7 +169,8 @@ public data class SafeToolFromCallable<TResult>(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgsToString(encodeArgs(*args))
+                content = tool.encodeArgsToString(encodeArgs(*args)),
+                metaInfo = ResponseMetaInfo.create(clock = clock)
             )
         ).content
     }

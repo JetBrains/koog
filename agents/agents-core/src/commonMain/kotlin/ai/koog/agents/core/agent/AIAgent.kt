@@ -29,6 +29,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -59,6 +60,7 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
  * @property agentConfig Configuration details for the local agent that define its operational parameters.
  * @property toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
  * @property installFeatures Lambda for installing additional features within the agent environment.
+ * @property clock The clock used to calculate message timestamps
  * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
  */
 @OptIn(ExperimentalUuidApi::class)
@@ -67,7 +69,8 @@ public open class AIAgent(
     private val strategy: AIAgentStrategy,
     public val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private val installFeatures: FeatureContext.() -> Unit = {}
+    public val clock: Clock = Clock.System,
+    private val installFeatures: FeatureContext.() -> Unit = {},
 ) : AIAgentBase, AIAgentEnvironment, Closeable {
 
     private companion object {
@@ -124,8 +127,12 @@ public open class AIAgent(
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
+        // Environment (initially equal to the current agent), transformed by some features
+        //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
+        val preparedEnvironment = pipeline.transformEnvironment(strategy, this, this)
+
         val agentContext = AIAgentContext(
-            this,
+            preparedEnvironment,
             agentInput = agentInput,
             agentConfig,
             llm = AIAgentLLMContext(
@@ -134,8 +141,9 @@ public open class AIAgent(
                 agentConfig.prompt,
                 agentConfig.model,
                 promptExecutor = PromptExecutorProxy(promptExecutor, pipeline),
-                environment = this,
-                agentConfig
+                environment = preparedEnvironment,
+                agentConfig,
+                clock
             ),
             stateManager = stateManager,
             storage = storage,

@@ -2,6 +2,7 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.prompt.params.LLMParams
+import kotlinx.datetime.Instant
 
 public fun AIAgentLLMWriteSession.clearHistory() {
     prompt = prompt.withMessages { emptyList() }
@@ -9,6 +10,10 @@ public fun AIAgentLLMWriteSession.clearHistory() {
 
 public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
     prompt = prompt.withMessages { it.takeLast(n) }
+}
+
+public fun AIAgentLLMWriteSession.leaveMessagesFromTimestamp(timestamp: Instant) {
+    prompt = prompt.withMessages { it.filter { it.metaInfo.timestamp >= timestamp } }
 }
 
 /**

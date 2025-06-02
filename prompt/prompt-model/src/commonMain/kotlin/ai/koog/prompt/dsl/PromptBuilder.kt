@@ -1,8 +1,11 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
+import kotlinx.datetime.Clock
 
 /**
  * A builder class for creating prompts using a DSL approach.
@@ -20,15 +23,21 @@ import ai.koog.prompt.text.TextContentBuilder
  *
  * @property id The identifier for the prompt
  * @property params The parameters for the language model
+ * @property clock The clock used for timestamps of messages
  */
 @PromptDSL
-public class PromptBuilder internal constructor(private val id: String, private val params: LLMParams = LLMParams()) {
+public class PromptBuilder internal constructor(
+    private val id: String,
+    private val params: LLMParams = LLMParams(),
+    private val clock: Clock = Clock.System
+) {
     private val messages = mutableListOf<Message>()
 
     internal companion object {
-        internal fun from(prompt: Prompt): PromptBuilder = PromptBuilder(
+        internal fun from(prompt: Prompt, clock: Clock = Clock.System): PromptBuilder = PromptBuilder(
             prompt.id,
-            prompt.params
+            prompt.params,
+            clock
         ).apply {
             messages.addAll(prompt.messages)
         }
@@ -48,7 +57,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * @param content The content of the system message
      */
     public fun system(content: String) {
-        messages.add(Message.System(content))
+        messages.add(Message.System(content, RequestMetaInfo.create(clock)))
     }
 
     /**
@@ -83,7 +92,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * @param content The content of the user message
      */
     public fun user(content: String) {
-        messages.add(Message.User(content))
+        messages.add(Message.User(content, RequestMetaInfo.create(clock)))
     }
 
     /**
@@ -118,7 +127,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * @param content The content of the assistant message
      */
     public fun assistant(content: String) {
-        messages.add(Message.Assistant(content))
+        messages.add(Message.Assistant(content, finishReason = null, metaInfo = ResponseMetaInfo.create(clock)))
     }
 
     /**
@@ -147,7 +156,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      *
      * Example:
      * ```kotlin
-     * message(Message.System("You are a helpful assistant."))
+     * message(Message.System("You are a helpful assistant.", metaInfo = ...))
      * ```
      *
      * @param message The message to add
@@ -164,8 +173,8 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * Example:
      * ```kotlin
      * messages(listOf(
-     *     Message.System("You are a helpful assistant."),
-     *     Message.User("What is the capital of France?")
+     *     Message.System("You are a helpful assistant.", metaInfo = ...),
+     *     Message.User("What is the capital of France?", metaInfo = ...)
      * ))
      * ```
      *
@@ -181,7 +190,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
      * This class provides methods for adding tool calls and tool results.
      */
     @PromptDSL
-    public inner class ToolMessageBuilder() {
+    public inner class ToolMessageBuilder(public val clock: Clock) {
         /**
          * Adds a tool call message to the prompt.
          *
@@ -189,8 +198,23 @@ public class PromptBuilder internal constructor(private val id: String, private 
          *
          * @param call The tool call message to add
          */
+        @Deprecated("Use call(id, tool, content) instead", ReplaceWith("call(id, tool, content)"))
         public fun call(call: Message.Tool.Call) {
             this@PromptBuilder.messages.add(call)
+        }
+
+        /**
+         * Adds a tool call message to the prompt.
+         *
+         * This method creates a `Message.Tool.Call` instance and adds it to the message list.
+         * The tool call represents a request to execute a specific tool with the provided parameters.
+         *
+         * @param id The unique identifier for the tool call message.
+         * @param tool The name of the tool being called.
+         * @param content The content or payload of the tool call.
+         */
+        public fun call(id: String?, tool: String, content: String) {
+            call(Message.Tool.Call(id, tool, content, ResponseMetaInfo.create(clock)))
         }
 
         /**
@@ -200,6 +224,7 @@ public class PromptBuilder internal constructor(private val id: String, private 
          *
          * @param result The tool result message to add
          */
+        @Deprecated("Use result(id, tool, content) instead", ReplaceWith("result(id, tool, content)"))
         public fun result(result: Message.Tool.Result) {
             this@PromptBuilder.messages
                 .indexOfLast { it is Message.Tool.Call && it.id == result.id }
@@ -207,9 +232,23 @@ public class PromptBuilder internal constructor(private val id: String, private 
                 ?.let { index -> this@PromptBuilder.messages.add(index + 1, result) }
                 ?: throw IllegalStateException("Failed to add tool result: no call message with id ${result.id}")
         }
+
+        /**
+         * Adds a tool result message to the prompt.
+         *
+         * This method creates a `Message.Tool.Result` instance and adds it to the message list.
+         * Tool results represent the output from executing a tool with the provided parameters.
+         *
+         * @param id The unique identifier for the tool result message.
+         * @param tool The name of the tool that provided the result.
+         * @param content The content or payload of the tool result.
+         */
+        public fun result(id: String?, tool: String, content: String) {
+            result(Message.Tool.Result(id, tool, content, RequestMetaInfo.create(clock)))
+        }
     }
 
-    private val tool = ToolMessageBuilder()
+    private val tool = ToolMessageBuilder(clock)
 
     /**
      * Adds tool-related messages to the prompt using a ToolMessageBuilder.

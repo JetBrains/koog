@@ -21,6 +21,7 @@ import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.Clock
 import kotlin.reflect.KClass
 
 /**
@@ -32,6 +33,7 @@ import kotlin.reflect.KClass
  * @property environment The agent environment that provides the session with tool execution
  * and error handling capabilities.
  * @property toolRegistry The registry containing tools available for use within the session.
+ * @property clock The clock used for message timestamps
  */
 public class AIAgentLLMWriteSession internal constructor(
     @PublishedApi internal val environment: AIAgentEnvironment,
@@ -41,6 +43,7 @@ public class AIAgentLLMWriteSession internal constructor(
     prompt: Prompt,
     model: LLModel,
     config: AIAgentConfigBase,
+    public val clock: Clock
 ) : AIAgentLLMSession(executor, tools, prompt, model, config) {
     /**
      * Represents the prompt object used within the session. The prompt can be accessed or
@@ -148,7 +151,7 @@ public class AIAgentLLMWriteSession internal constructor(
         val tool = (toolRegistry.tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
             ?: throw IllegalArgumentException("Tool with type ${toolClass.simpleName} is not defined"))
 
-        return SafeTool(tool, environment)
+        return SafeTool(tool, environment, clock)
     }
 
     /**
@@ -175,7 +178,7 @@ public class AIAgentLLMWriteSession internal constructor(
         val tool = toolRegistry.tools.find(ToolT::class::isInstance) as? ToolT
             ?: throw IllegalArgumentException("Tool with type ${ToolT::class.simpleName} is not defined")
 
-        return SafeTool(tool, environment)
+        return SafeTool(tool, environment, clock)
     }
 
     /**
@@ -295,7 +298,7 @@ public class AIAgentLLMWriteSession internal constructor(
         val tool = (toolRegistry.getTool(toolName) as? Tool<TArgs, *>
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments"))
 
-        return SafeTool(tool, environment)
+        return SafeTool(tool, environment, clock)
     }
 
     /**
@@ -307,7 +310,7 @@ public class AIAgentLLMWriteSession internal constructor(
      *             the modifications to be applied to the current prompt.
      */
     public fun updatePrompt(body: PromptBuilder.() -> Unit) {
-        prompt = prompt(prompt, body)
+        prompt = prompt(prompt, clock, body)
     }
 
     /**
@@ -439,7 +442,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     public suspend fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
         if (definition != null) {
-            val prompt = prompt(prompt) {
+            val prompt = prompt(prompt, clock) {
                 user {
                     definition.definition(this)
                 }

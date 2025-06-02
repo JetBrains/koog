@@ -70,8 +70,8 @@ internal data class OpenAIChoice(
 
 @Serializable
 internal data class OpenAIUsage(
-    val promptTokens: Int,
-    val completionTokens: Int? = null,
+    val inputTokens: Int? = null,
+    val outputTokens: Int? = null,
     val totalTokens: Int
 )
 

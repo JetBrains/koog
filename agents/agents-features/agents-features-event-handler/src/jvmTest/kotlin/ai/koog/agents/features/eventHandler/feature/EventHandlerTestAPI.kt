@@ -7,15 +7,22 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolRegistry.Builder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+
+val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
+
+val testClock: Clock = object : Clock {
+    override fun now(): Instant = ts
+}
 
 fun createAgent(
     strategy: AIAgentStrategy,
     configureTools: Builder.() -> Unit = { },
     installFeatures: AIAgent.FeatureContext.() -> Unit = { }
-
 ): AIAgent {
     val agentConfig = AIAgentConfig(
-        prompt = prompt("test") {
+        prompt = prompt("test", clock = testClock) {
             system("Test system message")
             user("Test user message")
             assistant("Test assistant response")
@@ -25,10 +32,11 @@ fun createAgent(
     )
 
     return AIAgent(
-        promptExecutor = TestLLMExecutor(),
+        promptExecutor = TestLLMExecutor(testClock),
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry { configureTools() },
+        clock = testClock,
         installFeatures = installFeatures,
     )
 }

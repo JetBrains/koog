@@ -4,18 +4,18 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaToolCallDTO
 import ai.koog.prompt.executor.ollama.client.dto.getFirstToolCall
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
+import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Tests for Ollama tool call ID generation and extraction.
  */
 class OllamaToolCallTest {
+
+    val testResponseMetadata = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
 
     @Test
     fun testGetToolCallWithNoToolCalls() {
@@ -25,7 +25,7 @@ class OllamaToolCallTest {
             toolCalls = null
         )
 
-        val toolCall = message.getFirstToolCall()
+        val toolCall = message.getFirstToolCall(testResponseMetadata)
         assertNull(toolCall)
     }
 
@@ -37,7 +37,7 @@ class OllamaToolCallTest {
             toolCalls = emptyList()
         )
 
-        val toolCall = message.getFirstToolCall()
+        val toolCall = message.getFirstToolCall(testResponseMetadata)
         assertNull(toolCall)
     }
 
@@ -63,7 +63,7 @@ class OllamaToolCallTest {
             )
         )
 
-        val toolCall = message.getFirstToolCall()
+        val toolCall = message.getFirstToolCall(testResponseMetadata)
         assertNotNull(toolCall)
         assertEquals("get_weather", toolCall.tool)
         assertTrue(toolCall.id!!.startsWith("ollama_tool_call_"))
@@ -105,7 +105,7 @@ class OllamaToolCallTest {
             )
         )
 
-        val toolCalls = message.getToolCalls()
+        val toolCalls = message.getToolCalls(testResponseMetadata)
         assertEquals(2, toolCalls.size)
 
         val weatherCall = toolCalls[0]
@@ -156,8 +156,8 @@ class OllamaToolCallTest {
             )
         )
 
-        val toolCall1 = message1.getFirstToolCall()
-        val toolCall2 = message2.getFirstToolCall()
+        val toolCall1 = message1.getFirstToolCall(testResponseMetadata)
+        val toolCall2 = message2.getFirstToolCall(testResponseMetadata)
 
         assertNotNull(toolCall1)
         assertNotNull(toolCall2)
@@ -206,8 +206,8 @@ class OllamaToolCallTest {
             )
         )
 
-        val toolCall1 = message1.getFirstToolCall()
-        val toolCall2 = message2.getFirstToolCall()
+        val toolCall1 = message1.getFirstToolCall(testResponseMetadata)
+        val toolCall2 = message2.getFirstToolCall(testResponseMetadata)
 
         assertNotNull(toolCall1)
         assertNotNull(toolCall2)
@@ -237,7 +237,7 @@ class OllamaToolCallTest {
             )
         )
 
-        val toolCall = message.getFirstToolCall()
+        val toolCall = message.getFirstToolCall(testResponseMetadata)
         assertNotNull(toolCall)
 
         // Verify ID format: ollama_tool_call_ followed by numbers

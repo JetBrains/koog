@@ -11,10 +11,13 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,14 +28,18 @@ class MultipleLLMPromptExecutorMockTest {
         private const val API_KEY = "fake-key"
     }
 
+    val mockClock = object : Clock {
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
+    }
+
     // Mock client for OpenAI
-    private class MockOpenAILLMClient : OpenAILLMClient(API_KEY) {
+    private inner class MockOpenAILLMClient : OpenAILLMClient(API_KEY) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant("OpenAI response"))
+            return listOf(Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock)))
         }
 
         override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
@@ -41,13 +48,13 @@ class MultipleLLMPromptExecutorMockTest {
     }
 
     // Mock client for Anthropic
-    private class MockAnthropicLLMClient : AnthropicLLMClient(API_KEY) {
+    private inner class MockAnthropicLLMClient : AnthropicLLMClient(API_KEY) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant("Anthropic response"))
+            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock)))
         }
 
         override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
@@ -56,13 +63,13 @@ class MultipleLLMPromptExecutorMockTest {
     }
 
     // Mock client for Anthropic
-    private class MockGoogleLLMClient : GoogleLLMClient(API_KEY) {
+    private inner class MockGoogleLLMClient : GoogleLLMClient(API_KEY) {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant("Gemini response"))
+            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock)))
         }
 
         override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {

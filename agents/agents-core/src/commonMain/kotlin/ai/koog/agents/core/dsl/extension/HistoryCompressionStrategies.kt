@@ -3,6 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
+import kotlinx.datetime.Instant
 
 /**
  * Represents an abstract strategy for compressing the history of messages in a `AIAgentLLMWriteSession`.
@@ -11,7 +12,9 @@ import ai.koog.prompt.message.Message
  * Example implementations:
  * - [HistoryCompressionStrategy.WholeHistory]
  * - [HistoryCompressionStrategy.FromLastNMessages]
+ * - [HistoryCompressionStrategy.FromTimestamp]
  * - [HistoryCompressionStrategy.Chunked]
+ * - [ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory]
  */
 public abstract class HistoryCompressionStrategy {
     /**
@@ -132,6 +135,32 @@ public abstract class HistoryCompressionStrategy {
             memoryMessages: List<Message>
         ) {
             llmSession.leaveLastNMessages(n)
+            val tldr = compressPromptIntoTLDR(llmSession)
+            composePromptWithRequiredMessages(llmSession, tldr, preserveMemory, memoryMessages)
+        }
+    }
+
+    /**
+     * A strategy for compressing message histories using a specified timestamp as a reference point.
+     * This strategy removes messages that occurred before a given timestamp and creates a summarized
+     * context for further interactions.
+     *
+     * @param timestamp The timestamp indicating the earliest point to retain messages from.
+     */
+    public data class FromTimestamp(val timestamp: Instant) : HistoryCompressionStrategy() {
+        /**
+         * Compresses the message history in the provided session according to the specified strategy.
+         *
+         * @param llmSession The session used for writing and managing the large language model's state.
+         * @param preserveMemory If true, ensures memory messages are preserved.
+         * @param memoryMessages The list of memory messages that should be used or referenced during compression.
+         */
+        override suspend fun compress(
+            llmSession: AIAgentLLMWriteSession,
+            preserveMemory: Boolean,
+            memoryMessages: List<Message>
+        ) {
+            llmSession.leaveMessagesFromTimestamp(timestamp)
             val tldr = compressPromptIntoTLDR(llmSession)
             composePromptWithRequiredMessages(llmSession, tldr, preserveMemory, memoryMessages)
         }

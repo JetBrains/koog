@@ -98,22 +98,22 @@ class GraphTestingFeatureTest {
                     assertReachable(askLLM, callTool)
 
                     assertNodes {
-                        askLLM withInput "Hello" outputs Message.Assistant("Hello!")
+                        askLLM withInput "Hello" outputs assistantMessage("Hello!")
                         askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
 
-                        callTool withInput toolCallSignature(
+                        callTool withInput toolCallMessage(
                             SolveTool,
                             SolveTool.Args("solve")
                         ) outputs toolResult(SolveTool, "solved")
 
-                        callTool withInput toolCallSignature(
+                        callTool withInput toolCallMessage(
                             CreateTool,
                             CreateTool.Args("solve")
                         ) outputs toolResult(CreateTool, "created")
                     }
 
                     assertEdges {
-                        askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
+                        askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
                         askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
                     }
                 }

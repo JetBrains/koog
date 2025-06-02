@@ -5,6 +5,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.tokenizer.Tokenizer
+import kotlinx.datetime.Clock
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -61,6 +64,7 @@ public class ToolCondition<Args : Tool.Args, Result : ToolResult>(
  * It allows you to define how the LLM should respond to different inputs and how tools should
  * behave when called during testing.
  *
+ *
  * Example usage:
  * ```kotlin
  * val mockLLMApi = getMockExecutor(toolRegistry) {
@@ -79,8 +83,11 @@ public class ToolCondition<Args : Tool.Args, Result : ToolResult>(
  *     }
  * }
  * ```
+ *
+ * @property clock: A clock that is used for mock message timestamps
+ * @property tokenizer: Tokenizer that will be used to estimate token counts in mock messages
  */
-public class MockLLMBuilder {
+public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tokenizer? = null) {
     private val assistantPartialMatches = mutableMapOf<String, String>()
     private val assistantExactMatches = mutableMapOf<String, String>()
     private val conditional = mutableMapOf<(String) -> Boolean, String>()
@@ -124,8 +131,14 @@ public class MockLLMBuilder {
      * @param args The arguments to pass to the tool
      */
     public fun <Args : Tool.Args> addLLMAnswerExactPattern(llmAnswer: String, tool: Tool<Args, *>, args: Args) {
-        toolCallExactMatches[llmAnswer] =
-            Message.Tool.Call(id = null, tool = tool.name, content = tool.encodeArgsToString(args))
+        toolCallExactMatches[llmAnswer] = tool.encodeArgsToString(args).let { toolContent ->
+            Message.Tool.Call(
+                id = null,
+                tool = tool.name,
+                content = toolContent,
+                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+            )
+        }
     }
 
     /**
@@ -348,7 +361,7 @@ public class MockLLMBuilder {
      * @param action A function that produces the string result
      * @return The result of the does call
      */
-    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String):  MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
+    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String): MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
         does { ToolResult.Text(action()) }
 
     /**
@@ -361,10 +374,18 @@ public class MockLLMBuilder {
      */
     public fun build(): PromptExecutor {
         val combinedExactMatches = assistantExactMatches.mapValues {
-            Message.Assistant(it.value.trimIndent())
+            val text = it.value.trimIndent()
+            Message.Assistant(
+                content = text,
+                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
+            )
         } + toolCallExactMatches
         val combinedPartialMatches = assistantPartialMatches.mapValues {
-            Message.Assistant(it.value.trimIndent())
+            val text = it.value.trimIndent()
+            Message.Assistant(
+                content = text,
+                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
+            )
         } + toolCallPartialMatches
 
         return MockLLMExecutor(
@@ -373,7 +394,9 @@ public class MockLLMBuilder {
             conditional = conditional.takeIf { it.isNotEmpty() },
             defaultResponse = defaultResponse,
             toolRegistry = toolRegistry,
-            toolActions = toolActions
+            toolActions = toolActions,
+            clock = clock,
+            tokenizer = tokenizer
         )
     }
 }
@@ -517,6 +540,8 @@ public class DefaultResponseReceiver(public val response: String) {
  * all the configured responses and tool actions.
  *
  * @param toolRegistry Optional tool registry to be used for tool execution
+ * @param clock: A clock that is used for mock message timestamps
+ * @param tokenizer: Tokenizer that will be used to estimate token counts in mock messages
  * @param init A lambda with receiver that configures the mock LLM executor
  * @return A configured PromptExecutor for testing
  *
@@ -541,6 +566,8 @@ public class DefaultResponseReceiver(public val response: String) {
  */
 public fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
+    clock: Clock = Clock.System,
+    tokenizer: Tokenizer? = null,
     init: MockLLMBuilder.() -> Unit
 ): PromptExecutor {
 
@@ -548,7 +575,7 @@ public fun getMockExecutor(
     DefaultResponseReceiver.clearMatches()
 
     // Call MockLLMBuilder and apply toolRegistry, eventHandler and set currentBuilder to this (to add mocked tool calls)
-    val builder = MockLLMBuilder().apply {
+    val builder = MockLLMBuilder(clock, tokenizer).apply {
         toolRegistry?.let { setToolRegistry(it) }
         MockLLMBuilder.currentBuilder = this
         init()

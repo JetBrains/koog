@@ -2,13 +2,18 @@ package ai.koog.prompt
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -19,6 +24,15 @@ import kotlin.test.assertNotEquals
 
 class PromptTest {
     companion object {
+        val ts: Instant = Instant.parse("2023-01-01T00:00:00Z")
+
+        val testClock: Clock = object : Clock {
+            override fun now(): Instant = ts
+        }
+
+        val testRespMetaInfo = ResponseMetaInfo.create(testClock)
+        val testReqMetaInfo = RequestMetaInfo.create(testClock)
+
         val promptId = "test-id"
         val systemMessage = "You are a helpful assistant with many capabilities"
         val assistantMessage = "I'm here to help!"
@@ -42,13 +56,13 @@ class PromptTest {
             put("required", true)
         }
 
-        val basicPrompt = Prompt.build("test") {
+        val basicPrompt = Prompt.build("test", clock = testClock) {
             system(systemMessage)
             user(userMessage)
-            message(Message.Assistant(assistantMessage, finishReason))
+            message(Message.Assistant(assistantMessage, testRespMetaInfo, finishReason))
             tool {
-                call(Message.Tool.Call(toolCallId, toolName, toolCallContent))
-                result(Message.Tool.Result(toolCallId, toolName, toolResultContent))
+                call(toolCallId, toolName, toolCallContent)
+                result(toolCallId, toolName, toolResultContent)
             }
         }
 
@@ -90,8 +104,8 @@ class PromptTest {
             user(userMessage)
             assistant(assistantMessage)
             tool {
-                call(Message.Tool.Call(toolCallId, toolName, toolContent))
-                result(Message.Tool.Result(toolCallId, toolName, toolResult))
+                call(toolCallId, toolName, toolContent,)
+                result(toolCallId, toolName, toolResult)
             }
         }
 
@@ -221,9 +235,9 @@ class PromptTest {
         val assistantMessage = "I'll help you with Kotlin programming"
 
         val newMessages = listOf(
-            Message.System(systemMessage),
-            Message.User(userMessage),
-            Message.Assistant(assistantMessage)
+            Message.System(systemMessage, testReqMetaInfo),
+            Message.User(userMessage, testReqMetaInfo),
+            Message.Assistant(assistantMessage, testRespMetaInfo)
         )
 
         val updatedPrompt = basicPrompt.withMessages({ newMessages })
@@ -313,11 +327,11 @@ class PromptTest {
 
     @Test
     fun testMessageWithEmptyContent() {
-        val emptySystemMessage = Message.System("")
-        val emptyUserMessage = Message.User("")
-        val emptyAssistantMessage = Message.Assistant("")
-        val emptyToolCallMessage = Message.Tool.Call(toolCallId, toolName, "")
-        val emptyToolResultMessage = Message.Tool.Result(toolCallId, toolName, "")
+        val emptySystemMessage = Message.System("", testReqMetaInfo)
+        val emptyUserMessage = Message.User("", testReqMetaInfo)
+        val emptyAssistantMessage = Message.Assistant("", testRespMetaInfo)
+        val emptyToolCallMessage = Message.Tool.Call(toolCallId, toolName, "", testRespMetaInfo)
+        val emptyToolResultMessage = Message.Tool.Result(toolCallId, toolName, "", testReqMetaInfo)
 
         assertEquals("", emptySystemMessage.content)
         assertEquals("", emptyUserMessage.content)
@@ -330,8 +344,8 @@ class PromptTest {
             user("")
             assistant("")
             tool {
-                call(Message.Tool.Call(toolCallId, toolName, ""))
-                result(Message.Tool.Result(toolCallId, toolName, ""))
+                call(toolCallId, toolName, "")
+                result(toolCallId, toolName, "")
             }
         }
 
@@ -351,16 +365,16 @@ class PromptTest {
 
     @Test
     fun testToolMessagesWithNullId() {
-        val toolCallWithNullId = Message.Tool.Call(null, toolName, toolCallContent)
-        val toolResultWithNullId = Message.Tool.Result(null, toolName, toolCallContent)
+        val toolCallWithNullId = Message.Tool.Call(null, toolName, toolCallContent, testRespMetaInfo)
+        val toolResultWithNullId = Message.Tool.Result(null, toolName, toolCallContent, testReqMetaInfo)
 
         assertNull(toolCallWithNullId.id)
         assertNull(toolResultWithNullId.id)
 
         val prompt = Prompt.build(promptId) {
             tool {
-                call(Message.Tool.Call(null, toolName, toolCallContent))
-                result(Message.Tool.Result(null, toolName, toolCallContent))
+                call(null, toolName, toolCallContent)
+                result(null, toolName, toolCallContent)
             }
         }
 
@@ -382,7 +396,7 @@ class PromptTest {
     @Test
     fun testAssistantMessageWithNullFinishReason() {
         val prompt = Prompt.build(promptId) {
-            message(Message.Assistant(assistantMessage, null))
+            message(Message.Assistant(assistantMessage, testRespMetaInfo, null))
         }
 
         assertEquals(1, prompt.messages.size)
@@ -398,7 +412,7 @@ class PromptTest {
 
     @Test
     fun testInvalidToolCallJsonContent() {
-        val toolCallWithInvalidJson = Message.Tool.Call(toolCallId, toolName, "invalid json")
+        val toolCallWithInvalidJson = Message.Tool.Call(toolCallId, toolName, "invalid json", testRespMetaInfo)
 
         assertThrows<SerializationException> {
             toolCallWithInvalidJson.contentJson
@@ -473,8 +487,8 @@ class PromptTest {
 
     @Test
     fun testToolMessagesWithEmptyToolName() {
-        val toolCallWithEmptyName = Message.Tool.Call(toolCallId, emptyName, toolCallContent)
-        val toolResultWithEmptyName = Message.Tool.Result(toolCallId, emptyName, toolCallContent)
+        val toolCallWithEmptyName = Message.Tool.Call(toolCallId, emptyName, toolCallContent, testRespMetaInfo)
+        val toolResultWithEmptyName = Message.Tool.Result(toolCallId, emptyName, toolCallContent, testReqMetaInfo)
 
         val prompt = Prompt.build(promptId) {
             tool {
@@ -563,20 +577,20 @@ class PromptTest {
 
         // Test adding a message
         val updatedPrompt = originalPrompt.withMessages { messages ->
-            messages + Message.Assistant("How can I help you?")
+            messages + Message.Assistant("How can I help you?", testRespMetaInfo)
         }
 
         assertNotEquals(originalPrompt, updatedPrompt)
         assertEquals(3, updatedPrompt.messages.size)
-        assertEquals(Message.Assistant("How can I help you?"), updatedPrompt.messages[2])
+        assertEquals(Message.Assistant("How can I help you?", testRespMetaInfo), updatedPrompt.messages[2])
 
         // Test replacing messages
         val replacedPrompt = originalPrompt.withMessages {
-            listOf(Message.System("You are a coding assistant"))
+            listOf(Message.System("You are a coding assistant", testReqMetaInfo))
         }
 
         assertEquals(1, replacedPrompt.messages.size)
-        assertEquals(Message.System("You are a coding assistant"), replacedPrompt.messages[0])
+        assertEquals(Message.System("You are a coding assistant", testReqMetaInfo), replacedPrompt.messages[0])
     }
 
     @Test

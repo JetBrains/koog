@@ -92,12 +92,12 @@ fun testAgentBehavior() = runTest {
 
                 // Test node behavior
                 assertNodes {
-                    askLLM withInput "Hello" outputs Message.Assistant("Hello!")
+                    askLLM withInput "Hello" outputs assistantMessage("Hello!")
                 }
 
                 // Test edge connections
                 assertEdges {
-                    askLLM withOutput Message.Assistant("Hello!") goesTo giveFeedback
+                    askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
                 }
             }
         }

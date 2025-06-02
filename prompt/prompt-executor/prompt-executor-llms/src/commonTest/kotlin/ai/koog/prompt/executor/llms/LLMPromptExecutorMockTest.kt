@@ -10,20 +10,27 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 class LLMPromptExecutorMockTest {
 
+    val mockClock = object : Clock {
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
+    }
+
     // Mock client for OpenAI
-    private class MockOpenAILLMClient : LLMClient {
+    private inner class MockOpenAILLMClient : LLMClient {
         override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-            return listOf(Message.Assistant("OpenAI response"))
+            return listOf(Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock)))
         }
 
         override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
@@ -32,13 +39,13 @@ class LLMPromptExecutorMockTest {
     }
 
     // Mock client for Anthropic
-    private class MockAnthropicLLMClient : LLMClient {
+    private inner class MockAnthropicLLMClient : LLMClient {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant("Anthropic response"))
+            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock)))
         }
 
         override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
@@ -47,13 +54,13 @@ class LLMPromptExecutorMockTest {
     }
 
     // Mock client for Gemini
-    private class MockGoogleLLMClient : LLMClient {
+    private inner class MockGoogleLLMClient : LLMClient {
         override suspend fun execute(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant("Gemini response"))
+            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock)))
         }
 
         override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
