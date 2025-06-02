@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
  * @property display The human-readable name of the LLM provider.
  */
 @Serializable
-public sealed class LLMProvider(public val id: String, public val display: String) {
+public abstract class LLMProvider(public val id: String, public val display: String) {
     /**
      * Represents a specialized implementation of the `LLMProvider` class corresponding to the Google provider.
      *
