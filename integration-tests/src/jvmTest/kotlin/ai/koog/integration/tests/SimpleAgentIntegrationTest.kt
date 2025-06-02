@@ -29,12 +29,6 @@ import kotlin.test.AfterTest
 import kotlin.test.assertTrue
 
 class SimpleAgentIntegrationTest {
-    val systemPrompt = """
-            You are a helpful assistant. 
-            You MUST use tools to communicate to the user.
-            You MUST NOT communicate to the user without tools.
-        """.trimIndent()
-
     companion object {
         @JvmStatic
         fun openAIModels(): Stream<LLModel> {
@@ -123,8 +117,7 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14478")
-        assumeTrue(model != GoogleModels.Gemini2_5FlashPreview0417, "JBAI-14478")
+        val systemPrompt = "You are a helpful assistant."
 
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
@@ -152,6 +145,12 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
+        val systemPrompt = """
+            You are a helpful assistant. 
+            You MUST use tools to communicate to the user.
+            You MUST NOT communicate to the user without tools.
+        """.trimIndent()
+
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
