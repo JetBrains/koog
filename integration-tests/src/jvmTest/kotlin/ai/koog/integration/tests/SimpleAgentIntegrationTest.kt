@@ -7,9 +7,9 @@ import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
-import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.runWithRetry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -29,6 +29,8 @@ import kotlin.test.AfterTest
 import kotlin.test.assertTrue
 
 class SimpleAgentIntegrationTest {
+    val systemPrompt = "You are a helpful assistant."
+
     companion object {
         @JvmStatic
         fun openAIModels(): Stream<LLModel> {
@@ -117,8 +119,6 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
-        val systemPrompt = "You are a helpful assistant."
-
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
@@ -145,19 +145,13 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
-        val systemPrompt = """
-            You are a helpful assistant. 
-            You MUST use tools to communicate to the user.
-            You MUST NOT communicate to the user without tools.
-        """.trimIndent()
-
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(!model.id.contains("flash"), "JBAI-14094")
 
         val toolRegistry = ToolRegistry {
-            tool(SayToUser)
+            tool(CalculatorTool)
         }
 
         val executor = when (model.provider) {
@@ -177,13 +171,13 @@ class SimpleAgentIntegrationTest {
         )
 
         runWithRetry {
-            agent.run("Write a Kotlin function to calculate factorial.")
+            agent.run("How much is 3 times 5?")
         }
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
         assertTrue(
-            actualToolCalls.contains(SayToUser.name),
-            "The ${SayToUser.name} tool was not called for model $model"
+            actualToolCalls.contains(CalculatorTool.name),
+            "The ${CalculatorTool.name} tool was not called for model $model"
         )
     }
 }

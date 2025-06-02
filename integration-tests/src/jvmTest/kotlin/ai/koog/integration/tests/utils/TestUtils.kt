@@ -105,7 +105,7 @@ internal object TestUtils {
         val b: Int
     ) : Tool.Args
 
-    class CalculatorTool : SimpleTool<CalculatorArgs>() {
+    public object CalculatorTool : SimpleTool<CalculatorArgs>() {
         override val argsSerializer = CalculatorArgs.serializer()
 
         val calculatorToolDescriptor = ToolDescriptor(
