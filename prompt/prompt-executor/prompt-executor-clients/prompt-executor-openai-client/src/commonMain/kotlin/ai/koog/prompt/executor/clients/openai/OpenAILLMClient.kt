@@ -441,19 +441,17 @@ public open class OpenAILLMClient(
 
             is ToolParameterType.Object -> {
                 put("type", JsonPrimitive("object"))
-                if (type.additionalProperties) {
-                    put("additionalProperties", true)
-                } else {
-                    put("properties", buildJsonObject {
-                        type.properties.forEach { property ->
-                            put(property.name, buildJsonObject {
-                                fillOpenAIParamType(property.type)
-                                put("description", property.description)
-                            })
-                        }
-                    }
-                    )
+                type.additionalProperties?.let {
+                    put("additionalProperties", type.additionalProperties)
                 }
+                put("properties", buildJsonObject {
+                    type.properties.forEach { property ->
+                        put(property.name, buildJsonObject {
+                            fillOpenAIParamType(property.type)
+                            put("description", property.description)
+                        })
+                    }
+                })
             }
         }
     }

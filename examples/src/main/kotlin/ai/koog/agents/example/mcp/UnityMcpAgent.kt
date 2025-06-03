@@ -7,8 +7,8 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.ext.agent.subgraphWithTask
-import ai.koog.agents.local.features.eventHandler.feature.EventHandler
-import ai.koog.agents.local.features.tracing.feature.Tracing
+import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -34,20 +34,18 @@ import kotlinx.coroutines.runBlocking
  */
 fun main() {
     // Start the Docker container with the Google Maps MCP server
-    val process = ProcessBuilder(
-        "uv", "--directory",
-        "/Users/Maria.Tigina/Applications/UnityMCP/UnityMcpServer/src",
-        "run",
-        "server.py"
-    )
-        .start()
-    
-    // MCP github: https://github.com/IvanMurzak/Unity-MCP
-    // Demo project: https://github.com/citizenmatt/TowerDefense
 //    val process = ProcessBuilder(
-//        "/Users/heorhii.lemeshko/projects/unity/Unity-MCP/Library/com.ivanmurzak.unity.mcp.server/bin~/Release/net9.0/com.IvanMurzak.Unity.MCP.Server",
-//        "60606"
+//        "uv", "--directory",
+//        "/Users/Maria.Tigina/Applications/UnityMCP/UnityMcpServer/src",
+//        "run",
+//        "server.py"
 //    )
+//        .start()
+
+    val process = ProcessBuilder(
+        "/Users/Maria.Tigina/IdeaProjects/TowerDefense/My project/Library/com.ivanmurzak.unity.mcp.server/bin~/Release/net9.0/com.IvanMurzak.Unity.MCP.Server",
+        "60606"
+    ).start()
 
     // Wait for the server to start
     Thread.sleep(2000)
@@ -58,7 +56,10 @@ fun main() {
             val toolRegistry = McpToolRegistryProvider.fromTransport(
                 transport = McpToolRegistryProvider.defaultStdioTransport(process)
             )
-            toolRegistry.tools.forEach { println(it.name) }
+            toolRegistry.tools.forEach {
+                println(it.name)
+                println(it.descriptor)
+            }
             val agentConfig = AIAgentConfig(
                 prompt = prompt("cook_agent_system_prompt") {
                     system { "Your are a unity assistant. You can exucute different tasks by interacting with the tools from Unity3d engine." }
@@ -102,8 +103,12 @@ fun main() {
                             println("Tool: ${tool.name}, Args: $toolArgs, Result: $result")
                         }
 
-                        onAfterLLMWithToolsCall = { response, tools ->
-                            println("LLM response: $response, Tools: ${tools.map{it.name}}")
+                        onBeforeLLMCall  = { prompt, tools ->
+                            println("Before LLM call: prompt=$prompt, tools: [${tools.joinToString { it.name }}]")
+                        }
+
+                        onAfterLLMCall  = { responses ->
+                            println("After LLM call: ${responses.joinToString("\n") { it.content }}")
                         }
 
                         onAgentFinished = { strategyName: String, result: String? ->

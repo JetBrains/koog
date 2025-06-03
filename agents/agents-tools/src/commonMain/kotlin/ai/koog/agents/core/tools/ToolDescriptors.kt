@@ -91,7 +91,8 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      */
     public data class Object(
         val properties: kotlin.collections.List<ToolParameterDescriptor>,
-        val additionalProperties: kotlin.Boolean = false
+        val requiredProperties: kotlin.collections.List<kotlin.String>,
+        val additionalProperties: kotlin.Boolean?
 
     ) : ToolParameterType("OBJECT")
 

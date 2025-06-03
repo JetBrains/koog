@@ -3,9 +3,7 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.*
 import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 
 /**
@@ -77,27 +75,34 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
             // Object type
             "object" -> {
-                if ("additionalProperties" in element) {
-                    ToolParameterType.Object(
-                        emptyList(),
-                        true)
-                } else {
-                    val properties = if ("properties" in element) {
-                        element.getValue("properties").jsonObject
-                    } else {
-                        return ToolParameterType.Object(
-                            emptyList(),
-                            true)
+                val properties = if ("properties" in element) {
+                    val rawProperties = element.getValue("properties").jsonObject
+                    rawProperties.map { (name, property) ->
+                        // Description is optional
+                        val description = element["description"]?.jsonPrimitive?.content.orEmpty()
+                        ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
                     }
-
-                    ToolParameterType.Object(
-                        properties.map { (name, property) ->
-                            val description = element["description"]?.jsonPrimitive?.content.orEmpty()
-                            ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
-                        },
-                        additionalProperties = true
-                    )
+                } else {
+                    emptyList()
                 }
+
+                val required = if ("required" in element) {
+                    element.getValue("required").jsonArray.map { it.jsonPrimitive.content }
+                } else {
+                    emptyList()
+                }
+
+                val additionalProperties = if ("additionalProperties" in element) {
+                    element.getValue("additionalProperties").jsonPrimitive.boolean
+                } else {
+                    null
+                }
+
+                ToolParameterType.Object(
+                    properties = properties,
+                    requiredProperties = required,
+                    additionalProperties = additionalProperties
+                )
             }
 
             // Unsupported type
