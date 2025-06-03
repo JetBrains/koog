@@ -29,6 +29,7 @@ internal object TestUtils {
 
     private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
     private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
+    private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
 
     suspend fun <T> executeWithRetry(operation: suspend () -> T): T {
         val maxRetries = 3
@@ -39,8 +40,8 @@ internal object TestUtils {
             try {
                 return operation()
             } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_500_ERROR) == true) {
-                    assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
+                if (e.message?.contains(GOOGLE_500_ERROR) == true || e.message?.contains(GOOGLE_503_ERROR) == true) {
+                    assumeTrue(false, "Skipping test due to ${e.message}")
                 } else if (e.message?.contains(GOOGLE_API_ERROR) == true) {
                     lastException = e
                     attempts++
@@ -69,8 +70,8 @@ internal object TestUtils {
             try {
                 return operation()
             } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_500_ERROR) == true) {
-                    assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
+                if (e.message?.contains(GOOGLE_500_ERROR) == true || e.message?.contains(GOOGLE_503_ERROR) == true) {
+                    assumeTrue(false, "Skipping test due to ${e.message}}")
                 } else {
                     attempts++
                     println("Attempt $attempts/$maxRetries failed with exception ${e.message}, retrying...")
