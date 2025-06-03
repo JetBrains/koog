@@ -1,6 +1,7 @@
 package ai.koog.agents.mcp
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -44,7 +45,7 @@ public class McpTool(
      * @property arguments The JsonObject containing the arguments for the MCP tool.
      */
     @Serializable(with = ArgsSerializer::class)
-    public data class Args(val arguments: JsonObject) : Tool.Args
+    public data class Args(val arguments: JsonObject) : ToolArgs
 
     /**
      * Custom serializer for the Args class.

@@ -19,7 +19,7 @@ object ToneTools {
         private val toneType: String
     ) : SimpleTool<ToneTool.Args>() {
         @Serializable
-        data class Args(val text: String) : Tool.Args
+        data class Args(val text: String) : ToolArgs
 
         override val argsSerializer = Args.serializer()
 

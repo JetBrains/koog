@@ -1,6 +1,7 @@
 package ai.koog.agents.core.tools.reflect
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -40,7 +41,7 @@ public class ToolFromCallable(
     private val json: Json = Json,
 ) : Tool<ToolFromCallable.VarArgs, ToolFromCallable.Result>() {
 
-    public data class VarArgs(val args: Map<KParameter, Any?>) : Args {
+    public data class VarArgs(val args: Map<KParameter, Any?>) : ToolArgs {
         public fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) -> parameter.name?.let { it to value } }
     }
 

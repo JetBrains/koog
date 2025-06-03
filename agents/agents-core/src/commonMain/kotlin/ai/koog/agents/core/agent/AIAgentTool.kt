@@ -48,7 +48,7 @@ public class AIAgentTool(
     requestDescription: String = "Input for the task"
 ) : Tool<AgentToolArgs, AgentToolResult>() {
     @Serializable
-    public data class AgentToolArgs(val request: String) : Args
+    public data class AgentToolArgs(val request: String) : ToolArgs
 
     @Serializable
     public data class AgentToolResult(

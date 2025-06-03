@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
  */
 public object SayToUser : SimpleTool<SayToUser.Args>() {
     @Serializable
-    public data class Args(val message: String) : Tool.Args
+    public data class Args(val message: String) : ToolArgs
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 

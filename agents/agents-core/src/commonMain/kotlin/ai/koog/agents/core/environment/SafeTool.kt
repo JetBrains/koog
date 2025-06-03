@@ -3,6 +3,7 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -13,13 +14,13 @@ import kotlinx.datetime.Clock
  * It provides mechanisms for handling tool execution results and differentiating between
  * success and failure cases.
  *
- * @param TArgs The type of arguments accepted by the underlying tool. Must extend [Tool.Args].
+ * @param TArgs The type of arguments accepted by the underlying tool. Must extend [ToolArgs].
  * @param TResult The type of result produced by the underlying tool. Must extend [ToolResult].
  * @property tool The tool instance to be executed. Defines the operation and its required input/output behavior.
  * @property clock The clock used to determine tool call message timestamps
  * @property environment The environment in which the tool operates. Handles the execution of tool logic.
  */
-public data class SafeTool<TArgs : Tool.Args, TResult : ToolResult>(
+public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
     private val tool: Tool<TArgs, TResult>,
     private val environment: AIAgentEnvironment,
     private val clock: Clock
@@ -152,11 +153,11 @@ public data class SafeTool<TArgs : Tool.Args, TResult : ToolResult>(
      * Executes a tool with the provided arguments in an unsafe manner.
      * This method does not enforce type safety for the arguments provided to the tool.
      *
-     * @param args The arguments to be passed to the tool, represented as a Tool.Args object.
+     * @param args The arguments to be passed to the tool, represented as a ToolArgs object.
      * @return A Result containing the outcome of the tool execution with TResult as the result type.
      */
     @Suppress("UNCHECKED_CAST")
-    public suspend fun executeUnsafe(args: Tool.Args): Result<TResult> {
+    public suspend fun executeUnsafe(args: ToolArgs): Result<TResult> {
         return environment.executeTool(
             Message.Tool.Call(
                 id = null,
