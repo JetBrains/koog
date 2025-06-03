@@ -1,5 +1,6 @@
 package ai.koog.integration.tests
 
+import ai.koog.integration.tests.utils.TestUtils.executeWithRetry
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
@@ -45,9 +46,9 @@ class MultipleSystemMessagesPromptIntegrationTest {
         val modelAnthropic = AnthropicModels.Haiku_3_5
         val modelGemini = GoogleModels.Gemini2_0Flash
 
-        val responseOpenAI = executor.execute(prompt, modelOpenAI)
-        val responseAnthropic = executor.execute(prompt, modelAnthropic)
-        val responseGemini = executor.execute(prompt, modelGemini)
+        val responseOpenAI = executeWithRetry { executor.execute(prompt, modelOpenAI) }
+        val responseAnthropic = executeWithRetry { executor.execute(prompt, modelAnthropic) }
+        val responseGemini = executeWithRetry { executor.execute(prompt, modelGemini) }
 
         assertTrue(responseOpenAI.content.isNotEmpty(), "OpenAI response should not be empty")
         assertTrue(responseAnthropic.content.isNotEmpty(), "Anthropic response should not be empty")
