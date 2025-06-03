@@ -40,6 +40,11 @@ fun main() {
                 transport = McpToolRegistryProvider.defaultStdioTransport(process)
             )
 
+            toolRegistry.tools.forEach {
+                println(it.name)
+                println(it.descriptor)
+            }
+
             // Create the runner
             val agent = AIAgent(
                 executor = simpleOpenAIExecutor(openAIApiToken),

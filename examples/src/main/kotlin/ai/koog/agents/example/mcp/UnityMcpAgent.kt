@@ -39,8 +39,7 @@ fun main() {
 //        "/Users/Maria.Tigina/Applications/UnityMCP/UnityMcpServer/src",
 //        "run",
 //        "server.py"
-//    )
-//        .start()
+//    ).start()
 
     val process = ProcessBuilder(
         "/Users/Maria.Tigina/IdeaProjects/TowerDefense/My project/Library/com.ivanmurzak.unity.mcp.server/bin~/Release/net9.0/com.IvanMurzak.Unity.MCP.Server",

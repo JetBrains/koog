@@ -46,9 +46,6 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         // Extract the type string from the JSON object
         val typeStr = if ("type" in element) {
             element.getValue("type").jsonPrimitive.content
-        } else if ("\$ref" in element) {
-//           TODO("Support \$ref") 
-            "object"
         } else {
             throw IllegalArgumentException("Parameter type must have type property")
         }
@@ -60,6 +57,9 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             "integer" -> ToolParameterType.Integer
             "number" -> ToolParameterType.Float
             "boolean" -> ToolParameterType.Boolean
+            "enum" -> ToolParameterType.Enum(
+                element.getValue("enum").jsonArray.map { it.jsonPrimitive.content }.toTypedArray()
+            )
 
             // Array type
             "array" -> {
@@ -93,7 +93,20 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 }
 
                 val additionalProperties = if ("additionalProperties" in element) {
-                    element.getValue("additionalProperties").jsonPrimitive.boolean
+                    when (element.getValue("additionalProperties")) {
+                        is JsonPrimitive -> element.getValue("additionalProperties").jsonPrimitive.boolean
+                        is JsonObject -> true
+                        else -> null
+                    }
+                } else {
+                    null
+                }
+
+                val additionalPropertiesType = if ("additionalProperties" in element) {
+                    when (element.getValue("additionalProperties")) {
+                        is JsonObject -> parseParameterType(element.getValue("additionalProperties").jsonObject)
+                        else -> null
+                    }
                 } else {
                     null
                 }
@@ -101,6 +114,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 ToolParameterType.Object(
                     properties = properties,
                     requiredProperties = required,
+                    additionalPropertiesType = additionalPropertiesType,
                     additionalProperties = additionalProperties
                 )
             }
