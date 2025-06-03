@@ -444,7 +444,7 @@ public class AIAgentLLMWriteSession internal constructor(
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {
-                    text { definition.definition(this) }
+                    definition.definition(this)
                 }
             }
             this.prompt = prompt
