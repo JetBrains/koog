@@ -3,7 +3,6 @@ package ai.koog.agents.core.tools
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
@@ -32,7 +31,7 @@ public interface DirectToolCallsEnabler
  * Represents a tool that, when executed, makes changes to the environment.
  */
 @Suppress("UNCHECKED_CAST", "unused")
-public abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
+public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
     /**
      * Serializer responsible for encoding and decoding the arguments required for the tool execution.
      * This abstract property is used to define the specific [KSerializer] corresponding to the type of arguments
@@ -212,15 +211,4 @@ public abstract class Tool<TArgs : Tool.Args, TResult : ToolResult> {
      * @return A JSON string representation of the provided result.
      */
     public fun encodeResultToStringUnsafe(result: ToolResult): String = encodeResultToString(result as TResult)
-
-    /**
-     * Base type, representing tool arguments.
-     */
-    public interface Args
-
-    /**
-     * Args implementation that can be used for tools that expect no arguments.
-     */
-    @Serializable
-    public data object EmptyArgs : Args
 }

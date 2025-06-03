@@ -53,7 +53,7 @@ public class AIAgentTool(
      * @property request The input data or parameters needed for the agent tool to perform its operation.
      */
     @Serializable
-    public data class AgentToolArgs(val request: String) : Args
+    public data class AgentToolArgs(val request: String) : ToolArgs
 
     /**
      * Represents the result of executing an agent tool operation.

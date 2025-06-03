@@ -15,7 +15,7 @@ public class DummyTool : SimpleTool<DummyTool.Args>() {
      * @property dummy A dummy string parameter that can be optionally specified.
      */
     @Serializable
-    public data class Args(val dummy: String = "") : Tool.Args
+    public data class Args(val dummy: String = "") : ToolArgs
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 

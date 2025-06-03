@@ -45,12 +45,12 @@ internal suspend fun AIAgentContextBase.promptWithTLDR(
 /**
  * The result which subgraphs can return.
  */
-public interface SubgraphResult : Tool.Args, ToolResult
+public interface SubgraphResult : ToolArgs, ToolResult
 
 /**
  * The result which subgraphs can return.
  */
-public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> : Tool.Args, ToolResult.JSONSerializable<T>
+public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> : ToolArgs, ToolResult.JSONSerializable<T>
 
 /**
  * Represents the result of a verified subgraph execution.

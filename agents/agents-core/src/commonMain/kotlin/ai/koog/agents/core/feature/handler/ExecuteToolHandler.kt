@@ -1,6 +1,7 @@
 package ai.koog.agents.core.feature.handler
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
 
 /**
@@ -72,7 +73,7 @@ public fun interface ToolCallHandler {
      * @param toolArgs The arguments required for executing the tool. These arguments are
      *                 used to configure or supply information needed for the tool's operation.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: Tool.Args)
+    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs)
 }
 
 /**
@@ -87,7 +88,7 @@ public fun interface ToolValidationErrorHandler {
      * @param toolArgs The arguments passed to the tool when the error occurred.
      * @param error The error message describing the validation issue.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: Tool.Args, error: String)
+    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs, error: String)
 }
 
 /**
@@ -103,7 +104,7 @@ public fun interface ToolCallFailureHandler {
      * @param toolArgs The arguments that were passed to the tool during execution.
      * @param throwable The exception or error that caused the failure.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable)
+    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable)
 }
 
 /**
@@ -119,5 +120,5 @@ public fun interface ToolCallResultHandler {
      * @param toolArgs The arguments required by the tool for execution.
      * @param result An optional result produced by the tool after execution, can be null if not applicable.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?)
+    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?)
 }

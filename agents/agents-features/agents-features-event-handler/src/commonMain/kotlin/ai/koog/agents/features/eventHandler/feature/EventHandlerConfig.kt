@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
@@ -85,17 +86,17 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Tool Call Handlers
 
-    private var _onToolCall: suspend (tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit =
-        { tool: Tool<*, *>, toolArgs: Tool.Args -> }
+    private var _onToolCall: suspend (tool: Tool<*, *>, toolArgs: ToolArgs) -> Unit =
+        { tool: Tool<*, *>, toolArgs: ToolArgs -> }
 
-    private var _onToolValidationError: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit =
-        { tool: Tool<*, *>, toolArgs: Tool.Args, value: String -> }
+    private var _onToolValidationError: suspend (tool: Tool<*, *>, toolArgs: ToolArgs, value: String) -> Unit =
+        { tool: Tool<*, *>, toolArgs: ToolArgs, value: String -> }
 
-    private var _onToolCallFailure: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit =
-        { tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable -> }
+    private var _onToolCallFailure: suspend (tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable) -> Unit =
+        { tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable -> }
 
-    private var _onToolCallResult: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit =
-        { tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? -> }
+    private var _onToolCallResult: suspend (tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?) -> Unit =
+        { tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult? -> }
 
     //endregion Tool Call Handlers
 

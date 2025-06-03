@@ -15,7 +15,7 @@ public object AskUser : SimpleTool<AskUser.Args>() {
      * @property message The message to be used as an argument for the tool's execution.
      */
     @Serializable
-    public data class Args(val message: String) : Tool.Args
+    public data class Args(val message: String) : ToolArgs
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 

@@ -5,6 +5,7 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
@@ -91,7 +92,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param tool The tool to match against
  * @param block A function that evaluates the tool arguments to determine if the edge should accept the message
  */
-public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : Tool.Args>
+public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : ToolArgs>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<Args, *>,
     crossinline block: suspend (Args) -> Boolean

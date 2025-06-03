@@ -1,6 +1,7 @@
 package ai.koog.agents.core.tools.reflect
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -46,7 +47,7 @@ public class ToolFromCallable(
      * @property args A map of parameters to their respective values.
      * Each key is a KParameter, matched with a value which can potentially be null.
      */
-    public data class VarArgs(val args: Map<KParameter, Any?>) : Args {
+    public data class VarArgs(val args: Map<KParameter, Any?>) : ToolArgs {
         /**
          * Converts a map of parameters and their corresponding values into a list of pairs,
          * where each pair consists of a parameter name and its associated value.

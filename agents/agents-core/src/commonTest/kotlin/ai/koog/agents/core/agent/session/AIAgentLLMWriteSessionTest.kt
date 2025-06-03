@@ -61,7 +61,7 @@ class AIAgentLLMWriteSessionTest {
 
     class TestTool : SimpleTool<TestTool.Args>() {
         @Serializable
-        data class Args(val input: String) : Tool.Args
+        data class Args(val input: String) : ToolArgs
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
@@ -84,7 +84,7 @@ class AIAgentLLMWriteSessionTest {
 
     class CustomTool : Tool<CustomTool.Args, CustomTool.Result>() {
         @Serializable
-        data class Args(val input: String) : Tool.Args
+        data class Args(val input: String) : ToolArgs
 
         data class Result(val output: String) : ToolResult {
             override fun toStringDefault(): String = output

@@ -11,6 +11,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.handler.*
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
@@ -317,7 +318,7 @@ public class AIAgentPipeline {
      * @param tool The tool that is being called
      * @param toolArgs The arguments provided to the tool
      */
-    public suspend fun onToolCall(tool: Tool<*, *>, toolArgs: Tool.Args) {
+    public suspend fun onToolCall(tool: Tool<*, *>, toolArgs: ToolArgs) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(tool, toolArgs) }
     }
 
@@ -328,7 +329,7 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments that failed validation
      * @param error The validation error message
      */
-    public suspend fun onToolValidationError(tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
+    public suspend fun onToolValidationError(tool: Tool<*, *>, toolArgs: ToolArgs, error: String) {
         executeToolHandlers.values.forEach { handler ->
             handler.toolValidationErrorHandler.handle(
                 tool,
@@ -345,7 +346,7 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments provided to the tool
      * @param throwable The exception that caused the failure
      */
-    public suspend fun onToolCallFailure(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
+    public suspend fun onToolCallFailure(tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable) {
         executeToolHandlers.values.forEach { handler ->
             handler.toolCallFailureHandler.handle(
                 tool,
@@ -362,7 +363,7 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments that were provided to the tool
      * @param result The result produced by the tool, or null if no result was produced
      */
-    public suspend fun onToolCallResult(tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
+    public suspend fun onToolCallResult(tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(tool, toolArgs, result) }
     }
 
@@ -669,7 +670,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptToolCall(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
@@ -693,7 +694,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptToolValidationError(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs, value: String) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
@@ -717,7 +718,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptToolCallFailure(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
@@ -742,7 +743,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptToolCallResult(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?) -> Unit
     ) {
         val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 

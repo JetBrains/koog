@@ -21,7 +21,7 @@ public object ExitTool : SimpleTool<ExitTool.Args>() {
      * @property message The input message provided as an argument for the tool.
      */
     @Serializable
-    public data class Args(val message: String) : Tool.Args
+    public data class Args(val message: String) : ToolArgs
 
     override suspend fun doExecute(args: Args): String {
         return "DONE"
