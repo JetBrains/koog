@@ -14,6 +14,7 @@ import kotlin.reflect.KType
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.instanceParameter
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.kotlinFunction
 
@@ -197,6 +198,15 @@ public fun KType.asToolType(): ToolParameterType {
         Int::class -> ToolParameterType.Integer
         Float::class -> ToolParameterType.Float
         Boolean::class -> ToolParameterType.Boolean
+        Long::class -> ToolParameterType.Integer
+        Double::class -> ToolParameterType.Float
+
+        List::class -> {
+            val listItemType = this.arguments[0].type ?: error("List item type is null")
+            val listItemToolType = listItemType.asToolType()
+            ToolParameterType.List(listItemToolType)
+        }
+
         is KClass<*> -> {
             val classJava = classifier.java
             when {
@@ -209,6 +219,18 @@ public fun KType.asToolType(): ToolParameterType {
                     val arrayItemType = this.arguments[0].type ?: error("Array item type is null")
                     val arrayItemToolType = arrayItemType.asToolType()
                     ToolParameterType.List(arrayItemToolType)
+                }
+
+                classifier.isData -> {
+                    val properties = classifier.memberProperties.map { prop ->
+                        val description = prop.findAnnotation<LLMDescription>()?.description ?: prop.name
+                        ToolParameterDescriptor(
+                            name = prop.name,
+                            description = description,
+                            type = prop.returnType.asToolType() // Recursive call
+                        )
+                    }
+                    ToolParameterType.Object(properties)
                 }
 
                 else -> throw kotlin.IllegalArgumentException("Unsupported type $classifier")
