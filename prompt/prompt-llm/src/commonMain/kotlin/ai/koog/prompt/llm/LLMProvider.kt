@@ -13,7 +13,7 @@ import kotlinx.serialization.Serializable
  * @property display The human-readable name of the LLM provider.
  */
 @Serializable
-public sealed class LLMProvider(public val id: String, public val display: String) {
+public enum class LLMProvider(public val id: String, public val display: String) {
     /**
      * Represents a specialized implementation of the `LLMProvider` class corresponding to the Google provider.
      *
@@ -25,7 +25,7 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      * related to Google's language model are required.
      */
     @Serializable
-    public data object Google : LLMProvider("google", "Google")
+    Google("google", "Google"),
 
     /**
      * Represents the OpenAI provider in the Large Language Model (LLM) ecosystem.
@@ -38,7 +38,7 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      * to leverage OpenAI's capabilities within various applications or systems.
      */
     @Serializable
-    public data object OpenAI : LLMProvider("openai", "OpenAI")
+    OpenAI("openai", "OpenAI"),
 
     /**
      * Represents the Anthropic LLM provider.
@@ -49,7 +49,7 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      * Use this object to reference or configure language models provided by Anthropic in the context of an LLM system.
      */
     @Serializable
-    public data object Anthropic : LLMProvider("anthropic", "Anthropic")
+    Anthropic("anthropic", "Anthropic"),
 
     /**
      * Represents the "Meta" large language model provider in the system.
@@ -59,7 +59,7 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      * Meta platform across the application.
      */
     @Serializable
-    public data object Meta : LLMProvider("meta", "Meta")
+    Meta("meta", "Meta"),
 
     /**
      * Represents Alibaba as a specific provider of Large Language Models (LLMs).
@@ -69,7 +69,7 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      * selections to specify Alibaba as the chosen provider.
      */
     @Serializable
-    public data object Alibaba : LLMProvider("alibaba", "Alibaba")
+    Alibaba("alibaba", "Alibaba"),
 
     /**
      * Represents the OpenRouter provider within the available set of large language model providers.
@@ -82,7 +82,7 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      * providers for large language model functionalities and capabilities.
      */
     @Serializable
-    public data object OpenRouter : LLMProvider("openrouter", "OpenRouter")
+    OpenRouter("openrouter", "OpenRouter"),
 
     /**
      * Represents the Ollama provider within the available set of large language model providers.
@@ -95,5 +95,5 @@ public sealed class LLMProvider(public val id: String, public val display: Strin
      * providers for large language model functionalities and capabilities.
      */
     @Serializable
-    public data object Ollama : LLMProvider("ollama", "Ollama")
+    Ollama("ollama", "Ollama"),
 }

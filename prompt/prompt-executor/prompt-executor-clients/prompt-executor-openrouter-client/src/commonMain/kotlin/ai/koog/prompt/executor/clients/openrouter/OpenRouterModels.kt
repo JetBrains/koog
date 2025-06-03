@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openrouter
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -8,7 +9,7 @@ import ai.koog.prompt.llm.LLModel
  * OpenRouter models
  * Models available through the OpenRouter API
  */
-public object OpenRouterModels {
+public object OpenRouterModels: LLModelDefinitions {
     private val standardCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Temperature,
         LLMCapability.Schema.JSON.Full,

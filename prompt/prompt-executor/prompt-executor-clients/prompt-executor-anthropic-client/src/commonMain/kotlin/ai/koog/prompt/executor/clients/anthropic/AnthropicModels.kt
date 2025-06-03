@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -7,7 +8,7 @@ import ai.koog.prompt.llm.LLModel
 /**
  * Anthropic models for text generation and embeddings.
  */
-public object AnthropicModels {
+public object AnthropicModels: LLModelDefinitions {
 
     /**
      * Claude 3 Opus is Anthropic's most powerful model, designed for highly complex tasks.

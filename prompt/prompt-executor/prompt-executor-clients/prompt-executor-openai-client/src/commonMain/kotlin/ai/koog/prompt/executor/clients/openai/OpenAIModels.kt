@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -8,8 +9,7 @@ import ai.koog.prompt.llm.LLModel
  * Object containing a collection of predefined OpenAI model configurations.
  * These models span various use cases, including reasoning, chat, and cost-optimized tasks.
  */
-public object OpenAIModels {
-
+public object OpenAIModels: LLModelDefinitions {
     // TODO: support thinking tokens
     /**
      * Object containing a set of pre-configured reasoning models with various capabilities and constraints.

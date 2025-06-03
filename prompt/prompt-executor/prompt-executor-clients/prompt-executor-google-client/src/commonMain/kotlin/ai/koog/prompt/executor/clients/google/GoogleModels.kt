@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -8,7 +9,7 @@ import ai.koog.prompt.llm.LLModel
  * Google Gemini models and their capabilities.
  * See https://ai.google.dev/gemini-api/docs for more information.
  */
-public object GoogleModels {
+public object GoogleModels: LLModelDefinitions {
     /**
      * Basic capabilities shared across all Gemini models
      */
