@@ -73,6 +73,18 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     /**
+     * Creates an edge between nodes.
+     * @param edgeIntermediate Intermediate edge builder
+     */
+    public fun <IncomingOutput, OutgoingInput> edge(
+        edgeIntermediate: () -> AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>
+    ) {
+        val edgeIntermediateBuilder = edgeIntermediate()
+        val edge = AIAgentEdgeBuilder(edgeIntermediateBuilder).build()
+        edgeIntermediateBuilder.fromNode.addEdge(edge)
+    }
+
+    /**
      * Checks if finish node is reachable from start node.
      * @param start Starting node
      * @return True if finish node is reachable
