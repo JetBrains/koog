@@ -10,14 +10,11 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-@EnabledOnOs(OS.LINUX, OS.MAC)
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaClientIntegrationTest {
     companion object {
@@ -28,7 +25,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute simple prompt`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute simple prompt`() = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
@@ -41,7 +38,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with required parameters`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with required parameters`() = runTest(timeout = 600.seconds) {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -70,7 +67,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with required and optional parameters`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with required and optional parameters`() = runTest(timeout = 600.seconds) {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -101,7 +98,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with optional parameters`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with optional parameters`() = runTest(timeout = 600.seconds) {
         val searchTool = ToolDescriptor(
             name = "search",
             description = "Search for information",
@@ -131,7 +128,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with no parameters`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with no parameters`() = runTest(timeout = 600.seconds) {
         val getTimeTool = ToolDescriptor(
             name = "getTime",
             description = "Get the current time"
@@ -148,7 +145,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with int parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with int parameter`() = runTest(timeout = 600.seconds) {
         val setLimitTool = ToolDescriptor(
             name = "setLimit",
             description = "Set the limit",
@@ -172,7 +169,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with float parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with float parameter`() = runTest(timeout = 600.seconds) {
         val printValueTool = ToolDescriptor(
             name = "printValue",
             description = "Print the value",
@@ -196,7 +193,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with string parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with string parameter`() = runTest(timeout = 600.seconds) {
         val setNameTool = ToolDescriptor(
             name = "setName",
             description = "Set the name",
@@ -220,7 +217,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with enum parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with enum parameter`() = runTest(timeout = 600.seconds) {
         val setColor = ToolDescriptor(
             name = "setColor",
             description = "Set the color",
@@ -249,7 +246,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with serializable enum parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with serializable enum parameter`() = runTest(timeout = 600.seconds) {
         val calculatorTool = ToolDescriptor(
             name = "calculator",
             description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
@@ -283,7 +280,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with list of strings parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with list of strings parameter`() = runTest(timeout = 600.seconds) {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -307,7 +304,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with list of integers parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with list of integers parameter`() = runTest(timeout = 600.seconds) {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -331,7 +328,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with list of floats parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with list of floats parameter`() = runTest(timeout = 600.seconds) {
         val setValues = ToolDescriptor(
             name = "setValues",
             description = "Set the values",
@@ -364,7 +361,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with list of enums parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with list of enums parameter`() = runTest(timeout = 600.seconds) {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -388,7 +385,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun `integration_test execute tools with list of lists parameter`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute tools with list of lists parameter`() = runTest(timeout = 600.seconds) {
         val setTags = ToolDescriptor(
             name = "setTags",
             description = "Set the tags",
@@ -413,7 +410,7 @@ class OllamaClientIntegrationTest {
     }
 
     @Test
-    fun integration_testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
+    fun ollama_testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant.")
             user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words.")
@@ -577,7 +574,7 @@ class OllamaClientIntegrationTest {
 
     @Disabled("JBAI-14221")
     @Test
-    fun `integration_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
 

@@ -5,7 +5,7 @@
 # This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
 
-name: Heavy Tests
+name: Ollama Tests
 
 on:
   workflow_dispatch:  # Manual trigger
@@ -21,7 +21,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
 
     steps:
       - name: Configure Git
@@ -39,13 +39,10 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
-      - name: JvmIntegrationTest with Gradle Wrapper
+      - name: JvmOllamaTest with Gradle Wrapper
         env:
-          ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
-          OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
-          GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
-          OPEN_ROUTER_API_TEST_KEY: ${{ vars.OPEN_ROUTER_API_TEST_KEY }}
-        run: ./gradlew jvmIntegrationTest --continue
+          OLLAMA_IMAGE_URL: ${{ vars.OLLAMA_IMAGE_URL }}
+        run: ./gradlew jvmOllamaTest --no-parallel --continue
 
       - name: Collect reports
         if: always()

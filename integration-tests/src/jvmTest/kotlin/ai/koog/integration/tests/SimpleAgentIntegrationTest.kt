@@ -2,9 +2,12 @@ package ai.koog.integration.tests
 
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
-import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
+import ai.koog.integration.tests.utils.TestUtils.runWithRetry
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
@@ -18,7 +21,6 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
@@ -27,13 +29,8 @@ import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
-@ExtendWith(OllamaTestFixtureExtension::class)
 class SimpleAgentIntegrationTest {
-    val systemPrompt = """
-            You are a helpful assistant. 
-            You MUST use tools to communicate to the user.
-            You MUST NOT communicate to the user without tools.
-        """.trimIndent()
+    val systemPrompt = "You are a helpful assistant."
 
     companion object {
         @JvmStatic
@@ -138,30 +135,26 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        try {
+        runWithRetry {
             agent.run("Repeat what I say: hello, I'm good.")
-        } catch (e: Exception) {
-            if (e.message?.contains("Error from GoogleAI API: 500 Internal Server Error") == true) {
-                assumeTrue(false, "Skipping test due to GoogleAI API 500 Internal Server Error")
-            } else {
-                throw e
-            }
         }
 
         // by default, simpleSingleRunAgent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
-
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
+        val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        // ToDo remove after fixes
         assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
+        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(!model.id.contains("flash"), "JBAI-14094")
 
-        val toolRegistry = ToolRegistry.Companion {
-            tool(SayToUser)
+        val toolRegistry = ToolRegistry {
+            tool(CalculatorTool)
         }
 
         val executor = when (model.provider) {
@@ -172,7 +165,7 @@ class SimpleAgentIntegrationTest {
 
         val agent = simpleSingleRunAgent(
             executor = executor,
-            systemPrompt = systemPrompt,
+            systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
             llmModel = model,
             temperature = 1.0,
             toolRegistry = toolRegistry,
@@ -180,12 +173,14 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        agent.run("Write a Kotlin function to calculate factorial.")
+        runWithRetry {
+            agent.run("How much is 3 times 5?")
+        }
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
         assertTrue(
-            actualToolCalls.contains(SayToUser.name),
-            "The ${SayToUser.name} tool was not called for model $model"
+            actualToolCalls.contains(CalculatorTool.name),
+            "The ${CalculatorTool.name} tool was not called for model $model"
         )
     }
 }

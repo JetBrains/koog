@@ -90,6 +90,14 @@ public sealed class LLMCapability(public val id: String) {
     public data object Completion : LLMCapability("embed")
 
     /**
+     * Represents a capability in the Large Language Model (LLM) for caching.
+     *
+     * Use this capability to represent models that support caching functionalities.
+     */
+    @Serializable
+    public data object PromptCaching: LLMCapability("promptCaching")
+
+    /**
      * Represents a structured schema capability for a language model. The schema defines certain characteristics or
      * functionalities related to data interaction and encoding using specific formats.
      *

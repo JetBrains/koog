@@ -4,8 +4,6 @@ import ai.koog.prompt.executor.ollama.client.findByNameOrNull
 import ai.koog.prompt.llm.LLMCapability.*
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,7 +11,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.seconds
 
-@EnabledOnOs(OS.LINUX)
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaClientModelsIntegrationTest {
     companion object {
@@ -23,7 +20,7 @@ class OllamaClientModelsIntegrationTest {
     }
 
     @Test
-    fun `integration_test load models`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test load models`() = runTest(timeout = 600.seconds) {
         val modelCards = client.getModels()
 
         val modelCard = modelCards.findByNameOrNull(OllamaModels.Meta.LLAMA_3_2.id)
@@ -31,7 +28,7 @@ class OllamaClientModelsIntegrationTest {
     }
 
     @Test
-    fun `integration_test get model`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
         val modelCard = client.getModelOrNull(OllamaModels.Meta.LLAMA_3_2.id)
         assertNotNull(modelCard)
 
@@ -50,7 +47,7 @@ class OllamaClientModelsIntegrationTest {
     }
 
     @Test
-    fun `integration_test pull model`() = runTest(timeout = 600.seconds) {
+    fun `ollama_test pull model`() = runTest(timeout = 600.seconds) {
         val beforePull = client.getModelOrNull("tinyllama")
         assertNull(beforePull)
 

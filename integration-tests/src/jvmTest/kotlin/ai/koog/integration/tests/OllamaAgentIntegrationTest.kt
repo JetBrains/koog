@@ -15,9 +15,8 @@ import ai.koog.integration.tests.utils.TestUtils.runWithRetry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -25,7 +24,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-@EnabledOnOs(OS.LINUX, OS.MAC)
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaAgentIntegrationTest {
     companion object {
@@ -137,7 +135,11 @@ class OllamaAgentIntegrationTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt("test-ollama") {}, model, 15),
+            agentConfig = AIAgentConfig(
+                prompt("test-ollama", LLMParams(temperature = 0.0)) {},
+                model,
+                15
+            ),
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
@@ -151,7 +153,7 @@ class OllamaAgentIntegrationTest {
 
                 onBeforeLLMCall = { prompt, tools ->
                     val promptText = prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
-                    val toolsText = tools.joinToString{ it.name }
+                    val toolsText = tools.joinToString { it.name }
                     println("Prompt with tools:\n$promptText\nAvailable tools:\n$toolsText")
                     promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
                 }
@@ -170,7 +172,7 @@ class OllamaAgentIntegrationTest {
     }
 
     @Test
-    fun integration_testOllamaAgentClearContext() = runTest(timeout = 600.seconds) {
+    fun ollama_testAgentClearContext() = runTest(timeout = 600.seconds) {
         val strategy = createTestStrategy()
         val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
