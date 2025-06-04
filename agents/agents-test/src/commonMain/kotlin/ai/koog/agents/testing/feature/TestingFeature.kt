@@ -100,6 +100,10 @@ public class DummyAgentContext(
             strategyId?.let { this.strategyId = it }
         }
     )
+
+    override fun replaceWith(context: AIAgentContextBase) {
+        // TODO("Not yet implemented")
+    }
 }
 
 @TestOnly
