@@ -57,7 +57,7 @@ private fun ToolDescriptor.toJSONSchema(): JsonObject {
     }
 
     // Build the properties object by converting each parameter to its JSON schema.
-    val properties = mutableMapOf<String, kotlinx.serialization.json.JsonElement>()
+    val properties = mutableMapOf<String, JsonElement>()
 
     // Process required parameters.
     for (param in requiredParameters) {
