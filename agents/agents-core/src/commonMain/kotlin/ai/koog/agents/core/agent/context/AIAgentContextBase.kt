@@ -180,4 +180,13 @@ public interface AIAgentContextBase {
         strategyId: String? = null,
         pipeline: AIAgentPipeline? = null,
     ): AIAgentContextBase
+
+    /**
+     * Replaces the current context with the provided context.
+     * This method is used to update the current context with values from another context,
+     * particularly useful in scenarios like parallel node execution where contexts need to be merged.
+     *
+     * @param context The context to replace the current context with.
+     */
+    public fun replaceWith(context: AIAgentContextBase)
 }

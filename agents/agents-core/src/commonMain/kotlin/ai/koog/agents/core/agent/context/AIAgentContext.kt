@@ -119,4 +119,14 @@ internal class AIAgentContext(
         strategyId = strategyId ?: this.strategyId,
         pipeline = pipeline ?: @OptIn(InternalAgentsApi::class) this.pipeline,
     )
+
+    /**
+     * Replaces the current context with the provided context.
+     *
+     * @param context The context to replace the current context with.
+     * @throws UnsupportedOperationException This method is not fully implemented due to the constraints of immutable properties.
+     */
+    override fun replaceWith(context: AIAgentContextBase) {
+        // TODO("Not yet implemented")
+    }
 }
