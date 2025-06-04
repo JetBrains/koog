@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.integration.tests
 
 import ai.koog.integration.tests.tools.AnswerVerificationTool
@@ -23,6 +25,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
 
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaAgentIntegrationTest {
@@ -151,14 +154,14 @@ class OllamaAgentIntegrationTest {
                     )
                 }
 
-                onBeforeLLMCall = { prompt, tools ->
+                onBeforeLLMCall = { prompt, tools, model, uuid ->
                     val promptText = prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
                     val toolsText = tools.joinToString { it.name }
                     println("Prompt with tools:\n$promptText\nAvailable tools:\n$toolsText")
                     promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
                 }
 
-                onAfterLLMCall = { responses ->
+                onAfterLLMCall = { prompt, tools, model, responses, uuid ->
                     val responseText = "[${responses.joinToString { "${it.role.name}: ${it.content}" }}]"
                     println("LLM Call response: $responseText")
                     promptsAndResponses.add("RESPONSE: $responseText")
