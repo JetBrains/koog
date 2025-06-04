@@ -6,6 +6,7 @@ import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KClass
 
@@ -173,4 +174,21 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
     return onIsInstance(Message.Assistant::class)
         .onCondition { signature -> block(signature) }
         .transformed { it.content }
+}
+
+/**
+ * Creates an edge that filters assistant messages based on a custom condition and provides access to media content.
+ *
+ * @param block A function that evaluates whether to accept an assistant message with media
+ */
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
+        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessageWithMedia(
+    block: suspend (Message.Assistant) -> Boolean
+): AIAgentEdgeBuilderIntermediate<IncomingOutput, MediaContent, OutgoingInput> {
+    return onIsInstance(Message.Assistant::class)
+        .onCondition {
+            it.mediaContent != null
+        }
+        .onCondition { signature -> block(signature) }
+        .transformed { it.mediaContent!! }
 }

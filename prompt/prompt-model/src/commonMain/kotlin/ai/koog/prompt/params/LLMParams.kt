@@ -26,6 +26,14 @@ public data class LLMParams(
     val schema: Schema? = null,
     val toolChoice: ToolChoice? = null,
 ) {
+    /**
+     * Combines the parameters of the current `LLMParams` instance with the provided default `LLMParams`
+     * to produce a new instance. Fields that are null in the current instance are replaced by the
+     * corresponding fields from the default instance.
+     *
+     * @param default The default `LLMParams` instance used to fill in missing values in the current instance.
+     * @return A new `LLMParams` instance with missing fields replaced by corresponding fields from the default instance.
+     */
     public fun default(default: LLMParams): LLMParams = copy(
         temperature = temperature ?: default.temperature,
         speculation = speculation ?: default.speculation,

@@ -11,25 +11,48 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.sse.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.accept
+import io.ktor.client.request.header
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.ClassDiscriminatorMode
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -162,6 +185,46 @@ public open class OpenAILLMClient(
         }
     }
 
+    /**
+     * Embeds the given text using the OpenAI embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the Embed capability.
+     * @return A list of floating-point values representing the embedding.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
+        require(model.capabilities.contains(LLMCapability.Embed)) {
+            "Model ${model.id} does not have the Embed capability"
+        }
+        logger.debug { "Embedding text with model: ${model.id}" }
+
+        val request = OpenAIEmbeddingRequest(
+            model = model.id,
+            input = text
+        )
+
+        return withContext(Dispatchers.SuitableForIO) {
+            val response = httpClient.post(settings.embeddingsPath) {
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                val openAIResponse = response.body<OpenAIEmbeddingResponse>()
+                if (openAIResponse.data.isNotEmpty()) {
+                    openAIResponse.data.first().embedding
+                } else {
+                    logger.error { "Empty data in OpenAI embedding response" }
+                    error("Empty data in OpenAI embedding response")
+                }
+            } else {
+                val errorBody = response.bodyAsText()
+                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
+                error("Error from OpenAI API: ${response.status}: $errorBody")
+            }
+        }
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     private fun createOpenAIRequest(
         prompt: Prompt,
@@ -179,53 +242,15 @@ public open class OpenAILLMClient(
             }
         }
 
-        for (message in prompt.messages) {
-            when (message) {
-                is Message.System -> {
-                    flushCalls()
-                    messages.add(
-                        OpenAIMessage(
-                            role = "system",
-                            content = message.content
-                        )
-                    )
-                }
-
-                is Message.User -> {
-                    flushCalls()
-                    messages.add(
-                        OpenAIMessage(
-                            role = "user",
-                            content = message.content
-                        )
-                    )
-                }
-
-                is Message.Assistant -> {
-                    flushCalls()
-                    messages.add(
-                        OpenAIMessage(
-                            role = "assistant",
-                            content = message.content
-                        )
-                    )
-                }
-
-                is Message.Tool.Result -> {
-                    flushCalls()
-                    messages.add(
-                        OpenAIMessage(
-                            role = "tool",
-                            content = message.content,
-                            toolCallId = message.id
-                        )
-                    )
-                }
-
-                is Message.Tool.Call -> pendingCalls += OpenAIToolCall(
+        prompt.messages.forEach { message ->
+            if (message is Message.Tool.Call) {
+                pendingCalls += OpenAIToolCall(
                     id = message.id ?: Uuid.random().toString(),
                     function = OpenAIFunction(message.tool, message.content)
                 )
+            } else {
+                flushCalls()
+                messages += message.toOpenAIMessage(model) ?: return@forEach
             }
         }
         flushCalls()
@@ -270,14 +295,88 @@ public open class OpenAILLMClient(
             null -> null
         }
 
+        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf("text", "audio") else null
+
         return OpenAIRequest(
             model = model.id,
             messages = messages,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
+            modalities = modalities,
+            audio = modalities?.let { OpenAIAudioConfig() },
             stream = stream,
             toolChoice = toolChoice,
         )
+    }
+
+    private fun Message.toOpenAIMessage(model: LLModel): OpenAIMessage? = when (this) {
+        is Message.System -> OpenAIMessage(role = "system", content = Content.Text(content))
+        is Message.User -> {
+            val listOfContent = buildList {
+                if (content.isNotEmpty() || mediaContent.isEmpty()) {
+                    add(ContentPart.Text(content))
+                }
+
+                mediaContent.forEach { media ->
+                    when (media) {
+                        is MediaContent.Image -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} does not support image"
+                            }
+                            val imageUrl = if (media.isUrl()) {
+                                media.source
+                            } else {
+                                require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
+                                    "Image format ${media.format} not supported"
+                                }
+                                "data:${media.getMimeType()};base64,${media.toBase64()}"
+                            }
+                            add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
+                        }
+
+                        is MediaContent.Audio -> {
+                            require(model.capabilities.contains(LLMCapability.Audio)) {
+                                "Model ${model.id} does not support audio"
+                            }
+
+                            require(media.format in listOf("wav", "mp3")) {
+                                "Audio format ${media.format} not supported"
+                            }
+                            add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+                        }
+
+                        is MediaContent.File -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} does not support files"
+                            }
+
+                            require(media.format == "pdf") {
+                                "File format ${media.format} not supported. Supported formats: `pdf`"
+                            }
+                            val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
+                            add(
+                                ContentPart.File(
+                                    ContentPart.FileData(
+                                        fileData = fileData,
+                                        filename = media.fileName()
+                                    )
+                                )
+                            )
+                        }
+
+                        else -> {
+                            logger.warn { "Media content type not supported: $mediaContent" }
+                            return null
+                        }
+                    }
+                }
+            }
+            OpenAIMessage(role = "user", content = Content.Parts(listOfContent))
+        }
+
+        is Message.Assistant -> OpenAIMessage(role = "assistant", content = Content.Text(content))
+        is Message.Tool.Result -> OpenAIMessage(role = "tool", content = Content.Text(content), toolCallId = id)
+        is Message.Tool.Call -> null
     }
 
     private fun buildOpenAIParam(param: ToolParameterDescriptor): JsonObject = buildJsonObject {
@@ -322,6 +421,7 @@ public open class OpenAILLMClient(
         }
     }
 
+    @OptIn(ExperimentalEncodingApi::class)
     private fun processOpenAIResponse(response: OpenAIResponse): List<Message.Response> {
         if (response.choices.isEmpty()) {
             logger.error { "Empty choices in OpenAI response" }
@@ -357,7 +457,23 @@ public open class OpenAILLMClient(
             message.content != null -> {
                 listOf(
                     Message.Assistant(
-                        content = message.content,
+                        content = message.content.text(),
+                        finishReason = choice.finishReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock, totalTokensCount = totalTokensCount,
+                            inputTokensCount = inputTokensCount,
+                            outputTokensCount = outputTokensCount
+                        )
+                    )
+                )
+            }
+
+            message.audio != null -> {
+                val audio = Base64.decode(message.audio.data)
+                listOf(
+                    Message.Assistant(
+                        content = message.audio.transcript ?: "",
+                        mediaContent = MediaContent.Audio(audio, format = ""),
                         finishReason = choice.finishReason,
                         metaInfo = ResponseMetaInfo.create(
                             clock, totalTokensCount = totalTokensCount,
@@ -371,46 +487,6 @@ public open class OpenAILLMClient(
             else -> {
                 logger.error { "Unexpected response from OpenAI: no tool calls and no content" }
                 error("Unexpected response from OpenAI: no tool calls and no content")
-            }
-        }
-    }
-
-    /**
-     * Embeds the given text using the OpenAI embeddings API.
-     *
-     * @param text The text to embed.
-     * @param model The model to use for embedding. Must have the Embed capability.
-     * @return A list of floating-point values representing the embedding.
-     * @throws IllegalArgumentException if the model does not have the Embed capability.
-     */
-    override suspend fun embed(text: String, model: LLModel): List<Double> {
-        require(model.capabilities.contains(LLMCapability.Embed)) {
-            "Model ${model.id} does not have the Embed capability"
-        }
-        logger.debug { "Embedding text with model: ${model.id}" }
-
-        val request = OpenAIEmbeddingRequest(
-            model = model.id,
-            input = text
-        )
-
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(settings.embeddingsPath) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                val openAIResponse = response.body<OpenAIEmbeddingResponse>()
-                if (openAIResponse.data.isNotEmpty()) {
-                    openAIResponse.data.first().embedding
-                } else {
-                    logger.error { "Empty data in OpenAI embedding response" }
-                    error("Empty data in OpenAI embedding response")
-                }
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
-                error("Error from OpenAI API: ${response.status}: $errorBody")
             }
         }
     }

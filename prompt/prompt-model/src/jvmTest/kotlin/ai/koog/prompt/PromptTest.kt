@@ -59,7 +59,13 @@ class PromptTest {
         val basicPrompt = Prompt.build("test", clock = testClock) {
             system(systemMessage)
             user(userMessage)
-            message(Message.Assistant(assistantMessage, testRespMetaInfo, finishReason))
+            message(
+                Message.Assistant(
+                    content = assistantMessage,
+                    metaInfo = testRespMetaInfo,
+                    finishReason = finishReason
+                )
+            )
             tool {
                 call(toolCallId, toolName, toolCallContent)
                 result(toolCallId, toolName, toolResultContent)
@@ -104,7 +110,7 @@ class PromptTest {
             user(userMessage)
             assistant(assistantMessage)
             tool {
-                call(toolCallId, toolName, toolContent,)
+                call(toolCallId, toolName, toolContent)
                 result(toolCallId, toolName, toolResult)
             }
         }
