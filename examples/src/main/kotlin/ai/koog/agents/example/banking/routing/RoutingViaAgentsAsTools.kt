@@ -1,5 +1,6 @@
 package ai.koog.agents.example.banking.routing
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.asTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
@@ -8,7 +9,6 @@ import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools
 import ai.koog.agents.example.banking.tools.bankingAssistantSystemPrompt
 import ai.koog.agents.example.banking.tools.transactionAnalysisPrompt
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -18,7 +18,7 @@ fun main() = runBlocking {
     val apiKey = ApiKeyService.openAIApiKey // Your OpenAI API key
     val openAIExecutor = simpleOpenAIExecutor(apiKey)
 
-    val transferAgent = simpleSingleRunAgent(
+    val transferAgent = AIAgent(
         executor = openAIExecutor,
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
@@ -26,7 +26,7 @@ fun main() = runBlocking {
         toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
     )
 
-    val analysisAgent = simpleSingleRunAgent(
+    val analysisAgent = AIAgent(
         executor = openAIExecutor,
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
@@ -34,7 +34,7 @@ fun main() = runBlocking {
         toolRegistry = ToolRegistry { tools(TransactionAnalysisTools().asTools()) }
     )
 
-    val classifierAgent = simpleSingleRunAgent(
+    val classifierAgent = AIAgent(
         executor = openAIExecutor,
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         toolRegistry = ToolRegistry {

@@ -13,7 +13,6 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.tools.*
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -706,7 +705,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
         runBlocking {
-            val a = simpleSingleRunAgent(
+            val agent = AIAgent(
                 executor = simpleAnthropicExecutor(anthropicApiKey),
                 llmModel = AnthropicModels.Sonnet_3_7,
                 systemPrompt = "You are a calculator with access to the calculator tools. Please call tools!!!",
@@ -730,7 +729,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 }
             )
 
-            val result = a.runAndGetResult("calculate 10 plus 15, and then subtract 8")
+            val result = agent.runAndGetResult("calculate 10 plus 15, and then subtract 8")
             println("result = $result")
             assertNotNull(result)
             assertContains(result, "17")

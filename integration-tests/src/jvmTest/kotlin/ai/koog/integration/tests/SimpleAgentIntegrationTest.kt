@@ -1,17 +1,16 @@
 package ai.koog.integration.tests
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
-import ai.koog.integration.tests.utils.TestUtils.runWithRetry
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.runWithRetry
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
@@ -126,7 +125,7 @@ class SimpleAgentIntegrationTest {
             else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
         }
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             executor = executor,
             systemPrompt = systemPrompt,
             llmModel = model,
@@ -163,7 +162,7 @@ class SimpleAgentIntegrationTest {
             else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
         }
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             executor = executor,
             systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
             llmModel = model,

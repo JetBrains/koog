@@ -1,9 +1,9 @@
 package ai.koog.agents.example.simpleapi
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -22,7 +22,7 @@ fun main() = runBlocking {
     val toolRegistry = ToolRegistry {
         tools(SwitchTools(switch).asTools())
     }
-    val agent = simpleSingleRunAgent(
+    val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",

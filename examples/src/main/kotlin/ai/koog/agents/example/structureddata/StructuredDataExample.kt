@@ -8,7 +8,6 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.eventHandler.feature.handleEvents
@@ -245,8 +244,7 @@ fun main(): Unit = runBlocking {
             LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
         ),
         strategy = agentStrategy, // no tools needed for this example
-        agentConfig = agentConfig,
-        toolRegistry = ToolRegistry.EMPTY
+        agentConfig = agentConfig
     ) {
         handleEvents {
             onAgentRunError = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->

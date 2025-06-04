@@ -1,7 +1,7 @@
 package ai.koog.integration.tests
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -109,7 +109,7 @@ class OllamaSimpleAgentIntegrationTest {
             }
         """.trimIndent()
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             executor = ollamaSimpleExecutor,
             systemPrompt = bookwormPrompt,
             llmModel = ollamaModel,
