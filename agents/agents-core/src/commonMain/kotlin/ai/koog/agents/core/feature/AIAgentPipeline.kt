@@ -559,9 +559,8 @@ public class AIAgentPipeline {
             return
         }
 
-        existingHandler.strategyFinishedHandler = StrategyFinishedHandler { context, result ->
-            handle(context, result)
-            with(featureImpl) { handle(context, result) }
+        existingHandler.strategyFinishedHandler = StrategyFinishedHandler { updateContext, result ->
+            handle(updateContext, result)
         }
     }
 
