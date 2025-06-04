@@ -265,66 +265,69 @@ public class OpenRouterLLMClient(
 
     private fun Message.toOpenRouterMessage(model: LLModel): OpenRouterMessage? = when (this) {
         is Message.System -> OpenRouterMessage(role = "system", content = Content.Text(content))
-        is Message.User -> when (val media = mediaContent) {
-            null -> OpenRouterMessage(role = "user", content = Content.Text(content))
-            is MediaContent.Image -> {
-                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                    "Model ${model.id} does not support image"
+        is Message.User -> {
+            val listOfContent = buildList {
+                if (content.isNotEmpty() || mediaContent.isEmpty()) {
+                    add(ContentPart.Text(content))
                 }
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(ContentPart.Text(content))
-                    }
-                    val imageUrl = if (media.isUrl()) {
-                        media.source
-                    } else {
-                        require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                            "Image format ${media.format} not supported"
+
+                mediaContent.forEach { media ->
+                    when (media) {
+                        is MediaContent.Image -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} does not support image"
+                            }
+                            val imageUrl = if (media.isUrl()) {
+                                media.source
+                            } else {
+                                require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
+                                    "Image format ${media.format} not supported"
+                                }
+                                "data:${media.getMimeType()};base64,${media.toBase64()}"
+                            }
+                            add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
+
                         }
-                        "data:${media.getMimeType()};base64,${media.toBase64()}"
+
+                        is MediaContent.Audio -> {
+                            require(model.capabilities.contains(LLMCapability.Audio)) {
+                                "Model ${model.id} does not support audio"
+                            }
+
+                            require(media.format in listOf("wav", "mp3")) {
+                                "Audio format ${media.format} not supported"
+                            }
+                            add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+                        }
+
+                        is MediaContent.File -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} does not support files"
+                            }
+
+                            require(media.format == "pdf") {
+                                "File format ${media.format} not supported. Supported formats: `pdf`"
+                            }
+                            val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
+                            add(
+                                ContentPart.File(
+                                    ContentPart.FileData(
+                                        fileData = fileData,
+                                        filename = media.fileName()
+                                    )
+                                )
+                            )
+                        }
+
+                        else -> {
+                            logger.warn { "Media content type not supported: $mediaContent" }
+                            return null
+                        }
                     }
-                    add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
                 }
-                OpenRouterMessage(role = "user", content = Content.Parts(listOfContent))
             }
 
-            is MediaContent.Audio -> {
-                require(model.capabilities.contains(LLMCapability.Audio)) {
-                    "Model ${model.id} does not support audio"
-                }
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(ContentPart.Text(content))
-                    }
-                    require(media.format in listOf("wav", "mp3")) {
-                        "Audio format ${media.format} not supported"
-                    }
-                    add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
-                }
-                OpenRouterMessage(role = "user", content = Content.Parts(listOfContent))
-            }
-
-            is MediaContent.File -> {
-                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                    "Model ${model.id} does not support files"
-                }
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(ContentPart.Text(content))
-                    }
-                    require(media.format == "pdf") {
-                        "File format ${media.format} not supported. Supported formats: `pdf`"
-                    }
-                    val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
-                    add(ContentPart.File(ContentPart.FileData(fileData = fileData, filename = media.fileName())))
-                }
-                OpenRouterMessage(role = "user", content = Content.Parts(listOfContent))
-            }
-
-            else -> {
-                logger.warn { "Media content type not supported: $mediaContent" }
-                null
-            }
+            OpenRouterMessage(role = "user", content = Content.Parts(listOfContent))
         }
 
         is Message.Assistant -> OpenRouterMessage(role = "assistant", content = Content.Text(content))

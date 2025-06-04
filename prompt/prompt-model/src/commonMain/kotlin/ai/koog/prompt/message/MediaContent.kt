@@ -19,6 +19,10 @@ import kotlin.jvm.JvmInline
  */
 @Serializable
 public sealed class MediaContent {
+    /**
+     * A regular expression to validate and match URLs that start with "http" or "https".
+     * It is case-insensitive and is used to ensure the format of URLs in the media content.
+     */
     @Transient
     protected val urlRegex: Regex = """^https?://.*""".toRegex(RegexOption.IGNORE_CASE)
 
@@ -27,6 +31,11 @@ public sealed class MediaContent {
      */
     public abstract val format: String?
 
+    /**
+     * Retrieves the MIME type of the media content.
+     *
+     * @return A string representing the MIME type.
+     */
     public abstract fun getMimeType(): String
 
     /**
@@ -163,10 +172,26 @@ public sealed class MediaContent {
             is FileSource.Url -> error("Cannot get fileName for URL. Download the file first.")
         }
 
+        /**
+         * Reads the content of a file based on its source type.
+         * If the file source is a local path, the file content is read and returned as a string.
+         * If the file source is a URL, an error is thrown.
+         *
+         * @return The text content of the file if the source is a local path.
+         * @throws IllegalStateException if the source is a URL, as reading directly from a URL is not supported.
+         */
         public fun readText(): String = when (val src = fileSource) {
             is FileSource.LocalPath -> src.readText()
             is FileSource.Url -> error("Cannot read file from URL. Download the file first.")
         }
+        /**
+         * Converts the file content to a Base64 encoded string.
+         * This method supports encoding for files with a local path source.
+         * For URL sources, an exception is thrown since encoding is not supported directly.
+         *
+         * @return Base64 encoded string representation of the file content if the file source is a local path.
+         * @throws IllegalStateException if the file source is a URL as encoding is not supported.
+         */
         public override fun toBase64(): String = when (val src = fileSource) {
             is FileSource.LocalPath -> src.encodeLocalFile()
             is FileSource.Url -> error("Cannot encode URL to base64. Download the file first.")
@@ -191,6 +216,13 @@ private sealed interface FileSource {
 
         private val path: Path by lazy { Path(value) }
 
+        /**
+         * Reads the content of a file located at the specified path as a string.
+         *
+         * @return The content of the file as a string.
+         * @throws IllegalArgumentException If the specified path is not a regular file.
+         * @throws IllegalStateException If the file is not found.
+         */
         fun readText(): String {
             val metadata = requireNotNull(SystemFileSystem.metadataOrNull(path)) {
                 "File not found: $path"

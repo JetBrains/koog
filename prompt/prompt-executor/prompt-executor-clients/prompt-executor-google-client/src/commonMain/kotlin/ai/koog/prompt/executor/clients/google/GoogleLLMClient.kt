@@ -270,68 +270,68 @@ public open class GoogleLLMClient(
     }
 
     private fun Message.toGoogleContent(model: LLModel): GoogleContent? = when (this) {
-        is Message.User -> when (val media = mediaContent) {
-            null -> GoogleContent(role = "user", parts = listOf(GooglePart.Text(content)))
-            is MediaContent.Image -> {
-                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                    "Model ${model.id} does not support image"
+        is Message.User -> {
+            val contentParts = buildList {
+                if (content.isNotEmpty() || mediaContent.isEmpty()) {
+                    add(GooglePart.Text(content))
                 }
-                val listOfPart = buildList {
-                    if (content.isNotEmpty()) {
-                        add(GooglePart.Text(content))
-                    }
-                    if (media.isUrl()) {
-                        throw IllegalArgumentException("URL images not supported for Gemini models")
-                    }
-                    require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
-                        "Image format ${media.format} not supported"
-                    }
-                    add(GooglePart.InlineData(GoogleData.Blob(mimeType = media.getMimeType(), media.toBase64())))
-                }
-                GoogleContent(role = "user", parts = listOfPart)
-            }
+                mediaContent.forEach { media ->
+                    when (media) {
+                        is MediaContent.Image -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} does not support image"
+                            }
+                            if (media.isUrl()) {
+                                throw IllegalArgumentException("URL images not supported for Gemini models")
+                            }
+                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
+                                "Image format ${media.format} not supported"
+                            }
+                            add(
+                                GooglePart.InlineData(
+                                    GoogleData.Blob(
+                                        mimeType = media.getMimeType(),
+                                        data = media.toBase64()
+                                    )
+                                )
+                            )
 
-            is MediaContent.Audio -> {
-                require(model.capabilities.contains(LLMCapability.Audio)) {
-                    "Model ${model.id} does not support audio"
-                }
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(GooglePart.Text(content))
-                    }
-                    require(media.format in listOf("wav", "mp3", "aiff", "aac", "ogg", "flac")) {
-                        "Audio format ${media.format} not supported"
-                    }
-                    add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
-                }
-                GoogleContent(role = "user", parts = listOfContent)
-            }
+                        }
 
-            is MediaContent.File -> {
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(GooglePart.Text(content))
-                    }
-                    if (media.isUrl()) {
-                        throw IllegalArgumentException("URL files not supported for Gemini models")
-                    }
-                    add(GooglePart.InlineData(GoogleData.Blob(mimeType = media.getMimeType(), data = media.toBase64())))
-                }
-                GoogleContent(role = "user", parts = listOfContent)
-            }
+                        is MediaContent.Audio -> {
+                            require(model.capabilities.contains(LLMCapability.Audio)) {
+                                "Model ${model.id} does not support audio"
+                            }
+                            require(media.format in listOf("wav", "mp3", "aiff", "aac", "ogg", "flac")) {
+                                "Audio format ${media.format} not supported"
+                            }
+                            add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+                        }
 
-            is MediaContent.Video -> {
-                require(model.capabilities.contains(LLMCapability.Vision.Video)) {
-                    "Model ${model.id} does not support video"
-                }
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(GooglePart.Text(content))
+                        is MediaContent.File -> {
+                            if (media.isUrl()) {
+                                throw IllegalArgumentException("URL files not supported for Gemini models")
+                            }
+                            add(
+                                GooglePart.InlineData(
+                                    GoogleData.Blob(
+                                        mimeType = media.getMimeType(),
+                                        data = media.toBase64()
+                                    )
+                                )
+                            )
+                        }
+
+                        is MediaContent.Video -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Video)) {
+                                "Model ${model.id} does not support video"
+                            }
+                            add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+                        }
                     }
-                    add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
                 }
-                GoogleContent(role = "user", parts = listOfContent)
             }
+            GoogleContent(role = "user", parts = contentParts)
         }
 
         is Message.Assistant -> GoogleContent(role = "model", parts = listOf(GooglePart.Text(content)))

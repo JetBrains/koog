@@ -85,7 +85,7 @@ public sealed interface Message {
     public data class User(
         override val content: String,
         override val metaInfo: RequestMetaInfo,
-        val mediaContent: MediaContent? = null,
+        val mediaContent: List<MediaContent> = emptyList(),
     ) : Request {
         override val role: Role = Role.User
     }

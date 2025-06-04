@@ -104,7 +104,9 @@ val response = client.execute(
     prompt = prompt {
         user {
             text("What do you see in this image?")
-            image("/path/to/image.jpg")
+            attachments {
+                image("/path/to/image.jpg")
+            }
         }
     },
     model = visionModel
@@ -115,7 +117,9 @@ val response = client.execute(
     prompt = prompt {
         user {
             text("Summarize this document")
-            document("/path/to/document.pdf")
+            attachments {
+                document("/path/to/document.pdf")
+            }
         }
     },
     model = documentModel
@@ -127,7 +131,9 @@ val response = client.execute(
     prompt = prompt {
         user {
             text("Transcribe this audio")
-            audio(audioData, "mp3")
+            attachments {
+                audio(audioData, "mp3")
+            }
         }
     },
     model = audioModel
@@ -138,8 +144,10 @@ val response = client.execute(
     prompt = prompt {
         user {
             text("Compare the image with the document content:")
-            image("/path/to/screenshot.png")
-            document("/path/to/report.pdf")
+            attachments {
+               image("/path/to/screenshot.png")
+               document("/path/to/report.pdf")
+            }
             text("What are the key differences?")
         }
     },

@@ -276,57 +276,57 @@ public open class AnthropicLLMClient(
         )
     }
 
-    private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage =
-        when (val media = mediaContent) {
-            null -> AnthropicMessage(role = "user", content = listOf(AnthropicContent.Text(content)))
-            is MediaContent.Image -> {
-                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                    "Model ${model.id} does not support image"
-                }
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(AnthropicContent.Text(content))
-                    }
-                    if (media.isUrl()) {
-                        add(AnthropicContent.Image(ImageSource.Url(media.source)))
-                    } else {
-                        require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                            "Image format ${media.format} not supported"
+    private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage {
+        val listOfContent = buildList {
+            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+                add(AnthropicContent.Text(content))
+            }
+
+            mediaContent.forEach { media ->
+                when (media) {
+                    is MediaContent.Image -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                            "Model ${model.id} does not support image"
                         }
-                        add(
-                            AnthropicContent.Image(
-                                ImageSource.Base64(
-                                    data = media.toBase64(),
-                                    mediaType = media.getMimeType()
+
+                        if (media.isUrl()) {
+                            add(AnthropicContent.Image(ImageSource.Url(media.source)))
+                        } else {
+                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
+                                "Image format ${media.format} not supported"
+                            }
+                            add(
+                                AnthropicContent.Image(
+                                    ImageSource.Base64(
+                                        data = media.toBase64(),
+                                        mediaType = media.getMimeType()
+                                    )
                                 )
                             )
-                        )
+                        }
                     }
-                }
-                AnthropicMessage(role = "user", content = listOfContent)
-            }
 
-            is MediaContent.File -> {
-                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                    "Model ${model.id} does not support files"
-                }
-                val listOfContent = buildList {
-                    if (content.isNotEmpty()) {
-                        add(AnthropicContent.Text(content))
-                    }
-                    val docSource = when {
-                        media.isUrl() -> DocumentSource.PDFUrl(media.source)
-                        media.format == "pdf" -> DocumentSource.PDFBase64(media.toBase64())
-                        media.format == "txt" || media.format == "md" -> DocumentSource.PlainText(media.readText())
-                        else -> throw IllegalArgumentException("File format ${media.format} not supported. Supported formats: `pdf`, `text`")
-                    }
-                    add(AnthropicContent.Document(docSource))
-                }
-                AnthropicMessage(role = "user", content = listOfContent)
-            }
+                    is MediaContent.File -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                            "Model ${model.id} does not support files"
+                        }
 
-            else -> throw IllegalArgumentException("Media content not supported: $media")
+                        val docSource = when {
+                            media.isUrl() -> DocumentSource.PDFUrl(media.source)
+                            media.format == "pdf" -> DocumentSource.PDFBase64(media.toBase64())
+                            media.format == "txt" || media.format == "md" -> DocumentSource.PlainText(media.readText())
+                            else -> throw IllegalArgumentException("File format ${media.format} not supported. Supported formats: `pdf`, `text`")
+                        }
+                        add(AnthropicContent.Document(docSource))
+                    }
+
+                    else -> throw IllegalArgumentException("Media content not supported: $media")
+                }
+            }
         }
+
+        return AnthropicMessage(role = "user", content = listOfContent)
+    }
 
     private fun processAnthropicResponse(response: AnthropicResponse): List<Message.Response> {
         // Extract token count from the response

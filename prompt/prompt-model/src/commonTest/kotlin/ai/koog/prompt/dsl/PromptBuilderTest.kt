@@ -4,6 +4,7 @@ import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class PromptBuilderTest {
@@ -19,8 +20,9 @@ class PromptBuilderTest {
         assertEquals("Check this image", prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        assertTrue(userMessage.mediaContent is MediaContent.Image, "Message should have an image attachment")
-        assertEquals("test.png", userMessage.mediaContent.source, "Image source should match")
+        val singleContent = userMessage.mediaContent.single()
+        assertIs<MediaContent.Image>(singleContent, "Message should have an image attachment")
+        assertEquals("test.png", singleContent.source, "Image source should match")
     }
 
     @Test
@@ -35,15 +37,15 @@ class PromptBuilderTest {
         }
 
         // Due to the bug, only the first attachment is included, so there's only one message
-        assertEquals(2, prompt.messages.size, "Prompt should have one message")
+        assertEquals(1, prompt.messages.size, "Prompt should have one message")
         assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
 
         assertEquals("Check these files", prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-
-        assertTrue(userMessage.mediaContent is MediaContent.Image, "Message should have an image attachment")
-        assertEquals("photo.jpg", userMessage.mediaContent.source, "Image source should match")
+        val firstContent = userMessage.mediaContent[0]
+        assertIs<MediaContent.Image>(firstContent, "Message should have an image attachment")
+        assertEquals("photo.jpg", firstContent.source, "Image source should match")
     }
 
     @Test
@@ -66,8 +68,9 @@ class PromptBuilderTest {
         assertEquals(expectedContent, prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        assertTrue(userMessage.mediaContent is MediaContent.Image, "Message should have an image attachment")
-        assertEquals("screenshot.png", userMessage.mediaContent.source, "Image source should match")
+        val singleContent = userMessage.mediaContent.single()
+        assertIs<MediaContent.Image>(singleContent, "Message should have an image attachment")
+        assertEquals("screenshot.png", singleContent.source, "Image source should match")
     }
 
     @Test
@@ -86,21 +89,26 @@ class PromptBuilderTest {
         }
 
         // Due to the bug, only the first two attachments are included, so there are only two messages
-        assertEquals(3, prompt.messages.size, "Prompt should have two messages")
+        assertEquals(1, prompt.messages.size, "Prompt should have 1 message")
 
         // First message should have the text and the first attachment
-        val firstMessage = prompt.messages[0] as Message.User
-        assertEquals("Please analyze these files", firstMessage.content, "First message content should match")
-        assertTrue(firstMessage.mediaContent is MediaContent.Image, "First message should have an image attachment")
-        assertEquals("chart.png", firstMessage.mediaContent.source, "Image source should match")
+        val userMessage = prompt.messages.first() as Message.User
+        assertEquals("Please analyze these files", userMessage.content, "First message content should match")
 
-        // Second message should be empty with the second attachment
-        val secondMessage = prompt.messages[1] as Message.User
-        assertEquals("", secondMessage.content, "Second message content should be empty")
-        assertTrue(secondMessage.mediaContent is MediaContent.File, "Second message should have a file attachment")
-        assertEquals("data.pdf", secondMessage.mediaContent.source, "File source should match")
+        assertEquals(3, userMessage.mediaContent.size, "First message should have an image attachment")
 
-        // The third attachment (report.docx) is skipped due to the bug
+        val firstContent = userMessage.mediaContent[0]
+
+        assertIs<MediaContent.Image>(firstContent, "First attachment should be an image attachment")
+        assertEquals("chart.png", firstContent.source, "Image source should match")
+
+        val secondContent = userMessage.mediaContent[1]
+        assertIs<MediaContent.File>(secondContent, "Second attachment should be a file attachment")
+        assertEquals("data.pdf", secondContent.source, "File source should match")
+
+        val thirdContent = userMessage.mediaContent[2]
+        assertIs<MediaContent.File>(thirdContent, "Third attachment should be a file attachment")
+        assertEquals("report.docx", thirdContent.source, "File source should match")
     }
 
     @Test
@@ -140,7 +148,7 @@ class PromptBuilderTest {
             }
         }
 
-        assertEquals(5, prompt.messages.size, "Prompt should have five messages")
+        assertEquals(5, prompt.messages.size, "Prompt should have 4 messages")
 
         assertTrue(prompt.messages[0] is Message.System, "First message should be a System message")
         assertTrue(prompt.messages[1] is Message.User, "Second message should be a User message")
@@ -158,7 +166,10 @@ class PromptBuilderTest {
             "I have a question about programming.\nHow do I implement a binary search in Kotlin?",
             userMessage.content
         )
-        assertTrue(userMessage.mediaContent is MediaContent.Image, "User message should have an image attachment")
+
+        assertEquals(1, userMessage.mediaContent.size, "User message should have an image attachment")
+        val mediaContent = userMessage.mediaContent.single()
+        assertIs<MediaContent.Image>(mediaContent, "User message should have an image attachment")
 
         val assistantMessage = prompt.messages[2] as Message.Assistant
         assertTrue(assistantMessage.content.contains("Here's how you can implement binary search in Kotlin:"))

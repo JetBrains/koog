@@ -90,17 +90,7 @@ public class PromptBuilder internal constructor(
      * @param attachments The list of media attachments associated with the user message. Defaults to an empty list if no attachments are provided.
      */
     public fun user(content: String, attachments: List<MediaContent> = emptyList()) {
-        when (attachments.size) {
-            0 -> messages.add(Message.User(content, RequestMetaInfo.create(clock)))
-            1 -> messages.add(Message.User(content, RequestMetaInfo.create(clock), attachments.first()))
-            else -> with(messages) {
-                add(Message.User(content, RequestMetaInfo.create(clock), attachments.first()))
-                addAll(
-                    attachments
-                        .subList(1, attachments.lastIndex + 1)
-                        .map { Message.User("", RequestMetaInfo.create(clock), it) })
-            }
-        }
+        messages.add(Message.User(content, RequestMetaInfo.create(clock), attachments))
     }
 
     /**

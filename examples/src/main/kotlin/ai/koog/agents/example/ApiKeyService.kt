@@ -6,4 +6,7 @@ internal object ApiKeyService {
 
     val anthropicApiKey: String
         get() = System.getenv("ANTHROPIC_API_KEY") ?: throw IllegalArgumentException("ANTHROPIC_API_KEY env is not set")
+
+    val googleApiKey: String
+        get() = System.getenv("GOOGLE_API_KEY") ?: throw IllegalArgumentException("GOOGLE_API_KEY env is not set")
 }
