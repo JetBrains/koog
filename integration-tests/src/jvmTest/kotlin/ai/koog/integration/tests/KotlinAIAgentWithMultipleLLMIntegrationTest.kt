@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.integration.tests
 
 import ai.koog.integration.tests.ReportingLLMLLMClient.Event
@@ -39,6 +41,7 @@ import kotlinx.serialization.Serializable
 import kotlin.coroutines.coroutineContext
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
 
 internal class ReportingLLMLLMClient(
     private val eventsChannel: Channel<Event>,
@@ -712,7 +715,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 },
                 installFeatures = {
                     install(EventHandler) {
-                        onAgentRunError = { _, e ->
+                        onAgentRunError = { _, _, e ->
                             println("error: ${e.javaClass.simpleName}(${e.message})\n${e.stackTraceToString()}")
                             true
                         }

@@ -16,6 +16,11 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
             }
         }
+        jvmMain {
+            dependencies {
+                api(kotlin("reflect"))
+            }
+        }
     }
 
     explicitApi()

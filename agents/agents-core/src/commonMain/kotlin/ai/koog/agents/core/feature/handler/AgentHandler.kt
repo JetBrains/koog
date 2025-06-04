@@ -1,9 +1,13 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.core.feature.handler
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Feature implementation for agent and strategy interception.
@@ -28,7 +32,7 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
         AgentFinishedHandler { _, _ -> }
 
     public var agentRunErrorHandler: AgentRunErrorHandler =
-        AgentRunErrorHandler { _, _ -> }
+        AgentRunErrorHandler { _, _, _ -> }
 
     /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
@@ -87,8 +91,9 @@ public fun interface AgentFinishedHandler {
     public suspend fun handle(strategyName: String, result: String?)
 }
 
+@OptIn(ExperimentalUuidApi::class)
 public fun interface AgentRunErrorHandler {
-    public suspend fun handle(strategyName: String, throwable: Throwable)
+    public suspend fun handle(strategyName: String, sessionUuid: Uuid?, throwable: Throwable)
 }
 
 public class AgentCreateContext<FeatureT>(
@@ -111,8 +116,10 @@ public class AgentStartContext<TFeature>(
     }
 }
 
+@OptIn(ExperimentalUuidApi::class)
 public class StrategyUpdateContext<FeatureT>(
     public val strategy: AIAgentStrategy,
+    public val sessionUuid: Uuid,
     public val feature: FeatureT
 ) {
     public suspend fun readStrategy(block: suspend (AIAgentStrategy) -> Unit) {

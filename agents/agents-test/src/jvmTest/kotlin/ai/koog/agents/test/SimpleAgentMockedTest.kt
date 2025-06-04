@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.test
 
 import ai.koog.agents.core.tools.ToolRegistry
@@ -13,6 +15,7 @@ import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
+import kotlin.uuid.ExperimentalUuidApi
 
 class SimpleAgentMockedTest {
     val systemPrompt = """
@@ -37,7 +40,7 @@ class SimpleAgentMockedTest {
             actualToolCalls.add(tool.name)
         }
 
-        onAgentRunError = { strategyName, throwable ->
+        onAgentRunError = { strategyName, sessionUuid, throwable ->
             errors.add(throwable)
         }
 

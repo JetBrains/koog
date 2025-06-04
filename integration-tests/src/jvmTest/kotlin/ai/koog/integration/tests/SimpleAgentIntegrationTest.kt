@@ -1,10 +1,5 @@
 package ai.koog.integration.tests
 
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -13,6 +8,10 @@ import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.runWithRetry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
@@ -27,7 +26,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.AfterTest
 import kotlin.test.assertTrue
+import kotlin.uuid.ExperimentalUuidApi
 
+@OptIn(ExperimentalUuidApi::class)
 class SimpleAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
@@ -58,7 +59,7 @@ class SimpleAgentIntegrationTest {
             results.add(result)
         }
 
-        onAgentRunError = { strategyName, throwable ->
+        onAgentRunError = { strategyName, sessionUuid, throwable ->
             println("Agent error: strategy=$strategyName, error=${throwable.message}")
             errors.add(throwable)
         }
@@ -79,12 +80,12 @@ class SimpleAgentIntegrationTest {
             println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
         }
 
-        onBeforeLLMCall = { prompt: Prompt, tools: List<ToolDescriptor> ->
+        onBeforeLLMCall = { prompt, tools, model, sessionUuid ->
             println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
         }
 
-        onAfterLLMCall = { response ->
-            println("After LLM call with tools: response=${response.map { it.content.take(50) }}")
+        onAfterLLMCall = { prompt, tools, model, responses, sessionUuid ->
+            println("After LLM call with tools: response=${responses.map { it.content.take(50) }}")
         }
 
         onToolCall = { tool, args ->

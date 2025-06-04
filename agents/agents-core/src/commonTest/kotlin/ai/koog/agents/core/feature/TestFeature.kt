@@ -1,13 +1,18 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.features.common.config.FeatureConfig
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 class TestFeature(val events: MutableList<String>) {
 
@@ -40,11 +45,11 @@ class TestFeature(val events: MutableList<String>) {
                 TestFeature(mutableListOf())
             }
 
-            pipeline.interceptBeforeLLMCall(this, feature) { prompt: Prompt, tools: List<ToolDescriptor> ->
+            pipeline.interceptBeforeLLMCall(this, feature) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid ->
                 feature.events += "LLM: start LLM call (prompt: ${prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}, tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptAfterLLMCall(this, feature) { responses: List<Message.Response> ->
+            pipeline.interceptAfterLLMCall(this, feature) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid ->
                 feature.events += "LLM: finish LLM call (responses: [${responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}])"
             }
 

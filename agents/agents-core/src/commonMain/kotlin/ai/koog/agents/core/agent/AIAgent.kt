@@ -140,7 +140,7 @@ public open class AIAgent(
                 toolRegistry,
                 agentConfig.prompt,
                 agentConfig.model,
-                promptExecutor = PromptExecutorProxy(promptExecutor, pipeline),
+                promptExecutor = PromptExecutorProxy(promptExecutor, pipeline, sessionUuid!!),
                 environment = preparedEnvironment,
                 agentConfig,
                 clock
@@ -359,7 +359,7 @@ public open class AIAgent(
             throw error.asException()
         } catch (e: AgentEngineException) {
             logger.error(e) { "Execution exception reported by server!" }
-            pipeline.onAgentRunError(strategyName = strategy.name, throwable = e)
+            pipeline.onAgentRunError(strategyName = strategy.name, sessionUuid = sessionUuid, throwable = e)
         }
     }
 

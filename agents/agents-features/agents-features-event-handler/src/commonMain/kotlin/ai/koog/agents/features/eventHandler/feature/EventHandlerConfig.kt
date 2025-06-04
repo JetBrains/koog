@@ -9,7 +9,10 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Configuration class for the EventHandler feature.
@@ -34,6 +37,7 @@ import ai.koog.prompt.message.Message
  * }
  * ```
  */
+@OptIn(ExperimentalUuidApi::class)
 public class EventHandlerConfig : FeatureConfig() {
 
     //region Trigger Agent Handlers
@@ -53,8 +57,8 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called when an error occurs during agent execution.
      */
-    public var onAgentRunError: suspend (strategyName: String, throwable: Throwable) -> Unit =
-        { strategyName: String, throwable: Throwable -> }
+    public var onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit =
+        { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
 
     //endregion Trigger Agent Handlers
 
@@ -69,8 +73,8 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called when a strategy finishes execution.
      */
-    public var onStrategyFinished: suspend (strategyName: String, result: String) -> Unit =
-        { strategyName: String, result: String -> }
+    public var onStrategyFinished: suspend (strategy: AIAgentStrategy, result: String) -> Unit =
+        { strategy: AIAgentStrategy, result: String -> }
 
     //endregion Trigger Strategy Handlers
 
@@ -95,14 +99,14 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Handler called before a call is made to the language model.
      */
-    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>) -> Unit =
-        { prompt: Prompt, tools: List<ToolDescriptor> -> }
+    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit =
+        { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
 
     /**
      * Handler called after a response is received from the language model.
      */
-    public var onAfterLLMCall: suspend (responses: List<Message.Response>) -> Unit =
-        { responses: List<Message.Response> -> }
+    public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit =
+        { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid -> }
 
     //endregion Trigger LLM Call Handlers
 

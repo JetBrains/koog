@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -13,11 +15,14 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -169,8 +174,9 @@ public class AIAgentPipeline {
      * @param strategyName The name of the strategy during which the error occurred
      * @param throwable The exception that was thrown during agent execution
      */
-    public suspend fun onAgentRunError(strategyName: String, throwable: Throwable) {
-        agentHandlers.values.forEach { handler -> handler.agentRunErrorHandler.handle(strategyName, throwable) }
+    @OptIn(ExperimentalUuidApi::class)
+    public suspend fun onAgentRunError(strategyName: String, sessionUuid: Uuid?, throwable: Throwable) {
+        agentHandlers.values.forEach { handler -> handler.agentRunErrorHandler.handle(strategyName, sessionUuid, throwable) }
     }
 
     /**
@@ -203,10 +209,12 @@ public class AIAgentPipeline {
      * Notifies all registered strategy handlers that a strategy has started execution.
      *
      * @param strategy The strategy that has started execution
+     * @param context The context of the strategy execution
      */
-    public suspend fun onStrategyStarted(strategy: AIAgentStrategy) {
+    @OptIn(ExperimentalUuidApi::class)
+    public suspend fun onStrategyStarted(strategy: AIAgentStrategy, context: AIAgentContextBase) {
         strategyHandlers.values.forEach { handler ->
-            val updateContext = StrategyUpdateContext(strategy, handler.feature)
+            val updateContext = StrategyUpdateContext(strategy, context.sessionUuid, handler.feature)
             handler.handleStrategyStartedUnsafe(updateContext)
         }
     }
@@ -214,11 +222,16 @@ public class AIAgentPipeline {
     /**
      * Notifies all registered strategy handlers that a strategy has finished execution.
      *
-     * @param strategyName The name of the strategy that has finished
+     * @param strategy The strategy that has started execution
+     * @param context The context of the strategy execution
      * @param result The result produced by the strategy execution
      */
-    public suspend fun onStrategyFinished(strategyName: String, result: String) {
-        strategyHandlers.values.forEach { handler -> handler.strategyFinishedHandler.handle(strategyName, result) }
+    @OptIn(ExperimentalUuidApi::class)
+    public suspend fun onStrategyFinished(strategy: AIAgentStrategy, context: AIAgentContextBase, result: String) {
+        strategyHandlers.values.forEach { handler ->
+            val updateContext = StrategyUpdateContext(strategy, context.sessionUuid, handler.feature)
+            handler.handleStrategyFinishedUnsafe(updateContext, result)
+        }
     }
 
     //endregion Trigger Strategy Handlers
@@ -281,8 +294,8 @@ public class AIAgentPipeline {
      *
      * @param prompt The prompt that will be sent to the language model
      */
-    public suspend fun onBeforeLLMCall(prompt: Prompt,  tools: List<ToolDescriptor>) {
-        executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt, tools) }
+    public suspend fun onBeforeLLMCall(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) {
+        executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt, tools, model, sessionUuid) }
     }
 
     /**
@@ -290,8 +303,8 @@ public class AIAgentPipeline {
      *
      * @param responses A single or multiple response messages received from the language model
      */
-    public suspend fun onAfterLLMCall(responses: List<Message.Response>) {
-        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(responses) }
+    public suspend fun onAfterLLMCall(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) {
+        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(prompt, tools, model, responses, sessionUuid) }
     }
 
     //endregion Trigger LLM Call Handlers
@@ -470,15 +483,16 @@ public class AIAgentPipeline {
      * }
      * ```
      */
+    @OptIn(ExperimentalUuidApi::class)
     public fun <TFeature : Any> interceptAgentRunError(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(strategyName: String, throwable: Throwable) -> Unit
+        handle: suspend TFeature.(strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit
     ) {
         val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
 
-        existingHandler.agentRunErrorHandler = AgentRunErrorHandler { strategyName, throwable ->
-            with(featureImpl) { handle(strategyName, throwable) }
+        existingHandler.agentRunErrorHandler = AgentRunErrorHandler { strategyName, sessionUuid, throwable ->
+            with(featureImpl) { handle(strategyName, sessionUuid, throwable) }
         }
     }
 
@@ -532,12 +546,21 @@ public class AIAgentPipeline {
     public fun <TFeature : Any> interceptStrategyFinished(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(strategyName: String, result: String) -> Unit
+        handle: suspend StrategyUpdateContext<TFeature>.(String) -> Unit
     ) {
         val existingHandler = strategyHandlers.getOrPut(feature.key) { StrategyHandler(featureImpl) }
 
-        existingHandler.strategyFinishedHandler = StrategyFinishedHandler { strategyName, result ->
-            with(featureImpl) { handle(strategyName, result) }
+        @Suppress("UNCHECKED_CAST")
+        if (existingHandler as? StrategyHandler<TFeature> == null) {
+            logger.debug {
+                "Expected to get an agent handler for feature of type <${featureImpl::class}>, but get a handler of type <${feature.key}> instead. " +
+                        "Skipping adding strategy finished interceptor for feature."
+            }
+            return
+        }
+
+        existingHandler.strategyFinishedHandler = StrategyFinishedHandler { updateContext, result ->
+            handle(updateContext, result)
         }
     }
 
@@ -609,12 +632,12 @@ public class AIAgentPipeline {
     public fun <TFeature : Any> interceptBeforeLLMCall(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>) -> Unit
+        handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit
     ) {
         val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
 
-        existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler { prompt, tools ->
-            with(featureImpl) { handle(prompt, tools) }
+        existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler { prompt, tools, model, sessionUuid ->
+            with(featureImpl) { handle(prompt, tools, model, sessionUuid) }
         }
     }
 
@@ -633,12 +656,12 @@ public class AIAgentPipeline {
     public fun <TFeature : Any> interceptAfterLLMCall(
         feature: AIAgentFeature<*, TFeature>,
         featureImpl: TFeature,
-        handle: suspend TFeature.(responses: List<Message.Response>) -> Unit
+        handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit
     ) {
         val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
 
-        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { responses ->
-            with(featureImpl) { handle(responses) }
+        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { prompt, tools, model, responses, sessionUuid ->
+            with(featureImpl) { handle(prompt, tools, model, responses, sessionUuid) }
         }
     }
 

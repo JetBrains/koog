@@ -12,7 +12,9 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlin.uuid.ExperimentalUuidApi
 
+@OptIn(ExperimentalUuidApi::class)
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaSimpleAgentIntegrationTest {
     companion object {
@@ -31,16 +33,16 @@ class OllamaSimpleAgentIntegrationTest {
             println("Agent finished: strategy=$strategyName, result=$result")
         }
 
-        onAgentRunError = { strategyName, throwable ->
+        onAgentRunError = { strategyName, sessionUuid, throwable ->
             println("Agent error: strategy=$strategyName, error=${throwable.message}")
         }
 
         onStrategyStarted = { strategy ->
-            println("Strategy started: ${strategy.javaClass.simpleName}")
+            println("Strategy started: ${strategy.name}")
         }
 
-        onStrategyFinished = { strategyName, result ->
-            println("Strategy finished: strategy=$strategyName, result=$result")
+        onStrategyFinished = { strategy, result ->
+            println("Strategy finished: strategy=${strategy.name}, result=$result")
         }
 
         onBeforeNode = { node, context, input ->
@@ -51,11 +53,11 @@ class OllamaSimpleAgentIntegrationTest {
             println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
         }
 
-        onBeforeLLMCall = { prompt, tools ->
+        onBeforeLLMCall = { prompt, tools, model, sessionUuid ->
             println("Before LLM call: prompt=$prompt")
         }
 
-        onAfterLLMCall = { responses ->
+        onAfterLLMCall = { prompt, tools, model, responses, sessionUuid ->
             val lastResponse = responses.last().content
             println("After LLM call: response=${lastResponse.take(100)}${if (lastResponse.length > 100) "..." else ""}")
         }
