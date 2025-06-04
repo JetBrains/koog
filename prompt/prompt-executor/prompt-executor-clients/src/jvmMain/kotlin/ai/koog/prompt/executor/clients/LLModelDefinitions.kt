@@ -5,7 +5,7 @@ import kotlin.reflect.KVisibility
 import kotlin.reflect.full.createType
 import kotlin.reflect.full.memberProperties
 
-internal fun allModelsIn(obj: Any): List<LLModel> {
+public fun allModelsIn(obj: Any): List<LLModel> {
         return obj::class.memberProperties
             .filter { it.visibility == KVisibility.PUBLIC }
             .filter { it.returnType == LLModel::class.createType() }
