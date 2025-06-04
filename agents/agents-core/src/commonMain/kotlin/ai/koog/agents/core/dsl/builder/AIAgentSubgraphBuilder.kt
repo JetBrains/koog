@@ -3,7 +3,11 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.tools.Tool
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.KProperty
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -88,9 +92,27 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param nextNode Node to connect to
      * @return The next node
      */
-    public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
+    public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(
+        nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>
+    ): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
         edge(this forwardTo nextNode)
         return nextNode
+    }
+
+    /**
+     * Executes multiple nodes in parallel and merges their contexts.
+     *
+     * @param nodes List of nodes to execute in parallel
+     * @param reduce Function to merge the contexts after parallel execution
+     * @param name Optional name for the parallel node
+     * @return A node that executes the given nodes in parallel
+     */
+    public fun <Input, Output> parallel(
+        nodes: List<AIAgentNodeBase<Input, Output>>,
+        reduce: suspend AIAgentContextBase.(List<Pair<AIAgentContextBase, Output>>) -> Pair<AIAgentContextBase, Output>,
+        name: String? = null
+    ): AIAgentNodeDelegateBase<Input, Output> {
+        return AIAgentNodeDelegate(name, ParallelAIAgentNodeBuilder(nodes, reduce))
     }
 
     /**
@@ -218,3 +240,37 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
         return subgraph!!
     }
 }
+
+/**
+ * Builder for a node that executes multiple nodes in parallel.
+ *
+ * @param nodes List of nodes to execute in parallel
+ * @param reduce Function to merge the contexts after parallel execution
+ */
+@OptIn(ExperimentalUuidApi::class)
+public class ParallelAIAgentNodeBuilder<Input, Output> internal constructor(
+    private val nodes: List<AIAgentNodeBase<Input, Output>>,
+    private val reduce: suspend AIAgentContextBase.(List<Pair<AIAgentContextBase, Output>>) -> Pair<AIAgentContextBase, Output>,
+) : AIAgentNodeBuilder<Input, Output>(
+    execute = { input ->
+        val initialContext: AIAgentContextBase = this
+        val (context, output) = supervisorScope {
+            val mapResults = nodes.map { node ->
+                async {
+                    val nodeContext = initialContext.copy()
+                    val result = node.execute(nodeContext, input)
+                    nodeContext to result
+                }
+            }
+
+            val results = mapResults.awaitAll()
+
+            reduce(results)
+        }
+
+        // TODO: check if it is working!!!
+        this.replaceWith(context)
+
+        output
+    }
+)
