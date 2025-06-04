@@ -84,10 +84,6 @@ public open class AIAgent(
     private val installFeatures: FeatureContext.() -> Unit = {},
 ) : AIAgentBase, AIAgentEnvironment, Closeable {
 
-    init {
-        FeatureContext(this).installFeatures()
-    }
-
     private companion object {
         private val logger = KotlinLogging.logger {}
         private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
@@ -155,6 +151,10 @@ public open class AIAgent(
     private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
 
     private val pipeline = AIAgentPipeline()
+
+    init {
+        FeatureContext(this).installFeatures()
+    }
 
 
     override suspend fun run(agentInput: String) {
