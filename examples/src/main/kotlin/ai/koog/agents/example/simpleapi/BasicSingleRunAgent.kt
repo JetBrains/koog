@@ -1,7 +1,7 @@
 package ai.koog.agents.example.simpleapi
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.example.ApiKeyService
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -18,7 +18,7 @@ fun main() = runBlocking {
         onAgentFinished = { _, agentResult -> result = agentResult }
     }
     // Create a single-run agent with a system prompt
-    val agent = simpleSingleRunAgent(
+    val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.Reasoning.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples.",

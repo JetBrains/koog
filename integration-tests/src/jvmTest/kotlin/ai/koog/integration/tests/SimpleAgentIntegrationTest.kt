@@ -1,17 +1,16 @@
 package ai.koog.integration.tests
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
-import ai.koog.integration.tests.utils.TestUtils.runWithRetry
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.runWithRetry
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
@@ -119,14 +118,14 @@ class SimpleAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+    fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
             else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
         }
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             executor = executor,
             systemPrompt = systemPrompt,
             llmModel = model,
@@ -139,13 +138,13 @@ class SimpleAgentIntegrationTest {
             agent.run("Repeat what I say: hello, I'm good.")
         }
 
-        // by default, simpleSingleRunAgent has no tools underneath
+        // by default, AIAgent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
+    fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         // ToDo remove after fixes
@@ -163,7 +162,7 @@ class SimpleAgentIntegrationTest {
             else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
         }
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             executor = executor,
             systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
             llmModel = model,

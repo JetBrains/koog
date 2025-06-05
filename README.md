@@ -51,7 +51,7 @@ fun main() = runBlocking {
     // Before you run the example, assign a corresponding API key as an environment variable.
    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
-   val agent = simpleSingleRunAgent(
+   val agent = AIAgent(
       executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
       systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
       llmModel = OpenAIModels.Chat.GPT4o

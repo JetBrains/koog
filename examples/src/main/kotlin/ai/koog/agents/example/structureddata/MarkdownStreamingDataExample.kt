@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -46,7 +45,6 @@ fun main() = runBlocking {
         promptExecutor = executor,
         strategy = agentStrategy, // no tools needed for this example
         agentConfig = agentConfig,
-        toolRegistry = ToolRegistry.EMPTY,
     )
 
     val res = runner.runAndGetResult("Please provide a list of the top 10 books in the world.")

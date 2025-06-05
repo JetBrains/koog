@@ -114,10 +114,10 @@ fun main() = runBlocking {
     )
 
     val agent = AIAgent(
-        toolRegistry = toolRegistry,
+        promptExecutor = simpleOpenAIExecutor(apiKey),
         strategy = strategy,
         agentConfig = agentConfig,
-        promptExecutor = simpleOpenAIExecutor(apiKey),
+        toolRegistry = toolRegistry,
     )
 
     println("Banking Assistant started")

@@ -2,6 +2,7 @@
 
 package ai.koog.agents.test
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -9,7 +10,6 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.ExitTool
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -161,8 +161,8 @@ class SimpleAgentMockedTest {
     }
 
     @Test
-    fun ` test simpleSingleRunAgent doesn't call tools by default`() = runBlocking {
-        val agent = simpleSingleRunAgent(
+    fun ` test AIAgent doesn't call tools by default`() = runBlocking {
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -173,7 +173,7 @@ class SimpleAgentMockedTest {
 
         agent.run("Repeat after me: Hello, I'm good.")
 
-        // by default, a simpleSingleRunAgent has no tools underneath
+        // by default, a AI Agent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called")
         assertTrue(results.isNotEmpty(), "No agent run results were received")
         assertTrue(
@@ -183,12 +183,12 @@ class SimpleAgentMockedTest {
     }
 
     @Test
-    fun `test simpleSingleRunAgent calls a custom tool`() = runBlocking {
+    fun `test AIAgent calls a custom tool`() = runBlocking {
         val toolRegistry = ToolRegistry {
             tool(SayToUser)
         }
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -212,7 +212,7 @@ class SimpleAgentMockedTest {
     @ParameterizedTest
     @MethodSource("getToolRegistry")
     fun `test simpleSingleRunAgent handles non-registered tools`(toolRegistry: ToolRegistry) = runBlocking {
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -238,7 +238,7 @@ class SimpleAgentMockedTest {
             tool(ErrorTool)
         }
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -268,7 +268,7 @@ class SimpleAgentMockedTest {
             tool(ConditionalTool)
         }
 
-        val successAgent = simpleSingleRunAgent(
+        val successAgent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -296,7 +296,7 @@ class SimpleAgentMockedTest {
 
         iterationCount = 0
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,

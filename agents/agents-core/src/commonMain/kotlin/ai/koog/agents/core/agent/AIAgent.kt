@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -19,8 +20,18 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
@@ -81,6 +92,41 @@ public open class AIAgent(
     }
 
     /**
+     * Creates an instance of [AIAgent] with the specified parameters.
+     *
+     * @param executor The [PromptExecutor] responsible for executing prompts.
+     * @param strategy The [AIAgentStrategy] defining the agent's behavior. Default is a single-run strategy.
+     * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
+     * @param llmModel The language model to be used by the agent.
+     * @param temperature The sampling temperature for the language model, controlling randomness. Default is 1.0.
+     * @param toolRegistry The [ToolRegistry] containing tools available to the agent. Default is an empty registry.
+     * @param maxIterations Maximum number of iterations for the agent's execution. Default is 50.
+     * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
+     */
+    public constructor(
+        executor: PromptExecutor,
+        llmModel: LLModel,
+        strategy: AIAgentStrategy = singleRunStrategy(),
+        systemPrompt: String = "",
+        temperature: Double = 1.0,
+        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+        maxIterations: Int = 50,
+        installFeatures: FeatureContext.() -> Unit = {}
+    ) : this(
+        promptExecutor = executor,
+        strategy = strategy,
+        agentConfig = AIAgentConfig(
+            prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
+                system(systemPrompt)
+            },
+            model = llmModel,
+            maxAgentIterations = maxIterations,
+        ),
+        toolRegistry = toolRegistry,
+        installFeatures = installFeatures
+    )
+
+    /**
      * The context for adding and configuring features in a Kotlin AI Agent instance.
      *
      * Note: The method is used to hide internal install() method from a public API to prevent
@@ -110,8 +156,8 @@ public open class AIAgent(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun run(agentInput: String) {
 
+    override suspend fun run(agentInput: String) {
         runningMutex.withLock {
             if (isRunning) {
                 throw IllegalStateException("Agent is already running")
@@ -164,8 +210,7 @@ public open class AIAgent(
     }
 
     public suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
-        val agentInput = TextContentBuilder().apply { this.builder() }.build()
-        run(agentInput = agentInput)
+        run(agentInput = TextContentBuilder().apply { this.builder() }.build())
     }
 
     override suspend fun runAndGetResult(agentInput: String): String? {
@@ -367,4 +412,28 @@ public open class AIAgent(
         "$message [${strategy.name}, ${sessionUuid?.toString() ?: throw IllegalStateException("Session UUID is null")}]"
 
     //endregion Private Methods
+}
+
+/**
+* Creates a single-run strategy for an AI agent.
+* This strategy defines a simple execution flow where the agent processes input,
+* calls tools, and sends results back to the agent.
+* The flow consists of the following steps:
+* 1. Start the agent.
+* 2. Call the LLM with the input.
+* 3. Execute a tool based on the LLM's response.
+* 4. Send the tool result back to the LLM.
+* 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
+*/
+public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
+    val nodeCallLLM by nodeLLMRequest("sendInput")
+    val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
+    val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
+
+    edge(nodeStart forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeExecuteTool forwardTo nodeSendToolResult)
+    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
 }

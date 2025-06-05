@@ -3,8 +3,6 @@ package ai.koog.agents.ext.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.tool.AskUser
-import ai.koog.agents.ext.tool.ExitTool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -22,6 +20,7 @@ import ai.koog.prompt.params.LLMParams
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
  * @return A configured instance of `AIAgent` with a single-run execution strategy.
  */
+@Deprecated("Use AIAgent constructor instead", ReplaceWith("AIAgent(...)"))
 public fun simpleSingleRunAgent(
     executor: PromptExecutor,
     systemPrompt: String = "",
@@ -30,21 +29,13 @@ public fun simpleSingleRunAgent(
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
     installFeatures: AIAgent.FeatureContext.() -> Unit = {}
-): AIAgent {
-
-    val agentConfig = AIAgentConfig(
-        prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
-            system(systemPrompt)
-        },
-        model = llmModel,
-        maxAgentIterations = maxIterations,
-    )
-
-    return AIAgent(
-        promptExecutor = executor,
-        strategy = singleRunStrategy(),
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry,
-        installFeatures = installFeatures
-    )
-}
+): AIAgent = AIAgent(
+    systemPrompt = systemPrompt,
+    llmModel = llmModel,
+    temperature = temperature,
+    toolRegistry = toolRegistry,
+    maxIterations = maxIterations,
+    installFeatures = installFeatures,
+    strategy = singleRunStrategy(),
+    executor = executor
+)
