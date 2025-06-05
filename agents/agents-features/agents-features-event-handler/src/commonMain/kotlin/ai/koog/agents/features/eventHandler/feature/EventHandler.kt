@@ -119,8 +119,8 @@ public class EventHandler {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ prompt, tools, model, sessionUuid ->
-                config.invokeOnBeforeLLMCall(prompt, tools, model, sessionUuid)
+            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ sessionId, prompt, tools, model ->
+                config.invokeOnBeforeLLMCall(sessionId, prompt, tools, model)
             }
 
             pipeline.interceptAfterLLMCall(interceptContext) intercept@{ prompt, tools, model, responses, sessionUuid ->

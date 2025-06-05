@@ -12,8 +12,6 @@ import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Configuration class for the EventHandler feature.
@@ -38,7 +36,6 @@ import kotlin.uuid.Uuid
  * }
  * ```
  */
-@OptIn(ExperimentalUuidApi::class)
 public class EventHandlerConfig : FeatureConfig() {
 
     //region Agent Handlers
@@ -49,8 +46,8 @@ public class EventHandlerConfig : FeatureConfig() {
     private var _onAgentFinished: suspend (strategyName: String, result: String?) -> Unit =
         { strategyName: String, result: String? -> }
 
-    private var _onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit =
-        { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
+    private var _onAgentRunError: suspend (sessionId: String, strategyName: String, throwable: Throwable) -> Unit =
+        { sessionId: String, strategyName: String, throwable: Throwable -> }
 
     //endregion Agent Handlers
 
@@ -76,11 +73,11 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region LLM Call Handlers
 
-    private var _onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit =
-        { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
+    private var _onBeforeLLMCall: suspend (sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) -> Unit =
+        { sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel -> }
 
-    private var _onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit =
-        { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid -> }
+    private var _onAfterLLMCall: suspend (sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>) -> Unit =
+        { sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response> -> }
 
     //endregion LLM Call Handlers
 
@@ -135,12 +132,12 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * A deprecated variable used to define a handler that is called when an error occurs during agent execution.
      *
-     * This handler is invoked with the strategy name, an optional session UUID, and the throwable that caused the error.
+     * This handler is invoked with the strategy name, an optional session id, and the throwable that caused the error.
      *
      * @deprecated Use the `onAgentRunError` function instead for appending custom error handlers.
      */
     @Deprecated(message = "Please use onAgentRunError() instead", replaceWith = ReplaceWith("onAgentRunError(handler)"))
-    public var onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
+    public var onAgentRunError: suspend (sessionId: String, strategyName: String, throwable: Throwable) -> Unit = { sessionId: String, strategyName: String, throwable: Throwable -> }
         set(value) = this.onAgentRunError(value)
 
     //endregion Deprecated Agent Handlers
@@ -221,7 +218,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * @deprecated Use the `onBeforeLLMCall(handler)` function to achieve the same functionality.
      */
     @Deprecated(message = "Please use onBeforeLLMCall() instead", replaceWith = ReplaceWith("onBeforeLLMCall(handler)"))
-    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
+    public var onBeforeLLMCall: suspend (sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) -> Unit = { sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel -> }
         set(value) = this.onBeforeLLMCall(value)
 
     /**
@@ -239,7 +236,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * Updating this property will automatically delegate to the newer `onAfterLLMCall` method.
      */
     @Deprecated(message = "Please use onAfterLLMCall() instead", replaceWith = ReplaceWith("onAfterLLMCall(handler)"))
-    public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid -> }
+    public var onAfterLLMCall: suspend (sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>) -> Unit = { sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response> -> }
         set(value) = this.onAfterLLMCall(value)
 
     //endregion Deprecated LLM Call Handlers
@@ -326,11 +323,11 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an error occurs during agent execution.
      */
-    public fun onAgentRunError(handler: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit) {
+    public fun onAgentRunError(handler: suspend (sessionId: String, strategyName: String, throwable: Throwable) -> Unit) {
         val originalHandler = this._onAgentRunError
-        this._onAgentRunError = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
-            originalHandler(strategyName, sessionUuid, throwable)
-            handler.invoke(strategyName, sessionUuid, throwable)
+        this._onAgentRunError = { sessionId: String, strategyName: String, throwable: Throwable ->
+            originalHandler(sessionId, strategyName, throwable)
+            handler.invoke(sessionId, strategyName, throwable)
         }
     }
 
@@ -393,22 +390,22 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called before a call is made to the language model.
      */
-    public fun onBeforeLLMCall(handler: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit) {
+    public fun onBeforeLLMCall(handler: suspend (sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) -> Unit) {
         val originalHandler = this._onBeforeLLMCall
-        this._onBeforeLLMCall = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid ->
-            originalHandler(prompt, tools, model, sessionUuid)
-            handler.invoke(prompt, tools, model, sessionUuid)
+        this._onBeforeLLMCall = { sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel ->
+            originalHandler(sessionId, prompt, tools, model)
+            handler.invoke(sessionId, prompt, tools, model)
         }
     }
 
     /**
      * Append handler called after a response is received from the language model.
      */
-    public fun onAfterLLMCall(handler: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit) {
+    public fun onAfterLLMCall(handler: suspend (sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>) -> Unit) {
         val originalHandler = this._onAfterLLMCall
-        this._onAfterLLMCall = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid ->
-            originalHandler(prompt, tools, model, responses, sessionUuid)
-            handler.invoke(prompt, tools, model, responses, sessionUuid)
+        this._onAfterLLMCall = { sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response> ->
+            originalHandler(sessionId, prompt, tools, model, responses)
+            handler.invoke(sessionId, prompt, tools, model, responses)
         }
     }
 
@@ -482,8 +479,8 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when an error occurs during agent execution.
      */
-    internal suspend fun invokeOnAgentRunError(strategyName: String, sessionUuid: Uuid?, throwable: Throwable) {
-        _onAgentRunError.invoke(strategyName, sessionUuid, throwable)
+    internal suspend fun invokeOnAgentRunError(sessionId: String, strategyName: String, throwable: Throwable) {
+        _onAgentRunError.invoke(sessionId, strategyName, throwable)
     }
 
     //endregion Invoke Agent Handlers
@@ -529,15 +526,15 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for before a call is made to the language model event.
      */
-    internal suspend fun invokeOnBeforeLLMCall(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) {
-        _onBeforeLLMCall.invoke(prompt, tools, model, sessionUuid)
+    internal suspend fun invokeOnBeforeLLMCall(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) {
+        _onBeforeLLMCall.invoke(sessionId, prompt, tools, model)
     }
 
     /**
      * Invoke handlers for after a response is received from the language model event.
      */
-    internal suspend fun invokeOnAfterLLMCall(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) {
-        _onAfterLLMCall.invoke(prompt, tools, model, responses, sessionUuid)
+    internal suspend fun invokeOnAfterLLMCall(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>) {
+        _onAfterLLMCall.invoke(sessionId, prompt, tools, model, responses)
     }
 
     //endregion Invoke LLM Call Handlers

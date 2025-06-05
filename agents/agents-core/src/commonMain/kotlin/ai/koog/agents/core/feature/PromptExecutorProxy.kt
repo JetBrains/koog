@@ -17,11 +17,10 @@ import kotlin.uuid.Uuid
  * @property executor The [ai.koog.prompt.executor.model.PromptExecutor] to wrap.
  * @property pipeline The [AIAgentPipeline] associated with the executor.
  */
-@OptIn(ExperimentalUuidApi::class)
 public class PromptExecutorProxy(
     private val executor: PromptExecutor,
     private val pipeline: AIAgentPipeline,
-    private val sessionUuid: Uuid,
+    private val sessionId: String,
 ) : PromptExecutor {
 
     private companion object {
@@ -41,6 +40,11 @@ public class PromptExecutorProxy(
     }
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        return executor.executeStreaming(prompt, model)
+        logger.debug { "Executing LLM streaming call (prompt: $prompt)" }
+
+        val stream = executor.executeStreaming(prompt, model)
+        pipeline.onStartStreaming(prompt, model, sessionUuid)
+
+        return stream
     }
 }

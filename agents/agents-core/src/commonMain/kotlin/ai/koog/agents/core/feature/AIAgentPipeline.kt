@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -152,7 +150,7 @@ public class AIAgentPipeline {
      * @param agent The agent instance for which the execution has started
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(strategy: AIAgentStrategy, agent: AIAgent) {
+    public suspend fun onBeforeAgentStarted(parentEventId: String?, strategy: AIAgentStrategy, agent: AIAgent) {
         agentHandlers.values.forEach { handler ->
             val context = AgentStartContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.handleBeforeAgentStartedUnsafe(context)
@@ -295,8 +293,8 @@ public class AIAgentPipeline {
      *
      * @param prompt The prompt that will be sent to the language model
      */
-    public suspend fun onBeforeLLMCall(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) {
-        executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(prompt, tools, model, sessionUuid) }
+    public suspend fun onBeforeLLMCall(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) {
+        executeLLMHandlers.values.forEach { handler -> handler.beforeLLMCallHandler.handle(sessionId, prompt, tools, model) }
     }
 
     /**
@@ -304,8 +302,8 @@ public class AIAgentPipeline {
      *
      * @param responses A single or multiple response messages received from the language model
      */
-    public suspend fun onAfterLLMCall(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) {
-        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(prompt, tools, model, responses, sessionUuid) }
+    public suspend fun onAfterLLMCall(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>) {
+        executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(sessionId, prompt, tools, model, responses) }
     }
 
     //endregion Trigger LLM Call Handlers
@@ -623,12 +621,12 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptBeforeLLMCall(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit
+        handle: suspend TFeature.(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) -> Unit
     ) {
         val existingHandler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
 
-        existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler { prompt, tools, model, sessionUuid ->
-            with(interceptContext.featureImpl) { handle(prompt, tools, model, sessionUuid) }
+        existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler { sessionId, prompt, tools, model ->
+            with(interceptContext.featureImpl) { handle(sessionId, prompt, tools, model) }
         }
     }
 
@@ -646,12 +644,12 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptAfterLLMCall(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit
+        handle: suspend TFeature.(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>) -> Unit
     ) {
         val existingHandler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
 
-        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { prompt, tools, model, responses, sessionUuid ->
-            with(interceptContext.featureImpl) { handle(prompt, tools, model, responses, sessionUuid) }
+        existingHandler.afterLLMCallHandler = AfterLLMCallHandler { sessionId, prompt, tools, model, responses ->
+            with(interceptContext.featureImpl) { handle(sessionId, prompt, tools, model, responses) }
         }
     }
 
@@ -754,8 +752,3 @@ public class AIAgentPipeline {
 
     //endregion Interceptors
 }
-
-public data class InterceptContext<TFeature : Any>(
-    val feature: AIAgentFeature<*, TFeature>,
-    val featureImpl: TFeature
-)
