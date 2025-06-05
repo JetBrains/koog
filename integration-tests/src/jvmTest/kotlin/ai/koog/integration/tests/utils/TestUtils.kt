@@ -28,8 +28,15 @@ internal object TestUtils {
     }
 
     private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
+    private const val GOOGLE_429_ERROR = "Error from GoogleAI API: 429 Too Many Requests"
     private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
     private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
+
+    private fun isGoogleSideError(e: Throwable): Boolean {
+        return e.message?.contains(GOOGLE_429_ERROR) == true
+                || e.message?.contains(GOOGLE_500_ERROR) == true
+                || e.message?.contains(GOOGLE_503_ERROR) == true
+    }
 
     suspend fun <T> executeWithRetry(operation: suspend () -> T): T {
         val maxRetries = 3
@@ -40,7 +47,7 @@ internal object TestUtils {
             try {
                 return operation()
             } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_500_ERROR) == true || e.message?.contains(GOOGLE_503_ERROR) == true) {
+                if (isGoogleSideError(e)) {
                     assumeTrue(false, "Skipping test due to ${e.message}")
                 } else if (e.message?.contains(GOOGLE_API_ERROR) == true) {
                     lastException = e
@@ -70,7 +77,7 @@ internal object TestUtils {
             try {
                 return operation()
             } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_500_ERROR) == true || e.message?.contains(GOOGLE_503_ERROR) == true) {
+                if (isGoogleSideError(e)) {
                     assumeTrue(false, "Skipping test due to ${e.message}}")
                 } else {
                     attempts++
