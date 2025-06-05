@@ -1,9 +1,22 @@
 package ai.koog.agents.mcp.provider
 
-import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.utils.Closeable
+import ai.koog.agents.mcp.config.McpServerCommandConfig
+import ai.koog.agents.mcp.config.McpServerConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 
-public interface McpClientProvider : Closeable {
+internal class McpClientProvider {
 
-    public fun getTools(): List<Tool>
+    companion object {
+        private val logger = KotlinLogging.logger("ai.koog.agents.mcp.provider.McpClientProvider")
+    }
+
+    fun provideClient(config: McpServerConfig): McpClient {
+        val mcpClient: McpClient =
+            when (config) {
+                is CommandBaseMcpClient ->
+                else ->
+            }
+
+        return
+    }
 }
