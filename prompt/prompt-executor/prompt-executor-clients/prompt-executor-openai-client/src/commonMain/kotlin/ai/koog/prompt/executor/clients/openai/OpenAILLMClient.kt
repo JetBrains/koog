@@ -30,6 +30,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -175,7 +176,8 @@ public open class OpenAILLMClient(
                 }
             } catch (e: SSEClientException) {
                 e.response?.let { response ->
-                    logger.error { "Error from OpenAI API: ${response.status}: ${e.message}" }
+                    val body = response.readRawBytes().decodeToString()
+                    logger.error(e) { "Error from OpenAI API: ${response.status}: ${e.message}.\nBody:\n$body" }
                     error("Error from OpenAI API: ${response.status}: ${e.message}")
                 }
             } catch (e: Exception) {
@@ -328,7 +330,14 @@ public open class OpenAILLMClient(
             null -> null
         }
 
-        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf("text", "audio") else null
+        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf(OpenAIModalities.Text, OpenAIModalities.Audio) else null
+        // TODO allow passing this externally and actually controlling this behavior
+        val audio = modalities?.let {
+            OpenAIAudioConfig(
+                format = if (stream) OpenAIAudioFormat.PCM16 else OpenAIAudioFormat.WAV,
+                voice = OpenAIAudioVoice.Alloy,
+            )
+        }
 
         return OpenAIRequest(
             model = model.id,
@@ -336,7 +345,7 @@ public open class OpenAILLMClient(
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
             modalities = modalities,
-            audio = modalities?.let { OpenAIAudioConfig() },
+            audio = audio,
             stream = stream,
             toolChoice = toolChoice,
         )
