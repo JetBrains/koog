@@ -29,7 +29,7 @@ A single-run agent processes a single input and provides a response:
 fun main() = runBlocking {
     val apiToken = "YOUR_API_TOKEN"
 
-    val agent = simpleSingleRunAgent(
+    val agent = AIAgent(
         executor = simpleOpenAIExecutor("API_TOKEN"),
         systemPrompt = "You are a code assistant. Provide concise code examples."
     )
@@ -42,7 +42,7 @@ Please note that the single-run agent doesn't have any tools by default.
 
 ## Configuration Options
 
-`simpleSingleRunAgent` accept the following parameters:
+`AIAgent` accept the following parameters:
 
 - `executor` (required): Your LLM prompt executor
 - `systemPrompt`: Initial system prompt for the agent (default: empty string)
@@ -116,7 +116,7 @@ val toolRegistry = ToolRegistry {
     // Add more tools as needed
 }
 
-val agent = simpleSingleRunAgent(
+val agent = AIAgent(
     executor = simpleOpenAIExecutor("API_TOKEN"),
     systemPrompt = "You are a helpful assistant with calculator capabilities.",
     toolRegistry = toolRegistry
@@ -175,7 +175,7 @@ fun main() = runBlocking {
         tool(GenerateCodeTool)
     }
 
-    val agent = simpleSingleRunAgent(
+    val agent = AIAgent(
         executor = simpleOpenAIExecutor("API_TOKEN"),
         systemPrompt = "You are a code assistant. Use the generate_code tool to create code examples.",
         toolRegistry = toolRegistry

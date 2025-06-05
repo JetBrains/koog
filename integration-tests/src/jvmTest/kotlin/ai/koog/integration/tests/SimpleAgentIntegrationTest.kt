@@ -118,7 +118,7 @@ class SimpleAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleSingleRunAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+    fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
         val executor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
@@ -138,13 +138,13 @@ class SimpleAgentIntegrationTest {
             agent.run("Repeat what I say: hello, I'm good.")
         }
 
-        // by default, simpleSingleRunAgent has no tools underneath
+        // by default, AIAgent has no tools underneath
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_simpleSingleRunAgentShouldCallCustomTool(model: LLModel) = runBlocking {
+    fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         // ToDo remove after fixes
