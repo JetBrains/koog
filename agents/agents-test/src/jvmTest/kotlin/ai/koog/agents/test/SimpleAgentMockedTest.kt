@@ -2,6 +2,12 @@
 
 package ai.koog.agents.test
 
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolException
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.simpleSingleRunAgent
 import ai.koog.agents.ext.tool.ExitTool
@@ -12,12 +18,35 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.uuid.ExperimentalUuidApi
 
 class SimpleAgentMockedTest {
+    companion object {
+        const val ERROR_TRIGGER = "Call conditional tool with error."
+        const val SUCCESS_TRIGGER = "Call conditional tool with success."
+
+        @JvmStatic
+        fun getInputMessage(): Array<String> = arrayOf(
+            SUCCESS_TRIGGER,
+            ERROR_TRIGGER,
+        )
+
+        @JvmStatic
+        fun getToolRegistry(): Array<ToolRegistry> = arrayOf(
+            ToolRegistry { },
+            ToolRegistry { tool(SayToUser) }
+        )
+    }
+
+    val errorTrigger = "Trigger an error."
+
     val systemPrompt = """
             You are a helpful assistant. 
             You MUST use tools to communicate to the user.
@@ -32,15 +61,46 @@ class SimpleAgentMockedTest {
             SayToUser,
             SayToUser.Args("Calculating...")
         ) onRequestEquals "Write a Kotlin function to calculate factorial."
+        mockLLMToolCall(
+            ErrorTool,
+            ErrorTool.Args("test")
+        ) onRequestEquals errorTrigger
+        mockLLMToolCall(
+            ConditionalTool,
+            ConditionalTool.Args("success")
+        ) onRequestEquals SUCCESS_TRIGGER
+        mockLLMToolCall(
+            ConditionalTool,
+            ConditionalTool.Args("error")
+        ) onRequestEquals ERROR_TRIGGER
+        mockLLMToolCall(
+            SayToUser,
+            SayToUser.Args("First message")
+        ) onRequestEquals "Make multiple tool calls."
+        mockLLMToolCall(
+            SayToUser,
+            SayToUser.Args("Invalid argument")
+        ) onRequestEquals "Call tool with invalid argument."
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onToolCall = { tool, args ->
             println("Tool called: tool ${tool.name}, args $args")
             actualToolCalls.add(tool.name)
+            iterationCount++
         }
 
         onAgentRunError = { strategyName, sessionUuid, throwable ->
+            errors.add(throwable)
+        }
+
+        onToolCall = { tool, args ->
+            println("Tool called: tool ${tool.name}, args $args")
+            actualToolCalls.add(tool.name)
+        }
+
+        onToolCallFailure = { tool, args, throwable ->
+            println("Tool call failure: tool ${tool.name}, args $args, error=${throwable.message}")
             errors.add(throwable)
         }
 
@@ -52,12 +112,63 @@ class SimpleAgentMockedTest {
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
     val results = mutableListOf<String?>()
+    var iterationCount = 0
 
     @AfterTest
     fun teardown() {
         actualToolCalls.clear()
         errors.clear()
         results.clear()
+        iterationCount = 0
+    }
+
+    object ErrorTool : SimpleTool<ErrorTool.Args>() {
+        @Serializable
+        data class Args(val message: String) : Tool.Args
+
+        override val argsSerializer: KSerializer<Args> = Args.serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "error_tool",
+            description = "A tool that always throws an exception",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "message",
+                    description = "Message for the error",
+                    type = ToolParameterType.String
+                )
+            )
+        )
+
+        override suspend fun doExecute(args: Args): String {
+            throw ToolException.ValidationFailure("This tool always fails")
+        }
+    }
+
+    object ConditionalTool : SimpleTool<ConditionalTool.Args>() {
+        @Serializable
+        data class Args(val condition: String) : Tool.Args
+
+        override val argsSerializer: KSerializer<Args> = Args.serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "conditional_tool",
+            description = "A tool that conditionally throws an exception",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "condition",
+                    description = "Condition that determines if the tool will succeed or fail",
+                    type = ToolParameterType.String
+                )
+            )
+        )
+
+        override suspend fun doExecute(args: Args): String {
+            if (args.condition == "error") {
+                throw ToolException.ValidationFailure("Conditional failure triggered")
+            }
+            return "Conditional success"
+        }
     }
 
     @Test
@@ -106,6 +217,119 @@ class SimpleAgentMockedTest {
         assertTrue(
             errors.isEmpty(),
             "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("getToolRegistry")
+    fun `simpleSingleRunAgent should handle non-registered tools`(toolRegistry: ToolRegistry) = runBlocking {
+        val agent = simpleSingleRunAgent(
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            temperature = 1.0,
+            toolRegistry = toolRegistry,
+            maxIterations = 10,
+            executor = testExecutor,
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
+        )
+
+        try {
+            agent.run(errorTrigger)
+        } catch (e: Throwable) {
+            assertTrue(e is IllegalArgumentException, "Expected IllegalArgumentException")
+            assertTrue(e.message?.contains("is not defined") == true, "Expected 'not defined' error message")
+        }
+
+        assertTrue(errors.isNotEmpty(), "Expected errors to be recorded")
+    }
+
+    @Test
+    fun `simpleSingleRunAgent should handle tool execution errors`() = runBlocking {
+        val toolRegistry = ToolRegistry {
+            tool(ErrorTool)
+        }
+
+        val agent = simpleSingleRunAgent(
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            temperature = 1.0,
+            toolRegistry = toolRegistry,
+            maxIterations = 10,
+            executor = testExecutor,
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
+        )
+
+        try {
+            agent.run(errorTrigger)
+        } catch (e: Throwable) {
+            errors.add(e)
+        }
+
+        assertTrue(actualToolCalls.contains(ErrorTool.name), "The ${ErrorTool.name} tool was not called")
+        assertTrue(
+            errors.isEmpty(),
+            "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("getInputMessage")
+    fun `simpleSingleRunAgent should handle conditional tool execution`(agentMessage: String) = runBlocking {
+        val toolRegistry = ToolRegistry {
+            tool(ConditionalTool)
+        }
+
+        val successAgent = simpleSingleRunAgent(
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            temperature = 1.0,
+            toolRegistry = toolRegistry,
+            maxIterations = 10,
+            executor = testExecutor,
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
+        )
+
+        successAgent.run(agentMessage)
+
+        assertTrue(actualToolCalls.contains(ConditionalTool.name), "The ${ConditionalTool.name} tool was not called")
+        assertTrue(errors.isEmpty(), "No errors should be recorded for success case")
+    }
+
+    @Test
+    fun `simpleSingleRunAgent should fail after reaching maxIterations`() = runBlocking {
+        val toolRegistry = ToolRegistry {
+            tool(SayToUser)
+        }
+
+        val loopExecutor = getMockExecutor {
+            mockLLMToolCall(SayToUser, SayToUser.Args("Looping...")) onRequestEquals "Make the agent loop."
+        }
+
+        iterationCount = 0
+
+        val agent = simpleSingleRunAgent(
+            systemPrompt = systemPrompt,
+            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            temperature = 1.0,
+            toolRegistry = toolRegistry,
+            maxIterations = 3,
+            executor = loopExecutor,
+            installFeatures = { install(EventHandler, eventHandlerConfig) }
+        )
+
+        try {
+            agent.run("Make the agent loop.")
+        } catch (e: Throwable) {
+            errors.add(e)
+        }
+
+        assertTrue(errors.isNotEmpty(), "Error should be recorded when maxIterations is reached")
+        assertTrue(
+            errors.any {
+                it.message?.contains("Maximum number of iterations") == true ||
+                        it.message?.contains("Agent couldn't finish in given number of steps") == true
+            },
+            "Expected error about maximum iterations"
         )
     }
 }

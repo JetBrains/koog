@@ -37,8 +37,8 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.junit.jupiter.params)
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
-
                 implementation(libs.ktor.client.cio)
             }
         }
