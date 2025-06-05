@@ -1,6 +1,8 @@
 package ai.koog.integration.tests
 
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.annotations.Retry
+import ai.koog.integration.tests.utils.annotations.RetryExtension
 import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -31,6 +34,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@ExtendWith(RetryExtension::class)
 class SingleLLMPromptExecutorIntegrationTest {
     companion object {
         @JvmStatic
@@ -98,6 +102,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
+    @Retry(times = 3)
     fun integration_testCodeGeneration(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         val executor = SingleLLMPromptExecutor(client)
 
