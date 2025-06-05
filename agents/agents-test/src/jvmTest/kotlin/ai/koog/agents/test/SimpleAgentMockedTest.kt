@@ -29,13 +29,10 @@ import kotlin.uuid.ExperimentalUuidApi
 
 class SimpleAgentMockedTest {
     companion object {
-        const val ERROR_TRIGGER = "Call conditional tool with error."
-        const val SUCCESS_TRIGGER = "Call conditional tool with success."
-
         @JvmStatic
         fun getInputMessage(): Array<String> = arrayOf(
-            SUCCESS_TRIGGER,
-            ERROR_TRIGGER,
+            "Call conditional tool with success.",
+            "Call conditional tool with error.",
         )
 
         @JvmStatic
@@ -68,11 +65,11 @@ class SimpleAgentMockedTest {
         mockLLMToolCall(
             ConditionalTool,
             ConditionalTool.Args("success")
-        ) onRequestEquals SUCCESS_TRIGGER
+        ) onRequestEquals "Call conditional tool with success."
         mockLLMToolCall(
             ConditionalTool,
             ConditionalTool.Args("error")
-        ) onRequestEquals ERROR_TRIGGER
+        ) onRequestEquals "Call conditional tool with error."
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
@@ -164,7 +161,7 @@ class SimpleAgentMockedTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should not call tools by default`() = runBlocking {
+    fun ` test simpleSingleRunAgent doesn't call tools by default`() = runBlocking {
         val agent = simpleSingleRunAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
@@ -186,7 +183,7 @@ class SimpleAgentMockedTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should call a custom tool`() = runBlocking {
+    fun `test simpleSingleRunAgent calls a custom tool`() = runBlocking {
         val toolRegistry = ToolRegistry {
             tool(SayToUser)
         }
@@ -214,7 +211,7 @@ class SimpleAgentMockedTest {
 
     @ParameterizedTest
     @MethodSource("getToolRegistry")
-    fun `simpleSingleRunAgent should handle non-registered tools`(toolRegistry: ToolRegistry) = runBlocking {
+    fun `test simpleSingleRunAgent handles non-registered tools`(toolRegistry: ToolRegistry) = runBlocking {
         val agent = simpleSingleRunAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
@@ -236,7 +233,7 @@ class SimpleAgentMockedTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should handle tool execution errors`() = runBlocking {
+    fun `test simpleSingleRunAgent handles tool execution errors`() = runBlocking {
         val toolRegistry = ToolRegistry {
             tool(ErrorTool)
         }
@@ -266,7 +263,7 @@ class SimpleAgentMockedTest {
 
     @ParameterizedTest
     @MethodSource("getInputMessage")
-    fun `simpleSingleRunAgent should handle conditional tool execution`(agentMessage: String) = runBlocking {
+    fun `test simpleSingleRunAgent handles conditional tool execution`(agentMessage: String) = runBlocking {
         val toolRegistry = ToolRegistry {
             tool(ConditionalTool)
         }
@@ -288,7 +285,7 @@ class SimpleAgentMockedTest {
     }
 
     @Test
-    fun `simpleSingleRunAgent should fail after reaching maxIterations`() = runBlocking {
+    fun `test simpleSingleRunAgent fails after reaching maxIterations`() = runBlocking {
         val toolRegistry = ToolRegistry {
             tool(SayToUser)
         }
