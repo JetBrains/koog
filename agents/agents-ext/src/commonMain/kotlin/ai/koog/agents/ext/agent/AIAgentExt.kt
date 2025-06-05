@@ -20,7 +20,7 @@ import ai.koog.prompt.params.LLMParams
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
  * @return A configured instance of `AIAgent` with a single-run execution strategy.
  */
-@Deprecated("Use AIAgent constructor instead")
+@Deprecated("Use AIAgent constructor instead", ReplaceWith("AIAgent(...)"))
 public fun simpleSingleRunAgent(
     executor: PromptExecutor,
     systemPrompt: String = "",
