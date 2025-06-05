@@ -212,7 +212,7 @@ class SimpleAgentMockedTest {
     @ParameterizedTest
     @MethodSource("getToolRegistry")
     fun `test simpleSingleRunAgent handles non-registered tools`(toolRegistry: ToolRegistry) = runBlocking {
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -238,7 +238,7 @@ class SimpleAgentMockedTest {
             tool(ErrorTool)
         }
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -268,7 +268,7 @@ class SimpleAgentMockedTest {
             tool(ConditionalTool)
         }
 
-        val successAgent = simpleSingleRunAgent(
+        val successAgent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
@@ -296,7 +296,7 @@ class SimpleAgentMockedTest {
 
         iterationCount = 0
 
-        val agent = simpleSingleRunAgent(
+        val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
