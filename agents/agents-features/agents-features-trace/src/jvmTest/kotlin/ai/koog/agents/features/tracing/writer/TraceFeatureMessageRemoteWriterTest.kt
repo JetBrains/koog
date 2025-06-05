@@ -7,7 +7,6 @@ import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureMessageProcessor
 import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.features.tracing.NetUtil.findAvailablePort
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -24,19 +23,8 @@ import kotlin.time.Duration.Companion.seconds
 class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger = KotlinLogging.logger { }
+        private val logger = KotlinLogging.logger("ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriterTest")
         private val defaultClientServerTimeout = 5.seconds
-    }
-
-    private class TestFeatureMessageWriter : FeatureMessageProcessor() {
-
-        val processedMessages = mutableListOf<FeatureMessage>()
-
-        override suspend fun processMessage(message: FeatureMessage) {
-            processedMessages.add(message)
-        }
-
-        override suspend fun close() {}
     }
 
     @Test
@@ -235,8 +223,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val isServerStarted = CompletableDeferred<Boolean>()
 
         val serverJob = launch {
-            TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
-                TestFeatureMessageWriter().use { fakeWriter ->
+            TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { remoteWriter ->
+                TestFeatureMessageWriter().use { testWriter ->
 
                     val strategy = strategy(strategyName) {
                         val llmCallNode by nodeLLMRequest("test LLM call")
@@ -250,7 +238,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     createAgent(strategy = strategy) {
                         install(Tracing) {
                             messageFilter = { true }
-                            addMessageProcessor(fakeWriter)
+                            addMessageProcessor(testWriter)
                         }
                     }.use { agent ->
 
