@@ -1,22 +1,13 @@
 package ai.koog.prompt.executor.clients.openai
 
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.*
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonEncoder
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.*
 import kotlin.jvm.JvmInline
 
 @Serializable
@@ -25,11 +16,19 @@ internal data class OpenAIRequest(
     val messages: List<OpenAIMessage>,
     val temperature: Double? = null,
     val tools: List<OpenAITool>? = null,
-    val modalities: List<String>? = null,
+    val modalities: List<OpenAIModalities>? = null,
     val audio: OpenAIAudioConfig? = null,
     val stream: Boolean = false,
     val toolChoice: OpenAIToolChoice? = null
 )
+
+@Serializable
+internal enum class OpenAIModalities {
+    @SerialName("text")
+    Text,
+    @SerialName("audio")
+    Audio,
+}
 
 @Serializable
 internal data class OpenAIMessage(
@@ -206,9 +205,23 @@ internal sealed interface OpenAIToolChoice {
 
 @Serializable
 internal data class OpenAIAudioConfig(
-    val format: String = "wav",
-    val voice: String = "alloy"
+    val format: OpenAIAudioFormat,
+    val voice: OpenAIAudioVoice,
 )
+
+@Serializable
+internal enum class OpenAIAudioFormat {
+    @SerialName("wav")
+    WAV,
+    @SerialName("pcm16")
+    PCM16,
+}
+
+@Serializable
+internal enum class OpenAIAudioVoice {
+    @SerialName("alloy")
+    Alloy,
+}
 
 @Serializable
 internal data class OpenAIAudio(

@@ -30,6 +30,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -175,7 +176,8 @@ public open class OpenAILLMClient(
                 }
             } catch (e: SSEClientException) {
                 e.response?.let { response ->
-                    logger.error { "Error from OpenAI API: ${response.status}: ${e.message}" }
+                    val body = response.readRawBytes().decodeToString()
+                    logger.error(e) { "Error from OpenAI API: ${response.status}: ${e.message}.\nBody:\n$body" }
                     error("Error from OpenAI API: ${response.status}: ${e.message}")
                 }
             } catch (e: Exception) {
@@ -242,15 +244,48 @@ public open class OpenAILLMClient(
             }
         }
 
-        prompt.messages.forEach { message ->
-            if (message is Message.Tool.Call) {
-                pendingCalls += OpenAIToolCall(
+        for (message in prompt.messages) {
+            when (message) {
+                is Message.System -> {
+                    flushCalls()
+                    messages.add(
+                        OpenAIMessage(
+                            role = "system",
+                            content = Content.Text(message.content)
+                        )
+                    )
+                }
+
+                is Message.User -> {
+                    flushCalls()
+                    messages.add(message.toOpenAIMessage(model))
+                }
+
+                is Message.Assistant -> {
+                    flushCalls()
+                    messages.add(
+                        OpenAIMessage(
+                            role = "assistant",
+                            content = Content.Text(message.content)
+                        )
+                    )
+                }
+
+                is Message.Tool.Result -> {
+                    flushCalls()
+                    messages.add(
+                        OpenAIMessage(
+                            role = "tool",
+                            content = Content.Text(message.content),
+                            toolCallId = message.id
+                        )
+                    )
+                }
+
+                is Message.Tool.Call -> pendingCalls += OpenAIToolCall(
                     id = message.id ?: Uuid.random().toString(),
                     function = OpenAIFunction(message.tool, message.content)
                 )
-            } else {
-                flushCalls()
-                messages += message.toOpenAIMessage(model) ?: return@forEach
             }
         }
         flushCalls()
@@ -295,7 +330,14 @@ public open class OpenAILLMClient(
             null -> null
         }
 
-        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf("text", "audio") else null
+        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf(OpenAIModalities.Text, OpenAIModalities.Audio) else null
+        // TODO allow passing this externally and actually controlling this behavior
+        val audio = modalities?.let {
+            OpenAIAudioConfig(
+                format = if (stream) OpenAIAudioFormat.PCM16 else OpenAIAudioFormat.WAV,
+                voice = OpenAIAudioVoice.Alloy,
+            )
+        }
 
         return OpenAIRequest(
             model = model.id,
@@ -303,80 +345,71 @@ public open class OpenAILLMClient(
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
             modalities = modalities,
-            audio = modalities?.let { OpenAIAudioConfig() },
+            audio = audio,
             stream = stream,
             toolChoice = toolChoice,
         )
     }
 
-    private fun Message.toOpenAIMessage(model: LLModel): OpenAIMessage? = when (this) {
-        is Message.System -> OpenAIMessage(role = "system", content = Content.Text(content))
-        is Message.User -> {
-            val listOfContent = buildList {
-                if (content.isNotEmpty() || mediaContent.isEmpty()) {
-                    add(ContentPart.Text(content))
-                }
+    private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
+        val listOfContent = buildList {
+            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+                add(ContentPart.Text(content))
+            }
 
-                mediaContent.forEach { media ->
-                    when (media) {
-                        is MediaContent.Image -> {
-                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                                "Model ${model.id} does not support image"
+            mediaContent.forEach { media ->
+                when (media) {
+                    is MediaContent.Image -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                            "Model ${model.id} does not support image"
+                        }
+                        val imageUrl = if (media.isUrl()) {
+                            media.source
+                        } else {
+                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
+                                "Image format ${media.format} not supported"
                             }
-                            val imageUrl = if (media.isUrl()) {
-                                media.source
-                            } else {
-                                require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                                    "Image format ${media.format} not supported"
-                                }
-                                "data:${media.getMimeType()};base64,${media.toBase64()}"
-                            }
-                            add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
+                            "data:${media.getMimeType()};base64,${media.toBase64()}"
+                        }
+                        add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
+                    }
+
+                    is MediaContent.Audio -> {
+                        require(model.capabilities.contains(LLMCapability.Audio)) {
+                            "Model ${model.id} does not support audio"
                         }
 
-                        is MediaContent.Audio -> {
-                            require(model.capabilities.contains(LLMCapability.Audio)) {
-                                "Model ${model.id} does not support audio"
-                            }
+                        require(media.format in listOf("wav", "mp3")) {
+                            "Audio format ${media.format} not supported"
+                        }
+                        add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+                    }
 
-                            require(media.format in listOf("wav", "mp3")) {
-                                "Audio format ${media.format} not supported"
-                            }
-                            add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+                    is MediaContent.File -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                            "Model ${model.id} does not support files"
                         }
 
-                        is MediaContent.File -> {
-                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                                "Model ${model.id} does not support files"
-                            }
-
-                            require(media.format == "pdf") {
-                                "File format ${media.format} not supported. Supported formats: `pdf`"
-                            }
-                            val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
-                            add(
-                                ContentPart.File(
-                                    ContentPart.FileData(
-                                        fileData = fileData,
-                                        filename = media.fileName()
-                                    )
+                        require(media.format == "pdf") {
+                            "File format ${media.format} not supported. Supported formats: `pdf`"
+                        }
+                        val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
+                        add(
+                            ContentPart.File(
+                                ContentPart.FileData(
+                                    fileData = fileData,
+                                    filename = media.fileName()
                                 )
                             )
-                        }
-
-                        else -> {
-                            logger.warn { "Media content type not supported: $mediaContent" }
-                            return null
-                        }
+                        )
                     }
+
+                    else -> throw IllegalArgumentException("Unsupported media content: $media")
                 }
             }
-            OpenAIMessage(role = "user", content = Content.Parts(listOfContent))
         }
 
-        is Message.Assistant -> OpenAIMessage(role = "assistant", content = Content.Text(content))
-        is Message.Tool.Result -> OpenAIMessage(role = "tool", content = Content.Text(content), toolCallId = id)
-        is Message.Tool.Call -> null
+        return OpenAIMessage(role = "user", content = Content.Parts(listOfContent))
     }
 
     private fun buildOpenAIParam(param: ToolParameterDescriptor): JsonObject = buildJsonObject {

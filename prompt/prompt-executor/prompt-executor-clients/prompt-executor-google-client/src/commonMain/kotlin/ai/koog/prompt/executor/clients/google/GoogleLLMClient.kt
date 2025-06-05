@@ -190,7 +190,7 @@ public open class GoogleLLMClient(
      * @return A formatted GoogleAI request
      */
     private fun createGoogleRequest(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleRequest {
-        val (systemMessages, convMessages) = prompt.messages.partition { it is Message.System }
+        val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
 
@@ -201,18 +201,55 @@ public open class GoogleLLMClient(
             }
         }
 
-        convMessages.forEach { message ->
-            if (message is Message.Tool.Call) {
-                pendingCalls += GooglePart.FunctionCall(
-                    functionCall = GoogleData.FunctionCall(
-                        id = message.id,
-                        name = message.tool,
-                        args = json.decodeFromString(message.content)
+        for (message in prompt.messages) {
+            when (message) {
+                is Message.System -> {
+                    systemMessageParts.add(GooglePart.Text(message.content))
+                }
+
+                is Message.User -> {
+                    flushCalls()
+                    // User messages become 'user' role content
+                    contents.add(message.toGoogleContent(model))
+                }
+
+                is Message.Assistant -> {
+                    flushCalls()
+                    contents.add(
+                        GoogleContent(
+                            role = "model",
+                            parts = listOf(GooglePart.Text(message.content))
+                        )
                     )
-                )
-            } else {
-                flushCalls()
-                contents += message.toGoogleContent(model) ?: return@forEach
+                }
+
+                is Message.Tool.Result -> {
+                    flushCalls()
+                    contents.add(
+                        GoogleContent(
+                            role = "user",
+                            parts = listOf(
+                                GooglePart.FunctionResponse(
+                                    functionResponse = GoogleData.FunctionResponse(
+                                        id = message.id,
+                                        name = message.tool,
+                                        response = buildJsonObject { put("result", message.content) }
+                                    )
+                                )
+                            )
+                        )
+                    )
+                }
+
+                is Message.Tool.Call -> {
+                    pendingCalls += GooglePart.FunctionCall(
+                        functionCall = GoogleData.FunctionCall(
+                            id = message.id,
+                            name = message.tool,
+                            args = json.decodeFromString(message.content)
+                        )
+                    )
+                }
             }
         }
         flushCalls()
@@ -236,9 +273,9 @@ public open class GoogleLLMClient(
             .takeIf { it.isNotEmpty() }
             ?.let { declarations -> listOf(GoogleTool(functionDeclarations = declarations)) }
 
-        val googleSystemInstruction = systemMessages
+        val googleSystemInstruction = systemMessageParts
             .takeIf { it.isNotEmpty() }
-            ?.let { GoogleContent(parts = it.map { message -> GooglePart.Text(message.content) }) }
+            ?.let { GoogleContent(parts = it) }
 
         val generationConfig = GoogleGenerationConfig(
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
@@ -269,84 +306,69 @@ public open class GoogleLLMClient(
         )
     }
 
-    private fun Message.toGoogleContent(model: LLModel): GoogleContent? = when (this) {
-        is Message.User -> {
-            val contentParts = buildList {
-                if (content.isNotEmpty() || mediaContent.isEmpty()) {
-                    add(GooglePart.Text(content))
-                }
-                mediaContent.forEach { media ->
-                    when (media) {
-                        is MediaContent.Image -> {
-                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                                "Model ${model.id} does not support image"
-                            }
-                            if (media.isUrl()) {
-                                throw IllegalArgumentException("URL images not supported for Gemini models")
-                            }
-                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
-                                "Image format ${media.format} not supported"
-                            }
-                            add(
-                                GooglePart.InlineData(
-                                    GoogleData.Blob(
-                                        mimeType = media.getMimeType(),
-                                        data = media.toBase64()
-                                    )
+    private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
+        val contentParts = buildList {
+            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+                add(GooglePart.Text(content))
+            }
+            mediaContent.forEach { media ->
+                when (media) {
+                    is MediaContent.Image -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                            "Model ${model.id} does not support image"
+                        }
+                        if (media.isUrl()) {
+                            throw IllegalArgumentException("URL images not supported for Gemini models")
+                        }
+                        require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
+                            "Image format ${media.format} not supported"
+                        }
+                        add(
+                            GooglePart.InlineData(
+                                GoogleData.Blob(
+                                    mimeType = media.getMimeType(),
+                                    data = media.toBase64()
                                 )
                             )
+                        )
 
+                    }
+
+                    is MediaContent.Audio -> {
+                        require(model.capabilities.contains(LLMCapability.Audio)) {
+                            "Model ${model.id} does not support audio"
                         }
-
-                        is MediaContent.Audio -> {
-                            require(model.capabilities.contains(LLMCapability.Audio)) {
-                                "Model ${model.id} does not support audio"
-                            }
-                            require(media.format in listOf("wav", "mp3", "aiff", "aac", "ogg", "flac")) {
-                                "Audio format ${media.format} not supported"
-                            }
-                            add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+                        require(media.format in listOf("wav", "mp3", "aiff", "aac", "ogg", "flac")) {
+                            "Audio format ${media.format} not supported"
                         }
+                        add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+                    }
 
-                        is MediaContent.File -> {
-                            if (media.isUrl()) {
-                                throw IllegalArgumentException("URL files not supported for Gemini models")
-                            }
-                            add(
-                                GooglePart.InlineData(
-                                    GoogleData.Blob(
-                                        mimeType = media.getMimeType(),
-                                        data = media.toBase64()
-                                    )
+                    is MediaContent.File -> {
+                        if (media.isUrl()) {
+                            throw IllegalArgumentException("URL files not supported for Gemini models")
+                        }
+                        add(
+                            GooglePart.InlineData(
+                                GoogleData.Blob(
+                                    mimeType = media.getMimeType(),
+                                    data = media.toBase64()
                                 )
                             )
-                        }
+                        )
+                    }
 
-                        is MediaContent.Video -> {
-                            require(model.capabilities.contains(LLMCapability.Vision.Video)) {
-                                "Model ${model.id} does not support video"
-                            }
-                            add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+                    is MediaContent.Video -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Video)) {
+                            "Model ${model.id} does not support video"
                         }
+                        add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
                     }
                 }
             }
-            GoogleContent(role = "user", parts = contentParts)
         }
 
-        is Message.Assistant -> GoogleContent(role = "model", parts = listOf(GooglePart.Text(content)))
-        is Message.Tool.Result -> GoogleContent(
-            role = "user",
-            parts = listOf(
-                GooglePart.FunctionResponse(
-                    functionResponse = GoogleData.FunctionResponse(
-                        id = id, name = tool, response = buildJsonObject { put("result", content) })
-                )
-            )
-        )
-
-        is Message.Tool.Call -> null
-        is Message.System -> null
+        return GoogleContent(role = "user", parts = contentParts)
     }
 
     /**

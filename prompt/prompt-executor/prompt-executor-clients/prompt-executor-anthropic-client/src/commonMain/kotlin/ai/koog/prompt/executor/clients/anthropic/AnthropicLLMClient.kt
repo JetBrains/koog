@@ -190,13 +190,21 @@ public open class AnthropicLLMClient(
         model: LLModel,
         stream: Boolean
     ): AnthropicMessageRequest {
-        val (systemMessages, convMessages) = prompt.messages.partition { it is Message.System }
+        val systemMessage = mutableListOf<SystemAnthropicMessage>()
+        val messages = mutableListOf<AnthropicMessage>()
 
-        val messages = convMessages.fold(mutableListOf<AnthropicMessage>()) { acc, message ->
+        for (message in prompt.messages) {
             when (message) {
-                is Message.User -> acc.add(message.toAnthropicUserMessage(model))
+                is Message.System -> {
+                    systemMessage.add(SystemAnthropicMessage(message.content))
+                }
+
+                is Message.User -> {
+                    messages.add(message.toAnthropicUserMessage(model))
+                }
+
                 is Message.Assistant -> {
-                    acc.add(
+                    messages.add(
                         AnthropicMessage(
                             role = "assistant",
                             content = listOf(AnthropicContent.Text(message.content))
@@ -205,31 +213,35 @@ public open class AnthropicLLMClient(
                 }
 
                 is Message.Tool.Result -> {
-                    val toolResult = AnthropicContent.ToolResult(
-                        toolUseId = message.id.orEmpty(),
-                        content = message.content
+                    messages.add(
+                        AnthropicMessage(
+                            role = "user",
+                            content = listOf(
+                                AnthropicContent.ToolResult(
+                                    toolUseId = message.id ?: "",
+                                    content = message.content
+                                )
+                            )
+                        )
                     )
-                    acc.lastOrNull { it.role == "user" }?.let { lastUserMessage ->
-                        acc[acc.lastIndex] = lastUserMessage.copy(content = lastUserMessage.content + toolResult)
-                    } ?: acc.add(AnthropicMessage(role = "user", content = listOf(toolResult)))
                 }
 
                 is Message.Tool.Call -> {
-                    val toolUse = AnthropicContent.ToolUse(
-                        id = message.id ?: Uuid.random().toString(),
-                        name = message.tool,
-                        input = Json.parseToJsonElement(message.content).jsonObject
+                    // Create a new assistant message with the tool call
+                    messages.add(
+                        AnthropicMessage(
+                            role = "assistant",
+                            content = listOf(
+                                AnthropicContent.ToolUse(
+                                    id = message.id ?: Uuid.random().toString(),
+                                    name = message.tool,
+                                    input = Json.parseToJsonElement(message.content).jsonObject
+                                )
+                            )
+                        )
                     )
-                    acc.lastOrNull { it.role == "assistant" }?.let { lastAssistantMessage ->
-                        acc[acc.lastIndex] = lastAssistantMessage.copy(content = lastAssistantMessage.content + toolUse)
-                    } ?: acc.add(AnthropicMessage(role = "assistant", content = listOf(toolUse)))
-                }
-
-                is Message.System -> {
-                    logger.warn { "System messages already prepares for Anthropic. Ignoring: ${message.content}" }
                 }
             }
-            acc
         }
 
         val anthropicTools = tools.map { tool ->
@@ -269,7 +281,7 @@ public open class AnthropicLLMClient(
             maxTokens = 2048, // This is required by the API
             // TODO why 0.7 and not 0.0?
             temperature = prompt.params.temperature ?: 0.7, // Default temperature if not provided
-            system = systemMessages.map { SystemAnthropicMessage(it.content) },
+            system = systemMessage,
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
             stream = stream,
             toolChoice = toolChoice,
