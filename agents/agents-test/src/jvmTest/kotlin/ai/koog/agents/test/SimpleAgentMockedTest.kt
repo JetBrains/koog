@@ -73,14 +73,6 @@ class SimpleAgentMockedTest {
             ConditionalTool,
             ConditionalTool.Args("error")
         ) onRequestEquals ERROR_TRIGGER
-        mockLLMToolCall(
-            SayToUser,
-            SayToUser.Args("First message")
-        ) onRequestEquals "Make multiple tool calls."
-        mockLLMToolCall(
-            SayToUser,
-            SayToUser.Args("Invalid argument")
-        ) onRequestEquals "Call tool with invalid argument."
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
