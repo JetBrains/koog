@@ -12,13 +12,13 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(kotlin("test"))
-
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-ext"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
                 api(project(":prompt:prompt-tokenizer"))
+
+                api(kotlin("test"))
 
                 api(libs.jetbrains.annotations)
                 api(libs.kotlinx.coroutines.core)
