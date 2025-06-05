@@ -50,6 +50,8 @@ public class AIAgentPipeline {
         private val logger = KotlinLogging.logger {  }
     }
 
+    private val
+
     private val featurePrepareDispatcher = Dispatchers.Default.limitedParallelism(5)
 
     /**

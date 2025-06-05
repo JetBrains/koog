@@ -38,16 +38,21 @@ class TraceFeatureMessageTestWriterTest {
     fun `test subsequent LLM calls`() = runTest {
 
         val strategy = strategy("tracing-test-strategy") {
+
             val setPrompt by nodeUpdatePrompt("Set prompt") {
                 system("System 1")
                 user("User 1")
             }
+
             val updatePrompt by nodeUpdatePrompt("Update prompt") {
                 system("System 2")
                 user("User 2")
             }
+
             val llmRequest0 by nodeLLMRequest("LLM Request 1", allowToolCalls = false)
+
             val llmRequest1 by nodeLLMRequest("LLM Request 2", allowToolCalls = false)
+
             edge(nodeStart forwardTo setPrompt transformed { input -> })
             edge(setPrompt forwardTo llmRequest0 transformed { input -> "" })
             edge(llmRequest0 forwardTo updatePrompt transformed { input -> })
