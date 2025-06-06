@@ -144,7 +144,7 @@ public class OllamaClient(
         }
     }
 
-    override suspend fun executeStreaming(
+    override fun executeStreaming(
         prompt: Prompt, model: LLModel
     ): Flow<String> = flow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }

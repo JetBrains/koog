@@ -32,7 +32,7 @@ public interface LLMClient {
      * @param model The LLM model to use
      * @return Flow of response chunks
      */
-    public suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
+    public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
 }
 
 public data class ConnectionTimeoutConfig(
