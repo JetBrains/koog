@@ -19,11 +19,11 @@ import kotlin.uuid.ExperimentalUuidApi
  * Example usage:
  * ```
  * handleEvents {
- *     onToolCall = { stage, tool, toolArgs ->
+ *     onToolCall { stage, tool, toolArgs ->
  *         println("Tool called: ${tool.name} with args $toolArgs")
  *     }
  *     
- *     onAgentFinished = { strategyName, result ->
+ *     onAgentFinished { strategyName, result ->
  *         println("Agent finished with result: $result")
  *     }
  * }
@@ -44,11 +44,11 @@ public class EventHandler {
      * Example usage:
      * ```
      * handleEvents {
-     *     onToolCall = { stage, tool, toolArgs ->
+     *     onToolCall { stage, tool, toolArgs ->
      *         println("Tool called: ${tool.name} with args $toolArgs")
      *     }
      *
-     *     onAgentFinished = { strategyName, result ->
+     *     onAgentFinished { strategyName, result ->
      *         println("Agent finished with result: $result")
      *     }
      * }
@@ -74,15 +74,15 @@ public class EventHandler {
             //region Intercept Agent Events
 
             pipeline.interceptBeforeAgentStarted(this, featureImpl) intercept@{
-                config.onBeforeAgentStarted(strategy, agent)
+                config.invokeOnBeforeAgentStarted(strategy, agent)
             }
 
             pipeline.interceptAgentFinished(this, featureImpl) intercept@{ strategyName, result ->
-                config.onAgentFinished(strategyName, result)
+                config.invokeOnAgentFinished(strategyName, result)
             }
 
             pipeline.interceptAgentRunError(this, featureImpl) intercept@{ strategyName, sessionUuid, throwable ->
-                config.onAgentRunError(strategyName, sessionUuid, throwable)
+                config.invokeOnAgentRunError(strategyName, sessionUuid, throwable)
             }
 
             //endregion Intercept Agent Events
@@ -90,11 +90,11 @@ public class EventHandler {
             //region Intercept Strategy Events
 
             pipeline.interceptStrategyStarted(this, featureImpl) intercept@{
-                config.onStrategyStarted(strategy)
+                config.invokeOnStrategyStarted(strategy)
             }
 
             pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ result ->
-                config.onStrategyFinished(strategy, result)
+                config.invokeOnStrategyFinished(strategy, result)
             }
 
             //endregion Intercept Strategy Events
@@ -105,14 +105,14 @@ public class EventHandler {
                 this,
                 featureImpl
             ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
-                config.onBeforeNode(node, context, input)
+                config.invokeOnBeforeNode(node, context, input)
             }
 
             pipeline.interceptAfterNode(
                 this,
                 featureImpl
             ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
-                config.onAfterNode(node, context, input, output)
+                config.invokeOnAfterNode(node, context, input, output)
             }
 
             //endregion Intercept Node Events
@@ -120,11 +120,11 @@ public class EventHandler {
             //region Intercept LLM Call Events
 
             pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools, model, sessionUuid ->
-                config.onBeforeLLMCall(prompt, tools, model, sessionUuid)
+                config.invokeOnBeforeLLMCall(prompt, tools, model, sessionUuid)
             }
 
             pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ prompt, tools, model, responses, sessionUuid ->
-                config.onAfterLLMCall(prompt, tools, model, responses, sessionUuid)
+                config.invokeOnAfterLLMCall(prompt, tools, model, responses, sessionUuid)
             }
 
             //endregion Intercept LLM Call Events
@@ -132,19 +132,19 @@ public class EventHandler {
             //region Intercept Tool Call Events
 
             pipeline.interceptToolCall(this, featureImpl) intercept@{ tool, toolArgs ->
-                config.onToolCall(tool, toolArgs)
+                config.invokeOnToolCall(tool, toolArgs)
             }
 
             pipeline.interceptToolValidationError(this, featureImpl) intercept@{  tool, toolArgs, value ->
-                config.onToolValidationError(tool, toolArgs, value)
+                config.invokeOnToolValidationError(tool, toolArgs, value)
             }
 
             pipeline.interceptToolCallFailure(this, featureImpl) intercept@{ tool, toolArgs, throwable ->
-                config.onToolCallFailure(tool, toolArgs, throwable)
+                config.invokeOnToolCallFailure(tool, toolArgs, throwable)
             }
 
             pipeline.interceptToolCallResult(this, featureImpl) intercept@{ tool, toolArgs, result ->
-                config.onToolCallResult(tool, toolArgs, result)
+                config.invokeOnToolCallResult(tool, toolArgs, result)
             }
 
             //endregion Intercept Tool Call Events
@@ -166,12 +166,12 @@ public class EventHandler {
  * ```
  * handleEvents {
  *     // Log when tools are called
- *     onToolCall = { stage, tool, toolArgs ->
+ *     onToolCall { stage, tool, toolArgs ->
  *         println("Tool called: ${tool.name}")
  *     }
  *     
  *     // Handle errors
- *     onAgentRunError = { strategyName, throwable ->
+ *     onAgentRunError { strategyName, throwable ->
  *         logger.error("Agent error: ${throwable.message}")
  *     }
  * }

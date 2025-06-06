@@ -56,12 +56,12 @@ val testAgent = AIAgents(
     var agentFinished = false
 
     handleEvents {
-        onToolCall = { stage, tool, toolArgs ->
+        onToolCall { stage, tool, toolArgs ->
             toolCalled = true
             println("[DEBUG_LOG] Tool called: ${tool.name}")
         }
 
-        onAgentFinished = { strategyName, result ->
+        onAgentFinished { strategyName, result ->
             agentFinished = true
             println("[DEBUG_LOG] Agent finished with result: $result")
         }
@@ -86,33 +86,33 @@ val agent = AIAgents(
 ) {
     handleEvents {
         // Log LLM interactions
-        onBeforeLLMCall = { prompt ->
+        onBeforeLLMCall { prompt ->
             println("Sending prompt to LLM: ${prompt.toString().take(100)}...")
         }
 
-        onAfterLLMCall = { response ->
+        onAfterLLMCall { response ->
             println("Received response from LLM: ${response.take(100)}...")
         }
 
         // Monitor tool usage
-        onToolCall = { stage, tool, toolArgs ->
+        onToolCall { stage, tool, toolArgs ->
             println("Tool called: ${tool.name} with args: $toolArgs")
         }
 
-        onToolCallResult = { stage, tool, toolArgs, result ->
+        onToolCallResult { stage, tool, toolArgs, result ->
             println("Tool result: $result")
         }
 
-        onToolCallFailure = { stage, tool, toolArgs, throwable ->
+        onToolCallFailure { stage, tool, toolArgs, throwable ->
             println("Tool failed: ${throwable.message}")
         }
 
         // Track agent progress
-        onStrategyStarted = { strategy ->
+        onStrategyStarted { strategy ->
             println("Strategy started: ${strategy.name}")
         }
 
-        onStrategyFinished = { strategyName, result ->
+        onStrategyFinished { strategyName, result ->
             println("Strategy finished: $strategyName with result: $result")
         }
     }

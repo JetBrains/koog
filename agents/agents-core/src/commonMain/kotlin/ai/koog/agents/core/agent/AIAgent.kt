@@ -379,10 +379,11 @@ public open class AIAgent(
         val messageContent = message.content
         val messageError = message.error
 
-        if (messageError == null) {
-            logger.debug { "Finished execution chain, processing final result..." }
-            check(messageContent != null) { NO_CONTENT }
+        logger.debug { "Finished execution chain, processing final result (content: $messageContent, error: $messageError)" }
 
+        if (messageError == null) {
+
+            check(messageContent != null) { NO_CONTENT }
             check(messageContent.toolName == TerminationTool.NAME) { INVALID_TOOL }
 
             val element = messageContent.toolArgs[TerminationTool.ARG]

@@ -67,15 +67,15 @@ fun main() {
             toolRegistry = toolRegistry
         ) {
             handleEvents {
-                onToolCall = { tool: Tool<*, *>, toolArgs: Tool.Args ->
+                onToolCall { tool: Tool<*, *>, toolArgs: Tool.Args ->
                     println("Tool called: tool ${tool.name}, args $toolArgs")
                 }
 
-                onAgentRunError = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
+                onAgentRunError { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
                     println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
                 }
 
-                onAgentFinished = { strategyName: String, result: String? ->
+                onAgentFinished { strategyName: String, result: String? ->
                     println("Result: $result")
                 }
             }

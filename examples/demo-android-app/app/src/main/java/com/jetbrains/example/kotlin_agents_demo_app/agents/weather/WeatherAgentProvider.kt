@@ -128,15 +128,15 @@ object WeatherAgentProvider : AgentProvider {
             toolRegistry = toolRegistry,
         ) {
             handleEvents {
-                onToolCall = { tool: Tool<*, *>, toolArgs: Tool.Args ->
+                onToolCall { tool: Tool<*, *>, toolArgs: Tool.Args ->
                     onToolCallEvent("Tool ${tool.name}, args $toolArgs")
                 }
 
-                onAgentRunError = { strategyName: String, throwable: Throwable ->
+                onAgentRunError { strategyName: String, throwable: Throwable ->
                     onErrorEvent("${throwable.message}")
                 }
 
-                onAgentFinished = { strategyName: String, result: String? ->
+                onAgentFinished { strategyName: String, result: String? ->
                     // Skip finish event handling
                 }
             }
