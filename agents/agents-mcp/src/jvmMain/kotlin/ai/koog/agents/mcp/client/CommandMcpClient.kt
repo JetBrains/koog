@@ -1,4 +1,4 @@
-package ai.koog.agents.mcp.provider
+package ai.koog.agents.mcp.client
 
 import ai.koog.agents.mcp.McpTool
 import ai.koog.agents.mcp.McpToolRegistryProvider
@@ -8,16 +8,14 @@ import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.coroutines.delay
 
-public abstract class CommandBaseMcpClient(
-    override val config: McpServerCommandConfig,
-    public val type: CommandMcpClientType,
-    override val name: String = DEFAULT_MCP_CLIENT_NAME,
-    override val version: String = DEFAULT_MCP_CLIENT_VERSION,
+public class CommandMcpClient(
+    private val config: McpServerCommandConfig,
+    private val version: String = DEFAULT_MCP_CLIENT_VERSION,
 ) : McpClient {
 
     public companion object {
 
-        private val logger = KotlinLogging.logger("ai.koog.agents.mcp.provider.CommandBaseMcpClient")
+        private val logger = KotlinLogging.logger("ai.koog.agents.mcp.client.CommandBaseMcpClient")
 
         /**
          * Default name for the MCP client when connecting to an MCP server.
@@ -30,13 +28,15 @@ public abstract class CommandBaseMcpClient(
         public const val DEFAULT_MCP_CLIENT_VERSION: String = "1.0.0"
     }
 
+    override val name: String
+        get() = config.name
+
     private var _client: Client? = null
 
     override val client: Client
         get() = _client ?: throw IllegalStateException("MCP client is not connected")
 
     private var _process: Process? = null
-
 
     override suspend fun connect() {
 

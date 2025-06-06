@@ -1,5 +1,7 @@
 package ai.koog.agents.mcp.provider
 
+import ai.koog.agents.mcp.client.McpClient
+import ai.koog.agents.mcp.client.RemoteMcpClient
 import ai.koog.agents.mcp.config.McpServerCommandConfig
 import ai.koog.agents.mcp.config.McpServerConfig
 import ai.koog.agents.mcp.config.McpServerRemoteConfig
