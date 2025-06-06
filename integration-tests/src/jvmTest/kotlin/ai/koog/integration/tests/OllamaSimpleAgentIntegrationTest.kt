@@ -5,7 +5,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.TestUtils.runWithRetry
+import ai.koog.integration.tests.utils.annotations.Retry
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.AfterTest
@@ -87,6 +87,7 @@ class OllamaSimpleAgentIntegrationTest {
         actualToolCalls.clear()
     }
 
+    @Retry(3)
     @Test
     fun ollama_simpleTest() = runTest(timeout = 600.seconds) {
         val toolRegistry = ToolRegistry.Companion {
@@ -119,9 +120,8 @@ class OllamaSimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        runWithRetry {
-            agent.run("Give me top 10 books of the all time.")
-        }
+
+        agent.run("Give me top 10 books of the all time.")
 
         assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model")
         assertTrue(

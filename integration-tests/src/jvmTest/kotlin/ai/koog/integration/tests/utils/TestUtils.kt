@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Assumptions.assumeTrue
 
 internal object TestUtils {
     fun readTestAnthropicKeyFromEnv(): String {
@@ -27,68 +26,6 @@ internal object TestUtils {
             ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` is not set")
     }
 
-    private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
-    private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
-    private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
-
-    suspend fun <T> executeWithRetry(operation: suspend () -> T): T {
-        val maxRetries = 3
-        var attempts = 0
-        var lastException: Exception? = null
-
-        while (attempts < maxRetries) {
-            try {
-                return operation()
-            } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_500_ERROR) == true || e.message?.contains(GOOGLE_503_ERROR) == true) {
-                    assumeTrue(false, "Skipping test due to ${e.message}")
-                } else if (e.message?.contains(GOOGLE_API_ERROR) == true) {
-                    lastException = e
-                    attempts++
-                    println("Attempt $attempts/$maxRetries failed with known Google API issue, retrying...")
-                } else {
-                    throw e // Rethrow if it's a different exception
-                }
-            }
-        }
-
-        if (lastException?.message?.contains(GOOGLE_API_ERROR) == true) {
-            assumeTrue(
-                false,
-                "Skipping test after $maxRetries failed attempts due to JBAI-14082: ${lastException.message}"
-            )
-        }
-
-        throw IllegalStateException("Should not reach here, test should be skipped")
-    }
-
-    suspend fun <T> runWithRetry(operation: suspend () -> T): T {
-        val maxRetries = 3
-        var attempts = 0
-
-        while (attempts < maxRetries) {
-            try {
-                return operation()
-            } catch (e: Exception) {
-                if (e.message?.contains(GOOGLE_500_ERROR) == true || e.message?.contains(GOOGLE_503_ERROR) == true) {
-                    assumeTrue(false, "Skipping test due to ${e.message}}")
-                } else {
-                    attempts++
-                    println("Attempt $attempts/$maxRetries failed with exception ${e.message}, retrying...")
-                }
-            }
-        }
-
-        if (attempts == maxRetries) {
-            assumeTrue(
-                false,
-                "Skipping test after $maxRetries failed attempts"
-            )
-        }
-
-        throw IllegalStateException("Should not reach here, test should be skipped")
-    }
-
     @Serializable
     enum class CalculatorOperation {
         ADD, SUBTRACT, MULTIPLY, DIVIDE
@@ -106,7 +43,7 @@ internal object TestUtils {
         val b: Int
     ) : Tool.Args
 
-    public object CalculatorTool : SimpleTool<CalculatorArgs>() {
+    object CalculatorTool : SimpleTool<CalculatorArgs>() {
         override val argsSerializer = CalculatorArgs.serializer()
 
         val calculatorToolDescriptor = ToolDescriptor(
@@ -146,51 +83,6 @@ internal object TestUtils {
                     }
                 }
             }
-        }
-    }
-
-    @Serializable
-    data class ColorPickerArgs(
-        val color: List<String>
-    ) : Tool.Args
-
-    class ColorPickerTool : SimpleTool<ColorPickerArgs>() {
-        override val argsSerializer = ColorPickerArgs.serializer()
-
-        val colorPickerToolDescriptor = ToolDescriptor(
-            name = "colorPicker",
-            description = "A tool that can randomly pick a color from a list of colors.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "color",
-                    description = "The color to be picked.",
-                    type = ToolParameterType.List(ToolParameterType.Enum(Colors.entries.map { it.name }.toTypedArray()))
-                )
-            )
-        )
-
-        override val descriptor = colorPickerToolDescriptor
-
-        override suspend fun doExecute(args: ColorPickerArgs): String {
-            return if (args.color.isEmpty()) {
-                "No colors provided to pick from"
-            } else {
-                val selectedColor = args.color.random()
-                "Selected color: $selectedColor"
-            }
-        }
-    }
-
-    class SummaryTool : SimpleTool<Tool.EmptyArgs>() {
-        override val argsSerializer = EmptyArgs.serializer()
-
-        override val descriptor = ToolDescriptor(
-            name = "summary",
-            description = "A tool that summarizes the results of previous operations."
-        )
-
-        override suspend fun doExecute(args: EmptyArgs): String {
-            return "Summary of previous operations"
         }
     }
 

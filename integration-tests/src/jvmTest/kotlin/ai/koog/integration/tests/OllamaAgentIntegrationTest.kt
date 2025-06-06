@@ -13,7 +13,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
-import ai.koog.integration.tests.utils.TestUtils.runWithRetry
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
@@ -174,13 +174,14 @@ class OllamaAgentIntegrationTest {
         }
     }
 
+    @Retry(3)
     @Test
     fun ollama_testAgentClearContext() = runTest(timeout = 600.seconds) {
         val strategy = createTestStrategy()
         val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
-        val result = runWithRetry { agent.runAndGetResult("What is the capital of France?") }
+        val result = agent.runAndGetResult("What is the capital of France?")
 
         assertNotNull(result, "Result should not be empty")
         assertTrue(result.isNotEmpty(), "Result should not be empty")
