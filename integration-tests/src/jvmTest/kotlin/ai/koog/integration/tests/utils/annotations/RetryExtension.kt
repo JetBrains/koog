@@ -1,13 +1,13 @@
 package ai.koog.integration.tests.utils.annotations
 
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.extension.*
-import java.util.stream.Stream
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.InvocationInterceptor
+import org.junit.jupiter.api.extension.ReflectiveInvocationContext
+import java.lang.reflect.Method
 
-class RetryExtension : TestTemplateInvocationContextProvider, TestExecutionExceptionHandler {
+class RetryExtension : InvocationInterceptor {
     companion object {
-        private val NAMESPACE = ExtensionContext.Namespace.create(RetryExtension::class.java)
-
         private const val GOOGLE_API_ERROR = "Field 'parts' is required for type with serial name"
         private const val GOOGLE_429_ERROR = "Error from GoogleAI API: 429 Too Many Requests"
         private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
@@ -23,60 +23,54 @@ class RetryExtension : TestTemplateInvocationContextProvider, TestExecutionExcep
                 || e.message?.contains(ANTHROPIC_502_ERROR) == true
     }
 
-    override fun supportsTestTemplate(context: ExtensionContext): Boolean {
-        return context.requiredTestMethod.isAnnotationPresent(Retry::class.java)
-    }
-
-    override fun provideTestTemplateInvocationContexts(context: ExtensionContext): Stream<TestTemplateInvocationContext> {
-        val retry = context.requiredTestMethod.getAnnotation(Retry::class.java)
-        return Stream.generate { createInvocationContext(context, retry) }
-            .limit(retry.times.toLong())
-    }
-
-    private fun createInvocationContext(context: ExtensionContext, retry: Retry): TestTemplateInvocationContext {
-        return object : TestTemplateInvocationContext {
-            override fun getDisplayName(invocationIndex: Int): String {
-                return "${context.displayName} [attempt ${invocationIndex}]"
-            }
-
-            override fun getAdditionalExtensions(): List<Extension> {
-                return listOf(RetryExecutionExtension(retry))
-            }
-        }
-    }
-
-    override fun handleTestExecutionException(
-        context: ExtensionContext,
-        throwable: Throwable
+    override fun interceptTestMethod(
+        invocation: InvocationInterceptor.Invocation<Void>,
+        invocationContext: ReflectiveInvocationContext<Method>,
+        extensionContext: ExtensionContext
     ) {
-        if (isThirdSideError(throwable)) {
-            println("[DEBUG_LOG] Google-side known error detected: ${throwable.message}")
-            assumeTrue(false, "Skipping test due to ${throwable.message}")
+        val retry = extensionContext.requiredTestMethod.getAnnotation(Retry::class.java)
+
+        if (retry == null) {
+            invocation.proceed()
             return
         }
 
-        throw throwable
-    }
+        var lastException: Throwable? = null
 
-    private class RetryExecutionExtension(private val retry: Retry) : TestExecutionExceptionHandler {
-        override fun handleTestExecutionException(
-            context: ExtensionContext,
-            throwable: Throwable
-        ) {
-            val retryStore = context.getStore(NAMESPACE)
-            val key = "${context.requiredTestClass.name}.${context.requiredTestMethod.name}"
-            val currentAttempt = retryStore.getOrComputeIfAbsent(key, { 0 }, Int::class.java) as Int
-
-            println("[DEBUG_LOG] Test '${context.displayName}' failed. Attempt ${currentAttempt + 1} of ${retry.times}")
-
-            if (currentAttempt < retry.times - 1) {
-                retryStore.put(key, currentAttempt + 1)
-                println("[DEBUG_LOG] Retrying test '${context.displayName}'")
+        for (attempt in 1..retry.times) {
+            try {
+                println("[DEBUG_LOG] Test '${extensionContext.displayName}' - attempt $attempt of ${retry.times}")
+                invocation.proceed()
+                println("[DEBUG_LOG] Test '${extensionContext.displayName}' succeeded on attempt $attempt")
                 return
-            } else {
-                println("[DEBUG_LOG] Maximum retry attempts (${retry.times}) reached for test '${context.displayName}'")
-                throw throwable
+            } catch (throwable: Throwable) {
+                lastException = throwable
+
+                if (isThirdSideError(throwable)) {
+                    println("[DEBUG_LOG] Third-party service error detected: ${throwable.message}")
+                    assumeTrue(false, "Skipping test due to ${throwable.message}")
+                    return
+                }
+
+                println("[DEBUG_LOG] Test '${extensionContext.displayName}' failed on attempt $attempt: ${throwable.message}")
+
+                if (attempt < retry.times) {
+                    println("[DEBUG_LOG] Retrying test '${extensionContext.displayName}' (attempt ${attempt + 1} of ${retry.times})")
+
+                    if (retry.delayMs > 0) {
+                        try {
+                            Thread.sleep(retry.delayMs)
+                        } catch (e: InterruptedException) {
+                            Thread.currentThread().interrupt()
+                            throw e
+                        }
+                    }
+                } else {
+                    println("[DEBUG_LOG] Maximum retry attempts (${retry.times}) reached for test '${extensionContext.displayName}'")
+                }
             }
         }
+
+        throw lastException!!
     }
 }
