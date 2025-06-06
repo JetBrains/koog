@@ -53,6 +53,8 @@ buildscript {
 plugins {
     alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
+    id("org.jetbrains.kotlinx.kover") version "0.7.3"
+    application
 }
 
 allprojects {
@@ -62,6 +64,16 @@ allprojects {
 }
 
 disableDistTasks()
+
+tasks.test {
+    finalizedBy(tasks.koverXmlReport)
+    finalizedBy(tasks.koverVerify) // you will find the report in build/kover/bin-reports
+}
+
+// Apply Kover to all subprojects
+subprojects {
+    apply(plugin = "org.jetbrains.kotlinx.kover")
+}
 
 subprojects {
     tasks.withType<Test> {
@@ -184,4 +196,34 @@ dependencies {
     dokka(project(":prompt:prompt-structure"))
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
+}
+
+koverReport {
+    defaults {
+        // Enable binary reports
+        binary {
+            onCheck = true
+        }
+
+        // Configure XML report
+        xml {
+            onCheck = true
+        }
+
+        // Configure HTML report
+        html {
+            onCheck = true
+        }
+    }
+
+    filters {
+        includes {
+            packages("ai.koog.agents")
+            packages("ai.koog.agents.core.agent")
+            packages("ai.koog.agents.core.tools")
+            packages("ai.koog.agents.core.dsl")
+            packages("ai.koog.agents.core.dsl.builder")
+            packages("ai.koog.agents.core.utils")
+        }
+    }
 }
