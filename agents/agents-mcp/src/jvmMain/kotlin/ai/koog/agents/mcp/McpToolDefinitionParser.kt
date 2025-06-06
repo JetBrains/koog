@@ -44,11 +44,8 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
     private fun parseParameterType(element: JsonObject): ToolParameterType {
         // Extract the type string from the JSON object
-        val typeStr = if ("type" in element) {
-            element.getValue("type").jsonPrimitive.content
-        } else {
-            throw IllegalArgumentException("Parameter type must have type property")
-        }
+        val typeStr = element["type"]?.jsonPrimitive?.content
+            ?: throw IllegalArgumentException("Parameter type must have type property")
 
         // Convert the type string to a ToolParameterType
         return when (typeStr.lowercase()) {
@@ -63,11 +60,9 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
             // Array type
             "array" -> {
-                val items = if ("items" in element) {
-                    element.getValue("items").jsonObject
-                } else {
-                    throw IllegalArgumentException("Array type parameters must have items property")
-                }
+                val items = element["items"]?.jsonObject
+                    ?: throw IllegalArgumentException("Array type parameters must have items property")
+
                 val itemType = parseParameterType(items)
 
                 ToolParameterType.List(itemsType = itemType)
@@ -75,22 +70,17 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
             // Object type
             "object" -> {
-                val properties = if ("properties" in element) {
-                    val rawProperties = element.getValue("properties").jsonObject
+                val properties = element["properties"]?.let { properties ->
+                    val rawProperties = properties.jsonObject
                     rawProperties.map { (name, property) ->
                         // Description is optional
                         val description = element["description"]?.jsonPrimitive?.content.orEmpty()
                         ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
                     }
-                } else {
-                    emptyList()
-                }
+                } ?: emptyList()
 
-                val required = if ("required" in element) {
-                    element.getValue("required").jsonArray.map { it.jsonPrimitive.content }
-                } else {
-                    emptyList()
-                }
+                val required = element["required"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
+
 
                 val additionalProperties = if ("additionalProperties" in element) {
                     when (element.getValue("additionalProperties")) {

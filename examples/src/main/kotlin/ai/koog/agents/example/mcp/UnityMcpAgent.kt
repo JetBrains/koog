@@ -2,6 +2,7 @@ package ai.koog.agents.example.mcp
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -33,16 +34,19 @@ import kotlinx.coroutines.runBlocking
  * and task automation.
  */
 fun main() {
-    // Start the Docker container with the Google Maps MCP server
+    // https://github.com/justinpbarnett/unity-mcp
+//    val pathToUnityServer= "path/to/unity/server"
 //    val process = ProcessBuilder(
 //        "uv", "--directory",
-//        "/Users/Maria.Tigina/Applications/UnityMCP/UnityMcpServer/src",
+//        pathToUnityServer,
 //        "run",
 //        "server.py"
 //    ).start()
 
+    // https://github.com/IvanMurzak/Unity-MCP
+    val pathToUnityProject = "path/to/unity/project"
     val process = ProcessBuilder(
-        "/Users/Maria.Tigina/IdeaProjects/TowerDefense/My project/Library/com.ivanmurzak.unity.mcp.server/bin~/Release/net9.0/com.IvanMurzak.Unity.MCP.Server",
+        "$pathToUnityProject/com.ivanmurzak.unity.mcp.server/bin~/Release/net9.0/com.IvanMurzak.Unity.MCP.Server",
         "60606"
     ).start()
 
@@ -98,31 +102,25 @@ fun main() {
                     install(Tracing)
 
                     install(EventHandler) {
-                        onToolCallResult = { tool, toolArgs, result ->
-                            println("Tool: ${tool.name}, Args: $toolArgs, Result: $result")
+                        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                            println("OnBeforeAgentStarted first (strategy: ${strategy.name})")
                         }
 
-                        onBeforeLLMCall  = { prompt, tools ->
-                            println("Before LLM call: prompt=$prompt, tools: [${tools.joinToString { it.name }}]")
+                        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                            println("OnBeforeAgentStarted second (strategy: ${strategy.name})")
                         }
 
-                        onAfterLLMCall  = { responses ->
-                            println("After LLM call: ${responses.joinToString("\n") { it.content }}")
-                        }
-
-                        onAgentFinished = { strategyName: String, result: String? ->
-                            println("Result: $result")
-                        }
-
-                        onAgentRunError = { strategyName, throwable ->
-                            println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+                        onAgentFinished { strategyName: String, result: String? ->
+                            println("OnAgentFinished (strategy: $strategyName, result: $result)")
                         }
                     }
                 }
             )
-            
-            val runAndGetResult = agent.runAndGetResult(" extend current opened scene for the towerdefence game. " +
-                    "Add more placements for the towers, change the path for the enemies")
+
+            val runAndGetResult = agent.runAndGetResult(
+                " extend current opened scene for the towerdefence game. " +
+                        "Add more placements for the towers, change the path for the enemies"
+            )
             println(runAndGetResult)
 
 

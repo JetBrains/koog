@@ -84,8 +84,8 @@ public object McpToolRegistryProvider {
                 try {
                     val toolDescriptor = mcpToolParser.parse(sdkTool)
                     tool(McpTool(mcpClient, toolDescriptor))
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to register tool: ${sdkTool.name}" }
+                } catch (e: Throwable) {
+                    logger.error(e) { "Failed to parse descriptor parameters for tool: ${sdkTool.name}" }
                 }
             }
         }

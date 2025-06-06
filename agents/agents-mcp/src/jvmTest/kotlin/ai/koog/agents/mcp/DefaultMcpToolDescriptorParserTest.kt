@@ -307,8 +307,7 @@ class DefaultMcpToolDescriptorParserTest {
     }
 
     @Test
-    fun `test error cases`() {
-        // Test case 1: Parameter type is missing
+    fun `test parameter type is missing`() {
         val missingTypeToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
@@ -324,8 +323,10 @@ class DefaultMcpToolDescriptorParserTest {
         assertFailsWith<IllegalArgumentException>("Should fail when parameter type is missing") {
             parser.parse(missingTypeToolSdk)
         }
+    }
 
-        // Test case 2: Array items property is missing
+    @Test
+    fun `test array items property is missing`() {
         val missingArrayItemsToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
@@ -342,8 +343,10 @@ class DefaultMcpToolDescriptorParserTest {
         assertFailsWith<IllegalArgumentException>("Should fail when array items property is missing") {
             parser.parse(missingArrayItemsToolSdk)
         }
+    }
 
-        // Test case 3: Object without properties property should return empty properties list
+    @Test
+    fun `test object without properties returns empty properties list`() {
         val missingObjectPropertiesToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
@@ -361,8 +364,10 @@ class DefaultMcpToolDescriptorParserTest {
         val objectParam = toolDescriptor.optionalParameters.first()
         val objectType = objectParam.type as ToolParameterType.Object
         assertEquals(emptyList(), objectType.properties, "Object without properties should have empty properties list")
+    }
 
-        // Test case 4: Parameter type is unsupported
+    @Test
+    fun `test parameter type is unsupported`() {
         val unsupportedTypeToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
