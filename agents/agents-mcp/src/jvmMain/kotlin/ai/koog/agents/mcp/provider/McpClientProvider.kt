@@ -2,6 +2,7 @@ package ai.koog.agents.mcp.provider
 
 import ai.koog.agents.mcp.config.McpServerCommandConfig
 import ai.koog.agents.mcp.config.McpServerConfig
+import ai.koog.agents.mcp.config.McpServerRemoteConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 internal class McpClientProvider {
@@ -13,10 +14,23 @@ internal class McpClientProvider {
     fun provideClient(config: McpServerConfig): McpClient {
         val mcpClient: McpClient =
             when (config) {
-                is CommandBaseMcpClient ->
-                else ->
+                is McpServerRemoteConfig -> {
+                    RemoteMcpClient(config)
+                }
+                is McpServerCommandConfig -> {
+                    if (config.command == CommandMcpClientType.DOCKER.command) {
+                        DockerCommandMcpClient(config)
+                    }
+                    else {
+                        DefaultCommandMcpClient(config)
+                    }
+                }
+                else -> {
+                    error("Unsupported MCP server config type: ${config::class.simpleName}")
+                }
             }
 
-        return
+        logger.debug { "Defined MCP client to use: $mcpClient" }
+        return mcpClient
     }
 }
