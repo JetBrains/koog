@@ -246,7 +246,7 @@ class PromptTest {
             Message.Assistant(assistantMessage, testRespMetaInfo)
         )
 
-        val updatedPrompt = basicPrompt.withMessages({ newMessages })
+        val updatedPrompt = basicPrompt.withMessages { newMessages }
 
         assertEquals(3, updatedPrompt.messages.size)
         assertEquals(systemMessage, updatedPrompt.messages[0].content)

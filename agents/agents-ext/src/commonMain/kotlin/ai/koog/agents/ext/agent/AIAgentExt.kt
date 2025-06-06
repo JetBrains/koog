@@ -1,12 +1,9 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.params.LLMParams
 
 /**
  * Creates and configures a `AIAgent` instance with a single-run strategy.

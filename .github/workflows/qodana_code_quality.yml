@@ -1,0 +1,38 @@
+name: Qodana
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+jobs:
+  qodana:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
+          fetch-depth: 0  # a full history is required for pull request analysis
+
+      # Add Java setup step
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'  # Popular OpenJDK distribution
+
+      - name: 'Qodana Scan'
+        uses: JetBrains/qodana-action@v2025.1
+        with:
+          pr-mode: false
+          args: --apply-fixes,--baseline,qodana.sarif.json
+          push-fixes: branch
+          use-caches: 'false'
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1399872884 }}
+          QODANA_ENDPOINT: 'https://qodana.cloud'

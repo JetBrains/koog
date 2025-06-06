@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.prompt.dsl.AttachmentBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
