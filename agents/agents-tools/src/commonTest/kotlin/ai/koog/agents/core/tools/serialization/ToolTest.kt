@@ -36,9 +36,9 @@ class ToolTest {
     @Test
     fun testSimpleUnstructuredToolSerialization() = runTest {
         val args = JsonObject(emptyMap())
-        val (_, result) = UnstructuredTool.executeAndSerialize(UnstructuredTool.decodeArgs(args), Enabler)
+        val result = UnstructuredTool.execute(UnstructuredTool.decodeArgs(args), Enabler)
 
-        assertEquals("Simple result", result)
+        assertEquals("Simple result", result.toStringDefault())
     }
 
     // Structured tool
@@ -80,12 +80,12 @@ class ToolTest {
             put("arg1", "argument")
             put("arg2", 15)
         }
-        val (_, result) = SampleStructuredTool.executeAndSerialize(SampleStructuredTool.decodeArgs(args), Enabler)
+        val result = SampleStructuredTool.execute(SampleStructuredTool.decodeArgs(args), Enabler)
 
         assertEquals(
             //language=JSON
             expected = """{"first":"result","second":1}""",
-            actual = result
+            actual = result.toStringDefault()
         )
     }
 
@@ -126,7 +126,7 @@ class ToolTest {
     @Test
     fun testCustomFormatToolSerialization() = runTest {
         val args = JsonObject(emptyMap())
-        val (_, result) = CustomFormatTool.executeAndSerialize(CustomFormatTool.decodeArgs(args), Enabler)
-        assertEquals("Foo: first result | Bar: second result", result)
+        val result = CustomFormatTool.execute(CustomFormatTool.decodeArgs(args), Enabler)
+        assertEquals("Foo: first result | Bar: second result", result.toStringDefault())
     }
 }
