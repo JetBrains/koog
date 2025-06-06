@@ -31,7 +31,11 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
                 forwardOutputComposition(ctx, output)
                     .filter { transOutput -> ctx.block(transOutput) }
            },
-        )
+        ).apply {
+            @Suppress("UNCHECKED_CAST")
+            val edge = AIAgentEdgeBuilder(this as AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>).build()
+            fromNode.addEdge(edge)
+        }
     }
 
     public infix fun <NewIntermediateOutput> transformed(
@@ -44,6 +48,10 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
                 forwardOutputComposition(ctx, output)
                     .map { ctx.block(it) }
             }
-        )
+        ).apply {
+            @Suppress("UNCHECKED_CAST")
+            val edge = AIAgentEdgeBuilder(this as AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>).build()
+            fromNode.addEdge(edge)
+        }
     }
 }
