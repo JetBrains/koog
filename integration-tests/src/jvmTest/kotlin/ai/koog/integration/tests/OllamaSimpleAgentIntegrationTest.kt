@@ -6,6 +6,7 @@ import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.utils.annotations.Retry
+import ai.koog.integration.tests.utils.annotations.RetryExtension
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.AfterTest
@@ -16,6 +17,7 @@ import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
 @ExtendWith(OllamaTestFixtureExtension::class)
+@ExtendWith(RetryExtension::class)
 class OllamaSimpleAgentIntegrationTest {
     companion object {
         @field:InjectOllamaTestFixture

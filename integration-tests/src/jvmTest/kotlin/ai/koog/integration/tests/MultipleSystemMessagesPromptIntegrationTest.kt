@@ -4,6 +4,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
+import ai.koog.integration.tests.utils.annotations.RetryExtension
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -15,9 +16,11 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+@ExtendWith(RetryExtension::class)
 class MultipleSystemMessagesPromptIntegrationTest {
     private val openAIApiKey = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey = readTestAnthropicKeyFromEnv()
