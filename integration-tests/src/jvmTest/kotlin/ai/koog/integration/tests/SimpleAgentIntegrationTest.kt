@@ -116,7 +116,7 @@ class SimpleAgentIntegrationTest {
         results.clear()
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
@@ -141,7 +141,7 @@ class SimpleAgentIntegrationTest {
         assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {

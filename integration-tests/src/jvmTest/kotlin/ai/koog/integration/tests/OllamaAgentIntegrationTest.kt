@@ -174,7 +174,7 @@ class OllamaAgentIntegrationTest {
         }
     }
 
-    @Retry(3)
+    @Retry
     @Test
     fun ollama_testAgentClearContext() = runTest(timeout = 600.seconds) {
         val strategy = createTestStrategy()

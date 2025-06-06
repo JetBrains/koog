@@ -60,7 +60,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -82,7 +82,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -110,7 +110,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -141,7 +141,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(content.contains("return"), "Response should contain a return statement")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -187,7 +187,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -240,7 +240,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -291,7 +291,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -327,7 +327,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -364,7 +364,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -402,7 +402,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
@@ -436,7 +436,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -512,7 +512,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         user("What is 123 + 456?")
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -540,7 +540,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.first() is Message.Tool.Call)
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -570,7 +570,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.first() is Message.Assistant)
     }
 
-    @Retry(3)
+    @Retry
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNamed(model: LLModel) = runTest(timeout = 300.seconds) {
