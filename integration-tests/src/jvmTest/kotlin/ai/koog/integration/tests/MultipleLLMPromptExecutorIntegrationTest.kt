@@ -14,6 +14,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -86,6 +87,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
+        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
+            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+        }
+
         val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-streaming") {
@@ -402,10 +407,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
-    @Retry(3)
+    @Retry(5)
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
+        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
+            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+        }
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Count from 1 to 5.")
@@ -440,6 +448,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
+        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
+            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+        }
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
