@@ -70,6 +70,9 @@ jobs:
       - name: JvmTest with Gradle Wrapper
         run: ./gradlew jvmTest --continue
 
+      - name: Aggregate test coverage with Kover
+        run: ./gradlew :koverBinaryReport
+
       - name: Create coverage-data directory and copy contents
         run: |
           mkdir -p .qodana/code-coverage

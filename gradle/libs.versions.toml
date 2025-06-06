@@ -18,6 +18,7 @@ mcp = "0.5.0"
 dokka = "2.0.0"
 jetsign = "45.47"
 testcontainers = "1.19.7"
+kover = "0.9.1"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -52,3 +53,4 @@ testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "
 grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
