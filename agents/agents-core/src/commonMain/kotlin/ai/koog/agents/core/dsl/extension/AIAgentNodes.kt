@@ -35,16 +35,35 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = nu
  * @param name Optional node name, defaults to delegate's property name.
  * @param body Lambda to modify the prompt using PromptBuilder.
  */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     name: String? = null,
     body: PromptBuilder.() -> Unit
-): AIAgentNodeDelegateBase<Unit, Unit> =
-    node(name) {
+): AIAgentNodeDelegateBase<T, T> =
+    node(name) { input ->
         llm.writeSession {
             updatePrompt {
                 body()
             }
         }
+
+        input
+    }
+
+/**
+ * Creates an AI agent node that clears the message history in the current session and passes the input forward unchanged.
+ *
+ * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
+ * @return A delegate for the created AI agent node, which processes input and outputs the same input after clearing the session history.
+ */
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeClearHistory(
+    name: String? = null
+): AIAgentNodeDelegateBase<T, T> =
+    node(name) { input ->
+        llm.writeSession {
+            clearHistory()
+        }
+
+        input
     }
 
 /**
@@ -204,7 +223,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String?
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
-    strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
+    strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.CompressWholeHistory,
     preserveMemory: Boolean = true
 ): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
     llm.writeSession {

@@ -45,8 +45,6 @@ fun main() = runBlocking {
         edge(getMdOutput forwardTo nodeFinish)
     }
 
-    val token = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
-
     val toolRegistry = ToolRegistry {
         tool(BookTool())
     }
@@ -57,12 +55,12 @@ fun main() = runBlocking {
         """.trimIndent()
     )
 
-    val runner = AIAgent(
+    val agent = AIAgent(
         promptExecutor = executor,
         strategy = agentStrategy, // no tools needed for this example
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,
     )
 
-    runner.run("Please provide a list of the top 10 books in the world.")
+    agent.run("Please provide a list of the top 10 books in the world.")
 }

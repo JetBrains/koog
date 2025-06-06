@@ -40,7 +40,7 @@ class AIAgentNodesTest {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
-        val runner = AIAgent(
+        val agent = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -53,7 +53,7 @@ class AIAgentNodesTest {
             }
         }
 
-        runner.run("")
+        agent.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)

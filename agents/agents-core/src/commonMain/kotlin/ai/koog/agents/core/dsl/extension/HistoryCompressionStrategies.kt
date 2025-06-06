@@ -10,7 +10,9 @@ import kotlinx.datetime.Instant
  * Different implementations define specific approaches to reducing the context size while maintaining key information.
  *
  * Example implementations:
- * - [HistoryCompressionStrategy.WholeHistory]
+ * - [HistoryCompressionStrategy.NoCompression]
+ * - [HistoryCompressionStrategy.ClearHistory]
+ * - [HistoryCompressionStrategy.CompressWholeHistory]
  * - [HistoryCompressionStrategy.FromLastNMessages]
  * - [HistoryCompressionStrategy.FromTimestamp]
  * - [HistoryCompressionStrategy.Chunked]
@@ -84,12 +86,33 @@ public abstract class HistoryCompressionStrategy {
     }
 
     /**
-     * WholeHistory is a concrete implementation of the HistoryCompressionStrategy
+     * A strategy implementation of `HistoryCompressionStrategy` that clears the current session's history.
+     * This class provides a straightforward approach for compressing memory by removing all previous messages.
+     */
+    public object ClearHistory : HistoryCompressionStrategy() {
+        /**
+         * Compresses a list of memory messages using a specified strategy.
+         *
+         * @param llmSession The current LLM session used for processing during compression.
+         * @param preserveMemory A flag indicating whether parts of the memory should be preserved during compression.
+         * @param memoryMessages A list of messages representing the memory to be compressed.
+         */
+        override suspend fun compress(
+            llmSession: AIAgentLLMWriteSession,
+            preserveMemory: Boolean,
+            memoryMessages: List<Message>
+        ) {
+            llmSession.clearHistory()
+        }
+    }
+
+    /**
+     * [CompressWholeHistory] is a concrete implementation of the HistoryCompressionStrategy
      * that encapsulates the logic for compressing entire conversation history into
      * a succinct summary (TL;DR) and composing necessary messages to create a
      * streamlined prompt suitable for language model interactions.
      */
-    public object WholeHistory : HistoryCompressionStrategy() {
+    public object CompressWholeHistory : HistoryCompressionStrategy() {
         /**
          * Compresses and adjusts the prompt for the local agent's write session by summarizing and incorporating
          * memory messages optionally.
@@ -198,5 +221,24 @@ public abstract class HistoryCompressionStrategy {
 
             composePromptWithRequiredMessages(llmSession, chunkedTLDR, preserveMemory, memoryMessages)
         }
+    }
+
+    /**
+     * A concrete implementation of the HistoryCompressionStrategy that performs no compression
+     * on the provided memory messages. This strategy simply leaves the memory unchanged.
+     */
+    public object NoCompression : HistoryCompressionStrategy() {
+        /**
+         * Compresses a given collection of memory messages using a specified strategy.
+         *
+         * @param llmSession The current LLM session used for processing during compression.
+         * @param preserveMemory A flag indicating whether parts of the memory should be preserved during compression.
+         * @param memoryMessages A list of messages representing the memory to be compressed.
+         */
+        override suspend fun compress(
+            llmSession: AIAgentLLMWriteSession,
+            preserveMemory: Boolean,
+            memoryMessages: List<Message>
+        ) {}
     }
 }

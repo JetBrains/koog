@@ -66,7 +66,7 @@ public fun AIAgentLLMWriteSession.unsetToolChoice() {
  * @param preserveMemory Whether to preserve memory-related messages in the history.
  */
 public suspend fun AIAgentLLMWriteSession.replaceHistoryWithTLDR(
-    strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
+    strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.CompressWholeHistory,
     preserveMemory: Boolean = true
 ) {
     // Store memory-related messages if needed
