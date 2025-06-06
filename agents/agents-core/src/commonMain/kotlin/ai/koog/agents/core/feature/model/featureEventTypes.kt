@@ -1,6 +1,5 @@
 package ai.koog.agents.core.feature.model
 
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureEvent
