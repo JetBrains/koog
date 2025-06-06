@@ -301,7 +301,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall = { tool, arguments ->
+            onToolCall { tool, arguments ->
                 println(
                     "Calling tool ${tool.name} with arguments ${
                         arguments.toString().lines().first().take(100)
@@ -309,7 +309,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 )
             }
 
-            onAgentFinished = { _, _ ->
+            onAgentFinished { _, _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -363,7 +363,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
         val fs = MockFileSystem()
         var errorMessage: String? = null
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall = { tool, arguments ->
+            onToolCall { tool, arguments ->
                 println(
                     "Calling tool ${tool.name} with arguments ${
                         arguments.toString().lines().first().take(100)
@@ -371,7 +371,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 )
             }
 
-            onAgentFinished = { _, _ ->
+            onAgentFinished { _, _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -615,7 +615,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall = { tool, arguments ->
+            onToolCall { tool, arguments ->
                 println(
                     "Calling tool ${tool.name} with arguments ${
                         arguments.toString().lines().first().take(100)
@@ -623,7 +623,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 )
             }
 
-            onAgentFinished = { _, _ ->
+            onAgentFinished { _, _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -640,7 +640,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall = { tool, arguments ->
+            onToolCall { tool, arguments ->
                 println(
                     "Calling tool ${tool.name} with arguments ${
                         arguments.toString().lines().first().take(100)
@@ -648,7 +648,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 )
             }
 
-            onAgentFinished = { _, _ ->
+            onAgentFinished { _, _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -714,11 +714,11 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 },
                 installFeatures = {
                     install(EventHandler) {
-                        onAgentRunError = { _, _, e ->
+                        onAgentRunError { _, _, e ->
                             println("error: ${e.javaClass.simpleName}(${e.message})\n${e.stackTraceToString()}")
                             true
                         }
-                        onToolCall = { tool, arguments ->
+                        onToolCall { tool, arguments ->
                             println(
                                 "Calling tool ${tool.name} with arguments ${
                                     arguments.toString().lines().first().take(100)

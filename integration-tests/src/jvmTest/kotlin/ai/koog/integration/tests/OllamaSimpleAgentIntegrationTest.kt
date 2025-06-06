@@ -25,57 +25,57 @@ class OllamaSimpleAgentIntegrationTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onBeforeAgentStarted = { strategy, agent ->
+        onBeforeAgentStarted { strategy, agent ->
             println("Agent started: strategy=${strategy.javaClass.simpleName}, agent=${agent.javaClass.simpleName}")
         }
 
-        onAgentFinished = { strategyName, result ->
+        onAgentFinished { strategyName, result ->
             println("Agent finished: strategy=$strategyName, result=$result")
         }
 
-        onAgentRunError = { strategyName, sessionUuid, throwable ->
+        onAgentRunError { strategyName, sessionUuid, throwable ->
             println("Agent error: strategy=$strategyName, error=${throwable.message}")
         }
 
-        onStrategyStarted = { strategy ->
+        onStrategyStarted { strategy ->
             println("Strategy started: ${strategy.name}")
         }
 
-        onStrategyFinished = { strategy, result ->
+        onStrategyFinished { strategy, result ->
             println("Strategy finished: strategy=${strategy.name}, result=$result")
         }
 
-        onBeforeNode = { node, context, input ->
+        onBeforeNode { node, context, input ->
             println("Before node: node=${node.javaClass.simpleName}, input=$input")
         }
 
-        onAfterNode = { node, context, input, output ->
+        onAfterNode { node, context, input, output ->
             println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
         }
 
-        onBeforeLLMCall = { prompt, tools, model, sessionUuid ->
+        onBeforeLLMCall { prompt, tools, model, sessionUuid ->
             println("Before LLM call: prompt=$prompt")
         }
 
-        onAfterLLMCall = { prompt, tools, model, responses, sessionUuid ->
+        onAfterLLMCall { prompt, tools, model, responses, sessionUuid ->
             val lastResponse = responses.last().content
             println("After LLM call: response=${lastResponse.take(100)}${if (lastResponse.length > 100) "..." else ""}")
         }
 
-        onToolCall = { tool, args ->
+        onToolCall { tool, args ->
             println("Tool called: tool=${tool.name}, args=$args")
             actualToolCalls.add(tool.name)
         }
 
-        onToolValidationError = { tool, args, value ->
+        onToolValidationError { tool, args, value ->
             println("Tool validation error: tool=${tool.name}, args=$args, value=$value")
         }
 
-        onToolCallFailure = { tool, args, throwable ->
+        onToolCallFailure { tool, args, throwable ->
             println("Tool call failure: tool=${tool.name}, args=$args, error=${throwable.message}")
         }
 
-        onToolCallResult = { tool, args, result ->
+        onToolCallResult { tool, args, result ->
             println("Tool call result: tool=${tool.name}, args=$args, result=$result")
         }
     }

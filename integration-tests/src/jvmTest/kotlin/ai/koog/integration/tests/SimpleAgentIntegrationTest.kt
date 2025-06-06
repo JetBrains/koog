@@ -49,58 +49,58 @@ class SimpleAgentIntegrationTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onBeforeAgentStarted = { strategy, agent ->
+        onBeforeAgentStarted { strategy, agent ->
             println("Agent started: strategy=${strategy.javaClass.simpleName}, agent=${agent.javaClass.simpleName}")
         }
 
-        onAgentFinished = { strategyName, result ->
+        onAgentFinished { strategyName, result ->
             println("Agent finished: strategy=$strategyName, result=$result")
             results.add(result)
         }
 
-        onAgentRunError = { strategyName, sessionUuid, throwable ->
+        onAgentRunError { strategyName, sessionUuid, throwable ->
             println("Agent error: strategy=$strategyName, error=${throwable.message}")
             errors.add(throwable)
         }
 
-        onStrategyStarted = { strategy ->
+        onStrategyStarted { strategy ->
             println("Strategy started: ${strategy.javaClass.simpleName}")
         }
 
-        onStrategyFinished = { strategyName, result ->
+        onStrategyFinished { strategyName, result ->
             println("Strategy finished: strategy=$strategyName, result=$result")
         }
 
-        onBeforeNode = { node, context, input ->
+        onBeforeNode { node, context, input ->
             println("Before node: node=${node.javaClass.simpleName}, input=$input")
         }
 
-        onAfterNode = { node, context, input, output ->
+        onAfterNode { node, context, input, output ->
             println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
         }
 
-        onBeforeLLMCall = { prompt, tools, model, sessionUuid ->
+        onBeforeLLMCall { prompt, tools, model, sessionUuid ->
             println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
         }
 
-        onAfterLLMCall = { prompt, tools, model, responses, sessionUuid ->
+        onAfterLLMCall { prompt, tools, model, responses, sessionUuid ->
             println("After LLM call with tools: response=${responses.map { it.content.take(50) }}")
         }
 
-        onToolCall = { tool, args ->
+        onToolCall { tool, args ->
             println("Tool called: tool=${tool.name}, args=$args")
             actualToolCalls.add(tool.name)
         }
 
-        onToolValidationError = { tool, args, value ->
+        onToolValidationError { tool, args, value ->
             println("Tool validation error: tool=${tool.name}, args=$args, value=$value")
         }
 
-        onToolCallFailure = { tool, args, throwable ->
+        onToolCallFailure { tool, args, throwable ->
             println("Tool call failure: tool=${tool.name}, args=$args, error=${throwable.message}")
         }
 
-        onToolCallResult = { tool, args, result ->
+        onToolCallResult { tool, args, result ->
             println("Tool call result: tool=${tool.name}, args=$args, result=$result")
         }
     }

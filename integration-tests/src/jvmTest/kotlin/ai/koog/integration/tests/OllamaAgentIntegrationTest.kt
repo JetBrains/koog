@@ -146,7 +146,7 @@ class OllamaAgentIntegrationTest {
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
-                onToolCall = { tool, arguments ->
+                onToolCall { tool, arguments ->
                     println(
                         "Calling tool ${tool.name} with arguments ${
                             arguments.toString().lines().first().take(100)
@@ -154,20 +154,20 @@ class OllamaAgentIntegrationTest {
                     )
                 }
 
-                onBeforeLLMCall = { prompt, tools, model, uuid ->
+                onBeforeLLMCall { prompt, tools, model, uuid ->
                     val promptText = prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
                     val toolsText = tools.joinToString { it.name }
                     println("Prompt with tools:\n$promptText\nAvailable tools:\n$toolsText")
                     promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
                 }
 
-                onAfterLLMCall = { prompt, tools, model, responses, uuid ->
+                onAfterLLMCall { prompt, tools, model, responses, uuid ->
                     val responseText = "[${responses.joinToString { "${it.role.name}: ${it.content}" }}]"
                     println("LLM Call response: $responseText")
                     promptsAndResponses.add("RESPONSE: $responseText")
                 }
 
-                onAgentFinished = { _, _ ->
+                onAgentFinished { _, _ ->
                     println("Agent execution finished")
                 }
             }
