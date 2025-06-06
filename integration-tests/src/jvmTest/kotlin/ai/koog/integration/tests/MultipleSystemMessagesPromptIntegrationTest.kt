@@ -1,9 +1,9 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.utils.TestUtils.executeWithRetry
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -23,6 +23,7 @@ class MultipleSystemMessagesPromptIntegrationTest {
     private val anthropicApiKey = readTestAnthropicKeyFromEnv()
     private val googleApiKey = readTestGoogleAIKeyFromEnv()
 
+    @Retry(3)
     @Test
     fun integration_testMultipleSystemMessages() = runBlocking {
         val openAIClient = OpenAILLMClient(openAIApiKey)
@@ -46,9 +47,9 @@ class MultipleSystemMessagesPromptIntegrationTest {
         val modelAnthropic = AnthropicModels.Haiku_3_5
         val modelGemini = GoogleModels.Gemini2_0Flash
 
-        val responseOpenAI = executeWithRetry { executor.execute(prompt, modelOpenAI) }
-        val responseAnthropic = executeWithRetry { executor.execute(prompt, modelAnthropic) }
-        val responseGemini = executeWithRetry { executor.execute(prompt, modelGemini) }
+        val responseOpenAI = executor.execute(prompt, modelOpenAI)
+        val responseAnthropic = executor.execute(prompt, modelAnthropic)
+        val responseGemini = executor.execute(prompt, modelGemini)
 
         assertTrue(responseOpenAI.content.isNotEmpty(), "OpenAI response should not be empty")
         assertTrue(responseAnthropic.content.isNotEmpty(), "Anthropic response should not be empty")
