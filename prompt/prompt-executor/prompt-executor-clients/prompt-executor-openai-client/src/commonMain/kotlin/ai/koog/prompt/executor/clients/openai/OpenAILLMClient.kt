@@ -441,6 +441,9 @@ public open class OpenAILLMClient(
 
             is ToolParameterType.Object -> {
                 put("type", JsonPrimitive("object"))
+                type.additionalProperties?.let {
+                    put("additionalProperties", type.additionalProperties)
+                }
                 put("properties", buildJsonObject {
                     type.properties.forEach { property ->
                         put(property.name, buildJsonObject {
@@ -448,8 +451,7 @@ public open class OpenAILLMClient(
                             put("description", property.description)
                         })
                     }
-                }
-                )
+                })
             }
         }
     }

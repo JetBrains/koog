@@ -1,6 +1,7 @@
 package ai.koog.agents.mcp
 
 import ai.koog.agents.core.tools.ToolRegistry
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.plugins.sse.*
 import io.modelcontextprotocol.kotlin.sdk.Implementation
@@ -22,6 +23,8 @@ import kotlinx.io.buffered
  * 4. Registering the transformed tools in a ToolRegistry
  */
 public object McpToolRegistryProvider {
+    private val logger = KotlinLogging.logger (McpToolRegistryProvider::class.qualifiedName!!)
+
     /**
      * Default name for the MCP client when connecting to an MCP server.
      */
@@ -78,8 +81,12 @@ public object McpToolRegistryProvider {
         val sdkTools = mcpClient.listTools()?.tools.orEmpty()
         return ToolRegistry {
             sdkTools.forEach { sdkTool ->
-                val toolDescriptor = mcpToolParser.parse(sdkTool)
-                tool(McpTool(mcpClient, toolDescriptor))
+                try {
+                    val toolDescriptor = mcpToolParser.parse(sdkTool)
+                    tool(McpTool(mcpClient, toolDescriptor))
+                } catch (e: Throwable) {
+                    logger.error(e) { "Failed to parse descriptor parameters for tool: ${sdkTool.name}" }
+                }
             }
         }
     }

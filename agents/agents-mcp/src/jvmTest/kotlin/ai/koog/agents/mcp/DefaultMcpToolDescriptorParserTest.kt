@@ -8,6 +8,7 @@ import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class DefaultMcpToolDescriptorParserTest {
 
@@ -196,8 +197,117 @@ class DefaultMcpToolDescriptorParserTest {
     }
 
     @Test
-    fun `test error cases`() {
-        // Test case 1: Parameter type is missing
+    fun `test parsing enum parameter type`() {
+        // Create an SDK Tool with an enum parameter
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with enum parameter",
+            properties = buildJsonObject {
+                putJsonObject("enumParam") {
+                    put("type", "enum")
+                    put("description", "Enum parameter")
+                    putJsonArray("enum") {
+                        add("option1")
+                        add("option2")
+                        add("option3")
+                    }
+                }
+            },
+            required = listOf("enumParam")
+        )
+
+        // Parse the tool
+        val toolDescriptor = parser.parse(sdkTool)
+
+        // Verify the basic properties
+        assertEquals("test-tool", toolDescriptor.name)
+        assertEquals("A test tool with enum parameter", toolDescriptor.description)
+        assertEquals(1, toolDescriptor.requiredParameters.size)
+        assertEquals(0, toolDescriptor.optionalParameters.size)
+
+        // Verify the enum parameter
+        val enumParam = toolDescriptor.requiredParameters.first()
+        assertEquals("enumParam", enumParam.name)
+        assertEquals("Enum parameter", enumParam.description)
+        assertTrue(enumParam.type is ToolParameterType.Enum)
+
+        // Verify the enum values
+        val enumType = enumParam.type as ToolParameterType.Enum
+        val expectedOptions = arrayOf("option1", "option2", "option3")
+        assertEquals(expectedOptions.size, enumType.entries.size)
+        expectedOptions.forEachIndexed { index, option ->
+            assertEquals(option, enumType.entries[index])
+        }
+    }
+
+    @Test
+    fun `test parsing object parameter with additional properties`() {
+        // Create an SDK Tool with an object parameter that has additional properties
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with object parameter",
+            properties = buildJsonObject {
+                putJsonObject("objectParam") {
+                    put("type", "object")
+                    put("description", "Object parameter")
+                    putJsonObject("properties") {
+                        putJsonObject("name") {
+                            put("type", "string")
+                            put("description", "Name property")
+                        }
+                        putJsonObject("age") {
+                            put("type", "integer")
+                            put("description", "Age property")
+                        }
+                    }
+                    putJsonArray("required") {
+                        add("name")
+                    }
+                    putJsonObject("additionalProperties") {
+                        put("type", "string")
+                    }
+                }
+            },
+            required = listOf("objectParam")
+        )
+
+        // Parse the tool
+        val toolDescriptor = parser.parse(sdkTool)
+
+        // Verify the result
+        val expectedToolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool with object parameter",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "objectParam",
+                    description = "Object parameter",
+                    type = ToolParameterType.Object(
+                        properties = listOf(
+                            ToolParameterDescriptor(
+                                name = "name",
+                                description = "Object parameter",
+                                type = ToolParameterType.String
+                            ),
+                            ToolParameterDescriptor(
+                                name = "age",
+                                description = "Object parameter",
+                                type = ToolParameterType.Integer
+                            )
+                        ),
+                        requiredProperties = listOf("name"),
+                        additionalPropertiesType = ToolParameterType.String,
+                        additionalProperties = true
+                    )
+                )
+            ),
+            optionalParameters = emptyList()
+        )
+        assertEquals(expectedToolDescriptor, toolDescriptor)
+    }
+
+    @Test
+    fun `test parameter type is missing`() {
         val missingTypeToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
@@ -213,8 +323,10 @@ class DefaultMcpToolDescriptorParserTest {
         assertFailsWith<IllegalArgumentException>("Should fail when parameter type is missing") {
             parser.parse(missingTypeToolSdk)
         }
+    }
 
-        // Test case 2: Array items property is missing
+    @Test
+    fun `test array items property is missing`() {
         val missingArrayItemsToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
@@ -231,26 +343,31 @@ class DefaultMcpToolDescriptorParserTest {
         assertFailsWith<IllegalArgumentException>("Should fail when array items property is missing") {
             parser.parse(missingArrayItemsToolSdk)
         }
+    }
 
-        // Test case 3: Object properties property is missing
+    @Test
+    fun `test object without properties returns empty properties list`() {
         val missingObjectPropertiesToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",
             properties = buildJsonObject {
-                putJsonObject("invalidObjectParam") {
+                putJsonObject("objectParam") {
                     put("type", "object")
-                    put("description", "Invalid object parameter")
+                    put("description", "Object parameter without properties")
                     // Missing properties property
                 }
             },
             required = emptyList()
         )
 
-        assertFailsWith<IllegalArgumentException>("Should fail when object properties property is missing") {
-            parser.parse(missingObjectPropertiesToolSdk)
-        }
+        val toolDescriptor = parser.parse(missingObjectPropertiesToolSdk)
+        val objectParam = toolDescriptor.optionalParameters.first()
+        val objectType = objectParam.type as ToolParameterType.Object
+        assertEquals(emptyList(), objectType.properties, "Object without properties should have empty properties list")
+    }
 
-        // Test case 4: Parameter type is unsupported
+    @Test
+    fun `test parameter type is unsupported`() {
         val unsupportedTypeToolSdk = createSdkTool(
             name = "test-tool",
             description = "A test tool",

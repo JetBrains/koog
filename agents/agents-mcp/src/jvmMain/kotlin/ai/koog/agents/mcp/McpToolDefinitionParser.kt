@@ -3,12 +3,7 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.contains
+import kotlinx.serialization.json.*
 import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 
 /**
@@ -49,11 +44,8 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
     private fun parseParameterType(element: JsonObject): ToolParameterType {
         // Extract the type string from the JSON object
-        val typeStr = if ("type" in element) {
-            element.getValue("type").jsonPrimitive.content
-        } else {
-            throw IllegalArgumentException("Parameter type must have type property")
-        }
+        val typeStr = element["type"]?.jsonPrimitive?.content
+            ?: throw IllegalArgumentException("Parameter type must have type property")
 
         // Convert the type string to a ToolParameterType
         return when (typeStr.lowercase()) {
@@ -62,14 +54,15 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             "integer" -> ToolParameterType.Integer
             "number" -> ToolParameterType.Float
             "boolean" -> ToolParameterType.Boolean
+            "enum" -> ToolParameterType.Enum(
+                element.getValue("enum").jsonArray.map { it.jsonPrimitive.content }.toTypedArray()
+            )
 
             // Array type
             "array" -> {
-                val items = if ("items" in element) {
-                    element.getValue("items").jsonObject
-                } else {
-                    throw IllegalArgumentException("Array type parameters must have items property")
-                }
+                val items = element["items"]?.jsonObject
+                    ?: throw IllegalArgumentException("Array type parameters must have items property")
+
                 val itemType = parseParameterType(items)
 
                 ToolParameterType.List(itemsType = itemType)
@@ -77,16 +70,43 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
             // Object type
             "object" -> {
-                val properties = if ("properties" in element) {
-                    element.getValue("properties").jsonObject
+                val properties = element["properties"]?.let { properties ->
+                    val rawProperties = properties.jsonObject
+                    rawProperties.map { (name, property) ->
+                        // Description is optional
+                        val description = element["description"]?.jsonPrimitive?.content.orEmpty()
+                        ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
+                    }
+                } ?: emptyList()
+
+                val required = element["required"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
+
+
+                val additionalProperties = if ("additionalProperties" in element) {
+                    when (element.getValue("additionalProperties")) {
+                        is JsonPrimitive -> element.getValue("additionalProperties").jsonPrimitive.boolean
+                        is JsonObject -> true
+                        else -> null
+                    }
                 } else {
-                    throw IllegalArgumentException("Object type parameters must have properties property")
+                    null
                 }
 
-                ToolParameterType.Object(properties.map { (name, property) ->
-                    val description = element["description"]?.jsonPrimitive?.content.orEmpty()
-                    ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
-                })
+                val additionalPropertiesType = if ("additionalProperties" in element) {
+                    when (element.getValue("additionalProperties")) {
+                        is JsonObject -> parseParameterType(element.getValue("additionalProperties").jsonObject)
+                        else -> null
+                    }
+                } else {
+                    null
+                }
+
+                ToolParameterType.Object(
+                    properties = properties,
+                    requiredProperties = required,
+                    additionalPropertiesType = additionalPropertiesType,
+                    additionalProperties = additionalProperties
+                )
             }
 
             // Unsupported type
