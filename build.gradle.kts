@@ -54,7 +54,6 @@ plugins {
     alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
     alias(libs.plugins.kotlinx.kover)
-    application
 }
 
 allprojects {
