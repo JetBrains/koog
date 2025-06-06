@@ -43,14 +43,6 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
     public abstract val argsSerializer: KSerializer<TArgs>
 
     /**
-     * Encodes the given result of type TResult to its string representation for the LLM.s
-     *
-     * @param result The result object of type TResult to be encoded into a string.
-     * @return The string representation of the given result.
-     */
-    public open fun encodeResultToString(result: TResult): String = result.toStringDefault()
-
-    /**
      * Provides a descriptor detailing the tool's metadata, including its name,
      * description, and parameter requirements. This property defines the structure
      * and characteristics of the tool, offering an overview of its functionality
@@ -135,37 +127,15 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
      * @suppress
      */
     @InternalAgentToolsApi
-    internal suspend fun execute(args: TArgs, enabler: DirectToolCallsEnabler): TResult = execute(args)
-
+    public suspend fun execute(args: TArgs, enabler: DirectToolCallsEnabler): TResult = execute(args)
 
     /**
-     * Executes the tool with the provided arguments and enabler, and serializes the result to a string.
+     * Decodes the provided raw JSON arguments into an instance of the specified arguments type.
      *
-     *  Tool calls must not be performed directly by a user as this might cause issues
-     * and side-effects, such as:
-     * - Missing EventHandler events
-     * - Bugs with feature pipelines
-     * - Inability to test/mock
-     * - And other potential problems
-     *
-     * For this reason, all tools should be called using the environment context.
-     * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a
-     * `SafeTool`, and then call `execute` on it. This ensures that the tool call is
-     * delegated properly to the underlying `environment` object.
-
-     *
-     * @param args The input arguments of type TArgs, required for the execution of the tool.
-     * @param enabler An instance of DirectToolCallsEnabler that ensures the execution is controlled within the proper context.
-     * @return A pair containing the result of the tool's execution as an instance of TResult and its stringified representation.
-     *
-     * @suppress
+     * @param rawArgs the raw JSON object that contains the encoded arguments
+     * @return the decoded arguments of type TArgs
      */
-    @InternalAgentToolsApi
-    public suspend fun executeAndSerialize(args: TArgs, enabler: DirectToolCallsEnabler): Pair<TResult, String> {
-        val result = execute(args, enabler)
-        val stringified = encodeResultToString(result)
-        return result to stringified
-    }
+    public fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(argsSerializer, rawArgs)
 
     /**
      * Encodes the given arguments into a JSON representation.
@@ -184,21 +154,12 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
     public fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(argsSerializer, args)
 
     /**
-     * Decodes the provided raw JSON arguments into an instance of the specified arguments type.
+     * Encodes the given result of type TResult to its string representation for the LLM.s
      *
-     * @param rawArgs the raw JSON object that contains the encoded arguments
-     * @return the decoded arguments of type TArgs
+     * @param result The result object of type TResult to be encoded into a string.
+     * @return The string representation of the given result.
      */
-    public fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(argsSerializer, rawArgs)
-
-    /**
-     * Decodes a raw string representation of arguments into the corresponding object of type TArgs.
-     *
-     * @param rawArgs The raw string containing the encoded arguments.
-     * @return The decoded arguments as an instance of type TArgs.
-     */
-    public fun decodeArgsFromString(rawArgs: String): TArgs = ToolJson.decodeFromString(argsSerializer, rawArgs)
-
+    public open fun encodeResultToString(result: TResult): String = result.toStringDefault()
 
     /**
      * Encodes the provided result object into a JSON string representation without type safety checks.

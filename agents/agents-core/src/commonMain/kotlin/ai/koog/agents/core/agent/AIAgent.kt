@@ -319,9 +319,9 @@ public open class AIAgent(
             pipeline.onToolCall(tool = tool, toolArgs = toolArgs)
 
             // Tool Execution
-            val (toolResult, serializedResult) = try {
+            val toolResult = try {
                 @Suppress("UNCHECKED_CAST")
-                (tool as Tool<ToolArgs, ToolResult>).executeAndSerialize(toolArgs, toolEnabler)
+                (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
 
                 pipeline.onToolValidationError(tool = tool, toolArgs = toolArgs, error = e.message)

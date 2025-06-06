@@ -309,7 +309,7 @@ public inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIA
                     // The only workaround is to generate it
                     user(
                         "Tool call: ${tool.name} was explicitly called with args: ${
-                            tool.encodeArgsToString(toolArgs)
+                            tool.encodeArgs(toolArgs)
                         }"
                     )
                 }

@@ -35,7 +35,7 @@ public class ToolCondition<Args : ToolArgs, Result : ToolResult>(
      * @return True if the tool name matches and the arguments satisfy the condition
      */
     internal suspend fun satisfies(toolCall: Message.Tool.Call) =
-        tool.name == toolCall.tool && argsCondition(tool.decodeArgsFromString(toolCall.content))
+        tool.name == toolCall.tool && argsCondition(tool.decodeArgs(toolCall.contentJson))
 
     /**
      * Invokes the tool with the arguments from the tool call.
@@ -44,7 +44,7 @@ public class ToolCondition<Args : ToolArgs, Result : ToolResult>(
      * @return The result produced by the tool
      */
     internal suspend fun invoke(toolCall: Message.Tool.Call) =
-        produceResult(tool.decodeArgsFromString(toolCall.content))
+        produceResult(tool.decodeArgs(toolCall.contentJson))
 
     /**
      * Invokes the tool and serializes the result.
@@ -53,7 +53,7 @@ public class ToolCondition<Args : ToolArgs, Result : ToolResult>(
      * @return A pair of the result object and its serialized string representation
      */
     internal suspend fun invokeAndSerialize(toolCall: Message.Tool.Call): Pair<Result, String> {
-        val toolResult = produceResult(tool.decodeArgsFromString(toolCall.content))
+        val toolResult = produceResult(tool.decodeArgs(toolCall.contentJson))
         return toolResult to tool.encodeResultToString(toolResult)
     }
 }

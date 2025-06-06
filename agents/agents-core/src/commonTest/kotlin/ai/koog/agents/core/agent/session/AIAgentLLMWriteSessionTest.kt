@@ -38,7 +38,7 @@ class AIAgentLLMWriteSessionTest {
         override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
             return toolCalls.map { toolCall ->
                 val tool = toolRegistry.getTool(toolCall.tool)
-                val args = tool.decodeArgsFromString(toolCall.content)
+                val args = tool.decodeArgs(toolCall.contentJson)
                 val result = tool.executeUnsafe(args, TestToolsEnabler)
 
                 ReceivedToolResult(
