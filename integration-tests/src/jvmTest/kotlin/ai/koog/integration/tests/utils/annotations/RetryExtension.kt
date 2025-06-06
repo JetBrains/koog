@@ -12,20 +12,22 @@ class RetryExtension : TestExecutionExceptionHandler {
         private const val GOOGLE_429_ERROR = "Error from GoogleAI API: 429 Too Many Requests"
         private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
         private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
+        private const val ANTHROPIC_502_ERROR = "Error from Anthropic API: 502 Bad Gateway"
     }
 
-    private fun isGoogleSideError(e: Throwable): Boolean {
+    private fun isThirdSideError(e: Throwable): Boolean {
         return e.message?.contains(GOOGLE_429_ERROR) == true
                 || e.message?.contains(GOOGLE_500_ERROR) == true
                 || e.message?.contains(GOOGLE_503_ERROR) == true
                 || e.message?.contains(GOOGLE_API_ERROR) == true
+                || e.message?.contains(ANTHROPIC_502_ERROR) == true
     }
 
     override fun handleTestExecutionException(
         context: ExtensionContext,
         throwable: Throwable
     ) {
-        if (isGoogleSideError(throwable)) {
+        if (isThirdSideError(throwable)) {
             println("[DEBUG_LOG] Google-side known error detected: ${throwable.message}")
             assumeTrue(false, "Skipping test due to ${throwable.message}")
             return
