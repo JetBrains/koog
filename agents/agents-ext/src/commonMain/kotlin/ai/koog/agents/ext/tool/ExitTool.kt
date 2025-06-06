@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  */
 public object ExitTool : SimpleTool<ExitTool.Args>() {
     @Serializable
-    public data class Args(val message: String) : Tool.Args
+    public data class Args(val message: String) : ToolArgs
 
     override suspend fun doExecute(args: Args): String {
         return "DONE"

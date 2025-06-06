@@ -76,9 +76,9 @@ The SimpleAPI provides the following built-in tools:
 You can create custom tools by extending the `SimpleTool` class:
 
 ```kotlin
-object CalculatorTool : SimpleTool<CalculatorTool.Args>() {
+object CalculatorTool : SimpleTool<CalculatorToolArgs>() {
     @Serializable
-    data class Args(val expression: String) : Tool.Args
+    data class Args(val expression: String) : ToolArgs
 
     override val argsSerializer = Args.serializer()
 
@@ -138,9 +138,9 @@ val agent = AIAgent(
 ## Example: Creating a Code Assistant
 
 ```kotlin
-object GenerateCodeTool : SimpleTool<GenerateCodeTool.Args>() {
+object GenerateCodeTool : SimpleTool<GenerateCodeToolArgs>() {
     @Serializable
-    data class Args(val language: String, val task: String) : Tool.Args
+    data class Args(val language: String, val task: String) : ToolArgs
 
     override val argsSerializer = Args.serializer()
 

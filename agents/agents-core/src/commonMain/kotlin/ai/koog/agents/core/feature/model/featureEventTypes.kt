@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.model
 
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
@@ -97,14 +97,14 @@ public data class LLMCallEndEvent(
 @Serializable
 public data class ToolCallEvent(
     val toolName: String,
-    val toolArgs: Tool.Args,
+    val toolArgs: ToolArgs,
     override val eventId: String = ToolCallEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 @Serializable
 public data class ToolValidationErrorEvent(
     val toolName: String,
-    val toolArgs: Tool.Args,
+    val toolArgs: ToolArgs,
     val errorMessage: String,
     override val eventId: String = ToolValidationErrorEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -112,7 +112,7 @@ public data class ToolValidationErrorEvent(
 @Serializable
 public data class ToolCallFailureEvent(
     val toolName: String,
-    val toolArgs: Tool.Args,
+    val toolArgs: ToolArgs,
     val error: AIAgentError,
     override val eventId: String = ToolCallFailureEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -120,7 +120,7 @@ public data class ToolCallFailureEvent(
 @Serializable
 public data class ToolCallResultEvent(
     val toolName: String,
-    val toolArgs: Tool.Args,
+    val toolArgs: ToolArgs,
     val result: ToolResult?,
     override val eventId: String = ToolCallResultEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()

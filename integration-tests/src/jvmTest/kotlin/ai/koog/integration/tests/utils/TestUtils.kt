@@ -41,7 +41,7 @@ internal object TestUtils {
         val operation: CalculatorOperation,
         val a: Int,
         val b: Int
-    ) : Tool.Args
+    ) : ToolArgs
 
     object CalculatorTool : SimpleTool<CalculatorArgs>() {
         override val argsSerializer = CalculatorArgs.serializer()

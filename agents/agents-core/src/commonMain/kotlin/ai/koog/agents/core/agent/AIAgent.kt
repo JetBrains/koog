@@ -304,9 +304,9 @@ public open class AIAgent(
             pipeline.onToolCall(tool = tool, toolArgs = toolArgs)
 
             // Tool Execution
-            val (toolResult, serializedResult) = try {
+            val toolResult = try {
                 @Suppress("UNCHECKED_CAST")
-                (tool as Tool<Tool.Args, ToolResult>).executeAndSerialize(toolArgs, toolEnabler)
+                (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
 
                 pipeline.onToolValidationError(tool = tool, toolArgs = toolArgs, error = e.message)
@@ -342,7 +342,7 @@ public open class AIAgent(
                 toolCallId = content.toolCallId,
                 toolName = content.toolName,
                 agentId = strategy.name,
-                message = serializedResult,
+                message = toolResult.toStringDefault(),
                 result = toolResult
             )
         }

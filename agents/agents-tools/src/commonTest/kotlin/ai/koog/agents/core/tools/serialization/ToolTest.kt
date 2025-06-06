@@ -22,30 +22,30 @@ object Enabler: DirectToolCallsEnabler
 class ToolTest {
     // Unstructured tool
 
-    private object UnstructuredTool : SimpleTool<Tool.EmptyArgs>() {
-        override val argsSerializer = EmptyArgs.serializer()
+    private object UnstructuredTool : SimpleTool<ToolArgs.Empty>() {
+        override val argsSerializer = ToolArgs.Empty.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "unstructured_tool",
             description = "Unstructured tool"
         )
 
-        override suspend fun doExecute(args: EmptyArgs): String = "Simple result"
+        override suspend fun doExecute(args: ToolArgs.Empty): String = "Simple result"
     }
 
     @Test
     fun testSimpleUnstructuredToolSerialization() = runTest {
         val args = JsonObject(emptyMap())
-        val (_, result) = UnstructuredTool.executeAndSerialize(UnstructuredTool.decodeArgs(args), Enabler)
+        val result = UnstructuredTool.execute(UnstructuredTool.decodeArgs(args), Enabler)
 
-        assertEquals("Simple result", result)
+        assertEquals("Simple result", result.toStringDefault())
     }
 
     // Structured tool
 
     private object SampleStructuredTool : Tool<SampleStructuredTool.Args, SampleStructuredTool.Result>(){
         @Serializable
-        data class Args(val arg1: String, val arg2: Int) : Tool.Args
+        data class Args(val arg1: String, val arg2: Int) : ToolArgs
 
         @Serializable
         data class Result(val first: String, val second: Int) : ToolResult {
@@ -80,12 +80,12 @@ class ToolTest {
             put("arg1", "argument")
             put("arg2", 15)
         }
-        val (_, result) = SampleStructuredTool.executeAndSerialize(SampleStructuredTool.decodeArgs(args), Enabler)
+        val result = SampleStructuredTool.execute(SampleStructuredTool.decodeArgs(args), Enabler)
 
         assertEquals(
             //language=JSON
             expected = """{"first":"result","second":1}""",
-            actual = result
+            actual = result.toStringDefault()
         )
     }
 
@@ -105,20 +105,20 @@ class ToolTest {
         }
     }
 
-    private object CustomFormatTool : Tool<Tool.EmptyArgs, CustomFormatTool.Result>() {
+    private object CustomFormatTool : Tool<ToolArgs.Empty, CustomFormatTool.Result>() {
         @Serializable
         data class Result(val foo: String, val bar: String) : ToolResult {
             override fun toStringDefault(): String = "Foo: $foo | Bar: $bar"
         }
 
-        override val argsSerializer = EmptyArgs.serializer()
+        override val argsSerializer = ToolArgs.Empty.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "custom_format_tool",
             description = "Custom format tool",
         )
 
-        override suspend fun execute(args: EmptyArgs): Result {
+        override suspend fun execute(args: ToolArgs.Empty): Result {
             return Result("first result", "second result")
         }
     }
@@ -126,7 +126,7 @@ class ToolTest {
     @Test
     fun testCustomFormatToolSerialization() = runTest {
         val args = JsonObject(emptyMap())
-        val (_, result) = CustomFormatTool.executeAndSerialize(CustomFormatTool.decodeArgs(args), Enabler)
-        assertEquals("Foo: first result | Bar: second result", result)
+        val result = CustomFormatTool.execute(CustomFormatTool.decodeArgs(args), Enabler)
+        assertEquals("Foo: first result | Bar: second result", result.toStringDefault())
     }
 }

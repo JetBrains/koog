@@ -97,7 +97,7 @@ internal class MockEnvironment(
         }
         val tool = toolRegistry.getTool(functionCall.tool)
 
-        val args = tool.decodeArgsFromString(functionCall.content)
+        val args = tool.decodeArgs(functionCall.contentJson)
         val result = tool.executeUnsafe(args, MockToolsEnabler)
 
 

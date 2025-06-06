@@ -7,6 +7,7 @@ import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.executeTool
 import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.structure.StructuredData
@@ -295,7 +296,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
  * @param tool The tool to execute.
  * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
  */
-public inline fun <reified ToolArg : Tool.Args, reified TResult : ToolResult> AIAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
+public inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
     name: String? = null,
     tool: Tool<ToolArg, TResult>,
     doUpdatePrompt: Boolean = true
@@ -308,7 +309,7 @@ public inline fun <reified ToolArg : Tool.Args, reified TResult : ToolResult> AI
                     // The only workaround is to generate it
                     user(
                         "Tool call: ${tool.name} was explicitly called with args: ${
-                            tool.encodeArgsToString(toolArgs)
+                            tool.encodeArgs(toolArgs)
                         }"
                     )
                 }

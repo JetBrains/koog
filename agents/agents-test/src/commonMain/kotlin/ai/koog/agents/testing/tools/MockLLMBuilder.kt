@@ -1,6 +1,7 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -22,7 +23,7 @@ import kotlinx.datetime.Clock
  * @property argsCondition A function that determines if the tool call matches this condition
  * @property produceResult A function that produces the result when the condition is satisfied
  */
-public class ToolCondition<Args : Tool.Args, Result : ToolResult>(
+public class ToolCondition<Args : ToolArgs, Result : ToolResult>(
     public val tool: Tool<Args, Result>,
     public val argsCondition: suspend (Args) -> Boolean,
     public val produceResult: suspend (Args) -> Result
@@ -34,7 +35,7 @@ public class ToolCondition<Args : Tool.Args, Result : ToolResult>(
      * @return True if the tool name matches and the arguments satisfy the condition
      */
     internal suspend fun satisfies(toolCall: Message.Tool.Call) =
-        tool.name == toolCall.tool && argsCondition(tool.decodeArgsFromString(toolCall.content))
+        tool.name == toolCall.tool && argsCondition(tool.decodeArgs(toolCall.contentJson))
 
     /**
      * Invokes the tool with the arguments from the tool call.
@@ -43,7 +44,7 @@ public class ToolCondition<Args : Tool.Args, Result : ToolResult>(
      * @return The result produced by the tool
      */
     internal suspend fun invoke(toolCall: Message.Tool.Call) =
-        produceResult(tool.decodeArgsFromString(toolCall.content))
+        produceResult(tool.decodeArgs(toolCall.contentJson))
 
     /**
      * Invokes the tool and serializes the result.
@@ -52,7 +53,7 @@ public class ToolCondition<Args : Tool.Args, Result : ToolResult>(
      * @return A pair of the result object and its serialized string representation
      */
     internal suspend fun invokeAndSerialize(toolCall: Message.Tool.Call): Pair<Result, String> {
-        val toolResult = produceResult(tool.decodeArgsFromString(toolCall.content))
+        val toolResult = produceResult(tool.decodeArgs(toolCall.contentJson))
         return toolResult to tool.encodeResultToString(toolResult)
     }
 }
@@ -130,7 +131,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args : Tool.Args> addLLMAnswerExactPattern(llmAnswer: String, tool: Tool<Args, *>, args: Args) {
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(llmAnswer: String, tool: Tool<Args, *>, args: Args) {
         toolCallExactMatches[llmAnswer] = tool.encodeArgsToString(args).let { toolContent ->
             Message.Tool.Call(
                 id = null,
@@ -148,7 +149,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param argsCondition A function that determines if the tool call arguments match this action
      * @param action A function that produces the result when the condition is satisfied
      */
-    public fun <Args : Tool.Args, Result : ToolResult> addToolAction(
+    public fun <Args : ToolArgs, Result : ToolResult> addToolAction(
         tool: Tool<Args, Result>,
         argsCondition: suspend (Args) -> Boolean = { true },
         action: suspend (Args) -> Result
@@ -166,7 +167,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param args The arguments to pass to the tool
      * @return A [ToolCallReceiver] for further configuration
      */
-    public fun <Args : Tool.Args> mockLLMToolCall(tool: Tool<Args, *>, args: Args): ToolCallReceiver<Args> {
+    public fun <Args : ToolArgs> mockLLMToolCall(tool: Tool<Args, *>, args: Args): ToolCallReceiver<Args> {
         return ToolCallReceiver(tool, args, this)
     }
 
@@ -179,7 +180,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be mocked
      * @return A [MockToolReceiver] for further configuration
      */
-    public fun <Args : Tool.Args, Result : ToolResult> mockTool(tool: Tool<Args, Result>): MockToolReceiver<Args, Result> {
+    public fun <Args : ToolArgs, Result : ToolResult> mockTool(tool: Tool<Args, Result>): MockToolReceiver<Args, Result> {
         return MockToolReceiver(tool, this)
     }
 
@@ -227,7 +228,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @property args The arguments to pass to the tool
      * @property builder The parent MockLLMBuilder instance
      */
-    public class ToolCallReceiver<Args : Tool.Args>(
+    public class ToolCallReceiver<Args : ToolArgs>(
         private val tool: Tool<Args, *>,
         private val args: Args,
         private val builder: MockLLMBuilder
@@ -258,7 +259,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @property tool The tool to be mocked
      * @property builder The parent MockLLMBuilder instance
      */
-    public class MockToolReceiver<Args : Tool.Args, Result : ToolResult>(
+    public class MockToolReceiver<Args : ToolArgs, Result : ToolResult>(
         internal val tool: Tool<Args, Result>,
         internal val builder: MockLLMBuilder
     ) {
@@ -274,7 +275,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
          * @property action A function that produces the result
          * @property builder The parent MockLLMBuilder instance
          */
-        public class MockToolResponseBuilder<Args : Tool.Args, Result : ToolResult>(
+        public class MockToolResponseBuilder<Args : ToolArgs, Result : ToolResult>(
             private val tool: Tool<Args, Result>,
             private val action: suspend () -> Result,
             private val builder: MockLLMBuilder
@@ -341,7 +342,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param response The string to return
      * @return The result of the alwaysReturns call
      */
-    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.alwaysReturns(response: String): Unit =
+    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.alwaysReturns(response: String): Unit =
         alwaysReturns(ToolResult.Text(response))
 
     /**
@@ -351,7 +352,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param action A function that produces the string result
      * @return The result of the alwaysDoes call
      */
-    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(action: suspend () -> String): Unit =
+    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(action: suspend () -> String): Unit =
         alwaysDoes { ToolResult.Text(action()) }
 
     /**
@@ -361,7 +362,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param action A function that produces the string result
      * @return The result of the does call
      */
-    public infix fun <Args : Tool.Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String): MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
+    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String): MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
         does { ToolResult.Text(action()) }
 
     /**
