@@ -55,12 +55,14 @@ import kotlin.uuid.Uuid
  * This determines which Anthropic model versions are used for operations.
  * @property baseUrl The base URL for accessing the Anthropic API. Defaults to "https://api.anthropic.com".
  * @property apiVersion The version of the Anthropic API to be used. Defaults to "2023-06-01".
+ * @property messagesPath The path of the Anthropic Messages API. Defaults to "v1/messages".
  */
 public class AnthropicClientSettings(
     public val modelVersionsMap: Map<LLModel, String> = DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP,
     public val baseUrl: String = "https://api.anthropic.com",
     public val apiVersion: String = "2023-06-01",
-    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val messagesPath: String = "v1/messages"
 )
 
 /**
@@ -85,8 +87,6 @@ public open class AnthropicLLMClient(
 
     private companion object {
         private val logger = KotlinLogging.logger { }
-
-        private const val DEFAULT_MESSAGE_PATH = "v1/messages"
     }
 
     private val json = Json {
@@ -127,7 +127,7 @@ public open class AnthropicLLMClient(
         val request = createAnthropicRequest(prompt, tools, model, false)
 
         return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(DEFAULT_MESSAGE_PATH) {
+            val response = httpClient.post(settings.messagesPath) {
                 setBody(request)
             }
 
@@ -153,7 +153,7 @@ public open class AnthropicLLMClient(
         return flow {
             try {
                 httpClient.sse(
-                    urlString = DEFAULT_MESSAGE_PATH,
+                    urlString = settings.messagesPath,
                     request = {
                         method = HttpMethod.Post
                         accept(ContentType.Text.EventStream)

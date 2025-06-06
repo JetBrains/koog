@@ -51,14 +51,20 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * Configuration settings for the Google AI client.
+ * A configuration class used to define settings for a Google API client.
  *
- * @property baseUrl The base URL for the Google AI API.
- * @property timeoutConfig Timeout configuration for API requests.
+ * @property baseUrl The base URL of the Google API service. Defaults to "https://generativelanguage.googleapis.com".
+ * @property timeoutConfig Configuration for various timeout settings, such as request, connection, and socket timeouts. Defaults to values specified in `ConnectionTimeoutConfig`.
+ * @property path The default API path used for endpoints. Defaults to "v1beta/models".
+ * @property methodGenerateContent The default method name for generating content through the API. Defaults to "generateContent".
+ * @property methodStreamGenerateContent The default method name for streaming generated content from the API. Defaults to "streamGenerateContent".
  */
 public class GoogleClientSettings(
     public val baseUrl: String = "https://generativelanguage.googleapis.com",
-    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val path: String = "v1beta/models",
+    public val methodGenerateContent: String = "generateContent",
+    public val methodStreamGenerateContent: String = "streamGenerateContent",
 )
 
 /**
@@ -81,10 +87,6 @@ public open class GoogleLLMClient(
 
     private companion object {
         private val logger = KotlinLogging.logger { }
-
-        private const val DEFAULT_PATH = "v1beta/models"
-        private const val DEFAULT_METHOD_GENERATE_CONTENT = "generateContent"
-        private const val DEFAULT_METHOD_STREAM_GENERATE_CONTENT = "streamGenerateContent"
     }
 
     private val json = Json {
@@ -123,7 +125,7 @@ public open class GoogleLLMClient(
         val request = createGoogleRequest(prompt, model, tools)
 
         return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post("$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_GENERATE_CONTENT") {
+            val response = httpClient.post("${settings.path}/${model.id}:${settings.methodGenerateContent}") {
                 setBody(request)
             }
 
@@ -149,7 +151,7 @@ public open class GoogleLLMClient(
         return flow {
             try {
                 httpClient.sse(
-                    urlString = "$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_STREAM_GENERATE_CONTENT",
+                    urlString = "${settings.path}/${model.id}:${settings.methodStreamGenerateContent}",
                     request = {
                         method = HttpMethod.Post
                         parameter("alt", "sse")

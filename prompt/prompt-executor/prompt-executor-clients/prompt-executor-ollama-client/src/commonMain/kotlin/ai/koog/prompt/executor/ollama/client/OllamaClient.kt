@@ -10,8 +10,8 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import io.github.oshai.kotlinlogging.KotlinLogging
 import ai.koog.prompt.message.ResponseMetaInfo
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -28,31 +28,68 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 
 /**
+ * Configuration settings for the OllamaClient.
+ *
+ * @property baseUrl The base URL for connecting to the Ollama server. Defaults to "http://localhost:11434".
+ * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ * @property messagePath The API endpoint path for sending chat messages. Defaults to "api/chat".
+ * @property embeddingsPath The API endpoint path for generating embeddings. Defaults to "api/embeddings".
+ * @property listModelsPath The API endpoint path for listing available models. Defaults to "api/tags".
+ * @property showModelPath The API endpoint path for showing detailed information about a specific model. Defaults to "api/show".
+ * @property pullModelPath The API endpoint path for pulling a model from the Ollama registry. Defaults to "api/pull".
+ */
+public class OllamaClientSettings(
+    public val baseUrl: String = "http://localhost:11434",
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val messagePath: String = "api/chat",
+    public val embeddingsPath: String = "api/embeddings",
+    public val listModelsPath: String = "api/tags",
+    public val showModelPath: String = "api/show",
+    public val pullModelPath: String = "api/pull"
+)
+
+/**
  * Client for interacting with the Ollama API with comprehensive model support.
  *
- * @param baseUrl The base URL of the Ollama server. Defaults to "http://localhost:11434".
+ * @param settings The base URL and timeouts for the Ollama API, defaults to http://localhost:11434" and 900 s, also provides a configuration for the API paths if non-default Ollama API is used
  * @param baseClient The underlying HTTP client used for making requests.
- * @param timeoutConfig Configuration for connection, request, and socket timeouts.
  * @param clock Clock instance used for tracking response metadata timestamps.
  * Implements:
  * - LLMClient for executing prompts and streaming responses.
  * - LLMEmbeddingProvider for generating embeddings from input text.
  */
 public class OllamaClient(
-    private val baseUrl: String = "http://localhost:11434",
+    private val settings: OllamaClientSettings,
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
-    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     private val clock: Clock = Clock.System
 ) : LLMClient, LLMEmbeddingProvider {
 
+    /**
+     * Constructor for `OllamaClient` to initialize the client with the specified base URL, HTTP client, timeout configurations,
+     * and clock.
+     *
+     * This constructor is deprecated and should be replaced by the `OllamaClient(settings, baseClient, clock)` constructor
+     * for improved flexibility and clarity.
+     *
+     * @param baseUrl The base URL for connecting to the Ollama server. Defaults to "http://localhost:11434".
+     * @param baseClient The `HttpClient` instance for executing HTTP requests. Uses the platform-specific engine by default.
+     * @param timeoutConfig Configuration settings for timeout durations, including request, connect, and socket timeouts.
+     * @param clock The clock instance used for time-related operations, defaults to `Clock.System`.
+     * @deprecated Use `OllamaClient(settings, baseClient, clock)` instead.
+     */
+    @Deprecated(
+        replaceWith = ReplaceWith("OllamaClient(settings, baseClient, clock)"),
+        message = "Use OllamaClient(settings, baseClient, clock) instead"
+    )
+    public constructor(
+        baseUrl: String = "http://localhost:11434",
+        baseClient: HttpClient = HttpClient(engineFactoryProvider()),
+        timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+        clock: Clock = Clock.System
+    ) : this(OllamaClientSettings(baseUrl, timeoutConfig), baseClient, clock)
+
     private companion object {
         private val logger = KotlinLogging.logger { }
-
-        private const val DEFAULT_MESSAGE_PATH = "api/chat"
-        private const val DEFAULT_EMBEDDINGS_PATH = "api/embeddings"
-        private const val DEFAULT_LIST_MODELS_PATH = "api/tags"
-        private const val DEFAULT_SHOW_MODEL_PATH = "api/show"
-        private const val DEFAULT_PULL_MODEL_PATH = "api/pull"
     }
 
     private val ollamaJson = Json {
@@ -62,16 +99,16 @@ public class OllamaClient(
 
     private val client = baseClient.config {
         defaultRequest {
-            url(baseUrl)
+            url(settings.baseUrl)
             contentType(ContentType.Application.Json)
         }
         install(ContentNegotiation) {
             json(ollamaJson)
         }
         install(HttpTimeout) {
-            requestTimeoutMillis = timeoutConfig.requestTimeoutMillis
-            connectTimeoutMillis = timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis = timeoutConfig.socketTimeoutMillis
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis
+            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
+            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
         }
     }
 
@@ -80,7 +117,7 @@ public class OllamaClient(
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response: OllamaChatResponseDTO = client.post(DEFAULT_MESSAGE_PATH) {
+        val response: OllamaChatResponseDTO = client.post(settings.messagePath) {
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
@@ -149,7 +186,7 @@ public class OllamaClient(
     ): Flow<String> = flow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
+        val response = client.post(settings.messagePath) {
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
@@ -195,7 +232,7 @@ public class OllamaClient(
             throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
         }
 
-        val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
+        val response = client.post(settings.embeddingsPath) {
             setBody(EmbeddingRequestDTO(model = model.id, prompt = text))
         }
 
@@ -258,19 +295,19 @@ public class OllamaClient(
     }
 
     private suspend fun listModels(): OllamaModelsListResponseDTO {
-        return client.get(DEFAULT_LIST_MODELS_PATH)
+        return client.get(settings.listModelsPath)
             .body<OllamaModelsListResponseDTO>()
     }
 
     private suspend fun showModel(name: String): OllamaShowModelResponseDTO {
-        return client.post(DEFAULT_SHOW_MODEL_PATH) {
+        return client.post(settings.showModelPath) {
             setBody(OllamaShowModelRequestDTO(name = name))
         }.body<OllamaShowModelResponseDTO>()
     }
 
     private suspend fun pullModel(name: String) {
         try {
-            val response = client.post(DEFAULT_PULL_MODEL_PATH) {
+            val response = client.post(settings.pullModelPath) {
                 setBody(OllamaPullModelRequestDTO(name = name, stream = false))
             }.body<OllamaPullModelResponseDTO>()
 
