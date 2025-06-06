@@ -67,8 +67,13 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
-      - name: JvmTest with Gradle Wrapper
+      - name: JvmTest with Gradle Wrapper and Kover coverage
+        if: matrix.os == 'ubuntu-latest'
         run: ./gradlew jvmTest :koverBinaryReport --continue
+
+      - name: JvmTest with Gradle Wrapper
+        if: matrix.os != 'ubuntu-latest'
+        run: ./gradlew jvmTest --continue
 
       - name: Create coverage-data directory and copy contents
         if: matrix.os == 'ubuntu-latest'
