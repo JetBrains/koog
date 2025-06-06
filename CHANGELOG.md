@@ -1,3 +1,14 @@
+# 0.2.1
+
+> Published 6 Jun 2025
+
+## Bug Fixes
+
+- Support MCP enum arg types and object additionalParameters (#214)
+- Allow appending handlers for the EventHandler feature (#234)
+- Migrating of simple agents to AIAgent constructor, simpleSingleRunAgent deprecation (#222)
+- Fix LLM clients after #195, make LLM request construction again more explicit in LLM clients (#229)
+
 # 0.2.0
 
 > Published 5 Jun 2025
