@@ -53,7 +53,7 @@ buildscript {
 plugins {
     alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
-    id("org.jetbrains.kotlinx.kover") version "0.7.3"
+    alias(libs.plugins.kotlinx.kover)
     application
 }
 
@@ -64,11 +64,6 @@ allprojects {
 }
 
 disableDistTasks()
-
-tasks.test {
-    finalizedBy(tasks.koverXmlReport)
-    finalizedBy(tasks.koverVerify) // you will find the report in build/kover/bin-reports
-}
 
 // Apply Kover to all subprojects
 subprojects {
@@ -198,32 +193,15 @@ dependencies {
     dokka(project(":prompt:prompt-xml"))
 }
 
-koverReport {
-    defaults {
-        // Enable binary reports
-        binary {
-            onCheck = true
-        }
-
-        // Configure XML report
-        xml {
-            onCheck = true
-        }
-
-        // Configure HTML report
-        html {
-            onCheck = true
-        }
-    }
-
-    filters {
-        includes {
-            packages("ai.koog.agents")
-            packages("ai.koog.agents.core.agent")
-            packages("ai.koog.agents.core.tools")
-            packages("ai.koog.agents.core.dsl")
-            packages("ai.koog.agents.core.dsl.builder")
-            packages("ai.koog.agents.core.utils")
+kover {
+    val excludedProjects = setOf(
+        ":integration-tests",
+        ":examples",
+        ":buildSrc"
+    )
+    merge {
+        subprojects {
+            it.path !in excludedProjects
         }
     }
 }
