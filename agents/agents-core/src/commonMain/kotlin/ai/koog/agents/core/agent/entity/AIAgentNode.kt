@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.coroutines.sync.Mutex
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -19,40 +18,24 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * to other nodes. Each edge defines the flow and transformation of output data
      * from this node to another.
      *
-     * The map is initially empty and can only be modified internally by using the
-     * [addEdge] function, which adds or replaces edges in the map.
+     * The list is initially empty and can only be modified internally by using the
+     * [addEdge] function, which appends new edges to the existing list.
      *
-     * @property edgesMap A map of [AIAgentEdge] describing the connections from this node
-     * to other nodes in the strategy graph. The key is a combination of toNode.name and forwardOutput reference.
+     * @property edges A list of [AIAgentEdge] describing the connections from this node
+     * to other nodes in the strategy graph.
      */
-    private val edgesMap: MutableMap<String, AIAgentEdge<Output, *>> = mutableMapOf()
-
-    /**
-     * Returns a list of all edges in this node.
-     */
-    public val edges: List<AIAgentEdge<Output, *>>
-        get() = edgesMap.values.toList()
-
+    public var edges: List<AIAgentEdge<Output, *>> = emptyList()
+        private set
 
     /**
      * Adds a directed edge from the current node, enabling connections between this node
      * and other nodes in the AI agent strategy graph.
      *
-     * If an edge with the same toNode.name and forwardOutput reference already exists,
-     * it will be replaced with the new edge.
-     *
      * @param edge The edge to be added, representing a connection from this node's output
      * to another node in the strategy graph.
      */
     public open fun addEdge(edge: AIAgentEdge<Output, *>) {
-        // Create a key based on toNode.name and forwardOutput reference hashCode
-        val key = edge.toNode.name
-
-        // TODO:
-        //  Not sure what to do with the old value before overwriting it with the new one.
-        //  if (edgesMap[key] != null) { }
-
-        edgesMap[key] = edge
+        edges = edges + edge
     }
 
     /**
