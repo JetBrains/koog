@@ -70,7 +70,7 @@ public class StructureParser(
 
                     h2("KEY PRINCIPLES")
                     bulleted {
-                        item("You MUST stick to the original data, make as less changes as possible to convert it into valid JSON.")
+                        item("You MUST stick to the original data, make as few changes as possible to convert it into valid JSON.")
                         item("Do not drop, alter or change any semantic data unless it is necessary to fit into JSON schema.")
                     }
 
