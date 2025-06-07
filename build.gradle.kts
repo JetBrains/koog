@@ -53,6 +53,7 @@ buildscript {
 plugins {
     alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
+    alias(libs.plugins.kotlinx.kover)
 }
 
 allprojects {
@@ -62,6 +63,11 @@ allprojects {
 }
 
 disableDistTasks()
+
+// Apply Kover to all subprojects
+subprojects {
+    apply(plugin = "org.jetbrains.kotlinx.kover")
+}
 
 subprojects {
     tasks.withType<Test> {
@@ -184,4 +190,17 @@ dependencies {
     dokka(project(":prompt:prompt-structure"))
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
+}
+
+kover {
+    val excludedProjects = setOf(
+        ":integration-tests",
+        ":examples",
+        ":buildSrc"
+    )
+    merge {
+        subprojects {
+            it.path !in excludedProjects
+        }
+    }
 }
