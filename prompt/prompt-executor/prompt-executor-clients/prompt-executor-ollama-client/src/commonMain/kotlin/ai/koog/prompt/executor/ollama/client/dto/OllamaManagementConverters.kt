@@ -34,6 +34,7 @@ private fun List<OllamaShowModelResponseDTO.Capability>.toLLMCapabilities(): Lis
             OllamaShowModelResponseDTO.Capability.EMBEDDING -> listOf(LLMCapability.Embed)
             OllamaShowModelResponseDTO.Capability.INSERT -> listOf()
             OllamaShowModelResponseDTO.Capability.VISION -> listOf(LLMCapability.Vision.Image)
+            OllamaShowModelResponseDTO.Capability.THINKING -> listOf()
             OllamaShowModelResponseDTO.Capability.TOOLS -> listOf(LLMCapability.Tools)
         }
     } + listOf(
