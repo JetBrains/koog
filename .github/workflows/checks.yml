@@ -115,6 +115,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'  # Popular OpenJDK distribution
 
+      # Download the coverage data artifact
+      - name: Download coverage data
+        uses: actions/download-artifact@v4
+        with:
+          name: gradle-coverage-data.zip
+          path: .qodana/code-coverage
+
       - name: 'Qodana Scan'
         uses: JetBrains/qodana-action@v2025.1
         with:
