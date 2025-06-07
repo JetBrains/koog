@@ -3,14 +3,10 @@
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
-import ai.koog.agents.core.agent.entity.AIAgentStateManager
-import ai.koog.agents.core.agent.entity.AIAgentStorage
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.utils.Some
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

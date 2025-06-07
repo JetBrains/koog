@@ -26,11 +26,7 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
         fromNode = this,
         toNode = otherNode,
         forwardOutputComposition = { _, output -> Some(output) }
-    ).apply {
-        @Suppress("UNCHECKED_CAST")
-        val edge = AIAgentEdgeBuilder(this as AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>).build()
-        fromNode.addEdge(edge)
-    }
+    )
 }
 
 public interface AIAgentNodeDelegateBase<Input, Output> {
