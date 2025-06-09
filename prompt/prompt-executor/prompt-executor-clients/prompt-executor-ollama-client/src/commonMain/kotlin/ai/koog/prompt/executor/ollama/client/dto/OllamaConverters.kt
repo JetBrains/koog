@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.ollama.client.dto
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
+import ai.koog.prompt.message.MediaContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -26,7 +27,9 @@ internal fun Prompt.toOllamaChatMessages(): List<OllamaChatMessageDTO> {
 
             is Message.User -> OllamaChatMessageDTO(
                 role = "user",
-                content = message.content
+                content = message.content,
+                images = message.mediaContent
+                    .filterIsInstance<MediaContent.Image>().map { it.toBase64() }.takeIf { it.isNotEmpty() },
             )
 
             is Message.Assistant -> OllamaChatMessageDTO(
