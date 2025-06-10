@@ -202,5 +202,14 @@ kover {
         subprojects {
             it.path !in excludedProjects
         }
+
     }
+    reports {
+        total {
+            binary {
+                file = file(".qodana/code-coverage/kover.ic")
+            }
+        }
+    }
+
 }

@@ -75,12 +75,6 @@ jobs:
         if: matrix.os != 'ubuntu-latest'
         run: ./gradlew jvmTest --continue
 
-      - name: Create coverage-data directory and copy contents
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          mkdir -p .qodana/code-coverage
-          cp -R build/reports/kover/* .qodana/code-coverage/
-
       - name: Archive coverage data
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
