@@ -17,6 +17,8 @@ public interface McpToolDescriptorParser {
  * Default implementation of [McpToolDescriptorParser].
  */
 public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
+    private const val MAX_DEPTH = 10
+
     /**
      * Parses an MCP SDK Tool definition into tool descriptor format.
      *
@@ -42,7 +44,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         )
     }
 
-    private fun parseParameterType(element: JsonObject): ToolParameterType {
+    private fun parseParameterType(element: JsonObject, depth: Int = 0 ): ToolParameterType {
         // Extract the type string from the JSON object
         val typeStr = element["type"]?.jsonPrimitive?.content
 
@@ -58,13 +60,13 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             //  "title": "Nullable string parameter"
             //}
             val anyOf = element["anyOf"]?.jsonArray
-            if (anyOf != null && anyOf.size == 2) {
+            if (depth  < MAX_DEPTH && anyOf != null && anyOf.size == 2) {
                 val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
                 if (types.contains("null")) {
                     val nonNullType = anyOf.first {
                         it.jsonObject["type"]?.jsonPrimitive?.content != "null"
                     }.jsonObject
-                    return parseParameterType(nonNullType)
+                    return parseParameterType(nonNullType, depth + 1)
                 }
             }
             val title =
