@@ -75,7 +75,7 @@ fun main(args: Array<String>) = runBlocking {
 
         // Define a node to select the best joke
         val nodeBestJoke by parallel(
-            nodes = listOf(nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus),
+            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
             reduce = { results ->
                 val context = results.map { it.second }
                 val jokes = results.map { it.third }
