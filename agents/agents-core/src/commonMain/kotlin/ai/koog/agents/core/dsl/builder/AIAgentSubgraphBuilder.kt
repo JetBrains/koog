@@ -109,7 +109,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      */
     public fun <Input, Output> parallel(
         nodes: List<AIAgentNodeBase<Input, Output>>,
-        reduce: suspend AIAgentContextBase.(List<Pair<AIAgentContextBase, Output>>) -> Pair<AIAgentContextBase, Output>,
+        reduce: suspend AIAgentContextBase.(List<Triple<String, AIAgentContextBase, Output>>) -> Pair<AIAgentContextBase, Output>,
         name: String? = null
     ): AIAgentNodeDelegateBase<Input, Output> {
         return AIAgentNodeDelegate(name, ParallelAIAgentNodeBuilder(nodes, reduce))
@@ -250,7 +250,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
 @OptIn(ExperimentalUuidApi::class)
 public class ParallelAIAgentNodeBuilder<Input, Output> internal constructor(
     private val nodes: List<AIAgentNodeBase<Input, Output>>,
-    private val reduce: suspend AIAgentContextBase.(List<Pair<AIAgentContextBase, Output>>) -> Pair<AIAgentContextBase, Output>,
+    private val reduce: suspend AIAgentContextBase.(List<Triple<String, AIAgentContextBase, Output>>) -> Pair<AIAgentContextBase, Output>,
 ) : AIAgentNodeBuilder<Input, Output>(
     execute = { input ->
         val initialContext: AIAgentContextBase = this
@@ -259,7 +259,7 @@ public class ParallelAIAgentNodeBuilder<Input, Output> internal constructor(
                 async {
                     val nodeContext = initialContext.copy()
                     val result = node.execute(nodeContext, input)
-                    nodeContext to result
+                    Triple(node.name, nodeContext, result)
                 }
             }
 

@@ -64,43 +64,45 @@ public class DummyAgentContext(
      */
     public val isEnvironmentDefined: Boolean = builder.environment != null
 
+    private var _environment: AIAgentEnvironment? = builder.environment
+    private var _agentInput: String? = builder.agentInput
+    private var _config: AIAgentConfigBase? = builder.config
+    private var _llm: AIAgentLLMContext? = builder.llm
+    private var _stateManager: AIAgentStateManager? = builder.stateManager
+    private var _storage: AIAgentStorage? = builder.storage
+    private var _sessionUuid: Uuid? = builder.sessionUuid
+    private var _strategyId: String? = builder.strategyId
+
+    @OptIn(InternalAgentsApi::class)
+    private var _pipeline: AIAgentPipeline = AIAgentPipeline()
+
     override val environment: AIAgentEnvironment
-        get() = builder.environment
-            ?: throw NotImplementedError("Environment is not mocked")
+        get() = _environment ?: throw NotImplementedError("Environment is not mocked")
 
     override val agentInput: String
-        get() = builder.agentInput
-            ?: throw NotImplementedError("Config is not mocked")
+        get() = _agentInput ?: throw NotImplementedError("Agent input is not mocked")
 
     override val config: AIAgentConfigBase
-        get() = builder.config
-            ?: throw NotImplementedError("Config is not mocked")
+        get() = _config ?: throw NotImplementedError("Config is not mocked")
 
     override val llm: AIAgentLLMContext
-        get() = builder.llm
-            ?: throw NotImplementedError("LLM is not mocked")
+        get() = _llm ?: throw NotImplementedError("LLM is not mocked")
 
     override val stateManager: AIAgentStateManager
-        get() = builder.stateManager
-            ?: throw NotImplementedError("State manager is not mocked")
+        get() = _stateManager ?: throw NotImplementedError("State manager is not mocked")
 
     override val storage: AIAgentStorage
-        get() = builder.storage
-            ?: throw NotImplementedError("Storage is not mocked")
+        get() = _storage ?: throw NotImplementedError("Storage is not mocked")
 
     override val sessionUuid: Uuid
-        get() = builder.sessionUuid
-            ?: throw NotImplementedError("Session UUID is not mocked")
+        get() = _sessionUuid ?: throw NotImplementedError("Session UUID is not mocked")
 
     override val strategyId: String
-        get() = builder.strategyId
-            ?: throw NotImplementedError("Strategy ID is not mocked")
+        get() = _strategyId ?: throw NotImplementedError("Strategy ID is not mocked")
 
-    /**
-     * @suppress
-     */
-    @InternalAgentsApi
-    override val pipeline: AIAgentPipeline = AIAgentPipeline()
+    @OptIn(InternalAgentsApi::class)
+    override val pipeline: AIAgentPipeline
+        get() = _pipeline
 
     override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? =
         throw NotImplementedError("feature() getting in runtime is not supported for mock")
@@ -132,7 +134,15 @@ public class DummyAgentContext(
     )
 
     override fun replaceWith(context: AIAgentContextBase) {
-        // TODO("Not yet implemented")
+        _environment = context.environment
+        _agentInput = context.agentInput
+        _config = context.config
+        _llm = context.llm
+        _stateManager = context.stateManager
+        _storage = context.storage
+        _sessionUuid = context.sessionUuid
+        _strategyId = context.strategyId
+        _pipeline = @OptIn(InternalAgentsApi::class) context.pipeline
     }
 }
 
