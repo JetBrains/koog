@@ -31,17 +31,57 @@ import kotlin.uuid.Uuid
  */
 @OptIn(ExperimentalUuidApi::class)
 internal class AIAgentContext(
-    override val environment: AIAgentEnvironment,
-    override val agentInput: String,
-    override val config: AIAgentConfigBase,
-    override val llm: AIAgentLLMContext,
-    override val stateManager: AIAgentStateManager,
-    override val storage: AIAgentStorage,
-    override val sessionUuid: Uuid,
-    override val strategyId: String,
+    environment: AIAgentEnvironment,
+    agentInput: String,
+    config: AIAgentConfigBase,
+    llm: AIAgentLLMContext,
+    stateManager: AIAgentStateManager,
+    storage: AIAgentStorage,
+    sessionUuid: Uuid,
+    strategyId: String,
     @OptIn(InternalAgentsApi::class)
-    override val pipeline: AIAgentPipeline,
+    pipeline: AIAgentPipeline,
 ) : AIAgentContextBase {
+    private var _environment: AIAgentEnvironment = environment
+    private var _agentInput: String = agentInput
+    private var _config: AIAgentConfigBase = config
+    private var _llm: AIAgentLLMContext = llm
+    private var _stateManager: AIAgentStateManager = stateManager
+    private var _storage: AIAgentStorage = storage
+    private var _sessionUuid: Uuid = sessionUuid
+    private var _strategyId: String = strategyId
+
+    @OptIn(InternalAgentsApi::class)
+    private var _pipeline: AIAgentPipeline = pipeline
+
+    override val environment: AIAgentEnvironment
+        get() = _environment
+
+    override val agentInput: String
+        get() = _agentInput
+
+    override val config: AIAgentConfigBase
+        get() = _config
+
+    override val llm: AIAgentLLMContext
+        get() = _llm
+
+    override val stateManager: AIAgentStateManager
+        get() = _stateManager
+
+    override val storage: AIAgentStorage
+        get() = _storage
+
+    override val sessionUuid: Uuid
+        get() = _sessionUuid
+
+    override val strategyId: String
+        get() = _strategyId
+
+    @OptIn(InternalAgentsApi::class)
+    override val pipeline: AIAgentPipeline
+        get() = _pipeline
+
     /**
      * A map storing features associated with the current AI agent context.
      * The keys represent unique identifiers for specific features, defined as [AIAgentStorageKey].
@@ -127,6 +167,14 @@ internal class AIAgentContext(
      * @throws UnsupportedOperationException This method is not fully implemented due to the constraints of immutable properties.
      */
     override fun replaceWith(context: AIAgentContextBase) {
-        // TODO("Not yet implemented")
+        _environment = context.environment
+        _agentInput = context.agentInput
+        _config = context.config
+        _llm = context.llm
+        _stateManager = context.stateManager
+        _storage = context.storage
+        _sessionUuid = context.sessionUuid
+        _strategyId = context.strategyId
+        _pipeline = @OptIn(InternalAgentsApi::class) this.pipeline
     }
 }

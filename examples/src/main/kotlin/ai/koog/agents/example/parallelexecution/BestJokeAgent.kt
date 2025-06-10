@@ -77,8 +77,8 @@ fun main(args: Array<String>) = runBlocking {
         val nodeBestJoke by parallel(
             nodes = listOf(nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus),
             reduce = { results ->
-                val context = results.map { it.first }
-                val jokes = results.map { it.second }
+                val context = results.map { it.second }
+                val jokes = results.map { it.third }
 
                 val bestJokeIndex = this.llm.writeSession {
                     model = OpenAIModels.Chat.GPT4o
