@@ -358,6 +358,10 @@ class SingleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testRawStringStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 600.seconds) {
+        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
+            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+        }
+
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Count from 1 to 5.")
