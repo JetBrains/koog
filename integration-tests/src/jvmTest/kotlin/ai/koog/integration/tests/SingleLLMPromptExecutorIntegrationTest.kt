@@ -13,6 +13,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -73,6 +74,10 @@ class SingleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testExecuteStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
+        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
+            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+        }
+
         val executor = SingleLLMPromptExecutor(client)
 
         val prompt = Prompt.build("test-streaming") {
@@ -382,6 +387,10 @@ class SingleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
+        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
+            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+        }
+
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
