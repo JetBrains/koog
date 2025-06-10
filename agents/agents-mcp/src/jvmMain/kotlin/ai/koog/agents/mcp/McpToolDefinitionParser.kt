@@ -50,16 +50,19 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         val typeStr = element["type"]?.jsonPrimitive?.content
 
         if (typeStr == null) {
-            // special case for nullable types
-            //"nullableParam": {
-            //  "anyOf": [{
-            //              "type": "string"
-            //		     },
-            //           {
-            //              "type": "null"
-            //           }],
-            //  "title": "Nullable string parameter"
-            //}
+            /**
+             * Special case for nullable types.
+             * Schema example:
+             * {
+             *   "nullableParam": {
+             *     "anyOf": [
+             *       { "type": "string" },
+             *       { "type": "null" }
+             *     ],
+             *     "title": "Nullable string parameter"
+             *   }
+             * }
+             */
             val anyOf = element["anyOf"]?.jsonArray
             if (depth  < MAX_DEPTH && anyOf != null && anyOf.size == 2) {
                 val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
