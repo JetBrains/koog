@@ -12,14 +12,10 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.TimeSource
 
 class ParallelNodesTest {
 
@@ -46,15 +42,16 @@ class ParallelNodesTest {
             }
 
             // Create a parallel node that executes all three nodes
-            val parallelNode by parallel(
+            val parallelNode by parallel<Unit, String>(
                 node1, node2, node3,
-                reduce = { results ->
-                    // Use the context from the third node (node3)
-                    val (_, node3Context, node3Output) = results.find { (name, _, _) -> name == "node3" }!!
-                    node3Context to node3Output
-                },
-                name = "parallelNode"
+                name = "parallelNode",
             )
+
+            val reduceNode by reduce<Unit, String>(name = "reduceNode") { results ->
+                // Use the context from the third node (node3)
+                val nodeResult = results.find { it.nodeName == "node3" }!!
+                nodeResult.context to nodeResult.output
+            }
 
             // Node to verify the context after parallel execution
             val verifyNode by node<String, String>("verifyNode") { input ->
@@ -65,7 +62,8 @@ class ParallelNodesTest {
 
             // Connect the nodes
             edge(nodeStart forwardTo parallelNode transformed { })
-            edge(parallelNode forwardTo verifyNode)
+            edge(parallelNode forwardTo reduceNode)
+            edge(reduceNode forwardTo verifyNode)
             edge(verifyNode forwardTo nodeFinish)
         }
 
