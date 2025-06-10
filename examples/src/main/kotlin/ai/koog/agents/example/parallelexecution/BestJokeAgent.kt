@@ -74,49 +74,49 @@ fun main(args: Array<String>) = runBlocking {
         }
 
         // Define a node to select the best joke
-        val nodeBestJoke by parallel(
+        val nodeGenerateJokes by parallel<String, String>(
             nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
-            reduce = { results ->
-                val context = results.map { it.second }
-                val jokes = results.map { it.third }
+        )
 
-                val bestJokeIndex = this.llm.writeSession {
-                    model = OpenAIModels.Chat.GPT4o
-                    updatePrompt {
-                        prompt("best-joke-selector") {
-                            system(jokeCritiqueSystemPrompt)
-                            user(
-                                """
+        val nodeSelectBestJoke by reduce<String, String>() { results ->
+            val context = results.map { it.context }
+            val jokes = results.map { it.output }
+
+            val bestJokeIndex = this.llm.writeSession {
+                model = OpenAIModels.Chat.GPT4o
+                updatePrompt {
+                    prompt("best-joke-selector") {
+                        system(jokeCritiqueSystemPrompt)
+                        user(
+                            """
                                 Here are three jokes about the same topic:
 
-                                ${jokes.mapIndexed { index, joke -> "Joke $index:\n$joke"  }.joinToString("\n\n")}
+                                ${jokes.mapIndexed { index, joke -> "Joke $index:\n$joke" }.joinToString("\n\n")}
 
                                 Select the best joke and explain why it's the best.
                             """.trimIndent()
-                            )
-                        }
-                    }
-
-
-                    val response = requestLLMStructured(
-                        structure = JsonStructuredData.createJsonStructure<JokeWinner>(
-                            schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                            schemaType = JsonStructuredData.JsonSchemaType.FULL
                         )
-                    )
-                    val bestJoke = response.getOrNull()!!.structure
-                    bestJoke.index
+                    }
                 }
 
-                context[bestJokeIndex] to jokes[bestJokeIndex]
 
+                val response = requestLLMStructured(
+                    structure = JsonStructuredData.createJsonStructure<JokeWinner>(
+                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                        schemaType = JsonStructuredData.JsonSchemaType.FULL
+                    )
+                )
+                val bestJoke = response.getOrNull()!!.structure
+                bestJoke.index
             }
-        )
 
-        nodeStart then nodeBestJoke then nodeFinish
+            context[bestJokeIndex] to jokes[bestJokeIndex]
+        }
+
+        nodeStart then nodeGenerateJokes then nodeSelectBestJoke then nodeFinish
     }
 
-    // Create agent config
+// Create agent config
     val agentConfig = AIAgentConfig(
         prompt = prompt("best-joke-agent") {
             system("You are a joke generator that creates the best jokes about given topics.")
@@ -125,7 +125,7 @@ fun main(args: Array<String>) = runBlocking {
         maxAgentIterations = 10
     )
 
-    // Create the agent
+// Create the agent
     val agent = AIAgent(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
@@ -153,7 +153,7 @@ fun main(args: Array<String>) = runBlocking {
     val topic = "programming"
     println("Generating jokes about: $topic")
 
-    // Run the agent
+// Run the agent
     val result = agent.run(topic)
     println("Final result: $result")
 }
