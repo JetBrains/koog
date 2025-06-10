@@ -1,8 +1,6 @@
 package ai.koog.integration.tests
 
 import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.annotations.Retry
-import ai.koog.integration.tests.utils.annotations.RetryExtension
 import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
@@ -10,6 +8,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -24,7 +23,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -33,7 +31,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
-@ExtendWith(RetryExtension::class)
 class SingleLLMPromptExecutorIntegrationTest {
     companion object {
         @JvmStatic
@@ -51,7 +48,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testExecute(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -62,18 +58,18 @@ class SingleLLMPromptExecutorIntegrationTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt, model, emptyList())
-
-        assertNotNull(response, "Response should not be null")
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
-        assertTrue(
-            (response.first() as Message.Assistant).content.contains("Paris", ignoreCase = true),
-            "Response should contain 'Paris'"
-        )
+        withRetry(times = 3, testName = "integration_testExecute[${model.id}]") {
+            val response = executor.execute(prompt, model, emptyList())
+            assertNotNull(response, "Response should not be null")
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
+            assertTrue(
+                (response.first() as Message.Assistant).content.contains("Paris", ignoreCase = true),
+                "Response should contain 'Paris'"
+            )
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testExecuteStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -84,24 +80,24 @@ class SingleLLMPromptExecutorIntegrationTest {
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
+            val responseChunks = executor.executeStreaming(prompt, model).toList()
+            assertNotNull(responseChunks, "Response chunks should not be null")
+            assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
 
-        assertNotNull(responseChunks, "Response chunks should not be null")
-        assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
-
-        // Combine all chunks to check the full response
-        val fullResponse = responseChunks.joinToString("")
-        assertTrue(
-            fullResponse.contains("1") &&
-                    fullResponse.contains("2") &&
-                    fullResponse.contains("3") &&
-                    fullResponse.contains("4") &&
-                    fullResponse.contains("5"),
-            "Full response should contain numbers 1 through 5"
-        )
+            // Combine all chunks to check the full response
+            val fullResponse = responseChunks.joinToString("")
+            assertTrue(
+                fullResponse.contains("1") &&
+                        fullResponse.contains("2") &&
+                        fullResponse.contains("3") &&
+                        fullResponse.contains("4") &&
+                        fullResponse.contains("5"),
+                "Full response should contain numbers 1 through 5"
+            )
+        }
     }
 
-    @Retry(times = 3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testCodeGeneration(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -112,28 +108,24 @@ class SingleLLMPromptExecutorIntegrationTest {
             user("Write a simple Kotlin function to calculate the factorial of a number. Make sure the name of the function starts with 'factorial'.")
         }
 
-        val maxRetries = 3
-        var attempts = 0
         var response: List<Message>
 
-        do {
-            attempts++
+        withRetry(times = 3, testName = "integration_testCodeGeneration[${model.id}]") {
             response = executor.execute(prompt, model, emptyList())
-        } while (response.isEmpty() && attempts < maxRetries)
 
-        assertNotNull(response, "Response should not be null")
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
+            assertNotNull(response, "Response should not be null")
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
 
-        val content = (response.first() as Message.Assistant).content
-        assertTrue(
-            content.contains("fun factorial"),
-            "Response should contain a factorial function. Response: $response. Content: $content"
-        )
-        assertTrue(content.contains("return"), "Response should contain a return statement")
+            val content = (response.first() as Message.Assistant).content
+            assertTrue(
+                content.contains("fun factorial"),
+                "Response should contain a factorial function. Response: $response. Content: $content"
+            )
+            assertTrue(content.contains("return"), "Response should contain a return statement")
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolsWithRequiredParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -166,13 +158,13 @@ class SingleLLMPromptExecutorIntegrationTest {
             user("What is 123 + 456?")
         }
 
-        val executor = SingleLLMPromptExecutor(client)
-
-        val response = executor.execute(prompt, model, listOf(calculatorTool))
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
+        withRetry(times = 3, testName = "integration_testToolsWithRequiredParams[${model.id}]") {
+            val executor = SingleLLMPromptExecutor(client)
+            val response = executor.execute(prompt, model, listOf(calculatorTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel, client: LLMClient) =
@@ -216,11 +208,12 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             val executor = SingleLLMPromptExecutor(client)
 
-            val response = executor.execute(prompt, model, listOf(calculatorTool))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            withRetry(times = 3, testName = "integration_testToolsWithRequiredOptionalParams[${model.id}]") {
+                val response = executor.execute(prompt, model, listOf(calculatorTool))
+                assertTrue(response.isNotEmpty(), "Response should not be empty")
+            }
         }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolsWithOptionalParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -259,12 +252,12 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         val executor = SingleLLMPromptExecutor(client)
-
-        val response = executor.execute(prompt, model, listOf(calculatorTool))
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
+        withRetry(times = 3, testName = "integration_testToolsWithOptionalParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(calculatorTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolsWithNoParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -289,12 +282,13 @@ class SingleLLMPromptExecutorIntegrationTest {
 
         val executor = SingleLLMPromptExecutor(client)
 
-        val response =
-            executor.execute(prompt, model, listOf(calculatorTool, calculatorToolBetter))
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
+        withRetry(times = 3, testName = "integration_testToolsWithNoParams[${model.id}]") {
+            val response =
+                executor.execute(prompt, model, listOf(calculatorTool, calculatorToolBetter))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolsWithListEnumParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -320,11 +314,12 @@ class SingleLLMPromptExecutorIntegrationTest {
 
         val executor = SingleLLMPromptExecutor(client)
 
-        val response = executor.execute(prompt, model, listOf(colorPickerTool))
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
+        withRetry(times = 3, testName = "integration_testToolsWithListEnumParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(colorPickerTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolsWithNestedListParams(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -349,12 +344,12 @@ class SingleLLMPromptExecutorIntegrationTest {
 
         val executor = SingleLLMPromptExecutor(client)
 
-        val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
-
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
+        withRetry(times = 3, testName = "integration_testToolsWithNestedListParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testRawStringStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 600.seconds) {
@@ -365,24 +360,25 @@ class SingleLLMPromptExecutorIntegrationTest {
 
         val responseChunks = mutableListOf<String>()
 
-        client.executeStreaming(prompt, model).collect { chunk ->
-            responseChunks.add(chunk)
+        withRetry(times = 3, testName = "integration_testRawStringStreaming[${model.id}]") {
+            client.executeStreaming(prompt, model).collect { chunk ->
+                responseChunks.add(chunk)
+            }
+
+            assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
+
+            val fullResponse = responseChunks.joinToString("")
+            assertTrue(
+                fullResponse.contains("1") &&
+                        fullResponse.contains("2") &&
+                        fullResponse.contains("3") &&
+                        fullResponse.contains("4") &&
+                        fullResponse.contains("5"),
+                "Full response should contain numbers 1 through 5"
+            )
         }
-
-        assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
-
-        val fullResponse = responseChunks.joinToString("")
-        assertTrue(
-            fullResponse.contains("1") &&
-                    fullResponse.contains("2") &&
-                    fullResponse.contains("3") &&
-                    fullResponse.contains("4") &&
-                    fullResponse.contains("5"),
-            "Full response should contain numbers 1 through 5"
-        )
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -402,13 +398,15 @@ class SingleLLMPromptExecutorIntegrationTest {
             )
         }
 
-        val markdownStream = client.executeStreaming(prompt, model)
+        withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
+            val markdownStream = client.executeStreaming(prompt, model)
 
-        TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
-            countries.add(country)
+            TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
+                countries.add(country)
+            }
+
+            assertTrue(countries.isNotEmpty(), "Countries list should not be empty")
         }
-
-        assertTrue(countries.isNotEmpty(), "Countries list should not be empty")
     }
 
     // Common helper methods for tool choice tests
@@ -441,7 +439,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         user("What is 123 + 456?")
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolChoiceRequired(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -452,21 +449,22 @@ class SingleLLMPromptExecutorIntegrationTest {
 
         /** tool choice auto is default and thus is tested by [integration_testToolsWithRequiredParams] */
 
-        val response = client.execute(
-            prompt.withParams(
-                prompt.params.copy(
-                    toolChoice = ToolChoice.Required
-                )
-            ),
-            model,
-            listOf(calculatorTool)
-        )
+        withRetry(times = 3, testName = "integration_testToolChoiceRequired[${model.id}]") {
+            val response = client.execute(
+                prompt.withParams(
+                    prompt.params.copy(
+                        toolChoice = ToolChoice.Required
+                    )
+                ),
+                model,
+                listOf(calculatorTool)
+            )
 
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.first() is Message.Tool.Call)
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.first() is Message.Tool.Call)
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolChoiceNone(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -475,24 +473,25 @@ class SingleLLMPromptExecutorIntegrationTest {
         val calculatorTool = createCalculatorTool()
         val prompt = createCalculatorPrompt()
 
-        val response = client.execute(
-            Prompt.build("test-tools") {
-                system("You are a helpful assistant. Do not use calculator tool, it's broken!")
-                user("What is 123 + 456?")
-            }.withParams(
-                prompt.params.copy(
-                    toolChoice = ToolChoice.None
-                )
-            ),
-            model,
-            listOf(calculatorTool)
-        )
+        withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
+            val response = client.execute(
+                Prompt.build("test-tools") {
+                    system("You are a helpful assistant. Do not use calculator tool, it's broken!")
+                    user("What is 123 + 456?")
+                }.withParams(
+                    prompt.params.copy(
+                        toolChoice = ToolChoice.None
+                    )
+                ),
+                model,
+                listOf(calculatorTool)
+            )
 
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.first() is Message.Assistant)
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.first() is Message.Assistant)
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testToolChoiceNamed(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -506,20 +505,22 @@ class SingleLLMPromptExecutorIntegrationTest {
             description = "A tool that does nothing",
         )
 
-        val response = client.execute(
-            prompt.withParams(
-                prompt.params.copy(
-                    toolChoice = ToolChoice.Named(nothingTool.name)
-                )
-            ),
-            model,
-            listOf(calculatorTool, nothingTool)
-        )
+        withRetry(times = 3, testName = "integration_testToolChoiceNamed[${model.id}]") {
+            val response = client.execute(
+                prompt.withParams(
+                    prompt.params.copy(
+                        toolChoice = ToolChoice.Named(nothingTool.name)
+                    )
+                ),
+                model,
+                listOf(calculatorTool, nothingTool)
+            )
 
-        assertNotNull(response, "Response should not be null")
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.first() is Message.Tool.Call)
-        val toolCall = response.first() as Message.Tool.Call
-        assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
+            assertNotNull(response, "Response should not be null")
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.first() is Message.Tool.Call)
+            val toolCall = response.first() as Message.Tool.Call
+            assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
+        }
     }
 }

@@ -89,7 +89,7 @@ class OllamaSimpleAgentIntegrationTest {
         actualToolCalls.clear()
     }
 
-    @Retry(3)
+    @Retry
     @Test
     fun ollama_simpleTest() = runTest(timeout = 600.seconds) {
         val toolRegistry = ToolRegistry.Companion {

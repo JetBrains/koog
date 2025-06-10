@@ -26,7 +26,7 @@ class MultipleSystemMessagesPromptIntegrationTest {
     private val anthropicApiKey = readTestAnthropicKeyFromEnv()
     private val googleApiKey = readTestGoogleAIKeyFromEnv()
 
-    @Retry(3)
+    @Retry
     @Test
     fun integration_testMultipleSystemMessages() = runBlocking {
         val openAIClient = OpenAILLMClient(openAIApiKey)
