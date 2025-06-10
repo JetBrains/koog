@@ -81,7 +81,7 @@ public class FeatureMessageRemoteServer(
             return
         }
 
-        startServer(port = connectionConfig.port)
+        startServer(host = connectionConfig.host, port = connectionConfig.port)
         logger.debug { "Feature Message Remote Server. Initialized successfully on port ${connectionConfig.port}" }
 
         isInitialized = true
@@ -112,9 +112,9 @@ public class FeatureMessageRemoteServer(
 
     //region Private Methods
 
-    private fun startServer(port: Int) {
+    private fun startServer(host: String, port: Int) {
         try {
-            val server = createServer(port = port)
+            val server = createServer(host = host, port = port)
             server.start(wait = false)
         }
         catch (t: CancellationException) {
@@ -131,12 +131,12 @@ public class FeatureMessageRemoteServer(
         }
     }
 
-    private fun createServer(port: Int): EmbeddedServer<ApplicationEngine, ApplicationEngine.Configuration> {
+    private fun createServer(host: String, port: Int): EmbeddedServer<ApplicationEngine, ApplicationEngine.Configuration> {
 
         logger.debug { "Feature Message Remote Server. Start creating server on port: $port" }
 
         val factory = engineFactoryProvider()
-        server = embeddedServer(factory = factory, host = "127.0.0.1", port = port) {
+        server = embeddedServer(factory = factory, host = host, port = port) {
             install(SSE)
 
             routing {
