@@ -17,6 +17,7 @@ public interface McpToolDescriptorParser {
  * Default implementation of [McpToolDescriptorParser].
  */
 public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
+    // Maximum depth of recursive parsing
     private const val MAX_DEPTH = 10
 
     /**
