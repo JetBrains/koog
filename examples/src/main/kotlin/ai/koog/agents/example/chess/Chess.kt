@@ -37,21 +37,6 @@ fun main() = runBlocking {
         edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
     }
 
-//    // Create agent config with proper prompt
-//    val agentConfig = LocalAgentConfig(
-//        prompt = prompt(OpenAIModels.O3Mini, "test", LLMParams(numReplies = 1)) {
-//            system("""
-//                You are an agent who plays chess.
-//                You should always propose a move in response to the "Your move!" message.
-//
-//                DO NOT HALLUCINATE!!!
-//                DO NOT PLAY ILLEGAL MOVES!!!
-//                YOU CAN SEND A MESSAGE ONLY IF IT IS A RESIGNATION OR A CHECKMATE!!!
-//            """.trimMargin())
-//        },
-//        maxAgentIterations = 200
-//    )
-
     // Create a chat agent with a system prompt and the tool registry
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
