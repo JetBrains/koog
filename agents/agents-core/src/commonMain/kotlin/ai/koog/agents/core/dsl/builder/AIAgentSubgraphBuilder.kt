@@ -108,11 +108,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @return A node that executes the given nodes in parallel
      */
     public fun <Input, Output> parallel(
-        nodes: List<AIAgentNodeBase<Input, Output>>,
+        vararg nodes: AIAgentNodeBase<Input, Output>,
         reduce: suspend AIAgentContextBase.(List<Triple<String, AIAgentContextBase, Output>>) -> Pair<AIAgentContextBase, Output>,
         name: String? = null
     ): AIAgentNodeDelegateBase<Input, Output> {
-        return AIAgentNodeDelegate(name, ParallelAIAgentNodeBuilder(nodes, reduce))
+        return AIAgentNodeDelegate(name, ParallelAIAgentNodeBuilder(nodes.asList(), reduce))
     }
 
     /**
@@ -268,9 +268,7 @@ public class ParallelAIAgentNodeBuilder<Input, Output> internal constructor(
             reduce(results)
         }
 
-        // TODO: check if it is working!!!
         this.replaceWith(context)
-
         output
     }
 )
