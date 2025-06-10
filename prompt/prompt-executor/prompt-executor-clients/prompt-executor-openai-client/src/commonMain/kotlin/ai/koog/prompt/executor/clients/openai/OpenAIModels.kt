@@ -53,7 +53,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4oMini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4o-mini", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
 
@@ -73,7 +74,7 @@ public object OpenAIModels: LLModelDefinitions {
         public val O3Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o3-mini", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Completion
+                LLMCapability.Schema.JSON.Full, LLMCapability.Completion, LLMCapability.MultipleReplies
             )
         )
 
@@ -92,7 +93,8 @@ public object OpenAIModels: LLModelDefinitions {
          */
         public val O1Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o1-mini", capabilities = listOf(
-                LLMCapability.Speculation, LLMCapability.Schema.JSON.Full, LLMCapability.Completion
+                LLMCapability.Speculation, LLMCapability.Schema.JSON.Full, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
 
@@ -112,7 +114,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val O3: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o3", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
 
@@ -131,7 +134,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val O1: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o1", capabilities = listOf(
                 LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
     }
@@ -158,7 +162,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4o: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4o", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.ToolChoice, LLMCapability.Schema.JSON.Full,
-                LLMCapability.Speculation, LLMCapability.Tools, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Speculation, LLMCapability.Tools, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
 
@@ -176,7 +181,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4_1: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
     }
@@ -239,7 +245,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val O4Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "o4-mini", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
 
@@ -256,7 +263,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4_1Nano: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1-nano", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
 
@@ -274,7 +282,8 @@ public object OpenAIModels: LLModelDefinitions {
         public val GPT4_1Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "gpt-4.1-mini", capabilities = listOf(
                 LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion
+                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.MultipleReplies
             )
         )
 

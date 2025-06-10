@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.llms
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMReply
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -43,5 +44,17 @@ public open class SingleLLMPromptExecutor(
         responseFlow.collect { chunk ->
             emit(chunk)
         }
+    }
+
+    override suspend fun executeMultipleReplies(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMReply> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        val replies = llmClient.executeMultipleReplies(prompt, model, tools)
+        logger.debug { "Replies: $replies" }
+
+        return replies
     }
 }
