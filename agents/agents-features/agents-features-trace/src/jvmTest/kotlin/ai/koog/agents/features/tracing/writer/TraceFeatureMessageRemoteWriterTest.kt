@@ -26,6 +26,7 @@ class TraceFeatureMessageRemoteWriterTest {
     companion object {
         private val logger = KotlinLogging.logger { }
         private val defaultClientServerTimeout = 5.seconds
+        private val host = "127.0.0.1"
     }
 
     private class TestFeatureMessageWriter : FeatureMessageProcessor() {
@@ -43,9 +44,9 @@ class TraceFeatureMessageRemoteWriterTest {
     fun `test health check on agent run`() = runBlocking {
 
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(host = host, port = port)
         val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+            AIAgentFeatureClientConnectionConfig(host = host, port = port, protocol = URLProtocol.HTTP)
 
         val isServerStarted = CompletableDeferred<Boolean>()
         val isClientFinished = CompletableDeferred<Boolean>()
@@ -98,9 +99,9 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(host = host, port = port)
         val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+            AIAgentFeatureClientConnectionConfig(host = host, port = port, protocol = URLProtocol.HTTP)
 
         val userPrompt = "Test user prompt"
         val systemPrompt = "Test system prompt"
@@ -225,9 +226,9 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(host = host, port = port)
         val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+            AIAgentFeatureClientConnectionConfig(host = host, port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<FeatureMessage>()
 
@@ -304,9 +305,9 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(port = port)
+        val serverConfig = AIAgentFeatureServerConnectionConfig(host = host, port = port)
         val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+            AIAgentFeatureClientConnectionConfig(host = host, port = port, protocol = URLProtocol.HTTP)
 
         val userPrompt = "Test user prompt"
         val systemPrompt = "Test system prompt"
