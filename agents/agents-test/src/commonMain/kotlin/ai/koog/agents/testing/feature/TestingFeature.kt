@@ -14,6 +14,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
@@ -872,15 +873,15 @@ public class Testing {
             pipeline: AIAgentPipeline
         ) {
             val feature = Testing()
-
-            pipeline.interceptEnvironmentCreated(this, feature) { agentEnvironment ->
+            val interceptContext = InterceptContext(this, feature)
+            pipeline.interceptEnvironmentCreated(interceptContext) { agentEnvironment ->
                 MockEnvironment(agent.toolRegistry, agent.promptExecutor, agentEnvironment)
             }
 
             if (config.enableGraphTesting) {
                 feature.graphAssertions.add(config.getAssertions())
 
-                pipeline.interceptBeforeAgentStarted(this, feature) {
+                pipeline.interceptBeforeAgentStarted(interceptContext) {
                     readStrategy { strategyGraph ->
                         val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
                         config.assert(
