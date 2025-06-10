@@ -15,12 +15,10 @@ class RetryExtension : InvocationInterceptor {
         private const val ANTHROPIC_502_ERROR = "Error from Anthropic API: 502 Bad Gateway"
     }
 
-    private fun isThirdSideError(e: Throwable): Boolean {
-        return e.message?.contains(GOOGLE_429_ERROR) == true
-                || e.message?.contains(GOOGLE_500_ERROR) == true
-                || e.message?.contains(GOOGLE_503_ERROR) == true
-                || e.message?.contains(GOOGLE_API_ERROR) == true
-                || e.message?.contains(ANTHROPIC_502_ERROR) == true
+    private fun isThirdPartyError(e: Throwable): Boolean {
+        val errorMessages =
+            listOf(GOOGLE_API_ERROR, GOOGLE_429_ERROR, GOOGLE_500_ERROR, GOOGLE_503_ERROR, ANTHROPIC_502_ERROR)
+        return e.message?.let { message -> message in errorMessages } == true
     }
 
     override fun interceptTestMethod(
@@ -46,7 +44,7 @@ class RetryExtension : InvocationInterceptor {
             } catch (throwable: Throwable) {
                 lastException = throwable
 
-                if (isThirdSideError(throwable)) {
+                if (isThirdPartyError(throwable)) {
                     println("[DEBUG_LOG] Third-party service error detected: ${throwable.message}")
                     assumeTrue(false, "Skipping test due to ${throwable.message}")
                     return
