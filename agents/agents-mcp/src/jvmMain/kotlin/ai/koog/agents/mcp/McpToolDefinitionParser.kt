@@ -45,7 +45,33 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
     private fun parseParameterType(element: JsonObject): ToolParameterType {
         // Extract the type string from the JSON object
         val typeStr = element["type"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Parameter type must have type property")
+
+        if (typeStr == null) {
+            // special case for nullable types
+            //"nullableParam": {
+            //  "anyOf": [{
+            //              "type": "string"
+            //		     },
+            //           {
+            //              "type": "null"
+            //           }],
+            //  "title": "Nullable string parameter"
+            //}
+            val anyOf = element["anyOf"]?.jsonArray
+            if (anyOf != null && anyOf.size == 2) {
+                val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
+                if (types.contains("null")) {
+                    val nonNullType = anyOf.first {
+                        it.jsonObject["type"]?.jsonPrimitive?.content != "null"
+                    }.jsonObject
+                    return parseParameterType(nonNullType)
+                }
+            }
+            val title =
+                element["title"]?.jsonPrimitive?.content ?: element["description"]?.jsonPrimitive?.content.orEmpty()
+            throw IllegalArgumentException("Parameter $title must have type property")
+        }
+
 
         // Convert the type string to a ToolParameterType
         return when (typeStr.lowercase()) {
