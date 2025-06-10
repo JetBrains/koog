@@ -16,6 +16,7 @@ import ai.koog.agents.core.tools.*
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
+import ai.koog.integration.tests.utils.Models
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -25,6 +26,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -39,6 +41,14 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import java.util.stream.Stream
 import kotlin.coroutines.coroutineContext
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
@@ -102,11 +112,110 @@ internal fun LLMClient.reportingTo(
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
 @Suppress("SSBasedInspection")
-class KotlinAIAgentWithMultipleLLMIntegrationTest {
+class AIAgentMultipleLLMIntegrationTest {
+
+    companion object {
+        private lateinit var testResourcesDir: File
+
+        @JvmStatic
+        @BeforeAll
+        fun setupTestResources() {
+            testResourcesDir = File("src/jvmTest/resources/media")
+            testResourcesDir.mkdirs()
+
+            val markdownFile = File(testResourcesDir, "test.md")
+            markdownFile.writeText(
+                """
+                # Test Markdown File
+
+                This is a test markdown file for integration testing.
+
+                ## Features
+                - Support for markdown files
+                - Integration with LLM models
+                - Testing capabilities
+
+                ## Usage
+                - Run the `integration_test` Gradle task to run the tests.
+                - Run the `integrationTest` Maven goal to run the tests.
+
+                ## License
+                This project is licensed under the Apache License 2.0.
+            """.trimIndent()
+            )
+
+            val textFile = File(testResourcesDir, "test.txt")
+            textFile.writeText("This is a simple text file for testing document handling.")
+
+            val imageFile = File(testResourcesDir, "test.png")
+            imageFile.writeBytes(
+                byteArrayOf(
+                    -119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
+                    73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,
+                    0, 0, 0, 31, 21, -60, -119, 0, 0, 0, 10, 73, 68, 65,
+                    84, 120, -100, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45,
+                    -76, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126
+                )
+            )
+
+            val audioFile = File(testResourcesDir, "test.wav")
+            audioFile.writeBytes(
+                byteArrayOf(
+                    82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69, 102, 109, 116, 32,
+                    16, 0, 0, 0, 1, 0, 1, 0, 68, -84, 0, 0, -120, 88, 1, 0,
+                    2, 0, 16, 0, 100, 97, 116, 97, 0, 0, 0, 0
+                )
+            )
+
+            // Create a simple PDF file for testing
+            val pdfFile = File(testResourcesDir, "test.pdf")
+            pdfFile.writeText(
+                """%PDF-1.4
+                        1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+                        2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+                        3 0 obj<</Type/Page/Contents 4 0 R>>endobj
+                        4 0 obj<</Length 44>>stream
+                        BT/F1 12 Tf 100 700 Td(Test PDF for Koog)Tj ET
+                        endstream endobj
+                        xref 0 5
+                        0000000000 65535 f 
+                        0000000010 00000 n 
+                        0000000074 00000 n 
+                        0000000142 00000 n 
+                        0000000210 00000 n 
+                        trailer<</Size 5/Root 1 0 R>>startxref 300 %%EOF""".trimIndent()
+            )
+        }
+
+        @JvmStatic
+        fun modelWithVisionCapability(): Stream<Arguments> {
+            val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
+            val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+
+            return Stream.concat(
+                Models.openAIModels()
+                    .filter { model ->
+                        model.capabilities.contains(LLMCapability.Vision.Image)
+                    }
+                    .map { model -> Arguments.of(model, openAIClient) },
+
+                Models.anthropicModels()
+                    .filter { model ->
+                        model.capabilities.contains(LLMCapability.Vision.Image)
+                    }
+                    .map { model -> Arguments.of(model, anthropicClient) }
+            )
+        }
+    }
 
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+
+    @BeforeEach
+    fun setup() {
+        assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+    }
 
     sealed interface OperationResult<T> {
         class Success<T>(val result: T) : OperationResult<T>
@@ -299,7 +408,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
     }
 
     @Test
-    fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+    fun integration_testAIAgentOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
@@ -737,5 +846,54 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
             assertNotNull(result)
             assertContains(result, "17")
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("modelWithVisionCapability")
+    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val fs = MockFileSystem()
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCall { tool, arguments ->
+                println(
+                    "Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+
+            onAgentFinished { _, _ ->
+                eventsChannel.send(Event.Termination)
+            }
+        }
+
+        val imageFile = File(testResourcesDir, "test.png")
+        assertTrue(imageFile.exists(), "Image test file should exist")
+
+        val imageBytes = imageFile.readBytes()
+        val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
+
+        val agent = when (model.provider) {
+            is LLMProvider.Anthropic -> createTestOpenaiAnthropicAgent(
+                eventsChannel,
+                fs,
+                eventHandlerConfig,
+                maxAgentIterations = 20
+            )
+
+            else -> createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20)
+        }
+
+        val result = agent.runAndGetResult(
+            """
+            I'm sending you an image encoded in base64 format.
+
+            data:image/png,$base64Image
+
+            Please analyze this image and describe what you see.
+            """
+        )
+
+        assertNotNull(result, "Result should not be null")
     }
 }
