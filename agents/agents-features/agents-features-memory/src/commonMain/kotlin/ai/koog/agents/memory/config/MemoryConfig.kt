@@ -42,12 +42,33 @@ public enum class MemoryScopeType {
 public data class MemoryScopesProfile(
     val names: MutableMap<MemoryScopeType, String> =  mutableMapOf()
 ) {
+    /**
+     * Secondary constructor for `MemoryScopesProfile` that initializes the profile with a variable
+     * number of `MemoryScopeType` to String mappings. This constructor converts the provided pairs
+     * into a mutable map and passes it to the primary constructor.
+     *
+     * @param scopeNames Variable number of pairs where the key is a `MemoryScopeType` and the value
+     *   is the associated scope name.
+     */
     public constructor(vararg scopeNames: Pair<MemoryScopeType, String>) : this(
         scopeNames.toMap().toMutableMap()
     )
 
+    /**
+     * Retrieves the name associated with a specific memory scope type.
+     *
+     * @param type The memory scope type for which the name is required.
+     * @return The name corresponding to the given memory scope type, or null if no name is associated.
+     */
     public fun nameOf(type: MemoryScopeType): String? = names[type]
 
+    /**
+     * Retrieves the memory scope associated with the specified memory scope type.
+     *
+     * @param type The type of memory scope to retrieve.
+     * @return The corresponding memory scope if the type is valid and has a name,
+     *         or null if no name is associated with the provided type.
+     */
     public fun getScope(type: MemoryScopeType): MemoryScope? {
         val name = nameOf(type) ?: return null
         return when (type) {

@@ -40,11 +40,37 @@ public class ToolFromCallable(
     private val json: Json = Json,
 ) : Tool<ToolFromCallable.VarArgs, ToolFromCallable.Result>() {
 
+    /**
+     * Represents a data structure to hold arguments conforming to the Args interface.
+     *
+     * @property args A map of parameters to their respective values.
+     * Each key is a KParameter, matched with a value which can potentially be null.
+     */
     public data class VarArgs(val args: Map<KParameter, Any?>) : Args {
+        /**
+         * Converts a map of parameters and their corresponding values into a list of pairs,
+         * where each pair consists of a parameter name and its associated value.
+         * Parameters without names are excluded from the resulting list.
+         *
+         * @return a list of pairs containing parameter names and their values. If a parameter has no name, it is ignored.
+         */
         public fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) -> parameter.name?.let { it to value } }
     }
 
+    /**
+     * Represents the result of a tool operation, encapsulating the value of the result, its type,
+     * and the JSON serialization logic.
+     *
+     * @property result The actual result value produced.
+     * @property type The Kotlin type of the result value.
+     * @property json The JSON configuration used for serialization and deserialization.
+     */
     public class Result(public val result: Any?, public val type: KType, public val json: Json) : ToolResult {
+        /**
+         * Converts the encapsulated result into a JSON string representation using the specified serializer and type.
+         *
+         * @return A JSON string representation of the result based on the type and serializer.
+         */
         override fun toStringDefault(): String {
             return json.encodeToString(serializer(type), result)
         }
@@ -88,6 +114,14 @@ public class ToolFromCallable(
     override val argsSerializer: KSerializer<VarArgs>
         get() = VarArgsSerializer(callable)
 
+    /**
+     * A serializer for the `VarArgs` class, enabling Kotlin serialization for arguments provided dynamically
+     * to a callable function (`KCallable`). This serializer facilitates encoding and decoding of arguments
+     * via their corresponding `KParameter` mappings.
+     *
+     * @property kCallable A reference to the `KCallable` instance this serializer is associated with. The callable's
+     * parameters are used to generate the serialization descriptor and process argument values.
+     */
     public class VarArgsSerializer(public val kCallable: KCallable<*>) : KSerializer<VarArgs> {
         @OptIn(InternalSerializationApi::class)
         override val descriptor: SerialDescriptor

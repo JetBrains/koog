@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.kdoc.psi.api.KDoc
 import org.jetbrains.kotlin.psi.KtClass
 import org.jetbrains.kotlin.psi.KtFunction
 import org.jetbrains.kotlin.psi.KtModifierList
+import org.jetbrains.kotlin.psi.KtObjectDeclaration
 import org.jetbrains.kotlin.psi.KtProperty
 import kotlin.text.contains
 
@@ -37,7 +38,7 @@ val anyLanguageInspectionTemplate = localInspection { psiFile, inspection ->
         .isNotEmpty()
 
     val declarations =
-        psiFile.descendantsOfType<KtClass>() + psiFile.descendantsOfType<KtFunction>() + psiFile.descendantsOfType<KtProperty>()
+        psiFile.descendantsOfType<KtClass>() + psiFile.descendantsOfType<KtFunction>() + psiFile.descendantsOfType<KtProperty>() + psiFile.descendantsOfType<KtObjectDeclaration>()
 
     declarations
         .filter { it.isPublic() }

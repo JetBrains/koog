@@ -52,19 +52,56 @@ public interface SubgraphResult : Tool.Args, ToolResult
  */
 public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> : Tool.Args, ToolResult.JSONSerializable<T>
 
+/**
+ * Represents the result of a verified subgraph execution.
+ *
+ * This class is used to encapsulate whether the subgraph execution was successful and
+ * provides a message describing the result, including potential issues or errors.
+ *
+ * @property correct Indicates whether the subgraph execution was successful.
+ * @property message Describes the outcome of the execution. If the execution was unsuccessful,
+ * this property provides information on what went wrong.
+ */
 @Serializable
 public data class VerifiedSubgraphResult(
     val correct: Boolean,
     val message: String,
 ) : SubgraphResult {
+    /**
+     * Returns the string representation of this object in JSON format.
+     *
+     * @return JSON string representation of the object.
+     */
     override fun toStringDefault(): String = Json.encodeToString(serializer(), this)
 }
 
+/**
+ * Represents the result of a subgraph operation encapsulated as a string.
+ *
+ * This class is used to serialize and pass string-based results of subgraph executions in the agent framework.
+ * Implements the `SubgraphResult` interface, enabling compatibility with subgraphs and tooling mechanisms.
+ *
+ * @property result The string representation of the execution result produced by the subgraph.
+ */
 @Serializable
 public data class StringSubgraphResult(public val result: String) : SubgraphResult {
+    /**
+     * Converts the current object to its JSON string representation using the default serializer.
+     *
+     * @return The JSON string representation of the object.
+     */
     override fun toStringDefault(): String = Json.encodeToString(serializer(), this)
 }
 
+/**
+ * Represents an abstract result type for subgraph provisioning tools.
+ *
+ * `ProvideSubgraphResult` defines functionality for specific tools that work
+ * on subgraphs and produce a `SubgraphResult` as both input and output.
+ * It serves as a specialization of the generic `Tool` framework.
+ *
+ * @param FinalResult The type of the final result, which must extend `SubgraphResult`.
+ */
 public abstract class ProvideSubgraphResult<FinalResult : SubgraphResult> : Tool<FinalResult, FinalResult>()
 
 public object ProvideVerifiedSubgraphResult : ProvideSubgraphResult<VerifiedSubgraphResult>() {

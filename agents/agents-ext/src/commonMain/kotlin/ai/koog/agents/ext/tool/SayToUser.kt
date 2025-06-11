@@ -8,6 +8,12 @@ import kotlinx.serialization.Serializable
  * The `SayToUser` allows agent to say something to the output (via `println`).
  */
 public object SayToUser : SimpleTool<SayToUser.Args>() {
+    /**
+     * Represents the arguments for the [SayToUser] tool
+     *
+     * @property message A string representing a specific message or input payload
+     * required for tool execution.
+     */
     @Serializable
     public data class Args(val message: String) : Tool.Args
 

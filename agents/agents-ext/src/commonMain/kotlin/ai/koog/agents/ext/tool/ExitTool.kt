@@ -15,6 +15,11 @@ import kotlinx.serialization.Serializable
  * The descriptor defines the tool's metadata including its name, description, and required parameters.
  */
 public object ExitTool : SimpleTool<ExitTool.Args>() {
+    /**
+     * Represents the arguments for the [ExitTool] tool
+     *
+     * @property message The input message provided as an argument for the tool.
+     */
     @Serializable
     public data class Args(val message: String) : Tool.Args
 

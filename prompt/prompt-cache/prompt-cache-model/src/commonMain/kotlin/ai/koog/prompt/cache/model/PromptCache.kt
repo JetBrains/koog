@@ -15,6 +15,14 @@ public interface PromptCache {
      * based on a provided configuration string.
      */
     public interface Factory {
+        /**
+         * A [PromptCache.Factory] implementation that aggregates multiple [Factory.Named] instances.
+         *
+         * The `Aggregated` class provides a way to combine multiple named factories and attempts
+         * to create a `PromptCache` using the first factory that supports a given configuration.
+         *
+         * @property factories The list of `Factory.Named` instances to be aggregated.
+         */
         public class Aggregated(private val factories: List<Factory.Named>) : Factory {
             /**
              * Secondary constructor for the `Aggregated` class.

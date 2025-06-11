@@ -102,14 +102,42 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Deprecated Agent Handlers
 
+    /**
+     * A handler invoked before an AI agent is started.
+     *
+     * Deprecated: Use the corresponding `onBeforeAgentStarted` function instead to append event handlers.
+     *
+     * The handler is a suspendable function that receives an `AIAgentStrategy` and an `AIAgent` as parameters. It can be used
+     * to perform custom logic or setup tasks before the agent's execution begins.
+     *
+     * To ensure future compatibility, transition to the recommended function-based approach for appending handlers.
+     */
     @Deprecated(message = "Please use onBeforeAgentStarted() instead", replaceWith = ReplaceWith("onBeforeAgentStarted(handler)"))
     public var onBeforeAgentStarted: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit = { strategy: AIAgentStrategy, agent: AIAgent -> }
         set(value) = this.onBeforeAgentStarted(value)
 
+    /**
+     * A deprecated handler invoked when an agent finishes execution.
+     *
+     * Provides the name of the strategy and an optional result of the execution.
+     *
+     * It is recommended to use the `onAgentFinished()` function instead to append handlers.
+     *
+     * @param strategyName The name of the strategy associated with the finished agent.
+     * @param result The result of the execution, if available; otherwise, null.
+     * @deprecated Use `onAgentFinished(handler)` instead.
+     */
     @Deprecated(message = "Please use onAgentFinished() instead", replaceWith = ReplaceWith("onAgentFinished(handler)"))
     public var onAgentFinished: suspend (strategyName: String, result: String?) -> Unit = { strategyName: String, result: String? -> }
         set(value) = this.onAgentFinished(value)
 
+    /**
+     * A deprecated variable used to define a handler that is called when an error occurs during agent execution.
+     *
+     * This handler is invoked with the strategy name, an optional session UUID, and the throwable that caused the error.
+     *
+     * @deprecated Use the `onAgentRunError` function instead for appending custom error handlers.
+     */
     @Deprecated(message = "Please use onAgentRunError() instead", replaceWith = ReplaceWith("onAgentRunError(handler)"))
     public var onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
         set(value) = this.onAgentRunError(value)
@@ -118,10 +146,27 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Deprecated Strategy Handlers
 
+    /**
+     * A suspendable handler invoked when a strategy starts execution in the AI Agent workflow.
+     *
+     * This property is deprecated and replaced by the `onStrategyStarted(handler)` function for appending handlers.
+     *
+     * The handler receives an `AIAgentStrategy` instance, which represents the strategy being executed.
+     *
+     * @deprecated Use `onStrategyStarted(handler)` instead for appending multiple handlers.
+     * Replace this property with the `onStrategyStarted(handler)` function for better extensibility.
+     */
     @Deprecated(message = "Please use onStrategyStarted() instead", replaceWith = ReplaceWith("onStrategyStarted(handler)"))
     public var onStrategyStarted: suspend (strategy: AIAgentStrategy) -> Unit = { strategy: AIAgentStrategy -> }
         set(value) = this.onStrategyStarted(value)
 
+    /**
+     * A deprecated variable that defines a handler to be invoked when a strategy finishes execution.
+     * Replaced by the `onStrategyFinished(handler)` method to provide a more structured and extensible approach.
+     *
+     * @deprecated Use `onStrategyFinished(handler)` instead for appending handlers.
+     * This variable is retained for backward compatibility but is not the recommended approach.
+     */
     @Deprecated(message = "Please use onStrategyFinished() instead", replaceWith = ReplaceWith("onStrategyFinished(handler)"))
     public var onStrategyFinished: suspend (strategy: AIAgentStrategy, result: String) -> Unit = { strategy: AIAgentStrategy, result: String -> }
         set(value) = this.onStrategyFinished(value)
@@ -130,10 +175,34 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Deprecated Node Handlers
 
+    /**
+     * A handler invoked before a node in the agent's execution graph is processed.
+     *
+     * This property is deprecated and should be replaced with the `onBeforeNode` method.
+     * It accepts a suspend function that takes the following parameters:
+     * - `node`: The node being processed.
+     * - `context`: The context in which the node is being executed.
+     * - `input`: The input provided to the node.
+     *
+     * Deprecated: Use the `onBeforeNode(handler)` method for appending handlers to the event.
+     */
     @Deprecated(message = "Please use onBeforeNode() instead", replaceWith = ReplaceWith("onBeforeNode(handler)"))
     public var onBeforeNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? -> }
         set(value) = this.onBeforeNode(value)
 
+    /**
+     * A deprecated variable used to define a handler that is called after a node
+     * in the agent's execution graph has been processed.
+     *
+     * The handler is a suspend function that receives the following parameters:
+     * - `node`: The node that was processed, represented by an instance of `AIAgentNodeBase`.
+     * - `context`: The context of the agent containing relevant execution state and data.
+     * - `input`: The input passed to the node during processing.
+     * - `output`: The output produced after the node was processed.
+     *
+     * It is recommended to use the function `onAfterNode(handler)` to set the handler,
+     * as this variable is deprecated.
+     */
     @Deprecated(message = "Please use onAfterNode() instead", replaceWith = ReplaceWith("onAfterNode(handler)"))
     public var onAfterNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? -> }
         set(value) = this.onAfterNode(value)
@@ -142,10 +211,32 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Deprecated LLM Call Handlers
 
+    /**
+     * Deprecated variable used to define a handler that is invoked before a call is made to the language model.
+     *
+     * It allows custom logic to be executed prior to making a call to the language model with the given prompt,
+     * tools, model, and session UUID.
+     *
+     * @deprecated Use the `onBeforeLLMCall(handler)` function to achieve the same functionality.
+     */
     @Deprecated(message = "Please use onBeforeLLMCall() instead", replaceWith = ReplaceWith("onBeforeLLMCall(handler)"))
     public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
         set(value) = this.onBeforeLLMCall(value)
 
+    /**
+     * A deprecated property to handle events triggered after a response is received from the language model (LLM).
+     *
+     * Use the `onAfterLLMCall(handler: suspend (prompt, tools, model, responses, sessionUuid) -> Unit)` method instead.
+     *
+     * The handler is a suspending function that is executed after an LLM call and receives the following parameters:
+     * - `prompt`: The prompt that was sent to the language model.
+     * - `tools`: A list of available tool descriptors.
+     * - `model`: The language model instance that processed the request.
+     * - `responses`: A list of responses returned by the language model.
+     * - `sessionUuid`: The unique identifier for the session in which this call occurred.
+     *
+     * Updating this property will automatically delegate to the newer `onAfterLLMCall` method.
+     */
     @Deprecated(message = "Please use onAfterLLMCall() instead", replaceWith = ReplaceWith("onAfterLLMCall(handler)"))
     public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid -> }
         set(value) = this.onAfterLLMCall(value)
@@ -154,18 +245,52 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Deprecated Tool Call Handlers
 
+    /**
+     * A deprecated variable for appending a handler called when a tool is about to be invoked.
+     *
+     * Use the `onToolCall` function to properly append a handler for tool invocation events.
+     *
+     * @deprecated Use `onToolCall(handler)` instead for appending handlers in a preferred manner.
+     */
     @Deprecated(message = "Please use onToolCall() instead", replaceWith = ReplaceWith("onToolCall(handler)"))
     public var onToolCall: suspend (tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args -> }
         set(value) = this.onToolCall(value)
 
+    /**
+     * A deprecated variable representing the handler invoked when a validation error occurs during a tool call.
+     * Use `onToolValidationError(handler)` instead to register error handling logic.
+     *
+     * The handler receives the following parameters:
+     * - `tool`: The tool instance where the validation error occurred.
+     * - `toolArgs`: The arguments provided to the tool during the call.
+     * - `value`: The string representing the invalid value or other contextual information about the error.
+     *
+     * This property is deprecated and maintained for backward compatibility.
+     */
     @Deprecated(message = "Please use onToolValidationError() instead", replaceWith = ReplaceWith("onToolValidationError(handler)"))
     public var onToolValidationError: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, value: String -> }
         set(value) = this.onToolValidationError(value)
 
+    /**
+     * Defines a handler that is invoked when a tool call fails due to an exception.
+     *
+     * This property is deprecated and will be removed in future versions.
+     * Use the `onToolCallFailure(handler: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit)` function instead to add handlers for tool call failure events
+     * .
+     *
+     * Replacing this property with the newer `onToolCallFailure` function ensures better consistency and management of handlers.
+     */
     @Deprecated(message = "Please use onToolCallFailure() instead", replaceWith = ReplaceWith("onToolCallFailure(handler)"))
     public var onToolCallFailure: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable -> }
         set(value) = this.onToolCallFailure(value)
 
+    /**
+     * Deprecated variable representing a handler invoked when a tool call is completed successfully.
+     * The handler is a suspend function with parameters for the tool, its arguments, and the result of the tool call.
+     *
+     * @deprecated Use the `onToolCallResult(handler)` function instead. This property will be removed in future versions.
+     * @see onToolCallResult
+     */
     @Deprecated(message = "Please use onToolCallResult() instead", replaceWith = ReplaceWith("onToolCallResult(handler)"))
     public var onToolCallResult: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? -> }
         set(value) = this.onToolCallResult(value)

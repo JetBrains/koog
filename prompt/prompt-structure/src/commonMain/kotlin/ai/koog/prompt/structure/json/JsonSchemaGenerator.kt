@@ -25,6 +25,9 @@ public class JsonSchemaGenerator(
     private val schemaFormat: SchemaFormat,
     private val maxDepth: Int
 ) {
+    /**
+     * Enum class representing the schema format options for generating JSON schemas.
+     */
     public enum class SchemaFormat {
         /**
          * Simple format, embed all type definitions.

@@ -28,10 +28,38 @@ import org.jetbrains.annotations.TestOnly
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+/**
+ * DummyAgentContext is an implementation of the AIAgentContextBase interface used primarily for testing or mocking purposes.
+ * It is constructed using an instance of AIAgentContextMockBuilder, which allows configuring the underlying mocked components.
+ *
+ * This class provides access to various components of an AI agent's context, such as environment, input, configuration,
+ * language model, state manager, storage, session information, and strategy ID. Each component is based on the fields
+ * defined in the provided builder instance.
+ *
+ * Features:
+ * - Access to predefined mocked components.
+ * - Customizable behavior through the AIAgentContextMockBuilder interface.
+ * - Throws NotImplementedError if the requested component is not initialized in the builder.
+ */
 public class DummyAgentContext(
     private val builder: AIAgentContextMockBuilder,
 ) : AIAgentContextBase {
+    /**
+     * Indicates whether a Language Learning Model (LLM) is defined in the current context.
+     *
+     * This property is true if the LLM context (`llm`) has been initialized, providing functionality for handling
+     * LLM-related operations within the agent context. It can be used for conditional logic to verify if LLM-specific
+     * capabilities are available.
+     */
     public val isLLMDefined: Boolean = builder.llm != null
+    /**
+     * Indicates whether the environment for the agent context is defined.
+     *
+     * This property evaluates to `true` if the `environment` property in the builder
+     * is not null, meaning that a specific environment has been explicitly set for
+     * the agent context. If `false`, it implies that no environment has been
+     * defined and a default or mock environment may be used in its place.
+     */
     public val isEnvironmentDefined: Boolean = builder.environment != null
 
     override val environment: AIAgentEnvironment
@@ -102,33 +130,216 @@ public class DummyAgentContext(
     )
 }
 
+/**
+ * A base interface for building mock implementations of the [AIAgentContextBase] interface.
+ *
+ * This interface provides configurable properties and methods for creating a mock
+ * AI agent context, enabling the customization of its environment, input, configuration,
+ * state management, and more. It is intended for use in testing scenarios and allows
+ * for the creation of testable mock instances of AI agent contexts.
+ *
+ * Extends the [BaseBuilder] interface for constructing instances of type [AIAgentContextBase].
+ */
 @TestOnly
 public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase> {
+    /**
+     * Represents the environment used by the AI agent to interact with external systems.
+     *
+     * This variable enables the association of an AI agent's context with a specific instance of
+     * `AIAgentEnvironment`. The `AIAgentEnvironment` interface provides mechanisms for tool execution,
+     * problem reporting, and termination signaling, serving as the bridge between the agent and its surrounding environment.
+     *
+     * When set, this variable allows the agent to execute tools through the connected environment, as well as
+     * handle exceptions and send termination messages as needed during operation.
+     *
+     * The value can be null, indicating that no environment is currently associated with the context.
+     *
+     * @see AIAgentEnvironment
+     */
     public var environment: AIAgentEnvironment?
+    /**
+     * Represents the input to be used by the AI agent during its execution.
+     * This variable can be set to define specific data or context relevant to the agent's task.
+     * It is nullable, indicating that the agent may operate without an explicitly defined input.
+     */
     public var agentInput: String?
+    /**
+     * Specifies the configuration for the AI agent.
+     *
+     * This property allows setting an instance of [AIAgentConfigBase], which defines various parameters
+     * and settings for the AI agent, such as the model, prompt structure, execution strategies, and constraints.
+     * It provides the core configuration required for the agent's setup and behavior.
+     *
+     * If null, the configuration will not be explicitly defined, and the agent may rely on default or externally
+     * supplied configurations.
+     */
     public var config: AIAgentConfigBase?
+    /**
+     * Represents the LLM context associated with an AI agent during testing scenarios.
+     * This variable is used to configure and manage the context for an AI agent's
+     * large language model (LLM) interactions, including tools, prompt handling,
+     * and model-specific attributes.
+     *
+     * This is part of the mock building process to facilitate controlled testing of agent behaviors
+     * and interactions with LLMs.
+     *
+     * @see AIAgentLLMContext
+     */
     public var llm: AIAgentLLMContext?
+    /**
+     * Represents an optional state manager for an AI agent in the context of building its mock environment.
+     * The `stateManager` is responsible for maintaining and managing the internal state of the agent in
+     * a thread-safe manner, ensuring consistency during state modifications.
+     *
+     * This property can be used to define a customized or mocked state management behavior when setting
+     * up the test environment for the AI agent. If left unset, no state management behavior is applied
+     * in the mock context.
+     */
     public var stateManager: AIAgentStateManager?
+    /**
+     * Represents a concurrent-safe key-value storage used for managing data within the context of mock
+     * AI agent construction. This property typically holds an optional instance of [AIAgentStorage],
+     * which provides methods to store, retrieve, and manage typed key-value pairs in a thread-safe manner.
+     *
+     * The storage is designed to facilitate the sharing of structured and unstructured data within
+     * different components of the AI agent during the testing and building phase.
+     *
+     * The storage can be configured or accessed to simulate various testing scenarios or to mock
+     * internal states of the agent.
+     */
     public var storage: AIAgentStorage?
+    /**
+     * Represents the unique identifier associated with the session in the mock builder context.
+     *
+     * This property is optional and may be used to specify or retrieve the UUID that ties the
+     * session to a specific context or operation.
+     */
     public var sessionUuid: Uuid?
+    /**
+     * Represents the identifier of a strategy to be used within the context of an AI agent.
+     *
+     * This variable allows specifying or retrieving the unique identifier associated with a
+     * particular strategy. It can be null if no strategy is defined or required.
+     */
     public var strategyId: String?
 
+    /**
+     * Creates and returns a copy of the current instance of `AIAgentContextMockBuilderBase`.
+     *
+     * @return A new instance of `AIAgentContextMockBuilderBase` with the same properties as the original.
+     */
     public fun copy(): AIAgentContextMockBuilderBase
 
+    /**
+     * Builds and returns an instance of [AIAgentContextBase] based on the current properties
+     * of the builder. This method creates a finalized AI agent context, integrating all the
+     * specified configurations, environment settings, and components into a coherent context
+     * object ready for use.
+     *
+     * @return A fully constructed [AIAgentContextBase] instance representing the configured agent context.
+     */
     override fun build(): AIAgentContextBase
 }
 
+/**
+ * AIAgentContextMockBuilder is a builder class for constructing a mock implementation of an AI agent context.
+ * It provides mechanisms to configure various components of the AI agent context before constructing it.
+ * This class is intended for use in testing scenarios and extends `AIAgentContextMockBuilderBase`.
+ */
 @TestOnly
 public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
+    /**
+     * Represents the AI agent's environment in which the context is being executed.
+     *
+     * This property allows setting or retrieving the `AIAgentEnvironment` instance associated with
+     * the builder, enabling the integration of external environments. The environment provides
+     * mechanisms for tool execution, error reporting, and communication of termination signals.
+     *
+     * It is nullable, as the environment may not always be defined during initialization.
+     *
+     * @see AIAgentEnvironment
+     */
     override var environment: AIAgentEnvironment? = null
+    /**
+     * Represents the agent's input data used in constructing or testing the agent's context.
+     *
+     * This property is optional and can be null, indicating that no specific input is provided for the agent.
+     * It is utilized during the construction or copying of an agent's context to define the data the agent operates on.
+     */
     override var agentInput: String? = null
+    /**
+     * Represents the AI agent configuration used in the mock builder.
+     *
+     * This property holds the agent's configuration, which may include the parameters for prompts,
+     * the language model to be used, iteration limits, and strategies for handling missing tools.
+     * It is utilized in constructing or copying an AI agent context during testing or mock setup.
+     *
+     * The configuration, represented by [AIAgentConfigBase], can be modified or replaced
+     * depending on the requirements of the mock or testing scenario. A `null` value indicates
+     * the absence of a specific configuration.
+     */
     override var config: AIAgentConfigBase? = null
+    /**
+     * Represents the context for accessing and managing an AI agent's LLM (Large Language Model) configuration
+     * and behavior. The `llm` property allows you to define or override the LLM context for the agent,
+     * including tools, prompt handling, and interaction with external dependencies.
+     *
+     * Can be used for dependency injection, mock testing, or modifying the LLM behavior dynamically during
+     * runtime. If set to `null`, it indicates that no specific LLM context is defined, and defaults or
+     * fallback mechanisms may be utilized by the containing class.
+     */
     override var llm: AIAgentLLMContext? = null
+    /**
+     * An overrideable property for managing the agent's state using an instance of [AIAgentStateManager].
+     *
+     * The `stateManager` provides thread-safe mechanisms to update, lock, and access the internal
+     * state of the AI agent. It ensures the consistency of state modifications and employs a
+     * mutual exclusion mechanism to synchronize coroutines accessing the state.
+     *
+     * This property can be used for customizing state management within the context of the
+     * `AIAgentContextMockBuilder` and its associated operations such as copying or building
+     * mock agent contexts.
+     *
+     * By default, it is initialized to `null` and can be set or overridden to integrate a
+     * specific `AIAgentStateManager` instance for managing agent state in custom scenarios.
+     */
     override var stateManager: AIAgentStateManager? = null
+    /**
+     * Represents a concurrent-safe key-value storage instance for an AI agent.
+     *
+     * This property holds a reference to an optional [AIAgentStorage] implementation, which enables the
+     * handling of typed keys and respective values in a thread-safe manner within the agent context.
+     * The storage can be used to store, retrieve, or manage custom data uniquely identified by specific keys.
+     *
+     * It can be configured or overridden during the agent context setup or through subsequent modifications
+     * to the context builder. If not provided, the default value remains `null`.
+     */
     override var storage: AIAgentStorage? = null
+    /**
+     * Defines the unique identifier for the session context within the agent's lifecycle.
+     * This property can be used to correlate and differentiate multiple sessions for the same agent
+     * or across different agents.
+     *
+     * The `sessionUuid` can be null, indicating that the session has not been associated with an identifier.
+     */
     override var sessionUuid: Uuid? = null
+    /**
+     * Represents the identifier for the strategy to be used in the agent context.
+     *
+     * This property is used to distinguish and configure different strategies within an AI agent's
+     * workflow. It may determine how the agent processes inputs, selects methodologies, or executes
+     * tasks, depending on the applied strategy.
+     *
+     * Can be null if a strategy is not explicitly defined or required.
+     */
     override var strategyId: String? = null
 
+    /**
+     * Creates and returns a new copy of the current `AIAgentContextMockBuilder` instance.
+     * The copied instance contains the same state and configuration as the original.
+     *
+     * @return a new `AIAgentContextMockBuilder` instance with the same properties as the original.
+     */
     override fun copy(): AIAgentContextMockBuilder {
         return AIAgentContextMockBuilder().also {
             it.environment = environment
@@ -142,32 +353,102 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
         }
     }
 
+    /**
+     * Builds and returns an instance of `DummyAgentContext`.
+     *
+     * This method finalizes the current configuration of the `AIAgentContextMockBuilder` instance
+     * by creating a copy of its current state and passing it to the constructor of `DummyAgentContext`.
+     *
+     * @return A `DummyAgentContext` instance initialized with the current state of the builder.
+     */
     override fun build(): DummyAgentContext {
         return DummyAgentContext(this.copy())
     }
 
+    /**
+     * Companion object providing utility methods for the encompassing class.
+     */
     private companion object {
+        /**
+         * Creates a dummy proxy implementation of the specified type [T] using the provided name.
+         *
+         * The returned proxy is an instance of [T] that contains stubbed behavior for unimplemented
+         * properties and methods. It is primarily intended for mocking or testing purposes.
+         *
+         * @param name A unique name for the proxy to associate with its string representation and errors.
+         * @return A dummy proxy of type [T] with the provided name.
+         */
         @Suppress("UNCHECKED_CAST")
         private inline fun <reified T : Any> createDummyProxy(name: String): T {
             return ProxyHandler<T>(name).createProxy()
         }
     }
 
+    /**
+     * ProxyHandler is a utility class that dynamically creates a proxy object of a specified type.
+     * The proxy implements default behavior for methods such as `toString`, `equals`, property access,
+     * and method invocation, providing a placeholder implementation.
+     *
+     * This class is typically used to generate mock or dummy objects for testing or prototyping purposes.
+     *
+     * @param T The type of the proxy object to be created. Must be a non-abstract class.
+     * @param name A string identifier associated with the proxy. This is used in placeholder implementation
+     *             to display information about the proxy.
+     */
     public class ProxyHandler<T : Any>(private val name: String) {
+        /**
+         * Creates a proxy instance of type [T]. The proxy is a dummy implementation that provides default
+         * behavior for overridden methods such as `toString`, `equals`, and unimplemented operations.
+         *
+         * @return A proxy instance of type [T] with default, unimplemented functionality.
+         */
         @Suppress("UNCHECKED_CAST")
         public fun createProxy(): T {
             return object : Any() {
+                /**
+                 * Returns a string representation of the object with the format `DummyProxy<name>`.
+                 *
+                 * This implementation provides a simple description of the proxy object that includes
+                 * the name of the proxy. It is useful for debugging or logging purposes to identify
+                 * the specific proxy instance by its name.
+                 *
+                 * @return A string in the format `DummyProxy<name>`.
+                 */
                 override fun toString() = "DummyProxy<${name}>"
 
+                /**
+                 * Checks whether this instance is equal to the specified object.
+                 *
+                 * @param other The object to compare with this instance.
+                 * @return True if this instance is the same as the specified object, otherwise false.
+                 */
                 override fun equals(other: Any?): Boolean {
                     return this === other
                 }
 
+                /**
+                 * Retrieves the value of a property specified by its name.
+                 * This operator is intended to simulate property access in a proxy-like manner.
+                 *
+                 * @param propertyName The name of the property to retrieve.
+                 * @return The value of the specified property, or null.
+                 * @throws IllegalStateException This function always throws an exception indicating unimplemented property access.
+                 */
                 @Suppress("UNUSED_PARAMETER")
                 operator fun get(propertyName: String): Any? {
                     error("Unimplemented property access: $name.$propertyName")
                 }
 
+                /**
+                 * Invokes a method by its name and passes the provided arguments.
+                 *
+                 * This method is typically used to simulate an unimplemented method call, throwing an error
+                 * to indicate that the called method is not yet implemented.
+                 *
+                 * @param methodName The name of the method to invoke.
+                 * @param args The arguments to pass to the method, provided as a vararg of any type.
+                 * @return This function does not return a value as it throws an error instead.
+                 */
                 @Suppress("UNUSED_PARAMETER")
                 fun invoke(methodName: String, vararg args: Any?): Any? {
                     error("Unimplemented method call: $name.$methodName(${args.joinToString()})")
@@ -178,23 +459,81 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
 }
 
 
+/**
+ * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
+ * provides a way to resolve and identify nodes for various processing operations in the context
+ * of a subgraph.
+ *
+ * @param Input The input data type handled by the related node.
+ * @param Output The output data type produced by the related node.
+ */
 @TestOnly
 public sealed class NodeReference<Input, Output> {
+    /**
+     * Resolves the current node reference within the context of the provided AI agent subgraph.
+     *
+     * @param subgraph An instance of [AIAgentSubgraph], representing the structured subgraph within the AI agent workflow.
+     *                 It contains the logical segment of processing, including the starting and finishing nodes.
+     * @return An instance of [AIAgentNodeBase], representing the resolved node within the subgraph that corresponds
+     *         to the current node reference.
+     */
     public abstract fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output>
 
+    /**
+     * The `Start` class is a specialized type of `NodeReference` that serves as a reference to
+     * the starting node of an `AIAgentSubgraph`. This node initiates the processing of the subgraph
+     * by resolving and returning the subgraph's starting node.
+     *
+     * @param Input The type of input data that this node reference accepts and processes.
+     */
     public class Start<Input> : NodeReference<Input, Input>() {
+        /**
+         * Resolves the starting node of the given subgraph and casts it to the appropriate type.
+         *
+         * @param subgraph The subgraph from which the starting node will be resolved.
+         * @return The starting node of the subgraph cast to AIAgentNodeBase<Input, Input>.
+         */
         @Suppress("UNCHECKED_CAST")
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Input> =
             subgraph.start as AIAgentNodeBase<Input, Input>
     }
 
+    /**
+     * Represents the final node in an AI agent subgraph workflow.
+     * The `Finish` node signifies the end of the processing within the subgraph and provides the result
+     * of the subgraph's operations.
+     *
+     * @param Output The type of output data produced by this finish node.
+     */
     public class Finish<Output> : NodeReference<Output, Output>() {
+        /**
+         * Resolves and returns the finishing node of the given AI agent subgraph.
+         *
+         * @param subgraph The AI agent subgraph from which the finishing node is resolved.
+         * @return The finishing node of the subgraph, cast to the expected type `AIAgentNodeBase<Output, Output>`.
+         */
         @Suppress("UNCHECKED_CAST")
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Output, Output> =
             subgraph.finish as AIAgentNodeBase<Output, Output>
     }
 
+    /**
+     * [NamedNode] is a class that references a specific node within a subgraph by name.
+     * This class allows resolving a node instance by its unique name within a given subgraph.
+     *
+     * @param Input The type of input accepted by the node.
+     * @param Output The type of output produced by the node.
+     * @property name The unique name of the target node within the subgraph.
+     */
     public open class NamedNode<Input, Output>(public val name: String) : NodeReference<Input, Output>() {
+        /**
+         * Resolves a node within the given AI Agent subgraph by searching for a node that matches the current node's name.
+         * The method performs a depth-first traversal starting from the subgraph's start node.
+         *
+         * @param subgraph The AI Agent subgraph to traverse in search of the matching node.
+         * @return The resolved node that matches the current node's name of type [AIAgentNodeBase<Input, Output>].
+         * @throws IllegalArgumentException If no node with the specified name is found within the subgraph.
+         */
         @Suppress("UNCHECKED_CAST")
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
@@ -215,7 +554,24 @@ public sealed class NodeReference<Input, Output> {
         }
     }
 
+    /**
+     * Represents a specialized type of node used in the context of AI agent subgraphs.
+     * This class extends the functionality of a named node by providing specific behavior
+     * to resolve itself as a valid subgraph within the overarching system.
+     *
+     * @param Input The input type that this node expects.
+     * @param Output The output type that this node produces.
+     * @param name The name of the node, inherited from the parent class, which serves as its identifier within the graph.
+     */
     public open class SubgraphNode<Input, Output>(name: String) : NamedNode<Input, Output>(name) {
+        /**
+         * Resolves the specified subgraph into a strongly typed subgraph of the expected input and output types.
+         * This method ensures the resolved subgraph matches the type constraints of the current node.
+         *
+         * @param subgraph The subgraph to resolve. This represents a structured portion of an AI agent workflow.
+         * @return The resolved subgraph of type `AIAgentSubgraph<Input, Output>`.
+         * @throws IllegalArgumentException If the resolved subgraph does not match the expected type constraints.
+         */
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentSubgraph<Input, Output> {
             val result = super.resolve(subgraph)
 
@@ -227,7 +583,27 @@ public sealed class NodeReference<Input, Output> {
         }
     }
 
+    /**
+     * Represents a specific strategy within an AI agent subgraph.
+     *
+     * The `Strategy` class is a specialization of the `SubgraphNode` class designed to focus on
+     * resolving and managing `AIAgentStrategy` instances. It provides a mechanism to ensure the
+     * resolution process evaluates to the expected strategy type, preserving type safety
+     * and logical consistency within the graph-based AI workflow.
+     *
+     * @param name The unique identifier for the strategy.
+     */
     public class Strategy(name: String) : SubgraphNode<String, String>(name) {
+        /**
+         * Resolves the given subgraph into an `AIAgentStrategy` instance to ensure that the resolved object
+         * matches the expected strategy name and type.
+         *
+         * @param subgraph The subgraph to be resolved. It must have the same name as the current strategy instance
+         *                 and must also be of type `AIAgentStrategy`.
+         * @return The resolved subgraph as an instance of `AIAgentStrategy`.
+         * @throws IllegalArgumentException If the subgraph's name does not match the name of the current strategy.
+         * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
+         */
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
@@ -242,6 +618,19 @@ public sealed class NodeReference<Input, Output> {
     }
 }
 
+/**
+ * Represents a set of assertions for validating the structure and behavior of a graph-based system.
+ *
+ * @property name The name or identifier of the graph being asserted.
+ * @property start The starting node reference of the graph.
+ * @property finish The finishing node reference of the graph.
+ * @property nodes A map containing all nodes of the graph, indexed by their names.
+ * @property nodeOutputAssertions A list of assertions verifying the output of specific nodes based on given inputs and contexts.
+ * @property edgeAssertions A list of assertions validating the edges between nodes in the graph for specific contexts.
+ * @property unconditionalEdgeAssertions A list of assertions ensuring unconditional connections between nodes.
+ * @property reachabilityAssertions A list of assertions verifying that one node in the graph is reachable from another node.
+ * @property subgraphAssertions A mutable list of assertions related to specific subgraphs within the graph structure.
+ */
 @TestOnly
 public data class GraphAssertions(
     val name: String,
@@ -255,6 +644,20 @@ public data class GraphAssertions(
     val subgraphAssertions: MutableList<SubGraphAssertions>
 )
 
+/**
+ * Represents an assertion for testing the output of a specific node within an AI agent's subgraph.
+ *
+ * This class is intended to be used for verifying that a node, when executed in a specific
+ * agent context with a given input, produces the expected output.
+ *
+ * @param Input The type of the input data that the node processes.
+ * @param Output The type of the output data produced by the node.
+ * @property node A reference to the node whose behavior is being tested.
+ * @property context The testing or mock context in which the node executes.
+ * Provides the necessary environment and configurations for the node's execution.
+ * @property input The input data passed to the node during execution.
+ * @property expectedOutput The expected output data to be verified against the actual output from the node.
+ */
 @TestOnly
 public data class NodeOutputAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
@@ -263,6 +666,16 @@ public data class NodeOutputAssertion<Input, Output>(
     val expectedOutput: Output
 )
 
+/**
+ * Represents the assertion of an edge in a graph structure related to AI agent operations.
+ *
+ * @param Input The type of the input parameter for the node.
+ * @param Output The type of the output parameter for the node.
+ * @property node The reference to the current node involved in this edge assertion.
+ * @property context The context associated with the AI agent during the assertion.
+ * @property output The output value produced or expected by the edge during assertion.
+ * @property expectedNode The reference to the expected node where the edge should lead.
+ */
 @TestOnly
 public data class EdgeAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
@@ -271,26 +684,82 @@ public data class EdgeAssertion<Input, Output>(
     val expectedNode: NodeReference<*, *>
 )
 
+/**
+ * Represents an assertion for an unconditional edge in a graph structure.
+ *
+ * This data class is used to verify the existence of a direct connection from the `node` to the
+ * `expectedNode` in a graph during tests. Such connections are evaluated without considering
+ * any specific conditions or outputs, ensuring that the edge is universally established.
+ *
+ * @property node The source node of the edge to be asserted.
+ * @property expectedNode The target node that the source node is expected to connect to.
+ */
 @TestOnly
 public data class UnconditionalEdgeAssertion(
     val node: NodeReference<*, *>,
     val expectedNode: NodeReference<*, *>
 )
 
+/**
+ * Represents an assertion for testing the reachability between two specific nodes in a graph.
+ *
+ * This class is primarily used in graph-based testing contexts to verify that a directed path
+ * exists from a starting node (`from`) to a target node (`to`) within an agent graph.
+ *
+ * @property from The starting node reference for the reachability assertion.
+ * @property to The target node reference for the reachability assertion.
+ *
+ * This assertion helps validate correctness and connectivity properties of constructed graphs.
+ */
 @TestOnly
 public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
 
+/**
+ * Encapsulates assertions for a subgraph within a graph testing framework.
+ *
+ * This class links a specific subgraph, represented by a `SubgraphNode`, with its corresponding
+ * graph-wide assertions. It is intended to facilitate hierarchical testing and validation of
+ * graph components in isolation or as part of a larger graph structure.
+ *
+ * @property subgraphRef Reference to the subgraph being asserted, represented as a `SubgraphNode`.
+ * @property graphAssertions Graph-wide assertions relevant to the subgraph.
+ */
 @TestOnly
 public data class SubGraphAssertions(
     val subgraphRef: NodeReference.SubgraphNode<*, *>,
     val graphAssertions: GraphAssertions
 )
 
+/**
+ * Represents the result of an assertion used within the testing framework.
+ *
+ * This sealed interface allows defining various outcomes of assertions, such as
+ * inequality or false conditions.
+ */
 @TestOnly
 public sealed interface AssertionResult {
+    /**
+     * Represents the result of a failed equality assertion.
+     *
+     * This class is used to specify details about the expected and actual values
+     * when an equality assertion fails. The failure may include an optional message
+     * providing additional context.
+     *
+     * @param expected The expected value in the comparison.
+     * @param actual The actual value found during the comparison.
+     * @param message A custom message explaining why the assertion failed.
+     */
     public class NotEqual(public val expected: Any?, public val actual: Any?, public val message: String) :
         AssertionResult
 
+    /**
+     * Represents an assertion result indicating a failed assertion due to a false condition.
+     *
+     * This class is used when a boolean condition evaluates to false during an assertion.
+     * It encapsulates an error message describing the failure.
+     *
+     * @property message The message providing details about the failed assertion.
+     */
     public class False(public val message: String) : AssertionResult
 }
 
@@ -606,6 +1075,12 @@ public class Testing {
                 return nodeRef
             }
 
+            /**
+             * Verifies a given subgraph by applying a set of assertions to it using a provided configuration block.
+             *
+             * @param subgraph the subgraph to verify, represented as a [NodeReference.SubgraphNode] of input and output types [I] and [O].
+             * @param checkSubgraph a lambda receiver operating on a [SubgraphAssertionsBuilder] that defines the assertions to be applied to the subgraph.
+             */
             public fun <I, O> verifySubgraph(
                 subgraph: NodeReference.SubgraphNode<I, O>,
                 checkSubgraph: SubgraphAssertionsBuilder<I, O>.() -> Unit = {}

@@ -35,6 +35,18 @@ public interface LLMClient {
     public suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
 }
 
+/**
+ * ConnectionTimeoutConfig is a configuration class for specifying timeout values
+ * for network connections in milliseconds. It includes configurable timeouts for
+ * requests, connection establishment, and socket operations.
+ *
+ * @property requestTimeoutMillis The maximum amount of time, in milliseconds, allowed for a request to complete
+ *                                before timing out. Defaults to 900 seconds.
+ * @property connectTimeoutMillis The maximum amount of time, in milliseconds, allowed for establishing a connection
+ *                                to the server. Defaults to 60 seconds.
+ * @property socketTimeoutMillis  The maximum amount of time, in milliseconds, allowed for waiting for data over
+ *                                an established socket connection. Defaults to 900 seconds.
+ */
 public data class ConnectionTimeoutConfig(
     val requestTimeoutMillis: Long = DEFAULT_TIMEOUT_MS,
     val connectTimeoutMillis: Long = DEFAULT_CONNECT_TIMEOUT_MS,

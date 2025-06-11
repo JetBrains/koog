@@ -86,13 +86,13 @@ public class AIAgentTool(
     )
 
     override suspend fun execute(args: AgentToolArgs): AgentToolResult {
-        try {
-            return AgentToolResult(
+        return try {
+            AgentToolResult(
                 successful = true,
                 result = agent.runAndGetResult(args.request)
             )
         } catch (e: Throwable) {
-            return AgentToolResult(
+            AgentToolResult(
                 successful = false,
                 errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n" +
                         e.stackTraceToString().take(100)

@@ -9,6 +9,11 @@ import kotlinx.serialization.Serializable
  * This tool accepts a dummy parameter and returns a constant result.
  */
 public class DummyTool : SimpleTool<DummyTool.Args>() {
+    /**
+     * Represents the arguments for the DummyTool.
+     *
+     * @property dummy A dummy string parameter that can be optionally specified.
+     */
     @Serializable
     public data class Args(val dummy: String = "") : Tool.Args
 

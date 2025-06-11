@@ -30,6 +30,18 @@ public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reif
 }
 
 
+/**
+ * Filters and transforms the intermediate outputs of the AI agent node based on the success results of a tool operation.
+ *
+ * This method is used to create a conditional path in the agent's execution by selecting only the successful results
+ * of type [SafeTool.Result.Success] and evaluating them against a provided condition.
+ *
+ * @param condition A suspending lambda function that accepts a result of type [TResult]
+ *                  and evaluates it to a Boolean value. Returns `true` if the condition is satisfied,
+ *                  and `false` otherwise.
+ * @return An instance of [AIAgentEdgeBuilderIntermediate] configured to handle only successful tool results
+ *         that satisfy the specified condition, with output type adjusted to [SafeTool.Result.Success].
+ */
 @Suppress("UNCHECKED_CAST")
 public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onSuccessful(
@@ -40,6 +52,16 @@ public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolRe
             condition(it.result)
         }
 
+/**
+ * Defines a handler to process failure cases in a directed edge strategy by applying a condition
+ * to filter intermediate results of type `SafeTool.Result.Failure`. This method is used to specialize
+ * processing for failure results and to propagate or transform them based on the provided condition.
+ *
+ * @param condition A suspending lambda function that takes an error message string as input and returns a boolean.
+ *                  It specifies whether the error should be further processed based on the condition provided.
+ * @return A new instance of `AIAgentEdgeBuilderIntermediate`, where the intermediate output type is restricted
+ *         to `SafeTool.Result.Failure` containing the specified `TResult` for failure results that match the condition.
+ */
 @Suppress("UNCHECKED_CAST")
 public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onFailure(
@@ -145,12 +167,12 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         .onCondition { toolCalls -> block(toolCalls) }
 }
 
-@Suppress("unused")
 /**
  * Creates an edge that filters lists of tool result messages based on a custom condition.
  *
  * @param block A function that evaluates whether to accept a list of tool result messages
  */
+@Suppress("unused")
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleToolResults(
     block: suspend (List<ReceivedToolResult>) -> Boolean
