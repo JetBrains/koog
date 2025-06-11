@@ -58,7 +58,6 @@ exclude:
       - build
       - buildSrc
       - docs
-      - qodana.sarif.json
   - name: JvmCoverageInspection
     paths:
       - .devcontainer
@@ -69,7 +68,6 @@ exclude:
       - build
       - buildSrc
       - docs
-      - qodana.sarif.json
       - examples
       - integration-tests
 # Enable quick fixes for found issues

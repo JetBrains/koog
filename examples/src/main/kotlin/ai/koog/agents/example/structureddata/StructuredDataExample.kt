@@ -206,9 +206,7 @@ fun main(): Unit = runBlocking {
 
     val weatherForecastStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
         // some models don't work well with json schema, so you may try simple, but it has more limitations (no polymorphism!)
-        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
         examples = exampleForecasts,
-        schemaType = JsonStructuredData.JsonSchemaType.FULL
     )
 
     val agentStrategy = strategy("weather-forecast") {
