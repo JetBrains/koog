@@ -9,6 +9,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -32,7 +33,6 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -183,7 +183,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
     }
 
-    @Retry
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testExecute(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -868,7 +867,7 @@ class SingleLLMPromptExecutorIntegrationTest {
     @Test
     fun integration_testMultipleMediaTypes() = runTest(timeout = 60.seconds) {
         val model = OpenAIModels.Chat.GPT4o
-        val client = OpenAILLMClient(TestUtils.readTestOpenAIKeyFromEnv())
+        val client = OpenAILLMClient(readTestOpenAIKeyFromEnv())
 
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
