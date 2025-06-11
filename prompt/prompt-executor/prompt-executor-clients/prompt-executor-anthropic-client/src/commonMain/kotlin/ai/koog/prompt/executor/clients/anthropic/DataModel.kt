@@ -61,29 +61,29 @@ internal sealed class AnthropicContent {
 }
 
 @Serializable
-internal sealed class ImageSource {
+internal sealed interface ImageSource {
     @Serializable
     @SerialName("url")
-    data class Url(val url: String) : ImageSource()
+    data class Url(val url: String) : ImageSource
 
     @Serializable
     @SerialName("base64")
-    data class Base64(val data: String, val mediaType: String) : ImageSource()
+    data class Base64(val data: String, val mediaType: String) : ImageSource
 }
 
 @Serializable
-internal sealed class DocumentSource {
+internal sealed interface DocumentSource {
     @Serializable
     @SerialName("url")
-    data class PDFUrl(val url: String) : DocumentSource()
+    data class Url(val url: String) : DocumentSource
 
     @Serializable
     @SerialName("base64")
-    data class PDFBase64(val data: String, val mediaType: String = "application/pdf") : DocumentSource()
+    data class Base64(val data: String, val mediaType: String) : DocumentSource
 
     @Serializable
     @SerialName("text")
-    data class PlainText(val data: String, val mediaType: String = "text/plain") : DocumentSource()
+    data class PlainText(val data: String, val mediaType: String) : DocumentSource
 }
 
 @Serializable

@@ -1,6 +1,6 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -22,8 +22,8 @@ class AttachmentBuilderTest {
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is MediaContent.Image, "Attachment should be an Image")
-        assertEquals("test.png", (result[0] as MediaContent.Image).source, "Image source should match")
+        assertTrue(result[0] is Attachment.Image, "Attachment should be an Image")
+        assertEquals("test.png", (result[0] as Attachment.Image).source, "Image source should match")
     }
 
     @Test
@@ -34,9 +34,9 @@ class AttachmentBuilderTest {
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is MediaContent.Audio, "Attachment should be an Audio")
-        assertEquals("mp3", (result[0] as MediaContent.Audio).format, "Audio format should match")
-        assertEquals(audioData, (result[0] as MediaContent.Audio).data, "Audio data should match")
+        assertTrue(result[0] is Attachment.Audio, "Attachment should be an Audio")
+        assertEquals("mp3", (result[0] as Attachment.Audio).format, "Audio format should match")
+        assertEquals(audioData, (result[0] as Attachment.Audio).data, "Audio data should match")
     }
 
     @Test
@@ -46,8 +46,8 @@ class AttachmentBuilderTest {
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is MediaContent.File, "Attachment should be a File")
-        assertEquals("report.pdf", (result[0] as MediaContent.File).source, "Document source should match")
+        assertTrue(result[0] is Attachment.File, "Attachment should be a File")
+        assertEquals("report.pdf", (result[0] as Attachment.File).source, "Document source should match")
     }
 
     @Test
@@ -60,9 +60,9 @@ class AttachmentBuilderTest {
         val result = builder.build()
 
         assertEquals(3, result.size, "Should contain three attachments")
-        assertTrue(result[0] is MediaContent.Image, "First attachment should be an Image")
-        assertTrue(result[1] is MediaContent.Audio, "Second attachment should be an Audio")
-        assertTrue(result[2] is MediaContent.File, "Third attachment should be a File")
+        assertTrue(result[0] is Attachment.Image, "First attachment should be an Image")
+        assertTrue(result[1] is Attachment.Audio, "Second attachment should be an Audio")
+        assertTrue(result[2] is Attachment.File, "Third attachment should be a File")
     }
 
     @Test
@@ -73,8 +73,8 @@ class AttachmentBuilderTest {
         }.build()
 
         assertEquals(2, result.size, "Should contain two attachments")
-        assertTrue(result[0] is MediaContent.Image, "First attachment should be an Image")
-        assertTrue(result[1] is MediaContent.File, "Second attachment should be a File")
+        assertTrue(result[0] is Attachment.Image, "First attachment should be an Image")
+        assertTrue(result[1] is Attachment.File, "Second attachment should be a File")
     }
 
     @Test
@@ -84,12 +84,12 @@ class AttachmentBuilderTest {
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is MediaContent.Image, "Attachment should be an Image")
+        assertTrue(result[0] is Attachment.Image, "Attachment should be an Image")
         assertEquals(
             "https://example.com/image.jpg",
-            (result[0] as MediaContent.Image).source,
+            (result[0] as Attachment.Image).source,
             "Image source should match"
         )
-        assertTrue((result[0] as MediaContent.Image).isUrl(), "Image should be recognized as URL")
+        assertTrue((result[0] as Attachment.Image).isUrl(), "Image should be recognized as URL")
     }
 }
