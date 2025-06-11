@@ -330,10 +330,10 @@ public open class GoogleLLMClient(
 
     private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
         val contentParts = buildList {
-            if (content.isNotEmpty() || attachment.isEmpty()) {
+            if (content.isNotEmpty() || attachments.isEmpty()) {
                 add(GooglePart.Text(content))
             }
-            attachment.forEach { attachment ->
+            attachments.forEach { attachment ->
                 when (attachment) {
                     is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {

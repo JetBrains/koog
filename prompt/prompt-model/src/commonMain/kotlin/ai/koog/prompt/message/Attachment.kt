@@ -1,7 +1,6 @@
 package ai.koog.prompt.message
 
 import kotlinx.serialization.Serializable
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 
 /**
@@ -103,33 +102,50 @@ public sealed interface AttachmentContent {
     public data class PlainText(val text: String): AttachmentContent
 
     /**
-     * URL of the content (e.g. image or a document)
+     * URL of the content (e.g. image or a document).
      */
     @Serializable
     public data class URL(val url: String): AttachmentContent
 
     /**
-     * Binary content represented as byte array.
+     * Binary content.
      */
     @Serializable
-    public data class Binary(val data: ByteArray): AttachmentContent {
+    public sealed interface Binary : AttachmentContent {
         /**
-         * Lazily evaluated property with string Base64 representation of the binary data (byte array).
+         * Base64 representation ofr the binary content
          */
-        @OptIn(ExperimentalEncodingApi::class)
-        public val base64: String by lazy { Base64.encode(data) }
+        public val base64: String
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other !is Binary) return false
+        /**
+         * Binary content represented as byte array.
+         */
+        @Serializable
+        public data class Bytes(val data: ByteArray): Binary {
+            /**
+             * Lazily evaluated Base64 representation of the underlying byte array
+             */
+            @OptIn(ExperimentalEncodingApi::class)
+            override val base64: String by lazy { kotlin.io.encoding.Base64.encode(data) }
 
-            if (!data.contentEquals(other.data)) return false
+            override fun equals(other: Any?): Boolean {
+                if (this === other) return true
+                if (other !is Bytes) return false
 
-            return true
+                if (!data.contentEquals(other.data)) return false
+
+                return true
+            }
+
+            override fun hashCode(): Int {
+                return data.contentHashCode()
+            }
         }
 
-        override fun hashCode(): Int {
-            return data.contentHashCode()
-        }
+        /**
+         * Binary content represented as Base64 encoded string.
+         */
+        @Serializable
+        public data class Base64(override val base64: String): Binary
     }
 }

@@ -277,11 +277,11 @@ public class OpenRouterLLMClient(
 
     private fun Message.User.toOpenRouterMessage(model: LLModel): OpenRouterMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || attachment.isEmpty()) {
+            if (content.isNotEmpty() || attachments.isEmpty()) {
                 add(ContentPart.Text(content))
             }
 
-            attachment.forEach { attachment ->
+            attachments.forEach { attachment ->
                 when (attachment) {
                     is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {

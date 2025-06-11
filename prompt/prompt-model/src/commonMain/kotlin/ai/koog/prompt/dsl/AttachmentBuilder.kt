@@ -90,14 +90,14 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Image] with [AttachmentContent.Binary] content from the provided local file path.
+     * Adds [Attachment.Image] with [AttachmentContent.Bytes] content from the provided local file path.
      *
      * @param path Path to local image file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
     public fun imageFromPath(path: Path) {
         val fileData = path.fileData()
-        image(Attachment.Image(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
+        image(Attachment.Image(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
     }
 
     /**
@@ -119,14 +119,14 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Audio] with [AttachmentContent.Binary] content from the provided local file path.
+     * Adds [Attachment.Audio] with [AttachmentContent.Bytes] content from the provided local file path.
      *
      * @param path Path to local audio file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
     public fun audioFromPath(path: Path) {
         val fileData = path.fileData()
-        audio(Attachment.Audio(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
+        audio(Attachment.Audio(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
     }
 
     /**
@@ -148,14 +148,14 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Video] with [AttachmentContent.Binary] content from the provided local file path.
+     * Adds [Attachment.Video] with [AttachmentContent.Bytes] content from the provided local file path.
      *
      * @param path Path to local video file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
     public fun videoFromPath(path: Path) {
         val fileData = path.fileData()
-        video(Attachment.Video(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
+        video(Attachment.Video(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
     }
 
     /**
@@ -178,7 +178,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.File] with [AttachmentContent.Binary] content from the provided local file path.
+     * Adds [Attachment.File] with [AttachmentContent.Bytes] content from the provided local file path.
      *
      * @param path Path to local file
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
@@ -186,7 +186,7 @@ public class AttachmentBuilder {
      */
     public fun binaryFileFromPath(path: Path, mimeType: String) {
         val fileData = path.fileData()
-        file(Attachment.File(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
+        file(Attachment.File(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
     }
 
     /**

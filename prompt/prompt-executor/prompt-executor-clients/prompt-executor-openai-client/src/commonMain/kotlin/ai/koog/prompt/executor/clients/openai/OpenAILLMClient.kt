@@ -33,7 +33,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
-import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -341,11 +340,11 @@ public open class OpenAILLMClient(
 
     private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || attachment.isEmpty()) {
+            if (content.isNotEmpty() || attachments.isEmpty()) {
                 add(ContentPart.Text(content))
             }
 
-            attachment.forEach { attachment ->
+            attachments.forEach { attachment ->
                 when (attachment) {
                     is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
@@ -490,13 +489,11 @@ public open class OpenAILLMClient(
             }
 
             message.audio != null -> {
-                val audioData = Base64.decode(message.audio.data)
-
                 listOf(
                     Message.Assistant(
                         content = message.audio.transcript ?: "",
                         attachment = Attachment.Audio(
-                            content = AttachmentContent.Binary(audioData),
+                            content = AttachmentContent.Binary.Base64(message.audio.data),
                             // FIXME not a proper solution. Seems like there is no data in response about format, need to clarify
                             format = "unknown",
                         ),

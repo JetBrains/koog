@@ -37,13 +37,13 @@ class AttachmentBuilderTest {
     fun testAddSingleAudio() {
         val audioData = byteArrayOf(1, 2, 3, 4, 5)
         val builder = AttachmentBuilder()
-        builder.audio(Attachment.Audio(content = AttachmentContent.Binary(audioData), format = "mp3", fileName = "audio.mp3"))
+        builder.audio(Attachment.Audio(content = AttachmentContent.Binary.Bytes(audioData), format = "mp3", fileName = "audio.mp3"))
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
         assertEquals(
             Attachment.Audio(
-                content = AttachmentContent.Binary(audioData),
+                content = AttachmentContent.Binary.Bytes(audioData),
                 format = "mp3",
                 fileName = "audio.mp3"
             ),
@@ -56,7 +56,7 @@ class AttachmentBuilderTest {
         val documentData = byteArrayOf(1, 2, 3, 4, 5)
         val builder = AttachmentBuilder()
         builder.file(Attachment.File(
-            content = AttachmentContent.Binary(documentData),
+            content = AttachmentContent.Binary.Bytes(documentData),
             format = "pdf",
             mimeType = "application/pdf",
             fileName = "report.pdf"
@@ -66,7 +66,7 @@ class AttachmentBuilderTest {
         assertEquals(1, result.size, "Should contain one attachment")
         assertEquals(
             Attachment.File(
-                content = AttachmentContent.Binary(documentData),
+                content = AttachmentContent.Binary.Bytes(documentData),
                 format = "pdf",
                 mimeType = "application/pdf",
                 fileName = "report.pdf"
@@ -82,17 +82,17 @@ class AttachmentBuilderTest {
         val documentData = byteArrayOf(60, 70, 80, 90, 100)
         val builder = AttachmentBuilder()
         builder.image(Attachment.Image(
-            content = AttachmentContent.Binary(imageData),
+            content = AttachmentContent.Binary.Bytes(imageData),
             format = "jpg",
             fileName = "photo.jpg"
         ))
         builder.audio(Attachment.Audio(
-            content = AttachmentContent.Binary(audioData),
+            content = AttachmentContent.Binary.Bytes(audioData),
             format = "wav",
             fileName = "audio.wav"
         ))
         builder.file(Attachment.File(
-            content = AttachmentContent.Binary(documentData),
+            content = AttachmentContent.Binary.Bytes(documentData),
             format = "pdf",
             mimeType = "application/pdf",
             fileName = "document.pdf"
@@ -102,7 +102,7 @@ class AttachmentBuilderTest {
         assertEquals(3, result.size, "Should contain three attachments")
         assertEquals(
             Attachment.Image(
-                content = AttachmentContent.Binary(imageData),
+                content = AttachmentContent.Binary.Bytes(imageData),
                 format = "jpg",
                 fileName = "photo.jpg"
             ),
@@ -110,7 +110,7 @@ class AttachmentBuilderTest {
         )
         assertEquals(
             Attachment.Audio(
-                content = AttachmentContent.Binary(audioData),
+                content = AttachmentContent.Binary.Bytes(audioData),
                 format = "wav",
                 fileName = "audio.wav"
             ),
@@ -118,7 +118,7 @@ class AttachmentBuilderTest {
         )
         assertEquals(
             Attachment.File(
-                content = AttachmentContent.Binary(documentData),
+                content = AttachmentContent.Binary.Bytes(documentData),
                 format = "pdf",
                 mimeType = "application/pdf",
                 fileName = "document.pdf"
@@ -133,12 +133,12 @@ class AttachmentBuilderTest {
         val pdfData = byteArrayOf(66, 77, 88, 99, 111)
         val result = AttachmentBuilder().apply {
             image(Attachment.Image(
-                content = AttachmentContent.Binary(imageData),
+                content = AttachmentContent.Binary.Bytes(imageData),
                 format = "png",
                 fileName = "photo.png"
             ))
             file(Attachment.File(
-                content = AttachmentContent.Binary(pdfData),
+                content = AttachmentContent.Binary.Bytes(pdfData),
                 format = "pdf",
                 mimeType = "application/pdf",
                 fileName = "report.pdf"
@@ -148,7 +148,7 @@ class AttachmentBuilderTest {
         assertEquals(2, result.size, "Should contain two attachments")
         assertEquals(
             Attachment.Image(
-                content = AttachmentContent.Binary(imageData),
+                content = AttachmentContent.Binary.Bytes(imageData),
                 format = "png",
                 fileName = "photo.png"
             ),
@@ -156,7 +156,7 @@ class AttachmentBuilderTest {
         )
         assertEquals(
             Attachment.File(
-                content = AttachmentContent.Binary(pdfData),
+                content = AttachmentContent.Binary.Bytes(pdfData),
                 format = "pdf",
                 mimeType = "application/pdf",
                 fileName = "report.pdf"
