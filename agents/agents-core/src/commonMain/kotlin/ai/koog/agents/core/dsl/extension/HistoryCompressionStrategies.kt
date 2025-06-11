@@ -200,3 +200,4 @@ public abstract class HistoryCompressionStrategy {
         }
     }
 }
+
