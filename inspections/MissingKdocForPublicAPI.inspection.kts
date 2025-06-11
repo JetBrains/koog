@@ -17,26 +17,24 @@ val htmlDescription = """
     </html>
 """.trimIndent()
 
-
-fun PsiElement.isPublic() = this.children
-    .filterIsInstance<KtModifierList>()
-    .firstOrNull()
-    ?.text
-    ?.contains("public")
-    ?: false
-
-fun PsiElement.isOverride() = this.children
-    .filterIsInstance<KtModifierList>()
-    .firstOrNull()
-    ?.text
-    ?.contains("override")
-    ?: false
-
-fun PsiElement.hasKdoc() = this.children
-    .filterIsInstance<KDoc>()
-    .isNotEmpty()
-
 val anyLanguageInspectionTemplate = localInspection { psiFile, inspection ->
+    fun PsiElement.isPublic() = this.children
+        .filterIsInstance<KtModifierList>()
+        .firstOrNull()
+        ?.text
+        ?.contains("public")
+        ?: false
+
+    fun PsiElement.isOverride() = this.children
+        .filterIsInstance<KtModifierList>()
+        .firstOrNull()
+        ?.text
+        ?.contains("override")
+        ?: false
+
+    fun PsiElement.hasKdoc() = this.children
+        .filterIsInstance<KDoc>()
+        .isNotEmpty()
 
     inspection.registerProblem(
         psiFile,
