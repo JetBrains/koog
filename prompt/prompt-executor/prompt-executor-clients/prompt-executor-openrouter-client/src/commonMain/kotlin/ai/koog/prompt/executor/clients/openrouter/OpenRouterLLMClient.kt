@@ -34,14 +34,16 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * Configuration settings for connecting to the OpenRouter API.
+ * Configuration settings for the OpenRouterClient.
  *
- * @property baseUrl The base URL of the OpenRouter API. Default is "https://openrouter.ai/api/v1".
- * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
+ * @property baseUrl The base URL of the OpenRouter API. Defaults to "https://openrouter.ai".
+ * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ * @property completionsPath The API endpoint path for initiating chat completions. Defaults to "api/v1/chat/completions".
  */
 public class OpenRouterClientSettings(
     public val baseUrl: String = "https://openrouter.ai",
-    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val completionsPath: String = "api/v1/chat/completions"
 )
 
 /**
@@ -61,8 +63,6 @@ public class OpenRouterLLMClient(
 
     private companion object {
         private val logger = KotlinLogging.logger { }
-
-        private const val DEFAULT_MESSAGE_PATH = "api/v1/chat/completions"
     }
 
     private val json = Json {
@@ -108,7 +108,7 @@ public class OpenRouterLLMClient(
         val request = createOpenRouterRequest(prompt, model, tools, false)
 
         return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(DEFAULT_MESSAGE_PATH) {
+            val response = httpClient.post(settings.completionsPath) {
                 setBody(request)
             }
 
@@ -134,7 +134,7 @@ public class OpenRouterLLMClient(
         return flow {
             try {
                 httpClient.sse(
-                    urlString = DEFAULT_MESSAGE_PATH,
+                    urlString = settings.completionsPath,
                     request = {
                         method = HttpMethod.Post
                         accept(ContentType.Text.EventStream)
