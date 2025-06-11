@@ -9,6 +9,7 @@ import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -16,6 +17,7 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
