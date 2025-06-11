@@ -36,11 +36,6 @@ val anyLanguageInspectionTemplate = localInspection { psiFile, inspection ->
         .filterIsInstance<KDoc>()
         .isNotEmpty()
 
-    inspection.registerProblem(
-        psiFile,
-        "Good file: ${psiFile.name}"
-    )
-
     val declarations =
         psiFile.descendantsOfType<KtClass>() + psiFile.descendantsOfType<KtFunction>() + psiFile.descendantsOfType<KtProperty>()
 

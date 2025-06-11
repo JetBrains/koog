@@ -43,7 +43,7 @@ include:
   # License audit:
   - name: CheckDependencyLicenses
   # Missing Kdocs:
-  - name: MissingKdocForPublicAPI
+  - name: MissingKDocForPublicAPI
 # Exclude from analysis:
 exclude:
   - name: All
