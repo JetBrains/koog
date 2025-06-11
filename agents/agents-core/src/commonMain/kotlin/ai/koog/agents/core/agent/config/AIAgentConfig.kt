@@ -26,6 +26,9 @@ public class AIAgentConfig(
     )
 ): AIAgentConfigBase {
 
+    /**
+     * Companion object for providing utility methods related to `AIAgentConfig`.
+     */
     public companion object {
 
         /**

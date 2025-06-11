@@ -163,6 +163,16 @@ public class AIAgentSubgraphBuilder<Input, Output>(
  * @param Output The type of the output data that the subgraph emits after processing.
  */
 public interface AIAgentSubgraphDelegateBase<Input, Output> {
+    /**
+     * Provides access to an instance of [AIAgentSubgraph] based on the specified property reference.
+     *
+     * This operator function acts as a delegate to dynamically retrieve and return an appropriate
+     * instance of [AIAgentSubgraph] associated with the input and output types specified by the containing context.
+     *
+     * @param thisRef The reference to the object that contains the delegated property. Can be null if the property is a top-level or package-level property.
+     * @param property The property metadata used to identify the property for which the subgraph instance is being accessed.
+     * @return An [AIAgentSubgraph] instance that handles the specified input and output data types.
+     */
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentSubgraph<Input, Output>
 }
 

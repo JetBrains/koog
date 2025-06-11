@@ -181,6 +181,11 @@ public object OpenAIModels: LLModelDefinitions {
         )
     }
 
+    /**
+     * The `Audio` object provides access to preconfigured audio-enabled Large Language Models (LLMs).
+     * These models support both audio input and output functionalities, making them suitable
+     * for various audio-centric applications.
+     */
     public object Audio {
         /**
          * GPT-4o mini Audio is a smaller,

@@ -54,6 +54,14 @@ public interface PromptCache {
          * @property name The unique name associated with the factory.
          */
         public abstract class Named(public val name: String) : Factory {
+            /**
+             * Determines if the current factory instance can support the provided configuration string.
+             *
+             * The method checks if the factory's `name` matches the first element of the parsed configuration string.
+             *
+             * @param config The configuration string to be evaluated.
+             * @return `true` if the factory supports the configuration, otherwise `false`.
+             */
             public fun supports(config: String): Boolean = name == elements(config).firstOrNull()
         }
 
