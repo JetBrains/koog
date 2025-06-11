@@ -90,7 +90,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Image] with [AttachmentContent.Bytes] content from the provided local file path.
+     * Adds [Attachment.Image] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local image file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
@@ -119,7 +119,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Audio] with [AttachmentContent.Bytes] content from the provided local file path.
+     * Adds [Attachment.Audio] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local audio file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
@@ -148,7 +148,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Video] with [AttachmentContent.Bytes] content from the provided local file path.
+     * Adds [Attachment.Video] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local video file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
@@ -178,7 +178,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.File] with [AttachmentContent.Bytes] content from the provided local file path.
+     * Adds [Attachment.File] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local file
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
