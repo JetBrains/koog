@@ -47,9 +47,21 @@ public class AIAgentTool(
     agentDescription: String,
     requestDescription: String = "Input for the task"
 ) : Tool<AgentToolArgs, AgentToolResult>() {
+    /**
+     * Represents the arguments required for the execution of an agent tool.
+     *
+     * @property request The input data or parameters needed for the agent tool to perform its operation.
+     */
     @Serializable
     public data class AgentToolArgs(val request: String) : Args
 
+    /**
+     * Represents the result of executing an agent tool operation.
+     *
+     * @property successful Indicates whether the operation was successful.
+     * @property errorMessage An optional error message describing the failure, if any.
+     * @property result An optional string representing the result produced by the tool operation.
+     */
     @Serializable
     public data class AgentToolResult(
         val successful: Boolean,

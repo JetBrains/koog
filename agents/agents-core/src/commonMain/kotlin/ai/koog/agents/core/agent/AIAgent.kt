@@ -134,6 +134,12 @@ public open class AIAgent(
      *       This makes the API a bit stricter and clear.
      */
     public class FeatureContext internal constructor(private val agent: AIAgent) {
+        /**
+         * Installs and configures a feature into the current AI agent context.
+         *
+         * @param feature the feature to be added, defined by an implementation of [AIAgentFeature], which provides specific functionality
+         * @param configure an optional lambda to customize the configuration of the feature, where the provided [Config] can be modified
+         */
         public fun <Config : FeatureConfig, Feature : Any> install(
             feature: AIAgentFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
@@ -209,6 +215,15 @@ public open class AIAgent(
         }
     }
 
+    /**
+     * Executes the AI agent using a builder to construct the textual input.
+     *
+     * This method allows for constructing a complex input by utilizing the functionalities
+     * of [TextContentBuilder]. The builder is applied to create the structured input which
+     * is then used to initiate the agent's execution.
+     *
+     * @param builder a lambda function applied to a [TextContentBuilder] instance to build the input text for the agent
+     */
     public suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
         run(agentInput = TextContentBuilder().apply { this.builder() }.build())
     }

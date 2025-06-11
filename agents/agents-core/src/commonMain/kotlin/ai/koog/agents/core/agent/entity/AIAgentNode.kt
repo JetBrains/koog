@@ -11,6 +11,11 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
  * @param Output The type of output data this node produces.
  */
 public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
+    /**
+     * The name of the AI agent node.
+     * This property serves as a unique identifier for the node within the strategy graph
+     * and is used to distinguish and reference nodes in the graph structure.
+     */
     public abstract val name: String
 
     /**
@@ -122,7 +127,24 @@ internal class AIAgentNode<Input, Output> internal constructor(
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output = context.execute(input)
 }
 
+/**
+ * Represents the base node for starting a subgraph in an AI agent strategy graph.
+ * Derived from [AIAgentNodeBase], this node acts as an entry point for executing subgraphs
+ * identified by a unique name.
+ *
+ * @param Input The type of input data this node processes and produces as output.
+ */
 public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>() {
+    /**
+     * The name of the subgraph associated with the AI agent's starting node.
+     *
+     * This property serves as an identifier or label for the subgraph, helping to distinguish
+     * and reference specific AI workflows or strategies. It can be null if no subgraph
+     * name has been assigned.
+     *
+     * Internal changes to this property are restricted to ensure controlled modification, as the setter
+     * is marked internal. Its value may influence how the AI agent node generates its unique name.
+     */
     public var subgraphName: String? = null
         internal set
 
@@ -131,7 +153,23 @@ public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>(
     override suspend fun execute(context: AIAgentContextBase, input: Input): Input = input
 }
 
+/**
+ * Represents a specialized node within an AI agent strategy graph that marks the endpoint
+ * of a subgraph. This node serves as a "finish" node and directly passes its input
+ * to its output without modification, acting as an identity operation.
+ *
+ * @param Output The type of data this node processes and produces.
+ */
 public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Output>() {
+    /**
+     * Stores the name of the subgraph associated with the node.
+     *
+     * This variable is used to identify or tag subgraphs in AI agent strategies.
+     * If `subgraphName` is set, it will be integrated into the node's identity or behavior,
+     * such as forming a unique name for the node.
+     *
+     * This property is mutable within the internal scope, but read-only from external scopes.
+     */
     public var subgraphName: String? = null
         internal set
 

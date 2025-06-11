@@ -115,6 +115,17 @@ public sealed class AIAgentLLMSession(
         executeMultiple(prompt, tools).first()
 
 
+    /**
+     * Sends a request to the language model without utilizing any tools and returns the response.
+     *
+     * This method validates the session state before proceeding with the operation. If tool usage
+     * is disabled (i.e., the tools list is empty), the tool choice parameter will be set to null
+     * to ensure compatibility with the underlying LLM client's behavior. It then executes the request
+     * and retrieves the response from the LLM.
+     *
+     * @return The response message from the language model after executing the request, represented
+     *         as a [Message.Response] instance.
+     */
     public open suspend fun requestLLMWithoutTools(): Message.Response {
         validateSession()
         /*
@@ -128,6 +139,14 @@ public sealed class AIAgentLLMSession(
         return executeSingle(promptWithDisabledTools, tools)
     }
 
+    /**
+     * Sends a request to the language model that enforces the usage of tools and retrieves the response.
+     *
+     * This method updates the session's prompt configuration to mark tool usage as required before
+     * executing the request. Additionally, it ensures the session is active before proceeding.
+     *
+     * @return The response from the language model after executing the request with enforced tool usage.
+     */
     public open suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
@@ -136,6 +155,20 @@ public sealed class AIAgentLLMSession(
         return executeSingle(promptWithOnlyCallingTools, tools)
     }
 
+    /**
+     * Sends a request to the language model while enforcing the use of a specific tool,
+     * and returns the response.
+     *
+     * This method validates that the session is active and checks if the specified tool
+     * exists within the session's set of available tools. It updates the prompt configuration
+     * to enforce the selection of the specified tool before executing the request.
+     *
+     * @param tool The tool to be used for the request, represented by a [ToolDescriptor] instance.
+     *             This parameter ensures that the language model utilizes the specified tool
+     *             during the interaction.
+     * @return The response from the language model as a [Message.Response] instance after
+     *         processing the request with the enforced tool.
+     */
     public open suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
         validateSession()
         check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
@@ -145,6 +178,18 @@ public sealed class AIAgentLLMSession(
         return executeSingle(promptWithForcingOneTool, tools)
     }
 
+    /**
+     * Sends a request to the language model while enforcing the use of a specific tool, and returns the response.
+     *
+     * This method ensures the session is active and updates the prompt configuration to enforce the selection of the
+     * specified tool before executing the request. It uses the provided tool as a focus for the language model to process
+     * the interaction.
+     *
+     * @param tool The tool to be used for the request, represented as an instance of [Tool]. This parameter ensures
+     *             the specified tool is utilized during the LLM interaction.
+     * @return The response from the language model as a [Message.Response] instance after processing the request with the
+     *         enforced tool.
+     */
     public open suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
         return requestLLMForceOneTool(tool.descriptor)
     }
