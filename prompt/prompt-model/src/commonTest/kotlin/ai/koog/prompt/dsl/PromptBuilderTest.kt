@@ -25,7 +25,7 @@ class PromptBuilderTest {
         assertEquals("Check this image", prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        val singleContent = userMessage.attachment.single()
+        val singleContent = userMessage.attachments.single()
 
         val expectedImage = Attachment.Image(
             content = AttachmentContent.URL("https://example.com/test.png"),
@@ -54,7 +54,7 @@ class PromptBuilderTest {
         assertEquals("Check these files", prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        assertEquals(2, userMessage.attachment.size, "Should have two attachments")
+        assertEquals(2, userMessage.attachments.size, "Should have two attachments")
 
         val expectedImage = Attachment.Image(
             content = AttachmentContent.URL("https://example.com/photo.jpg"),
@@ -62,7 +62,7 @@ class PromptBuilderTest {
             mimeType = "image/jpg",
             fileName = "photo.jpg"
         )
-        assertEquals(expectedImage, userMessage.attachment[0], "First attachment should match expected Image")
+        assertEquals(expectedImage, userMessage.attachments[0], "First attachment should match expected Image")
 
         val expectedFile = Attachment.File(
             content = AttachmentContent.URL("https://example.com/report.pdf"),
@@ -70,7 +70,7 @@ class PromptBuilderTest {
             mimeType = "application/pdf",
             fileName = "report.pdf"
         )
-        assertEquals(expectedFile, userMessage.attachment[1], "Second attachment should match expected File")
+        assertEquals(expectedFile, userMessage.attachments[1], "Second attachment should match expected File")
     }
 
     @Test
@@ -95,7 +95,7 @@ class PromptBuilderTest {
         assertEquals(expectedContent, prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        val singleContent = userMessage.attachment.single()
+        val singleContent = userMessage.attachments.single()
 
         val expectedImage = Attachment.Image(
             content = AttachmentContent.URL("https://example.com/screenshot.png"),
@@ -127,7 +127,7 @@ class PromptBuilderTest {
         val userMessage = prompt.messages.first() as Message.User
         assertEquals("Please analyze these files", userMessage.content, "First message content should match")
 
-        assertEquals(3, userMessage.attachment.size, "Should have three attachments")
+        assertEquals(3, userMessage.attachments.size, "Should have three attachments")
 
         val expectedImage = Attachment.Image(
             content = AttachmentContent.URL("https://example.com/chart.png"),
@@ -135,7 +135,7 @@ class PromptBuilderTest {
             mimeType = "image/png",
             fileName = "chart.png"
         )
-        assertEquals(expectedImage, userMessage.attachment[0], "First attachment should match expected Image")
+        assertEquals(expectedImage, userMessage.attachments[0], "First attachment should match expected Image")
 
         val expectedPdfFile = Attachment.File(
             content = AttachmentContent.URL("https://example.com/data.pdf"),
@@ -143,7 +143,7 @@ class PromptBuilderTest {
             mimeType = "application/pdf",
             fileName = "data.pdf"
         )
-        assertEquals(expectedPdfFile, userMessage.attachment[1], "Second attachment should match expected PDF File")
+        assertEquals(expectedPdfFile, userMessage.attachments[1], "Second attachment should match expected PDF File")
 
         val expectedDocxFile = Attachment.File(
             content = AttachmentContent.URL("https://example.com/report.docx"),
@@ -151,7 +151,7 @@ class PromptBuilderTest {
             mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             fileName = "report.docx"
         )
-        assertEquals(expectedDocxFile, userMessage.attachment[2], "Third attachment should match expected DOCX File")
+        assertEquals(expectedDocxFile, userMessage.attachments[2], "Third attachment should match expected DOCX File")
     }
 
     @Test
@@ -212,7 +212,7 @@ class PromptBuilderTest {
             userMessage.content
         )
 
-        assertEquals(1, userMessage.attachment.size, "User message should have an image attachment")
+        assertEquals(1, userMessage.attachments.size, "User message should have an image attachment")
 
         val expectedImage = Attachment.Image(
             content = AttachmentContent.URL("https://example.com/code_example.png"),
@@ -220,7 +220,7 @@ class PromptBuilderTest {
             mimeType = "image/png",
             fileName = "code_example.png"
         )
-        assertEquals(expectedImage, userMessage.attachment.single(), "Attachment should match expected Image")
+        assertEquals(expectedImage, userMessage.attachments.single(), "Attachment should match expected Image")
 
         val assistantMessage = prompt.messages[2] as Message.Assistant
         assertTrue(assistantMessage.content.contains("Here's how you can implement binary search in Kotlin:"))

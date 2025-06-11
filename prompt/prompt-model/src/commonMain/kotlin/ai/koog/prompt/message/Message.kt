@@ -78,14 +78,14 @@ public sealed interface Message {
      *
      * @property content The main content of the user's message.
      * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
-     * @property attachment Optional media content attached to the message.
+     * @property attachments Optional media content attached to the message.
      * @property role The role of the message, which is fixed as [Role.User] for this implementation.
      */
     @Serializable
     public data class User(
         override val content: String,
         override val metaInfo: RequestMetaInfo,
-        val attachment: List<Attachment> = emptyList(),
+        val attachments: List<Attachment> = emptyList(),
     ) : Request {
         override val role: Role = Role.User
     }
