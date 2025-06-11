@@ -117,14 +117,14 @@ public sealed class AIAgentLLMSession(
 
     public open suspend fun requestLLMWithoutTools(): Message.Response {
         validateSession()
-        val promptWithDisabledTools = prompt.withUpdatedParams {
-            /*
-              If tools are empty, they will not be added by the LLM client to the requests,
-              which means tool choice parameter cannot be used (it throws an exception without a tools parameter present).
-              So instead set it to null in this case, which behaves the same (there are no tools to call, after all).
-            */
-            toolChoice = if (tools.isNotEmpty()) LLMParams.ToolChoice.None else null
-        }
+        /*
+            Not all LLM providers support tool list when tool choice is set to "none", so we are rewriting all tool messages to regular messages,
+            for all requests without tools.
+         */
+        val promptWithDisabledTools = prompt
+            .withUpdatedParams { toolChoice = null }
+            .let { preparePrompt(it, emptyList()) }
+
         return executeSingle(promptWithDisabledTools, tools)
     }
 
