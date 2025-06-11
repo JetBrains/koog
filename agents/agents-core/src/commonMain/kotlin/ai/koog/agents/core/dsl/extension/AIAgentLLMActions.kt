@@ -1,6 +1,7 @@
 package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Instant
 
@@ -80,4 +81,11 @@ public suspend fun AIAgentLLMWriteSession.replaceHistoryWithTLDR(
     }
 
     strategy.compress(this, preserveMemory, memoryMessages)
+}
+
+/**
+ * Drops all trailing tool call messages from the current prompt
+ */
+public fun AIAgentLLMWriteSession.dropTrailingToolCalls() {
+    rewritePrompt { prompt -> prompt.withMessages { messages -> messages.dropLastWhile { it is Message.Tool.Call } } }
 }
