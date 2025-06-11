@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.llms
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMReply
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -148,5 +149,34 @@ public open class MultiLLMPromptExecutor(
         responseFlow.collect { chunk ->
             emit(chunk)
         }
+    }
+
+    /**
+     * Executes a given prompt using the specified tools and model, and returns a list of response messages.
+     *
+     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @param model The LLM model to use for execution.
+     * @return A list of `Message.Response` objects containing the responses generated based on the prompt.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
+     */
+    override suspend fun executeMultipleReplies(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMReply> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+
+        val provider = model.provider
+
+        val replies = when {
+            provider in llmClients -> llmClients[provider]!!.executeMultipleReplies(prompt, model, tools)
+            fallback != null -> fallbackClient!!.executeMultipleReplies(
+                prompt,
+                fallback.fallbackModel,
+                tools
+            )
+            else -> throw IllegalArgumentException("No client found for provider: $provider")
+        }
+
+        logger.debug { "Replies: $replies" }
+
+        return replies
     }
 }
