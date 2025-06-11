@@ -16,7 +16,6 @@ import ai.koog.agents.memory.model.DefaultTimeProvider.getCurrentTimestamp
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
-import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
