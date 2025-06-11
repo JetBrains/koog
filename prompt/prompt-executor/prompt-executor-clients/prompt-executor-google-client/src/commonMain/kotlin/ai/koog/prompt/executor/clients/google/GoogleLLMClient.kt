@@ -10,44 +10,31 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.accept
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.contentType
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.http.headers
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -343,61 +330,61 @@ public open class GoogleLLMClient(
 
     private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
         val contentParts = buildList {
-            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+            if (content.isNotEmpty() || attachment.isEmpty()) {
                 add(GooglePart.Text(content))
             }
-            mediaContent.forEach { media ->
-                when (media) {
-                    is MediaContent.Image -> {
+            attachment.forEach { attachment ->
+                when (attachment) {
+                    is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support image"
                         }
-                        if (media.isUrl()) {
-                            throw IllegalArgumentException("URL images not supported for Gemini models")
-                        }
-                        require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
-                            "Image format ${media.format} not supported"
-                        }
-                        add(
-                            GooglePart.InlineData(
-                                GoogleData.Blob(
-                                    mimeType = media.getMimeType(),
-                                    data = media.toBase64()
-                                )
-                            )
-                        )
 
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                        }
+
+                        add(GooglePart.InlineData(blob))
                     }
 
-                    is MediaContent.Audio -> {
+                    is Attachment.Audio -> {
                         require(model.capabilities.contains(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
-                        require(media.format in listOf("wav", "mp3", "aiff", "aac", "ogg", "flac")) {
-                            "Audio format ${media.format} not supported"
+
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
                         }
-                        add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+
+                        add(GooglePart.InlineData(blob))
                     }
 
-                    is MediaContent.File -> {
-                        if (media.isUrl()) {
-                            throw IllegalArgumentException("URL files not supported for Gemini models")
+                    is Attachment.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
+                            "Model ${model.id} does not support documents"
                         }
-                        add(
-                            GooglePart.InlineData(
-                                GoogleData.Blob(
-                                    mimeType = media.getMimeType(),
-                                    data = media.toBase64()
-                                )
-                            )
-                        )
+
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                        }
+
+                        add(GooglePart.InlineData(blob))
                     }
 
-                    is MediaContent.Video -> {
+                    is Attachment.Video -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Video)) {
                             "Model ${model.id} does not support video"
                         }
-                        add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported video attachment content: ${content::class}")
+                        }
+
+                        add(GooglePart.InlineData(blob))
                     }
                 }
             }

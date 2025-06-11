@@ -8,7 +8,8 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -288,49 +289,41 @@ public open class AnthropicLLMClient(
 
     private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+            if (content.isNotEmpty() || attachment.isEmpty()) {
                 add(AnthropicContent.Text(content))
             }
 
-            mediaContent.forEach { media ->
-                when (media) {
-                    is MediaContent.Image -> {
+            attachment.forEach { attachment ->
+                when (attachment) {
+                    is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support image"
                         }
 
-                        if (media.isUrl()) {
-                            add(AnthropicContent.Image(ImageSource.Url(media.source)))
-                        } else {
-                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                                "Image format ${media.format} not supported"
-                            }
-                            add(
-                                AnthropicContent.Image(
-                                    ImageSource.Base64(
-                                        data = media.toBase64(),
-                                        mediaType = media.getMimeType()
-                                    )
-                                )
-                            )
+                        val imageSource: ImageSource = when (val content = attachment.content) {
+                            is AttachmentContent.URL -> ImageSource.Url(content.url)
+                            is AttachmentContent.Binary -> ImageSource.Base64(content.base64, attachment.mimeType)
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                         }
+
+                        add(AnthropicContent.Image(imageSource))
                     }
 
-                    is MediaContent.File -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    is Attachment.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
-                        val docSource = when {
-                            media.isUrl() -> DocumentSource.PDFUrl(media.source)
-                            media.format == "pdf" -> DocumentSource.PDFBase64(media.toBase64())
-                            media.format == "txt" || media.format == "md" -> DocumentSource.PlainText(media.readText())
-                            else -> throw IllegalArgumentException("File format ${media.format} not supported. Supported formats: `pdf`, `text`")
+                        val documentSource: DocumentSource = when (val content = attachment.content) {
+                            is AttachmentContent.URL-> DocumentSource.Url(content.url)
+                            is AttachmentContent.Binary -> DocumentSource.Base64(content.base64, attachment.mimeType)
+                            is AttachmentContent.PlainText -> DocumentSource.PlainText(content.text, attachment.mimeType)
                         }
-                        add(AnthropicContent.Document(docSource))
+
+                        add(AnthropicContent.Document(documentSource))
                     }
 
-                    else -> throw IllegalArgumentException("Media content not supported: $media")
+                    else -> throw IllegalArgumentException("Media content not supported: $attachment")
                 }
             }
         }

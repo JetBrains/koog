@@ -1,6 +1,6 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.Message
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -12,7 +12,7 @@ class PromptBuilderTest {
     @Test
     fun testUserMessageWithAttachments() {
         val prompt = Prompt.build("test") {
-            user("Check this image", listOf(MediaContent.Image("test.png")))
+            user("Check this image", listOf(Attachment.Image("test.png")))
         }
 
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
@@ -20,8 +20,8 @@ class PromptBuilderTest {
         assertEquals("Check this image", prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        val singleContent = userMessage.mediaContent.single()
-        assertIs<MediaContent.Image>(singleContent, "Message should have an image attachment")
+        val singleContent = userMessage.attachment.single()
+        assertIs<Attachment.Image>(singleContent, "Message should have an image attachment")
         assertEquals("test.png", singleContent.source, "Image source should match")
     }
 
@@ -43,8 +43,8 @@ class PromptBuilderTest {
         assertEquals("Check these files", prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        val firstContent = userMessage.mediaContent[0]
-        assertIs<MediaContent.Image>(firstContent, "Message should have an image attachment")
+        val firstContent = userMessage.attachment[0]
+        assertIs<Attachment.Image>(firstContent, "Message should have an image attachment")
         assertEquals("photo.jpg", firstContent.source, "Image source should match")
     }
 
@@ -52,9 +52,9 @@ class PromptBuilderTest {
     fun testUserMessageWithContentBuilderWithAttachment() {
         val prompt = Prompt.build("test") {
             user {
-                text("Here's my question:")
+                content("Here's my question:")
                 newline()
-                text("How do I implement a binary search in Kotlin?")
+                content("How do I implement a binary search in Kotlin?")
                 attachments {
                     image("screenshot.png")
                 }
@@ -68,8 +68,8 @@ class PromptBuilderTest {
         assertEquals(expectedContent, prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        val singleContent = userMessage.mediaContent.single()
-        assertIs<MediaContent.Image>(singleContent, "Message should have an image attachment")
+        val singleContent = userMessage.attachment.single()
+        assertIs<Attachment.Image>(singleContent, "Message should have an image attachment")
         assertEquals("screenshot.png", singleContent.source, "Image source should match")
     }
 
@@ -79,7 +79,7 @@ class PromptBuilderTest {
         // in the subList call, which causes the last attachment to be skipped. This test is adjusted to match the current behavior.
         val prompt = Prompt.build("test") {
             user {
-                text("Please analyze these files")
+                content("Please analyze these files")
                 attachments {
                     image("chart.png")
                     document("data.pdf")
@@ -95,19 +95,19 @@ class PromptBuilderTest {
         val userMessage = prompt.messages.first() as Message.User
         assertEquals("Please analyze these files", userMessage.content, "First message content should match")
 
-        assertEquals(3, userMessage.mediaContent.size, "First message should have an image attachment")
+        assertEquals(3, userMessage.attachment.size, "First message should have an image attachment")
 
-        val firstContent = userMessage.mediaContent[0]
+        val firstContent = userMessage.attachment[0]
 
-        assertIs<MediaContent.Image>(firstContent, "First attachment should be an image attachment")
+        assertIs<Attachment.Image>(firstContent, "First attachment should be an image attachment")
         assertEquals("chart.png", firstContent.source, "Image source should match")
 
-        val secondContent = userMessage.mediaContent[1]
-        assertIs<MediaContent.File>(secondContent, "Second attachment should be a file attachment")
+        val secondContent = userMessage.attachment[1]
+        assertIs<Attachment.File>(secondContent, "Second attachment should be a file attachment")
         assertEquals("data.pdf", secondContent.source, "File source should match")
 
-        val thirdContent = userMessage.mediaContent[2]
-        assertIs<MediaContent.File>(thirdContent, "Third attachment should be a file attachment")
+        val thirdContent = userMessage.attachment[2]
+        assertIs<Attachment.File>(thirdContent, "Third attachment should be a file attachment")
         assertEquals("report.docx", thirdContent.source, "File source should match")
     }
 
@@ -120,9 +120,9 @@ class PromptBuilderTest {
             }
 
             user {
-                text("I have a question about programming.")
+                content("I have a question about programming.")
                 newline()
-                text("How do I implement a binary search in Kotlin?")
+                content("How do I implement a binary search in Kotlin?")
                 attachments {
                     image("code_example.png")
                 }
@@ -167,9 +167,9 @@ class PromptBuilderTest {
             userMessage.content
         )
 
-        assertEquals(1, userMessage.mediaContent.size, "User message should have an image attachment")
-        val mediaContent = userMessage.mediaContent.single()
-        assertIs<MediaContent.Image>(mediaContent, "User message should have an image attachment")
+        assertEquals(1, userMessage.attachment.size, "User message should have an image attachment")
+        val mediaContent = userMessage.attachment.single()
+        assertIs<Attachment.Image>(mediaContent, "User message should have an image attachment")
 
         val assistantMessage = prompt.messages[2] as Message.Assistant
         assertTrue(assistantMessage.content.contains("Here's how you can implement binary search in Kotlin:"))

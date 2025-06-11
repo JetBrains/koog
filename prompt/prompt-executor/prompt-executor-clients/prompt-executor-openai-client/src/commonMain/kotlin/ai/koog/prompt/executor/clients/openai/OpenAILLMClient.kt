@@ -12,47 +12,27 @@ import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
-import io.ktor.client.request.header
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readRawBytes
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.ClassDiscriminatorMode
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNamingStrategy
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.*
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
@@ -361,58 +341,57 @@ public open class OpenAILLMClient(
 
     private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+            if (content.isNotEmpty() || attachment.isEmpty()) {
                 add(ContentPart.Text(content))
             }
 
-            mediaContent.forEach { media ->
-                when (media) {
-                    is MediaContent.Image -> {
+            attachment.forEach { attachment ->
+                when (attachment) {
+                    is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support image"
                         }
-                        val imageUrl = if (media.isUrl()) {
-                            media.source
-                        } else {
-                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                                "Image format ${media.format} not supported"
-                            }
-                            "data:${media.getMimeType()};base64,${media.toBase64()}"
+
+                        val imageUrl: String = when (val content = attachment.content) {
+                            is AttachmentContent.URL -> content.url
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                         }
+
                         add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
                     }
 
-                    is MediaContent.Audio -> {
+                    is Attachment.Audio -> {
                         require(model.capabilities.contains(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
 
-                        require(media.format in listOf("wav", "mp3")) {
-                            "Audio format ${media.format} not supported"
+                        val inputAudio: ContentPart.InputAudio = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> ContentPart.InputAudio(content.base64, attachment.format)
+                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
                         }
-                        add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+
+                        add(ContentPart.Audio(inputAudio))
                     }
 
-                    is MediaContent.File -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    is Attachment.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
-                        require(media.format == "pdf") {
-                            "File format ${media.format} not supported. Supported formats: `pdf`"
-                        }
-                        val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
-                        add(
-                            ContentPart.File(
-                                ContentPart.FileData(
-                                    fileData = fileData,
-                                    filename = media.fileName()
-                                )
+                        val fileData: ContentPart.FileData = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> ContentPart.FileData(
+                                fileData = "data:${attachment.mimeType};base64,${content.base64}",
+                                filename = attachment.fileName
                             )
-                        )
+
+                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                        }
+
+                        add(ContentPart.File(fileData))
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported media content: $media")
+                    else -> throw IllegalArgumentException("Unsupported attachment content: $attachment")
                 }
             }
         }
@@ -511,11 +490,16 @@ public open class OpenAILLMClient(
             }
 
             message.audio != null -> {
-                val audio = Base64.decode(message.audio.data)
+                val audioData = Base64.decode(message.audio.data)
+
                 listOf(
                     Message.Assistant(
                         content = message.audio.transcript ?: "",
-                        mediaContent = MediaContent.Audio(audio, format = ""),
+                        attachment = Attachment.Audio(
+                            content = AttachmentContent.Binary(audioData),
+                            // FIXME not a proper solution. Seems like there is no data in response about format, need to clarify
+                            format = "unknown",
+                        ),
                         finishReason = choice.finishReason,
                         metaInfo = metaInfo
                     )

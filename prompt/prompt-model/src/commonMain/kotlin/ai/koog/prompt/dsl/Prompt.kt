@@ -17,6 +17,7 @@ import kotlin.time.Duration
  * @property id The unique identifier for the prompt.
  * @property params The language model parameters associated with the prompt. Defaults to [LLMParams].
  */
+// FIXME move it from dsl package up to the module root package?
 @Serializable
 public data class Prompt(
     val messages: List<Message>,

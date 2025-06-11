@@ -1,6 +1,6 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -81,23 +81,23 @@ public class PromptBuilder internal constructor(
     }
 
     /**
-     * Adds a user message to the prompt with optional media attachments.
+     * Adds a user message to the prompt with optional attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method supports adding text content along with a list of media attachments such as images, audio, or documents.
+     * This method supports adding text content along with a list of attachments such as images, audio, or documents.
      *
      * @param content The content of the user message.
-     * @param attachments The list of media attachments associated with the user message. Defaults to an empty list if no attachments are provided.
+     * @param attachments The list of attachments associated with the user message. Defaults to an empty list if no attachments are provided.
      */
-    public fun user(content: String, attachments: List<MediaContent> = emptyList()) {
+    public fun user(content: String, attachments: List<Attachment> = emptyList()) {
         messages.add(Message.User(content, RequestMetaInfo.create(clock), attachments))
     }
 
     /**
-     * Adds a user message to the prompt with media attachments.
+     * Adds a user message to the prompt with attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method allows attaching media content like images, audio, or documents.
+     * This method allows attaching content like images, audio, or documents.
      *
      * Example:
      * ```kotlin
@@ -106,7 +106,7 @@ public class PromptBuilder internal constructor(
      *
      * // Message with attachments using a lambda
      * user("Please analyze this image") {
-     *     image("photo.jpg")
+     *     imageFromPath("photo.jpg")
      * }
      * ```
      *
@@ -125,19 +125,21 @@ public class PromptBuilder internal constructor(
      * Example:
      * ```kotlin
      * user {
-     *      text("I have a question about programming.")
-     *      text("How do I implement a binary search in Kotlin?")
+     *      content {
+     *          text("I have a question about programming.")
+     *          text("How do I implement a binary search in Kotlin?")
+     *      }
      *      attachments {
-     *          image("screenshot.png")
+     *          imageFromPath("screenshot.png")
      *      }
      * }
      * ```
      *
      * @param body The initialization block for the ContentBuilderWithAttachment
      */
-    public fun user(body: ContentBuilderWithAttachment.() -> Unit) {
-        val (content, media) = ContentBuilderWithAttachment().apply(body).buildWithAttachments()
-        user(content, media)
+    public fun user(body: MessageContentBuilder.() -> Unit) {
+        val messageContent = MessageContentBuilder().apply(body).build()
+        user(messageContent.content, messageContent.attachments)
     }
 
     /**

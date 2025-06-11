@@ -1,121 +1,210 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
+import kotlinx.io.buffered
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.readByteArray
+import kotlinx.io.readString
 
 /**
- * A builder for constructing media attachments for prompt messages.
- *
- * This builder provides a fluent DSL API for creating collections of media content
- * that can be attached to user messages. It supports images, audio files, and documents,
- * enabling rich multimedia content in prompt construction.
+ * A builder for constructing attachments for prompt messages.
  *
  * Example usage:
  * ```kotlin
  * val attachments = AttachmentBuilder().apply {
- *     image("screenshot.png")
- *     audio(audioData, "mp3")
- *     document("report.pdf")
+ *     imageFromPath("screenshot.png")
+ *     fileFromPath("report.pdf")
  * }.build()
  * ```
  *
- * This class is part of the new DSL structure for prompt construction. It focuses specifically
- * on building media attachments, while text content is handled by TextContentBuilder.
- * For combining both text and attachments, use ContentBuilderWithAttachment.
- *
- * @see MediaContent for the types of media content supported
- * @see ContentBuilderWithAttachment for using this builder in prompt construction
+ * @see Attachment 
+ * @see MessageContentBuilder
  */
 @PromptDSL
-public class AttachmentBuilder() {
-    /**
-     * Internal collection to accumulate media content during the building process.
-     *
-     * This mutable list stores all the media content items created through the various builder methods
-     * and is used to construct the final media content list when [build] is called.
-     */
-    private val mediaContents = mutableListOf<MediaContent>()
+public class AttachmentBuilder {
+    private val attachments = mutableListOf<Attachment>()
 
-    /**
-     * Adds an image attachment to the media content collection.
-     *
-     * Creates an image media content item from the specified source.
-     * The source can be either a local file path or a URL.
-     *
-     * Model type support:
-     * - **Anthropic** — supports local and URL images. Formats: `png`, `jpeg`, `webp`, `gif`
-     * - **Gemini** — supports local images only. Formats: `png`, `jpeg`, `webp`, `heic`, `heif`, `gif`
-     * - **Ollama** — does not support images yet
-     * - **OpenAI** — supports local and URL images. Formats: `png`, `jpeg`, `webp`, `gif`
-     * - **OpenRouter** — supports local and URL images. Formats: `png`, `jpeg`, `webp`, `gif`
-     *
-     * Example:
-     * ```kotlin
-     * image("screenshot.png")           // Local file
-     * image("https://example.com/pic.jpg") // URL
-     * ```
-     *
-     * @param source The path to the local image file or URL of the image
-     */
-    public fun image(source: String) {
-        mediaContents.add(MediaContent.Image(source))
+    private class FileData(val name: String, val extension: String)
+
+    private fun String.urlFileData(): FileData {
+        val urlRegex = "^https?://.*$".toRegex()
+        require(this.matches(urlRegex)) { "Invalid url: $this" }
+
+        val name = this
+            .substringBeforeLast("?")
+            .substringBeforeLast("#")
+            .substringAfterLast("/")
+
+        val extension = name
+            .substringAfterLast(".", "")
+            .takeIf { it.isNotEmpty() }
+            ?.lowercase() ?: throw IllegalArgumentException("File extension not found in url: $this")
+
+        return FileData(name, extension)
+    }
+
+    private fun Path.fileData(): FileData {
+        require(SystemFileSystem.exists(this)) { "File not found: $this" }
+        require(SystemFileSystem.metadataOrNull(this)?.isRegularFile == true) { "This is not a regular file: $this" }
+
+        val extension = this.name.substringAfterLast(".", "")
+            .takeIf { it.isNotEmpty() }
+            ?.lowercase() ?: throw IllegalArgumentException("File extension not found in path: $this")
+
+        return FileData(this.name, extension)
+    }
+
+    private fun Path.readText(): String {
+        return SystemFileSystem.source(this).buffered().use { it.readString() }
+    }
+
+    private fun Path.readByteArray(): ByteArray {
+        return SystemFileSystem.source(this).buffered().use { it.readByteArray() }
     }
 
     /**
-     * Adds an audio attachment to the media content collection.
-     *
-     * Creates an audio media content item with the specified data and format.
-     * The audio data should be provided as a byte array.
-     *
-     * - **Anthropic** — does not support audio
-     * - **Gemini** — formats: `wav`, `mp3`, `aiff`, `aac`, `ogg`, `flac`
-     * - **Ollama** — does not support audio
-     * - **OpenAI** — formats: `wav`, `mp3`
-     * - **OpenRouter** — formats: `wav`, `mp3`
-     *
-     * Example:
-     * ```kotlin
-     * audio(audioByteArray, "mp3")
-     * audio(recordedSpeech, "wav")
-     * ```
-     *
-     * @param data The audio data as a byte array
-     * @param format The audio file format (e.g., "mp3", "wav", "ogg")
+     * Adds [Attachment] to the list of attachments.
      */
-    public fun audio(data: ByteArray, format: String) {
-        mediaContents.add(MediaContent.Audio(data, format))
+    public fun attachment(attachment: Attachment) {
+        attachments.add(attachment)
     }
 
     /**
-     * Adds a document attachment to the media content collection.
-     *
-     * Creates a document media content item from the specified local file path.
-     * URLs are not supported for security reasons.
-     *
-     * - Anthropic — supports local and URL-based PDF files.  Local support also for TXT and MD files.
-     * - Gemini — supports only local files of the following formats: `pdf`, `js`, `py`, `txt`, `html`, `css`, `md`, `csv`, `xml`, `rtf`
-     * - Ollama — does not support documents yet
-     * - OpenAI — supports only local PDF files
-     * - OpenRouter — supports only local PDF files
-     *
-     * Example:
-     * ```kotlin
-     * document("report.pdf")
-     * document("/path/to/document.docx")
-     * ```
-     *
-     * @param source The local file path to the document
+     * Adds [Attachment.Image] to the list of attachments.
      */
-    public fun document(source: String) {
-        mediaContents.add(MediaContent.File(source))
+    public fun image(image: Attachment.Image) {
+        attachment(image)
     }
 
     /**
-     * Constructs and returns the accumulated list of media content items.
+     * Adds [Attachment.Image] with [AttachmentContent.URL] content from the provided URL.
      *
-     * This method finalizes the building process and returns all the media content
-     * items that were added through the various builder methods.
-     *
-     * @return A list containing all the media content items created through the builder methods
+     * @param url Image URL
+     * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
      */
-    public fun build(): List<MediaContent> = mediaContents
+    public fun imageFromUrl(url: String) {
+        val fileData = url.urlFileData()
+        image(Attachment.Image(content = AttachmentContent.URL(url), format = fileData.extension, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.Image] with [AttachmentContent.Binary] content from the provided local file path.
+     *
+     * @param path Path to local image file
+     * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
+     */
+    public fun imageFromPath(path: Path) {
+        val fileData = path.fileData()
+        image(Attachment.Image(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.Audio] to the list of attachments.
+     */
+    public fun audio(audio: Attachment.Audio) {
+        attachments.add(audio)
+    }
+
+    /**
+     * Adds [Attachment.Audio] with [AttachmentContent.URL] content from the provided URL.
+     *
+     * @param url Audio URL
+     * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
+     */
+    public fun audioFromUrl(url: String) {
+        val fileData = url.urlFileData()
+        audio(Attachment.Audio(content = AttachmentContent.URL(url), format = fileData.extension, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.Audio] with [AttachmentContent.Binary] content from the provided local file path.
+     *
+     * @param path Path to local audio file
+     * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
+     */
+    public fun audioFromPath(path: Path) {
+        val fileData = path.fileData()
+        audio(Attachment.Audio(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.Video] to the list of attachments.
+     */
+    public fun video(video: Attachment.Video) {
+        attachments.add(video)
+    }
+
+    /**
+     * Adds [Attachment.Video] with [AttachmentContent.URL] content from the provided URL.
+     *
+     * @param url Video URL
+     * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
+     */
+    public fun videoFromUrl(url: String) {
+        val fileData = url.urlFileData()
+        video(Attachment.Video(content = AttachmentContent.URL(url), format = fileData.extension, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.Video] with [AttachmentContent.Binary] content from the provided local file path.
+     *
+     * @param path Path to local video file
+     * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
+     */
+    public fun videoFromPath(path: Path) {
+        val fileData = path.fileData()
+        video(Attachment.Video(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.File] to the list of attachments.
+     */
+    public fun file(file: Attachment.File) {
+        attachments.add(file)
+    }
+
+    /**
+     * Adds [Attachment.File] with [AttachmentContent.URL] content from the provided URL.
+     *
+     * @param url File URL
+     * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
+     * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
+     */
+    public fun fileFromUrl(url: String, mimeType: String) {
+        val fileData = url.urlFileData()
+        file(Attachment.File(content = AttachmentContent.URL(url), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.File] with [AttachmentContent.Binary] content from the provided local file path.
+     *
+     * @param path Path to local file
+     * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
+     * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
+     */
+    public fun binaryFileFromPath(path: Path, mimeType: String) {
+        val fileData = path.fileData()
+        file(Attachment.File(content = AttachmentContent.Binary(path.readByteArray()), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
+    }
+
+    /**
+     * Adds [Attachment.File] with [AttachmentContent.PlainText] content from the provided local file path.
+     *
+     * @param path Path to local file
+     * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
+     * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
+     */
+    public fun textFileFromPath(path: Path, mimeType: String) {
+        val fileData = path.fileData()
+        file(Attachment.File(content = AttachmentContent.PlainText(path.readText()), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
+    }
+
+    /**
+     * Constructs and returns the accumulated list of attachment items.
+     *
+     * @return A list containing all the attachment items created through the builder methods
+     */
+    public fun build(): List<Attachment> = attachments
 }
