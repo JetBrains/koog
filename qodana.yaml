@@ -42,6 +42,8 @@ include:
   - name: VulnerableLibrariesGlobal
   # License audit:
   - name: CheckDependencyLicenses
+  # Missing Kdocs:
+  - name: MissingKdocForPublicAPI
 # Exclude from analysis:
 exclude:
   - name: All
