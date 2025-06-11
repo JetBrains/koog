@@ -1,8 +1,8 @@
 package ai.koog.agents.memory.feature
 
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.feature.AIAgentFeature
@@ -15,6 +15,7 @@ import ai.koog.agents.memory.model.DefaultTimeProvider.getCurrentTimestamp
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
+import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -463,12 +464,14 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     preserveQuestionsInLLMChat: Boolean
 ): Fact {
     // Add a message asking to retrieve facts about the concept
-    val prompt = when (concept.factType) {
+    val promptForCompression = when (concept.factType) {
         FactType.SINGLE -> MemoryPrompts.singleFactPrompt(concept)
         FactType.MULTIPLE -> MemoryPrompts.multipleFactsPrompt(concept)
     }
 
-    updatePrompt { user(prompt) }
+    // remove tailing tool calls as we didn't provide any result for them
+    prompt = prompt.withMessages { messages -> messages.dropLastWhile { it is Message.Tool.Call } }
+    updatePrompt { user(promptForCompression) }
     val response = requestLLMWithoutTools()
 
     val timestamp = getCurrentTimestamp()
