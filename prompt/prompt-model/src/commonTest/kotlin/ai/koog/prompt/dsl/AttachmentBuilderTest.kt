@@ -1,6 +1,7 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -18,78 +19,183 @@ class AttachmentBuilderTest {
     @Test
     fun testAddSingleImage() {
         val builder = AttachmentBuilder()
-        builder.image("test.png")
+        builder.imageFromUrl("https://example.com/test.png")
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is Attachment.Image, "Attachment should be an Image")
-        assertEquals("test.png", (result[0] as Attachment.Image).source, "Image source should match")
+        assertEquals(
+            Attachment.Image(
+                content = AttachmentContent.URL("https://example.com/test.png"),
+                format = "png",
+                fileName = "test.png"
+            ),
+            result[0]
+        )
     }
 
     @Test
     fun testAddSingleAudio() {
         val audioData = byteArrayOf(1, 2, 3, 4, 5)
         val builder = AttachmentBuilder()
-        builder.audio(audioData, "mp3")
+        builder.audio(Attachment.Audio(content = AttachmentContent.Binary(audioData), format = "mp3", fileName = "audio.mp3"))
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is Attachment.Audio, "Attachment should be an Audio")
-        assertEquals("mp3", (result[0] as Attachment.Audio).format, "Audio format should match")
-        assertEquals(audioData, (result[0] as Attachment.Audio).data, "Audio data should match")
+        assertEquals(
+            Attachment.Audio(
+                content = AttachmentContent.Binary(audioData),
+                format = "mp3",
+                fileName = "audio.mp3"
+            ),
+            result[0]
+        )
     }
 
     @Test
     fun testAddSingleDocument() {
+        val documentData = byteArrayOf(1, 2, 3, 4, 5)
         val builder = AttachmentBuilder()
-        builder.document("report.pdf")
+        builder.file(Attachment.File(
+            content = AttachmentContent.Binary(documentData),
+            format = "pdf",
+            mimeType = "application/pdf",
+            fileName = "report.pdf"
+        ))
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is Attachment.File, "Attachment should be a File")
-        assertEquals("report.pdf", (result[0] as Attachment.File).source, "Document source should match")
+        assertEquals(
+            Attachment.File(
+                content = AttachmentContent.Binary(documentData),
+                format = "pdf",
+                mimeType = "application/pdf",
+                fileName = "report.pdf"
+            ),
+            result[0]
+        )
     }
 
     @Test
     fun testAddMultipleAttachments() {
         val audioData = byteArrayOf(1, 2, 3, 4, 5)
+        val imageData = byteArrayOf(10, 20, 30, 40, 50)
+        val documentData = byteArrayOf(60, 70, 80, 90, 100)
         val builder = AttachmentBuilder()
-        builder.image("photo.jpg")
-        builder.audio(audioData, "wav")
-        builder.document("document.pdf")
+        builder.image(Attachment.Image(
+            content = AttachmentContent.Binary(imageData),
+            format = "jpg",
+            fileName = "photo.jpg"
+        ))
+        builder.audio(Attachment.Audio(
+            content = AttachmentContent.Binary(audioData),
+            format = "wav",
+            fileName = "audio.wav"
+        ))
+        builder.file(Attachment.File(
+            content = AttachmentContent.Binary(documentData),
+            format = "pdf",
+            mimeType = "application/pdf",
+            fileName = "document.pdf"
+        ))
         val result = builder.build()
 
         assertEquals(3, result.size, "Should contain three attachments")
-        assertTrue(result[0] is Attachment.Image, "First attachment should be an Image")
-        assertTrue(result[1] is Attachment.Audio, "Second attachment should be an Audio")
-        assertTrue(result[2] is Attachment.File, "Third attachment should be a File")
+        assertEquals(
+            Attachment.Image(
+                content = AttachmentContent.Binary(imageData),
+                format = "jpg",
+                fileName = "photo.jpg"
+            ),
+            result[0]
+        )
+        assertEquals(
+            Attachment.Audio(
+                content = AttachmentContent.Binary(audioData),
+                format = "wav",
+                fileName = "audio.wav"
+            ),
+            result[1]
+        )
+        assertEquals(
+            Attachment.File(
+                content = AttachmentContent.Binary(documentData),
+                format = "pdf",
+                mimeType = "application/pdf",
+                fileName = "document.pdf"
+            ),
+            result[2]
+        )
     }
 
     @Test
     fun testDslSyntax() {
+        val imageData = byteArrayOf(11, 22, 33, 44, 55)
+        val pdfData = byteArrayOf(66, 77, 88, 99, 111)
         val result = AttachmentBuilder().apply {
-            image("photo.png")
-            document("report.pdf")
+            image(Attachment.Image(
+                content = AttachmentContent.Binary(imageData),
+                format = "png",
+                fileName = "photo.png"
+            ))
+            file(Attachment.File(
+                content = AttachmentContent.Binary(pdfData),
+                format = "pdf",
+                mimeType = "application/pdf",
+                fileName = "report.pdf"
+            ))
         }.build()
 
         assertEquals(2, result.size, "Should contain two attachments")
-        assertTrue(result[0] is Attachment.Image, "First attachment should be an Image")
-        assertTrue(result[1] is Attachment.File, "Second attachment should be a File")
+        assertEquals(
+            Attachment.Image(
+                content = AttachmentContent.Binary(imageData),
+                format = "png",
+                fileName = "photo.png"
+            ),
+            result[0]
+        )
+        assertEquals(
+            Attachment.File(
+                content = AttachmentContent.Binary(pdfData),
+                format = "pdf",
+                mimeType = "application/pdf",
+                fileName = "report.pdf"
+            ),
+            result[1]
+        )
     }
 
     @Test
     fun testImageWithUrl() {
         val result = AttachmentBuilder().apply {
-            image("https://example.com/image.jpg")
+            imageFromUrl("https://example.com/image.jpg")
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        assertTrue(result[0] is Attachment.Image, "Attachment should be an Image")
         assertEquals(
-            "https://example.com/image.jpg",
-            (result[0] as Attachment.Image).source,
-            "Image source should match"
+            Attachment.Image(
+                content = AttachmentContent.URL("https://example.com/image.jpg"),
+                format = "jpg",
+                fileName = "image.jpg"
+            ),
+            result[0]
         )
-        assertTrue((result[0] as Attachment.Image).isUrl(), "Image should be recognized as URL")
+    }
+
+    @Test
+    fun testAudioWithUrl() {
+        val result = AttachmentBuilder().apply {
+            audioFromUrl("https://example.com/music.mp3")
+        }.build()
+
+        assertEquals(1, result.size, "Should contain one attachment")
+        assertEquals(
+            Attachment.Audio(
+                content = AttachmentContent.URL("https://example.com/music.mp3"),
+                format = "mp3",
+                fileName = "music.mp3"
+            ),
+            result[0]
+        )
     }
 }
