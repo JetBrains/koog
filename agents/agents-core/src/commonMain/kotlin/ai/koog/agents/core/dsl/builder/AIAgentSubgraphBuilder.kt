@@ -28,6 +28,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param Input The type of input data that this starting node processes.
      */
     public abstract val nodeStart: StartAIAgentNodeBase<Input>
+
     /**
      * Represents the "finish" node in the AI agent's subgraph structure. This node indicates
      * the endpoint of the subgraph and acts as a terminal stage where the workflow stops.
@@ -103,24 +104,24 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param dispatcher Coroutine dispatcher to use for parallel execution
      * @param name Optional node name
      */
-    public fun <Input, Output> parallel(
+    public fun <Input, Output> fork(
         vararg nodes: AIAgentNodeBase<Input, Output>,
         dispatcher: CoroutineDispatcher = Dispatchers.Default,
         name: String? = null,
-    ): AIAgentNodeDelegateBase<Input, List<ParallelNodeResult<Input, Output>>> {
-        return AIAgentNodeDelegate(name, ParallelAIAgentNodeBuilder(nodes.asList(), dispatcher))
+    ): AIAgentNodeDelegateBase<Input, List<ForkedNodeResult<Input, Output>>> {
+        return AIAgentNodeDelegate(name, ForkNodeBuilder(nodes.asList(), dispatcher))
     }
 
     /**
-     * Creates a node that executes multiple nodes in parallel and merges their contexts.
+     * Creates a node that merges the results of the forked nodes.
      * @param execute Function to merge the contexts after parallel execution
      * @param name Optional node name
      */
-    public fun <Input, Output> reduce(
+    public fun <Input, Output> merge(
         name: String? = null,
-        execute: suspend AIAgentContextBase.(List<ParallelNodeResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
-    ): AIAgentNodeDelegateBase<List<ParallelNodeResult<Input, Output>>, Output> {
-        return AIAgentNodeDelegate(name, ReduceAIAgentNodeBuilder(execute))
+        execute: suspend AIAgentContextBase.(List<ForkedNodeResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+    ): AIAgentNodeDelegateBase<List<ForkedNodeResult<Input, Output>>, Output> {
+        return AIAgentNodeDelegate(name, MergeNodeBuilder(execute))
     }
 
     /**
@@ -257,7 +258,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
  * @property context Context of the node on the node termination state
  * @property output Output of the node
  */
-public data class ParallelNodeResult<Input, Output>(
+public data class ForkedNodeResult<Input, Output>(
     val nodeName: String,
     val input: Input,
     val context: AIAgentContextBase,
@@ -271,18 +272,19 @@ public data class ParallelNodeResult<Input, Output>(
  * @param dispatcher Coroutine dispatcher to use for parallel execution
  */
 @OptIn(ExperimentalUuidApi::class)
-public class ParallelAIAgentNodeBuilder<Input, Output> internal constructor(
+public class ForkNodeBuilder<Input, Output> internal constructor(
     private val nodes: List<AIAgentNodeBase<Input, Output>>,
     private val dispatcher: CoroutineDispatcher
-) : AIAgentNodeBuilder<Input, List<ParallelNodeResult<Input, Output>>>(
+) : AIAgentNodeBuilder<Input, List<ForkedNodeResult<Input, Output>>>(
     execute = { input ->
         val initialContext: AIAgentContextBase = this
         val mapResults = supervisorScope {
             nodes.map { node ->
                 async(dispatcher) {
-                    val nodeContext = (initialContext as? ai.koog.agents.core.agent.context.AIAgentContext)?.fork() ?: initialContext.fork()
+                    val nodeContext = (initialContext as? ai.koog.agents.core.agent.context.AIAgentContext)?.fork()
+                        ?: initialContext.fork()
                     val result = node.execute(nodeContext, input)
-                    ParallelNodeResult(node.name, input, nodeContext, result)
+                    ForkedNodeResult(node.name, input, nodeContext, result)
                 }
             }
         }
@@ -297,9 +299,9 @@ public class ParallelAIAgentNodeBuilder<Input, Output> internal constructor(
  * @param execute Function to merge the contexts after parallel execution
  */
 @OptIn(ExperimentalUuidApi::class)
-public class ReduceAIAgentNodeBuilder<Input, Output> internal constructor(
-    private val execute: suspend AIAgentContextBase.(List<ParallelNodeResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
-) : AIAgentNodeBuilder<List<ParallelNodeResult<Input, Output>>, Output>(
+public class MergeNodeBuilder<Input, Output> internal constructor(
+    private val execute: suspend AIAgentContextBase.(List<ForkedNodeResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+) : AIAgentNodeBuilder<List<ForkedNodeResult<Input, Output>>, Output>(
     execute = { input ->
         val (context, output) = execute(input)
         this.replace(context)
