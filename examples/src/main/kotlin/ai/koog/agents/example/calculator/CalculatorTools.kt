@@ -1,9 +1,19 @@
 package ai.koog.agents.example.calculator
 
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
+import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onMultipleToolCalls
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 
+@Suppress("unused")
 @LLMDescription("Tools for basic calculator operations")
 class CalculatorTools : ToolSet {
 
@@ -53,5 +63,52 @@ class CalculatorTools : ToolSet {
         b: Float
     ): String {
         return (a * b).toString()
+    }
+}
+
+object CalculatorStrategy {
+    private const val MAX_TOKENS_THRESHOLD = 1000
+
+    val strategy = strategy("test") {
+        val nodeCallLLM by nodeLLMRequestMultiple()
+        val nodeExecuteToolMultiple by nodeExecuteMultipleTools(parallelTools = true)
+        val nodeSendToolResultMultiple by nodeLLMSendMultipleToolResults()
+        val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>()
+
+        edge(nodeStart forwardTo nodeCallLLM)
+
+        edge(
+            (nodeCallLLM forwardTo nodeFinish)
+                    transformed { it.first() }
+                    onAssistantMessage { true }
+        )
+
+        edge(
+            (nodeCallLLM forwardTo nodeExecuteToolMultiple)
+                    onMultipleToolCalls { true }
+        )
+
+        edge(
+            (nodeExecuteToolMultiple forwardTo nodeCompressHistory)
+                    onCondition { llm.readSession { prompt.latestTokenUsage > MAX_TOKENS_THRESHOLD } }
+        )
+
+        edge(nodeCompressHistory forwardTo nodeSendToolResultMultiple)
+
+        edge(
+            (nodeExecuteToolMultiple forwardTo nodeSendToolResultMultiple)
+                    onCondition { llm.readSession { prompt.latestTokenUsage <= MAX_TOKENS_THRESHOLD } }
+        )
+
+        edge(
+            (nodeSendToolResultMultiple forwardTo nodeExecuteToolMultiple)
+                    onMultipleToolCalls { true }
+        )
+
+        edge(
+            (nodeSendToolResultMultiple forwardTo nodeFinish)
+                    transformed { it.first() }
+                    onAssistantMessage { true }
+        )
     }
 }

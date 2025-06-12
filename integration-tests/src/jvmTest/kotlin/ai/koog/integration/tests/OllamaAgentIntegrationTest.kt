@@ -2,9 +2,6 @@
 
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.tools.AnswerVerificationTool
-import ai.koog.integration.tests.tools.GenericParameterTool
-import ai.koog.integration.tests.tools.GeographyQueryTool
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
@@ -13,6 +10,9 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.integration.tests.tools.AnswerVerificationTool
+import ai.koog.integration.tests.tools.GenericParameterTool
+import ai.koog.integration.tests.tools.GeographyQueryTool
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
