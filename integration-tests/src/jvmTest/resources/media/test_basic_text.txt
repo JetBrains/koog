@@ -1,0 +1,1 @@
+This is a simple text for testing basic text processing capabilities.

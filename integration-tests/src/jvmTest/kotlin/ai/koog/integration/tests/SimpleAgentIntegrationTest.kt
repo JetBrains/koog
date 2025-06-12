@@ -4,15 +4,14 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
@@ -22,6 +21,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -41,75 +41,12 @@ class SimpleAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     companion object {
-        private lateinit var testResourcesDir: File
+        val testResourcesDir = File("src/jvmTest/resources/media")
 
         @JvmStatic
         @BeforeAll
         fun setupTestResources() {
-            testResourcesDir = File("src/jvmTest/resources/media")
-            testResourcesDir.mkdirs()
-
-            val markdownFile = File(testResourcesDir, "test.md")
-            markdownFile.writeText(
-                """
-                # Test Markdown File
-
-                This is a test markdown file for integration testing.
-
-                ## Features
-                - Support for markdown files
-                - Integration with LLM models
-                - Testing capabilities
-
-                ## Usage
-                - Run the `integration_test` Gradle task to run the tests.
-                - Run the `integrationTest` Maven goal to run the tests.
-
-                ## License
-                This project is licensed under the Apache License 2.0.
-            """.trimIndent()
-            )
-
-            val textFile = File(testResourcesDir, "test.txt")
-            textFile.writeText("This is a simple text file for testing document handling.")
-
-            val imageFile = File(testResourcesDir, "test.png")
-            imageFile.writeBytes(
-                byteArrayOf(
-                    -119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
-                    73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,
-                    0, 0, 0, 31, 21, -60, -119, 0, 0, 0, 10, 73, 68, 65,
-                    84, 120, -100, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45,
-                    -76, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126
-                )
-            )
-
-            val audioFile = File(testResourcesDir, "test.wav")
-            audioFile.writeBytes(
-                byteArrayOf(
-                    82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69, 102, 109, 116, 32,
-                    16, 0, 0, 0, 1, 0, 1, 0, 68, -84, 0, 0, -120, 88, 1, 0,
-                    2, 0, 16, 0, 100, 97, 116, 97, 0, 0, 0, 0
-                )
-            )
-
-            val pdfFile = File(testResourcesDir, "test.pdf")
-            pdfFile.writeText(
-                """%PDF-1.4
-                        1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-                        2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-                        3 0 obj<</Type/Page/Contents 4 0 R>>endobj
-                        4 0 obj<</Length 44>>stream
-                        BT/F1 12 Tf 100 700 Td(Test PDF for Koog)Tj ET
-                        endstream endobj
-                        xref 0 5
-                        0000000000 65535 f 
-                        0000000010 00000 n 
-                        0000000074 00000 n 
-                        0000000142 00000 n 
-                        0000000210 00000 n 
-                        trailer<</Size 5/Root 1 0 R>>startxref 300 %%EOF""".trimIndent()
-            )
+            MediaTestUtils.setupTestResourcesForAgent(testResourcesDir)
         }
 
         @JvmStatic
@@ -128,23 +65,8 @@ class SimpleAgentIntegrationTest {
         }
 
         @JvmStatic
-        fun modelWithVisionCapability(): Stream<Arguments> {
-            val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
-            val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
-
-            return Stream.concat(
-                Models.openAIModels()
-                    .filter { model ->
-                        model.capabilities.contains(LLMCapability.Vision.Image)
-                    }
-                    .map { model -> Arguments.of(model, openAIClient) },
-
-                Models.anthropicModels()
-                    .filter { model ->
-                        model.capabilities.contains(LLMCapability.Vision.Image)
-                    }
-                    .map { model -> Arguments.of(model, anthropicClient) }
-            )
+        fun modelsWithVisionCapability(): Stream<Arguments> {
+            return Models.modelsWithVisionCapability()
         }
     }
 
@@ -287,7 +209,7 @@ class SimpleAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("modelWithVisionCapability")
+    @MethodSource("modelsWithVisionCapability")
     fun integration_AIAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
@@ -327,5 +249,13 @@ class SimpleAgentIntegrationTest {
 
         val result = results.first()
         assertNotNull(result, "Result should not be null")
+        assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+        assertTrue(result.length > 20, "Result should contain more than 20 characters")
+
+        val resultLowerCase = result.lowercase()
+        assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
+        assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
+        assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
+
     }
 }

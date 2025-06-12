@@ -1,5 +1,7 @@
 package ai.koog.integration.tests
 
+import ai.koog.integration.tests.utils.MediaTestScenarios
+import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
@@ -8,6 +10,12 @@ import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
+import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
+import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
+import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
+import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
+import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
@@ -51,69 +59,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         fun setupTestResources() {
             testResourcesDir = File("src/jvmTest/resources/media")
             testResourcesDir.mkdirs()
-
-            val markdownFile = File(testResourcesDir, "test.md")
-            markdownFile.writeText(
-                """
-                # Test Markdown File
-
-                This is a test markdown file for integration testing.
-
-                ## Features
-                - Support for markdown files
-                - Integration with LLM models
-                - Testing capabilities
-                
-                ## Usage
-                - Run the `integration_test` Gradle task to run the tests.
-                - Run the `integrationTest` Maven goal to run the tests.
-                
-                ## License
-                This project is licensed under the Apache License 2.0.
-            """.trimIndent()
-            )
-
-            val textFile = File(testResourcesDir, "test.txt")
-            textFile.writeText("This is a simple text file for testing document handling.")
-
-            val imageFile = File(testResourcesDir, "test.png")
-            imageFile.writeBytes(
-                byteArrayOf(
-                    -119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
-                    73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,
-                    0, 0, 0, 31, 21, -60, -119, 0, 0, 0, 10, 73, 68, 65,
-                    84, 120, -100, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45,
-                    -76, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126
-                )
-            )
-
-            val audioFile = File(testResourcesDir, "test.wav")
-            audioFile.writeBytes(
-                byteArrayOf(
-                    82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69, 102, 109, 116, 32,
-                    16, 0, 0, 0, 1, 0, 1, 0, 68, -84, 0, 0, -120, 88, 1, 0,
-                    2, 0, 16, 0, 100, 97, 116, 97, 0, 0, 0, 0
-                )
-            )
-
-            // Create a simple PDF file for testing
-            val pdfFile = File(testResourcesDir, "test.pdf")
-            pdfFile.writeText(
-                """%PDF-1.4
-                        1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
-                        2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
-                        3 0 obj<</Type/Page/Contents 4 0 R>>endobj
-                        4 0 obj<</Length 44>>stream
-                        BT/F1 12 Tf 100 700 Td(Test PDF for Koog)Tj ET
-                        endstream endobj
-                        xref 0 5
-                        0000000000 65535 f 
-                        0000000010 00000 n 
-                        0000000074 00000 n 
-                        0000000142 00000 n 
-                        0000000210 00000 n 
-                        trailer<</Size 5/Root 1 0 R>>startxref 300 %%EOF""".trimIndent()
-            )
         }
 
         // combinations for usual universal tests
@@ -131,50 +76,24 @@ class SingleLLMPromptExecutorIntegrationTest {
             )
         }
 
-        // combinations for tests with media processing
         @JvmStatic
-        fun modelClientCombinationsMedia(): Stream<Arguments> {
-            val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
-            val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
-            val googleClient = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-            val openRouterClient = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
+        fun markdownScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.markdownScenarioModelCombinations()
+        }
 
-            return Stream.concat(
-                Models.openAIModels()
-                    .filter { model ->
-                        model.capabilities.contains(LLMCapability.Vision.Image) ||
-                                model.capabilities.contains(LLMCapability.Vision.Video) ||
-                                model.capabilities.contains(LLMCapability.Audio) ||
-                                model.capabilities.contains(LLMCapability.Document)
-                    }
-                    .map { model -> Arguments.of(model, openAIClient) },
+        @JvmStatic
+        fun imageScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.imageScenarioModelCombinations()
+        }
 
-                Models.anthropicModels()
-                    .filter { model ->
-                        model.capabilities.contains(LLMCapability.Vision.Image)
-                    }
-                    .map { model -> Arguments.of(model, anthropicClient) }
-            ).let { stream ->
-                Stream.concat(
-                    stream,
-                    Models.googleModels()
-                        .filter { model ->
-                            model.capabilities.contains(LLMCapability.Vision.Image) ||
-                                    model.capabilities.contains(LLMCapability.Vision.Video) ||
-                                    model.capabilities.contains(LLMCapability.Audio)
-                        }
-                        .map { model -> Arguments.of(model, googleClient) }
-                )
-            }.let { stream ->
-                Stream.concat(
-                    stream,
-                    Models.openRouterModels()
-                        .filter { model ->
-                            model.capabilities.contains(LLMCapability.Vision.Image)
-                        }
-                        .map { model -> Arguments.of(model, openRouterClient) }
-                )
-            }
+        @JvmStatic
+        fun textScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.textScenarioModelCombinations()
+        }
+
+        @JvmStatic
+        fun audioScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.audioScenarioModelCombinations()
         }
     }
 
@@ -224,7 +143,6 @@ class SingleLLMPromptExecutorIntegrationTest {
             assertNotNull(responseChunks, "Response chunks should not be null")
             assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
 
-            // Combine all chunks to check the full response
             val fullResponse = responseChunks.joinToString("")
             assertTrue(
                 fullResponse.contains("1") &&
@@ -556,7 +474,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
     }
 
-    // Common helper methods for tool choice tests
     private fun createCalculatorTool(): ToolDescriptor {
         return ToolDescriptor(
             name = "calculator",
@@ -671,220 +588,232 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource("modelClientCombinationsMedia")
-    fun integration_testMarkdownDocument(model: LLModel, client: LLMClient) = runTest(timeout = 60.seconds) {
-        assumeTrue(
-            model.capabilities.contains(LLMCapability.Vision.Image),
-            "Model must support image vision capability"
-        )
-        assumeTrue(
-            model.provider != LLMProvider.OpenAI,
-            "File format md not supported for OpenAI"
-        )
+    /*
+    * IMPORTANT about the testing approach!
+    * The number of combinations between specific executors and media types will make tests slower.
+    * The compatibility of each LLM profile with the media processing is covered in the E2E agents tests.
+    * Therefore, in the scope of the executor tests, we'll check one executor of each provider
+    * to decrease the number of possible combinations and to avoid redundant checks.*/
 
-        val markdownFile = File(testResourcesDir, "test.md")
-        assertTrue(markdownFile.exists(), "Markdown test file should exist")
-
-        val executor = SingleLLMPromptExecutor(client)
-
-        val prompt = prompt("markdown-test") {
-            system("You are a helpful assistant that can analyze markdown files.")
-
-            user {
-                markdown {
-                    +"I'm sending you a markdown file. Please analyze it and tell me what sections it contains."
-                }
-
-                attachments {
-                    document(markdownFile.absolutePath)
-                }
-            }
-        }
-
-        val response = executor.execute(prompt, model)
-
-        assertNotNull(response, "Response should not be null")
-        assertNotNull(response.content, "Response content should not be null")
-        assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
-
-        assertTrue(
-            response.content.contains("Features", ignoreCase = true),
-            "Response should mention the 'Features' section from the markdown file"
-        )
-        assertTrue(
-            response.content.contains("Usage", ignoreCase = true),
-            "Response should mention the 'Usage' section from the markdown file"
-        )
-        assertTrue(
-            response.content.contains("License", ignoreCase = true),
-            "Response should mention the 'License' section from the markdown file"
+    private fun getClient(model: LLModel): LLMClient {
+        return if (model.provider == LLMProvider.Anthropic) AnthropicLLMClient(
+            readTestAnthropicKeyFromEnv()
+        ) else GoogleLLMClient(
+            readTestGoogleAIKeyFromEnv()
         )
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinationsMedia")
-    fun integration_testImageFile(model: LLModel, client: LLMClient) = runTest(timeout = 60.seconds) {
-        assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+    @MethodSource("markdownScenarioModelCombinations")
+    fun integration_testMarkdownProcessingBasic(
+        scenario: MarkdownTestScenario,
+        model: LLModel
+    ) =
+        runTest(timeout = 60.seconds) {
+            assumeTrue(model.provider != LLMProvider.OpenAI, "File format md not supported for OpenAI")
 
-        val imageFile = File(testResourcesDir, "test.png")
-        assertTrue(imageFile.exists(), "Image test file should exist")
+            val client = getClient(model)
+            val executor = SingleLLMPromptExecutor(client)
 
-        val executor = SingleLLMPromptExecutor(client)
+            val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
 
-        val prompt = prompt("image-test") {
-            system("You are a helpful assistant that can analyze images.")
+            val prompt = prompt("markdown-test-${scenario.name.lowercase()}") {
+                system("You are a helpful assistant that can analyze markdown files.")
 
-            user {
-                markdown {
-                    +"I'm sending you an image. Please describe what you see in it."
+                user {
+                    markdown {
+                        "I'm sending you a markdown file with different markdown elements. "
+                        +"Please list all the markdown elements used in it and describe its structure clearly."
+                    }
+
+                    attachments {
+                        document(file.absolutePath)
+                    }
                 }
+            }
 
-                attachments {
-                    image(imageFile.absolutePath)
+            try {
+                val response = executor.execute(prompt, model)
+                when (scenario) {
+                    MarkdownTestScenario.MALFORMED_SYNTAX,
+                    MarkdownTestScenario.MATH_NOTATION,
+                    MarkdownTestScenario.BROKEN_LINKS,
+                    MarkdownTestScenario.IRREGULAR_TABLES -> {
+                        checkResponseBasic(response)
+                    }
+
+                    else -> {
+                        checkExecutorMediaResponse(response)
+                    }
+                }
+            } catch (e: Exception) {
+                when (scenario) {
+                    MarkdownTestScenario.EMPTY_MARKDOWN -> {
+                        when (model.provider) {
+                            LLMProvider.Google -> {
+                                println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
+                            }
+                        }
+                    }
+
+                    else -> {
+                        throw e
+                    }
                 }
             }
         }
-
-        val response = executor.execute(prompt, model)
-
-        assertNotNull(response, "Response should not be null")
-        assertNotNull(response.content, "Response content should not be null")
-        assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
-    }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinationsMedia")
-    fun integration_testTextDocument(model: LLModel, client: LLMClient) = runTest(timeout = 60.seconds) {
-        assumeTrue(
-            model.capabilities.contains(LLMCapability.Vision.Image),
-            "Model must support image vision capability"
-        )
-        assumeTrue(
-            model.provider != LLMProvider.OpenAI,
-            "File format md not supported for OpenAI"
-        )
+    @MethodSource("imageScenarioModelCombinations")
+    fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) =
+        runTest(timeout = 60.seconds) {
+            assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
-        val textFile = File(testResourcesDir, "test.txt")
-        assertTrue(textFile.exists(), "Text test file should exist")
+            val client = getClient(model)
+            val executor = SingleLLMPromptExecutor(client)
 
-        val executor = SingleLLMPromptExecutor(client)
+            val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
 
-        val prompt = prompt("text-document-test") {
-            system("You are a helpful assistant that can analyze text documents.")
+            val prompt = prompt("image-test-${scenario.name.lowercase()}") {
+                system("You are a helpful assistant that can analyze images.")
 
-            user {
-                markdown {
-                    +"I'm sending you a text file. Please summarize its content."
+                user {
+                    markdown {
+                        +"I'm sending you an image. Please describe what you see in it and identify the image format if possible."
+                    }
+
+                    attachments {
+                        image(imageFile.absolutePath)
+                    }
                 }
+            }
 
-                attachments {
-                    document(textFile.absolutePath)
+            try {
+                val response = executor.execute(prompt, model)
+                checkExecutorMediaResponse(response)
+            } catch (e: Exception) {
+                // For some edge cases, exceptions are expected
+                when (scenario) {
+                    ImageTestScenario.CORRUPTED_IMAGE,
+                    ImageTestScenario.EMPTY_IMAGE -> {
+                        println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
+                    }
+
+                    else -> {
+                        throw e
+                    }
                 }
             }
         }
-
-        val response = executor.execute(prompt, model)
-
-        assertNotNull(response, "Response should not be null")
-        assertNotNull(response.content, "Response content should not be null")
-        assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
-
-        assertTrue(
-            response.content.contains("document", ignoreCase = true),
-            "Response should mention 'document' from the text file"
-        )
-    }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinationsMedia")
-    fun integration_testPDFDocument(model: LLModel, client: LLMClient) = runTest(timeout = 60.seconds) {
-        assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+    @MethodSource("textScenarioModelCombinations")
+    fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
+        runTest(timeout = 60.seconds) {
+            assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
 
-        val pdfFile = File(testResourcesDir, "test.pdf")
-        assertTrue(pdfFile.exists(), "PDF test file should exist")
+            val client = getClient(model)
+            val executor = SingleLLMPromptExecutor(client)
 
-        val executor = SingleLLMPromptExecutor(client)
+            val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
-        val prompt = prompt("pdf-document-test") {
-            system("You are a helpful assistant that can analyze PDF documents.")
+            val prompt = prompt("text-test-${scenario.name.lowercase()}") {
+                system("You are a helpful assistant that can analyze and process text.")
 
-            user {
-                markdown {
-                    +"I'm sending you a PDF file. Please analyze it and tell me what it contains."
+                user {
+                    markdown {
+                        "I'm sending you a text file. Please analyze it and summarize its content."
+                    }
+
+                    attachments {
+                        document(file.absolutePath)
+                    }
                 }
+            }
 
-                attachments {
-                    document(pdfFile.absolutePath)
+            try {
+                val response = executor.execute(prompt, model)
+                checkExecutorMediaResponse(response)
+            } catch (e: Exception) {
+                if (scenario == TextTestScenario.CORRUPTED_TEXT) {
+                    println("Expected exception for corrupted text: ${e.message}")
+                } else {
+                    throw e
                 }
             }
         }
-
-        val response = executor.execute(prompt, model)
-
-        assertNotNull(response, "Response should not be null")
-        assertNotNull(response.content, "Response content should not be null")
-        assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
-
-        assertTrue(
-            response.content.contains("PDF", ignoreCase = true) ||
-                    response.content.contains("document", ignoreCase = true),
-            "Response should mention the PDF document"
-        )
-    }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinationsMedia")
-    fun integration_testAudioFile(model: LLModel, client: LLMClient) = runTest(timeout = 60.seconds) {
-        assumeTrue(model.id.contains("audio"), "Model must support audio capability")
+    @MethodSource("audioScenarioModelCombinations")
+    fun integration_testAudioProcessingBasic(scenario: AudioTestScenario, model: LLModel) =
+        runTest(timeout = 60.seconds) {
+            assumeTrue(
+                model.capabilities.contains(LLMCapability.Audio),
+                "Model must support audio capability"
+            )
 
-        val audioFile = File(testResourcesDir, "test.wav")
-        assertTrue(audioFile.exists(), "Audio test file should exist")
+            val client = getClient(model)
+            val executor = SingleLLMPromptExecutor(client)
 
-        val executor = SingleLLMPromptExecutor(client)
+            val audioFile = MediaTestUtils.createAudioFileForScenario(scenario, testResourcesDir)
 
-        val prompt = prompt("audio-test") {
-            system("You are a helpful assistant that can analyze audio files.")
+            val prompt = prompt("audio-test-${scenario.name.lowercase()}") {
+                system("You are a helpful assistant that can analyze audio files.")
 
-            user {
-                markdown {
-                    +"I'm sending you an audio file. Please analyze it and tell me what you hear."
+                user {
+                    markdown {
+                        "I'm sending you an audio file. Please analyze it and tell me what you hear."
+                    }
+
+                    attachments {
+                        when (scenario) {
+                            AudioTestScenario.BASIC_WAV, AudioTestScenario.BIG_AUDIO, AudioTestScenario.CORRUPTED_AUDIO -> {
+                                audio(audioFile.readBytes(), "wav")
+                            }
+
+                            AudioTestScenario.BASIC_MP3 -> {
+                                audio(audioFile.readBytes(), "mp3")
+                            }
+                        }
+                    }
                 }
+            }
 
-                attachments {
-                    audio(audioFile.readBytes(), "wav")
+            try {
+                val response = executor.execute(prompt, model)
+                checkExecutorMediaResponse(response)
+            } catch (e: Exception) {
+                if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
+                    println("Expected exception for corrupted audio: ${e.message}")
+                } else {
+                    throw e
                 }
             }
         }
-
-        val response = executor.execute(prompt, model)
-
-        assertNotNull(response, "Response should not be null")
-        assertNotNull(response.content, "Response content should not be null")
-        assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
-    }
 
     @Test
     fun integration_testMultipleMediaTypes() = runTest(timeout = 60.seconds) {
         val model = OpenAIModels.Chat.GPT4o
         val client = OpenAILLMClient(readTestOpenAIKeyFromEnv())
+        val executor = SingleLLMPromptExecutor(client)
 
-        assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Vision.Image),
+            "Model must support vision capability"
+        )
 
         val pdfFile = File(testResourcesDir, "test.pdf")
         val imageFile = File(testResourcesDir, "test.png")
 
-        assertTrue(pdfFile.exists(), "PDF test file should exist")
         assertTrue(imageFile.exists(), "Image test file should exist")
-
-        val executor = SingleLLMPromptExecutor(client)
+        assertTrue(pdfFile.exists(), "PDF test file should exist")
 
         val prompt = prompt("multiple-media-test") {
             system("You are a helpful assistant that can analyze different types of media files.")
 
             user {
                 markdown {
-                    +"I'm sending you a markdown file and an image. Please analyze both and tell me about their content."
+                    +"I'm sending you a PDF file and an image. Please analyze both and tell me about their content."
                 }
 
                 attachments {
@@ -895,15 +824,12 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model)
-
-        assertNotNull(response, "Response should not be null")
-        assertNotNull(response.content, "Response content should not be null")
-        assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
+        checkExecutorMediaResponse(response)
 
         assertTrue(
-            response.content.contains("markdown", ignoreCase = true) ||
-                    response.content.contains("document", ignoreCase = true),
-            "Response should mention the markdown file"
+            response.content.contains("image", ignoreCase = true) ||
+                    response.content.contains("PDF", ignoreCase = true),
+            "Response should mention the both image & PDF files"
         )
     }
 }
