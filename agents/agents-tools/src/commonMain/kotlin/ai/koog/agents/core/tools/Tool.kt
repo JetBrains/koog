@@ -3,6 +3,7 @@ package ai.koog.agents.core.tools
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
@@ -173,4 +174,17 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
      * @return A JSON string representation of the provided result.
      */
     public fun encodeResultToStringUnsafe(result: ToolResult): String = encodeResultToString(result as TResult)
+
+    /**
+     * Base type, representing tool arguments.
+     */
+    @Deprecated("Use ToolArgs instead", ReplaceWith("ToolArgs", "ai.koog.agents.core.tools.ToolArgs"))
+    public interface Args
+
+    /**
+     * Args implementation that can be used for tools that expect no arguments.
+     */
+    @Serializable
+    @Deprecated("Use ToolArgs.Empty instead", ReplaceWith("ToolArgs.Empty", "ai.koog.agents.core.tools.ToolArgs.Empty"))
+    public data object EmptyArgs : Args
 }
