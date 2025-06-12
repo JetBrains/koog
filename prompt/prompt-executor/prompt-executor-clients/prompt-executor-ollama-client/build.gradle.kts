@@ -19,7 +19,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
-                api(project(":embeddings:embeddings-base"))
+                api(project(":rag:embeddings:embeddings-base"))
 
                 api(libs.ktor.client.logging)
                 api(libs.kotlinx.datetime)

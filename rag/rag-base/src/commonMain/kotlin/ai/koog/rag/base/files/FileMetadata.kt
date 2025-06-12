@@ -1,8 +1,7 @@
-package ai.koog.agents.memory.providers
+package ai.koog.rag.base.files
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
 
 /**
  * Represents metadata associated with a file or directory.

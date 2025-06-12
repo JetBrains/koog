@@ -5,6 +5,7 @@ import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.storage.Storage
+import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString

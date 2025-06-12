@@ -25,8 +25,8 @@ val included = setOf(
     ":agents:agents-mcp",
     ":agents:agents-tools",
     ":agents:agents-utils",
-    ":embeddings:embeddings-base",
-    ":embeddings:embeddings-llm",
+    ":rag:embeddings:embeddings-base",
+    ":rag:embeddings:embeddings-llm",
     ":prompt:prompt-cache:prompt-cache-files",
     ":prompt:prompt-cache:prompt-cache-model",
     ":prompt:prompt-cache:prompt-cache-redis",
@@ -45,7 +45,9 @@ val included = setOf(
     ":prompt:prompt-model",
     ":prompt:prompt-structure",
     ":prompt:prompt-tokenizer",
-    ":prompt:prompt-xml"
+    ":prompt:prompt-xml",
+    ":rag:rag-base",
+    ":rag:vector-storage"
 )
 
 kotlin {
