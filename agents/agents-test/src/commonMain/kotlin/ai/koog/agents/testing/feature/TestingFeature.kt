@@ -109,7 +109,7 @@ public sealed class NodeReference<Input, Output> {
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
             fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
-                if (node is FinishAIAgentNodeBase) return null
+                if (node is AIAgentFinishNodeBase) return null
                 if (visited.contains(node.name)) return null
                 visited.add(node.name)
                 if (node.name == name) return node as? AIAgentNodeBase<Input, Output>
