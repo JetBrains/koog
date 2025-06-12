@@ -186,7 +186,7 @@ public object OllamaModels {
          */
         public val QWQ: LLModel = LLModel(
             provider = LLMProvider.Ollama,
-            id = "qwq",
+            id = "qwq:32b",
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Simple,
