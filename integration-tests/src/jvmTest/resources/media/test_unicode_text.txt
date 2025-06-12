@@ -1,0 +1,16 @@
+Unicode Text Examples:
+
+• Chinese: 你好，世界！(Hello, world!)
+• Japanese: こんにちは、世界！(Hello, world!)
+• Korean: 안녕하세요, 세계! (Hello, world!)
+• Russian: Привет, мир! (Hello, world!)
+• Arabic: مرحبا بالعالم! (Hello, world!)
+• Hebrew: שלום עולם! (Hello, world!)
+• Greek: Γειά σου Κόσμε! (Hello, world!)
+• Thai: สวัสดีชาวโลก! (Hello, world!)
+
+Emoji: 😀 🌍 🚀 🎉 🐱 🌈
+
+Mathematical Symbols: ∑ ∫ ∏ √ ∞ ∆ π Ω
+
+Currency Symbols: $ € £ ¥ ₹ ₽ ₩
