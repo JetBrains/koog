@@ -1,7 +1,7 @@
-package ai.koog.agents.memory.providers
+package ai.koog.rag.base.files
 
-import ai.koog.agents.memory.providers.FileMetadata.FileContent
-import ai.koog.agents.memory.providers.FileMetadata.FileType
+import ai.koog.rag.base.files.FileMetadata.FileContent
+import ai.koog.rag.base.files.FileMetadata.FileType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.Sink

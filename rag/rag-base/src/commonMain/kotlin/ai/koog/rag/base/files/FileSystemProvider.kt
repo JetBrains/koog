@@ -1,8 +1,7 @@
-package ai.koog.agents.memory.providers
+package ai.koog.rag.base.files
 
 import kotlinx.io.Sink
 import kotlinx.io.Source
-
 
 /**
  * Provides a broad set of functionalities for interacting with a filesystem or a similar hierarchy of data.
@@ -74,7 +73,7 @@ public object FileSystemProvider {
          * Retrieves the metadata associated with the specified file or directory.
          *
          * @param path The path to the file or directory whose metadata is being retrieved.
-         * @return The metadata of the specified file or directory as a [FileMetadata] object,
+         * @return The metadata of the specified file or directory as a [ai.koog.agents.memory.providers.FileMetadata] object,
          * or null if the metadata could not be retrieved or the path does not exist.
          */
         public suspend fun metadata(path: Path): FileMetadata?
@@ -190,7 +189,7 @@ public object FileSystemProvider {
          *
          * @param parent The path of the parent directory where the item will be created.
          * @param name The name of the new file or directory to be created.
-         * @param type The type of the item to create, either a file or a directory, as defined by [FileMetadata.FileType].
+         * @param type The type of the item to create, either a file or a directory, as defined by [ai.koog.agents.memory.providers.FileMetadata.FileType].
          */
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
         /**
