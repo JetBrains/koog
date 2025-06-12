@@ -3,7 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.dsl.builder.ForkedNodeResult
+import ai.koog.agents.core.dsl.builder.ForkResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -148,7 +148,7 @@ class ParallelNodesTest {
             )
 
             // Create nodes to verify the context isolation during parallel execution
-            val verifyNode by node<List<ForkedNodeResult<Unit, String>>, String>("verifyNode") { results ->
+            val verifyNode by node<List<ForkResult<Unit, String>>, String>("verifyNode") { results ->
                 results.map {
                     // This node should only see the changes from node1
                     val value1 = it.context.storage.get(testKey1)
