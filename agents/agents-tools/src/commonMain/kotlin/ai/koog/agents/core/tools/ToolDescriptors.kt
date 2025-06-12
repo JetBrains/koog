@@ -73,22 +73,7 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      *
      * @property entries The entries for the enumeration, allowing the parameter to be one of these values.
      */
-    public data class Enum(val entries: Array<kotlin.String>) : ToolParameterType("ENUM") {
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            if (other == null || this::class != other::class) return false
-
-            other as Enum
-
-            if (!entries.contentEquals(other.entries)) return false
-
-            return true
-        }
-
-        override fun hashCode(): Int {
-            return entries.contentHashCode()
-        }
-    }
+    public data class Enum(val entries: Array<kotlin.String>) : ToolParameterType("ENUM")
 
 
     /**
