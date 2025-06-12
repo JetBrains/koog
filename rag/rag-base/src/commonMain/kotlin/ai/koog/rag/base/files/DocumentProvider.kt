@@ -1,6 +1,5 @@
 package ai.koog.rag.base.files
 
-import ai.koog.rag.base.files.DocumentProvider.Position
 import kotlinx.serialization.Serializable
 
 /**
