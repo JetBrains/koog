@@ -2,7 +2,11 @@ package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.*
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy.NoCompression
+import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.utils.Some
 import kotlin.reflect.KProperty
 
 /**
@@ -86,11 +90,76 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     /**
      * Connects the sequence of nodes with edges between them.
      * @param nextNode Node to connect to
-     * @return The next node
+     * @return The [LinearStepsIntermediate] object that can be then passed to [linearSteps]
      */
-    public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
+    public infix fun <IncomingInput, IncomingOutput, OutgoingOutput> AIAgentNodeBase<IncomingInput, IncomingOutput>.then(
+        nextNode: AIAgentNodeBase<IncomingOutput, OutgoingOutput>
+    ): LinearStepsIntermediate<IncomingInput, OutgoingOutput> {
         edge(this forwardTo nextNode)
-        return nextNode
+        return LinearStepsIntermediate(firstNode = this, lastNode = nextNode, allNodes = listOf(this, nextNode))
+    }
+
+    /**
+     * Connects the last node of the current linear strategy intermediate to a new node in the sequence
+     * and returns a new linear strategy intermediate representing the updated sequence.
+     *
+     * @param nextNode The next node to which the last node of the current intermediate will be connected.
+     * @return A new instance of [LinearStepsIntermediate] with the updated sequence of nodes,
+     *  starting from the original first node and ending at the provided next node.
+     */
+    public infix fun <IncomingInput, IncomingOutput, OutgoingOutput> LinearStepsIntermediate<IncomingInput, IncomingOutput>.then(
+        nextNode: AIAgentNodeBase<IncomingOutput, OutgoingOutput>
+    ): LinearStepsIntermediate<IncomingInput, OutgoingOutput> {
+        return LinearStepsIntermediate(
+            firstNode = this.firstNode,
+            lastNode = nextNode,
+            allNodes = this.allNodes + nextNode
+        )
+    }
+
+    /**
+     * Applies a defined linear strategy by connecting a sequence of nodes in a predefined order
+     * and optionally applying a history compression strategy between each pair of nodes.
+     *
+     * @param steps The linear strategy consisting of interconnected nodes, represented by an instance of [LinearStepsIntermediate].
+     *              It defines the sequence of nodes to be connected in the agent's graph.
+     * @param historyCompressionBetweenSteps A strategy for compressing history between each step in the linear strategy. Defaults to [HistoryCompressionStrategy.NoCompression].
+     */
+    @Suppress("UNCHECKED_CAST")
+    public fun linearSteps(
+        steps: LinearStepsIntermediate<Input, Output>,
+        historyCompressionBetweenSteps: HistoryCompressionStrategy = NoCompression
+    ) {
+        check(!steps.allNodes.contains(nodeStart)) {
+            "`nodeStart` can't be one of the steps of the linear strategy. It will be already included automatically"
+        }
+        check(!steps.allNodes.contains(nodeFinish)) {
+            "`nodeFinish` can't be one of the steps of the linear strategy. It will be already included automatically"
+        }
+
+        fun addEdge(from: AIAgentNodeBase<Any?, Any?>, to: AIAgentNodeBase<Any?, Any?>) {
+            from.addEdge(AIAgentEdge(to, { _, output -> Some(output) }))
+        }
+
+        var currentNode: AIAgentNodeBase<Any?, Any?> = nodeStart as AIAgentNodeBase<Any?, Any?>
+
+        steps.allNodes.forEachIndexed { index, node ->
+            // We only compress history if it's needed AND if it's not between the nodeStart and the first node
+            //   (doesn't make sense to compress in this case as nodeStart doesn't perform any additional actions)
+            if (historyCompressionBetweenSteps !is NoCompression && index > 0) {
+                val compressHistory by nodeLLMCompressHistory<Any?>(
+                    name = "compressHistory_before_${node.name}",
+                    strategy = historyCompressionBetweenSteps
+                )
+                currentNode.addEdge(AIAgentEdge(compressHistory, { _, output -> Some(output) }))
+                currentNode = compressHistory
+            }
+
+            currentNode.addEdge(AIAgentEdge(node as AIAgentNodeBase<Any?, Any?>, { _, output -> Some(output) }))
+
+            currentNode = node
+        }
+        addEdge(currentNode, nodeFinish as AIAgentNodeBase<Any?, Any?>)
     }
 
     /**

@@ -39,7 +39,7 @@ class AIAgentNodesHistoryCompressionTest {
 
         val agentStrategy = strategy("test") {
             val compress by nodeLLMCompressHistory<Unit>(
-                strategy = HistoryCompressionStrategy.WholeHistory
+                strategy = HistoryCompressionStrategy.CompressWholeHistory
             )
 
             edge(nodeStart forwardTo compress transformed { })
@@ -55,7 +55,7 @@ class AIAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = AIAgent(
+        val agent = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -68,7 +68,7 @@ class AIAgentNodesHistoryCompressionTest {
             }
         }
 
-        runner.run("")
+        agent.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)
@@ -107,7 +107,7 @@ class AIAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = AIAgent(
+        val agent = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -120,7 +120,7 @@ class AIAgentNodesHistoryCompressionTest {
             }
         }
 
-        runner.run("")
+        agent.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)
@@ -162,7 +162,7 @@ class AIAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = AIAgent(
+        val agent = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -175,7 +175,7 @@ class AIAgentNodesHistoryCompressionTest {
             }
         }
 
-        runner.run("")
+        agent.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)
@@ -199,5 +199,113 @@ class AIAgentNodesHistoryCompressionTest {
             testExecutor.tldrCount, tldrMessages.size,
             "The number of TLDR messages in the final history should match the TLDR count"
         )
+    }
+    @Test
+    fun testNodeLLMCompressHistoryWithNoCompression() = runTest {
+        // Create a test LLM executor to track TLDR messages
+        val testExecutor = TestLLMExecutor()
+        testExecutor.reset()
+
+        val agentStrategy = strategy("test") {
+            val compress by nodeLLMCompressHistory<Unit>(
+                strategy = HistoryCompressionStrategy.NoCompression
+            )
+
+            edge(nodeStart forwardTo compress transformed { })
+            edge(compress forwardTo nodeFinish transformed { "Done" })
+        }
+
+        val results = mutableListOf<String?>()
+
+        // Create a prompt with 15 message pairs
+        val messageCount = 15
+        val agentConfig = AIAgentConfig(
+            prompt = createPromptWithMessages(messageCount),
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 10
+        )
+
+        val agent = AIAgent(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry {
+                tool(DummyTool())
+            }
+        ) {
+            handleEvents {
+                onAgentFinished = { _, result -> results += result }
+            }
+        }
+
+        // Store the initial message count
+        val initialMessageCount = testExecutor.messages.size
+
+        agent.run("")
+
+        // After compression, we should have one result
+        assertEquals(1, results.size)
+        assertEquals("Done", results.first())
+
+        // Verify that no TLDR messages were created
+        assertEquals(0, testExecutor.tldrCount, "NoCompression strategy should not create any TLDR messages")
+
+        // Verify that no TLDR messages are in the final history
+        val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
+            .filter { it.content.startsWith("TLDR") }
+        assertEquals(0, tldrMessages.size, "There should be no TLDR messages in the final history")
+    }
+
+    @Test
+    fun testNodeLLMCompressHistoryWithClearHistory() = runTest {
+        // Create a test LLM executor to track TLDR messages
+        val testExecutor = TestLLMExecutor()
+        testExecutor.reset()
+
+        val agentStrategy = strategy("test") {
+            val compress by nodeLLMCompressHistory<Unit>(
+                strategy = HistoryCompressionStrategy.ClearHistory
+            )
+
+            edge(nodeStart forwardTo compress transformed { })
+            edge(compress forwardTo nodeFinish transformed { "Done" })
+        }
+
+        val results = mutableListOf<String?>()
+
+        // Create a prompt with 15 message pairs
+        val messageCount = 15
+        val agentConfig = AIAgentConfig(
+            prompt = createPromptWithMessages(messageCount),
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 10
+        )
+
+        val agent = AIAgent(
+            promptExecutor = testExecutor,
+            strategy = agentStrategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry {
+                tool(DummyTool())
+            }
+        ) {
+            handleEvents {
+                onAgentFinished = { _, result -> results += result }
+            }
+        }
+
+        agent.run("")
+
+        // After compression, we should have one result
+        assertEquals(1, results.size)
+        assertEquals("Done", results.first())
+
+        // Verify that no TLDR messages were created
+        assertEquals(0, testExecutor.tldrCount, "ClearHistory strategy should not create any TLDR messages")
+
+        // Verify that no TLDR messages are in the final history
+        val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
+            .filter { it.content.startsWith("TLDR") }
+        assertEquals(0, tldrMessages.size, "There should be no TLDR messages in the final history")
     }
 }
