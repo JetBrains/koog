@@ -33,7 +33,7 @@ internal val testClock: Clock = object : Clock {
 fun userMessage(content: String, attachmentsBlock: AttachmentBuilder.() -> Unit = {}): Message.User = Message.User(
     content,
     metaInfo = RequestMetaInfo.create(testClock),
-    mediaContent = AttachmentBuilder().apply(attachmentsBlock).build()
+    attachments = AttachmentBuilder().apply(attachmentsBlock).build()
 )
 
 /**
