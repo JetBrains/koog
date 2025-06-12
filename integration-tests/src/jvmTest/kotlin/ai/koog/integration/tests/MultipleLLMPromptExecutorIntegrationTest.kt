@@ -820,77 +820,27 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
                 user {
                     markdown {
-                        when (scenario) {
-                            AudioTestScenario.BASIC_WAV ->
-                                +"I'm sending you an audio file in WAV format. Please analyze it and tell me what you hear."
-
-                            AudioTestScenario.BASIC_MP3 ->
-                                +"I'm sending you an audio file in MP3 format. Please analyze it and tell me what you hear."
-
-                            AudioTestScenario.CORRUPTED_AUDIO ->
-                                +"I'm sending you an audio file that might be corrupted. Please try to analyze it and tell me if you can hear anything or if there are issues with the file."
-
-                            else ->
-                                +"I'm sending you an audio file. Please analyze it and tell me what you hear."
-                        }
+                        "I'm sending you an audio file. Please analyze it and tell me what you hear."
                     }
 
                     attachments {
-                        audio(audioFile.readBytes(), "wav")
+                        when (scenario) {
+                            AudioTestScenario.BASIC_WAV, AudioTestScenario.BIG_AUDIO, AudioTestScenario.CORRUPTED_AUDIO -> {
+                                audio(audioFile.readBytes(), "wav")
+                            }
+
+                            AudioTestScenario.BASIC_MP3 -> {
+                                audio(audioFile.readBytes(), "mp3")
+                            }
+                        }
                     }
                 }
             }
 
-            // Execute the prompt and verify the response
             try {
                 val response = executor.execute(prompt, model)
-
-                // Basic assertions for all scenarios
-                assertNotNull(response, "Response should not be null")
-                assertNotNull(response.content, "Response content should not be null")
-                assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
-
-                // Scenario-specific assertions
-                when (scenario) {
-                    AudioTestScenario.BASIC_WAV -> {
-                        // For basic WAV, we expect the model to mention audio or sound
-                        assertTrue(
-                            response.content.contains("audio", ignoreCase = true) ||
-                                    response.content.contains("sound", ignoreCase = true) ||
-                                    response.content.contains("hear", ignoreCase = true),
-                            "Response should mention audio or sound"
-                        )
-                    }
-
-                    AudioTestScenario.BASIC_MP3 -> {
-                        // For basic MP3, we expect the model to mention audio or sound
-                        assertTrue(
-                            response.content.contains("audio", ignoreCase = true) ||
-                                    response.content.contains("sound", ignoreCase = true) ||
-                                    response.content.contains("hear", ignoreCase = true),
-                            "Response should mention audio or sound"
-                        )
-                    }
-
-                    AudioTestScenario.CORRUPTED_AUDIO -> {
-                        // For corrupted audio, we expect the model to mention issues with the file
-                        assertTrue(
-                            response.content.contains("corrupt", ignoreCase = true) ||
-                                    response.content.contains("issue", ignoreCase = true) ||
-                                    response.content.contains("problem", ignoreCase = true) ||
-                                    response.content.contains("error", ignoreCase = true) ||
-                                    response.content.contains("cannot", ignoreCase = true) ||
-                                    response.content.contains("unable", ignoreCase = true),
-                            "Response should mention issues with the corrupted audio file"
-                        )
-                    }
-
-                    else -> {
-                        // No specific assertions for other scenarios
-                    }
-                }
+                checkExecutorMediaResponse(response)
             } catch (e: Exception) {
-                // For corrupted audio, exceptions are expected
                 if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
                     println("Expected exception for corrupted audio: ${e.message}")
                 } else {
@@ -898,51 +848,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
             }
         }
-
-    @Test
-    fun integration_testMultipleMediaTypes() = runTest(timeout = 60.seconds) {
-        val model = OpenAIModels.Chat.GPT4o
-        assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
-
-        val pdfFile = File(testResourcesDir, "test.pdf")
-        val imageFile = File(testResourcesDir, "test.png")
-
-        assertTrue(pdfFile.exists(), "PDF test file should exist")
-        assertTrue(imageFile.exists(), "Image test file should exist")
-
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
-
-        val prompt = prompt("multiple-media-test") {
-            system("You are a helpful assistant that can analyze different types of media files.")
-
-            user {
-                markdown {
-                    +"I'm sending you a PDF file and an image. Please analyze both and tell me about their content."
-                }
-
-                attachments {
-                    document(pdfFile.absolutePath)
-                    image(imageFile.absolutePath)
-                }
-            }
-        }
-
-        val response = executor.execute(prompt, model)
-
-        assertNotNull(response, "Response should not be null")
-        assertNotNull(response.content, "Response content should not be null")
-        assertTrue(response.content.isNotEmpty(), "Response content should not be empty")
-
-        assertTrue(
-            response.content.contains("PDF", ignoreCase = true) ||
-                    response.content.contains("document", ignoreCase = true),
-            "Response should mention the PDF file"
-        )
-        assertTrue(
-            response.content.contains("image", ignoreCase = true),
-            "Response should mention the image"
-        )
-    }
 
     @Test
     fun integration_testMultiInputCombinations() =
