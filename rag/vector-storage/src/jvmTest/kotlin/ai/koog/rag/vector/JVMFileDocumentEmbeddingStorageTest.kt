@@ -3,10 +3,12 @@ package ai.koog.rag.vector
 import ai.koog.embeddings.base.Vector
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class JVMFileDocumentEmbeddingStorageTest {
 

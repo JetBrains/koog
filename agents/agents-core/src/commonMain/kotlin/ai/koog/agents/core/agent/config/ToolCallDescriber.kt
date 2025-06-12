@@ -1,14 +1,13 @@
-package ai.koog.agents.core.agent.config
+ package ai.koog.agents.core.agent.config
 
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.Message.Assistant
 import ai.koog.prompt.message.Message.User
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 
-/**
+ /**
  * Describes the way to reformat tool call/tool result messages,
  * in case real tool call/tool result messages cannot be used
  */

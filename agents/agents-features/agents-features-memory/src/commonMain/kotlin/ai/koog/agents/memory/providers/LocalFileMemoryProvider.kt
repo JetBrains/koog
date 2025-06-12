@@ -8,7 +8,6 @@ import ai.koog.agents.memory.storage.Storage
 import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 

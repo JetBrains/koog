@@ -1,7 +1,6 @@
 package ai.koog.rag.vector
 
 import ai.koog.embeddings.base.Vector
-import ai.koog.rag.base.DocumentWithPayload
 import ai.koog.rag.vector.mocks.MockDocument
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
