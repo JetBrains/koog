@@ -2,8 +2,14 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.entity.AIAgentStateManager
+import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -19,14 +25,6 @@ import ai.koog.agents.core.tools.*
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
-import ai.koog.agents.core.agent.context.AIAgentLLMContext
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -184,9 +182,9 @@ public open class AIAgent(
         val preparedEnvironment = pipeline.transformEnvironment(strategy, this, this)
 
         val agentContext = AIAgentContext(
-            preparedEnvironment,
+            environment = preparedEnvironment,
             agentInput = agentInput,
-            agentConfig,
+            config = agentConfig,
             llm = AIAgentLLMContext(
                 toolRegistry.tools.map { it.descriptor },
                 toolRegistry,
@@ -431,16 +429,16 @@ public open class AIAgent(
 }
 
 /**
-* Creates a single-run strategy for an AI agent.
-* This strategy defines a simple execution flow where the agent processes input,
-* calls tools, and sends results back to the agent.
-* The flow consists of the following steps:
-* 1. Start the agent.
-* 2. Call the LLM with the input.
-* 3. Execute a tool based on the LLM's response.
-* 4. Send the tool result back to the LLM.
-* 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
-*/
+ * Creates a single-run strategy for an AI agent.
+ * This strategy defines a simple execution flow where the agent processes input,
+ * calls tools, and sends results back to the agent.
+ * The flow consists of the following steps:
+ * 1. Start the agent.
+ * 2. Call the LLM with the input.
+ * 3. Execute a tool based on the LLM's response.
+ * 4. Send the tool result back to the LLM.
+ * 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
+ */
 public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
     val nodeCallLLM by nodeLLMRequest("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")

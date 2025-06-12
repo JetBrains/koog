@@ -9,6 +9,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.utils.RWLock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -30,57 +31,64 @@ import kotlin.uuid.Uuid
  * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
  */
 @OptIn(ExperimentalUuidApi::class)
-internal class AIAgentContext(
-    environment: AIAgentEnvironment,
-    agentInput: String,
-    config: AIAgentConfigBase,
+public class AIAgentContext(
+    override val environment: AIAgentEnvironment,
+    override val agentInput: String,
+    override val config: AIAgentConfigBase,
     llm: AIAgentLLMContext,
     stateManager: AIAgentStateManager,
     storage: AIAgentStorage,
-    sessionUuid: Uuid,
-    strategyId: String,
+    override val sessionUuid: Uuid,
+    override val strategyId: String,
     @OptIn(InternalAgentsApi::class)
-    pipeline: AIAgentPipeline,
+    override val pipeline: AIAgentPipeline,
 ) : AIAgentContextBase {
-    private var _environment: AIAgentEnvironment = environment
-    private var _agentInput: String = agentInput
-    private var _config: AIAgentConfigBase = config
-    private var _llm: AIAgentLLMContext = llm
-    private var _stateManager: AIAgentStateManager = stateManager
-    private var _storage: AIAgentStorage = storage
-    private var _sessionUuid: Uuid = sessionUuid
-    private var _strategyId: String = strategyId
 
-    @OptIn(InternalAgentsApi::class)
-    private var _pipeline: AIAgentPipeline = pipeline
+    /**
+     * Mutable wrapper for AI agent context properties.
+     */
+    internal class MutableAIAgentContext(
+        var llm: AIAgentLLMContext,
+        var stateManager: AIAgentStateManager,
+        var storage: AIAgentStorage,
+    ) {
+        private val rwLock = RWLock()
 
-    override val environment: AIAgentEnvironment
-        get() = _environment
+        /**
+         * Creates a copy of the current [MutableAIAgentContext].
+         * @return A new instance of [MutableAIAgentContext] with copies of all mutable properties.
+         */
+        suspend fun copy(): MutableAIAgentContext {
+            return rwLock.withReadLock {
+                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy())
+            }
+        }
 
-    override val agentInput: String
-        get() = _agentInput
+        /**
+         * Replaces the current context with the provided context.
+         * @param llm The LLM context to replace the current context with.
+         * @param stateManager The state manager to replace the current context with.
+         * @param storage The storage to replace the current context with.
+         */
+        suspend fun replace(llm: AIAgentLLMContext?, stateManager: AIAgentStateManager?, storage: AIAgentStorage?) {
+            rwLock.withWriteLock {
+                llm?.let { this.llm = llm }
+                stateManager?.let { this.stateManager = stateManager }
+                storage?.let { this.storage = storage }
+            }
+        }
+    }
 
-    override val config: AIAgentConfigBase
-        get() = _config
+    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
 
     override val llm: AIAgentLLMContext
-        get() = _llm
-
-    override val stateManager: AIAgentStateManager
-        get() = _stateManager
+        get() = mutableAIAgentContext.llm
 
     override val storage: AIAgentStorage
-        get() = _storage
+        get() = mutableAIAgentContext.storage
 
-    override val sessionUuid: Uuid
-        get() = _sessionUuid
-
-    override val strategyId: String
-        get() = _strategyId
-
-    @OptIn(InternalAgentsApi::class)
-    override val pipeline: AIAgentPipeline
-        get() = _pipeline
+    override val stateManager: AIAgentStateManager
+        get() = mutableAIAgentContext.stateManager
 
     /**
      * A map storing features associated with the current AI agent context.
@@ -161,20 +169,28 @@ internal class AIAgentContext(
     )
 
     /**
-     * Replaces the current context with the provided context.
+     * Creates a copy of the current [AIAgentContext] with deep copies of all mutable properties.
      *
-     * @param context The context to replace the current context with.
-     * @throws UnsupportedOperationException This method is not fully implemented due to the constraints of immutable properties.
+     * @return A new instance of [AIAgentContext] with copies of all mutable properties.
      */
-    override fun replaceWith(context: AIAgentContextBase) {
-        _environment = context.environment
-        _agentInput = context.agentInput
-        _config = context.config
-        _llm = context.llm
-        _stateManager = context.stateManager
-        _storage = context.storage
-        _sessionUuid = context.sessionUuid
-        _strategyId = context.strategyId
-        _pipeline = @OptIn(InternalAgentsApi::class) this.pipeline
+    override suspend fun fork(): AIAgentContextBase = copy(
+        llm = this.llm.copy(),
+        storage = this.storage.copy(),
+        stateManager = this.stateManager.copy(),
+    )
+
+    /**
+     * Replaces the current context with the provided context.
+     * This method is used to update the current context with values from another context,
+     * particularly useful in scenarios like parallel node execution where contexts need to be merged.
+     *
+     * @param context The context to replace the current context with.]]
+     */
+    override suspend fun replace(context: AIAgentContextBase) {
+        mutableAIAgentContext.replace(
+            context.llm,
+            context.stateManager,
+            context.storage
+        )
     }
 }

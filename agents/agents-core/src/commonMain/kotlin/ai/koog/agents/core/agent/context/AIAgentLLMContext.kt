@@ -36,6 +36,17 @@ public data class AIAgentLLMContext(
     private val clock: Clock
 ) {
 
+    /**
+     * Creates a deep copy of this LLM context.
+     *
+     * @return A new instance of [AIAgentLLMContext] with deep copies of mutable properties.
+     */
+    public suspend fun copy(): AIAgentLLMContext {
+        return rwLock.withReadLock {
+             this.copy()
+        }
+    }
+
     private val rwLock = RWLock()
 
     /**
