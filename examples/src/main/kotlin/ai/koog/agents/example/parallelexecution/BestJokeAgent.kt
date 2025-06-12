@@ -6,7 +6,6 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
-import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -74,11 +73,11 @@ fun main(args: Array<String>) = runBlocking {
         }
 
         // Define a node to select the best joke
-        val nodeGenerateJokes by parallel<String, String>(
+        val nodeGenerateJokes by fork<String, String>(
             nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
         )
 
-        val nodeSelectBestJoke by reduce<String, String>() { results ->
+        val nodeSelectBestJoke by merge<String, String>() { results ->
             val context = results.map { it.context }
             val jokes = results.map { it.output }
 

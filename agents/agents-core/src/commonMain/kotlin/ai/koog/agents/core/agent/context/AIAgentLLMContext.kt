@@ -43,7 +43,16 @@ public data class AIAgentLLMContext(
      */
     public suspend fun copy(): AIAgentLLMContext {
         return rwLock.withReadLock {
-             this.copy()
+            AIAgentLLMContext(
+                tools.toList(),
+                toolRegistry,
+                prompt.copy(),
+                model.copy(),
+                promptExecutor,
+                environment,
+                config,
+                clock
+            )
         }
     }
 
@@ -55,7 +64,8 @@ public data class AIAgentLLMContext(
      */
     @OptIn(ExperimentalStdlibApi::class)
     public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
-        val session = AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
+        val session =
+            AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
 
         session.use {
             val result = it.block()

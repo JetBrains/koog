@@ -2,8 +2,6 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.isActive
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
