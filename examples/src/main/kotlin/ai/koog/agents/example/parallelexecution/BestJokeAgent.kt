@@ -63,7 +63,7 @@ fun main(args: Array<String>) = runBlocking {
 
         val nodeAnthropicOpus by node<String, String> { topic ->
             llm.writeSession {
-                model = AnthropicModels.Opus
+                model = AnthropicModels.Opus_3
                 updatePrompt {
                     system(jokeSystemPrompt)
                     user("Tell me a joke about $topic.")
@@ -135,19 +135,7 @@ fun main(args: Array<String>) = runBlocking {
         agentConfig = agentConfig,
         toolRegistry = ToolRegistry.EMPTY
     ) {
-        handleEvents {
-            onAgentRunError = { strategyName: String, throwable: Throwable ->
-                println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
-            }
 
-            onAgentFinished = { strategyName: String, result: String? ->
-                println("Result: $result")
-            }
-
-            onBeforeLLMCall = { prompt, tools ->
-                println("Before LLM call: $prompt")
-            }
-        }
     }
 
     val topic = "programming"

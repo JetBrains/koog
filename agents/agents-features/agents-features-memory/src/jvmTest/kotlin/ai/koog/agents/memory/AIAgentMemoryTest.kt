@@ -3,12 +3,14 @@ package ai.koog.agents.memory
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.AgentMemory
 import ai.koog.agents.memory.model.*
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
+import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
@@ -121,7 +123,7 @@ class AIAgentMemoryTest {
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment(),
+            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -212,7 +214,7 @@ class AIAgentMemoryTest {
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment(),
+            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -335,7 +337,7 @@ class AIAgentMemoryTest {
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment(),
+            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )
@@ -406,7 +408,7 @@ class AIAgentMemoryTest {
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
-            environment = MockAgentEnvironment(),
+            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
         )

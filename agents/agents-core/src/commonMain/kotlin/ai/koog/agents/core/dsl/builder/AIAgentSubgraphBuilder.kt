@@ -280,7 +280,7 @@ public class ParallelAIAgentNodeBuilder<Input, Output> internal constructor(
         val mapResults = supervisorScope {
             nodes.map { node ->
                 async(dispatcher) {
-                    val nodeContext = initialContext.copy()
+                    val nodeContext = (initialContext as? ai.koog.agents.core.agent.context.AIAgentContext)?.fork() ?: initialContext.fork()
                     val result = node.execute(nodeContext, input)
                     ParallelNodeResult(node.name, input, nodeContext, result)
                 }
@@ -302,7 +302,7 @@ public class ReduceAIAgentNodeBuilder<Input, Output> internal constructor(
 ) : AIAgentNodeBuilder<List<ParallelNodeResult<Input, Output>>, Output>(
     execute = { input ->
         val (context, output) = execute(input)
-        this.replaceWith(context)
+        this.replace(context)
 
         output
     }
