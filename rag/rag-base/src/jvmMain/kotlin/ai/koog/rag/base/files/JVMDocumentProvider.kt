@@ -98,7 +98,7 @@ public object JVMDocumentProvider : DocumentProvider<Path, Path> {
                     buffer.append('\n')
                 }
             } else if (c == '\r') {
-                val followedByLineFeed = i < text.length - 1 && text.get(i + 1) == '\n'
+                val followedByLineFeed = i < text.length - 1 && text[i + 1] == '\n'
                 if (!followedByLineFeed && false) {
                     if (buffer == null) {
                         intactLength++
