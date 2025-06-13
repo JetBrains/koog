@@ -47,7 +47,7 @@ public open class EmbeddingBasedDocumentStorage<Document>(
             emit(
                 RankedDocument(
                     document = document,
-                    similarity = embedder.diff(queryVector, documentVector)
+                    similarity = 1.0 - embedder.diff(queryVector, documentVector)
                 )
             )
         }
