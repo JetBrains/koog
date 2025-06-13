@@ -281,8 +281,7 @@ public class AIAgentForkNodeBuilder<Input, Output> internal constructor(
         val mapResults = supervisorScope {
             nodes.map { node ->
                 async(dispatcher) {
-                    val nodeContext = (initialContext as? ai.koog.agents.core.agent.context.AIAgentContext)?.fork()
-                        ?: initialContext.fork()
+                    val nodeContext = initialContext.fork()
                     val result = node.execute(nodeContext, input)
                     ForkResult(node.name, input, nodeContext, result)
                 }
