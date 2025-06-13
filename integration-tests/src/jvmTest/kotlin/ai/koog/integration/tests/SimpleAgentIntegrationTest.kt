@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
@@ -19,12 +20,20 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
 import java.util.stream.Stream
 import kotlin.test.AfterTest
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
@@ -32,6 +41,14 @@ class SimpleAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     companion object {
+        val testResourcesDir = File("src/jvmTest/resources/media")
+
+        @JvmStatic
+        @BeforeAll
+        fun setupTestResources() {
+            MediaTestUtils.setupTestResourcesForAgent(testResourcesDir)
+        }
+
         @JvmStatic
         fun openAIModels(): Stream<LLModel> {
             return Models.openAIModels()
@@ -45,6 +62,11 @@ class SimpleAgentIntegrationTest {
         @JvmStatic
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
+        }
+
+        @JvmStatic
+        fun modelsWithVisionCapability(): Stream<Arguments> {
+            return Models.modelsWithVisionCapability()
         }
     }
 
@@ -108,6 +130,11 @@ class SimpleAgentIntegrationTest {
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
     val results = mutableListOf<String?>()
+
+    @BeforeEach
+    fun setup() {
+        assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+    }
 
     @AfterTest
     fun teardown() {
@@ -179,5 +206,56 @@ class SimpleAgentIntegrationTest {
                 "The ${CalculatorTool.name} tool was not called for model $model"
             )
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("modelsWithVisionCapability")
+    fun integration_AIAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+
+        val imageFile = File(testResourcesDir, "test.png")
+        assertTrue(imageFile.exists(), "Image test file should exist")
+
+        val imageBytes = imageFile.readBytes()
+        val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
+
+        val promptWithImage = """
+            I'm sending you an image encoded in base64 format.
+
+            data:image/png,$base64Image
+
+            Please analyze this image and describe what you see.
+        """.trimIndent()
+
+        val executor = when (model.provider) {
+            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+        }
+
+        val agent = AIAgent(
+            executor = executor,
+            systemPrompt = "You are a helpful assistant that can analyze images.",
+            llmModel = model,
+            temperature = 0.7,
+            maxIterations = 10,
+            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+        )
+
+        agent.run(promptWithImage)
+
+        assertTrue(errors.isEmpty(), "There should be no errors")
+        assertTrue(results.isNotEmpty(), "There should be results")
+
+        val result = results.first()
+        assertNotNull(result, "Result should not be null")
+        assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+        assertTrue(result.length > 20, "Result should contain more than 20 characters")
+
+        val resultLowerCase = result.lowercase()
+        assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
+        assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
+        assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
+
     }
 }
