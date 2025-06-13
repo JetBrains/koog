@@ -93,9 +93,9 @@ class McpToolTest {
             put("name", "Test")
             put("title", "Mr.")
         })
-        val (resultWithTitle, _) = withContext(Dispatchers.Default.limitedParallelism(1)) {
+        val resultWithTitle = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
-                greetingTool.executeAndSerialize(argsWithTitle, TestToolEnabler)
+                greetingTool.execute(argsWithTitle, TestToolEnabler)
             }
         }
 

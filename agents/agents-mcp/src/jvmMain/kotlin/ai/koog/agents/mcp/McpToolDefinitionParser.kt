@@ -24,7 +24,7 @@ public interface McpToolDescriptorParser {
  */
 public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
     // Maximum depth of recursive parsing
-    private const val MAX_DEPTH = 10
+    private const val MAX_DEPTH = 30
 
     /**
      * Parses an MCP SDK Tool definition into tool descriptor format.
@@ -52,6 +52,13 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
     }
 
     private fun parseParameterType(element: JsonObject, depth: Int = 0 ): ToolParameterType {
+        if (depth >= MAX_DEPTH) {
+            throw IllegalArgumentException(
+                "Maximum recursion depth ($MAX_DEPTH) exceeded. " +
+                        "This may indicate a circular reference in the parameter definition."
+            )
+        }
+
         // Extract the type string from the JSON object
         val typeStr = element["type"]?.jsonPrimitive?.content
 
@@ -70,7 +77,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
              * }
              */
             val anyOf = element["anyOf"]?.jsonArray
-            if (depth  < MAX_DEPTH && anyOf != null && anyOf.size == 2) {
+            if (anyOf != null && anyOf.size == 2) {
                 val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
                 if (types.contains("null")) {
                     val nonNullType = anyOf.first {
@@ -101,7 +108,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 val items = element["items"]?.jsonObject
                     ?: throw IllegalArgumentException("Array type parameters must have items property")
 
-                val itemType = parseParameterType(items)
+                val itemType = parseParameterType(items, depth + 1)
 
                 ToolParameterType.List(itemsType = itemType)
             }
@@ -113,7 +120,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                     rawProperties.map { (name, property) ->
                         // Description is optional
                         val description = element["description"]?.jsonPrimitive?.content.orEmpty()
-                        ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
+                        ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject, depth + 1))
                     }
                 } ?: emptyList()
 
@@ -132,7 +139,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
                 val additionalPropertiesType = if ("additionalProperties" in element) {
                     when (element.getValue("additionalProperties")) {
-                        is JsonObject -> parseParameterType(element.getValue("additionalProperties").jsonObject)
+                        is JsonObject -> parseParameterType(element.getValue("additionalProperties").jsonObject, depth + 1)
                         else -> null
                     }
                 } else {
