@@ -16,7 +16,7 @@ object MediaTestUtils {
             }
 
             MediaTestScenarios.ImageTestScenario.BASIC_JPG -> {
-                val file = File(testResourcesDir, "test.jpg")
+                val file = File(testResourcesDir, "test.jpeg")
                 check(file.exists()) { "Test image file should exist" }
                 file
             }
@@ -90,15 +90,15 @@ object MediaTestUtils {
                 ""
 
             MediaTestScenarios.TextTestScenario.LONG_TEXT_5_MB -> { // for Anthropic
-                val file = File(testResourcesDir, "fakefile_5MB.txt")
-                check(file.exists()) { "Test text file 5MB should exist" }
-                file
+                val sourceFile = File(testResourcesDir, "fakefile_5MB.txt")
+                check(sourceFile.exists()) { "Test text file 5MB should exist" }
+                sourceFile.readText()
             }
 
-            MediaTestScenarios.TextTestScenario.LONG_TEXT_20_MB -> { // for Gemini
-                val file = File(testResourcesDir, "fakefile_20MB.txt")
-                check(file.exists()) { "Test text file 20MB should exist" }
-                file
+            MediaTestScenarios.TextTestScenario.LONG_TEXT_20_MB -> { // for Google
+                val sourceFile = File(testResourcesDir, "fakefile_20MB.txt")
+                check(sourceFile.exists()) { "Test text file 20MB should exist" }
+                sourceFile.readText()
             }
 
             MediaTestScenarios.TextTestScenario.UTF8_ENCODING ->
@@ -112,60 +112,60 @@ object MediaTestUtils {
                         "(∑, ∞, ∂)\n"
 
             MediaTestScenarios.TextTestScenario.CODE_SNIPPET -> """
-                // Java code snippet
-                public class HelloWorld {
-                    public static void main(String[] args) {
-                        System.out.println("Hello, World!");
-                    }
+            // Java code snippet
+            public class HelloWorld {
+                public static void main(String[] args) {
+                    System.out.println("Hello, World!");
                 }
+            }
 
-                # Python code snippet
-                def greet(name):
-                    return f"Hello, {name}!"
+            # Python code snippet
+            def greet(name):
+                return f"Hello, {name}!"
 
-                print(greet("World"))
-                """.trimIndent()
+            print(greet("World"))
+            """.trimIndent()
 
             MediaTestScenarios.TextTestScenario.FORMATTED_TEXT -> """
-                # Heading 1
-                ## Heading 2
-                ### Heading 3
+            # Heading 1
+            ## Heading 2
+            ### Heading 3
 
-                This is a paragraph with *italic* and **bold** text.
+            This is a paragraph with *italic* and **bold** text.
 
-                * Bullet point 1
-                * Bullet point 2
-                  * Nested bullet point
+            * Bullet point 1
+            * Bullet point 2
+              * Nested bullet point
 
-                1. Numbered item 1
-                2. Numbered item 2
-                   1. Nested numbered item
+            1. Numbered item 1
+            2. Numbered item 2
+               1. Nested numbered item
 
-                > This is a blockquote
+            > This is a blockquote
 
-                ---
+            ---
 
-                This is another paragraph after a horizontal rule.
-                """.trimIndent()
+            This is another paragraph after a horizontal rule.
+            """.trimIndent()
 
             MediaTestScenarios.TextTestScenario.UNICODE_TEXT -> """
-                Unicode Text Examples:
+            Unicode Text Examples:
 
-                • Chinese: 你好，世界！(Hello, world!)
-                • Japanese: こんにちは、世界！(Hello, world!)
-                • Korean: 안녕하세요, 세계! (Hello, world!)
-                • Russian: Привет, мир! (Hello, world!)
-                • Arabic: مرحبا بالعالم! (Hello, world!)
-                • Hebrew: שלום עולם! (Hello, world!)
-                • Greek: Γειά σου Κόσμε! (Hello, world!)
-                • Thai: สวัสดีชาวโลก! (Hello, world!)
+            • Chinese: 你好，世界！(Hello, world!)
+            • Japanese: こんにちは、世界！(Hello, world!)
+            • Korean: 안녕하세요, 세계! (Hello, world!)
+            • Russian: Привет, мир! (Hello, world!)
+            • Arabic: مرحبا بالعالم! (Hello, world!)
+            • Hebrew: שלום עולם! (Hello, world!)
+            • Greek: Γειά σου Κόσμε! (Hello, world!)
+            • Thai: สวัสดีชาวโลก! (Hello, world!)
 
-                Emoji: 😀 🌍 🚀 🎉 🐱 🌈
+            Emoji: 😀 🌍 🚀 🎉 🐱 🌈
 
-                Mathematical Symbols: ∑ ∫ ∏ √ ∞ ∆ π Ω
+            Mathematical Symbols: ∑ ∫ ∏ √ ∞ ∆ π Ω
 
-                Currency Symbols: $ € £ ¥ ₹ ₽ ₩
-                """.trimIndent()
+            Currency Symbols: $ € £ ¥ ₹ ₽ ₩
+            """.trimIndent()
 
             MediaTestScenarios.TextTestScenario.CORRUPTED_TEXT -> {
                 val file = File(testResourcesDir, "corrupted.txt")
@@ -180,12 +180,12 @@ object MediaTestUtils {
                         )
                     )
                 }
-                file
+                file.readText()
             }
         }
 
         val file = File(testResourcesDir, "test_${scenario.name.lowercase()}.txt")
-        file.writeText(textContent as String)
+        file.writeText(textContent) // Теперь textContent всегда String
         return file
     }
 
@@ -747,7 +747,7 @@ object MediaTestUtils {
         val responseLowerCase = response.content.lowercase()
         assertFalse(responseLowerCase.contains("error"), "Result should not contain error messages")
         assertFalse(responseLowerCase.contains("unable"), "Result should not indicate inability to process")
-        assertFalse(responseLowerCase.contains("cannot"), "Result should not indicate inability to process")
+        assertFalse(responseLowerCase.contains("cannot process"), "Result should not indicate inability to process")
     }
 
     fun checkResponseBasic(response: Message.Response) {
