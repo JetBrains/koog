@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
@@ -99,11 +100,11 @@ public class Tracing {
                 logger.warn { "Tracing Feature. No feature out stream providers are defined. Trace streaming has no target." }
             }
 
-            val featureImpl = Tracing()
 
+            val interceptContext = InterceptContext(this, Tracing())
             //region Intercept Agent Events
 
-            pipeline.interceptBeforeAgentStarted(this, featureImpl) intercept@{
+            pipeline.interceptBeforeAgentStarted(interceptContext) intercept@{
                 val event = AIAgentStartedEvent(
                     strategyName = strategy.name,
                 )
@@ -112,7 +113,7 @@ public class Tracing {
                 }
             }
 
-            pipeline.interceptAgentFinished(this, featureImpl) intercept@{ strategyName, result ->
+            pipeline.interceptAgentFinished(interceptContext) intercept@{ strategyName, result ->
                 val event = AIAgentFinishedEvent(
                     strategyName = strategyName,
                     result = result,
@@ -120,7 +121,7 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptAgentRunError(this, featureImpl) intercept@{ strategyName, sessionUuid, throwable ->
+            pipeline.interceptAgentRunError(interceptContext) intercept@{ strategyName, sessionUuid, throwable ->
                 val event = AIAgentRunErrorEvent(
                     strategyName = strategyName,
                     error = throwable.toAgentError(),
@@ -132,7 +133,7 @@ public class Tracing {
 
             //region Intercept Strategy Events
 
-            pipeline.interceptStrategyStarted(this, featureImpl) intercept@{
+            pipeline.interceptStrategyStarted(interceptContext) intercept@{
                 val event = AIAgentStrategyStartEvent(
                     strategyName = strategy.name,
                 )
@@ -141,7 +142,7 @@ public class Tracing {
                 }
             }
 
-            pipeline.interceptStrategyFinished(this, featureImpl) intercept@{ result ->
+            pipeline.interceptStrategyFinished(interceptContext) intercept@{ result ->
                 val event = AIAgentStrategyFinishedEvent(
                     strategyName = strategy.name,
                     result = result,
@@ -153,7 +154,7 @@ public class Tracing {
 
             //region Intercept Node Events
 
-            pipeline.interceptBeforeNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
+            pipeline.interceptBeforeNode(interceptContext) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
                 val event = AIAgentNodeExecutionStartEvent(
                     nodeName = node.name,
                     input = input?.toString() ?: ""
@@ -161,7 +162,7 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptAfterNode(this, featureImpl) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
+            pipeline.interceptAfterNode(interceptContext) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
                 val event = AIAgentNodeExecutionEndEvent(
                     nodeName = node.name,
                     input = input?.toString() ?: "",
@@ -174,7 +175,7 @@ public class Tracing {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(this, featureImpl) intercept@{ prompt, tools, model, sessionUuid ->
+            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ prompt, tools, model, sessionUuid ->
                 val event = LLMCallStartEvent(
                     prompt = prompt,
                     tools = tools.map { it.name }
@@ -183,7 +184,7 @@ public class Tracing {
                 config.messageProcessor.onMessageForEachSafe(event)
             }
 
-            pipeline.interceptAfterLLMCall(this, featureImpl) intercept@{ prompt, tools, model, responses, sessionUuid ->
+            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ prompt, tools, model, responses, sessionUuid ->
                 val event = LLMCallEndEvent(
                     responses = responses
                 )
@@ -195,7 +196,7 @@ public class Tracing {
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolCall(this, featureImpl) intercept@{ tool, toolArgs ->
+            pipeline.interceptToolCall(interceptContext) intercept@{ tool, toolArgs ->
                 val event = ToolCallEvent(
                     toolName = tool.name,
                     toolArgs = toolArgs
@@ -203,7 +204,7 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolValidationError(this, featureImpl) intercept@{ tool, toolArgs, value ->
+            pipeline.interceptToolValidationError(interceptContext) intercept@{ tool, toolArgs, value ->
                 val event = ToolValidationErrorEvent(
                     toolName = tool.name,
                     toolArgs = toolArgs,
@@ -212,7 +213,7 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolCallFailure(this, featureImpl) intercept@{ tool, toolArgs, throwable ->
+            pipeline.interceptToolCallFailure(interceptContext) intercept@{ tool, toolArgs, throwable ->
                 val event = ToolCallFailureEvent(
                     toolName = tool.name,
                     toolArgs = toolArgs,
@@ -221,7 +222,7 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolCallResult(this, featureImpl) intercept@{ tool, toolArgs, result ->
+            pipeline.interceptToolCallResult(interceptContext) intercept@{ tool, toolArgs, result ->
                 val event = ToolCallResultEvent(
                     toolName = tool.name,
                     toolArgs = toolArgs,

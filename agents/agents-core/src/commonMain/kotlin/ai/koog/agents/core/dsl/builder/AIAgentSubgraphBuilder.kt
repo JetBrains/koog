@@ -5,9 +5,41 @@ import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.tools.Tool
 import kotlin.reflect.KProperty
 
-// TODO: rename *BuilderBase to *Builder and use specific prefixes (or suffixes) for subclasses
+/**
+ * Abstract base class for building AI agent subgraphs.
+ *
+ * This class provides utilities for defining and connecting nodes within a subgraph,
+ * constructing custom subgraphs with specified tools or tool selection strategies,
+ * and managing the structural relationships between subgraph nodes.
+ *
+ * @param Input The input type expected by the starting node of the subgraph.
+ * @param Output The output type produced by the finishing node of the subgraph.
+ */
 public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
+    /**
+     * Represents the starting node of the subgraph in the AI agent's strategy graph.
+     *
+     * This property holds a reference to a `StartAIAgentNodeBase` instance, which acts as the
+     * entry point for the subgraph. It is used to define the initial step in the processing
+     * pipeline for input data and is integral to the construction of the subgraph.
+     *
+     * @param Input The type of input data that this starting node processes.
+     */
     public abstract val nodeStart: StartAIAgentNodeBase<Input>
+    /**
+     * Represents the "finish" node in the AI agent's subgraph structure. This node indicates
+     * the endpoint of the subgraph and acts as a terminal stage where the workflow stops.
+     *
+     * The `nodeFinish` property is an abstract member that subclasses must define. It is of type
+     * `FinishAIAgentNodeBase`, which is a specialized node that directly passes its input to its
+     * output without modification as part of an identity operation.
+     *
+     * This node does not allow outgoing edges and cannot be linked further in the graph.
+     * It serves as the final node responsible for receiving and producing data of the defined
+     * output type.
+     *
+     * @param Output The type of data processed and produced by this node.
+     */
     public abstract val nodeFinish: FinishAIAgentNodeBase<Output>
 
     /**
@@ -91,6 +123,20 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 }
 
+/**
+ * Builder class for creating AI agent subgraphs with a defined tool selection strategy.
+ *
+ * This class facilitates the construction of customized subgraphs in an AI agent's
+ * execution pipeline. It provides methods for defining start and finish nodes and ensuring
+ * the connectivity between them. The subgraph can be configured with a tool selection strategy
+ * to control the tools available during its execution.
+ *
+ * @param Input The input type expected by the starting node of the subgraph.
+ * @param Output The output type produced by the finishing node of the subgraph.
+ * @property name Optional name of the subgraph for identification.
+ * @property toolSelectionStrategy The strategy that defines how tools are selected and used
+ * within the subgraph.
+ */
 public class AIAgentSubgraphBuilder<Input, Output>(
     public val name: String? = null,
     private val toolSelectionStrategy: ToolSelectionStrategy
@@ -109,10 +155,45 @@ public class AIAgentSubgraphBuilder<Input, Output>(
 
 }
 
+/**
+ * AIAgentSubgraphDelegateBase defines a delegate interface for accessing an instance of [AIAgentSubgraph].
+ * This interface allows dynamically providing subgraph instances based on context or property reference.
+ *
+ * @param Input The type of the input data that the subgraph is designed to handle.
+ * @param Output The type of the output data that the subgraph emits after processing.
+ */
 public interface AIAgentSubgraphDelegateBase<Input, Output> {
+    /**
+     * Provides access to an instance of [AIAgentSubgraph] based on the specified property reference.
+     *
+     * This operator function acts as a delegate to dynamically retrieve and return an appropriate
+     * instance of [AIAgentSubgraph] associated with the input and output types specified by the containing context.
+     *
+     * @param thisRef The reference to the object that contains the delegated property. Can be null if the property is a top-level or package-level property.
+     * @param property The property metadata used to identify the property for which the subgraph instance is being accessed.
+     * @return An [AIAgentSubgraph] instance that handles the specified input and output data types.
+     */
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentSubgraph<Input, Output>
 }
 
+/**
+ * A delegate implementation that provides dynamic access to an instance of [AIAgentSubgraph].
+ * This class facilitates constructing and associating a subgraph with specific start and finish nodes
+ * and a defined tool selection strategy upon access.
+ *
+ * @param Input The type of input data that the subgraph processes.
+ * @param Output The type of output data that the subgraph produces.
+ * @constructor Creates an instance of [AIAgentSubgraphDelegate] with the specified subgraph parameters.
+ *
+ * @property name An optional name for the subgraph. If not provided, the property name
+ * associated with the delegate is used as the subgraph name.
+ * @property nodeStart The starting node of the subgraph. This node marks the entry point
+ * of the subgraph and executes the initial logic.
+ * @property nodeFinish The finishing node of the subgraph. This node marks the endpoint
+ * and produces the final output of the subgraph.
+ * @property toolSelectionStrategy The strategy for selecting the set of tools available
+ * to the subgraph during its execution.
+ */
 public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
     public val nodeStart: StartAIAgentNodeBase<Input>,

@@ -57,7 +57,27 @@ public data class Concept(
  */
 @Serializable
 public sealed interface Fact {
+    /**
+     * The `concept` property represents the distinct piece of knowledge associated with this fact.
+     *
+     * Each fact is linked to a specific concept, which acts as the central reference point for
+     * storing, retrieving, and managing structured information. This allows for organizing
+     * and maintaining relationships between individual data points in the memory system.
+     */
     public val concept: Concept
+    /**
+     * The timestamp indicating when the fact was created or stored, expressed as the number of
+     * milliseconds elapsed since the Unix epoch (January 1, 1970, 00:00:00 UTC).
+     *
+     * This property is crucial for enabling temporal reasoning within the memory system,
+     * allowing the system to associate facts with specific moments in time. It is used for:
+     * - Ordering facts chronologically
+     * - Supporting time-based queries and operations
+     * - Tracking data validity or freshness based on creation time
+     *
+     * This value is typically generated using a platform-specific implementation of
+     * the TimeProvider interface to ensure precision and consistency across different platforms.
+     */
     public val timestamp: Long
 }
 

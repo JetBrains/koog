@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.Prompt
@@ -62,19 +63,19 @@ class TestEventsCollector {
             _collectedEvents.add("OnAfterLLMCall (responses: [${responses.joinToString { "${it.role.name}: ${it.content}" }}])")
         }
 
-        onToolCall { tool: Tool<*, *>, toolArgs: Tool.Args ->
+        onToolCall { tool: Tool<*, *>, toolArgs: ToolArgs ->
             _collectedEvents.add("OnToolCall (tool: ${tool.name}, args: $toolArgs)")
         }
 
-        onToolValidationError { tool: Tool<*, *>, toolArgs: Tool.Args, value: String ->
+        onToolValidationError { tool: Tool<*, *>, toolArgs: ToolArgs, value: String ->
             _collectedEvents.add("OnToolValidationError (tool: ${tool.name}, args: $toolArgs, value: $value)")
         }
 
-        onToolCallFailure { tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable ->
+        onToolCallFailure { tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable ->
             _collectedEvents.add("OnToolCallFailure (tool: ${tool.name}, args: $toolArgs, throwable: ${throwable.message})")
         }
 
-        onToolCallResult { tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? ->
+        onToolCallResult { tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult? ->
             _collectedEvents.add("OnToolCallResult (tool: ${tool.name}, args: $toolArgs, result: $result)")
         }
     }

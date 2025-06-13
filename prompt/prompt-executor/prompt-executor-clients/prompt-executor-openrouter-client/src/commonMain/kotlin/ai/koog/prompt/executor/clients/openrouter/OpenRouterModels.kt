@@ -31,7 +31,18 @@ public object OpenRouterModels: LLModelDefinitions {
     // Multimodal capabilities (including vision)
     private val multimodalCapabilities: List<LLMCapability> = standardCapabilities + LLMCapability.Vision.Image
     
-    // Anthropic models
+    /**
+     * Represents the Claude 3 Opus model provided by Anthropic through OpenRouter.
+     *
+     * This model instance is configured with the following attributes:
+     * - Provider: OpenRouter, which acts as the intermediary platform for model access and interactions.
+     * - Identifier: "anthropic/claude-3-opus", uniquely specifying the Claude 3 Opus variant offered by Anthropic.
+     * - Capabilities: A predefined set of multimodal capabilities that dictate the functionalities supported by this LLM instance.
+     *
+     * Claude 3 Opus is designed to support various advanced language model tasks enabled by its multimodal features,
+     * and is suitable for integration through systems compatible with the OpenRouter provider.
+     */
+// Anthropic models
     public val Claude3Opus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-opus",

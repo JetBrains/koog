@@ -170,6 +170,19 @@ public fun KFunction<*>.asTool(
     return ToolFromCallable(callable = this, thisRef = thisRef, descriptor = toolDescriptor, json = json)
 }
 
+/**
+ * Registers a tool in the `ToolRegistry` using a given function and optional parameters
+ * to customize the tool's properties.
+ *
+ * This method simplifies the process of adding a tool by internally converting a Kotlin function
+ * into a `Tool` instance with the provided metadata.
+ *
+ * @param toolFunction The function to be registered as a tool. It serves as the functional implementation of the tool.
+ * @param json The JSON serialization instance used for the tool. Defaults to a standard `Json` instance if not provided.
+ * @param thisRef An optional reference to the class instance where the tool function is defined. Can be `null` if not applicable.
+ * @param name An optional name to uniquely identify the tool in the registry. If `null`, a default name derived from the function will be used.
+ * @param description An optional description of the tool functionality. Useful for documentation and explanatory purposes.
+ */
 public fun ToolRegistry.Builder.tool(
     toolFunction: KFunction<*>,
     json: Json = Json,

@@ -3,8 +3,22 @@ package ai.koog.agents.core.agent.entity
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+/**
+ * Represents a storage key used for identifying and accessing data associated with an AI agent.
+ *
+ * The generic type parameter [T] specifies the type of data associated with this key, ensuring
+ * type safety when storing and retrieving data in the context of an AI agent.
+ *
+ * @param name The string identifier that uniquely represents the storage key.
+ */
 public data class AIAgentStorageKey<T : Any>(val name: String)
 
+/**
+ * Creates a storage key for a specific type, allowing identification and retrieval of values associated with it.
+ *
+ * @param name The name of the storage key, used to uniquely identify it.
+ * @return A new instance of [AIAgentStorageKey] for the specified type.
+ */
 public inline fun <reified T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAgentStorageKey<T>(name)
 
 /**

@@ -97,8 +97,25 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
     ) : ToolParameterType("OBJECT")
 
 
+    /**
+     * Companion object for the enclosing class. Provides utility functions for creating instances
+     * of the `Enum` type parameter from different kinds of inputs.
+     */
     public companion object {
+        /**
+         * Creates an Enum instance using the provided EnumEntries.
+         *
+         * @param entries The EnumEntries to initialize the Enum instance. The names of the entries will be used.
+         * @return A new Enum instance populated with the names of the provided entries.
+         */
         public fun Enum(entries: EnumEntries<*>): Enum = Enum(entries.map { it.name }.toTypedArray())
+        /**
+         * Constructs an Enum parameter type from an array of Enum entries.
+         *
+         * @param entries An array of Enum entries from which the parameter type is constructed.
+         *                Each entry's name is extracted to define the enumeration values.
+         * @return An instance of Enum containing the names of the provided Enum entries.
+         */
         public fun Enum(entries: Array<kotlin.Enum<*>>): Enum = Enum(entries.map { it.name }.toTypedArray())
     }
 }

@@ -1,7 +1,7 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 class DummyTool : SimpleTool<DummyTool.Args>() {
     @Serializable
-    data class Args(val dummy: String = "") : Tool.Args
+    data class Args(val dummy: String = "") : ToolArgs
 
     override val argsSerializer = Args.serializer()
 
