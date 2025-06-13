@@ -127,12 +127,30 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     /**
      * Adds an exact pattern match for an LLM answer that triggers a tool call.
      *
-     * @param llmAnswer The exact input string to match
+     * @param pattern The exact input string to match
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(llmAnswer: String, tool: Tool<Args, *>, args: Args) {
-        toolCallExactMatches[llmAnswer] = tool.encodeArgsToString(args).let { toolContent ->
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
+        toolCallExactMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
+            Message.Tool.Call(
+                id = null,
+                tool = tool.name,
+                content = toolContent,
+                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+            )
+        }
+    }
+
+    /**
+     * Adds a partial pattern match for an LLM answer that triggers a tool call.
+     *
+     * @param pattern The exact input string to match
+     * @param tool The tool to be called when the input matches
+     * @param args The arguments to pass to the tool
+     */
+    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
+        toolCallPartialMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
@@ -236,15 +254,28 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
         /**
          * Configures the LLM to respond with a tool call when the user request exactly matches the specified pattern.
          *
-         * @param llmAnswer The exact string to match in the user request
-         * @return The llmAnswer string for method chaining
+         * @param pattern The exact string to match in the user request
+         * @return The [pattern] string for method chaining
          */
-        public infix fun onRequestEquals(llmAnswer: String): String {
+        public infix fun onRequestEquals(pattern: String): String {
             // Using the llmAnswer directly as the response, which should contain the tool call JSON
-            builder.addLLMAnswerExactPattern(llmAnswer, tool, args)
+            builder.addLLMAnswerExactPattern(pattern, tool, args)
 
             // Return the llmAnswer as is, which should be a valid tool call JSON
-            return llmAnswer
+            return pattern
+        }
+
+        /**
+         * Configures the system to partially match user requests containing the specified pattern.
+         * If the pattern is found within a user request, the associated tool call response will be triggered.
+         *
+         * @param pattern The substring pattern to match within user requests.
+         * @return The [pattern] string for method chaining
+         */
+        public infix fun onRequestContains(pattern: String): String {
+            builder.addLLMAnswerPartialPattern(pattern, tool, args)
+
+            return pattern
         }
     }
 
