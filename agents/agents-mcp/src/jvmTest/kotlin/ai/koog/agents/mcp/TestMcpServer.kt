@@ -10,9 +10,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 /**
@@ -51,13 +53,25 @@ class TestMcpServer(private val port: Int) {
                     put("type", "string")
                     put("description", "A name to greet")
                 }
+                putJsonObject("title") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "string")
+                        }
+                    }
+                    put("description", "Title to use in the greeting")
+                }
             },
             required = listOf("name")
         )
         ) { request ->
             val name = request.arguments["name"]?.jsonPrimitive?.content
+            val title = request.arguments["title"]?.jsonPrimitive?.content
             CallToolResult(
-                content = listOf(TextContent("Hello, $name!"))
+                content = listOf(TextContent("Hello, ${if (title.isNullOrEmpty()) "" else "$title "}$name!"))
             )
         }
 
