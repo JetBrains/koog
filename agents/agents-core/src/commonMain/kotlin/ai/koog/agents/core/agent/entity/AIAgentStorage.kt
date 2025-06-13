@@ -52,6 +52,19 @@ public class AIAgentStorage internal constructor() {
         storage[key] as T?
     }
 
+
+    /**
+     * Retrieves the non-null value associated with the given key from the storage.
+     * If the key does not exist in the storage, a [NoSuchElementException] is thrown.
+     *
+     * @param key The key of type [AIAgentStorageKey] used to identify the value in the storage.
+     * @return The value associated with the key, of type [T].
+     * @throws NoSuchElementException if the key does not exist in the storage.
+     */
+    public suspend fun <T : Any> getValue(key: AIAgentStorageKey<T>): T {
+        return get(key) ?: throw NoSuchElementException("Key $key not found in storage")
+    }
+
     /**
      * Removes the value associated with the given key from the storage.
      *
