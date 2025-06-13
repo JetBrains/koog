@@ -697,32 +697,35 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            try {
-                val response = executor.execute(prompt, model)
-                when (scenario) {
-                    MarkdownTestScenario.MALFORMED_SYNTAX,
-                    MarkdownTestScenario.MATH_NOTATION,
-                    MarkdownTestScenario.BROKEN_LINKS,
-                    MarkdownTestScenario.IRREGULAR_TABLES -> {
-                        checkResponseBasic(response)
-                    }
+            withRetry(times = 3, testName = "integration_testMarkdownProcessingBasic[${scenario.name.lowercase()}]") {
 
-                    else -> {
-                        checkExecutorMediaResponse(response)
-                    }
-                }
-            } catch (e: Exception) {
-                when (scenario) {
-                    MarkdownTestScenario.EMPTY_MARKDOWN -> {
-                        when (model.provider) {
-                            LLMProvider.Google -> {
-                                println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
-                            }
+                try {
+                    val response = executor.execute(prompt, model)
+                    when (scenario) {
+                        MarkdownTestScenario.MALFORMED_SYNTAX,
+                        MarkdownTestScenario.MATH_NOTATION,
+                        MarkdownTestScenario.BROKEN_LINKS,
+                        MarkdownTestScenario.IRREGULAR_TABLES -> {
+                            checkResponseBasic(response)
+                        }
+
+                        else -> {
+                            checkExecutorMediaResponse(response)
                         }
                     }
+                } catch (e: Exception) {
+                    when (scenario) {
+                        MarkdownTestScenario.EMPTY_MARKDOWN -> {
+                            when (model.provider) {
+                                LLMProvider.Google -> {
+                                    println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
+                                }
+                            }
+                        }
 
-                    else -> {
-                        throw e
+                        else -> {
+                            throw e
+                        }
                     }
                 }
             }
