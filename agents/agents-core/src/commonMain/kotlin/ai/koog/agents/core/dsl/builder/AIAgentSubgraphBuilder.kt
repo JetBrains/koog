@@ -3,7 +3,9 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.tools.Tool
+import kotlinx.coroutines.*
 import kotlin.reflect.KProperty
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -25,7 +27,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      *
      * @param Input The type of input data that this starting node processes.
      */
-    public abstract val nodeStart: StartAIAgentNodeBase<Input>
+    public abstract val nodeStart: AIAgentStartNodeBase<Input>
+
     /**
      * Represents the "finish" node in the AI agent's subgraph structure. This node indicates
      * the endpoint of the subgraph and acts as a terminal stage where the workflow stops.
@@ -40,7 +43,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      *
      * @param Output The type of data processed and produced by this node.
      */
-    public abstract val nodeFinish: FinishAIAgentNodeBase<Output>
+    public abstract val nodeFinish: AIAgentFinishNodeBase<Output>
 
     /**
      * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
@@ -88,9 +91,37 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param nextNode Node to connect to
      * @return The next node
      */
-    public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
+    public infix fun <IncomingOutput, OutgoingInput, OutgoingOutput> AIAgentNodeBase<IncomingOutput, OutgoingInput>.then(
+        nextNode: AIAgentNodeBase<OutgoingInput, OutgoingOutput>
+    ): AIAgentNodeBase<OutgoingInput, OutgoingOutput> {
         edge(this forwardTo nextNode)
         return nextNode
+    }
+
+    /**
+     * Creates a node that executes multiple nodes in parallel.
+     * @param nodes List of nodes to execute in parallel
+     * @param dispatcher Coroutine dispatcher to use for parallel execution
+     * @param name Optional node name
+     */
+    public fun <Input, Output> fork(
+        vararg nodes: AIAgentNodeBase<Input, Output>,
+        dispatcher: CoroutineDispatcher = Dispatchers.Default,
+        name: String? = null,
+    ): AIAgentNodeDelegateBase<Input, List<ForkResult<Input, Output>>> {
+        return AIAgentNodeDelegate(name, AIAgentForkNodeBuilder(nodes.asList(), dispatcher))
+    }
+
+    /**
+     * Creates a node that merges the results of the forked nodes.
+     * @param execute Function to merge the contexts and outputs after parallel execution
+     * @param name Optional node name
+     */
+    public fun <Input, Output> merge(
+        name: String? = null,
+        execute: suspend AIAgentContextBase.(List<ForkResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+    ): AIAgentNodeDelegateBase<List<ForkResult<Input, Output>>, Output> {
+        return AIAgentNodeDelegate(name, AIAgentMergeNodeBuilder(execute))
     }
 
     /**
@@ -105,11 +136,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     /**
-     * Checks if finish node is reachable from start node.
+     * Checks if the finish node is reachable from start node.
      * @param start Starting node
-     * @return True if finish node is reachable
+     * @return True if the finish node is reachable
      */
-    protected fun isFinishReachable(start: StartAIAgentNodeBase<Input>): Boolean {
+    protected fun isFinishReachable(start: AIAgentStartNodeBase<Input>): Boolean {
         val visited = mutableSetOf<AIAgentNodeBase<*, *>>()
 
         fun visit(node: AIAgentNodeBase<*, *>): Boolean {
@@ -142,8 +173,8 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     private val toolSelectionStrategy: ToolSelectionStrategy
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
-    override val nodeStart: StartAIAgentNodeBase<Input> = StartAIAgentNodeBase()
-    override val nodeFinish: FinishAIAgentNodeBase<Output> = FinishAIAgentNodeBase()
+    override val nodeStart: AIAgentStartNodeBase<Input> = AIAgentStartNodeBase()
+    override val nodeFinish: AIAgentFinishNodeBase<Output> = AIAgentFinishNodeBase()
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
@@ -196,8 +227,8 @@ public interface AIAgentSubgraphDelegateBase<Input, Output> {
  */
 public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
-    public val nodeStart: StartAIAgentNodeBase<Input>,
-    public val nodeFinish: FinishAIAgentNodeBase<Output>,
+    public val nodeStart: AIAgentStartNodeBase<Input>,
+    public val nodeFinish: AIAgentFinishNodeBase<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy
 ) : AIAgentSubgraphDelegateBase<Input, Output> {
     private var subgraph: AIAgentSubgraph<Input, Output>? = null
@@ -218,3 +249,62 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
         return subgraph!!
     }
 }
+
+/**
+ * Result of parallel node execution.
+ *
+ * @property nodeName Name of the node
+ * @property input Input to the node
+ * @property context Context of the node on the node termination state
+ * @property output Output of the node
+ */
+public data class ForkResult<Input, Output>(
+    val nodeName: String,
+    val input: Input,
+    val context: AIAgentContextBase,
+    val output: Output
+)
+
+/**
+ * Builder for a node that executes multiple nodes in parallel.
+ *
+ * @param nodes List of nodes to execute in parallel
+ * @param dispatcher Coroutine dispatcher to use for parallel execution
+ */
+@OptIn(ExperimentalUuidApi::class)
+public class AIAgentForkNodeBuilder<Input, Output> internal constructor(
+    private val nodes: List<AIAgentNodeBase<Input, Output>>,
+    private val dispatcher: CoroutineDispatcher
+) : AIAgentNodeBuilder<Input, List<ForkResult<Input, Output>>>(
+    execute = { input ->
+        val initialContext: AIAgentContextBase = this
+        val mapResults = supervisorScope {
+            nodes.map { node ->
+                async(dispatcher) {
+                    val nodeContext = initialContext.fork()
+                    val result = node.execute(nodeContext, input)
+                    ForkResult(node.name, input, nodeContext, result)
+                }
+            }
+        }
+
+        mapResults.awaitAll()
+    }
+)
+
+/**
+ * Builder for a node that executes multiple nodes in parallel and merges their contexts.
+ *
+ * @param execute Function to merge the contexts after parallel execution
+ */
+@OptIn(ExperimentalUuidApi::class)
+public class AIAgentMergeNodeBuilder<Input, Output> internal constructor(
+    private val execute: suspend AIAgentContextBase.(List<ForkResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+) : AIAgentNodeBuilder<List<ForkResult<Input, Output>>, Output>(
+    execute = { input ->
+        val (context, output) = execute(input)
+        this.replace(context)
+
+        output
+    }
+)

@@ -32,6 +32,17 @@ public class AIAgentStorage internal constructor() {
     private val storage = mutableMapOf<AIAgentStorageKey<*>, Any>()
 
     /**
+     * Creates a deep copy of this storage.
+     *
+     * @return A new instance of [AIAgentStorage] with the same content as this one.
+     */
+    internal suspend fun copy(): AIAgentStorage {
+        val newStorage = AIAgentStorage()
+        newStorage.putAll(this.toMap())
+        return newStorage
+    }
+
+    /**
      * Sets the value associated with the given key in the storage.
      *
      * @param key The key of type [AIAgentStorageKey] used to identify the value in the storage.

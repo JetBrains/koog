@@ -80,7 +80,6 @@ public interface AIAgentContextBase {
      */
     public val storage: AIAgentStorage
 
-    // TODO: use Uuid?
     /**
      * A unique identifier for the current session associated with the AI agent context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
@@ -110,6 +109,7 @@ public interface AIAgentContextBase {
      */
     @InternalAgentsApi
     public val pipeline: AIAgentPipeline
+
 
     /**
      * Retrieves a feature from the agent's storage using the specified key.
@@ -180,4 +180,22 @@ public interface AIAgentContextBase {
         strategyId: String? = null,
         pipeline: AIAgentPipeline? = null,
     ): AIAgentContextBase
+
+    /**
+     * Creates a copy of the current [AIAgentContext] with deep copies of all mutable properties.
+     * This method is particularly useful in scenarios like parallel node execution
+     * where contexts need to be sent to different threads and then merged back together using [replace].
+     *
+     * @return A new instance of [AIAgentContext] with copies of all mutable properties.
+     */
+    public suspend fun fork(): AIAgentContextBase
+
+    /**
+     * Replaces the current context with the provided context.
+     * This method is used to update the current context with values from another context,
+     * particularly useful in scenarios like parallel node execution where contexts need to be merged.
+     *
+     * @param context The context to replace the current context with.
+     */
+    public suspend fun replace(context: AIAgentContextBase)
 }

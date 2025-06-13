@@ -9,6 +9,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.utils.RWLock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -30,18 +31,65 @@ import kotlin.uuid.Uuid
  * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
  */
 @OptIn(ExperimentalUuidApi::class)
-internal class AIAgentContext(
+public class AIAgentContext(
     override val environment: AIAgentEnvironment,
     override val agentInput: String,
     override val config: AIAgentConfigBase,
-    override val llm: AIAgentLLMContext,
-    override val stateManager: AIAgentStateManager,
-    override val storage: AIAgentStorage,
+    llm: AIAgentLLMContext,
+    stateManager: AIAgentStateManager,
+    storage: AIAgentStorage,
     override val sessionUuid: Uuid,
     override val strategyId: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
 ) : AIAgentContextBase {
+
+    /**
+     * Mutable wrapper for AI agent context properties.
+     */
+    internal class MutableAIAgentContext(
+        var llm: AIAgentLLMContext,
+        var stateManager: AIAgentStateManager,
+        var storage: AIAgentStorage,
+    ) {
+        private val rwLock = RWLock()
+
+        /**
+         * Creates a copy of the current [MutableAIAgentContext].
+         * @return A new instance of [MutableAIAgentContext] with copies of all mutable properties.
+         */
+        suspend fun copy(): MutableAIAgentContext {
+            return rwLock.withReadLock {
+                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy())
+            }
+        }
+
+        /**
+         * Replaces the current context with the provided context.
+         * @param llm The LLM context to replace the current context with.
+         * @param stateManager The state manager to replace the current context with.
+         * @param storage The storage to replace the current context with.
+         */
+        suspend fun replace(llm: AIAgentLLMContext?, stateManager: AIAgentStateManager?, storage: AIAgentStorage?) {
+            rwLock.withWriteLock {
+                llm?.let { this.llm = llm }
+                stateManager?.let { this.stateManager = stateManager }
+                storage?.let { this.storage = storage }
+            }
+        }
+    }
+
+    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
+
+    override val llm: AIAgentLLMContext
+        get() = mutableAIAgentContext.llm
+
+    override val storage: AIAgentStorage
+        get() = mutableAIAgentContext.storage
+
+    override val stateManager: AIAgentStateManager
+        get() = mutableAIAgentContext.stateManager
+
     /**
      * A map storing features associated with the current AI agent context.
      * The keys represent unique identifiers for specific features, defined as [AIAgentStorageKey].
@@ -119,4 +167,30 @@ internal class AIAgentContext(
         strategyId = strategyId ?: this.strategyId,
         pipeline = pipeline ?: @OptIn(InternalAgentsApi::class) this.pipeline,
     )
+
+    /**
+     * Creates a copy of the current [AIAgentContext] with deep copies of all mutable properties.
+     *
+     * @return A new instance of [AIAgentContext] with copies of all mutable properties.
+     */
+    override suspend fun fork(): AIAgentContextBase = copy(
+        llm = this.llm.copy(),
+        storage = this.storage.copy(),
+        stateManager = this.stateManager.copy(),
+    )
+
+    /**
+     * Replaces the current context with the provided context.
+     * This method is used to update the current context with values from another context,
+     * particularly useful in scenarios like parallel node execution where contexts need to be merged.
+     *
+     * @param context The context to replace the current context with.]]
+     */
+    override suspend fun replace(context: AIAgentContextBase) {
+        mutableAIAgentContext.replace(
+            context.llm,
+            context.stateManager,
+            context.storage
+        )
+    }
 }

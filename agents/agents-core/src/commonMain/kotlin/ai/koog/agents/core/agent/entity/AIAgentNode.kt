@@ -2,8 +2,6 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.isActive
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -136,7 +134,7 @@ internal class AIAgentNode<Input, Output> internal constructor(
  *
  * @param Input The type of input data this node processes and produces as output.
  */
-public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>() {
+public open class AIAgentStartNodeBase<Input>() : AIAgentNodeBase<Input, Input>() {
     /**
      * The name of the subgraph associated with the AI agent's starting node.
      *
@@ -162,7 +160,7 @@ public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>(
  *
  * @param Output The type of data this node processes and produces.
  */
-public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Output>() {
+public open class AIAgentFinishNodeBase<Output>() : AIAgentNodeBase<Output, Output>() {
     /**
      * Stores the name of the subgraph associated with the node.
      *
@@ -198,7 +196,7 @@ public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Outp
  * This node effectively passes its input as-is to the next node in the execution
  * pipeline, allowing downstream nodes to transform or handle the data further.
  */
-internal class StartNode internal constructor() : StartAIAgentNodeBase<String>()
+internal class StartNode internal constructor() : AIAgentStartNodeBase<String>()
 
 /**
  * A specialized implementation of [FinishNode] that finalizes the execution of an AI agent subgraph.
@@ -212,5 +210,5 @@ internal class StartNode internal constructor() : StartAIAgentNodeBase<String>()
  *
  * This node is critical to denote the completion of localized processing within a subgraph context.
  */
-internal class FinishNode internal constructor() : FinishAIAgentNodeBase<String>()
+internal class FinishNode internal constructor() : AIAgentFinishNodeBase<String>()
 

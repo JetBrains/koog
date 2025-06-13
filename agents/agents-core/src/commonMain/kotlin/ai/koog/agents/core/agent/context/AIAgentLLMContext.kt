@@ -36,6 +36,26 @@ public data class AIAgentLLMContext(
     private val clock: Clock
 ) {
 
+    /**
+     * Creates a deep copy of this LLM context.
+     *
+     * @return A new instance of [AIAgentLLMContext] with deep copies of mutable properties.
+     */
+    public suspend fun copy(): AIAgentLLMContext {
+        return rwLock.withReadLock {
+            AIAgentLLMContext(
+                tools.toList(),
+                toolRegistry,
+                prompt.copy(),
+                model.copy(),
+                promptExecutor,
+                environment,
+                config,
+                clock
+            )
+        }
+    }
+
     private val rwLock = RWLock()
 
     /**
@@ -44,7 +64,8 @@ public data class AIAgentLLMContext(
      */
     @OptIn(ExperimentalStdlibApi::class)
     public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
-        val session = AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
+        val session =
+            AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
 
         session.use {
             val result = it.block()
