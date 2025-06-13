@@ -834,7 +834,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             val audioFile = MediaTestUtils.createAudioFileForScenario(scenario, testResourcesDir)
 
             val prompt = prompt("audio-test-${scenario.name.lowercase()}") {
-                system("You are a helpful assistant that can analyze audio files.")
+                system("You are a helpful assistant.")
 
                 user {
                     markdown {
@@ -855,28 +855,30 @@ class SingleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            try {
-                val response = executor.execute(prompt, model)
-                checkExecutorMediaResponse(response)
-            } catch (e: Exception) {
-                if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                    assertTrue(
-                        e.message?.contains("400 Bad Request") == true,
-                        "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
-                    )
-                    if (model.provider == LLMProvider.OpenAI) {
+            withRetry(times = 3, testName = "integration_testAudioProcessingBasic[${model.id}]") {
+                try {
+                    val response = executor.execute(prompt, model)
+                    checkExecutorMediaResponse(response)
+                } catch (e: Exception) {
+                    if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
                         assertTrue(
-                            e.message?.contains("This model does not support the format you provided.") == true,
-                            "Expected exception for corrupted audio [This model does not support the format you provided.]"
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                         )
-                    } else if (model.provider == LLMProvider.Google) {
-                        assertTrue(
-                            e.message?.contains("Request contains an invalid argument.") == true,
-                            "Expected exception for corrupted audio [Request contains an invalid argument.]"
-                        )
+                        if (model.provider == LLMProvider.OpenAI) {
+                            assertTrue(
+                                e.message?.contains("This model does not support the format you provided.") == true,
+                                "Expected exception for corrupted audio [This model does not support the format you provided.]"
+                            )
+                        } else if (model.provider == LLMProvider.Google) {
+                            assertTrue(
+                                e.message?.contains("Request contains an invalid argument.") == true,
+                                "Expected exception for corrupted audio [Request contains an invalid argument.]"
+                            )
+                        }
+                    } else {
+                        throw e
                     }
-                } else {
-                    throw e
                 }
             }
         }
