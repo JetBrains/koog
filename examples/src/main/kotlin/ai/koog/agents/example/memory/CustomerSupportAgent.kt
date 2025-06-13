@@ -11,6 +11,7 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.memory.tools.DiagnosticToolSet
 import ai.koog.agents.example.memory.tools.KnowledgeBaseToolSet
 import ai.koog.agents.example.memory.tools.UserInfoToolSet
+import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.StringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.memory.config.MemoryScopeType
@@ -250,6 +251,8 @@ fun createCustomerSupportAgent(
             tools(userInfoToolSet.asTools())
             tools(diagnosticToolSet.asTools())
             tools(knowledgeBaseToolSet.asTools())
+
+            tool(ProvideStringSubgraphResult)
         }
     ) {
         install(AgentMemory) {

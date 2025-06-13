@@ -2,17 +2,13 @@ package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegateBase
 import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.dsl.extension.onToolNotCalled
-import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
-import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
-import ai.koog.agents.core.dsl.extension.unsetToolChoice
 import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.environment.SafeTool
+import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.*
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -20,27 +16,6 @@ import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-
-internal suspend fun AIAgentContextBase.promptWithTLDR(
-    systemMessage: String,
-    shouldTLDRHistory: Boolean = true,
-    model: LLModel? = null,
-    params: LLMParams? = null,
-) {
-    llm.writeSession {
-        if (shouldTLDRHistory) replaceHistoryWithTLDR()
-        rewritePrompt { prompt ->
-            prompt
-                .withMessages { messages -> messages.filterNot { it is Message.System } }
-                .withParams(params ?: prompt.params)
-        }
-        if (model != null) changeModel(model)
-
-        updatePrompt {
-            system(systemMessage)
-        }
-    }
-}
 
 /**
  * The result which subgraphs can return.
@@ -195,6 +170,9 @@ public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraph
  * using the tools defined by [toolSelectionStrategy].
  * When LLM believes that the task is finished, it will call [finishTool], generating [ProvidedResult] as its argument.
  * The generated [ProvidedResult] is the result of this subgraph.
+ * The subgraph returns a wrapper [SafeTool.Result] to handle cases when the model didn't reach the finish condition
+ * or didn't generate a final [ProvidedResult] due to an error (reported as [SafeTool.Result.Failure])
+ *
  *
  * Use this function if you need the agent to perform a single task which outputs a structured result.
  *
@@ -204,7 +182,6 @@ public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraph
  * The tool itself is never called.
  * @property model LLM used for this task
  * @property params Specific LLM parameters for this task
- * @property shouldTLDRHistory Whether to compress the history when starting to execute this task
  * @property defineTask A block which defines the task. It may just return a system prompt for the task,
  * but may also alter agent context, prompt, storage, etc.
  */
@@ -213,63 +190,78 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
     params: LLMParams? = null,
-    shouldTLDRHistory: Boolean = true,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraph(toolSelectionStrategy = toolSelectionStrategy) {
-    val defineTaskNode by node<Input, Unit> { input ->
-        val task = defineTask(input)
-        promptWithTLDR(
-            task,
-            shouldTLDRHistory,
-            model,
-            params,
-        )
+    val origModelKey = createStorageKey<LLModel>("original_model")
+    val origParamsKey = createStorageKey<LLMParams>("original_params")
 
+    val setupTask by node<Input, String> { input ->
         llm.writeSession {
+            // Save original parameters to restore them when exiting the subgraph
+            storage.set(origModelKey, this.model)
+            storage.set(origParamsKey, this.prompt.params)
+
+            // Append finish tool to tools if it's not present yet
+            if (finishTool.descriptor !in tools) {
+                this.tools = tools + finishTool.descriptor
+            }
+
+            // Model must always call tools in the loop until it decides (via finish tool) that the exit condition is reached
             setToolChoiceRequired()
 
-            if (finishTool.descriptor !in tools) {
-                tools = tools + finishTool.descriptor
-            }
+            // Apply custom values, if provided
+            model?.let(::changeModel)
+            params?.let(::changeLLMParams)
         }
+
+        // Output task description
+        defineTask(input)
     }
 
-    val preFinish by node<ProvidedResult, ProvidedResult> { input ->
+    val finalizeTask by node<ProvidedResult, ProvidedResult> { input ->
         llm.writeSession {
-            rewritePrompt {
-                prompt.copy(
-                    messages = prompt.messages.take(prompt.messages.size - 1)
-                )
-            }
-            unsetToolChoice()
-        }
-
-        llm.writeSession {
+            // Remove finish tool from tools
             tools = tools - finishTool.descriptor
+
+            // Restore original parameters (this will also restore original tool choice since it's part of LLMParams)
+            changeModel(storage.getValue(origModelKey))
+            changeLLMParams(storage.getValue(origParamsKey))
         }
 
         input
     }
 
+    // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
+    val nodeDecide by node<Message.Response, Message.Response> { it }
+
     val nodeCallLLM by nodeLLMRequest()
     val callTool by nodeExecuteTool()
     val sendToolResult by nodeLLMSendToolResult()
 
-    edge(nodeStart forwardTo defineTaskNode)
-    edge(defineTaskNode forwardTo nodeCallLLM transformed { agentInput })
-    edge(nodeCallLLM forwardTo preFinish onToolCall (finishTool) transformed {
-        Json.decodeFromJsonElement(finishTool.argsSerializer, it.contentJson)
-    })
-    edge(nodeCallLLM forwardTo callTool onToolNotCalled (finishTool))
+    nodeStart then setupTask then nodeCallLLM then nodeDecide
 
+    edge(nodeDecide forwardTo callTool onToolCall { true } )
+    // throw to terminate the agent early with exception
+    edge(
+        nodeDecide forwardTo nodeFinish
+            transformed {
+                throw IllegalStateException(
+                    "Subgraph with task must always call tools, but no tool call was generated, got instead: $it"
+                )
+            }
+    )
+
+    edge(
+        callTool forwardTo finalizeTask
+            onCondition { it.tool == finishTool.name }
+            // result should always be successful, otherwise throw
+            transformed { it.toSafeResult<ProvidedResult>().asSuccessful().result }
+    )
     edge(callTool forwardTo sendToolResult)
 
-    edge(sendToolResult forwardTo preFinish onToolCall (finishTool) transformed {
-        Json.decodeFromJsonElement(finishTool.argsSerializer, it.contentJson)
-    })
-    edge(sendToolResult forwardTo callTool onToolNotCalled (finishTool))
+    edge(sendToolResult forwardTo nodeDecide)
 
-    edge(preFinish forwardTo nodeFinish)
+    edge(finalizeTask forwardTo nodeFinish)
 }
 
 /**
@@ -280,7 +272,6 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
  * @param finishTool The tool responsible for producing the final result of the subgraph.
  * @param model An optional language model to be used in the subgraph. If not specified, a default model may be used.
  * @param params Optional parameters to customize the behavior of the language model in the subgraph.
- * @param shouldTLDRHistory A flag indicating whether the history should be summarized (True by default).
  * @param defineTask A suspend function that defines the task to be executed by the subgraph based on the given input.
  * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
  */
@@ -290,14 +281,12 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     model: LLModel? = null,
     params: LLMParams? = null,
-    shouldTLDRHistory: Boolean = true,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     finishTool = finishTool,
     model = model,
     params = params,
-    shouldTLDRHistory = shouldTLDRHistory,
     defineTask = defineTask
 )
 
@@ -309,14 +298,12 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     model: LLModel? = null,
     params: LLMParams? = null,
-    shouldTLDRHistory: Boolean = true,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
     finishTool = ProvideStringSubgraphResult,
     model = model,
     params = params,
-    shouldTLDRHistory = shouldTLDRHistory,
     defineTask = defineTask
 )
 
@@ -330,7 +317,6 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  * @param tools A list of tools available for use within the subgraph.
  * @param model An optional language model to be used within the subgraph. Defaults to `null`.
  * @param params Optional parameters for the language model. Defaults to `null`.
- * @param shouldTLDRHistory A flag indicating whether the task should summarize the history. Defaults to `true`.
  * @param defineTask A suspendable function that defines the task for the subgraph, given an input in the context.
  * @return A delegate representing the constructed subgraph with task execution capabilities.
  */
@@ -339,13 +325,11 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     model: LLModel? = null,
     params: LLMParams? = null,
-    shouldTLDRHistory: Boolean = true,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,
     params = params,
-    shouldTLDRHistory = shouldTLDRHistory,
     defineTask = defineTask
 )
 
@@ -358,14 +342,12 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
     model: LLModel? = null,
     params: LLMParams? = null,
-    shouldTLDRHistory: Boolean = true,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithTask(
     finishTool = ProvideVerifiedSubgraphResult,
     toolSelectionStrategy = toolSelectionStrategy,
     model = model,
     params = params,
-    shouldTLDRHistory = shouldTLDRHistory,
     defineTask = defineTask
 )
 
@@ -380,7 +362,6 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
  * @param tools A list of tools available to the subgraph.
  * @param model Optional language model to be used within the subgraph.
  * @param params Optional parameters to configure the language model's behavior.
- * @param shouldTLDRHistory Flag indicating whether to condense the history of inputs and outputs for the task.
  * @param defineTask A suspendable function defining the task that the subgraph will execute,
  *                   which takes an input and produces a string-based task description.
  * @return A delegate representing the constructed subgraph with input type `Input` and output type
@@ -391,12 +372,10 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
     model: LLModel? = null,
     params: LLMParams? = null,
-    shouldTLDRHistory: Boolean = true,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithVerification(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     model = model,
     params = params,
-    shouldTLDRHistory = shouldTLDRHistory,
     defineTask = defineTask
 )

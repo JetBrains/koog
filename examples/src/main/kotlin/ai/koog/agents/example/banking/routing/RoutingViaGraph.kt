@@ -12,6 +12,7 @@ import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools
 import ai.koog.agents.example.banking.tools.bankingAssistantSystemPrompt
 import ai.koog.agents.example.banking.tools.transactionAnalysisPrompt
+import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.structure.json.JsonSchemaGenerator
@@ -28,6 +29,8 @@ fun main() = runBlocking {
         tool(AskUser)
         tools(MoneyTransferTools().asTools())
         tools(TransactionAnalysisTools().asTools())
+
+        tool(ProvideStringSubgraphResult)
     }
 
     val strategy = strategy("banking assistant") {
@@ -75,7 +78,6 @@ fun main() = runBlocking {
 
         val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
             tools = MoneyTransferTools().asTools() + AskUser,
-            shouldTLDRHistory = true,
             model = OpenAIModels.Chat.GPT4o
         ) { request ->
             """
@@ -87,7 +89,6 @@ fun main() = runBlocking {
 
         val transactionAnalysis by subgraphWithTask<ClassifiedBankRequest>(
             tools = TransactionAnalysisTools().asTools() + AskUser,
-            shouldTLDRHistory = false
         ) { request ->
             """
                 ${bankingAssistantSystemPrompt}
@@ -97,8 +98,11 @@ fun main() = runBlocking {
             """.trimIndent()
         }
         edge(nodeStart forwardTo classifyRequest)
+
         edge(classifyRequest forwardTo transferMoney onCondition { it.requestType == RequestType.Transfer })
         edge(classifyRequest forwardTo transactionAnalysis onCondition { it.requestType == RequestType.Analytics })
+
+        // assume that subgraph always returns successfull results
         edge(transferMoney forwardTo nodeFinish transformed { it.result })
         edge(transactionAnalysis forwardTo nodeFinish transformed { it.result })
     }
