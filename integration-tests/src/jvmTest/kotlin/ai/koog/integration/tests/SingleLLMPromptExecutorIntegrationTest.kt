@@ -696,35 +696,32 @@ class SingleLLMPromptExecutorIntegrationTest {
             } catch (e: Exception) {
                 // For some edge cases, exceptions are expected
                 when (scenario) {
-                    ImageTestScenario.CORRUPTED_IMAGE,
-                    ImageTestScenario.EMPTY_IMAGE,
-                    ImageTestScenario.LARGE_IMAGE,
-                    ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                        println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
-                        when (scenario) {
-                            ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
-                                    "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
-                                )
-                                assertTrue(
-                                    e.message?.contains("image exceeds") == true,
-                                    "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
-                                )
-                            }
+                    ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
+                        assertTrue(
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
+                        )
+                        assertTrue(
+                            e.message?.contains("image exceeds") == true,
+                            "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
+                        )
+                    }
 
-                            ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
-                                    "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
-                                )
-                                assertTrue(
-                                    e.message?.contains("Provided image is not valid") == true,
-                                    "Expected exception for a corrupted image [Provided image is not valid] was not found, got [${e.message}] instead"
-                                )
-                            }
-
-                            else -> {}
+                    ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                        assertTrue(
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
+                        )
+                        if (model.provider == LLMProvider.Anthropic) {
+                            assertTrue(
+                                e.message?.contains("Could not process image") == true,
+                                "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
+                            )
+                        } else if (model.provider == LLMProvider.OpenAI) {
+                            assertTrue(
+                                e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
+                            )
                         }
                     }
 
