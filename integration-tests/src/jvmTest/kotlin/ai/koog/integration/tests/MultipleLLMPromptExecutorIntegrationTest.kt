@@ -755,9 +755,33 @@ class MultipleLLMPromptExecutorIntegrationTest {
             } catch (e: Exception) {
                 // For some edge cases, exceptions are expected
                 when (scenario) {
-                    ImageTestScenario.CORRUPTED_IMAGE,
-                    ImageTestScenario.EMPTY_IMAGE -> {
-                        println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
+                    ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
+                        assertTrue(
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
+                        )
+                        assertTrue(
+                            e.message?.contains("image exceeds") == true,
+                            "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
+                        )
+                    }
+
+                    ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                        assertTrue(
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
+                        )
+                        if (model.provider == LLMProvider.Anthropic) {
+                            assertTrue(
+                                e.message?.contains("Could not process image") == true,
+                                "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
+                            )
+                        } else if (model.provider == LLMProvider.OpenAI) {
+                            assertTrue(
+                                e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
+                            )
+                        }
                     }
 
                     else -> {
@@ -792,12 +816,62 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             try {
                 val response = executor.execute(prompt, model)
-                checkExecutorMediaResponse(response)
-            } catch (e: Exception) {
                 if (scenario == TextTestScenario.CORRUPTED_TEXT) {
-                    println("Expected exception for corrupted text: ${e.message}")
+                    checkResponseBasic(response)
                 } else {
-                    throw e
+                    checkExecutorMediaResponse(response)
+                }
+            } catch (e: Exception) {
+                when (scenario) {
+                    TextTestScenario.EMPTY_TEXT -> {
+                        if (model.provider == LLMProvider.Google) {
+                            assertTrue(
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
+                            )
+                            assertTrue(
+                                e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
+                                "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
+                            )
+                        }
+                    }
+
+                    TextTestScenario.LONG_TEXT_5_MB -> {
+                        if (model.provider == LLMProvider.Anthropic) {
+                            assertTrue(
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
+                            )
+                            assertTrue(
+                                e.message?.contains("prompt is too long") == true,
+                                "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
+                            )
+                        } else if (model.provider == LLMProvider.Google) {
+                            throw e
+                        }
+                    }
+
+                    TextTestScenario.LONG_TEXT_20_MB -> {
+                        assertTrue(
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
+                        )
+                        if (model.provider == LLMProvider.Anthropic) {
+                            assertTrue(
+                                e.message?.contains("prompt is too long") == true,
+                                "Expected exception for long text [prompt is too long] was not found, got [${e.message}] instead"
+                            )
+                        } else if (model.provider == LLMProvider.Google) {
+                            assertTrue(
+                                e.message?.contains("exceeds the maximum number of tokens allowed") == true,
+                                "Expected exception for long text [exceeds the maximum number of tokens allowed] was not found, got [${e.message}] instead"
+                            )
+                        }
+                    }
+
+                    else -> {
+                        throw e
+                    }
                 }
             }
         }
@@ -820,7 +894,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
                 user {
                     markdown {
-                        "I'm sending you an audio file. Please analyze it and tell me what you hear."
+                        "I'm sending you an audio file. Please tell me a couple of words about it."
                     }
 
                     attachments {
@@ -842,7 +916,21 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 checkExecutorMediaResponse(response)
             } catch (e: Exception) {
                 if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                    println("Expected exception for corrupted audio: ${e.message}")
+                    assertTrue(
+                        e.message?.contains("400 Bad Request") == true,
+                        "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
+                    )
+                    if (model.provider == LLMProvider.OpenAI) {
+                        assertTrue(
+                            e.message?.contains("This model does not support the format you provided.") == true,
+                            "Expected exception for corrupted audio [This model does not support the format you provided.]"
+                        )
+                    } else if (model.provider == LLMProvider.Google) {
+                        assertTrue(
+                            e.message?.contains("Request contains an invalid argument.") == true,
+                            "Expected exception for corrupted audio [Request contains an invalid argument.]"
+                        )
+                    }
                 } else {
                     throw e
                 }
@@ -853,7 +941,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testMultiInputCombinations() =
         runTest(timeout = 60.seconds) {
             val model = OpenAIModels.Chat.GPT4o
-            assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+            assumeTrue(
+                model.capabilities.contains(LLMCapability.Vision.Image),
+                "Model must support vision capability"
+            )
 
             val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
