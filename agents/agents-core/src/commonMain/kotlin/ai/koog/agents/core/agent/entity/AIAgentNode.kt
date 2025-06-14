@@ -2,8 +2,8 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.isActive
+import ai.koog.agents.core.dsl2.builder.AIAgentEdgeBuilder
+import ai.koog.agents.core.utils.Some
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -12,7 +12,11 @@ import kotlinx.coroutines.isActive
  * @param Input The type of input data this node processes.
  * @param Output The type of output data this node produces.
  */
-public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
+public abstract class AIAgentNodeBase<Input, Output> internal constructor() : AIAgentEdgeBuilder<Output, Output>(
+    forwardOutput = { _, output -> Some(output) },
+) {
+    override val sourceNode: AIAgentNodeBase<*, Output> get() = this
+
     /**
      * The name of the AI agent node.
      * This property serves as a unique identifier for the node within the strategy graph
@@ -213,4 +217,3 @@ internal class StartNode internal constructor() : StartAIAgentNodeBase<String>()
  * This node is critical to denote the completion of localized processing within a subgraph context.
  */
 internal class FinishNode internal constructor() : FinishAIAgentNodeBase<String>()
-
