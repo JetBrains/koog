@@ -2,8 +2,19 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.entity.AIAgentStateManager
+import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeDoNothing
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl2.builder.forwardTo
+import ai.koog.agents.core.dsl2.extension.onAssistantMessage
+import ai.koog.agents.core.dsl2.extension.onToolCall
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -14,19 +25,21 @@ import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.model.AgentServiceError
 import ai.koog.agents.core.model.AgentServiceErrorType
-import ai.koog.agents.core.model.message.*
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
+import ai.koog.agents.core.model.message.AgentTerminationToEnvironmentMessage
+import ai.koog.agents.core.model.message.AgentToolCallToEnvironmentContent
+import ai.koog.agents.core.model.message.AgentToolCallsToEnvironmentMessage
+import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMessage
+import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolException
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
-import ai.koog.agents.core.agent.context.AIAgentLLMContext
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -431,25 +444,28 @@ public open class AIAgent(
 }
 
 /**
-* Creates a single-run strategy for an AI agent.
-* This strategy defines a simple execution flow where the agent processes input,
-* calls tools, and sends results back to the agent.
-* The flow consists of the following steps:
-* 1. Start the agent.
-* 2. Call the LLM with the input.
-* 3. Execute a tool based on the LLM's response.
-* 4. Send the tool result back to the LLM.
-* 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
-*/
+ * Creates a single-run strategy for an AI agent.
+ * This strategy defines a simple execution flow where the agent processes input,
+ * calls tools, and sends results back to the agent.
+ * The flow consists of the following steps:
+ * 1. Start the agent.
+ * 2. Call the LLM with the input.
+ * 3. Execute a tool based on the LLM's response.
+ * 4. Send the tool result back to the LLM.
+ * 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
+ */
 public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
     val nodeCallLLM by nodeLLMRequest("sendInput")
+    val nodeProcessLLMResponse by nodeDoNothing<Message.Response>("processLLMResponse")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
 
-    edge(nodeStart forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+    nodeStart forwardTo nodeCallLLM
+    nodeCallLLM forwardTo nodeProcessLLMResponse
+
+    nodeProcessLLMResponse onToolCall { true } forwardTo nodeExecuteTool
+    nodeProcessLLMResponse onAssistantMessage { true } forwardTo nodeFinish
+
+    nodeExecuteTool forwardTo nodeSendToolResult
+    nodeSendToolResult forwardTo nodeProcessLLMResponse
 }
