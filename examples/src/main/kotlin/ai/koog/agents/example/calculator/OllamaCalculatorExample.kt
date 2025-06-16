@@ -33,7 +33,7 @@ fun main() = runBlocking {
         prompt = prompt("test") {
             system("You are a calculator.")
         },
-        model = OllamaModels.Alibaba.QWQ,
+        model = OllamaModels.Meta.LLAMA_3_2,
         maxAgentIterations = 50
     )
 
