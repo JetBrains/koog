@@ -2,6 +2,8 @@ package ai.koog.agents.example.mcp
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -18,7 +20,7 @@ import kotlinx.coroutines.runBlocking
  * The example specifically shows how to get the elevation of the JetBrains office in Munich
  * by using the maps_geocode and maps_elevation tools provided by the MCP server.
  */
-fun main() {
+fun main(): Unit = runBlocking {
     // Get the API key from environment variables
     val googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY") ?: error("GOOGLE_MAPS_API_KEY environment variable not set")
     val openAIApiToken = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable not set")
@@ -58,6 +60,37 @@ fun main() {
                         "You can only call tools. Get it by calling maps_geocode and maps_elevation tools."
             )
         }
+
+        // Example of using the Bedrock client
+        val bedrockModel = BedrockModels.AnthropicClaude3Sonnet // Or any other Bedrock model
+
+        // Replace with your actual AWS credentials from environment variables or a secure source
+        val awsAccessKey = System.getenv("AWS_ACCESS_KEY_ID") ?: error("AWS_ACCESS_KEY_ID not set")
+        val awsSecretKey = System.getenv("AWS_SECRET_ACCESS_KEY") ?: error("AWS_SECRET_ACCESS_KEY not set")
+
+        // Example of using the placeholder BedrockLLMClient
+        val bedrockClient = BedrockLLMClient(awsAccessKeyId = awsAccessKey, awsSecretAccessKey = awsSecretKey)
+
+        val agent = AIAgent(
+            executor = bedrockClient, // Using the Bedrock client directly as an executor
+            systemPrompt = "You are a helpful assistant. Answer user questions concisely using AWS Bedrock.",
+            llmModel = bedrockModel
+        )
+
+        println("Using model: ${bedrockModel.id} via Bedrock (placeholder)")
+
+        val result = agent.runAndGetResult("Hello! How can you help me via Bedrock?")
+        println("Agent Response (Bedrock Placeholder): $result")
+
+        // If you have a specific executor for Bedrock (similar to simpleOpenAIExecutor)
+        // you would use it like this:
+        // val agentWithExecutor = AIAgent(
+        //    executor = simpleBedrockExecutor(awsAccessKey, awsSecretKey), // Hypothetical executor
+        //    systemPrompt = "You are a helpful assistant.",
+        //    llmModel = bedrockModel
+        // )
+        // val resultWithExecutor = agentWithExecutor.runAndGetResult("Hello from Bedrock executor!")
+        // println("Agent Response (Bedrock Executor Placeholder): $resultWithExecutor")
     } finally {
         // Shutdown the Docker container
         process.destroy()
