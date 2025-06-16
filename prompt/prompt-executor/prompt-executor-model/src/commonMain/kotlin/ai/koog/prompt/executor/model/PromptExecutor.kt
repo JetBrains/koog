@@ -1,9 +1,11 @@
 package ai.koog.prompt.executor.model
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.Message.MessageWithAttachments
 import kotlinx.coroutines.flow.Flow
 
 public typealias LLMChoice = List<Message.Response>
@@ -47,4 +49,19 @@ public interface PromptExecutor {
      */
     public suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> =
         listOf(execute(prompt, model, tools))
+
+    /**
+     * Moderates the content of a given message with attachments using a specified language model.
+     *
+     * This method evaluates the content of the message and its attachments to determine
+     * if it complies with content guidelines. The moderation is performed using the provided
+     * language model, which analyzes the content and returns a detailed moderation result.
+     *
+     * @param message The message, including its attachments, that needs to be moderated.
+     * @param model The language model that will be used to perform the moderation.
+     * @return A `ModerationResult` containing information about the moderation outcome,
+     *         including flagged categories, scores, and whether the content is classified
+     *         as harmful.
+     */
+    public suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult
 }

@@ -243,8 +243,8 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, Attachment, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)
         .onCondition {
-            it.attachment != null
+            it.attachments.isNotEmpty()
         }
         .onCondition { signature -> block(signature) }
-        .transformed { it.attachment!! }
+        .transformed { it.attachments.single() }
 }

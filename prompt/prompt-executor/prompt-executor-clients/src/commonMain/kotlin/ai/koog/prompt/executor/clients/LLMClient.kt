@@ -1,10 +1,12 @@
 package ai.koog.prompt.executor.clients
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.Message.MessageWithAttachments
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -45,6 +47,15 @@ public interface LLMClient {
      */
     public suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> =
         throw UnsupportedOperationException("Not implemented for this client")
+
+    /**
+     * Analyzes the provided prompt for violations of content policies or other moderation criteria.
+     *
+     * @param prompt The input prompt to be analyzed for moderation.
+     * @param model The language model to be used for conducting the moderation analysis.
+     * @return The result of the moderation analysis, encapsulated in a ModerationResult object.
+     */
+    public suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult
 }
 
 /**

@@ -1,6 +1,7 @@
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -45,7 +46,11 @@ public class PromptExecutorProxy(
         return stream
     }
 
-    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> {
         logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
 
         val responses = executor.executeMultipleChoices(prompt, model, tools)
@@ -65,5 +70,17 @@ public class PromptExecutorProxy(
         }
 
         return responses
+    }
+
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        logger.debug { "Executing moderation LLM request (prompt: $prompt)" }
+        pipeline.onBeforeLLMCall(runId, prompt, model, emptyList())
+        val result = executor.moderate(prompt, model)
+        logger.debug { "Finished moderation LLM request with response: $result" }
+        pipeline.onAfterLLMCall(runId, prompt, model, emptyList(), result)
+        return result
     }
 }

@@ -123,6 +123,23 @@ public object OllamaModels {
                 LLMCapability.Tools
             )
         )
+
+        /**
+         * Represents the llama-guard model version3 provided by Meta.
+         *
+         * The llama-guard collection of models is natively multimodal AI models that enable text and multimodal experiences.
+         * These two models leverage a mixture-of-experts (MoE) architecture and support native multimodality (image input).
+         *
+         */
+        public val LLAMA_GUARD_3: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "llama-guard3:latest",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Tools
+            )
+        )
     }
 
     /**
