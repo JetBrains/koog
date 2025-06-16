@@ -29,6 +29,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.CoroutineScope
@@ -433,7 +434,8 @@ class AIAgentMultipleLLMIntegrationTest {
         eventsChannel: Channel<Event>,
         fs: MockFileSystem,
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
-        maxAgentIterations: Int
+        maxAgentIterations: Int,
+        prompt: Prompt = prompt("test") {}
     ): AIAgent {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
@@ -523,7 +525,7 @@ class AIAgentMultipleLLMIntegrationTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(Tracing) {
@@ -539,7 +541,8 @@ class AIAgentMultipleLLMIntegrationTest {
         eventsChannel: Channel<Event>,
         fs: MockFileSystem,
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
-        maxAgentIterations: Int
+        maxAgentIterations: Int,
+        prompt: Prompt = prompt("test") {}
     ): AIAgent {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
@@ -632,7 +635,7 @@ class AIAgentMultipleLLMIntegrationTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(Tracing) {
@@ -815,6 +818,66 @@ class AIAgentMultipleLLMIntegrationTest {
             Please analyze this image and describe what you see.
             """
         )
+
+        assertNotNull(result, "Result should not be null")
+        assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+        assertTrue(result.length > 20, "Result should contain more than 20 characters")
+
+        val resultLowerCase = result.lowercase()
+        Assertions.assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
+        Assertions.assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
+        Assertions.assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
+    }
+
+    @Ignore("The functionality is not ready yet")
+    @ParameterizedTest
+    @MethodSource("modelsWithVisionCapability")
+    fun integration_testAgentWithImageCapabilityPrompt(model: LLModel) = runTest(timeout = 120.seconds) {
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val fs = MockFileSystem()
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCall { tool, arguments ->
+                println(
+                    "Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+
+            onAgentFinished { _, _ ->
+                eventsChannel.send(Event.Termination)
+            }
+        }
+
+        val imageFile = File(testResourcesDir, "test.png")
+        assertTrue(imageFile.exists(), "Image test file should exist")
+
+        val prompt = prompt("example-prompt") {
+            system("You are a professional helpful assistant.")
+
+            user {
+                markdown {
+                    +"I'm sending you an image."
+                    br()
+                    +"Please analyze this image and describe what you see."
+                }
+
+                attachments {
+                    image(imageFile.absolutePath)
+                }
+            }
+        }
+
+        val agent = when (model.provider) {
+            is LLMProvider.Anthropic -> createTestOpenaiAnthropicAgent(
+                eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20, prompt = prompt
+            )
+
+            else -> createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20)
+        }
+
+
+        val result = agent.runAndGetResult("Hi! Please analyse my image.")
 
         assertNotNull(result, "Result should not be null")
         assertTrue(result.isNotBlank(), "Result should not be empty or blank")
