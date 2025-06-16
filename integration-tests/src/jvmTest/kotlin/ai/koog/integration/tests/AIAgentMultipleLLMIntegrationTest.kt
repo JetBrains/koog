@@ -18,6 +18,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -773,6 +774,7 @@ class AIAgentMultipleLLMIntegrationTest {
         }
     }
 
+    // TODO remove when APIs for non-encoded images are ready
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
     fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
@@ -809,24 +811,32 @@ class AIAgentMultipleLLMIntegrationTest {
             else -> createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20)
         }
 
-        val result = agent.runAndGetResult(
-            """
+        withRetry(times = 3) {
+            val result = agent.runAndGetResult(
+                """
             I'm sending you an image encoded in base64 format.
 
             data:image/png,$base64Image
 
             Please analyze this image and describe what you see.
             """
-        )
+            )
 
-        assertNotNull(result, "Result should not be null")
-        assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-        assertTrue(result.length > 20, "Result should contain more than 20 characters")
+            assertNotNull(result, "Result should not be null")
+            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+            assertTrue(result.length > 20, "Result should contain more than 20 characters")
 
-        val resultLowerCase = result.lowercase()
-        Assertions.assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
-        Assertions.assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
-        Assertions.assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
+            val resultLowerCase = result.lowercase()
+            Assertions.assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
+            Assertions.assertFalse(
+                resultLowerCase.contains("unable"),
+                "Result should not indicate inability to process"
+            )
+            Assertions.assertFalse(
+                resultLowerCase.contains("cannot"),
+                "Result should not indicate inability to process"
+            )
+        }
     }
 
     @Ignore("The functionality is not ready yet")
