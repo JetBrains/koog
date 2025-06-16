@@ -6,7 +6,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.LLMReply
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -203,18 +203,18 @@ public sealed class AIAgentLLMSession(
     }
 
     /**
-     * Sends a request to the language model, potentially receiving multiple replies,
-     * and returns a list of replies from the model.
+     * Sends a request to the language model, potentially receiving multiple choices,
+     * and returns a list of choices from the model.
      *
      * Before executing the request, the session state is validated to ensure
      * it is active and usable.
      *
-     * @return a list of replies from the language model
+     * @return a list of choices from the model
      */
-    public open suspend fun requestLLMMultipleReplies(): List<LLMReply> {
+    public open suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
         validateSession()
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.executeMultipleReplies(preparedPrompt, model, tools)
+        return executor.executeMultipleChoices(preparedPrompt, model, tools)
     }
 
     final override fun close() {

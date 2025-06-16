@@ -109,7 +109,7 @@ public open class AIAgent(
         strategy: AIAgentStrategy = singleRunStrategy(),
         systemPrompt: String = "",
         temperature: Double = 1.0,
-        numReplies: Int = 1,
+        numberOfChoices: Int = 1,
         toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
         maxIterations: Int = 50,
         installFeatures: FeatureContext.() -> Unit = {}
@@ -117,7 +117,7 @@ public open class AIAgent(
         promptExecutor = executor,
         strategy = strategy,
         agentConfig = AIAgentConfig(
-            prompt = prompt("chat", params = LLMParams(temperature = temperature, numReplies = numReplies)) {
+            prompt = prompt("chat", params = LLMParams(temperature = temperature, numberOfChoices = numberOfChoices)) {
                 system(systemPrompt)
             },
             model = llmModel,

@@ -9,7 +9,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
-import ai.koog.prompt.executor.model.LLMReply
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.MediaContent
@@ -120,7 +120,7 @@ public open class OpenAILLMClient(
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> =
-        processOpenAIResponse(getOpenAIResponse(prompt, model, tools))
+        processOpenAIResponse(getOpenAIResponse(prompt, model, tools)).first()
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
@@ -164,8 +164,8 @@ public open class OpenAILLMClient(
         }
     }
 
-    override suspend fun executeMultipleReplies(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMReply> =
-        processOpenAIResponseMultipleReplies(getOpenAIResponse(prompt, model, tools))
+    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> =
+        processOpenAIResponse(getOpenAIResponse(prompt, model, tools))
 
     /**
      * Embeds the given text using the OpenAI embeddings API.
@@ -323,7 +323,7 @@ public open class OpenAILLMClient(
             model = model.id,
             messages = messages,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
-            n = if (model.capabilities.contains(LLMCapability.MultipleReplies)) prompt.params.numReplies else null,
+            numberOfChoices = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
             modalities = modalities,
             audio = audio,
@@ -463,31 +463,7 @@ public open class OpenAILLMClient(
         }
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
-    private fun processOpenAIResponse(response: OpenAIResponse): List<Message.Response> {
-        if (response.choices.isEmpty()) {
-            logger.error { "Empty choices in OpenAI response" }
-            error("Empty choices in OpenAI response")
-        }
-
-        val choice = response.choices.firstOrNull() ?: throw IllegalStateException("No choice found in OpenAI response")
-
-        // Extract token count from the response
-        val totalTokensCount = response.usage?.totalTokens
-        val inputTokensCount = response.usage?.inputTokens
-        val outputTokensCount = response.usage?.outputTokens
-
-        val metaInfo = ResponseMetaInfo.create(
-            clock,
-            totalTokensCount = totalTokensCount,
-            inputTokensCount = inputTokensCount,
-            outputTokensCount = outputTokensCount
-        )
-
-        return processOpenAIMessage(choice, metaInfo)
-    }
-
-    private fun processOpenAIResponseMultipleReplies(response: OpenAIResponse): List<LLMReply> {
+    private fun processOpenAIResponse(response: OpenAIResponse): List<LLMChoice> {
         if (response.choices.isEmpty()) {
             logger.error { "Empty choices in OpenAI response" }
             error("Empty choices in OpenAI response")

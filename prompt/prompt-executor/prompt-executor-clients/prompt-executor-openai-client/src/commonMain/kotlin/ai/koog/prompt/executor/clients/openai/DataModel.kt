@@ -15,7 +15,8 @@ internal data class OpenAIRequest(
     val model: String,
     val messages: List<OpenAIMessage>,
     val temperature: Double? = null,
-    val n: Int? = null,
+    @SerialName("n")
+    val numberOfChoices: Int? = null,
     val tools: List<OpenAITool>? = null,
     val modalities: List<OpenAIModalities>? = null,
     val audio: OpenAIAudioConfig? = null,

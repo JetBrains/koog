@@ -58,10 +58,10 @@ public sealed class LLMCapability(public val id: String) {
     public data object ToolChoice : LLMCapability("tools")
 
     /**
-     * Represents an LLM capability to generate multiple independent replies to a single prompt.
+     * Represents an LLM capability to generate multiple independent reply choices to a single prompt.
      */
     @Serializable
-    public data object MultipleReplies : LLMCapability("multipleReplies")
+    public data object MultipleChoices : LLMCapability("multipleChoices")
 
     /**
      * Represents a large language model (LLM) capability associated with vision-based tasks.

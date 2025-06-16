@@ -1,19 +1,21 @@
-package ai.koog.agents.example.chess
+package ai.koog.agents.example.chess.choice
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.reply.choice.AskUserReplyChoiceStrategy
-import ai.koog.agents.core.feature.reply.choice.nodeChooseLLMReply
-import ai.koog.agents.core.feature.reply.choice.nodeLLMSendResultsMultipleReplies
+import ai.koog.agents.core.feature.choice.AskUserChoiceStrategy
+import ai.koog.agents.core.feature.choice.nodeChoose
+import ai.koog.agents.core.feature.choice.nodeLLMSendResultsMultipleChoices
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
+import ai.koog.agents.example.chess.ChessGame
+import ai.koog.agents.example.chess.Move
+import ai.koog.agents.example.chess.nodeTrimHistory
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message
@@ -26,7 +28,7 @@ fun main() = runBlocking {
         tools(listOf(Move(game)))
     }
 
-    val askReplyChoiceStrategy = AskUserReplyChoiceStrategy(promptShowToUser = { prompt ->
+    val askChoiceStrategy = AskUserChoiceStrategy(promptShowToUser = { prompt ->
         val lastMessage = prompt.messages.last()
         if (lastMessage is Message.Tool.Call) {
             lastMessage.content
@@ -38,8 +40,8 @@ fun main() = runBlocking {
     val strategy = strategy("chess_strategy") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
         val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
-        val nodeSendToolResult by nodeLLMSendResultsMultipleReplies("nodeSendToolResult")
-        val nodeChooseReply by nodeChooseLLMReply(askReplyChoiceStrategy, "chooseLLMReply")
+        val nodeSendToolResult by nodeLLMSendResultsMultipleChoices("nodeSendToolResult")
+        val nodeChooseChoice by nodeChoose(askChoiceStrategy, "chooseLLMChoice")
         val nodeTrimHistory by nodeTrimHistory<ReceivedToolResult>()
 
         edge(nodeStart forwardTo nodeCallLLM)
@@ -47,9 +49,9 @@ fun main() = runBlocking {
         edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
         edge(nodeExecuteTool forwardTo nodeTrimHistory)
         edge(nodeTrimHistory forwardTo nodeSendToolResult transformed { listOf(it) })
-        edge(nodeSendToolResult forwardTo nodeChooseReply)
-        edge(nodeChooseReply forwardTo nodeFinish transformed { it.first() } onAssistantMessage { true })
-        edge(nodeChooseReply forwardTo nodeExecuteTool transformed { it.first() } onToolCall { true })
+        edge(nodeSendToolResult forwardTo nodeChooseChoice)
+        edge(nodeChooseChoice forwardTo nodeFinish transformed { it.first() } onAssistantMessage { true })
+        edge(nodeChooseChoice forwardTo nodeExecuteTool transformed { it.first() } onToolCall { true })
     }
 
     // Create a chat agent with a system prompt and the tool registry
@@ -68,7 +70,7 @@ fun main() = runBlocking {
         temperature = 1.0,
         toolRegistry = toolRegistry,
         maxIterations = 200,
-        numReplies = 3,
+        numberOfChoices = 3,
     )
 
     println("Chess Game started!")

@@ -1,4 +1,4 @@
-package ai.koog.agents.example.chess
+package ai.koog.agents.example.chess.choice
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -9,10 +9,13 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.PromptExecutorReplyChoice
-import ai.koog.agents.core.feature.reply.choice.AskUserReplyChoiceStrategy
+import ai.koog.agents.core.feature.PromptExecutorChoice
+import ai.koog.agents.core.feature.choice.AskUserChoiceStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
+import ai.koog.agents.example.chess.ChessGame
+import ai.koog.agents.example.chess.Move
+import ai.koog.agents.example.chess.nodeTrimHistory
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message
@@ -40,7 +43,7 @@ fun main() = runBlocking {
         edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
     }
 
-    val askReplyChoiceStrategy = AskUserReplyChoiceStrategy(promptShowToUser = { prompt ->
+    val askChoiceStrategy = AskUserChoiceStrategy(promptShowToUser = { prompt ->
         val lastMessage = prompt.messages.last()
         if (lastMessage is Message.Tool.Call) {
             lastMessage.content
@@ -50,7 +53,7 @@ fun main() = runBlocking {
     })
 
     val basePromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
-    val promptExecutor = PromptExecutorReplyChoice(basePromptExecutor, askReplyChoiceStrategy)
+    val promptExecutor = PromptExecutorChoice(basePromptExecutor, askChoiceStrategy)
 
     val agent = AIAgent(
         executor = promptExecutor,
@@ -67,7 +70,7 @@ fun main() = runBlocking {
         temperature = 1.0,
         toolRegistry = toolRegistry,
         maxIterations = 200,
-        numReplies = 3,
+        numberOfChoices = 3,
     )
 
     println("Chess Game started!")
