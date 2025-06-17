@@ -22,6 +22,7 @@ val included = setOf(
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-trace",
     ":agents:agents-features:agents-features-tokenizer",
+    ":agents:agents-features:agents-features-snapshot",
     ":agents:agents-mcp",
     ":agents:agents-tools",
     ":agents:agents-utils",
