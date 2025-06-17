@@ -37,7 +37,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -50,15 +49,6 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class MultipleLLMPromptExecutorIntegrationTest {
-    // API keys for testing
-    private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
-    private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
-    private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
-
-    // LLM clients
-    private val openAIClient get() = OpenAILLMClient(openAIApiKey)
-    private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
-    private val googleClient get() = GoogleLLMClient(geminiApiKey)
 
     companion object {
         private lateinit var testResourcesDir: File
@@ -68,6 +58,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         fun setupTestResources() {
             testResourcesDir = File("src/jvmTest/resources/media")
             testResourcesDir.mkdirs()
+            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
         }
 
         @JvmStatic
@@ -104,17 +95,60 @@ class MultipleLLMPromptExecutorIntegrationTest {
         fun audioScenarioModelCombinations(): Stream<Arguments> {
             return MediaTestScenarios.audioScenarioModelCombinations()
         }
-
-        @BeforeEach
-        fun setup() {
-            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
-        }
     }
+
+    // API keys for testing
+    private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
+    private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
+    private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+
+    // LLM clients
+    private val openAIClient get() = OpenAILLMClient(openAIApiKey)
+    private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
+    private val googleClient get() = GoogleLLMClient(geminiApiKey)
+    val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+
+
+    private fun createCalculatorTool(): ToolDescriptor {
+        return ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operation",
+                    description = "The operation to perform.",
+                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor(
+                    name = "a",
+                    description = "The first argument (number)",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "b",
+                    description = "The second argument (number)",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+    }
+
+    private fun getClientForModel(model: LLModel) = when (model.provider) {
+        is LLMProvider.Anthropic -> anthropicClient
+        is LLMProvider.Google -> googleClient
+        else -> openAIClient
+    }
+
+    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
+        system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
+        user("What is 123 + 456?")
+    }
+
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+
 
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
@@ -140,8 +174,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
         }
-
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
@@ -171,8 +203,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools))
-
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
@@ -537,42 +567,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
     }
 
-    private fun createCalculatorTool(): ToolDescriptor {
-        return ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-    }
-
-    private fun getClientForModel(model: LLModel) = when (model.provider) {
-        is LLMProvider.Anthropic -> anthropicClient
-        is LLMProvider.Google -> googleClient
-        else -> openAIClient
-    }
-
-    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
-        system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
-        user("What is 123 + 456?")
-    }
-
-
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -680,7 +674,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     ) =
         runTest(timeout = 60.seconds) {
             assumeTrue(model.provider != LLMProvider.OpenAI, "File format md not supported for OpenAI")
-            val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
             val prompt = prompt("markdown-test-${scenario.name.lowercase()}") {
                 system("You are a helpful assistant that can analyze markdown files.")
@@ -736,7 +729,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) =
         runTest(timeout = 60.seconds) {
             assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
-            val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
             val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
             val prompt = prompt("image-test-${scenario.name.lowercase()}") {
                 system("You are a helpful assistant that can analyze images.")
@@ -799,7 +791,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
         runTest(timeout = 60.seconds) {
             assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
-            val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
@@ -888,8 +879,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 "Model must support audio capability"
             )
 
-            val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
-
             val audioFile = MediaTestUtils.createAudioFileForScenario(scenario, testResourcesDir)
 
             val prompt = prompt("audio-test-${scenario.name.lowercase()}") {
@@ -914,28 +903,30 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            try {
-                val response = executor.execute(prompt, model)
-                checkExecutorMediaResponse(response)
-            } catch (e: Exception) {
-                if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                    assertTrue(
-                        e.message?.contains("400 Bad Request") == true,
-                        "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
-                    )
-                    if (model.provider == LLMProvider.OpenAI) {
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    checkExecutorMediaResponse(response)
+                } catch (e: Exception) {
+                    if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
                         assertTrue(
-                            e.message?.contains("This model does not support the format you provided.") == true,
-                            "Expected exception for corrupted audio [This model does not support the format you provided.]"
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                         )
-                    } else if (model.provider == LLMProvider.Google) {
-                        assertTrue(
-                            e.message?.contains("Request contains an invalid argument.") == true,
-                            "Expected exception for corrupted audio [Request contains an invalid argument.]"
-                        )
+                        if (model.provider == LLMProvider.OpenAI) {
+                            assertTrue(
+                                e.message?.contains("This model does not support the format you provided.") == true,
+                                "Expected exception for corrupted audio [This model does not support the format you provided.]"
+                            )
+                        } else if (model.provider == LLMProvider.Google) {
+                            assertTrue(
+                                e.message?.contains("Request contains an invalid argument.") == true,
+                                "Expected exception for corrupted audio [Request contains an invalid argument.]"
+                            )
+                        }
+                    } else {
+                        throw e
                     }
-                } else {
-                    throw e
                 }
             }
         }
@@ -948,8 +939,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 model.capabilities.contains(LLMCapability.Vision.Image),
                 "Model must support vision capability"
             )
-
-            val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
             val pdfFile = File(testResourcesDir, "test.pdf")
             val imageFile = File(testResourcesDir, "test.png")
@@ -978,7 +967,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             assertTrue(
                 response.content.contains("image", ignoreCase = true) ||
                         response.content.contains("PDF", ignoreCase = true),
-                "Response should mention the both image & PDF files"
+                "Response should mention both image & PDF files"
             )
         }
 }

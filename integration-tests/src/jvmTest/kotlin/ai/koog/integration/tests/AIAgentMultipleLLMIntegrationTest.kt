@@ -16,7 +16,6 @@ import ai.koog.agents.core.tools.*
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.prompt.dsl.Prompt
@@ -43,7 +42,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -118,12 +116,30 @@ internal fun LLMClient.reportingTo(
 class AIAgentMultipleLLMIntegrationTest {
 
     companion object {
-        val testResourcesDir = File("src/jvmTest/resources/media")
+        private lateinit var testResourcesDir: File
 
         @JvmStatic
         @BeforeAll
-        fun setupTestResources() {
-            MediaTestUtils.setupTestResourcesForAgent(testResourcesDir)
+        fun setup() {
+            testResourcesDir = File("src/jvmTest/resources/media")
+            testResourcesDir.mkdirs()
+            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+        }
+
+        internal val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val fs = MockFileSystem()
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCall { tool, arguments ->
+                println(
+                    "Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+
+            onAgentFinished { _, _ ->
+                eventsChannel.send(Event.Termination)
+            }
         }
 
         @JvmStatic
@@ -135,11 +151,6 @@ class AIAgentMultipleLLMIntegrationTest {
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
-
-    @BeforeEach
-    fun setup() {
-        assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
-    }
 
     sealed interface OperationResult<T> {
         class Success<T>(val result: T) : OperationResult<T>
@@ -331,112 +342,13 @@ class AIAgentMultipleLLMIntegrationTest {
         }
     }
 
-    @Test
-    fun integration_testAIAgentOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
-        // Create the clients
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
-        val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
-                println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
-                    }"
-                )
-            }
-
-            onAgentFinished { _, _ ->
-                eventsChannel.send(Event.Termination)
-            }
-        }
-        val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
-
-        val result = agent.runAndGetResult(
-            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-        )
-
-        assertNotNull(result)
-
-        assertTrue(
-            fs.fileCount() > 0,
-            "Agent must have created at least one file"
-        )
-
-        val messages = mutableListOf<Event.Message>()
-        for (msg in eventsChannel) {
-            if (msg is Event.Message) messages.add(msg)
-            else break
-        }
-
-        assertTrue(
-            messages.any { it.llmClient == "AnthropicLLMClient" },
-            "At least one message must be delegated to Anthropic client"
-        )
-
-        assertTrue(
-            messages.any { it.llmClient == "OpenAILLMClient" },
-            "At least one message must be delegated to OpenAI client"
-        )
-
-        assertTrue(
-            messages
-                .filter { it.llmClient == "AnthropicLLMClient" }
-                .all { it.model.provider == LLMProvider.Anthropic },
-            "All prompts with Anthropic model must be delegated to Anthropic client"
-        )
-
-        assertTrue(
-            messages
-                .filter { it.llmClient == "OpenAILLMClient" }
-                .all { it.model.provider == LLMProvider.OpenAI },
-            "All prompts with OpenAI model must be delegated to OpenAI client"
-        )
-    }
-
-    @Test
-    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
-        val fs = MockFileSystem()
-        var errorMessage: String? = null
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
-                println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
-                    }"
-                )
-            }
-
-            onAgentFinished { _, _ ->
-                eventsChannel.send(Event.Termination)
-            }
-        }
-        val steps = 10
-        val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = steps)
-
-        try {
-            val result = agent.runAndGetResult(
-                "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-            )
-            assertNull(result)
-        } catch (e: AIAgentException) {
-            errorMessage = e.message
-        } finally {
-            assertEquals(
-                "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
-                        "Please, consider increasing `maxAgentIterations` value in agent's configuration",
-                errorMessage
-            )
-        }
-    }
-
     @OptIn(DelicateCoroutinesApi::class)
     private fun createTestOpenaiAnthropicAgent(
         eventsChannel: Channel<Event>,
         fs: MockFileSystem,
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int,
-        prompt: Prompt = prompt("test") {}
+        prompt: Prompt = prompt("test") {},
     ): AIAgent {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
@@ -543,7 +455,7 @@ class AIAgentMultipleLLMIntegrationTest {
         fs: MockFileSystem,
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int,
-        prompt: Prompt = prompt("test") {}
+        prompt: Prompt = prompt("test") {},
     ): AIAgent {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
@@ -647,6 +559,104 @@ class AIAgentMultipleLLMIntegrationTest {
         }
     }
 
+    @Test
+    fun integration_testAIAgentOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+        // Create the clients
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val fs = MockFileSystem()
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCall { tool, arguments ->
+                println(
+                    "Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+
+            onAgentFinished { _, _ ->
+                eventsChannel.send(Event.Termination)
+            }
+        }
+        val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
+
+        val result = agent.runAndGetResult(
+            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+        )
+
+        assertNotNull(result)
+
+        assertTrue(
+            fs.fileCount() > 0,
+            "Agent must have created at least one file"
+        )
+
+        val messages = mutableListOf<Event.Message>()
+        for (msg in eventsChannel) {
+            if (msg is Event.Message) messages.add(msg)
+            else break
+        }
+
+        assertTrue(
+            messages.any { it.llmClient == "AnthropicLLMClient" },
+            "At least one message must be delegated to Anthropic client"
+        )
+
+        assertTrue(
+            messages.any { it.llmClient == "OpenAILLMClient" },
+            "At least one message must be delegated to OpenAI client"
+        )
+
+        assertTrue(
+            messages
+                .filter { it.llmClient == "AnthropicLLMClient" }
+                .all { it.model.provider == LLMProvider.Anthropic },
+            "All prompts with Anthropic model must be delegated to Anthropic client"
+        )
+
+        assertTrue(
+            messages
+                .filter { it.llmClient == "OpenAILLMClient" }
+                .all { it.model.provider == LLMProvider.OpenAI },
+            "All prompts with OpenAI model must be delegated to OpenAI client"
+        )
+    }
+
+    @Test
+    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val fs = MockFileSystem()
+        var errorMessage: String? = null
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCall { tool, arguments ->
+                println(
+                    "Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+
+            onAgentFinished { _, _ ->
+                eventsChannel.send(Event.Termination)
+            }
+        }
+        val steps = 10
+        val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = steps)
+
+        try {
+            val result = agent.runAndGetResult(
+                "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+            )
+            assertNull(result)
+        } catch (e: AIAgentException) {
+            errorMessage = e.message
+        } finally {
+            assertEquals(
+                "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
+                        "Please, consider increasing `maxAgentIterations` value in agent's configuration",
+                errorMessage
+            )
+        }
+    }
 
     @Test
     fun integration_testAnthropicAgent() = runTest {
@@ -778,22 +788,6 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
     fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
-        val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
-                println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
-                    }"
-                )
-            }
-
-            onAgentFinished { _, _ ->
-                eventsChannel.send(Event.Termination)
-            }
-        }
-
         val imageFile = File(testResourcesDir, "test.png")
         assertTrue(imageFile.exists(), "Image test file should exist")
 
@@ -805,7 +799,7 @@ class AIAgentMultipleLLMIntegrationTest {
                 eventsChannel,
                 fs,
                 eventHandlerConfig,
-                maxAgentIterations = 20
+                maxAgentIterations = 20,
             )
 
             else -> createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20)
@@ -827,12 +821,12 @@ class AIAgentMultipleLLMIntegrationTest {
             assertTrue(result.length > 20, "Result should contain more than 20 characters")
 
             val resultLowerCase = result.lowercase()
-            Assertions.assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
-            Assertions.assertFalse(
+            assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
+            assertFalse(
                 resultLowerCase.contains("unable"),
                 "Result should not indicate inability to process"
             )
-            Assertions.assertFalse(
+            assertFalse(
                 resultLowerCase.contains("cannot"),
                 "Result should not indicate inability to process"
             )
@@ -843,22 +837,6 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
     fun integration_testAgentWithImageCapabilityPrompt(model: LLModel) = runTest(timeout = 120.seconds) {
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
-        val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
-                println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
-                    }"
-                )
-            }
-
-            onAgentFinished { _, _ ->
-                eventsChannel.send(Event.Termination)
-            }
-        }
-
         val imageFile = File(testResourcesDir, "test.png")
         assertTrue(imageFile.exists(), "Image test file should exist")
 
@@ -894,8 +872,8 @@ class AIAgentMultipleLLMIntegrationTest {
         assertTrue(result.length > 20, "Result should contain more than 20 characters")
 
         val resultLowerCase = result.lowercase()
-        Assertions.assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
-        Assertions.assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
-        Assertions.assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
+        assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
+        assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
+        assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
     }
 }

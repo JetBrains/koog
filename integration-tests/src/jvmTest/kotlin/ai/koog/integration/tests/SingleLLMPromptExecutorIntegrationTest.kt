@@ -39,7 +39,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -59,6 +58,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         fun setupTestResources() {
             testResourcesDir = File("src/jvmTest/resources/media")
             testResourcesDir.mkdirs()
+            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
         }
 
         // combinations for usual universal tests
@@ -95,11 +95,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         fun audioScenarioModelCombinations(): Stream<Arguments> {
             return MediaTestScenarios.audioScenarioModelCombinations()
         }
-    }
-
-    @BeforeEach
-    fun setup() {
-        assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
     }
 
     @ParameterizedTest
@@ -921,7 +916,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         assertTrue(
             response.content.contains("image", ignoreCase = true) ||
                     response.content.contains("PDF", ignoreCase = true),
-            "Response should mention the both image & PDF files"
+            "Response should mention both image & PDF files"
         )
     }
 }
