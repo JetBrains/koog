@@ -4,6 +4,8 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.result
 import ai.koog.prompt.message.Message
 
 /**
@@ -60,4 +62,58 @@ public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
     edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+}
+
+/**
+ * Creates a ReAct AI agent strategy that alternates between reasoning and execution stages
+ * to dynamically process tasks and request outputs from an LLM.
+ *
+ * @param reasoningInterval Specifies the interval for reasoning steps.
+ * @return An instance of [AIAgentStrategy] that defines the ReAct strategy.
+ */
+public fun reActStrategy(reasoningInterval: Int = 1): AIAgentStrategy = strategy("re_act") {
+    val nodeCallLLM by node<Unit, Message.Response> {
+        llm.writeSession {
+            println(prompt.messages.size)
+            requestLLM()
+        }
+    }
+    val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
+
+    var reasoningStep = 0
+    val reasoningPrompt = "Please give your thoughts about the task and plan the next steps."
+    val nodeReasonInput by node<String, Unit> { stageInput ->
+        llm.writeSession {
+            updatePrompt {
+                user(stageInput)
+                user(reasoningPrompt)
+            }
+
+            requestLLMWithoutTools().content
+        }
+    }
+    val nodeReasonAfterToolResult by node<ReceivedToolResult, Unit> { result ->
+        reasoningStep++
+        llm.writeSession {
+            updatePrompt {
+                tool {
+                    result(result)
+                }
+            }
+
+            if (reasoningStep % reasoningInterval == 0) {
+                updatePrompt {
+                    user(reasoningPrompt)
+                }
+                requestLLMWithoutTools().content
+            }
+        }
+    }
+
+    edge(nodeStart forwardTo nodeReasonInput)
+    edge(nodeReasonInput forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeExecuteTool forwardTo nodeReasonAfterToolResult)
+    edge(nodeReasonAfterToolResult forwardTo nodeCallLLM)
 }
