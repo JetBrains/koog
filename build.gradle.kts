@@ -1,4 +1,4 @@
-import ai.grazie.gradle.fixups.DisableDistTasks.disableDistTasks
+import ai.koog.gradle.fixups.DisableDistTasks.disableDistTasks
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request

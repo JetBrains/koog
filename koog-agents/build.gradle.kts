@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.Publishing.publishToMaven
+import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version
@@ -75,7 +75,7 @@ kotlin {
                 projects.forEach {
                     val text = it.buildFile.readText()
 
-                    require("import ai.grazie.gradle.publish.maven.Publishing.publishToMaven" in text) {
+                    require("import ai.koog.gradle.publish.maven.Publishing.publishToMaven" in text) {
                         "Module ${it.path} is used as a dependency for '${project.name}' main jar. Hence, it should be published. If not, please mark it as excluded in ${project.name}/build.gradle.kts"
                     }
 

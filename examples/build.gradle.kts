@@ -4,7 +4,7 @@ version = rootProject.version
 plugins {
     id("ai.kotlin.jvm")
     alias(libs.plugins.kotlin.serialization)
-    id("ai.grazie.gradle.plugins.credentialsresolver")
+    id("ai.koog.gradle.plugins.credentialsresolver")
     application
     alias(libs.plugins.shadow)
 }

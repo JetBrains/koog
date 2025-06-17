@@ -1,6 +1,5 @@
-//import ai.grazie.gradle.tests.setupKarmaConfigs
-import ai.grazie.gradle.publish.maven.configureJvmJarManifest
-import ai.grazie.gradle.tests.configureTests
+import ai.koog.gradle.publish.maven.configureJvmJarManifest
+import ai.koog.gradle.tests.configureTests
 import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin

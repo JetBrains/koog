@@ -1,4 +1,4 @@
-package ai.grazie.gradle.tests
+package ai.koog.gradle.tests
 
 import org.jetbrains.kotlin.gradle.targets.js.KotlinJsPlatformTestRun
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsTargetDsl
