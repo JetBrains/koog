@@ -2,10 +2,14 @@ package ai.koog.agents.memory.feature.nodes
 
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
+import ai.koog.agents.core.dsl.extension.dropLastNMessages
+import ai.koog.agents.core.dsl.extension.leaveLastNMessages
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.*
 import ai.koog.agents.memory.prompts.MemoryPrompts
+import ai.koog.prompt.llm.LLModel
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -88,12 +92,14 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
  * @param subject The subject scope of the memory (USER, PROJECT, etc.)
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concepts List of concepts to save in memory
+ * @param retrievalModel LLM that will be used for fact retrieval from the history (by default, the same model as the current one will be used)
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     name: String? = null,
     subject: MemorySubject,
     scope: MemoryScopeType,
     concepts: List<Concept>,
+    retrievalModel: LLModel? = null
 ): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
@@ -101,7 +107,8 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
                 concept = concept,
                 subject = subject,
                 scope = scopesProfile.getScope(scope) ?: return@forEach,
-                preserveQuestionsInLLMChat = true
+                preserveQuestionsInLLMChat = true,
+                retrievalModel = retrievalModel
             )
         }
     }
@@ -115,13 +122,15 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  * @param subject The subject scope of the memory (USER, PROJECT, etc.)
  * @param scope The scope of the memory (Agent, Feature, etc.)
  * @param concept The concept to save in memory
+ * @param retrievalModel LLM that will be used for fact retrieval from the history (by default, the same model as the current one will be used)
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     name: String? = null,
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType,
-): AIAgentNodeDelegateBase<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept))
+    retrievalModel: LLModel? = null
+): AIAgentNodeDelegateBase<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept), retrievalModel)
 
 /**
  * Node that automatically detects and extracts facts from the chat history and saves them to memory.
@@ -131,16 +140,21 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
  * @param scopes List of memory scopes (Agent, Feature, etc.). By default only Agent scope would be chosen
  * @param subjects List of subjects (user, project, organization, etc.) to look for.
  * By default, all subjects will be included and looked for.
+ * @param retrievalModel LLM that will be used for fact retrieval from the history (by default, the same model as the current one will be used)
  */
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),
-    subjects: List<MemorySubject> = MemorySubject.registeredSubjects
+    subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
+    retrievalModel: LLModel? = null
 ): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
     llm.writeSession {
+        val initialModel = model
+        if (retrievalModel != null) {
+            model = retrievalModel
+        }
         updatePrompt {
-            val prompt = MemoryPrompts.autoDetectFacts(subjects)
-            user(prompt)
+            user(MemoryPrompts.autoDetectFacts(subjects))
         }
 
         val response = requestLLMWithoutTools()
@@ -152,6 +166,11 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
                     agentMemory.save(fact, subject, scope)
                 }
             }
+        }
+
+        dropLastNMessages(2) // remove the prompt and LLM response
+        if (retrievalModel != null) {
+            model = initialModel
         }
     }
 

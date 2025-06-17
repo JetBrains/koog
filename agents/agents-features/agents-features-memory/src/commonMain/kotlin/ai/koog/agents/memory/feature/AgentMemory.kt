@@ -16,6 +16,7 @@ import ai.koog.agents.memory.model.DefaultTimeProvider.getCurrentTimestamp
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
+import ai.koog.prompt.llm.LLModel
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -46,7 +47,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *             storage = SimpleStorage(JVMFileSystemProvider),
  *             root = Path("memory/data")
  *         )
- *         
+ *
  *         // Configure scope names (optional)
  *         featureName = "code-assistant"
  *         productName = "my-ide"
@@ -84,7 +85,7 @@ public class AgentMemory(
     internal val llm: AIAgentLLMContext,
     internal val scopesProfile: MemoryScopesProfile
 ) {
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     private fun getCurrentTimestamp(): Long = DefaultTimeProvider.getCurrentTimestamp()
 
@@ -203,7 +204,8 @@ public class AgentMemory(
      * ```
      */
     public companion object Feature : AIAgentFeature<Config, AgentMemory> {
-        override val key: AIAgentStorageKey<AgentMemory> = createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
+        override val key: AIAgentStorageKey<AgentMemory> =
+            createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
         /**
          * Creates the initial configuration for the AgentMemory feature.
@@ -232,7 +234,7 @@ public class AgentMemory(
          *             storage = SimpleStorage(JVMFileSystemProvider),
          *             root = Path("memory/data")
          *         )
-         *         
+         *
          *         // Configure scope names (optional)
          *         featureName = "bank-assistant"
          *         productName = "my-bank"
@@ -275,19 +277,30 @@ public class AgentMemory(
      * @param subject The subject categorization for the facts (e.g., User, Project)
      * @param scope The visibility scope for the facts (e.g., Agent, Feature, Product)
      * @param preserveQuestionsInLLMChat If true, keeps the fact extraction messages in the chat history
+     * @param retrievalModel LLM that will be used for fact retrieval from the history (by default, the same model as the current one will be used)
      */
     public suspend fun saveFactsFromHistory(
         concept: Concept,
         subject: MemorySubject,
         scope: MemoryScope,
-        preserveQuestionsInLLMChat: Boolean = false
+        preserveQuestionsInLLMChat: Boolean = false,
+        retrievalModel: LLModel? = null
     ) {
         llm.writeSession {
+            val initialModel = model
+            if (retrievalModel != null) {
+                model = retrievalModel
+                logger.info { "Using model: ${retrievalModel.id}" }
+            }
             val facts = retrieveFactsFromHistory(concept, preserveQuestionsInLLMChat)
 
             // Save facts to memory
             agentMemory.save(facts, subject, scope)
             logger.info { "Saved fact for concept '${concept.keyword}' in scope $scope: $facts" }
+            if (retrievalModel != null) {
+                model = initialModel
+                logger.info { "Switching back to model: ${initialModel.id}" }
+            }
         }
     }
 
