@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
@@ -24,7 +23,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -41,12 +39,14 @@ class SimpleAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     companion object {
-        val testResourcesDir = File("src/jvmTest/resources/media")
+        private lateinit var testResourcesDir: File
 
         @JvmStatic
         @BeforeAll
-        fun setupTestResources() {
-            MediaTestUtils.setupTestResourcesForAgent(testResourcesDir)
+        fun setup() {
+            testResourcesDir = File("src/jvmTest/resources/media")
+            testResourcesDir.mkdirs()
+            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
         }
 
         @JvmStatic
@@ -131,11 +131,6 @@ class SimpleAgentIntegrationTest {
     val errors = mutableListOf<Throwable>()
     val results = mutableListOf<String?>()
 
-    @BeforeEach
-    fun setup() {
-        assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
-    }
-
     @AfterTest
     fun teardown() {
         actualToolCalls.clear()
@@ -158,7 +153,7 @@ class SimpleAgentIntegrationTest {
             llmModel = model,
             temperature = 1.0,
             maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
         )
 
         withRetry(times = 3, testName = "integration_AIAgentShouldNotCallToolsByDefault[${model.id}]") {
