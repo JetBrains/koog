@@ -1,7 +1,11 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.entity.*
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
@@ -57,11 +61,14 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         name: String? = null,
         execute: suspend AIAgentContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegate<Input, Output> {
-        return AIAgentNodeDelegate(name, AIAgentNodeBuilder(execute))
+        return AIAgentNodeDelegate(name, AIAgentNodeBuilder {
+            val res = execute(this, it)
+            return@AIAgentNodeBuilder res
+        })
     }
 
     /**
-     * Creates a subgraph with specified tool selection strategy.
+     * Creates a subgraph with a specified tool selection strategy.
      * @param name Optional subgraph name
      * @param toolSelectionStrategy Strategy for tool selection
      * @param define Subgraph definition function
@@ -120,7 +127,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         vararg nodes: AIAgentNodeBase<Input, Output>,
         dispatcher: CoroutineDispatcher = Dispatchers.Default,
         name: String? = null,
-        merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> NodeExecutionResult<Output>,
+        merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
     ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(name, AIAgentParallelNodeBuilder(nodes.asList(), merge, dispatcher))
     }
@@ -137,9 +144,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     /**
-     * Checks if finish node is reachable from start node.
+     * Checks if the finish node is reachable from the start node.
      * @param start Starting node
-     * @return True if finish node is reachable
+     * @return True if the finish node is reachable
      */
     protected fun isFinishReachable(start: StartNode<Input>): Boolean {
         val visited = mutableSetOf<AIAgentNodeBase<*, *>>()
@@ -152,6 +159,54 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         }
 
         return visit(start)
+    }
+
+    private fun getNodePath(node: AIAgentNodeBase<*, *>, parentPath: String): String {
+        return "${parentPath}:${node.id}"
+    }
+
+    internal fun buildSubgraphMetadata(start: StartNode<Input>, parentName: String, strategy: AIAgentStrategy<Input, Output>): SubgraphMetadata {
+        val subgraphNodes = buildSubGraphNodesMap(start, parentName)
+        subgraphNodes[parentName] = strategy
+
+        // Check if the finish node is reachable from the start node
+        if (!isFinishReachable(start)) {
+            throw IllegalStateException("Finish node is not reachable from the start node in the subgraph '$parentName'.")
+        }
+
+        // Validate that all nodes have unique names within the subgraph
+        val names = subgraphNodes.keys.map { it.split(":").last() }
+        val uniqueNames = names.toSet().size == names.size
+
+        return SubgraphMetadata(
+            nodesMap = subgraphNodes,
+            uniqueNames = uniqueNames
+        )
+    }
+
+    internal fun buildSubGraphNodesMap(start: StartNode<*>, parentName: String): MutableMap<String, AIAgentNodeBase<*, *>> {
+        val map = mutableMapOf<String, AIAgentNodeBase<*, *>>()
+
+        fun visit(node: AIAgentNodeBase<*, *>) {
+            if (node is FinishNode<*>) return
+            if (getNodePath(node, parentName) in map) return
+            if (node !is StartNode<*>) {
+                if (node.name in map)
+                    throw IllegalStateException("Node with name '${node.name}' already exists in the subgraph.")
+
+                map[getNodePath(node, parentName)] = node
+            }
+
+            if (node is AIAgentSubgraph<*, *>) {
+                val subgraphNodes = buildSubGraphNodesMap(node.start, getNodePath(node, parentName))
+                map.putAll(subgraphNodes)
+            }
+
+            return node.edges.forEach { visit(it.toNode) }
+        }
+
+        visit(start)
+        return map
     }
 }
 
@@ -257,7 +312,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
  * @property output The output value produced by the node execution.
  * @property context The agent context in which the node was executed, containing any state changes.
  */
-public data class NodeExecutionResult<Output>(val output: Output, val context: AIAgentContextBase)
+public data class ParallelNodeExecutionResult<Output>(val output: Output, val context: AIAgentContextBase)
 
 /**
  * Represents the completed result of a parallel node execution.
@@ -275,7 +330,7 @@ public data class NodeExecutionResult<Output>(val output: Output, val context: A
 public data class ParallelResult<Input, Output>(
     val nodeName: String,
     val nodeInput: Input,
-    val nodeResult: NodeExecutionResult<Output>
+    val nodeResult: ParallelNodeExecutionResult<Output>
 )
 
 /**
@@ -287,7 +342,7 @@ public data class ParallelResult<Input, Output>(
  */
 public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
     private val nodes: List<AIAgentNodeBase<Input, Output>>,
-    private val merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> NodeExecutionResult<Output>,
+    private val merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
     private val dispatcher: CoroutineDispatcher
 ) : AIAgentNodeBuilder<Input, Output>(
     execute = { input ->
@@ -299,7 +354,13 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
                 async(dispatcher) {
                     val nodeContext = initialContext.fork()
                     val nodeOutput = node.execute(nodeContext, input)
-                    val executionResult = NodeExecutionResult(nodeOutput, nodeContext)
+
+                    if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
+                        throw IllegalStateException("Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}")
+                    }
+
+                    @Suppress("UNCHECKED_CAST")
+                    val executionResult = ParallelNodeExecutionResult(nodeOutput as Output, nodeContext)
                     ParallelResult(node.name, input, executionResult)
                 }
             }.awaitAll()
@@ -309,7 +370,6 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
         val mergeContext = AIAgentParallelNodesMergeContext(this, nodeResults)
         val result = with(mergeContext) { merge() }
         this.replace(result.context)
-
         result.output
     }
 )

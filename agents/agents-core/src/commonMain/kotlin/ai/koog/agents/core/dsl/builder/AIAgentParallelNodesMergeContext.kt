@@ -3,6 +3,7 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -10,6 +11,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.prompt.message.Message
 
 /**
  * Context for merging parallel node execution results.
@@ -25,10 +27,11 @@ import ai.koog.agents.core.feature.AIAgentPipeline
 @OptIn(InternalAgentsApi::class)
 public class AIAgentParallelNodesMergeContext<Input, Output>(
     private val underlyingContextBase: AIAgentContextBase,
-    public val results: List<ParallelResult<Input, Output>>
+    public val results: List<ParallelResult<Input, Output>>,
 ) : AIAgentContextBase {
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
+    override val id: String get() = underlyingContextBase.id
     override val agentInput: Any? get() = underlyingContextBase.agentInput
     override val config: AIAgentConfigBase get() = underlyingContextBase.config
     override val llm: AIAgentLLMContext get() = underlyingContextBase.llm
@@ -38,15 +41,30 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val strategyName: String get() = underlyingContextBase.strategyName
     override val pipeline: AIAgentPipeline get() = underlyingContextBase.pipeline
 
+    override fun store(key: AIAgentStorageKey<*>, value: Any) {
+        underlyingContextBase.store(key, value)
+    }
+
+    override fun <T> get(key: AIAgentStorageKey<*>): T? {
+        return underlyingContextBase.get(key)
+    }
+
+    override fun remove(key: AIAgentStorageKey<*>): Boolean {
+        return underlyingContextBase.remove(key)
+    }
+
     // Delegate all methods to the underlying context
     override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? =
         underlyingContextBase.feature(key)
+
 
     override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
         underlyingContextBase.feature(feature)
 
     override fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
         underlyingContextBase.featureOrThrow(feature)
+
+    override suspend fun getHistory(): List<Message> = underlyingContextBase.getHistory()
 
     override fun copy(
         environment: AIAgentEnvironment,
@@ -81,7 +99,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @return The NodeExecutionResult with the selected output and context
      * @throws NoSuchElementException if no result matches the predicate
      */
-    public suspend fun selectBy(predicate: suspend (Output) -> Boolean): NodeExecutionResult<Output> {
+    public suspend fun selectBy(predicate: suspend (Output) -> Boolean): ParallelNodeExecutionResult<Output> {
         return results.first(predicate = { predicate(it.nodeResult.output) }).nodeResult
     }
 
@@ -95,9 +113,9 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      *         value as determined by the comparison function.
      * @throws NoSuchElementException if the results list is empty.
      */
-    public suspend fun <T : Comparable<T>> selectByMax(function: suspend (Output) -> T): NodeExecutionResult<Output> {
+    public suspend fun <T : Comparable<T>> selectByMax(function: suspend (Output) -> T): ParallelNodeExecutionResult<Output> {
         return results.maxBy { function(it.nodeResult.output) }
-            .let { NodeExecutionResult(it.nodeResult.output, it.nodeResult.context) }
+            .let { ParallelNodeExecutionResult(it.nodeResult.output, it.nodeResult.context) }
     }
 
     /**
@@ -107,9 +125,9 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @return The NodeExecutionResult containing the output and context at the selected index.
      * @throws IndexOutOfBoundsException if the index returned by the selectIndex function is out of bounds.
      */
-    public suspend fun selectByIndex(selectIndex: suspend (List<Output>) -> Int): NodeExecutionResult<Output> {
+    public suspend fun selectByIndex(selectIndex: suspend (List<Output>) -> Int): ParallelNodeExecutionResult<Output> {
         val indexOfBest = selectIndex(results.map { it.nodeResult.output })
-        return NodeExecutionResult(results[indexOfBest].nodeResult.output, results[indexOfBest].nodeResult.context)
+        return ParallelNodeExecutionResult(results[indexOfBest].nodeResult.output, results[indexOfBest].nodeResult.context)
     }
 
     /**
@@ -123,8 +141,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     public suspend fun <R> fold(
         initial: R,
         operation: suspend (acc: R, result: Output) -> R
-    ): NodeExecutionResult<R> {
+    ): ParallelNodeExecutionResult<R> {
         val folded = results.map { it.nodeResult.output }.fold(initial) { r, t -> operation(r, t) }
-        return NodeExecutionResult(folded, underlyingContextBase)
+        return ParallelNodeExecutionResult(folded, underlyingContextBase)
     }
 }

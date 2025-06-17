@@ -154,6 +154,7 @@ suspend fun planWork(
         ): AIAgentNodeBase<T, Message.Response> {
             val result by node<T, Message.Response> { parsedMessage ->
                 nextNode.execute(this, parsedMessage.problemDescription)
+                    ?: throw UnsupportedOperationException("Node interruption is not supported here")
             }
             return result
         }

@@ -21,12 +21,15 @@ public class AIAgentStrategyBuilder<Input, Output>(
     public override val nodeFinish: FinishNode<Output> = FinishNode()
 
     override fun build(): AIAgentStrategy<Input, Output> {
-        return AIAgentStrategy(
+
+        val strategy = AIAgentStrategy(
             name = name,
             nodeStart = nodeStart,
             nodeFinish = nodeFinish,
             toolSelectionStrategy = toolSelectionStrategy
         )
+        strategy.metadata = buildSubgraphMetadata(nodeStart, name, strategy)
+        return strategy
     }
 }
 

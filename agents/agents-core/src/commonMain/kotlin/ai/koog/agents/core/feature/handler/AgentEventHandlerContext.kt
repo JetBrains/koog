@@ -1,6 +1,7 @@
 package ai.koog.agents.core.feature.handler
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 
 /**
@@ -40,6 +41,7 @@ public data class AgentStartContext<TFeature>(
     public val runId: String,
     public val strategy: AIAgentStrategy<*, *>,
     public val feature: TFeature,
+    public val context: AIAgentContextBase,
 ) : AgentEventHandlerContext
 
 /**

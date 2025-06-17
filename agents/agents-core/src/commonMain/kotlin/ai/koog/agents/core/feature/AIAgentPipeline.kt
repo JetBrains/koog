@@ -150,9 +150,9 @@ public class AIAgentPipeline {
      * @param strategy The strategy being executed by the agent
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(runId: String, agent: AIAgent<*, *>, strategy: AIAgentStrategy<*, *>) {
+    public suspend fun onBeforeAgentStarted(runId: String, agent: AIAgent<*, *>, strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase,) {
         agentHandlers.values.forEach { handler ->
-            val eventContext = AgentStartContext(agent = agent, runId = runId, strategy = strategy, feature = handler.feature)
+            val eventContext = AgentStartContext(agent = agent, runId = runId, strategy = strategy, feature = handler.feature, context = context)
             handler.handleBeforeAgentStartedUnsafe(eventContext)
         }
     }

@@ -1,14 +1,9 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.snapshot.feature.AgentCheckpoint
-import ai.koog.agents.snapshot.feature.withCheckpoints
-import ai.koog.agents.snapshot.providers.InMemoryAgentCheckpointStorageProvider
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -30,9 +25,6 @@ class SimpleGraphCheckpointTest {
      */
     @Test
     fun `test agent jumps to execution point when using checkpoint`() = runTest {
-        // Create a snapshot provider to store checkpoints
-        val snapshotProvider = InMemoryAgentCheckpointStorageProvider()
-
         // Create a mock executor for testing
         val mockExecutor: PromptExecutor = getMockExecutor {
             // No specific mock responses needed for this test
@@ -59,13 +51,13 @@ class SimpleGraphCheckpointTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(AgentCheckpoint) {
-                snapshotProvider(snapshotProvider)
+            install(Persistency) {
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
         // Run the agent
-        val result = agent.runAndGetResult("Start the test")
+        val result = agent.run("Start the test")
 
         // Verify that the result contains the expected output from the teleported node
         assertEquals(
@@ -84,7 +76,7 @@ class SimpleGraphCheckpointTest {
     @Test
     fun `test agent creates and saves checkpoints`() = runTest {
         // Create a snapshot provider to store checkpoints
-        val checkpointStorageProvider = InMemoryAgentCheckpointStorageProvider()
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
 
         // Create a mock executor for testing
         val mockExecutor: PromptExecutor = getMockExecutor {
@@ -112,8 +104,8 @@ class SimpleGraphCheckpointTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(AgentCheckpoint) {
-                snapshotProvider(checkpointStorageProvider)
+            install(Persistency) {
+                storage = checkpointStorageProvider
             }
         }
 
@@ -121,104 +113,57 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test")
 
         // Verify that a checkpoint was created and saved
-        val checkpoint = checkpointStorageProvider.getCheckpoint("snapshot-id")
+        val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
         assertNotNull(checkpoint, "No checkpoint was created")
         assertEquals("checkpointNode", checkpoint?.nodeId, "Checkpoint has incorrect node ID")
     }
 
-    /**
-     * Creates a strategy with a teleport node that jumps to a specific execution point.
-     */
-    private fun createTeleportStrategy() = strategy("teleport-test") {
-        val node1 by simpleNode(
-            "Node1",
-            output = "Node 1 output"
+    @Test
+    fun test_checkpoint_persists_history() = runTest {
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+
+        val mockExecutor: PromptExecutor = getMockExecutor {
+            // No specific mock responses needed for this test
+        }
+
+        val input = "You are a test agent."
+        val toolRegistry = ToolRegistry {
+            tool(SayToUser)
+        }
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test") {
+                system(input)
+            },
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 10
         )
 
-        val node2 by simpleNode(
-            "Node2",
-            output = "Node 2 output"
-        )
-        val teleportNode by teleportNode()
-
-        edge(nodeStart forwardTo node1)
-        edge(node1 forwardTo teleportNode)
-        edge(teleportNode forwardTo node2)
-        edge(node2 forwardTo nodeFinish)
-    }
-
-    /**
-     * Creates a strategy with a checkpoint node that creates and saves a checkpoint.
-     */
-    private fun createCheckpointStrategy() = strategy("checkpoint-test") {
-        val node1 by simpleNode(
-            "Node1",
-            output = "Node 1 output"
-        )
-
-        val checkpointNode by nodeCreateCheckpoint(
-            "checkpointNode"
-        )
-
-        val node2 by simpleNode(
-            "Node2",
-            output = "Node 2 output"
-        )
-
-        edge(nodeStart forwardTo node1)
-        edge(node1 forwardTo checkpointNode)
-        edge(checkpointNode forwardTo node2)
-        edge(node2 forwardTo nodeFinish)
-    }
-
-    /**
-     * Creates a simple node that appends the output to the input.
-     */
-    private fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
-        name: String? = null,
-        output: String,
-    ): AIAgentNodeDelegateBase<String, String> = node(name) {
-        return@node it + "\n" + output
-    }
-
-    // Flag to track whether teleportation has occurred
-    private var hasTeleported = false
-
-    /**
-     * Creates a teleport node that jumps to a specific execution point.
-     * Only teleports once to avoid infinite loops.
-     */
-    private fun AIAgentSubgraphBuilderBase<*, *>.teleportNode(
-        name: String? = null,
-    ): AIAgentNodeDelegateBase<String, String> = node(name) {
-        val ctx = this
-        if (!hasTeleported) {
-            hasTeleported = true
-            withCheckpoints {
-                val history = llm.readSession { this.prompt.messages }
-                setExecutionPoint(ctx, "Node1", history, "$it\nTeleported")
-                return@withCheckpoints "Teleported"
+        // Create an agent with the checkpoint strategy
+        val agent = AIAgent(
+            promptExecutor = mockExecutor,
+            strategy = createCheckpointStrategy(),
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry
+        ) {
+            install(Persistency) {
+                storage = checkpointStorageProvider
             }
-        } else {
-            // If we've already teleported, just return the input
-            return@node "$it\nAlready teleported, passing by"
         }
-    }
 
-    /**
-     * Creates a checkpoint node that creates and saves a checkpoint.
-     */
-    private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
-        name: String? = null,
-    ): AIAgentNodeDelegateBase<String, String> = node(name) {
-        val ctx = this
-        val input = it
-        withCheckpoints {
-            val checkpoint = createCheckpoint("snapshot-id", ctx, currentNodeId ?: error("currentNodeId not set"), input)
-            saveCheckpoint(checkpoint.checkpointId, checkpoint)
+        // Run the agent
+        agent.run("Start the test")
 
-            val snapshot = it + "Snapshot created"
-            return@withCheckpoints snapshot
-        }
+        // Verify that a checkpoint was created and saved
+        val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
+        if (checkpoint == null)
+            error("checkpoint is null")
+
+        assertNotNull(checkpoint, "No checkpoint was created")
+        assertEquals("checkpointNode", checkpoint.nodeId, "Checkpoint has incorrect node ID")
+        assertEquals(3, checkpoint.messageHistory.size)
+        assertEquals(input, checkpoint.messageHistory[0].content)
+        assertEquals("Node 1 output", checkpoint.messageHistory[1].content)
+        assertEquals("Node 2 output", checkpoint.messageHistory[2].content)
     }
 }

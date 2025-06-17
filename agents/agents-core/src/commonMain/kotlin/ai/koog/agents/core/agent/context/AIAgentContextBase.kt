@@ -8,6 +8,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.message.Message
 
 /**
  * The [AIAgentContextBase] interface represents the context of an AI agent in the lifecycle.
@@ -26,12 +28,18 @@ public interface AIAgentContextBase {
     public val environment: AIAgentEnvironment
 
     /**
+     * Represents the unique identifier for the agent.
+     *
+     * This identifier is used to distinguish between different agents and is essential
+     * for tracking and managing the agent's lifecycle, especially in multi-agent scenarios.
+     */
+    public val id: String
+
+    /**
      * Represents the input provided to the agent's execution.
      *
      * This variable provides access to the agent's input, which can be used to
      * determine the agent's intent, context, or other relevant information at any stage of agents execution.
-     *
-     * @see [AIAgentEnvironment.input]
      */
     public val agentInput: Any?
 
@@ -102,6 +110,29 @@ public interface AIAgentContextBase {
     @InternalAgentsApi
     public val pipeline: AIAgentPipeline
 
+    /**
+     * Stores a feature in the agent's storage using the specified key.
+     *
+     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to store the feature.
+     * @param value The feature to be stored, which can be of any type.
+     */
+    public fun store(key: AIAgentStorageKey<*>, value: Any)
+
+    /**
+     * Retrieves data from the agent's storage using the specified key.
+     *
+     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding data.
+     * @return The data associated with the provided key, or null if no matching data is found.
+     */
+    public fun<T> get(key: AIAgentStorageKey<*>): T?
+
+    /**
+     * Removes a feature or data associated with the specified key from the agent's storage.
+     *
+     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to locate the data to be removed.
+     * @return `true` if the data was successfully removed, or `false` if no data was associated with the provided key.
+     */
+    public fun remove(key: AIAgentStorageKey<*>): Boolean
 
     /**
      * Retrieves a feature from the agent's storage using the specified key.
@@ -120,7 +151,6 @@ public interface AIAgentContextBase {
      */
     public fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature?
 
-
     /**
      * Retrieves a feature of the specified type from the context or throws an exception if it is not available.
      *
@@ -132,6 +162,25 @@ public interface AIAgentContextBase {
     public fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
         feature(feature)
             ?: throw IllegalStateException("Feature `${feature::class.simpleName}` is not installed to the agent")
+
+    /**
+     * Retrieves the history of messages exchanged during the agent's execution.
+     */
+    public suspend fun getHistory(): List<Message>
+
+    /**
+     * Creates a new instance of [AIAgentContext] with updated tools, while preserving the other properties
+     * of the original context.
+     *
+     * @param tools The new list of [ToolDescriptor] instances to be set in the context.
+     * @return A new [AIAgentContext] instance with the specified tools.
+     *
+     * @suppress
+     */
+    @InternalAgentsApi
+    public fun copyWithTools(tools: List<ToolDescriptor>): AIAgentContextBase {
+        return this.copy(llm = llm.copy(tools = tools))
+    }
 
     /**
      * Creates a copy of the current [AIAgentContext] with optional overrides for its properties.

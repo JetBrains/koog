@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
@@ -11,6 +13,7 @@ import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 
 /**
@@ -23,6 +26,7 @@ import org.jetbrains.annotations.TestOnly
 @TestOnly
 public class DummyAIAgentContext(
     private val builder: AIAgentContextMockBuilder,
+    override val id: String = "DummyAgentId",
 ) : AIAgentContextBase {
     /**
      * Indicates whether a Language Learning Model (LLM) is defined in the current context.
@@ -82,11 +86,25 @@ public class DummyAIAgentContext(
     override val pipeline: AIAgentPipeline
         get() = _pipeline
 
+    override fun store(key: AIAgentStorageKey<*>, value: Any) {
+        throw NotImplementedError("store() is not supported for mock")
+    }
+
+    override fun <T> get(key: AIAgentStorageKey<*>): T? {
+        throw NotImplementedError("get() is not supported for mock")
+    }
+
+    override fun remove(key: AIAgentStorageKey<*>): Boolean {
+        throw NotImplementedError("remove() is not supported for mock")
+    }
+
     override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? =
         throw NotImplementedError("feature() getting in runtime is not supported for mock")
 
     override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
         throw NotImplementedError("feature()  getting in runtime is not supported for mock")
+
+    override suspend fun getHistory(): List<Message> = emptyList()
 
     override fun copy(
         environment: AIAgentEnvironment,
@@ -108,15 +126,15 @@ public class DummyAIAgentContext(
             storage = storage,
             runId = runId,
             strategyId = strategyId,
-        )
+        ),
     )
 
     override suspend fun fork(): AIAgentContextBase {
-        TODO("Not yet implemented")
+        throw NotImplementedError("fork() is not supported for mock")
     }
 
     override suspend fun replace(context: AIAgentContextBase) {
-        TODO("Not yet implemented")
+        throw NotImplementedError("replace() is not supported for mock")
     }
 }
 
@@ -386,7 +404,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
          * @param name A unique name for the proxy to associate with its string representation and errors.
          * @return A dummy proxy of type [T] with the provided name.
          */
-        @Suppress("UNCHECKED_CAST")
+        @Suppress("UNCHECKED_CAST", "unused")
         private inline fun <reified T : Any> createDummyProxy(name: String): T {
             return ProxyHandler<T>(name).createProxy()
         }

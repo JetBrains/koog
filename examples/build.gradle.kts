@@ -24,6 +24,7 @@ dependencies {
     api(project(":agents:agents-features:agents-features-event-handler"))
     api(project(":agents:agents-features:agents-features-memory"))
     api(project(":agents:agents-features:agents-features-opentelemetry"))
+    api(project(":agents:agents-features:agents-features-snapshot"))
 
     api(project(":prompt:prompt-markdown"))
     api(project(":prompt:prompt-structure"))

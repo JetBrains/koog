@@ -3,6 +3,9 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.store
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -35,9 +38,37 @@ public open class AIAgentSubgraph<Input, Output>(
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
-) : AIAgentNodeBase<Input, Output>() {
+) : AIAgentNodeBase<Input, Output>(), ExecutionPointNode {
     private companion object {
         private val logger = KotlinLogging.logger { }
+    }
+
+    private var forcedNode: AIAgentNodeBase<*, *>? = null
+    private var forcedInput: Any? = null
+
+    override fun getExecutionPoint(): ExecutionPoint? {
+        val forcedNode = this.forcedNode
+        return if (forcedNode != null) {
+            ExecutionPoint(forcedNode, forcedInput)
+        } else {
+            null
+        }
+    }
+
+    override fun resetExecutionPoint() {
+        forcedNode = null
+        forcedInput = null
+    }
+
+    override fun enforceExecutionPoint(
+        node: AIAgentNodeBase<*, *>,
+        input: Any?
+    ) {
+        if (forcedNode != null || forcedInput != null) {
+            throw IllegalStateException("Forced node is already set to ${forcedNode!!.name}")
+        }
+        forcedNode = node
+        forcedInput = input
     }
 
     @Serializable
@@ -83,7 +114,8 @@ public open class AIAgentSubgraph<Input, Output>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
+    @OptIn(InternalAgentsApi::class)
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output? {
         val newTools = selectTools(context)
 
         // Copy inner context with new tools, model and LLM params.
@@ -106,13 +138,34 @@ public open class AIAgentSubgraph<Input, Output>(
         }
         context.llm.writeSession { prompt = newPrompt }
 
+        val innerForcedData = innerContext.getAgentContextData()
+
+        if (innerForcedData != null) {
+            context.store(innerForcedData)
+        }
+
         return result
     }
 
-    private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output {
+    @OptIn(InternalAgentsApi::class)
+    private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output? {
         logger.info { formatLog(context, "Executing subgraph $name") }
+
+
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
+
+        val executionPoint = getExecutionPoint()
+        if (executionPoint != null) {
+            currentNode = executionPoint.node
+            currentInput = executionPoint.input
+
+            logger.info { formatLog(context, "Enforcing execution point: ${currentNode.name}") }
+
+            resetExecutionPoint()
+        } else {
+            logger.info { formatLog(context, "No enforced execution point, starting from ${currentNode.name}") }
+        }
 
         while (currentNode != finish) {
             context.stateManager.withStateLock { state ->
@@ -129,8 +182,13 @@ public open class AIAgentSubgraph<Input, Output>(
 
             // run the current node and get its output
             logger.info { formatLog(context, "Executing node ${currentNode.name}") }
-            val nodeOutput = currentNode.executeUnsafe(context, currentInput)
+            val nodeOutput: Any? = currentNode.executeUnsafe(context, currentInput)
             logger.info { formatLog(context, "Completed node ${currentNode.name}") }
+
+            // forced context data means that we've requested interruption due to jump to other node / rolling back to checkpoint
+            if (context.getAgentContextData() != null) {
+                return null
+            }
 
             // find the suitable edge to move to the next node, get the transformed output
             val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput)
@@ -146,7 +204,7 @@ public open class AIAgentSubgraph<Input, Output>(
 
         logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
-        return (currentInput as? Output) ?: run {
+        val result = (currentInput as? Output) ?: run {
             logger.error {
                 formatLog(
                     context,
@@ -155,6 +213,7 @@ public open class AIAgentSubgraph<Input, Output>(
             }
             throw IllegalStateException("${FinishNode::class.simpleName} should always return String")
         }
+        return result
     }
 
     private fun formatLog(context: AIAgentContextBase, message: String): String =

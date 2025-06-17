@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
+
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -26,6 +28,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
+import kotlin.uuid.ExperimentalUuidApi
 
 
 /**

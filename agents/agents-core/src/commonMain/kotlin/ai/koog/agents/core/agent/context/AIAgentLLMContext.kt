@@ -38,11 +38,31 @@ public class AIAgentLLMContext(
     internal var tools: List<ToolDescriptor> = tools
         private set
 
-    internal var prompt: Prompt = prompt
-        private set
-
     internal var model: LLModel = model
         private set
+
+    /**
+     * The current prompt used within the `AIAgentLLMContext`.
+     *
+     * This property defines the main [Prompt] instance used by the context and is updated as needed to reflect
+     * modifications or new inputs for the language model operations. It is thread-safe, ensuring that updates
+     * and access are managed correctly within concurrent environments.
+     *
+     * This variable can only be modified internally via specific methods, maintaining control over state changes.
+     */
+    public var prompt: Prompt = prompt
+        private set
+
+    /**
+     * Updates the current `AIAgentLLMContext` with a new prompt and ensures thread-safe access using a read lock.
+     *
+     * @param prompt The new [Prompt] to be set for the context.
+     * @return The current instance of [AIAgentLLMContext] with the updated prompt.
+     */
+    public suspend fun withPrompt(block: Prompt.() -> Prompt): AIAgentLLMContext = rwLock.withReadLock {
+        this.prompt = prompt.block()
+        this
+    }
 
     /**
      * Creates a deep copy of this LLM context.
@@ -103,5 +123,22 @@ public class AIAgentLLMContext(
         val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, config)
 
         session.use { block(it) }
+    }
+
+    /**
+     * Returns the current prompt used in the LLM context.
+     *
+     * @return The current [Prompt] instance.
+     */
+    public fun copy(
+        tools: List<ToolDescriptor> = this.tools,
+        prompt: Prompt = this.prompt,
+        model: LLModel = this.model,
+        promptExecutor: PromptExecutor = this.promptExecutor,
+        environment: AIAgentEnvironment = this.environment,
+        config: AIAgentConfigBase = this.config,
+        clock: Clock = this.clock
+    ): AIAgentLLMContext {
+        return AIAgentLLMContext(tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock)
     }
 }

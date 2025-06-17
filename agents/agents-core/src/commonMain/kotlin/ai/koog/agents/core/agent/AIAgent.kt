@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -6,9 +8,12 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
+import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -113,7 +118,6 @@ public open class AIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-
     override suspend fun run(agentInput: Input): Output {
         runningMutex.withLock {
             if (isRunning) {
@@ -128,8 +132,14 @@ public open class AIAgent<Input, Output>(
         val sessionUuid = Uuid.random()
         val runId = sessionUuid.toString()
 
-        return withContext(AgentRunInfoContextElement(agentId = id, runId = runId, agentConfig = agentConfig, strategyName = strategy.name)) {
-
+        return withContext(
+            AgentRunInfoContextElement(
+                agentId = id,
+                runId = runId,
+                agentConfig = agentConfig,
+                strategyName = strategy.name
+            )
+        ) {
             val stateManager = AIAgentStateManager()
             val storage = AIAgentStorage()
 
@@ -161,29 +171,65 @@ public open class AIAgent<Input, Output>(
                 runId = runId,
                 strategyName = strategy.name,
                 pipeline = pipeline,
+                id = id,
             )
 
             logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }
-            pipeline.onBeforeAgentStarted(runId = runId, agent = this@AIAgent, strategy = strategy)
+            pipeline.onBeforeAgentStarted(
+                runId = runId,
+                agent = this@AIAgent,
+                strategy = strategy,
+                context = agentContext
+            )
 
-            val result = strategy.execute(context = agentContext, input = agentInput)
+            setExecutionPointIfNeeded(agentContext)
+
+            var strategyResult = strategy.execute(context = agentContext, input = agentInput)
+            while (strategyResult == null && agentContext.getAgentContextData() != null) {
+                setExecutionPointIfNeeded(agentContext)
+                strategyResult = strategy.execute(context = agentContext, input = agentInput)
+            }
 
             logger.debug { formatLog(agentId = id, runId = runId, message = "Finished agent execution") }
-            pipeline.onAgentFinished(agentId = id, runId = runId, result = result)
+            pipeline.onAgentFinished(agentId = id, runId = runId, result = strategyResult)
 
             runningMutex.withLock {
                 isRunning = false
             }
 
-            result
+            return@withContext strategyResult ?: error("result is null")
         }
+    }
+
+    private suspend fun setExecutionPointIfNeeded(
+        agentContext: AIAgentContext
+    ) {
+        val additionalContextData = agentContext.getAgentContextData()
+        if (additionalContextData == null) {
+            return
+        }
+
+        additionalContextData.let { contextData ->
+            val nodeId = contextData.nodeId
+            strategy.setExecutionPoint(nodeId, contextData.lastInput)
+            val messages = contextData.messageHistory
+            agentContext.llm.withPrompt {
+                this.withMessages { (messages).sortedBy { m -> m.metaInfo.timestamp } }
+            }
+        }
+
+        agentContext.removeAgentContextData()
     }
 
     override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
         val agentRunInfo = currentCoroutineContext().getAgentRunInfoElementOrThrow()
 
         logger.info {
-            formatLog(agentRunInfo.agentId, agentRunInfo.runId, "Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]")
+            formatLog(
+                agentRunInfo.agentId,
+                agentRunInfo.runId,
+                "Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]"
+            )
         }
 
         val message = AgentToolCallsToEnvironmentMessage(
@@ -259,7 +305,12 @@ public open class AIAgent<Input, Output>(
                 )
             }
 
-            pipeline.onToolCall(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs)
+            pipeline.onToolCall(
+                runId = content.runId,
+                toolCallId = content.toolCallId,
+                tool = tool,
+                toolArgs = toolArgs
+            )
 
             // Tool Execution
             val toolResult = try {
@@ -267,7 +318,13 @@ public open class AIAgent<Input, Output>(
                 (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
 
-                pipeline.onToolValidationError(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, error = e.message)
+                pipeline.onToolValidationError(
+                    runId = content.runId,
+                    toolCallId = content.toolCallId,
+                    tool = tool,
+                    toolArgs = toolArgs,
+                    error = e.message
+                )
 
                 return toolResult(
                     message = e.message,
@@ -280,7 +337,13 @@ public open class AIAgent<Input, Output>(
 
                 logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
 
-                pipeline.onToolCallFailure(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, throwable = e)
+                pipeline.onToolCallFailure(
+                    runId = content.runId,
+                    toolCallId = content.toolCallId,
+                    tool = tool,
+                    toolArgs = toolArgs,
+                    throwable = e
+                )
 
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to execute because of ${e.message}!",
@@ -292,7 +355,13 @@ public open class AIAgent<Input, Output>(
             }
 
             // Tool Finished with Result
-            pipeline.onToolCallResult(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, result = toolResult)
+            pipeline.onToolCallResult(
+                runId = content.runId,
+                toolCallId = content.toolCallId,
+                tool = tool,
+                toolArgs = toolArgs,
+                result = toolResult
+            )
 
             logger.debug { "Completed execution of ${content.toolName} with result: $toolResult" }
 

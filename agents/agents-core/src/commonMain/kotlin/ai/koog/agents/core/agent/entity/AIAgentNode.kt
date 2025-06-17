@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.withContext
 
 /**
@@ -12,6 +13,7 @@ import kotlinx.coroutines.withContext
  * @param Input The type of input data this node processes.
  * @param Output The type of output data this node produces.
  */
+@OptIn(ExperimentalUuidApi::class)
 public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     /**
      * The name of the AI agent node.
@@ -19,6 +21,11 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * and is used to distinguish and reference nodes in the graph structure.
      */
     public abstract val name: String
+
+    /**
+     * Represents the unique identifier of the AI agent node.
+     */
+    public val id: String get() = name
 
     /**
      * Represents the directed edges connecting the current node in the AI agent strategy graph
@@ -95,7 +102,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @param input The input data required to perform the execution.
      * @return The result of the execution as an Output object.
      */
-    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output
+    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output?
 
     /**
      * Executes the node operation using the provided execution context and input, bypassing type safety checks.
