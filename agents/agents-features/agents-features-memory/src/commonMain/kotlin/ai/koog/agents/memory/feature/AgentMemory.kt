@@ -281,18 +281,29 @@ public class AgentMemory(
      * @param concept The concept to extract facts about
      * @param subject The subject categorization for the facts (e.g., User, Project)
      * @param scope The visibility scope for the facts (e.g., Agent, Feature, Product)
+     * @param retrievalModel LLM that will be used for fact retrieval from the history (by default, the same model as the current one will be used)
      */
     public suspend fun saveFactsFromHistory(
         concept: Concept,
         subject: MemorySubject,
         scope: MemoryScope,
+        retrievalModel: LLModel? = null
     ) {
         llm.writeSession {
+            val initialModel = model
+            if (retrievalModel != null) {
+                model = retrievalModel
+                logger.info { "Using model: ${retrievalModel.id}" }
+            }
             val facts = retrieveFactsFromHistory(concept)
 
             // Save facts to memory
             agentMemory.save(facts, subject, scope)
             logger.info { "Saved fact for concept '${concept.keyword}' in scope $scope: $facts" }
+            if (retrievalModel != null) {
+                model = initialModel
+                logger.info { "Switching back to model: ${initialModel.id}" }
+            }
         }
     }
 
