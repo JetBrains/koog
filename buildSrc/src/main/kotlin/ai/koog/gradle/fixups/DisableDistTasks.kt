@@ -1,4 +1,4 @@
-package ai.grazie.gradle.fixups
+package ai.koog.gradle.fixups
 
 import org.gradle.api.Project
 

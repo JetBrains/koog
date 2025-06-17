@@ -1,4 +1,4 @@
-package ai.grazie.gradle.tests
+package ai.koog.gradle.tests
 
 import org.gradle.kotlin.dsl.invoke
 import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
