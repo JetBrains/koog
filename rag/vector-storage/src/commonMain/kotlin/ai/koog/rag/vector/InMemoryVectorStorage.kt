@@ -87,7 +87,6 @@ public open class InMemoryDocumentEmbeddingStorage<Document>(embedder: DocumentE
 public class InMemoryTextDocumentEmbeddingStorage<Document, Path>(
     embedder: Embedder,
     documentReader: DocumentProvider<Path, Document>
-) : EmbeddingBasedDocumentStorage<Document>(
+) : InMemoryDocumentEmbeddingStorage<Document>(
     embedder = TextDocumentEmbedder(documentReader, embedder),
-    storage = InMemoryVectorStorage()
 )
