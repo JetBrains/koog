@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
+import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.handleEvents
@@ -26,7 +26,7 @@ fun main() = runBlocking {
         // Special tool, required with this type of agent.
         tool(AskUser)
         tool(SayToUser)
-        tools(CalculatorTools().asTools())
+        tools(CalculatorTools())
     }
 
     // Create agent config with proper prompt
