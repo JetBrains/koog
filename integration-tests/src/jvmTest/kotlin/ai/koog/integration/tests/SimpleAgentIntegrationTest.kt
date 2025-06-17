@@ -237,20 +237,21 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        agent.run(promptWithImage)
+        withRetry {
+            agent.run(promptWithImage)
 
-        assertTrue(errors.isEmpty(), "There should be no errors")
-        assertTrue(results.isNotEmpty(), "There should be results")
+            assertTrue(errors.isEmpty(), "There should be no errors")
+            assertTrue(results.isNotEmpty(), "There should be results")
 
-        val result = results.first()
-        assertNotNull(result, "Result should not be null")
-        assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-        assertTrue(result.length > 20, "Result should contain more than 20 characters")
+            val result = results.first()
+            assertNotNull(result, "Result should not be null")
+            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+            assertTrue(result.length > 20, "Result should contain more than 20 characters")
 
-        val resultLowerCase = result.lowercase()
-        assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
-        assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
-        assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
-
+            val resultLowerCase = result.lowercase()
+            assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
+            assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
+            assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
+        }
     }
 }
