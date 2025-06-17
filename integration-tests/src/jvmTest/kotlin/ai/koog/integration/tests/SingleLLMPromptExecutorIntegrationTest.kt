@@ -752,63 +752,65 @@ class SingleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            try {
-                val response = executor.execute(prompt, model)
-                if (scenario == TextTestScenario.CORRUPTED_TEXT) {
-                    checkResponseBasic(response)
-                } else {
-                    checkExecutorMediaResponse(response)
-                }
-            } catch (e: Exception) {
-                when (scenario) {
-                    TextTestScenario.EMPTY_TEXT -> {
-                        if (model.provider == LLMProvider.Google) {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
-                                "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
-                            )
-                            assertTrue(
-                                e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
-                                "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
-                            )
-                        }
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    if (scenario == TextTestScenario.CORRUPTED_TEXT) {
+                        checkResponseBasic(response)
+                    } else {
+                        checkExecutorMediaResponse(response)
                     }
+                } catch (e: Exception) {
+                    when (scenario) {
+                        TextTestScenario.EMPTY_TEXT -> {
+                            if (model.provider == LLMProvider.Google) {
+                                assertTrue(
+                                    e.message?.contains("400 Bad Request") == true,
+                                    "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
+                                )
+                                assertTrue(
+                                    e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
+                                    "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
 
-                    TextTestScenario.LONG_TEXT_5_MB -> {
-                        if (model.provider == LLMProvider.Anthropic) {
+                        TextTestScenario.LONG_TEXT_5_MB -> {
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("400 Bad Request") == true,
+                                    "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
+                                )
+                                assertTrue(
+                                    e.message?.contains("prompt is too long") == true,
+                                    "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.Google) {
+                                throw e
+                            }
+                        }
+
+                        TextTestScenario.LONG_TEXT_20_MB -> {
                             assertTrue(
                                 e.message?.contains("400 Bad Request") == true,
                                 "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
                             )
-                            assertTrue(
-                                e.message?.contains("prompt is too long") == true,
-                                "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
-                            )
-                        } else if (model.provider == LLMProvider.Google) {
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("prompt is too long") == true,
+                                    "Expected exception for long text [prompt is too long] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.Google) {
+                                assertTrue(
+                                    e.message?.contains("exceeds the maximum number of tokens allowed") == true,
+                                    "Expected exception for long text [exceeds the maximum number of tokens allowed] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
+
+                        else -> {
                             throw e
                         }
-                    }
-
-                    TextTestScenario.LONG_TEXT_20_MB -> {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
-                            "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
-                        )
-                        if (model.provider == LLMProvider.Anthropic) {
-                            assertTrue(
-                                e.message?.contains("prompt is too long") == true,
-                                "Expected exception for long text [prompt is too long] was not found, got [${e.message}] instead"
-                            )
-                        } else if (model.provider == LLMProvider.Google) {
-                            assertTrue(
-                                e.message?.contains("exceeds the maximum number of tokens allowed") == true,
-                                "Expected exception for long text [exceeds the maximum number of tokens allowed] was not found, got [${e.message}] instead"
-                            )
-                        }
-                    }
-
-                    else -> {
-                        throw e
                     }
                 }
             }
