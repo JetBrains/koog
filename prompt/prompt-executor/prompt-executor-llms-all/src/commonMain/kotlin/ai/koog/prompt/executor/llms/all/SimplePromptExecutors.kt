@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.llms.all
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+import ai.koog.prompt.executor.clients.bedrock.createBedrockLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
@@ -45,3 +47,17 @@ public fun simpleGoogleAIExecutor(apiKey: String): SingleLLMPromptExecutor = Sin
  * @param baseUrl url used to access Ollama server.
  */
 public fun simpleOllamaAIExecutor(baseUrl: String = "http://localhost:11434"): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with a `BedrockLLMClient`.
+ *
+ * @param awsAccessKeyId Your AWS Access Key ID.
+ * @param awsSecretAccessKey Your AWS Secret Access Key.
+ * @param settings Custom client settings for region and timeouts.
+ */
+public fun simpleBedrockExecutor(
+    awsAccessKeyId: String,
+    awsSecretAccessKey: String,
+    settings: BedrockClientSettings = BedrockClientSettings()
+): SingleLLMPromptExecutor =
+    SingleLLMPromptExecutor(createBedrockLLMClient(awsAccessKeyId, awsSecretAccessKey, settings))
