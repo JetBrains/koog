@@ -45,11 +45,11 @@ public class InMemoryVectorStorage<Document> : VectorStorage<Document> {
         return documentById[documentId]
     }
 
-    override suspend fun allDocuments(): Flow<Document> = flow {
+    override fun allDocuments(): Flow<Document> = flow {
         documentById.values.forEach { emit(it.document) }
     }
 
-    override suspend fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Vector>> = flow {
+    override fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Vector>> = flow {
         documentById.values.forEach { emit(it) }
     }
 }

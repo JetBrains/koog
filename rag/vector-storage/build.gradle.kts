@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":rag:rag-base"))
-                api(project(":rag:embeddings:embeddings-base"))
+                api(project(":embeddings:embeddings-base"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
             }

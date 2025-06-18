@@ -41,7 +41,7 @@ public open class EmbeddingBasedDocumentStorage<Document>(
      * @return A flow of `RankedDocument` objects, where each object contains a document
      * and its associated similarity score.
      */
-    override suspend fun rankDocuments(query: String): Flow<RankedDocument<Document>> = flow {
+    override fun rankDocuments(query: String): Flow<RankedDocument<Document>> = flow {
         val queryVector = embedder.embed(query)
         storage.allDocumentsWithPayload().collect { (document, documentVector) ->
             emit(
@@ -90,7 +90,7 @@ public open class EmbeddingBasedDocumentStorage<Document>(
      *
      * @return A flow emitting each document individually.
      */
-    override suspend fun allDocuments(): Flow<Document> = flow {
+    override fun allDocuments(): Flow<Document> = flow {
         storage.allDocumentsWithPayload().collect {
             emit(it.document)
         }

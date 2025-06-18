@@ -73,14 +73,14 @@ public interface DocumentStorageWithPayload<Document, Payload> {
      *
      * @return An iterable collection of documents associated with the specified document ID.
      */
-    public suspend fun allDocuments(): Flow<Document>
+    public fun allDocuments(): Flow<Document>
 
     /**
      * Iterates through documents and their corresponding payloads
      *
      * @return An iterable collection of `DocumentWithPayload`, where each item contains a document and its associated payload.
      */
-    public suspend fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Payload>>
+    public fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Payload>>
 }
 
 /**
@@ -100,7 +100,7 @@ public interface DocumentStorage<Document> : DocumentStorageWithPayload<Document
 
     override suspend fun getPayload(documentId: String): Unit = Unit
 
-    override suspend fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Unit>> = flow {
+    override fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Unit>> = flow {
         allDocuments().collect { emit(DocumentWithPayload(it, Unit)) }
     }
 

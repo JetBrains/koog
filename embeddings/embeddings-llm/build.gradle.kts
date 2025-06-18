@@ -14,7 +14,7 @@ kotlin {
             dependencies {
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
-                api(project(":rag:embeddings:embeddings-base"))
+                api(project(":embeddings:embeddings-base"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)

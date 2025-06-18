@@ -153,7 +153,7 @@ public open class FileVectorStorage<Document, Path>(
         return DocumentWithPayload(document, payload)
     }
 
-    override suspend fun allDocuments(): Flow<Document> = flow {
+    override fun allDocuments(): Flow<Document> = flow {
         val docsDir = documentsDir()
 
         if (!fs.exists(docsDir)) {
@@ -167,7 +167,7 @@ public open class FileVectorStorage<Document, Path>(
         }
     }
 
-    override suspend fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Vector>> = flow {
+    override fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Document, Vector>> = flow {
         val docsDir = documentsDir()
 
         if (!fs.exists(docsDir)) {
