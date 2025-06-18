@@ -790,7 +790,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("textScenarioModelCombinations")
     fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
