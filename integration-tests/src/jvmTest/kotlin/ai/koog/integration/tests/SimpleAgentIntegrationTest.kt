@@ -218,7 +218,7 @@ class SimpleAgentIntegrationTest {
 
             data:image/png,$base64Image
 
-            Please analyze this image and describe what you see.
+            Please analyze this image and identify the image format if possible.
         """.trimIndent()
 
         withRetry {
