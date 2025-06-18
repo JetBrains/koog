@@ -676,7 +676,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
                 user {
                     markdown {
-                        +"I'm sending you an image. Please describe what you see in it and identify the image format if possible."
+                        +"I'm sending you an image. Please analyze it and identify the image format if possible."
                     }
 
                     attachments {
@@ -685,43 +685,45 @@ class SingleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            try {
-                val response = executor.execute(prompt, model)
-                checkExecutorMediaResponse(response)
-            } catch (e: Exception) {
-                // For some edge cases, exceptions are expected
-                when (scenario) {
-                    ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
-                            "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
-                        )
-                        assertTrue(
-                            e.message?.contains("image exceeds") == true,
-                            "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
-                        )
-                    }
-
-                    ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
-                            "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
-                        )
-                        if (model.provider == LLMProvider.Anthropic) {
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    checkExecutorMediaResponse(response)
+                } catch (e: Exception) {
+                    // For some edge cases, exceptions are expected
+                    when (scenario) {
+                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
                             assertTrue(
-                                e.message?.contains("Could not process image") == true,
-                                "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
-                        } else if (model.provider == LLMProvider.OpenAI) {
                             assertTrue(
-                                e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
-                                "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
+                                e.message?.contains("image exceeds") == true,
+                                "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
                             )
                         }
-                    }
 
-                    else -> {
-                        throw e
+                        ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                            assertTrue(
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
+                            )
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("Could not process image") == true,
+                                    "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.OpenAI) {
+                                assertTrue(
+                                    e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                    "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
+
+                        else -> {
+                            throw e
+                        }
                     }
                 }
             }

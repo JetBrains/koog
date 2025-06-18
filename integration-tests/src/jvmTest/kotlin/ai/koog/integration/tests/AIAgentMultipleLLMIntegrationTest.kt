@@ -810,7 +810,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
             data:image/png,$base64Image
 
-            Please analyze this image and describe what you see.
+            Please analyze this image and identify the image format if possible.
             """
             )
 
@@ -845,7 +845,7 @@ class AIAgentMultipleLLMIntegrationTest {
                 markdown {
                     +"I'm sending you an image."
                     br()
-                    +"Please analyze this image and describe what you see."
+                    +"Please analyze this image and identify the image format if possible."
                 }
 
                 attachments {
