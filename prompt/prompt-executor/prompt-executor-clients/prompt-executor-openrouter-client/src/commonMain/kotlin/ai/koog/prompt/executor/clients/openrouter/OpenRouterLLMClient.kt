@@ -123,7 +123,7 @@ public class OpenRouterLLMClient(
         }
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
         logger.debug { "Executing streaming prompt: $prompt" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -131,36 +131,34 @@ public class OpenRouterLLMClient(
 
         val request = createOpenRouterRequest(prompt, model, emptyList(), true)
 
-        return flow {
-            try {
-                httpClient.sse(
-                    urlString = DEFAULT_MESSAGE_PATH,
-                    request = {
-                        method = HttpMethod.Post
-                        accept(ContentType.Text.EventStream)
-                        headers {
-                            append(HttpHeaders.CacheControl, "no-cache")
-                            append(HttpHeaders.Connection, "keep-alive")
-                        }
-                        setBody(request)
+        try {
+            httpClient.sse(
+                urlString = DEFAULT_MESSAGE_PATH,
+                request = {
+                    method = HttpMethod.Post
+                    accept(ContentType.Text.EventStream)
+                    headers {
+                        append(HttpHeaders.CacheControl, "no-cache")
+                        append(HttpHeaders.Connection, "keep-alive")
                     }
-                ) {
-                    incoming.collect { event ->
-                        event
-                            .takeIf { it.data != "[DONE]" }
-                            ?.data?.trim()?.let { json.decodeFromString<OpenRouterStreamResponse>(it) }
-                            ?.choices?.forEach { choice -> choice.delta.content?.let { emit(it) } }
-                    }
+                    setBody(request)
                 }
-            } catch (e: SSEClientException) {
-                e.response?.let { response ->
-                    logger.error { "Error from OpenRouter API: ${response.status}: ${e.message}" }
-                    error("Error from OpenRouter API: ${response.status}: ${e.message}")
+            ) {
+                incoming.collect { event ->
+                    event
+                        .takeIf { it.data != "[DONE]" }
+                        ?.data?.trim()?.let { json.decodeFromString<OpenRouterStreamResponse>(it) }
+                        ?.choices?.forEach { choice -> choice.delta.content?.let { emit(it) } }
                 }
-            } catch (e: Exception) {
-                logger.error { "Exception during streaming: $e" }
-                error(e.message ?: "Unknown error during streaming")
             }
+        } catch (e: SSEClientException) {
+            e.response?.let { response ->
+                logger.error { "Error from OpenRouter API: ${response.status}: ${e.message}" }
+                error("Error from OpenRouter API: ${response.status}: ${e.message}")
+            }
+        } catch (e: Exception) {
+            logger.error { "Exception during streaming: $e" }
+            error(e.message ?: "Unknown error during streaming")
         }
     }
 

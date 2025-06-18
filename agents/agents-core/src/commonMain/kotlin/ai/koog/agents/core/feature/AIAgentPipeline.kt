@@ -11,6 +11,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.handler.*
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
@@ -317,7 +318,7 @@ public class AIAgentPipeline {
      * @param tool The tool that is being called
      * @param toolArgs The arguments provided to the tool
      */
-    public suspend fun onToolCall(tool: Tool<*, *>, toolArgs: Tool.Args) {
+    public suspend fun onToolCall(tool: Tool<*, *>, toolArgs: ToolArgs) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallHandler.handle(tool, toolArgs) }
     }
 
@@ -328,7 +329,7 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments that failed validation
      * @param error The validation error message
      */
-    public suspend fun onToolValidationError(tool: Tool<*, *>, toolArgs: Tool.Args, error: String) {
+    public suspend fun onToolValidationError(tool: Tool<*, *>, toolArgs: ToolArgs, error: String) {
         executeToolHandlers.values.forEach { handler ->
             handler.toolValidationErrorHandler.handle(
                 tool,
@@ -345,7 +346,7 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments provided to the tool
      * @param throwable The exception that caused the failure
      */
-    public suspend fun onToolCallFailure(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {
+    public suspend fun onToolCallFailure(tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable) {
         executeToolHandlers.values.forEach { handler ->
             handler.toolCallFailureHandler.handle(
                 tool,
@@ -362,7 +363,7 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments that were provided to the tool
      * @param result The result produced by the tool, or null if no result was produced
      */
-    public suspend fun onToolCallResult(tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) {
+    public suspend fun onToolCallResult(tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?) {
         executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(tool, toolArgs, result) }
     }
 
@@ -395,8 +396,7 @@ public class AIAgentPipeline {
      * This method registers a transformer function that will be called when an agent environment
      * is being created, allowing the feature to customize the environment based on the agent context.
      *
-     * @param feature The feature for which to register the environment transformer
-     * @param featureImpl The implementation of the feature
+     * @param context The context of the feature being intercepted, providing access to the feature key and implementation
      * @param transform A function that transforms the environment, with access to the agent creation context
      *
      * Example:
@@ -410,13 +410,12 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptEnvironmentCreated(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        context: InterceptContext<TFeature>,
         transform: AgentCreateContext<TFeature>.(AIAgentEnvironment) -> AIAgentEnvironment
     ) {
         @Suppress("UNCHECKED_CAST")
         val existingHandler: AgentHandler<TFeature> =
-            agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) } as? AgentHandler<TFeature> ?: return
+            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature> ?: return
 
         existingHandler.environmentTransformer = AgentEnvironmentTransformer { context, env -> context.transform(env) }
     }
@@ -436,13 +435,12 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptBeforeAgentStarted(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        context: InterceptContext<TFeature>,
         handle: suspend AgentStartContext<TFeature>.() -> Unit
     ) {
         @Suppress("UNCHECKED_CAST")
         val existingHandler: AgentHandler<TFeature> =
-            agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) } as? AgentHandler<TFeature> ?: return
+            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature> ?: return
 
         existingHandler.beforeAgentStartedHandler = BeforeAgentStartedHandler { handle(it) }
     }
@@ -460,14 +458,13 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptAgentFinished(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        context: InterceptContext<TFeature>,
         handle: suspend TFeature.(strategyName: String, result: String?) -> Unit
     ) {
-        val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
+        val existingHandler = agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) }
 
         existingHandler.agentFinishedHandler = AgentFinishedHandler { strategyName, result ->
-            with(featureImpl) { handle(strategyName, result) }
+            with(context.featureImpl) { handle(strategyName, result) }
         }
     }
 
@@ -485,14 +482,13 @@ public class AIAgentPipeline {
      */
     @OptIn(ExperimentalUuidApi::class)
     public fun <TFeature : Any> interceptAgentRunError(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        context: InterceptContext<TFeature>,
         handle: suspend TFeature.(strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit
     ) {
-        val existingHandler = agentHandlers.getOrPut(feature.key) { AgentHandler(featureImpl) }
+        val existingHandler = agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) }
 
         existingHandler.agentRunErrorHandler = AgentRunErrorHandler { strategyName, sessionUuid, throwable ->
-            with(featureImpl) { handle(strategyName, sessionUuid, throwable) }
+            with(context.featureImpl) { handle(strategyName, sessionUuid, throwable) }
         }
     }
 
@@ -510,16 +506,15 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptStrategyStarted(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        context: InterceptContext<TFeature>,
         handle: suspend StrategyUpdateContext<TFeature>.() -> Unit
     ) {
-        val existingHandler = strategyHandlers.getOrPut(feature.key) { StrategyHandler(featureImpl) }
+        val existingHandler = strategyHandlers.getOrPut(context.feature.key) { StrategyHandler(context.featureImpl) }
 
         @Suppress("UNCHECKED_CAST")
         if (existingHandler as? StrategyHandler<TFeature> == null) {
             logger.debug {
-                "Expected to get an agent handler for feature of type <${featureImpl::class}>, but get a handler of type <${feature.key}> instead. " +
+                "Expected to get an agent handler for feature of type <${context.featureImpl::class}>, but get a handler of type <${context.feature.key}> instead. " +
                         "Skipping adding strategy started interceptor for feature."
             }
             return
@@ -544,16 +539,15 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptStrategyFinished(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        context: InterceptContext<TFeature>,
         handle: suspend StrategyUpdateContext<TFeature>.(String) -> Unit
     ) {
-        val existingHandler = strategyHandlers.getOrPut(feature.key) { StrategyHandler(featureImpl) }
+        val existingHandler = strategyHandlers.getOrPut(context.feature.key) { StrategyHandler(context.featureImpl) }
 
         @Suppress("UNCHECKED_CAST")
         if (existingHandler as? StrategyHandler<TFeature> == null) {
             logger.debug {
-                "Expected to get an agent handler for feature of type <${featureImpl::class}>, but get a handler of type <${feature.key}> instead. " +
+                "Expected to get an agent handler for feature of type <${context.featureImpl::class}>, but get a handler of type <${context.feature.key}> instead. " +
                         "Skipping adding strategy finished interceptor for feature."
             }
             return
@@ -577,14 +571,13 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptBeforeNode(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) -> Unit
     ) {
-        val existingHandler = executeNodeHandlers.getOrPut(feature.key) { ExecuteNodeHandler() }
+        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
 
         existingHandler.beforeNodeHandler = BeforeNodeHandler { node, context, input ->
-            with(featureImpl) { handle(node, context, input) }
+            with(interceptContext.featureImpl) { handle(node, context, input) }
         }
     }
 
@@ -601,8 +594,7 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptAfterNode(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(
             node: AIAgentNodeBase<*, *>,
             context: AIAgentContextBase,
@@ -610,10 +602,10 @@ public class AIAgentPipeline {
             output: Any?
         ) -> Unit
     ) {
-        val existingHandler = executeNodeHandlers.getOrPut(feature.key) { ExecuteNodeHandler() }
+        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
 
         existingHandler.afterNodeHandler = AfterNodeHandler { node, context, input, output ->
-            with(featureImpl) { handle(node, context, input, output) }
+            with(interceptContext.featureImpl) { handle(node, context, input, output) }
         }
     }
 
@@ -630,14 +622,13 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptBeforeLLMCall(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit
     ) {
-        val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
+        val existingHandler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
 
         existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler { prompt, tools, model, sessionUuid ->
-            with(featureImpl) { handle(prompt, tools, model, sessionUuid) }
+            with(interceptContext.featureImpl) { handle(prompt, tools, model, sessionUuid) }
         }
     }
 
@@ -654,14 +645,13 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptAfterLLMCall(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
+        interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit
     ) {
-        val existingHandler = executeLLMHandlers.getOrPut(feature.key) { ExecuteLLMHandler() }
+        val existingHandler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
 
         existingHandler.afterLLMCallHandler = AfterLLMCallHandler { prompt, tools, model, responses, sessionUuid ->
-            with(featureImpl) { handle(prompt, tools, model, responses, sessionUuid) }
+            with(interceptContext.featureImpl) { handle(prompt, tools, model, responses, sessionUuid) }
         }
     }
 
@@ -679,14 +669,13 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptToolCall(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
         existingHandler.toolCallHandler = ToolCallHandler { tool, toolArgs ->
-            with(featureImpl) { handle(tool, toolArgs) }
+            with(interceptContext.featureImpl) { handle(tool, toolArgs) }
         }
     }
 
@@ -704,14 +693,13 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptToolValidationError(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs, value: String) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
         existingHandler.toolValidationErrorHandler = ToolValidationErrorHandler { tool, toolArgs, value ->
-            with(featureImpl) { handle(tool, toolArgs, value) }
+            with(interceptContext.featureImpl) { handle(tool, toolArgs, value) }
         }
     }
 
@@ -729,14 +717,13 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptToolCallFailure(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
         existingHandler.toolCallFailureHandler = ToolCallFailureHandler { tool, toolArgs, throwable ->
-            with(featureImpl) { handle(tool, toolArgs, throwable) }
+            with(interceptContext.featureImpl) { handle(tool, toolArgs, throwable) }
         }
     }
 
@@ -755,16 +742,20 @@ public class AIAgentPipeline {
      * ```
      */
     public fun <TFeature : Any> interceptToolCallResult(
-        feature: AIAgentFeature<*, TFeature>,
-        featureImpl: TFeature,
-        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(feature.key) { ExecuteToolHandler() }
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
         existingHandler.toolCallResultHandler = ToolCallResultHandler { tool, toolArgs, result ->
-            with(featureImpl) { handle(tool, toolArgs, result) }
+            with(interceptContext.featureImpl) { handle(tool, toolArgs, result) }
         }
     }
 
     //endregion Interceptors
 }
+
+public data class InterceptContext<TFeature : Any>(
+    val feature: AIAgentFeature<*, TFeature>,
+    val featureImpl: TFeature
+)

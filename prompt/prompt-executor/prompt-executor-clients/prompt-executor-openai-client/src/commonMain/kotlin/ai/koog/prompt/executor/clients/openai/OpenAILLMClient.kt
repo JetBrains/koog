@@ -122,7 +122,7 @@ public open class OpenAILLMClient(
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> =
         processOpenAIResponse(getOpenAIResponse(prompt, model, tools)).first()
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -130,37 +130,35 @@ public open class OpenAILLMClient(
 
         val request = createOpenAIRequest(prompt, emptyList(), model, true)
 
-        return flow {
-            try {
-                httpClient.sse(
-                    urlString = settings.chatCompletionsPath,
-                    request = {
-                        method = HttpMethod.Post
-                        accept(ContentType.Text.EventStream)
-                        headers {
-                            append(HttpHeaders.CacheControl, "no-cache")
-                            append(HttpHeaders.Connection, "keep-alive")
-                        }
-                        setBody(request)
+        try {
+            httpClient.sse(
+                urlString = settings.chatCompletionsPath,
+                request = {
+                    method = HttpMethod.Post
+                    accept(ContentType.Text.EventStream)
+                    headers {
+                        append(HttpHeaders.CacheControl, "no-cache")
+                        append(HttpHeaders.Connection, "keep-alive")
                     }
-                ) {
-                    incoming.collect { event ->
-                        event
-                            .takeIf { it.data != "[DONE]" }
-                            ?.data?.trim()?.let { json.decodeFromString<OpenAIStreamResponse>(it) }
-                            ?.choices?.forEach { choice -> choice.delta.content?.let { emit(it) } }
-                    }
+                    setBody(request)
                 }
-            } catch (e: SSEClientException) {
-                e.response?.let { response ->
-                    val body = response.readRawBytes().decodeToString()
-                    logger.error(e) { "Error from OpenAI API: ${response.status}: ${e.message}.\nBody:\n$body" }
-                    error("Error from OpenAI API: ${response.status}: ${e.message}")
+            ) {
+                incoming.collect { event ->
+                    event
+                        .takeIf { it.data != "[DONE]" }
+                        ?.data?.trim()?.let { json.decodeFromString<OpenAIStreamResponse>(it) }
+                        ?.choices?.forEach { choice -> choice.delta.content?.let { emit(it) } }
                 }
-            } catch (e: Exception) {
-                logger.error { "Exception during streaming: $e" }
-                error(e.message ?: "Unknown error during streaming")
             }
+        } catch (e: SSEClientException) {
+            e.response?.let { response ->
+                val body = response.readRawBytes().decodeToString()
+                logger.error(e) { "Error from OpenAI API: ${response.status}: ${e.message}.\nBody:\n$body" }
+                error("Error from OpenAI API: ${response.status}: ${e.message}")
+            }
+        } catch (e: Exception) {
+            logger.error { "Exception during streaming: $e" }
+            error(e.message ?: "Unknown error during streaming")
         }
     }
 
@@ -310,7 +308,10 @@ public open class OpenAILLMClient(
             null -> null
         }
 
-        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf(OpenAIModalities.Text, OpenAIModalities.Audio) else null
+        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf(
+            OpenAIModalities.Text,
+            OpenAIModalities.Audio
+        ) else null
         // TODO allow passing this externally and actually controlling this behavior
         val audio = modalities?.let {
             OpenAIAudioConfig(

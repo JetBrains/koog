@@ -21,6 +21,12 @@ import ai.koog.prompt.message.ResponseMetaInfo
  * @param concepts A list of `Concept` objects that define the domains of knowledge for which facts need to be retrieved.
  */
 public class RetrieveFactsFromHistory(public val concepts: List<Concept>) : HistoryCompressionStrategy() {
+    /**
+     * Secondary constructor for `RetrieveFactsFromHistory` that initializes the instance
+     * with a variable number of `Concept` objects, converting them into a list.
+     *
+     * @param concepts A variable number of `Concept` objects to be used for fact retrieval.
+     */
     public constructor(vararg concepts: Concept) : this(concepts.toList())
 
     /**

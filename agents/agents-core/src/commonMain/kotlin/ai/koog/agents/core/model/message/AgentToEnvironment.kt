@@ -18,6 +18,11 @@ import kotlin.uuid.Uuid
  */
 @Serializable
 public sealed interface AgentToEnvironmentMessage {
+    /**
+     * A unique identifier for the session associated with the message.
+     * Each session is identified by a universally unique identifier (UUID) to ensure proper association
+     * and tracking of messages between the agent and its environment.
+     */
     public val sessionUuid: Uuid
 }
 

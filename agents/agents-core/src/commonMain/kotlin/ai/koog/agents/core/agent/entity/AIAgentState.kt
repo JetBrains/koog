@@ -17,6 +17,16 @@ internal class AIAgentState internal constructor(
     }
 }
 
+/**
+ * Manages the state of an AI agent by providing thread-safe access and mechanisms
+ * to update the internal state using a locking mechanism.
+ *
+ * This class ensures consistency across state modifications by using a mutual exclusion
+ * lock, allowing only one coroutine to access or modify the state at a time.
+ *
+ * @constructor Creates a new instance of AIAgentStateManager with the initial state,
+ * defaulting to a new `AIAgentState` if not provided.
+ */
 public class AIAgentStateManager internal constructor(
     private var state: AIAgentState = AIAgentState()
 ) {

@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
+import ai.grazie.gradle.publish.maven.Publishing.publishToMaven
 
 plugins {
     id("ai.kotlin.multiplatform")
@@ -68,4 +68,4 @@ kotlin {
     explicitApi()
 }
 
-publishToGraziePublicMaven()
+publishToMaven()

@@ -13,6 +13,14 @@ import kotlin.math.absoluteValue
  * This implementation stores cache entries in memory.
  */
 public class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
+    /**
+     * A companion object implementation of the `PromptCache.Factory.Named` specialized for an in-memory prompt cache.
+     * This factory is responsible for creating instances of `InMemoryPromptCache` based on a specific configuration string.
+     *
+     * The factory expects the configuration string to begin with "memory", followed by an optional size limit. The size
+     * limit may either be omitted, set to "unlimited", or represented as a numeric value indicating the maximum
+     * number of entries in the cache.
+     */
     public companion object : PromptCache.Factory.Named("memory") {
         override fun create(config: String): PromptCache {
             val parts = elements(config)

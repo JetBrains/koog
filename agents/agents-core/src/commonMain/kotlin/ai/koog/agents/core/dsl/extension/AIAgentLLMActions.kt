@@ -1,17 +1,35 @@
 package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Instant
 
+/**
+ * Clears the history of messages in the current AI Agent LLM Write Session.
+ *
+ * This method resets the message history by setting it to an empty list.
+ * It is useful when you want to start a new conversation or reset the session's context.
+ */
 public fun AIAgentLLMWriteSession.clearHistory() {
     prompt = prompt.withMessages { emptyList() }
 }
 
+/**
+ * Keeps only the last N messages in the session's prompt by removing all earlier messages.
+ *
+ * @param n The number of most recent messages to retain in the session's prompt.
+ */
 public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
     prompt = prompt.withMessages { it.takeLast(n) }
 }
 
+/**
+ * Removes all messages from the current session's prompt that have a timestamp
+ * earlier than the specified timestamp.
+ *
+ * @param timestamp The threshold timestamp. Messages with a timestamp earlier than this will be removed.
+ */
 public fun AIAgentLLMWriteSession.leaveMessagesFromTimestamp(timestamp: Instant) {
     prompt = prompt.withMessages { it.filter { it.metaInfo.timestamp >= timestamp } }
 }
@@ -80,4 +98,11 @@ public suspend fun AIAgentLLMWriteSession.replaceHistoryWithTLDR(
     }
 
     strategy.compress(this, preserveMemory, memoryMessages)
+}
+
+/**
+ * Drops all trailing tool call messages from the current prompt
+ */
+public fun AIAgentLLMWriteSession.dropTrailingToolCalls() {
+    rewritePrompt { prompt -> prompt.withMessages { messages -> messages.dropLastWhile { it is Message.Tool.Call } } }
 }

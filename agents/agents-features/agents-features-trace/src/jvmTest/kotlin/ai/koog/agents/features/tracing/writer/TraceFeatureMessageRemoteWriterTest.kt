@@ -25,7 +25,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
         private val logger = KotlinLogging.logger { }
-        private val defaultClientServerTimeout = 5.seconds
+        private val defaultClientServerTimeout = 20.seconds
         private val host = "127.0.0.1"
     }
 

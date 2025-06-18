@@ -32,7 +32,9 @@ import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -78,8 +80,8 @@ internal class ReportingLLMLLMClient(
         return underlyingClient.execute(prompt, model, tools)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        CoroutineScope(coroutineContext).launch {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+        coroutineScope {
             eventsChannel.send(
                 Event.Message(
                     llmClient = underlyingClient::class.simpleName ?: "null",
@@ -90,7 +92,8 @@ internal class ReportingLLMLLMClient(
                 )
             )
         }
-        return underlyingClient.executeStreaming(prompt, model)
+        underlyingClient.executeStreaming(prompt, model)
+            .collect(this)
     }
 }
 
@@ -149,7 +152,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     class CreateFile(private val fs: MockFileSystem) : Tool<CreateFile.Args, CreateFile.Result>() {
         @Serializable
-        data class Args(val path: String, val content: String) : Tool.Args
+        data class Args(val path: String, val content: String) : ToolArgs
 
         @Serializable
         data class Result(
@@ -189,7 +192,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     class DeleteFile(private val fs: MockFileSystem) : Tool<DeleteFile.Args, DeleteFile.Result>() {
         @Serializable
-        data class Args(val path: String) : Tool.Args
+        data class Args(val path: String) : ToolArgs
 
         @Serializable
         data class Result(
@@ -224,7 +227,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     class ReadFile(private val fs: MockFileSystem) : Tool<ReadFile.Args, ReadFile.Result>() {
         @Serializable
-        data class Args(val path: String) : Tool.Args
+        data class Args(val path: String) : ToolArgs
 
         @Serializable
         data class Result(
@@ -260,7 +263,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     class ListFiles(private val fs: MockFileSystem) : Tool<ListFiles.Args, ListFiles.Result>() {
         @Serializable
-        data class Args(val path: String) : Tool.Args
+        data class Args(val path: String) : ToolArgs
 
         @Serializable
         data class Result(
@@ -668,7 +671,7 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
         @Serializable
-        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : Tool.Args
+        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
 
         override val argsSerializer = Args.serializer()
 

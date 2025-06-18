@@ -128,7 +128,7 @@ object WeatherAgentProvider : AgentProvider {
             toolRegistry = toolRegistry,
         ) {
             handleEvents {
-                onToolCall { tool: Tool<*, *>, toolArgs: Tool.Args ->
+                onToolCall { tool: Tool<*, *>, toolArgs: ToolArgs ->
                     onToolCallEvent("Tool ${tool.name}, args $toolArgs")
                 }
 

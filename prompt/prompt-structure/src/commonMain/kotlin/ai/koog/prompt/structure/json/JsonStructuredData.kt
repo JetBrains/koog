@@ -62,6 +62,10 @@ public class JsonStructuredData<TStruct>(
         newline()
     }
 
+    /**
+     * Companion object for the `JsonStructuredData` class, providing utility methods to facilitate the
+     * creation of JSON structures with associated schema generation.
+     */
     public companion object {
         // TODO: Class.simpleName is the only reason to make the function inline, perhaps we can hide most of the implementation
         /**

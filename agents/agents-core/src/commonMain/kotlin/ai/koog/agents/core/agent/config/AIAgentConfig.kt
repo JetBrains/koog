@@ -26,8 +26,23 @@ public class AIAgentConfig(
     )
 ): AIAgentConfigBase {
 
+    /**
+     * Companion object for providing utility methods related to `AIAgentConfig`.
+     */
     public companion object {
 
+        /**
+         * Creates an AI agent configuration with a specified system prompt.
+         *
+         * This function initializes an instance of `AIAgentConfig` using the provided system-level prompt
+         * and other optional parameters, such as the language model, configuration ID, and maximum agent iterations.
+         *
+         * @param prompt The content of the system prompt to define the context and instructions for the AI agent.
+         * @param llm The Large Language Model (LLM) to be used for the AI agent. Defaults to OpenAIModels.Chat.GPT4o.
+         * @param id The identifier for the agent configuration. Defaults to "code-engine-agents".
+         * @param maxAgentIterations The maximum number of iterations the agent can perform to avoid infinite loops. Defaults to 3.
+         * @return An instance of `AIAgentConfigBase` representing the AI agent configuration with the specified parameters.
+         */
         public fun withSystemPrompt(
             prompt: String,
             llm: LLModel = OpenAIModels.Chat.GPT4o,

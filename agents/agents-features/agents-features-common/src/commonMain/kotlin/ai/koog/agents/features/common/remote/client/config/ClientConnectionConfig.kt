@@ -34,6 +34,13 @@ public abstract class ClientConnectionConfig(
     public val connectTimeout: Duration? = 15.seconds,
 ) : ConnectionConfig() {
 
+    /**
+     * The port number used for establishing a client connection.
+     *
+     * This property determines the port to be used when constructing the connection URL.
+     * If no explicit port is specified during the configuration, the default port for the
+     * specified protocol (e.g., 80 for HTTP, 443 for HTTPS) will be used.
+     */
     public val port: Int = port ?: protocol.defaultPort
 
     /**

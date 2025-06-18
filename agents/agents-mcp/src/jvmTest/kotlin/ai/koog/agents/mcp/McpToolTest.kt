@@ -73,9 +73,9 @@ class McpToolTest {
         val greetingTool = toolRegistry.getTool("greeting") as McpTool
         val args = McpTool.Args(buildJsonObject { put("name", "Test") })
 
-        val (result, _) = withContext(Dispatchers.Default.limitedParallelism(1)) {
+        val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
-                greetingTool.executeAndSerialize(args, TestToolEnabler)
+                greetingTool.execute(args, TestToolEnabler)
             }
         }
 

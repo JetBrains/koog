@@ -42,6 +42,9 @@ public interface ToolResult {
          */
         public constructor(e: Exception) : this("Failed with exception '${e::class.simpleName}' and message '${e.message}'")
 
+        /**
+         * Companion object for the [Text] class providing utility functions.
+         */
         public companion object {
             /**
              * Builds a [Text] object by applying the given block to a [StringBuilder].

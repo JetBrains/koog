@@ -5,11 +5,11 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -116,7 +116,6 @@ class SimpleAgentIntegrationTest {
         results.clear()
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
@@ -135,13 +134,13 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-        agent.run("Repeat what I say: hello, I'm good.")
-
-        // by default, AIAgent has no tools underneath
-        assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
+        withRetry(times = 3, testName = "integration_AIAgentShouldNotCallToolsByDefault[${model.id}]") {
+            agent.run("Repeat what I say: hello, I'm good.")
+            // by default, AIAgent has no tools underneath
+            assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
+        }
     }
 
-    @Retry(3)
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {
@@ -172,13 +171,13 @@ class SimpleAgentIntegrationTest {
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
         )
 
-
-        agent.run("How much is 3 times 5?")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-        assertTrue(
-            actualToolCalls.contains(CalculatorTool.name),
-            "The ${CalculatorTool.name} tool was not called for model $model"
-        )
+        withRetry(times = 3, testName = "integration_AIAgentShouldCallCustomTool[${model.id}]") {
+            agent.run("How much is 3 times 5?")
+            assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
+            assertTrue(
+                actualToolCalls.contains(CalculatorTool.name),
+                "The ${CalculatorTool.name} tool was not called for model $model"
+            )
+        }
     }
 }

@@ -13,31 +13,30 @@ version = run {
     val main = "0.2.1"
 
     val feat = run {
-        val releaseBuild = !System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH").isNullOrBlank()
-        val defaultBranch = System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH") == "true"
+        val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
+        val branch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM")
         val customVersion = System.getenv("CE_CUSTOM_VERSION")
+        val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
         if (releaseBuild) {
-            if (defaultBranch) {
+            if (branch == "main") {
                 if (customVersion.isNullOrBlank()) {
                     ""
                 } else {
-                    throw GradleException("Custom version is not allowed during release from the default branch")
+                    throw GradleException("Custom version is not allowed during release from the main branch")
                 }
             } else {
                 if (!customVersion.isNullOrBlank()) {
                     "-feat-$customVersion"
+                } else if (branch == "develop" && !tcCounter.isNullOrBlank()) {
+                    ".$tcCounter"
                 } else {
-                    throw GradleException("Custom version is required during release from the non-default branch")
+                    throw GradleException("Custom version is required during release from the non-main branch")
                 }
             }
         } else {
             // do not care
-            if (customVersion.isNullOrBlank()) {
-                ""
-            } else {
-                "-feat-$customVersion"
-            }
+            ""
         }
     }
 
@@ -53,6 +52,7 @@ buildscript {
 plugins {
     alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
+    alias(libs.plugins.kotlinx.kover)
 }
 
 allprojects {
@@ -62,6 +62,11 @@ allprojects {
 }
 
 disableDistTasks()
+
+// Apply Kover to all subprojects
+subprojects {
+    apply(plugin = "org.jetbrains.kotlinx.kover")
+}
 
 subprojects {
     tasks.withType<Test> {
@@ -109,12 +114,12 @@ tasks {
         doLast {
             val uriBase = "https://central.sonatype.com/api/v1/publisher/upload"
 
-            val defaultBranch = System.getenv("CE_IS_RELEASING_FROM_THE_DEFAULT_BRANCH") == "true"
-            val publishingType = if (defaultBranch) {
-                println("Publishing from the default branch, so publishing as AUTOMATIC.")
+            val mainBranch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM") == "main"
+            val publishingType = if (mainBranch) {
+                println("Publishing from the main branch, so publishing as AUTOMATIC.")
                 "AUTOMATIC"
             } else {
-                println("Publishing from the non-default branch, so publishing as USER_MANAGED.")
+                println("Publishing from the non-main branch, so publishing as USER_MANAGED.")
                 "USER_MANAGED" // do not publish releases from non-main branches without approval
             }
 
@@ -184,4 +189,26 @@ dependencies {
     dokka(project(":prompt:prompt-structure"))
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
+}
+
+kover {
+    val excludedProjects = setOf(
+        ":integration-tests",
+        ":examples",
+        ":buildSrc"
+    )
+    merge {
+        subprojects {
+            it.path !in excludedProjects
+        }
+
+    }
+    reports {
+        total {
+            binary {
+                file = file(".qodana/code-coverage/kover.ic")
+            }
+        }
+    }
+
 }

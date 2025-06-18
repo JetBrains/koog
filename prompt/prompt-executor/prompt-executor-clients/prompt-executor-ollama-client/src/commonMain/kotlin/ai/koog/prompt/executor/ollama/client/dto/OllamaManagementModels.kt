@@ -63,6 +63,7 @@ internal data class OllamaShowModelResponseDTO(
         @SerialName("embedding") EMBEDDING,
         @SerialName("insert") INSERT,
         @SerialName("vision") VISION,
+        @SerialName("thinking") THINKING,
         @SerialName("tools") TOOLS,
     }
 }

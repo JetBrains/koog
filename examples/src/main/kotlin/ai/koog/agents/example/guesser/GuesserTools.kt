@@ -9,7 +9,7 @@ abstract class GuesserTool(
     description: String,
 ) : SimpleTool<GuesserTool.Args>() {
     @Serializable
-    data class Args(val value: Int) : Tool.Args
+    data class Args(val value: Int) : ToolArgs
 
     final override val argsSerializer = Args.serializer()
 
