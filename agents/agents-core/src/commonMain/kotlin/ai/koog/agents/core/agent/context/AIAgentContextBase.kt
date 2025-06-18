@@ -9,6 +9,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.message.Message
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -128,7 +129,6 @@ public interface AIAgentContextBase {
      */
     public fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature?
 
-
     /**
      * Retrieves a feature of the specified type from the context or throws an exception if it is not available.
      *
@@ -140,6 +140,11 @@ public interface AIAgentContextBase {
     public fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
         feature(feature)
             ?: throw IllegalStateException("Feature `${feature::class.simpleName}` is not installed to the agent")
+
+    /**
+     * Retrieves the history of messages exchanged during the agent's execution.
+     */
+    public suspend fun getHistory(): List<Message>
 
     /**
      * Creates a new instance of [AIAgentContext] with updated tools, while preserving the other properties

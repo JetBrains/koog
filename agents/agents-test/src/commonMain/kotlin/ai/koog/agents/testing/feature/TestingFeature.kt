@@ -108,6 +108,8 @@ public class DummyAgentContext(
     override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
         throw NotImplementedError("feature()  getting in runtime is not supported for mock")
 
+    override suspend fun getHistory(): List<Message> = emptyList()
+
     override fun copy(
         environment: AIAgentEnvironment?,
         agentInput: String?,

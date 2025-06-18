@@ -9,6 +9,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.message.Message
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -73,6 +74,12 @@ internal class AIAgentContext(
      * @return The feature implementation of the specified type if available, or null if it is not present.
      */
     override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? = feature(feature.key)
+
+    override suspend fun getHistory(): List<Message> {
+        return llm.readSession {
+            prompt.messages.toList()
+        }
+    }
 
     /**
      * Creates a new instance of [AIAgentContextBase] with an updated list of tools, replacing the current tools
