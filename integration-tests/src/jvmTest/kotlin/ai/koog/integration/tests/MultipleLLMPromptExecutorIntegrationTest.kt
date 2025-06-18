@@ -690,8 +690,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            withRetry(times = 3, testName = "integration_testMarkdownProcessingBasic[${scenario.name.lowercase()}]") {
-
+            withRetry {
                 try {
                     val response = executor.execute(prompt, model)
                     when (scenario) {
@@ -744,43 +743,45 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            try {
-                val response = executor.execute(prompt, model)
-                checkExecutorMediaResponse(response)
-            } catch (e: Exception) {
-                // For some edge cases, exceptions are expected
-                when (scenario) {
-                    ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
-                            "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
-                        )
-                        assertTrue(
-                            e.message?.contains("image exceeds") == true,
-                            "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
-                        )
-                    }
-
-                    ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
-                            "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
-                        )
-                        if (model.provider == LLMProvider.Anthropic) {
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    checkExecutorMediaResponse(response)
+                } catch (e: Exception) {
+                    // For some edge cases, exceptions are expected
+                    when (scenario) {
+                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
                             assertTrue(
-                                e.message?.contains("Could not process image") == true,
-                                "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
-                        } else if (model.provider == LLMProvider.OpenAI) {
                             assertTrue(
-                                e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
-                                "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
+                                e.message?.contains("image exceeds") == true,
+                                "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
                             )
                         }
-                    }
 
-                    else -> {
-                        throw e
+                        ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                            assertTrue(
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
+                            )
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("Could not process image") == true,
+                                    "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.OpenAI) {
+                                assertTrue(
+                                    e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                    "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
+
+                        else -> {
+                            throw e
+                        }
                     }
                 }
             }
@@ -808,63 +809,65 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            try {
-                val response = executor.execute(prompt, model)
-                if (scenario == TextTestScenario.CORRUPTED_TEXT) {
-                    checkResponseBasic(response)
-                } else {
-                    checkExecutorMediaResponse(response)
-                }
-            } catch (e: Exception) {
-                when (scenario) {
-                    TextTestScenario.EMPTY_TEXT -> {
-                        if (model.provider == LLMProvider.Google) {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
-                                "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
-                            )
-                            assertTrue(
-                                e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
-                                "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
-                            )
-                        }
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    if (scenario == TextTestScenario.CORRUPTED_TEXT) {
+                        checkResponseBasic(response)
+                    } else {
+                        checkExecutorMediaResponse(response)
                     }
+                } catch (e: Exception) {
+                    when (scenario) {
+                        TextTestScenario.EMPTY_TEXT -> {
+                            if (model.provider == LLMProvider.Google) {
+                                assertTrue(
+                                    e.message?.contains("400 Bad Request") == true,
+                                    "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
+                                )
+                                assertTrue(
+                                    e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
+                                    "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
 
-                    TextTestScenario.LONG_TEXT_5_MB -> {
-                        if (model.provider == LLMProvider.Anthropic) {
+                        TextTestScenario.LONG_TEXT_5_MB -> {
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("400 Bad Request") == true,
+                                    "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
+                                )
+                                assertTrue(
+                                    e.message?.contains("prompt is too long") == true,
+                                    "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.Google) {
+                                throw e
+                            }
+                        }
+
+                        TextTestScenario.LONG_TEXT_20_MB -> {
                             assertTrue(
                                 e.message?.contains("400 Bad Request") == true,
                                 "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
                             )
-                            assertTrue(
-                                e.message?.contains("prompt is too long") == true,
-                                "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
-                            )
-                        } else if (model.provider == LLMProvider.Google) {
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("prompt is too long") == true,
+                                    "Expected exception for long text [prompt is too long] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.Google) {
+                                assertTrue(
+                                    e.message?.contains("exceeds the maximum number of tokens allowed") == true,
+                                    "Expected exception for long text [exceeds the maximum number of tokens allowed] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
+
+                        else -> {
                             throw e
                         }
-                    }
-
-                    TextTestScenario.LONG_TEXT_20_MB -> {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
-                            "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
-                        )
-                        if (model.provider == LLMProvider.Anthropic) {
-                            assertTrue(
-                                e.message?.contains("prompt is too long") == true,
-                                "Expected exception for long text [prompt is too long] was not found, got [${e.message}] instead"
-                            )
-                        } else if (model.provider == LLMProvider.Google) {
-                            assertTrue(
-                                e.message?.contains("exceeds the maximum number of tokens allowed") == true,
-                                "Expected exception for long text [exceeds the maximum number of tokens allowed] was not found, got [${e.message}] instead"
-                            )
-                        }
-                    }
-
-                    else -> {
-                        throw e
                     }
                 }
             }
@@ -961,13 +964,15 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
             }
 
-            val response = executor.execute(prompt, model)
-            checkExecutorMediaResponse(response)
+            withRetry {
+                val response = executor.execute(prompt, model)
+                checkExecutorMediaResponse(response)
 
-            assertTrue(
-                response.content.contains("image", ignoreCase = true) ||
-                        response.content.contains("PDF", ignoreCase = true),
-                "Response should mention both image & PDF files"
-            )
+                assertTrue(
+                    response.content.contains("image", ignoreCase = true) ||
+                            response.content.contains("PDF", ignoreCase = true),
+                    "Response should mention both image & PDF files"
+                )
+            }
         }
 }

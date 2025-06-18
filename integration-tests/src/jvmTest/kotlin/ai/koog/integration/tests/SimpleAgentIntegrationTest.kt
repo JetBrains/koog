@@ -141,22 +141,21 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
+        withRetry {
+            val executor = when (model.provider) {
+                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            }
 
-        val agent = AIAgent(
-            executor = executor,
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
-        )
-
-        withRetry(times = 3, testName = "integration_AIAgentShouldNotCallToolsByDefault[${model.id}]") {
+            val agent = AIAgent(
+                executor = executor,
+                systemPrompt = systemPrompt,
+                llmModel = model,
+                temperature = 1.0,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+            )
             agent.run("Repeat what I say: hello, I'm good.")
             // by default, AIAgent has no tools underneath
             assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
@@ -177,23 +176,23 @@ class SimpleAgentIntegrationTest {
             tool(CalculatorTool)
         }
 
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
+        withRetry {
+            val executor = when (model.provider) {
+                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            }
 
-        val agent = AIAgent(
-            executor = executor,
-            systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            toolRegistry = toolRegistry,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
+            val agent = AIAgent(
+                executor = executor,
+                systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
+                llmModel = model,
+                temperature = 1.0,
+                toolRegistry = toolRegistry,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
 
-        withRetry(times = 3, testName = "integration_AIAgentShouldCallCustomTool[${model.id}]") {
             agent.run("How much is 3 times 5?")
             assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
             assertTrue(
@@ -222,22 +221,22 @@ class SimpleAgentIntegrationTest {
             Please analyze this image and describe what you see.
         """.trimIndent()
 
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
-
-        val agent = AIAgent(
-            executor = executor,
-            systemPrompt = "You are a helpful assistant that can analyze images.",
-            llmModel = model,
-            temperature = 0.7,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
         withRetry {
+            val executor = when (model.provider) {
+                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            }
+
+            val agent = AIAgent(
+                executor = executor,
+                systemPrompt = "You are a helpful assistant that can analyze images.",
+                llmModel = model,
+                temperature = 0.7,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
+
             agent.run(promptWithImage)
 
             assertTrue(errors.isEmpty(), "There should be no errors")
