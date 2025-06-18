@@ -150,8 +150,6 @@ public open class AIAgent(
 
     private var isRunning = false
 
-    private var sessionUuid: Uuid? = null
-
     private val runningMutex = Mutex()
 
     private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
@@ -170,7 +168,6 @@ public open class AIAgent(
             }
 
             isRunning = true
-            sessionUuid = Uuid.random()
         }
 
         pipeline.prepareFeatures()
@@ -192,14 +189,14 @@ public open class AIAgent(
                 toolRegistry,
                 agentConfig.prompt,
                 agentConfig.model,
-                promptExecutor = PromptExecutorProxy(promptExecutor, pipeline, sessionUuid!!),
+                promptExecutor = PromptExecutorProxy(sessionId = sessionId, executor = promptExecutor, pipeline = pipeline),
                 environment = preparedEnvironment,
                 agentConfig,
                 clock
             ),
             stateManager = stateManager,
             storage = storage,
-            sessionUuid = sessionUuid!!,
+            sessionId = sessionUuid!!,
             strategyId = strategy.name,
             pipeline = pipeline,
         )

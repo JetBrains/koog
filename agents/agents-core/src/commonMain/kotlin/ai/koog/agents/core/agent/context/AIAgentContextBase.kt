@@ -85,7 +85,7 @@ public interface AIAgentContextBase {
      * A unique identifier for the current session associated with the AI agent context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
-    public val sessionUuid: Uuid
+    public val sessionId: Uuid
 
     /**
      * Represents the unique identifier for the strategy being used in the current AI agent context.
@@ -164,19 +164,19 @@ public interface AIAgentContextBase {
      * @param llm The AI agent LLM context, or null to retain the current LLM context.
      * @param stateManager The state manager for the AI agent, or null to retain the current state manager.
      * @param storage The AI agent's key-value storage, or null to retain the current storage.
-     * @param sessionUuid The UUID of the session, or null to retain the current session UUID.
+     * @param sessionId The UUID of the session, or null to retain the current session UUID.
      * @param strategyId The strategy ID, or null to retain the current strategy ID.
      * @param pipeline The AI agent pipeline, or null to retain the current pipeline.
      * @return A new instance of [AIAgentContext] with the specified overrides.
      */
     public fun copy(
+        sessionId: Uuid? = null,
         environment: AIAgentEnvironment? = null,
         agentInput: String? = null,
         config: AIAgentConfigBase? = null,
         llm: AIAgentLLMContext? = null,
         stateManager: AIAgentStateManager? = null,
         storage: AIAgentStorage? = null,
-        sessionUuid: Uuid? = null,
         strategyId: String? = null,
         pipeline: AIAgentPipeline? = null,
     ): AIAgentContextBase

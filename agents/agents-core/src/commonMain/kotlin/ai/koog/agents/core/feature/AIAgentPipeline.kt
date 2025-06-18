@@ -150,7 +150,7 @@ public class AIAgentPipeline {
      * @param agent The agent instance for which the execution has started
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(parentEventId: String?, strategy: AIAgentStrategy, agent: AIAgent) {
+    public suspend fun onBeforeAgentStarted(strategy: AIAgentStrategy, agent: AIAgent) {
         agentHandlers.values.forEach { handler ->
             val context = AgentStartContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.handleBeforeAgentStartedUnsafe(context)
@@ -213,7 +213,7 @@ public class AIAgentPipeline {
     @OptIn(ExperimentalUuidApi::class)
     public suspend fun onStrategyStarted(strategy: AIAgentStrategy, context: AIAgentContextBase) {
         strategyHandlers.values.forEach { handler ->
-            val updateContext = StrategyUpdateContext(strategy, context.sessionUuid, handler.feature)
+            val updateContext = StrategyUpdateContext(strategy, context.sessionId, handler.feature)
             handler.handleStrategyStartedUnsafe(updateContext)
         }
     }
@@ -228,7 +228,7 @@ public class AIAgentPipeline {
     @OptIn(ExperimentalUuidApi::class)
     public suspend fun onStrategyFinished(strategy: AIAgentStrategy, context: AIAgentContextBase, result: String) {
         strategyHandlers.values.forEach { handler ->
-            val updateContext = StrategyUpdateContext(strategy, context.sessionUuid, handler.feature)
+            val updateContext = StrategyUpdateContext(strategy, context.sessionId, handler.feature)
             handler.handleStrategyFinishedUnsafe(updateContext, result)
         }
     }
@@ -304,6 +304,10 @@ public class AIAgentPipeline {
      */
     public suspend fun onAfterLLMCall(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>) {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(sessionId, prompt, tools, model, responses) }
+    }
+
+    public suspend fun onStartLLMStreaming(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) {
+        executeLLMHandlers.values.forEach { handler -> handler. }
     }
 
     //endregion Trigger LLM Call Handlers

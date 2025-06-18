@@ -88,7 +88,7 @@ public class DummyAgentContext(
         get() = builder.storage
             ?: throw NotImplementedError("Storage is not mocked")
 
-    override val sessionUuid: Uuid
+    override val sessionId: Uuid
         get() = builder.sessionUuid
             ?: throw NotImplementedError("Session UUID is not mocked")
 
@@ -1419,7 +1419,7 @@ public class Testing {
                         promptExecutor = PromptExecutorProxy(
                             agent.promptExecutor,
                             pipeline,
-                            assertion.context.sessionUuid,
+                            assertion.context.sessionId,
                         ),
                         environment = environment,
                         config = agent.agentConfig,

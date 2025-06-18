@@ -38,6 +38,8 @@ public class ExecuteLLMHandler {
      */
     public var afterLLMCallHandler: AfterLLMCallHandler =
         AfterLLMCallHandler { prompt, tools, model, response, sessionUuid -> }
+
+    public var
 }
 
 /**

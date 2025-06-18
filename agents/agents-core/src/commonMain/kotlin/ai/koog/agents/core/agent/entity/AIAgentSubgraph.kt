@@ -52,7 +52,7 @@ public open class AIAgentSubgraph<Input, Output>(
 
     @OptIn(ExperimentalUuidApi::class)
     private fun formatLog(context: AIAgentContextBase, message: String): String =
-        "$message [$name, ${context.strategyId}, ${context.sessionUuid}]"
+        "$message [$name, ${context.strategyId}, ${context.sessionId}]"
 
     @OptIn(InternalAgentsApi::class)
     protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
