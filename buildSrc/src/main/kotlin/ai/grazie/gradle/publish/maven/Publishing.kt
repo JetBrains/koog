@@ -9,7 +9,7 @@ import java.net.URL
 
 
 object Publishing {
-    fun Project.publishToGraziePublicMaven() {
+    fun Project.publishToMaven() {
         publishTo({
             it.graziePublic(project)
             it.artifactsMaven(project)
@@ -24,7 +24,7 @@ object Publishing {
                             Action {
                                 val pom = this
 
-                                pom.name.set(this@publishToGraziePublicMaven.name)
+                                pom.name.set(this@publishToMaven.name)
                                 pom.description.set("Koog is a framework for quickly creating AI agents in Kotlin with minimal effort.")
                                 pom.url.set("https://github.com/JetBrains/koog")
 

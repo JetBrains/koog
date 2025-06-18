@@ -196,7 +196,27 @@ public class MarkdownParserBuilder {
      */
     public fun buildStreaming(): MarkdownStreamingParser = MarkdownStreamingParser(build())
 
+    /**
+     * A class for streaming markdown parsing to process and handle markdown content incrementally.
+     * This class provides functionality to parse markdown content received as a flow of strings and
+     * invoke the given parser function for each processed segment.
+     *
+     * @property parser A suspendable function that processes a markdown segment.
+     */
     public inner class MarkdownStreamingParser(private val parser: suspend (String) -> Unit) {
+        /**
+         * Processes a stream of Markdown content provided as a flow of strings.
+         *
+         * Concatenates chunks of the incoming flow and parses complete sections of Markdown
+         * content based on the presence of header or line separators. Each section is then
+         * passed to the parser function for processing. Any remaining content in the buffer
+         * after all chunks are collected is also processed. Once processing is complete,
+         * a handler is invoked to signify the end of parsing.
+         *
+         * @param markdownStream A flow of strings representing chunks of Markdown content
+         * to be parsed. These chunks are concatenated and processed into complete sections
+         * for handling.
+         */
         public suspend fun parseStream(markdownStream: Flow<String>) {
             var buffer = ""
 

@@ -1,10 +1,11 @@
 package ai.koog.agents.memory.feature
 
-import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.features.common.config.FeatureConfig
@@ -463,12 +464,14 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     preserveQuestionsInLLMChat: Boolean
 ): Fact {
     // Add a message asking to retrieve facts about the concept
-    val prompt = when (concept.factType) {
+    val promptForCompression = when (concept.factType) {
         FactType.SINGLE -> MemoryPrompts.singleFactPrompt(concept)
         FactType.MULTIPLE -> MemoryPrompts.multipleFactsPrompt(concept)
     }
 
-    updatePrompt { user(prompt) }
+    // remove tailing tool calls as we didn't provide any result for them
+    dropTrailingToolCalls()
+    updatePrompt { user(promptForCompression) }
     val response = requestLLMWithoutTools()
 
     val timestamp = getCurrentTimestamp()
@@ -543,3 +546,5 @@ public fun AIAgentContextBase.memory(): AgentMemory = featureOrThrow(AgentMemory
  * @return The result of the action
  */
 public suspend fun <T> AIAgentContextBase.withMemory(action: suspend AgentMemory.() -> T): T = memory().action()
+
+

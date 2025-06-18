@@ -4,3 +4,4 @@
 build
 **/.claude/settings.local.json
 env.properties
+.qodana/code-coverage

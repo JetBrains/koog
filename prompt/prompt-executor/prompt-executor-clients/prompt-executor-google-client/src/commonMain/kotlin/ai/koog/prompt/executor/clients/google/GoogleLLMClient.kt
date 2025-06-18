@@ -138,7 +138,7 @@ public open class GoogleLLMClient(
         }
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -146,38 +146,36 @@ public open class GoogleLLMClient(
 
         val request = createGoogleRequest(prompt, model, emptyList())
 
-        return flow {
-            try {
-                httpClient.sse(
-                    urlString = "$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_STREAM_GENERATE_CONTENT",
-                    request = {
-                        method = HttpMethod.Post
-                        parameter("alt", "sse")
-                        accept(ContentType.Text.EventStream)
-                        headers {
-                            append(HttpHeaders.CacheControl, "no-cache")
-                            append(HttpHeaders.Connection, "keep-alive")
-                        }
-                        setBody(request)
+        try {
+            httpClient.sse(
+                urlString = "$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_STREAM_GENERATE_CONTENT",
+                request = {
+                    method = HttpMethod.Post
+                    parameter("alt", "sse")
+                    accept(ContentType.Text.EventStream)
+                    headers {
+                        append(HttpHeaders.CacheControl, "no-cache")
+                        append(HttpHeaders.Connection, "keep-alive")
                     }
-                ) {
-                    incoming.collect { event ->
-                        event
-                            .takeIf { it.data != "[DONE]" }
-                            ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
-                            ?.candidates?.firstOrNull()?.content
-                            ?.parts?.forEach { part -> if (part is GooglePart.Text) emit(part.text) }
-                    }
+                    setBody(request)
                 }
-            } catch (e: SSEClientException) {
-                e.response?.let { response ->
-                    logger.error { "Error from GoogleAI API: ${response.status}: ${e.message}" }
-                    error("Error from GoogleAI API: ${response.status}: ${e.message}")
+            ) {
+                incoming.collect { event ->
+                    event
+                        .takeIf { it.data != "[DONE]" }
+                        ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
+                        ?.candidates?.firstOrNull()?.content
+                        ?.parts?.forEach { part -> if (part is GooglePart.Text) emit(part.text) }
                 }
-            } catch (e: Exception) {
-                logger.error { "Exception during streaming: $e" }
-                error(e.message ?: "Unknown error during streaming")
             }
+        } catch (e: SSEClientException) {
+            e.response?.let { response ->
+                logger.error { "Error from GoogleAI API: ${response.status}: ${e.message}" }
+                error("Error from GoogleAI API: ${response.status}: ${e.message}")
+            }
+        } catch (e: Exception) {
+            logger.error { "Exception during streaming: $e" }
+            error(e.message ?: "Unknown error during streaming")
         }
     }
 

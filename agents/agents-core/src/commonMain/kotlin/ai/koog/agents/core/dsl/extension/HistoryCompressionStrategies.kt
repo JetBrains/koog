@@ -41,7 +41,7 @@ public abstract class HistoryCompressionStrategy {
      */
     protected suspend fun compressPromptIntoTLDR(llmSession: AIAgentLLMWriteSession): List<Message.Response> {
         return with(llmSession) {
-            prompt = prompt.withMessages { messages -> messages.dropLastWhile { it is Message.Tool.Call } }
+            dropTrailingToolCalls()
             updatePrompt {
                 user {
                     summarizeInTLDR()
@@ -200,3 +200,4 @@ public abstract class HistoryCompressionStrategy {
         }
     }
 }
+

@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.common.config.FeatureConfig
@@ -56,28 +57,28 @@ class Logging(val logger: Logger) {
             pipeline: AIAgentPipeline
         ) {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
-
-            pipeline.interceptBeforeAgentStarted(this, logging) {
+            val interceptContext = InterceptContext(this, logging)
+            pipeline.interceptBeforeAgentStarted(interceptContext) {
                 logging.logger.info("Agent is going to be started with strategy: ${strategy.name}.")
             }
 
-            pipeline.interceptStrategyStarted(this, logging) {
+            pipeline.interceptStrategyStarted(interceptContext) {
                 logging.logger.info("Strategy ${strategy.name} started")
             }
 
-            pipeline.interceptBeforeNode(this, logging) { node, context, input ->
+            pipeline.interceptBeforeNode(interceptContext) { node, context, input ->
                 logger.info("Node ${node.name} received input: $input")
             }
 
-            pipeline.interceptAfterNode(this, logging) { node, context, input, output ->
+            pipeline.interceptAfterNode(interceptContext) { node, context, input, output ->
                 logger.info("Node ${node.name} with input: $input produced output: $output")
             }
 
-            pipeline.interceptBeforeLLMCall(this, logging) { prompt, tools, model, sessionUuid ->
+            pipeline.interceptBeforeLLMCall(interceptContext) { prompt, tools, model, sessionUuid ->
                 logger.info("Before LLM call with prompt: ${prompt}, tools: [${tools.joinToString { it.name }}]")
             }
 
-            pipeline.interceptAfterLLMCall(this, logging) { prompt, tools, model, responses, sessionUuid ->
+            pipeline.interceptAfterLLMCall(interceptContext) { prompt, tools, model, responses, sessionUuid ->
                 logger.info("After LLM call with response: $responses")
             }
         }

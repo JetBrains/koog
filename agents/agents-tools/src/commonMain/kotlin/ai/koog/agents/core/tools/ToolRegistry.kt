@@ -30,6 +30,12 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
 
     private val _tools: MutableList<Tool<*, *>> = tools.toMutableList()
 
+    /**
+     * Provides an immutable list of tools currently available in the registry.
+     *
+     * The tools are sourced from the internal backing collection and returned as
+     * a read-only list to prevent external modification of the registry state.
+     */
     public val tools: List<Tool<*, *>>
         get() = _tools.toList()
 
@@ -64,20 +70,47 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
             ?: throw IllegalArgumentException("Tool with type ${T::class} is not defined")
     }
 
+    /**
+     * Combines the tools from this registry and the provided registry into a new ToolRegistry.
+     *
+     * This method merges the tools from both registries, ensuring that each tool is included only once,
+     * based on its name.
+     *
+     * @param toolRegistry The other ToolRegistry whose tools will be merged with the current registry.
+     * @return A new ToolRegistry containing the combined list of tools from both registries.
+     */
     public operator fun plus(toolRegistry: ToolRegistry): ToolRegistry {
         val mergedTools = (this.tools + toolRegistry.tools).distinctBy { it.name }
         return ToolRegistry(mergedTools)
     }
 
+    /**
+     * Adds a tool to the registry if it is not already present.
+     *
+     * @param tool The tool to be added to the registry.
+     */
     public fun add(tool: Tool<*, *>) {
         if (_tools.contains(tool)) return
         _tools.add(tool)
     }
 
+    /**
+     * Adds multiple tools to the registry.
+     *
+     * This method accepts a variable number of tools and adds each of them to the registry.
+     *
+     * @param tools The tools to be added to the registry.
+     */
     public fun addAll(vararg tools: Tool<*, *>) {
         tools.forEach { tool -> add(tool) }
     }
 
+    /**
+     * Builder class to construct and manage a registry of tools.
+     *
+     * This class allows for the registration of tools in a controlled manner.
+     * It ensures that each tool added to the registry has a unique name.
+     */
     public class Builder internal constructor() {
         private val tools = mutableListOf<Tool<*, *>>()
 

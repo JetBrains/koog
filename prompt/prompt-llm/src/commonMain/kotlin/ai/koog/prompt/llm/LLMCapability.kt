@@ -65,9 +65,26 @@ public sealed class LLMCapability(public val id: String) {
     @Serializable
     public sealed class Vision(public val visionType: String) : LLMCapability(visionType) {
 
+        /**
+         * Represents a specific capability for handling image-related vision tasks within a large language model (LLM).
+         *
+         * This class is a concrete implementation of the `Vision` sealed class, focusing on tasks such as image analysis,
+         * recognition, and interpretation. It is designed to enable models with the ability to process and infer
+         * insights from visual data represented as static images.
+         *
+         * The `Image` capability is typically used in scenarios where the model's functionality includes
+         * understanding image content, performing image-to-text generation, or tasks that require visual comprehension.
+         */
         @Serializable
         public data object Image : Vision("image")
 
+        /**
+         * Represents the video processing capability within vision-based tasks.
+         *
+         * This capability is used to handle video-related functionalities, including analyzing
+         * and processing video data. It is part of the sealed hierarchy for vision-based
+         * capabilities and provides a concrete implementation specific to video inputs.
+         */
         @Serializable
         public data object Video : Vision("video")
     }

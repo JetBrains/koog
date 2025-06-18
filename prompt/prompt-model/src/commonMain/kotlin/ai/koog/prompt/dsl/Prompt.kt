@@ -15,7 +15,7 @@ import kotlin.time.Duration
  *
  * @property messages The list of [Message] objects associated with the prompt.
  * @property id The unique identifier for the prompt.
- * @property params The language model pa rameters associated with the prompt. Defaults to [LLMParams].
+ * @property params The language model parameters associated with the prompt. Defaults to [LLMParams].
  */
 @Serializable
 public data class Prompt(

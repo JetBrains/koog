@@ -25,7 +25,19 @@ public sealed interface EnvironmentToAgentMessage
  */
 @Serializable
 public sealed interface EnvironmentToAgentContent {
+    /**
+     * A unique identifier representing the agent associated with the message.
+     * This identifier is used to distinguish between different agents within the environment
+     * for routing and processing communication or actions.
+     */
     public val agentId: String
+    /**
+     * Represents the textual content of a message exchanged between the environment and the agent.
+     *
+     * This property provides a description or information relevant to the context of communication,
+     * such as describing environment changes, conveying tool execution results, or initiating a conversation
+     * through user prompts.
+     */
     public val message: String
 }
 
@@ -69,6 +81,13 @@ public abstract class EnvironmentInitializeToAgentContent : EnvironmentToAgentCo
  */
 @Serializable
 public abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMessage {
+    /**
+     * Represents the content of the initialization message sent from the environment to an AI agent.
+     *
+     * Provides the necessary details and parameters required to set up or initialize the operational
+     * context for an agent. This property is abstract and must be implemented by subclasses to define
+     * the specifics of the initialization content.
+     */
     public abstract val content: EnvironmentInitializeToAgentContent
 }
 
@@ -84,6 +103,12 @@ public abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMe
  */
 @Serializable
 public sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgentMessage {
+    /**
+     * A unique identifier associated with a specific session.
+     *
+     * This UUID is used to tie the message to a particular session context,
+     * enabling clear association and tracking across environment-agent interactions.
+     */
     public val sessionUuid: Uuid
 }
 
@@ -96,7 +121,21 @@ public sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgent
  */
 @Serializable
 public abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentContent {
+    /**
+     * Identifier for a specific tool call, used to correlate results when invoking multiple tools
+     * simultaneously.
+     *
+     * This property is nullable and may be absent in cases where no specific tool call
+     * identifier is assigned or supported.
+     */
     public abstract val toolCallId: String?
+    /**
+     * The name of the tool associated with the current execution or message.
+     *
+     * This property is used to identify the specific tool that is being referenced or
+     * whose results are being communicated to an agent. It provides context within the
+     * scope of tool-based operations in an agent's environment.
+     */
     public abstract val toolName: String
     abstract override val agentId: String
     abstract override val message: String

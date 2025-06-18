@@ -30,13 +30,14 @@ class TestFeature(val events: MutableList<String>) {
             pipeline: AIAgentPipeline
         ) {
             val feature = TestFeature(events = config.events ?: mutableListOf())
+            val context = InterceptContext(this, feature)
 
-            pipeline.interceptBeforeAgentStarted(this, feature) {
+            pipeline.interceptBeforeAgentStarted(context) {
                 feature.events += "Agent: before agent started"
                 readStrategy { strategy -> feature.events += "Agent: before agent started (strategy name: ${strategy.name})" }
             }
 
-            pipeline.interceptStrategyStarted(this, feature) {
+            pipeline.interceptStrategyStarted(context) {
                 feature.events += "Agent: strategy started (strategy name: ${strategy.name})"
             }
 
@@ -45,27 +46,27 @@ class TestFeature(val events: MutableList<String>) {
                 TestFeature(mutableListOf())
             }
 
-            pipeline.interceptBeforeLLMCall(this, feature) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid ->
+            pipeline.interceptBeforeLLMCall(context) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid ->
                 feature.events += "LLM: start LLM call (prompt: ${prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}, tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptAfterLLMCall(this, feature) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid ->
+            pipeline.interceptAfterLLMCall(context) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid ->
                 feature.events += "LLM: finish LLM call (responses: [${responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}])"
             }
 
-            pipeline.interceptBeforeNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
+            pipeline.interceptBeforeNode(context) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
                 feature.events += "Node: start node (name: ${node.name}, input: $input)"
             }
 
-            pipeline.interceptAfterNode(this, feature) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
+            pipeline.interceptAfterNode(context) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
                 feature.events += "Node: finish node (name: ${node.name}, input: $input, output: $output)"
             }
 
-            pipeline.interceptToolCall(this, feature) { tool, toolArgs ->
+            pipeline.interceptToolCall(context) { tool, toolArgs ->
                 feature.events += "Tool: call tool (tool: ${tool.name}, args: $toolArgs)"
             }
 
-            pipeline.interceptToolCallResult(this, feature) { tool, toolArgs, result ->
+            pipeline.interceptToolCallResult(context) { tool, toolArgs, result ->
                 feature.events += "Tool: finish tool call with result (tool: ${tool.name}, result: ${result?.toStringDefault() ?: "null"})"
             }
         }

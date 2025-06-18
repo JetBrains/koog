@@ -7,6 +7,15 @@ import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 
+/**
+ * Creates a `SingleLLMPromptExecutor` instance configured to use the OpenAI client.
+ *
+ * This method simplifies the setup process by creating an `OpenAILLMClient` with the provided API token
+ * and wrapping it in a `SingleLLMPromptExecutor` to allow prompt execution with the OpenAI service.
+ *
+ * @param apiToken The API token used for authentication with the OpenAI API.
+ * @return A new instance of `SingleLLMPromptExecutor` configured with the `OpenAILLMClient`.
+ */
 public fun simpleOpenAIExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
 
 /**

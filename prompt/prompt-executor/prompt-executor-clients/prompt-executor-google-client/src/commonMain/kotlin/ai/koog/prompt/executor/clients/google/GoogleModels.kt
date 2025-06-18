@@ -13,18 +13,16 @@ import ai.koog.prompt.llm.LLModel
  * |-----------------------------|-----------|------------------------------|----------------------------------|---------------------|
  * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools | Text                |
+ * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Pro]              | Medium    | $1.25-$2.50 / $5.00-$10.00   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5ProLatest]        | Medium    | $1.25-$2.50 / $5.00-$10.00   | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini1_5Pro001]           | Medium    | $1.25-$2.50 / $5.00-$10.00   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Pro002]           | Medium    | $1.25-$2.50 / $5.00-$10.00   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Flash]            | Fast      | $0.075-$0.15 / $0.30-$0.60   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5FlashLatest]      | Fast      | $0.075-$0.15 / $0.30-$0.60   | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini1_5Flash001]         | Fast      | $0.075-$0.15 / $0.30-$0.60   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Flash002]         | Fast      | $0.075-$0.15 / $0.30-$0.60   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Flash8B]          | Very fast | $0.0375-$0.075 / $0.15-$0.30 | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Flash8BLatest]    | Very fast | $0.0375-$0.075 / $0.15-$0.30 | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5ProPreview0506]   | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text                |
+ * | [Gemini2_5ProPreview0506]   | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_5FlashPreview0417] | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
  */
 public object GoogleModels: LLModelDefinitions {
@@ -88,7 +86,7 @@ public object GoogleModels: LLModelDefinitions {
     public val Gemini2_0FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite",
-        capabilities = standardCapabilities // Flash Lite does not support tools
+        capabilities = fullCapabilities // Flash Lite has robust tool support
     )
 
     /**
@@ -97,7 +95,7 @@ public object GoogleModels: LLModelDefinitions {
     public val Gemini2_0FlashLite001: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite-001",
-        capabilities = standardCapabilities // Flash Lite does not support tools
+        capabilities = fullCapabilities // Flash Lite has robust tool support
     )
 
     /**
@@ -118,15 +116,6 @@ public object GoogleModels: LLModelDefinitions {
     public val Gemini1_5ProLatest: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-pro-latest",
-        capabilities = fullCapabilities // 1.5 Pro has robust tool support
-    )
-
-    /**
-     * Specific version of Gemini 1.5 Pro
-     */
-    public val Gemini1_5Pro001: LLModel = LLModel(
-        provider = LLMProvider.Google,
-        id = "gemini-1.5-pro-001",
         capabilities = fullCapabilities // 1.5 Pro has robust tool support
     )
 
@@ -157,15 +146,6 @@ public object GoogleModels: LLModelDefinitions {
     public val Gemini1_5FlashLatest: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-latest",
-        capabilities = multimodalCapabilities
-    )
-
-    /**
-     * Specific version of Gemini 1.5 Flash
-     */
-    public val Gemini1_5Flash001: LLModel = LLModel(
-        provider = LLMProvider.Google,
-        id = "gemini-1.5-flash-001",
         capabilities = multimodalCapabilities
     )
 
