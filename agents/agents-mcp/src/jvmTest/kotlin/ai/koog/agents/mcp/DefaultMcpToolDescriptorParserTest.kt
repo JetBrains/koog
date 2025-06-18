@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import io.modelcontextprotocol.kotlin.sdk.Tool
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -238,6 +239,55 @@ class DefaultMcpToolDescriptorParserTest {
         expectedOptions.forEachIndexed { index, option ->
             assertEquals(option, enumType.entries[index])
         }
+    }
+
+    @Ignore("until https://github.com/JetBrains/koog/issues/213 is fixed")
+    @Test
+    fun `test parsing enum parameter type with complex values`() {
+        // Create an SDK Tool with an enum parameter that has complex values (JsonArray)
+        val sdkTool = createSdkTool(
+            name = "test-tool-complex-enum",
+            description = "A test tool with complex enum parameter",
+            properties = buildJsonObject {
+                putJsonObject("complexEnumParam") {
+                    put("type", "enum")
+                    put("description", "Complex enum parameter")
+                    putJsonArray("enum") {
+                        add("option1")
+                        addJsonArray {
+                            add("nested1")
+                            add("nested2")
+                        }
+                        addJsonObject {
+                            put("key", "value")
+                        }
+                    }
+                }
+            },
+            required = listOf("complexEnumParam")
+        )
+
+        // Parse the tool
+        val toolDescriptor = parser.parse(sdkTool)
+
+        // Verify the basic properties
+        assertEquals("test-tool-complex-enum", toolDescriptor.name)
+        assertEquals("A test tool with complex enum parameter", toolDescriptor.description)
+        assertEquals(1, toolDescriptor.requiredParameters.size)
+        assertEquals(0, toolDescriptor.optionalParameters.size)
+
+        // Verify the enum parameter
+        val enumParam = toolDescriptor.requiredParameters.first()
+        assertEquals("complexEnumParam", enumParam.name)
+        assertEquals("Complex enum parameter", enumParam.description)
+        assertTrue(enumParam.type is ToolParameterType.Enum)
+
+        // Verify the enum values
+        val enumType = enumParam.type as ToolParameterType.Enum
+        assertEquals(3, enumType.entries.size)
+        assertEquals("option1", enumType.entries[0])
+        assertEquals("[\"nested1\",\"nested2\"]", enumType.entries[1])
+        assertEquals("{\"key\":\"value\"}", enumType.entries[2])
     }
 
     @Test
