@@ -179,7 +179,7 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
      * Base type, representing tool arguments.
      */
     @Deprecated("Use ToolArgs instead", ReplaceWith("ToolArgs", "ai.koog.agents.core.tools.ToolArgs"))
-    public interface Args
+    public interface Args : ToolArgs
 
     /**
      * Args implementation that can be used for tools that expect no arguments.
