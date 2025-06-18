@@ -236,6 +236,7 @@ internal class GoogleFunctionDeclaration(
  * Compatible MIME types: `application/json`: Schema for JSON response.
  * @property maxOutputTokens The maximum number of tokens to include in a response candidate.
  * @property temperature Controls the randomness of the output.
+ * @property numberOfChoices The number of reply choices to generate.
  * @property topP The maximum cumulative probability of tokens to consider when sampling.
  * @property topK The maximum number of tokens to consider when sampling.
  */
@@ -245,6 +246,8 @@ internal class GoogleGenerationConfig(
     val responseSchema: JsonObject? = null,
     val maxOutputTokens: Int? = null,
     val temperature: Double? = null,
+    @SerialName("candidateCount")
+    val numberOfChoices: Int? = null,
     val topP: Double? = null,
     val topK: Int? = null,
 )
