@@ -150,6 +150,47 @@ class AIAgentMultipleLLMIntegrationTest {
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
 
+    @Serializable
+    enum class CalculatorOperation {
+        ADD, SUBTRACT, MULTIPLY, DIVIDE
+    }
+
+    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
+        @Serializable
+        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
+
+        override val argsSerializer = Args.serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operation",
+                    description = "The operation to perform.",
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor(
+                    name = "a",
+                    description = "The first argument (number)",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "b",
+                    description = "The second argument (number)",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+
+        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
+            CalculatorOperation.ADD -> args.a + args.b
+            CalculatorOperation.SUBTRACT -> args.a - args.b
+            CalculatorOperation.MULTIPLY -> args.a * args.b
+            CalculatorOperation.DIVIDE -> args.a / args.b
+        }.let(ToolResult::Number)
+    }
+
     sealed interface OperationResult<T> {
         class Success<T>(val result: T) : OperationResult<T>
         class Failure<T>(val error: String) : OperationResult<T>
@@ -707,47 +748,6 @@ class AIAgentMultipleLLMIntegrationTest {
         assertNotNull(result)
     }
 
-    @Serializable
-    enum class CalculatorOperation {
-        ADD, SUBTRACT, MULTIPLY, DIVIDE
-    }
-
-    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
-        @Serializable
-        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-
-        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
-            CalculatorOperation.ADD -> args.a + args.b
-            CalculatorOperation.SUBTRACT -> args.a - args.b
-            CalculatorOperation.MULTIPLY -> args.a * args.b
-            CalculatorOperation.DIVIDE -> args.a / args.b
-        }.let(ToolResult::Number)
-    }
-
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
         runBlocking {
@@ -792,18 +792,18 @@ class AIAgentMultipleLLMIntegrationTest {
         val imageBytes = imageFile.readBytes()
         val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
 
-        val agent = when (model.provider) {
-            is LLMProvider.Anthropic -> createTestOpenaiAnthropicAgent(
-                eventsChannel,
-                fs,
-                eventHandlerConfig,
-                maxAgentIterations = 20,
-            )
+        withRetry {
+            val agent = when (model.provider) {
+                is LLMProvider.Anthropic -> createTestOpenaiAnthropicAgent(
+                    eventsChannel,
+                    fs,
+                    eventHandlerConfig,
+                    maxAgentIterations = 20,
+                )
 
-            else -> createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20)
-        }
+                else -> createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20)
+            }
 
-        withRetry(times = 3) {
             val result = agent.runAndGetResult(
                 """
             I'm sending you an image encoded in base64 format.
