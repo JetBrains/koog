@@ -3,8 +3,8 @@ package ai.koog.agents.testing.feature
 import ai.koog.agents.core.tools.*
 import kotlinx.serialization.Serializable
 
-object DummyTool : SimpleTool<Tool.EmptyArgs>() {
-    override val argsSerializer = EmptyArgs.serializer()
+object DummyTool : SimpleTool<ToolArgs.Empty>() {
+    override val argsSerializer = ToolArgs.Empty.serializer()
 
     override val descriptor = ToolDescriptor(
         name = "dummy",
@@ -12,12 +12,12 @@ object DummyTool : SimpleTool<Tool.EmptyArgs>() {
         requiredParameters = emptyList()
     )
 
-    override suspend fun doExecute(args: EmptyArgs): String = "Dummy result"
+    override suspend fun doExecute(args: ToolArgs.Empty): String = "Dummy result"
 }
 
 object CreateTool : SimpleTool<CreateTool.Args>() {
     @Serializable
-    data class Args(val name: String) : Tool.Args
+    data class Args(val name: String) : ToolArgs
 
     override val argsSerializer = Args.serializer()
 
@@ -38,7 +38,7 @@ object CreateTool : SimpleTool<CreateTool.Args>() {
 
 object SolveTool : SimpleTool<SolveTool.Args>() {
     @Serializable
-    data class Args(val name: String) : Tool.Args
+    data class Args(val name: String) : ToolArgs
 
     override val argsSerializer = Args.serializer()
 

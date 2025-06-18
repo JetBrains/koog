@@ -216,6 +216,9 @@ public sealed interface MessageMetaInfo {
 public data class RequestMetaInfo(
     override val timestamp: Instant
 ) : MessageMetaInfo {
+    /**
+     * Companion object for `RequestMetaInfo` that provides factory methods and utilities related to creating instances.
+     */
     public companion object {
         /**
          * Creates a RequestMetadata instance with a timestamp from the provided clock.
@@ -253,6 +256,10 @@ public data class ResponseMetaInfo(
     public val inputTokensCount: Int? = null,
     public val outputTokensCount: Int? = null,
 ) : MessageMetaInfo {
+    /**
+     * Companion object for the ResponseMetaInfo class.
+     * Provides utility methods to create ResponseMetaInfo instances.
+     */
     public companion object {
         /**
          * Creates a ResponseMetadata instance with a timestamp from the provided clock.

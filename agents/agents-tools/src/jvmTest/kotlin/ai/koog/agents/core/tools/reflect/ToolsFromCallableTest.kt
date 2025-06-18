@@ -9,6 +9,9 @@ import ai.koog.agents.core.tools.annotations.Tool
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -157,6 +160,7 @@ class MyTools : Tools {
     ) {
         println("tool3 called: arg")
     }
+
     @Tool
     @LLMDescription("Brilliant tool 4 with int result and multiple parameters")
     suspend fun tool4(
@@ -216,40 +220,90 @@ class ToolsFromCallableTest {
         @JvmStatic
         fun testVariants(): Array<Arguments> {
             return arrayOf(
-                Arguments.of(::globalTool, /*language=JSON*/ """{"count": 5}""", "\"Global tool called: 5\""),
-                Arguments.of(tools::tool1Async, /*language=JSON*/ """{"arg": 1}""", "\"tool1 called: 1\""),
-                Arguments.of(tools::tool2, /*language=JSON*/ """{"arg": 1}""", "\"tool2 called: 1\""),
-                Arguments.of(tools::tool3, /*language=JSON*/ """{"arg": 1}""", "{}"),
-                Arguments.of(tools::tool4, /*language=JSON*/ """{"argInt": 1, "argString":"10"}""", "11"),
-                Arguments.of(tools::tool5, /*language=JSON*/ """{"argInt": 1, "argString":"10"}""", """{"field1":1,"field2":"10"}"""),
-                Arguments.of(tools::tool7, /*language=JSON*/ """{"argInt": 1}""", """"tool 7 called""""),
-                Arguments.of(tools::tool7, /*language=JSON*/ """{"wrongArg": "Wrong", "argInt": 1}""", """"tool 7 called""""),
+                Arguments.of(
+                    ::globalTool,
+                    buildJsonObject { put("count", JsonPrimitive(5)) },
+                    "\"Global tool called: 5\""
+                ),
+                Arguments.of(
+                    tools::tool1Async,
+                    buildJsonObject { put("arg", JsonPrimitive(1)) },
+                    "\"tool1 called: 1\""
+                ),
+                Arguments.of(
+                    tools::tool2,
+                    buildJsonObject { put("arg", JsonPrimitive(1)) },
+                    "\"tool2 called: 1\""
+                ),
+                Arguments.of(
+                    tools::tool3,
+                    buildJsonObject { put("arg", JsonPrimitive(1)) },
+                    "{}"
+                ),
+                Arguments.of(
+                    tools::tool4,
+                    buildJsonObject {
+                        put("argInt", JsonPrimitive(1))
+                        put("argString", JsonPrimitive("10"))
+                    },
+                    "11"
+                ),
+                Arguments.of(
+                    tools::tool5,
+                    buildJsonObject {
+                        put("argInt", JsonPrimitive(1))
+                        put("argString", JsonPrimitive("10"))
+                    },
+                    """{"field1":1,"field2":"10"}"""
+                ),
+                Arguments.of(
+                    tools::tool7,
+                    buildJsonObject {
+                        put("argInt", JsonPrimitive(1))
+                        put("argString", JsonPrimitive("10"))
+                    },
+                    """"tool 7 called""""
+                ),
+                Arguments.of(
+                    tools::tool7,
+                    buildJsonObject {
+                        put("wrongArg", JsonPrimitive("Wrong"))
+                        put("argInt", JsonPrimitive(1))
+                    },
+                    """"tool 7 called""""
+                ),
             )
         }
 
         @JvmStatic
         fun descriptionTestVariants(): Array<Arguments> {
             return arrayOf(
-                Arguments.of(ToolSet1Impl().asTools(json), """
+                Arguments.of(
+                    ToolSet1Impl().asTools(json), """
 #0: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #1: ToolDescriptor(name=tool2, description=Wonderful tool number 2, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
 #2: ToolDescriptor(name=tool4, description=Perfect tool 4, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #3: ToolDescriptor(name=toolBase1, description=Base tool 1, requiredParameters=[], optionalParameters=[])
 #4: ToolDescriptor(name=toolBase2OverriddenInInterface, description=Base tool 2 description overridden, requiredParameters=[ToolParameterDescriptor(name=intArg, description=int argument overridden, type=Integer)], optionalParameters=[])
-""".trim()),
-                Arguments.of(DerivedToolSet1Impl().asTools(json), """
+""".trim()
+                ),
+                Arguments.of(
+                    DerivedToolSet1Impl().asTools(json), """
 #0: ToolDescriptor(name=derivedTool5, description=Derived tool 5, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
 #1: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #2: ToolDescriptor(name=tool2, description=Wonderful tool number 2, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
 #3: ToolDescriptor(name=tool4, description=Perfect tool 4, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #4: ToolDescriptor(name=toolBase1, description=Base tool 1, requiredParameters=[], optionalParameters=[])
 #5: ToolDescriptor(name=toolBase2OverriddenInInterface, description=Base tool 2 description overridden, requiredParameters=[ToolParameterDescriptor(name=intArg, description=int argument overridden, type=Integer)], optionalParameters=[])
-""".trim()),
-                Arguments.of(ToolSet1Impl().asToolsByInterface<ToolSet1>(json), """
+""".trim()
+                ),
+                Arguments.of(
+                    ToolSet1Impl().asToolsByInterface<ToolSet1>(json), """
 #0: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #1: ToolDescriptor(name=toolBase1, description=Base tool 1, requiredParameters=[], optionalParameters=[])
 #2: ToolDescriptor(name=toolBase2OverriddenInInterface, description=Base tool 2 description overridden, requiredParameters=[ToolParameterDescriptor(name=intArg, description=int argument overridden, type=Integer)], optionalParameters=[])
-""".trim()),
+""".trim()
+                ),
             )
         }
     }
@@ -257,16 +311,16 @@ class ToolsFromCallableTest {
 
     @ParameterizedTest
     @MethodSource("testVariants")
-    fun testJsonBridge(callable: KFunction<*>, argumentJsonString: String, expectedResult: String) {
+    fun testJsonBridge(callable: KFunction<*>, argumentJson: JsonObject, expectedResult: String) {
         val tool = callable.asTool(json)
-        val args = tool.decodeArgsFromString(argumentJsonString)
-        val (_, stringResult) = runBlocking {
-            tool.executeAndSerialize(args, ToolsEnabler)
+        val args = tool.decodeArgs(argumentJson)
+        val result = runBlocking {
+            tool.execute(args, ToolsEnabler)
         }
         assertEquals(
             expectedResult,
-            stringResult,
-            "Incorrect result for $callable with argument $argumentJsonString"
+            result.toStringDefault(),
+            "Incorrect result for $callable with argument $argumentJson"
         )
     }
 

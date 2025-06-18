@@ -2,13 +2,19 @@ package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
+import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.prompt.message.Message
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.uuid.ExperimentalUuidApi
 
 class EventHandlerTest {
 
@@ -225,4 +231,36 @@ class EventHandlerTest {
         assertEquals(expectedEvents.size, collectedEvents.size)
         assertContentEquals(expectedEvents, collectedEvents)
     }
+
+    @OptIn(ExperimentalUuidApi::class)
+    @Disabled
+    @Test
+    fun testEventHandlerWithErrors() = runBlocking {
+        val eventsCollector = TestEventsCollector()
+        val strategyName = "tracing-test-strategy"
+
+        val strategy = strategy(strategyName) {
+            val llmCallNode by nodeLLMRequest("test LLM call")
+            val llmCallWithToolsNode by nodeException("test LLM call with tools")
+
+            edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
+            edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
+            edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
+        }
+
+        val agent = createAgent(
+            strategy = strategy,
+            configureTools = {
+                tool(DummyTool())
+            },
+            installFeatures = {
+                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+            }
+        )
+
+        agent.run("Hello, world!!!")
+    }
+
+    fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegateBase<String, Message.Response> =
+        node(name) { message -> throw IllegalStateException("Test exception") }
 }

@@ -50,6 +50,31 @@ public class FeatureMessageRemoteServer(
     override val isStarted: Boolean
         get() = isInitialized
 
+    /**
+     * A channel used to receive and process incoming feature messages sent to the server.
+     *
+     * This property acts as an endpoint for handling incoming messages of type [FeatureMessage].
+     * Messages received on this channel are expected to be processed asynchronously, enabling
+     * the server to handle events such as client requests or updates in a non-blocking manner.
+     *
+     * Key Characteristics:
+     * - The channel is configured with an unlimited capacity, allowing it to buffer incoming messages
+     *   without restriction. This ensures robustness during high message throughput scenarios.
+     * - Incoming feature messages may represent various system events, categorized by their
+     *   `messageType` or timestamp as per the [FeatureMessage] interface.
+     *
+     * Use Cases:
+     * - Accepting and handling POST requests containing feature messages from clients.
+     * - Routing received messages for further processing, storage, or broadcasting.
+     * - Supporting server functionality by integrating received messages into its workflow for
+     *   tasks such as health checks, client communication, or event-driven responses.
+     *
+     * Behavior:
+     * - The channel remains open during the server's lifecycle and is explicitly closed
+     *   when the server is stopped (e.g., via the `stopServer` method).
+     * - Consumers of this channel are responsible for correctly processing the messages
+     *   while adhering to the channel's concurrency guarantees.
+     */
     public val receivedMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
 
 

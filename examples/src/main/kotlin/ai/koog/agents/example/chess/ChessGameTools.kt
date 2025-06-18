@@ -1,7 +1,7 @@
 package ai.koog.agents.example.chess
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -9,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 class Move(val game: ChessGame) : SimpleTool<Move.Args>() {
     @Serializable
-    data class Args(val notation: String) : Tool.Args
+    data class Args(val notation: String) : ToolArgs
 
     override val argsSerializer = Args.serializer()
 

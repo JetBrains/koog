@@ -22,7 +22,7 @@ public object OllamaEmbeddingModels {
      * Tradeoffs: Balanced between quality and efficiency
      */
     public val NOMIC_EMBED_TEXT: LLModel = LLModel(
-        provider = LLMProvider.Meta,
+        provider = LLMProvider.Ollama,
         id = "nomic-embed-text",
         capabilities = listOf(LLMCapability.Embed)
     )
@@ -37,7 +37,7 @@ public object OllamaEmbeddingModels {
      * Tradeoffs: Smaller model size with reduced context length, but very efficient
      */
     public val ALL_MINI_LM: LLModel = LLModel(
-        provider = LLMProvider.Meta,
+        provider = LLMProvider.Ollama,
         id = "all-minilm",
         capabilities = listOf(LLMCapability.Embed)
     )
@@ -52,7 +52,7 @@ public object OllamaEmbeddingModels {
      * Tradeoffs: Larger model size but provides excellent multilingual capabilities
      */
     public val MULTILINGUAL_E5: LLModel = LLModel(
-        provider = LLMProvider.Meta,
+        provider = LLMProvider.Ollama,
         id = "zylonai/multilingual-e5-large",
         capabilities = listOf(LLMCapability.Embed)
     )
@@ -67,7 +67,7 @@ public object OllamaEmbeddingModels {
      * Tradeoffs: Larger model size but provides high-quality embeddings
      */
     public val BGE_LARGE: LLModel = LLModel(
-        provider = LLMProvider.Meta,
+        provider = LLMProvider.Ollama,
         id = "bge-large",
         capabilities = listOf(LLMCapability.Embed)
     )
@@ -83,7 +83,7 @@ public object OllamaEmbeddingModels {
      * with this specific model configuration.
      */
     public val MXBAI_EMBED_LARGE: LLModel = LLModel(
-        provider = LLMProvider.Meta,
+        provider = LLMProvider.Ollama,
         id = "mxbai-embed-large",
         capabilities = listOf(LLMCapability.Embed)
     )

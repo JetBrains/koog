@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>() {
     @Serializable
-    data class Args(val arg1: String, val arg2: Int) : Tool.Args
+    data class Args(val arg1: String, val arg2: Int) : ToolArgs
 
     override val argsSerializer = Args.serializer()
 

@@ -47,9 +47,21 @@ public class AIAgentTool(
     agentDescription: String,
     requestDescription: String = "Input for the task"
 ) : Tool<AgentToolArgs, AgentToolResult>() {
+    /**
+     * Represents the arguments required for the execution of an agent tool.
+     *
+     * @property request The input data or parameters needed for the agent tool to perform its operation.
+     */
     @Serializable
-    public data class AgentToolArgs(val request: String) : Args
+    public data class AgentToolArgs(val request: String) : ToolArgs
 
+    /**
+     * Represents the result of executing an agent tool operation.
+     *
+     * @property successful Indicates whether the operation was successful.
+     * @property errorMessage An optional error message describing the failure, if any.
+     * @property result An optional string representing the result produced by the tool operation.
+     */
     @Serializable
     public data class AgentToolResult(
         val successful: Boolean,
@@ -74,13 +86,13 @@ public class AIAgentTool(
     )
 
     override suspend fun execute(args: AgentToolArgs): AgentToolResult {
-        try {
-            return AgentToolResult(
+        return try {
+            AgentToolResult(
                 successful = true,
                 result = agent.runAndGetResult(args.request)
             )
         } catch (e: Throwable) {
-            return AgentToolResult(
+            AgentToolResult(
                 successful = false,
                 errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n" +
                         e.stackTraceToString().take(100)

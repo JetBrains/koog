@@ -42,7 +42,7 @@ class MultipleLLMPromptExecutorMockTest {
             return listOf(Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock)))
         }
 
-        override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             return flowOf("OpenAI", " streaming", " response")
         }
     }
@@ -57,7 +57,7 @@ class MultipleLLMPromptExecutorMockTest {
             return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock)))
         }
 
-        override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             return flowOf("Anthropic", " streaming", " response")
         }
     }
@@ -72,7 +72,7 @@ class MultipleLLMPromptExecutorMockTest {
             return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock)))
         }
 
-        override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             return flowOf("Gemini", " streaming", " response")
         }
     }

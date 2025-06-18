@@ -15,6 +15,14 @@ public interface PromptCache {
      * based on a provided configuration string.
      */
     public interface Factory {
+        /**
+         * A [PromptCache.Factory] implementation that aggregates multiple [Factory.Named] instances.
+         *
+         * The `Aggregated` class provides a way to combine multiple named factories and attempts
+         * to create a `PromptCache` using the first factory that supports a given configuration.
+         *
+         * @property factories The list of `Factory.Named` instances to be aggregated.
+         */
         public class Aggregated(private val factories: List<Factory.Named>) : Factory {
             /**
              * Secondary constructor for the `Aggregated` class.
@@ -46,6 +54,14 @@ public interface PromptCache {
          * @property name The unique name associated with the factory.
          */
         public abstract class Named(public val name: String) : Factory {
+            /**
+             * Determines if the current factory instance can support the provided configuration string.
+             *
+             * The method checks if the factory's `name` matches the first element of the parsed configuration string.
+             *
+             * @param config The configuration string to be evaluated.
+             * @return `true` if the factory supports the configuration, otherwise `false`.
+             */
             public fun supports(config: String): Boolean = name == elements(config).firstOrNull()
         }
 

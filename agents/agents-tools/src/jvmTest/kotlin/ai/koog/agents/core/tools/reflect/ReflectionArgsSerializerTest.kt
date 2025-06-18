@@ -10,6 +10,9 @@ import ai.koog.agents.core.tools.reflect.ToolsFromCallableTest.Companion.ToolsEn
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -28,8 +31,16 @@ class ReflectionArgsSerializerTest {
 
         @JvmStatic
         fun getVariants(): Array<Arguments> = arrayOf(
-            Arguments.of(::foo, /*language=JSON*/ """{ "b": false, "i": 10, "extra": "Extra" }""", mapOf("i" to 10, "b" to false)),
-            Arguments.of(Any::fooEx, /*language=JSON*/ """{ "b": false, "i": 10, "extra": "Extra" }""", mapOf("i" to 10, "b" to false))
+            Arguments.of(
+                ::foo, /*language=JSON*/
+                """{ "b": false, "i": 10, "extra": "Extra" }""",
+                mapOf("i" to 10, "b" to false)
+            ),
+            Arguments.of(
+                Any::fooEx, /*language=JSON*/
+                """{ "b": false, "i": 10, "extra": "Extra" }""",
+                mapOf("i" to 10, "b" to false)
+            )
         )
     }
 
@@ -48,7 +59,8 @@ class ReflectionArgsSerializerTest {
     @Serializable
     data class MySpecificToolArgs(
         @LLMDescription("arg Long") val argLong: Long,
-        @LLMDescription("arg Double") val argDouble: Double)
+        @LLMDescription("arg Double") val argDouble: Double
+    )
 
     class MySpecificTool() {
         @Tool
@@ -65,8 +77,10 @@ class ReflectionArgsSerializerTest {
 
         @Tool
         @LLMDescription("Specific tool without tool annotation")
-        suspend fun executeWithArgs(@LLMDescription("args Tool") args: MySpecificToolArgs,
-                                    @LLMDescription("args Tool") args2: MySpecificToolArgs): String {
+        suspend fun executeWithArgs(
+            @LLMDescription("args Tool") args: MySpecificToolArgs,
+            @LLMDescription("args Tool") args2: MySpecificToolArgs
+        ): String {
             return "Specific tool called with ${args.argLong} and ${args.argDouble}"
         }
 
@@ -83,8 +97,8 @@ class ReflectionArgsSerializerTest {
         assertEquals(
             "Specific tool called with 42",
             runBlocking {
-                val args = tool.decodeArgsFromString("""{ "argLong": 42 }""")
-                val (rawResult, _) = tool.executeAndSerialize(args, ToolsEnabler)
+                val args = tool.decodeArgs(buildJsonObject { put("argLong", JsonPrimitive(42)) })
+                val rawResult = tool.execute(args, ToolsEnabler)
                 rawResult.result
             },
         )
@@ -98,8 +112,8 @@ class ReflectionArgsSerializerTest {
         assertEquals(
             "Specific tool called with 42.0",
             runBlocking {
-                val args = tool.decodeArgsFromString("""{ "argDouble": 42.0 }""")
-                val (rawResult, _) = tool.executeAndSerialize(args, ToolsEnabler)
+                val args = tool.decodeArgs(buildJsonObject { put("argDouble", JsonPrimitive(42.0)) })
+                val rawResult = tool.execute(args, ToolsEnabler)
                 rawResult.result
             },
         )
@@ -113,8 +127,22 @@ class ReflectionArgsSerializerTest {
         assertEquals(
             "Specific tool called with 42 and 3.14",
             runBlocking {
-                val args: ToolFromCallable.VarArgs = tool.decodeArgsFromString("""{ "args": {"argLong": 42, "argDouble": 3.14 }, "args2": {"argLong": 22, "argDouble": 3.14 }}""")
-                val (rawResult, _) = tool.executeAndSerialize(args, ToolsEnabler)
+                val args: ToolFromCallable.VarArgs =
+                    tool.decodeArgs(buildJsonObject {
+                        put(
+                            "args",
+                            buildJsonObject {
+                                put("argLong", JsonPrimitive(42))
+                                put("argDouble", JsonPrimitive(3.14))
+                            })
+                        put(
+                            "args2",
+                            buildJsonObject {
+                                put("argLong", JsonPrimitive(42))
+                                put("argDouble", JsonPrimitive(3.14))
+                            })
+                    })
+                val rawResult = tool.execute(args, ToolsEnabler)
                 rawResult.result
             }
         )
@@ -128,10 +156,22 @@ class ReflectionArgsSerializerTest {
         assertEquals(
             "Specific tool called with 42 and 3.14, 22 and 3.14",
             runBlocking {
-                val args: ToolFromCallable.VarArgs = tool.decodeArgsFromString(
-                    """{ "args": [{"argLong": 42, "argDouble": 3.14 }, {"argLong": 22, "argDouble": 3.14 }] }"""
-                )
-                val (rawResult, _) = tool.executeAndSerialize(args, ToolsEnabler)
+                val args: ToolFromCallable.VarArgs =
+                    tool.decodeArgs(buildJsonObject {
+                        put(
+                            "args",
+                            buildJsonArray {
+                                add(buildJsonObject {
+                                    put("argLong", JsonPrimitive(42))
+                                    put("argDouble", JsonPrimitive(3.14))
+                                })
+                                add(buildJsonObject {
+                                    put("argLong", JsonPrimitive(22))
+                                    put("argDouble", JsonPrimitive(3.14))
+                                })
+                            })
+                    })
+                val rawResult = tool.execute(args, ToolsEnabler)
                 rawResult.result
             }
         )

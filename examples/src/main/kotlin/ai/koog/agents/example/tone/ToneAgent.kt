@@ -5,6 +5,7 @@ package ai.koog.agents.example.tone
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.tone.ToneTools.NegativeToneTool
@@ -67,7 +68,7 @@ fun main() {
             toolRegistry = toolRegistry
         ) {
             handleEvents {
-                onToolCall { tool: Tool<*, *>, toolArgs: Tool.Args ->
+                onToolCall { tool: Tool<*, *>, toolArgs: ToolArgs ->
                     println("Tool called: tool ${tool.name}, args $toolArgs")
                 }
 

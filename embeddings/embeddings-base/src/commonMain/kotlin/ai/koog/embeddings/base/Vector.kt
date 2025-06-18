@@ -41,10 +41,29 @@ public data class Vector(val values: List<Double>) {
         }
     }
 
+    /**
+     * Checks if the vector is a null vector, i.e., all its components are equal to 0.0.
+     *
+     * @return True if all components of the vector are 0.0, false otherwise.
+     */
     public fun isNull(): Boolean = values.all { it == 0.0 }
 
+    /**
+     * Computes the magnitude (Euclidean norm) of the vector.
+     * The magnitude is calculated as the square root of the sum of the squares of the vector's elements.
+     *
+     * @return The magnitude of the vector as a non-negative Double.
+     */
     public fun magnitude(): Double = sqrt(kahanSum(values) { it * it })
 
+    /**
+     * Calculates the dot product of this vector and the given vector.
+     * The dot product is the sum of the products of the corresponding elements of the two vectors.
+     *
+     * @param other The vector to compute the dot product with. It must have the same dimension as this vector.
+     * @return The dot product of the two vectors as a double.
+     * @throws IllegalArgumentException if the vectors have different dimensions.
+     */
     public infix fun dotProduct(other: Vector): Double = kahanSum(values.zip(other.values)) { (a, b) -> a * b }
 
     /**
