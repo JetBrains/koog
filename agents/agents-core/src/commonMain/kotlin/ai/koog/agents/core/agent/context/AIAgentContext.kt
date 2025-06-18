@@ -89,15 +89,16 @@ internal class AIAgentContext(
     /**
      * Creates a copy of the current [AIAgentContext], allowing for selective overriding of its properties.
      *
+     * @param sessionId The session UUID, or `null` to retain the current session ID.
      * @param environment The [AIAgentEnvironment] to be used in the new context, or `null` to retain the current one.
      * @param config The [AIAgentConfigBase] for the new context, or `null` to retain the current configuration.
      * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
-     * @param sessionUuid The session UUID, or `null` to retain the current session ID.
      * @param strategyId The strategy identifier, or `null` to retain the current identifier.
      * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
      */
+    @OptIn(InternalAgentsApi::class)
     override fun copy(
         environment: AIAgentEnvironment?,
         agentInput: String?,
@@ -105,18 +106,17 @@ internal class AIAgentContext(
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
-        sessionUuid: Uuid?,
         strategyId: String?,
         pipeline: AIAgentPipeline?,
     ): AIAgentContextBase = AIAgentContext(
+        sessionId = this.sessionId,
         environment = environment ?: this.environment,
         agentInput = agentInput ?: this.agentInput,
         config = config ?: this.config,
         llm = llm ?: this.llm,
         stateManager = stateManager ?: this.stateManager,
         storage = storage ?: this.storage,
-        sessionUuid = sessionUuid ?: this.sessionId,
         strategyId = strategyId ?: this.strategyId,
-        pipeline = pipeline ?: @OptIn(InternalAgentsApi::class) this.pipeline,
+        pipeline = pipeline ?:  this.pipeline
     )
 }

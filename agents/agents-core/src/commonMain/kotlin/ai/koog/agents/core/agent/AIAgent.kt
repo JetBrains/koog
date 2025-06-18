@@ -160,7 +160,6 @@ public open class AIAgent(
         FeatureContext(this).installFeatures()
     }
 
-
     override suspend fun run(agentInput: String) {
         runningMutex.withLock {
             if (isRunning) {
@@ -180,23 +179,25 @@ public open class AIAgent(
         //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
         val preparedEnvironment = pipeline.transformEnvironment(strategy, this, this)
 
+        val sessionId = Uuid.random()
+
         val agentContext = AIAgentContext(
-            preparedEnvironment,
+            sessionId = sessionId,
+            environment = preparedEnvironment,
             agentInput = agentInput,
-            agentConfig,
+            config = agentConfig,
             llm = AIAgentLLMContext(
-                toolRegistry.tools.map { it.descriptor },
-                toolRegistry,
-                agentConfig.prompt,
-                agentConfig.model,
+                tools = toolRegistry.tools.map { it.descriptor },
+                prompt = agentConfig.prompt,
+                model = agentConfig.model,
                 promptExecutor = PromptExecutorProxy(sessionId = sessionId, executor = promptExecutor, pipeline = pipeline),
                 environment = preparedEnvironment,
-                agentConfig,
-                clock
+                config = agentConfig,
+                clock = clock,
+                toolRegistry = toolRegistry
             ),
             stateManager = stateManager,
             storage = storage,
-            sessionId = sessionUuid!!,
             strategyId = strategy.name,
             pipeline = pipeline,
         )
@@ -205,7 +206,6 @@ public open class AIAgent(
 
         runningMutex.withLock {
             isRunning = false
-            sessionUuid = null
             if (!agentResultDeferred.isCompleted) {
                 agentResultDeferred.complete(null)
             }

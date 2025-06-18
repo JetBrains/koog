@@ -306,8 +306,8 @@ public class AIAgentPipeline {
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(sessionId, prompt, tools, model, responses) }
     }
 
-    public suspend fun onStartLLMStreaming(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel) {
-        executeLLMHandlers.values.forEach { handler -> handler. }
+    public suspend fun onStartLLMStreaming(sessionId: String, prompt: Prompt, model: LLModel) {
+        executeLLMHandlers.values.forEach { handler -> handler.startLLMStreamingHandler.handle(sessionId, prompt, model) }
     }
 
     //endregion Trigger LLM Call Handlers

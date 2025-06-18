@@ -26,7 +26,7 @@ public class ExecuteLLMHandler {
         BeforeLLMCallHandler { prompt, tools, model, sessionUuid -> }
 
     /**
-     * A handler that is invoked after a call to a language model (LLM) is executed.
+     * A handler invoked after a call to a language model (LLM) is executed.
      *
      * This variable represents a custom implementation of the `AfterLLMCallHandler` functional interface,
      * allowing post-processing or custom logic to be performed once the LLM has returned a response.
@@ -39,7 +39,8 @@ public class ExecuteLLMHandler {
     public var afterLLMCallHandler: AfterLLMCallHandler =
         AfterLLMCallHandler { prompt, tools, model, response, sessionUuid -> }
 
-    public var
+    public var startLLMStreamingHandler: StartLLMStreamingHandler =
+        StartLLMStreamingHandler { sessionId: String, prompt: Prompt, model: LLModel -> }
 }
 
 /**
@@ -79,4 +80,8 @@ public fun interface AfterLLMCallHandler {
      * @param sessionUuid The unique identifier for the session during which the processing takes place.
      */
     public suspend fun handle(sessionId: String, prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>)
+}
+
+public fun interface StartLLMStreamingHandler {
+    public suspend fun handle(sessionId: String, prompt: Prompt, model: LLModel)
 }

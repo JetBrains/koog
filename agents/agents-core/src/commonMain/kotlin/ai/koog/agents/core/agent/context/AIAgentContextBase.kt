@@ -80,7 +80,6 @@ public interface AIAgentContextBase {
      */
     public val storage: AIAgentStorage
 
-    // TODO: use Uuid?
     /**
      * A unique identifier for the current session associated with the AI agent context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
@@ -170,7 +169,6 @@ public interface AIAgentContextBase {
      * @return A new instance of [AIAgentContext] with the specified overrides.
      */
     public fun copy(
-        sessionId: Uuid? = null,
         environment: AIAgentEnvironment? = null,
         agentInput: String? = null,
         config: AIAgentConfigBase? = null,
