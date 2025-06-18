@@ -9,12 +9,6 @@ plugins {
 }
 
 kotlin {
-    targets.withType(org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget::class.java).configureEach {
-        compilations.all {
-            kotlinOptions.jvmTarget = "1.8"
-        }
-    }
-
     sourceSets {
         commonMain {
             dependencies {

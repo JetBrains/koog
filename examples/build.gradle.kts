@@ -75,6 +75,7 @@ registerRunExampleTask("runExampleLoopComponent", "ai.koog.agents.example.compon
 registerRunExampleTask("runExampleInstagramPostDescriber", "ai.koog.agents.example.media.InstagramPostDescriberKt")
 registerRunExampleTask("runExampleRoutingViaGraph", "ai.koog.agents.example.banking.routing.RoutingViaGraphKt")
 registerRunExampleTask("runExampleRoutingViaAgentsAsTools", "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt")
+registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 
 dokka {
     dokkaSourceSets.named("main") {

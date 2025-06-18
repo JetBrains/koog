@@ -1,6 +1,7 @@
 package ai.koog.agents.example.mcp
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -23,7 +24,9 @@ import kotlinx.coroutines.runBlocking
 fun main(): Unit = runBlocking {
     // Get the API key from environment variables
     val googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY") ?: error("GOOGLE_MAPS_API_KEY environment variable not set")
-    val openAIApiToken = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable not set")
+    val openAIApiToken = ApiKeyService.openAIApiKey
+    val awsAccessKey = ApiKeyService.awsAccessKey
+    val awsSecretAccessKey = ApiKeyService.awsSecretAccessKey
 
     // Start the Docker container with the Google Maps MCP server
     val process = ProcessBuilder(
@@ -61,12 +64,8 @@ fun main(): Unit = runBlocking {
             )
         }
 
-        // Example of using the Bedrock executor
-        val awsAccessKey = System.getenv("AWS_ACCESS_KEY_ID") ?: error("AWS_ACCESS_KEY_ID not set")
-        val awsSecretKey = System.getenv("AWS_SECRET_ACCESS_KEY") ?: error("AWS_SECRET_ACCESS_KEY not set")
-
         val bedrockAgent = AIAgent(
-            executor = simpleBedrockExecutor(awsAccessKey, awsSecretKey),
+            executor = simpleBedrockExecutor(awsAccessKey, awsSecretAccessKey),
             systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
             llmModel = BedrockModels.AnthropicClaude3Sonnet
         )

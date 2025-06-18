@@ -127,13 +127,10 @@ val bedrockClient = createBedrockLLMClient(
 ## Basic Usage
 
 ```kotlin
-import ai.koog.prompt.executor.clients.bedrock.BedrockModels
-import ai.koog.prompt.executor.clients.bedrock.createBedrockLLMClient
-
 suspend fun main() {
     val client = createBedrockLLMClient(
-        awsAccessKeyId = System.getenv("AWS_ACCESS_KEY_ID"),
-        awsSecretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY"),
+        awsAccessKeyId = ApiKeyService.awsAccessKey,
+        awsSecretAccessKey = ApiKeyService.awsSecretAccessKey,
         settings = BedrockClientSettings(region = "us-west-2")
     )
 
