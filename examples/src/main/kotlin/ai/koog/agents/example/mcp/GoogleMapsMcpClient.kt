@@ -67,7 +67,7 @@ fun main(): Unit = runBlocking {
 
         val bedrockAgent = AIAgent(
             executor = simpleBedrockExecutor(awsAccessKey, awsSecretKey),
-            systemPrompt = "You are a helpful assistant. Answer user questions concisely using AWS Bedrock.",
+            systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
             llmModel = BedrockModels.AnthropicClaude3Sonnet
         )
 
