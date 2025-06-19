@@ -321,7 +321,7 @@ try {
 
 AWS Bedrock charges per token for model usage. Monitor your usage and set up billing alerts:
 
-- **Claude 3 models**: Higher cost, superior performance and capabilities
+- **Claude 3/4 models**: Higher cost, superior performance and capabilities
 - **Titan models**: Cost-effective for general-purpose tasks
 - **Llama models**: Good balance of cost and performance
 - **Mistral models**: Competitive pricing with tool support (Large model)
