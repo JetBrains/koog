@@ -104,12 +104,12 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param dispatcher Coroutine dispatcher to use for parallel execution
      * @param name Optional node name
      */
-    public fun <Input, Output> fork(
+    public fun <Input, Output> parallel(
         vararg nodes: AIAgentNodeBase<Input, Output>,
         dispatcher: CoroutineDispatcher = Dispatchers.Default,
         name: String? = null,
-    ): AIAgentNodeDelegateBase<Input, List<ForkResult<Input, Output>>> {
-        return AIAgentNodeDelegate(name, AIAgentForkNodeBuilder(nodes.asList(), dispatcher))
+    ): AIAgentNodeDelegateBase<Input, List<AsyncParallelResult<Input, Output>>> {
+        return AIAgentNodeDelegate(name, AIAgentParallelNodeBuilder(nodes.asList(), dispatcher))
     }
 
     /**
@@ -119,9 +119,25 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      */
     public fun <Input, Output> merge(
         name: String? = null,
-        execute: suspend AIAgentContextBase.(List<ForkResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
-    ): AIAgentNodeDelegateBase<List<ForkResult<Input, Output>>, Output> {
-        return AIAgentNodeDelegate(name, AIAgentMergeNodeBuilder(execute))
+        execute: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+    ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, Output>>, Output> {
+        return AIAgentNodeDelegate(name, AIAgentParallelMergeNodeBuilder(execute))
+    }
+
+    /**
+     * Creates a node that applies a transform function to the output of parallel node executions.
+     *
+     * @param name Optional name for the node. If not provided, the property name of the delegate will be used.
+     * @param dispatcher The coroutine dispatcher used for executing the transform function. Defaults to `Dispatchers.Default`.
+     * @param transform A suspendable function defining the transformation logic. It processes each `OldOutput` and produces a `NewOutput`.
+     * @return A delegate representing the node with the transformed parallel results.
+     */
+    public fun <Input, OldOutput, NewOutput> transform(
+        name: String? = null,
+        dispatcher: CoroutineDispatcher = Dispatchers.Default,
+        transform: suspend AIAgentContextBase.(OldOutput) -> NewOutput,
+    ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, OldOutput>>, List<AsyncParallelResult<Input, NewOutput>>> {
+        return AIAgentNodeDelegate(name, AIAgentParallelTransformNodeBuilder(transform, dispatcher))
     }
 
     /**
@@ -250,20 +266,38 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     }
 }
 
+public data class OutputWithContext<Output>(val output: Output, val context: AIAgentContextBase)
+
+/**
+ * Async result of parallel node execution.
+ *
+ * @property nodeName Name of the node
+ * @property input Input to the node
+ * @property asyncResult Output and context of the parallel pipeline step
+ */
+public data class AsyncParallelResult<Input, Output>(
+    val nodeName: String,
+    val input: Input,
+    val asyncResult: Deferred<OutputWithContext<Output>>
+) {
+    public suspend fun await(): ParallelResult<Input, Output> {
+        return ParallelResult(nodeName, input, asyncResult.await())
+    }
+}
+
 /**
  * Result of parallel node execution.
  *
  * @property nodeName Name of the node
  * @property input Input to the node
- * @property context Context of the node on the node termination state
- * @property output Output of the node
+ * @property result Output and context of the node on the parallel pipeline termination state
  */
-public data class ForkResult<Input, Output>(
+public data class ParallelResult<Input, Output>(
     val nodeName: String,
     val input: Input,
-    val context: AIAgentContextBase,
-    val output: Output
+    val result: OutputWithContext<Output>
 )
+
 
 /**
  * Builder for a node that executes multiple nodes in parallel.
@@ -272,39 +306,66 @@ public data class ForkResult<Input, Output>(
  * @param dispatcher Coroutine dispatcher to use for parallel execution
  */
 @OptIn(ExperimentalUuidApi::class)
-public class AIAgentForkNodeBuilder<Input, Output> internal constructor(
+public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
     private val nodes: List<AIAgentNodeBase<Input, Output>>,
     private val dispatcher: CoroutineDispatcher
-) : AIAgentNodeBuilder<Input, List<ForkResult<Input, Output>>>(
+) : AIAgentNodeBuilder<Input, List<AsyncParallelResult<Input, Output>>>(
     execute = { input ->
         val initialContext: AIAgentContextBase = this
         val mapResults = supervisorScope {
             nodes.map { node ->
-                async(dispatcher) {
+                val asyncResult = async(dispatcher) {
                     val nodeContext = initialContext.fork()
                     val result = node.execute(nodeContext, input)
-                    ForkResult(node.name, input, nodeContext, result)
+                    OutputWithContext(result, nodeContext)
                 }
+                AsyncParallelResult(node.name, input, asyncResult)
             }
         }
-
-        mapResults.awaitAll()
+        mapResults
     }
 )
 
 /**
- * Builder for a node that executes multiple nodes in parallel and merges their contexts.
+ * Builder for a node that merges the parallel tool results.
  *
- * @param execute Function to merge the contexts after parallel execution
+ * @param merge Function to merge the contexts after parallel execution
  */
 @OptIn(ExperimentalUuidApi::class)
-public class AIAgentMergeNodeBuilder<Input, Output> internal constructor(
-    private val execute: suspend AIAgentContextBase.(List<ForkResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
-) : AIAgentNodeBuilder<List<ForkResult<Input, Output>>, Output>(
+public class AIAgentParallelMergeNodeBuilder<Input, Output> internal constructor(
+    private val merge: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+) : AIAgentNodeBuilder<List<AsyncParallelResult<Input, Output>>, Output>(
     execute = { input ->
-        val (context, output) = execute(input)
+        val (context, output) = merge(input.map { it.await() })
         this.replace(context)
 
         output
+    }
+)
+
+/**
+ * Builder for constructing a parallel outputs transformation node.
+ *
+ * @param transform A suspend function defining the transformation logic to be applied to the elements in the output list.
+ * @param dispatcher The [CoroutineDispatcher] used to control the parallel execution of the transformation operations.
+ */
+@OptIn(ExperimentalUuidApi::class)
+public class AIAgentParallelTransformNodeBuilder<Input, OldOutput, NewOutput> internal constructor(
+    transform: suspend AIAgentContextBase.(OldOutput) -> NewOutput,
+    private val dispatcher: CoroutineDispatcher
+) : AIAgentNodeBuilder<List<AsyncParallelResult<Input, OldOutput>>, List<AsyncParallelResult<Input, NewOutput>>>(
+    execute = { input ->
+        val transformedResults = supervisorScope {
+            input.map {
+                val asyncResult = async(dispatcher) {
+                    val result = it.asyncResult.await()
+                    with(result.context) {
+                        OutputWithContext(transform(result.output), this@with)
+                    }
+                }
+                AsyncParallelResult(it.nodeName, it.input, asyncResult)
+            }
+        }
+        transformedResults
     }
 )
