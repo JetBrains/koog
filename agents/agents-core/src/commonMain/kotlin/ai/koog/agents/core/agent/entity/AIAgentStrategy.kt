@@ -21,7 +21,6 @@ public class AIAgentStrategy(
 ) : AIAgentSubgraph<String, String>(
     name, nodeStart, nodeFinish, toolSelectionStrategy
 ) {
-
     override suspend fun execute(context: AIAgentContextBase, input: String): String {
         return runCatchingCancellable {
             context.pipeline.onStrategyStarted(this, context)

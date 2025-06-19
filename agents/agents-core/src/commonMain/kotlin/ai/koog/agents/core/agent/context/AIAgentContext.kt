@@ -57,6 +57,9 @@ internal class AIAgentContext(
     private val features: Map<AIAgentStorageKey<*>, Any> =
         pipeline.getAgentFeatures(this)
 
+    @InternalAgentsApi
+    override var forcedContextData: AgentContextData? = null
+
     /**
      * Retrieves a feature associated with the given key from the AI agent storage.
      *

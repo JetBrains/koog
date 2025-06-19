@@ -163,7 +163,6 @@ public open class AIAgent(
         FeatureContext(this).installFeatures()
     }
 
-
     override suspend fun run(agentInput: String) {
         runningMutex.withLock {
             if (isRunning) {

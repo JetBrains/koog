@@ -113,6 +113,12 @@ public interface AIAgentContextBase {
     public val pipeline: AIAgentPipeline
 
     /**
+     * Enforced context data for the agent, which can be used to pass additional information
+     */
+    @InternalAgentsApi
+    public var forcedContextData: AgentContextData?
+
+    /**
      * Retrieves a feature from the agent's storage using the specified key.
      *
      * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding feature.
