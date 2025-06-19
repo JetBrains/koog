@@ -109,14 +109,14 @@ class InMemoryDocumentEmbeddingStorageTest {
         val otherDocRanks = rankedDocs.filter { !it.document.content.contains("banana") }
             .map { it.similarity }
 
-        // In our mock implementation, documents containing the query should have similarity 0.0 (exact match)
-        // and others should have similarity 1.0 (different)
+        // In our mock implementation, documents containing the query should have similarity 1.0 (exact match)
+        // and others should have similarity 0.0 (different)
         bananaDocRanks.forEach { similarity ->
-            assertEquals(0.0, similarity)
+            assertEquals(1.0, similarity)
         }
 
         otherDocRanks.forEach { similarity ->
-            assertEquals(1.0, similarity)
+            assertEquals(0.0, similarity)
         }
     }
 }

@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.math.sqrt
 import kotlin.test.*
 
 class JVMTextFileDocumentEmbeddingStorageTest {
@@ -13,13 +14,15 @@ class JVMTextFileDocumentEmbeddingStorageTest {
     // Simple mock implementation of Embedder for testing
     private class MockEmbedder : Embedder {
         override suspend fun embed(text: String): Vector {
-            // Simple embedding: convert each character to its ASCII value and use as vector values
-            return Vector(text.map { it.code.toDouble() })
+            // Simple embedding: convert each word to it's hash code
+            return Vector(text.split(" ").map { it.hashCode().toDouble() })
         }
 
         override fun diff(embedding1: Vector, embedding2: Vector): Double {
-            // Simple Euclidean distance
-            return embedding1.values.zip(embedding2.values) { a, b -> (a - b) * (a - b) }.sum()
+            // Number of intersecting elements (words) in 2 texts
+            val intersectionsSize = embedding1.values.count { it in embedding2.values }
+            val totalSize = embedding1.values.size + embedding2.values.size
+            return 1.0 - 2.0 * intersectionsSize / totalSize;
         }
     }
 
@@ -135,17 +138,17 @@ class JVMTextFileDocumentEmbeddingStorageTest {
             }
 
             // Documents containing "hello" should be more similar (lower distance)
-            val helloDocuments = rankedDocs.filter { 
-                Files.readString(it.document).contains("hello") 
+            val helloDocuments = rankedDocs.filter {
+                Files.readString(it.document).contains("hello")
             }
-            val nonHelloDocuments = rankedDocs.filter { 
-                !Files.readString(it.document).contains("hello") 
+            val nonHelloDocuments = rankedDocs.filter {
+                !Files.readString(it.document).contains("hello")
             }
 
             if (helloDocuments.isNotEmpty() && nonHelloDocuments.isNotEmpty()) {
                 val avgHelloSimilarity = helloDocuments.map { it.similarity }.average()
                 val avgNonHelloSimilarity = nonHelloDocuments.map { it.similarity }.average()
-                assertTrue(avgHelloSimilarity < avgNonHelloSimilarity, "Documents with 'hello' should be more similar")
+                assertTrue(avgHelloSimilarity > avgNonHelloSimilarity, "Documents with 'hello' should be more similar")
             }
         } finally {
             testFiles.forEach { Files.deleteIfExists(it) }
@@ -216,11 +219,11 @@ class JVMTextFileDocumentEmbeddingStorageTest {
             assertEquals(testFiles.size, bananaRanked.size)
 
             // The exact document should have the best similarity (lowest distance)
-            val bestAppleMatch = appleRanked.minByOrNull { it.similarity }
-            val bestBananaMatch = bananaRanked.minByOrNull { it.similarity }
+            val bestAppleMatch = appleRanked.maxBy { it.similarity }
+            val bestBananaMatch = bananaRanked.maxBy { it.similarity }
 
-            assertEquals("apple", Files.readString(bestAppleMatch!!.document))
-            assertEquals("banana", Files.readString(bestBananaMatch!!.document))
+            assertEquals("apple", Files.readString(bestAppleMatch.document))
+            assertEquals("banana", Files.readString(bestBananaMatch.document))
         } finally {
             testFiles.forEach { Files.deleteIfExists(it) }
         }
