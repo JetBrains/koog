@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.llms
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -43,5 +44,17 @@ public open class SingleLLMPromptExecutor(
         responseFlow.collect { chunk ->
             emit(chunk)
         }
+    }
+
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        val choices = llmClient.executeMultipleChoices(prompt, model, tools)
+        logger.debug { "Choices: $choices" }
+
+        return choices
     }
 }

@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.MediaContent
@@ -118,32 +119,8 @@ public open class OpenAILLMClient(
         }
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
-            "Model ${model.id} does not support chat completions"
-        }
-        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
-            "Model ${model.id} does not support tools"
-        }
-
-        val request = createOpenAIRequest(prompt, tools, model, false)
-
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(settings.chatCompletionsPath) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                val openAIResponse = response.body<OpenAIResponse>()
-                processOpenAIResponse(openAIResponse)
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
-                error("Error from OpenAI API: ${response.status}: $errorBody")
-            }
-        }
-    }
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> =
+        processOpenAIResponse(getOpenAIResponse(prompt, model, tools)).first()
 
     override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
@@ -184,6 +161,9 @@ public open class OpenAILLMClient(
             error(e.message ?: "Unknown error during streaming")
         }
     }
+
+    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> =
+        processOpenAIResponse(getOpenAIResponse(prompt, model, tools))
 
     /**
      * Embeds the given text using the OpenAI embeddings API.
@@ -344,12 +324,39 @@ public open class OpenAILLMClient(
             model = model.id,
             messages = messages,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            numberOfChoices = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
             modalities = modalities,
             audio = audio,
             stream = stream,
             toolChoice = toolChoice,
         )
+    }
+
+    private suspend fun getOpenAIResponse(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): OpenAIResponse {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
+        }
+        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+            "Model ${model.id} does not support tools"
+        }
+
+        val request = createOpenAIRequest(prompt, tools, model, false)
+
+        return withContext(Dispatchers.SuitableForIO) {
+            val response = httpClient.post(settings.chatCompletionsPath) {
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                response.body<OpenAIResponse>()
+            } else {
+                val errorBody = response.bodyAsText()
+                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
+                error("Error from OpenAI API: ${response.status}: $errorBody")
+            }
+        }
     }
 
     private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
@@ -457,22 +464,30 @@ public open class OpenAILLMClient(
         }
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
-    private fun processOpenAIResponse(response: OpenAIResponse): List<Message.Response> {
+    private fun processOpenAIResponse(response: OpenAIResponse): List<LLMChoice> {
         if (response.choices.isEmpty()) {
             logger.error { "Empty choices in OpenAI response" }
             error("Empty choices in OpenAI response")
         }
-
-        val (choice, message) = response.choices
-            .firstOrNull()
-            ?.let { it to it.message } ?: throw IllegalStateException("No choice found in OpenAI response")
 
         // Extract token count from the response
         val totalTokensCount = response.usage?.totalTokens
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
 
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokensCount,
+            inputTokensCount = inputTokensCount,
+            outputTokensCount = outputTokensCount
+        )
+
+        return response.choices.map { processOpenAIMessage(it, metaInfo) }
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun processOpenAIMessage(choice: OpenAIChoice, metaInfo: ResponseMetaInfo): List<Message.Response> {
+        val message = choice.message
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
                 message.toolCalls.map { toolCall ->
@@ -480,12 +495,7 @@ public open class OpenAILLMClient(
                         id = toolCall.id,
                         tool = toolCall.function.name,
                         content = toolCall.function.arguments,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock,
-                            totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount
-                        )
+                        metaInfo = metaInfo
                     )
                 }
             }
@@ -495,11 +505,7 @@ public open class OpenAILLMClient(
                     Message.Assistant(
                         content = message.content.text(),
                         finishReason = choice.finishReason,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock, totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount
-                        )
+                        metaInfo = metaInfo
                     )
                 )
             }
@@ -511,11 +517,7 @@ public open class OpenAILLMClient(
                         content = message.audio.transcript ?: "",
                         mediaContent = MediaContent.Audio(audio, format = ""),
                         finishReason = choice.finishReason,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock, totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount
-                        )
+                        metaInfo = metaInfo
                     )
                 )
             }

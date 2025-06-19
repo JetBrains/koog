@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.llms
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -148,5 +149,34 @@ public open class MultiLLMPromptExecutor(
         responseFlow.collect { chunk ->
             emit(chunk)
         }
+    }
+
+    /**
+     * Executes a given prompt using the specified tools and model and returns a list of model choices.
+     *
+     * @param prompt The `Prompt` to be executed, containing the input messages and parameters.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
+     * @param model The LLM model to use for execution.
+     * @return A list of `LLMChoice` objects containing the choices generated based on the prompt.
+     * @throws IllegalArgumentException If no client is found for the model's provider and no fallback settings are configured.
+     */
+    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+
+        val provider = model.provider
+
+        val choices = when {
+            provider in llmClients -> llmClients[provider]!!.executeMultipleChoices(prompt, model, tools)
+            fallback != null -> fallbackClient!!.executeMultipleChoices(
+                prompt,
+                fallback.fallbackModel,
+                tools
+            )
+            else -> throw IllegalArgumentException("No client found for provider: $provider")
+        }
+
+        logger.debug { "Choices: $choices" }
+
+        return choices
     }
 }

@@ -2,6 +2,7 @@ package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -42,5 +43,16 @@ public class PromptExecutorProxy(
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         return executor.executeStreaming(prompt, model)
+    }
+
+    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
+        logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
+        // TODO: add on before/after LLMWithMultipleChoices to the pipeline
+
+        val response = executor.executeMultipleChoices(prompt, model, tools)
+
+        logger.debug { "Finished LLM call with response: $response" }
+
+        return response
     }
 }

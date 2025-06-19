@@ -4,10 +4,6 @@ package ai.koog.agents.example.calculator
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
@@ -24,10 +20,6 @@ import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-
-// Example threshold
-private const val MAX_TOKENS_THRESHOLD = 1000
-
 fun main() = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
@@ -37,49 +29,6 @@ fun main() = runBlocking {
         tool(AskUser)
         tool(SayToUser)
         tools(CalculatorTools().asTools())
-    }
-
-    val strategy = strategy("test") {
-        val nodeCallLLM by nodeLLMRequestMultiple()
-        val nodeExecuteToolMultiple by nodeExecuteMultipleTools(parallelTools = true)
-        val nodeSendToolResultMultiple by nodeLLMSendMultipleToolResults()
-        val nodeCompressHistory by nodeLLMCompressHistory<List<ReceivedToolResult>>()
-
-        edge(nodeStart forwardTo nodeCallLLM)
-
-        edge(
-            (nodeCallLLM forwardTo nodeFinish)
-                    transformed { it.first() }
-                    onAssistantMessage { true }
-        )
-
-        edge(
-            (nodeCallLLM forwardTo nodeExecuteToolMultiple)
-                    onMultipleToolCalls { true }
-        )
-
-        edge(
-            (nodeExecuteToolMultiple forwardTo nodeCompressHistory)
-                    onCondition { llm.readSession { prompt.latestTokenUsage > MAX_TOKENS_THRESHOLD } }
-        )
-
-        edge(nodeCompressHistory forwardTo nodeSendToolResultMultiple)
-
-        edge(
-            (nodeExecuteToolMultiple forwardTo nodeSendToolResultMultiple)
-                    onCondition { llm.readSession { prompt.latestTokenUsage <= MAX_TOKENS_THRESHOLD } }
-        )
-
-        edge(
-            (nodeSendToolResultMultiple forwardTo nodeExecuteToolMultiple)
-                    onMultipleToolCalls { true }
-        )
-
-        edge(
-            (nodeSendToolResultMultiple forwardTo nodeFinish)
-                    transformed { it.first() }
-                    onAssistantMessage { true }
-        )
     }
 
     // Create agent config with proper prompt
@@ -94,7 +43,7 @@ fun main() = runBlocking {
     // Create the runner
     val agent = AIAgent(
         promptExecutor = executor,
-        strategy = strategy,
+        strategy = CalculatorStrategy.strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry
     ) {

@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
+import ai.grazie.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version
@@ -47,5 +47,4 @@ kotlin {
     explicitApi()
 }
 
-// Configure the publication to use the Grazie Public Maven repository
-publishToGraziePublicMaven()
+publishToMaven()

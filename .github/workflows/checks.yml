@@ -91,6 +91,7 @@ jobs:
             **/build/reports/
   qodana:
     needs: [tests]
+    if: github.repository == 'jetbrains/koog'
     runs-on: ubuntu-latest
     permissions:
       contents: write

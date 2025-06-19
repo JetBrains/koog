@@ -7,6 +7,7 @@ import ai.koog.agents.utils.SuitableForIO
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.MediaContent
@@ -120,22 +121,8 @@ public open class GoogleLLMClient(
             "Model ${model.id} does not support tools"
         }
 
-        val request = createGoogleRequest(prompt, model, tools)
-
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post("$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_GENERATE_CONTENT") {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                val googleResponse = response.body<GoogleResponse>()
-                processGoogleResponse(googleResponse)
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from GoogleAI API: ${response.status}: $errorBody" }
-                error("Error from GoogleAI API: ${response.status}: $errorBody")
-            }
-        }
+        val response = getGoogleResponse(prompt, model, tools)
+        return processGoogleResponse(response).first()
     }
 
     override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
@@ -176,6 +163,55 @@ public open class GoogleLLMClient(
         } catch (e: Exception) {
             logger.error { "Exception during streaming: $e" }
             error(e.message ?: "Unknown error during streaming")
+        }
+    }
+
+    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
+        logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
+        }
+        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+            "Model ${model.id} does not support tools"
+        }
+        require(model.capabilities.contains(LLMCapability.MultipleChoices)) {
+            "Model ${model.id} does not support multiple choices"
+        }
+
+        return processGoogleResponse(getGoogleResponse(prompt, model, tools))
+    }
+
+    /**
+     * Gets a response from the Google AI API.
+     *
+     * @param prompt The prompt to execute
+     * @param model The model to use
+     * @param tools The tools to include in the request
+     * @return The raw response from the Google AI API
+     */
+    private suspend fun getGoogleResponse(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleResponse {
+        logger.debug { "Getting Google response for prompt: $prompt with tools: $tools and model: $model" }
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
+        }
+        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+            "Model ${model.id} does not support tools"
+        }
+
+        val request = createGoogleRequest(prompt, model, tools)
+
+        return withContext(Dispatchers.SuitableForIO) {
+            val response = httpClient.post("$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_GENERATE_CONTENT") {
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                response.body<GoogleResponse>()
+            } else {
+                val errorBody = response.bodyAsText()
+                logger.error { "Error from GoogleAI API: ${response.status}: $errorBody" }
+                error("Error from GoogleAI API: ${response.status}: $errorBody")
+            }
         }
     }
 
@@ -277,6 +313,7 @@ public open class GoogleLLMClient(
 
         val generationConfig = GoogleGenerationConfig(
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            numberOfChoices = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
             maxOutputTokens = 2048,
         )
 
@@ -413,51 +450,28 @@ public open class GoogleLLMClient(
     }
 
     /**
-     * Processes the Google AI API response into our internal message format.
+     * Processes a single Google AI API candidate into internal message format.
      *
-     * @param response The raw response from the Google AI API
+     * @param candidate The candidate from the Google AI API response
+     * @param metaInfo The metadata for the response
      * @return A list of response messages
      */
     @OptIn(ExperimentalUuidApi::class)
-    private fun processGoogleResponse(response: GoogleResponse): List<Message.Response> {
-        if (response.candidates.isEmpty()) {
-            logger.error { "Empty candidates in Gemini response" }
-            error("Empty candidates in Gemini response")
-        }
-
-        val (candidate, parts) = response.candidates
-            .firstOrNull()
-            ?.let { it to it.content?.parts.orEmpty() }
-            ?: throw IllegalArgumentException("No responses found in Gemini response")
-
-        // Extract token count from the response
-        val inputTokensCount = response.usageMetadata?.promptTokenCount
-        val outputTokensCount = response.usageMetadata?.candidatesTokenCount
-        val totalTokensCount = response.usageMetadata?.totalTokenCount
-
+    private fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
+        val parts = candidate.content?.parts.orEmpty()
         val responses = parts.map { part ->
             when (part) {
                 is GooglePart.Text -> Message.Assistant(
                     content = part.text,
                     finishReason = candidate.finishReason,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokensCount,
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = outputTokensCount
-                    )
+                    metaInfo = metaInfo
                 )
 
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     id = Uuid.random().toString(),
                     tool = part.functionCall.name,
                     content = part.functionCall.args.toString(),
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokensCount,
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = outputTokensCount
-                    )
+                    metaInfo = metaInfo
                 )
 
                 else -> error("Not supported part type: $part")
@@ -472,11 +486,40 @@ public open class GoogleLLMClient(
                 Message.Assistant(
                     content = "",
                     finishReason = candidate.finishReason,
-                    metaInfo = ResponseMetaInfo.create(clock, totalTokensCount = totalTokensCount)
+                    metaInfo = metaInfo
                 )
             )
             // Just return responses
             else -> responses
+        }
+    }
+
+    /**
+     * Processes the Google AI API response into a list of choices.
+     *
+     * @param response The raw response from the Google AI API
+     * @return A list of choices, where each choice is a list of response messages
+     */
+    private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
+        if (response.candidates.isEmpty()) {
+            logger.error { "Empty candidates in Gemini response" }
+            error("Empty candidates in Gemini response")
+        }
+
+        // Extract token count from the response
+        val inputTokensCount = response.usageMetadata?.promptTokenCount
+        val outputTokensCount = response.usageMetadata?.candidatesTokenCount
+        val totalTokensCount = response.usageMetadata?.totalTokenCount
+
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokensCount,
+            inputTokensCount = inputTokensCount,
+            outputTokensCount = outputTokensCount
+        )
+
+        return response.candidates.map { candidate ->
+            processGoogleCandidate(candidate, metaInfo)
         }
     }
 }

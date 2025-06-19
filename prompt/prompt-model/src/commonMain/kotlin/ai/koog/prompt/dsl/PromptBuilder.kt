@@ -224,7 +224,6 @@ public class PromptBuilder internal constructor(
          *
          * @param call The tool call message to add
          */
-        @Deprecated("Use call(id, tool, content) instead", ReplaceWith("call(id, tool, content)"))
         public fun call(call: Message.Tool.Call) {
             this@PromptBuilder.messages.add(call)
         }
@@ -250,7 +249,6 @@ public class PromptBuilder internal constructor(
          *
          * @param result The tool result message to add
          */
-        @Deprecated("Use result(id, tool, content) instead", ReplaceWith("result(id, tool, content)"))
         public fun result(result: Message.Tool.Result) {
             this@PromptBuilder.messages
                 .indexOfLast { it is Message.Tool.Call && it.id == result.id }
