@@ -8,8 +8,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.choice.AskUserChoiceStrategy
-import ai.koog.agents.core.feature.choice.nodeChoose
+import ai.koog.agents.core.feature.choice.nodeSelectLLMChoice
 import ai.koog.agents.core.feature.choice.nodeLLMSendResultsMultipleChoices
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
@@ -28,7 +27,7 @@ fun main() = runBlocking {
         tools(listOf(Move(game)))
     }
 
-    val askChoiceStrategy = AskUserChoiceStrategy(promptShowToUser = { prompt ->
+    val askChoiceStrategy = AskUserChoiceSelectionStrategy(promptShowToUser = { prompt ->
         val lastMessage = prompt.messages.last()
         if (lastMessage is Message.Tool.Call) {
             lastMessage.content
@@ -41,7 +40,7 @@ fun main() = runBlocking {
         val nodeCallLLM by nodeLLMRequest("sendInput")
         val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
         val nodeSendToolResult by nodeLLMSendResultsMultipleChoices("nodeSendToolResult")
-        val nodeChooseChoice by nodeChoose(askChoiceStrategy, "chooseLLMChoice")
+        val nodeSelectLLMChoice by nodeSelectLLMChoice(askChoiceStrategy, "chooseLLMChoice")
         val nodeTrimHistory by nodeTrimHistory<ReceivedToolResult>()
 
         edge(nodeStart forwardTo nodeCallLLM)
@@ -49,9 +48,9 @@ fun main() = runBlocking {
         edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
         edge(nodeExecuteTool forwardTo nodeTrimHistory)
         edge(nodeTrimHistory forwardTo nodeSendToolResult transformed { listOf(it) })
-        edge(nodeSendToolResult forwardTo nodeChooseChoice)
-        edge(nodeChooseChoice forwardTo nodeFinish transformed { it.first() } onAssistantMessage { true })
-        edge(nodeChooseChoice forwardTo nodeExecuteTool transformed { it.first() } onToolCall { true })
+        edge(nodeSendToolResult forwardTo nodeSelectLLMChoice)
+        edge(nodeSelectLLMChoice forwardTo nodeFinish transformed { it.first() } onAssistantMessage { true })
+        edge(nodeSelectLLMChoice forwardTo nodeExecuteTool transformed { it.first() } onToolCall { true })
     }
 
     // Create a chat agent with a system prompt and the tool registry

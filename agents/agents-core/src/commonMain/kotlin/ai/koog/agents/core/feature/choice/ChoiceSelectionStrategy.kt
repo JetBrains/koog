@@ -7,7 +7,7 @@ import ai.koog.prompt.executor.model.LLMChoice
  * Represents a strategy for selecting a choice from a list of available options
  * for a given prompt.
  */
-public interface ChoiceStrategy {
+public interface ChoiceSelectionStrategy {
     /**
      * Selects one choice from a list of available `LLMChoice` options based on a given prompt.
      *
@@ -16,4 +16,15 @@ public interface ChoiceStrategy {
      * @return The selected `LLMChoice` from the provided list based on the implemented strategy.
      */
     public suspend fun choose(prompt: Prompt, choices: List<LLMChoice>): LLMChoice
+
+    /**
+     * Represents the default implementation of the `ChoiceSelectionStrategy` interface.
+     *
+     * This implementation selects the first available choice from the provided list of `LLMChoice` options
+     * in response to the given `Prompt`. It is intended to serve as a simple, deterministic strategy for
+     * use cases where no specific selection logic is required.
+     */
+    public object Default : ChoiceSelectionStrategy {
+        override suspend fun choose(prompt: Prompt, choices: List<LLMChoice>): LLMChoice = choices.first()
+    }
 }

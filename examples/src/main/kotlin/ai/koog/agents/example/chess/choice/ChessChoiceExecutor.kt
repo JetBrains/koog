@@ -9,8 +9,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.PromptExecutorChoice
-import ai.koog.agents.core.feature.choice.AskUserChoiceStrategy
+import ai.koog.agents.core.feature.PromptExecutorWithChoiceSelection
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.chess.ChessGame
@@ -43,7 +42,7 @@ fun main() = runBlocking {
         edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
     }
 
-    val askChoiceStrategy = AskUserChoiceStrategy(promptShowToUser = { prompt ->
+    val askChoiceStrategy = AskUserChoiceSelectionStrategy(promptShowToUser = { prompt ->
         val lastMessage = prompt.messages.last()
         if (lastMessage is Message.Tool.Call) {
             lastMessage.content
@@ -53,7 +52,7 @@ fun main() = runBlocking {
     })
 
     val basePromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
-    val promptExecutor = PromptExecutorChoice(basePromptExecutor, askChoiceStrategy)
+    val promptExecutor = PromptExecutorWithChoiceSelection(basePromptExecutor, askChoiceStrategy)
 
     val agent = AIAgent(
         executor = promptExecutor,

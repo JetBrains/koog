@@ -30,16 +30,16 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendResultsMultipleChoices(
 /**
  * A node that chooses an LLM choice based on the given strategy.
  *
- * @param choiceStrategy The strategy used to choose an LLM choice.
+ * @param choiceSelectionStrategy The strategy used to choose an LLM choice.
  * @param name Optional name for the node.
  */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeChoose(
-    choiceStrategy: ChoiceStrategy,
+public fun AIAgentSubgraphBuilderBase<*, *>.nodeSelectLLMChoice(
+    choiceSelectionStrategy: ChoiceSelectionStrategy,
     name: String? = null
 ): AIAgentNodeDelegateBase<List<LLMChoice>, LLMChoice> =
     node(name) { choices ->
         llm.writeSession {
-            choiceStrategy.choose(prompt, choices).also { choice ->
+            choiceSelectionStrategy.choose(prompt, choices).also { choice ->
                 choice.forEach { updatePrompt { message(it)} }
             }
         }
