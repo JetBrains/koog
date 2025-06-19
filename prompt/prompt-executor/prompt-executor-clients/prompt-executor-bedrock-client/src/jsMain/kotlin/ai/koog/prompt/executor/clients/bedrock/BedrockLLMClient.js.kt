@@ -15,6 +15,17 @@ internal actual class StaticCredentialsProvider actual constructor(
     // JS specific: No actual credentials needed as it will be unsupported.
 }
 
+/**
+ * Creates a no-op Bedrock LLM client for Kotlin/JS. This function is included for interface
+ * compatibility but will not establish a real AWS Bedrock connection. The provided credentials and 
+ * settings are unused in the JS implementation as AWS SDK is not supported here.
+ *
+ * @param awsAccessKeyId AWS access key ID (ignored on JS)
+ * @param awsSecretAccessKey AWS secret access key (ignored on JS)
+ * @param settings Configuration settings for the client (ignored on JS)
+ * @param clock Clock instance for time-based operations (ignored on JS)
+ * @return A [LLMClient] that throws [UnsupportedOperationException] on all operations
+ */
 public actual fun createBedrockLLMClient(
     awsAccessKeyId: String,
     awsSecretAccessKey: String,
