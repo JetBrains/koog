@@ -15,7 +15,7 @@ public class InMemoryAgentCheckpointProvider : AgentCheckpointProvider {
     override suspend fun getCheckpoint(agentId: String, snapshotId: String): AgentCheckpointData? {
         val snapshotKey = AgentCheckpointData.SNAPSHOT_ID_PREFIX + snapshotId
         return mutex.withLock {
-            snapshots[snapshotKey]?.takeIf { it.agentId == agentId }
+            snapshots[snapshotKey]
         }
     }
 

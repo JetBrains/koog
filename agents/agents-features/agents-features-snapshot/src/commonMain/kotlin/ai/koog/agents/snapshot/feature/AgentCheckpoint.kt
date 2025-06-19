@@ -50,16 +50,18 @@ public class AgentCheckpoint(private val agentCheckpointProvider: AgentCheckpoin
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    public fun createCheckpoint(
+    public suspend fun createCheckpoint(
         agentContext: AIAgentContextBase,
         nodeId: String,
         lastInput: Any?
     ): AgentCheckpointData {
-        return AgentCheckpointData(
-            agentContext = agentContext.copy(),
-            nodeId = nodeId,
-            lastInput = lastInput
-        )
+        return agentContext.llm.readSession {
+            return@readSession AgentCheckpointData(
+                messageHistory = prompt.messages,
+                nodeId = nodeId,
+                lastInput = lastInput
+            )
+        }
     }
 }
 

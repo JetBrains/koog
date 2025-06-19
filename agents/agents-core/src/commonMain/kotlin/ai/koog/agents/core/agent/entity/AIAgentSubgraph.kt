@@ -44,7 +44,7 @@ public open class AIAgentSubgraph<Input, Output>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
+    override suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output> {
         if (toolSelectionStrategy == ToolSelectionStrategy.ALL) return doExecute(context, input)
 
         return doExecuteWithCustomTools(context, input)
@@ -55,53 +55,55 @@ public open class AIAgentSubgraph<Input, Output>(
         "$message [$name, ${context.strategyId}, ${context.sessionUuid}]"
 
     @OptIn(InternalAgentsApi::class)
-    protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
-        var currentContext: AIAgentContextBase = context
-        logger.info { formatLog(currentContext, "Executing subgraph $name") }
+    protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): NodeExecutionResult<Output> {
+        logger.info { formatLog(context, "Executing subgraph $name") }
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
 
         while (currentNode != finish) {
-            currentContext.stateManager.withStateLock { state ->
-                if (++state.iterations > currentContext.config.maxAgentIterations) {
+            context.stateManager.withStateLock { state ->
+                if (++state.iterations > context.config.maxAgentIterations) {
                     logger.error {
                         formatLog(
-                            currentContext,
-                            "Max iterations limit (${currentContext.config.maxAgentIterations}) reached"
+                            context,
+                            "Max iterations limit (${context.config.maxAgentIterations}) reached"
                         )
                     }
-                    throw AIAgentMaxNumberOfIterationsReachedException(currentContext.config.maxAgentIterations)
+                    throw AIAgentMaxNumberOfIterationsReachedException(context.config.maxAgentIterations)
                 }
             }
 
             // run the current node and get its output
-            logger.info { formatLog(currentContext, "Executing node ${currentNode.name}") }
-            val nodeOutput = currentNode.executeUnsafe(currentContext, currentInput)
-            logger.info { formatLog(currentContext, "Completed node ${currentNode.name}") }
+            logger.info { formatLog(context, "Executing node ${currentNode.name}") }
+            val nodeOutput = currentNode.executeUnsafe(context, currentInput)
+            logger.info { formatLog(context, "Completed node ${currentNode.name}") }
+            if (nodeOutput is NodeExecutionSuccess<*>) {
+                // find the suitable edge to move to the next node, get the transformed output
+                val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput.result)
 
-            // find the suitable edge to move to the next node, get the transformed output
-            val resolvedEdge = currentNode.resolveEdgeUnsafe(currentContext, nodeOutput)
+                if (resolvedEdge == null) {
+                    logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
+                    throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                }
 
-            if (resolvedEdge == null) {
-                logger.error { formatLog(currentContext, "Agent stuck in node ${currentNode.name}") }
-                throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                currentNode = resolvedEdge.edge.toNode
+                currentInput = resolvedEdge.output
             }
 
-            currentNode = resolvedEdge.edge.toNode
-            currentInput = resolvedEdge.output
         }
 
-        logger.info { formatLog(currentContext, "Completed subgraph $name") }
+        logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
-        return (currentInput as? Output) ?: run {
+        val result = (currentInput as? Output) ?: run {
             logger.error {
                 formatLog(
-                    currentContext,
+                    context,
                     "Invalid finish node output type: ${currentInput?.let { it::class.simpleName }}"
                 )
             }
-            throw IllegalStateException("${FinishAIAgentNodeBase::class.simpleName} should always return String")
+            throw IllegalStateException("${AIAgentSubgraph::class.simpleName} should always return String")
         }
+        return NodeExecutionSuccess(result)
     }
 
     @Serializable
@@ -110,7 +112,7 @@ public open class AIAgentSubgraph<Input, Output>(
         val tools: List<String>
     )
 
-    private suspend fun doExecuteWithCustomTools(context: AIAgentContextBase, input: Input): Output {
+    private suspend fun doExecuteWithCustomTools(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output> {
         @OptIn(InternalAgentsApi::class)
         val innerContext = when (toolSelectionStrategy) {
             ToolSelectionStrategy.ALL -> context

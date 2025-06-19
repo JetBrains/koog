@@ -21,14 +21,14 @@ public class AIAgentStrategy(
 ) : AIAgentSubgraph<String, String>(
     name, nodeStart, nodeFinish, toolSelectionStrategy
 ) {
-    override suspend fun execute(context: AIAgentContextBase, input: String): String {
+    override suspend fun execute(context: AIAgentContextBase, input: String): NodeExecutionResult<String> {
         return runCatchingCancellable {
             context.pipeline.onStrategyStarted(this, context)
             val result = super.execute(context, input)
-            context.pipeline.onStrategyFinished(this, context, result)
+            context.pipeline.onStrategyFinished(this, context, (result as NodeExecutionSuccess<String>).result)
             result
         }.onSuccess {
-            context.environment.sendTermination(it)
+            context.environment.sendTermination(it.result)
         }.onFailure {
             context.environment.reportProblem(it)
         }.getOrThrow()

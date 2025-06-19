@@ -94,7 +94,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @param input The input data required to perform the execution.
      * @return The result of the execution as an Output object.
      */
-    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output
+    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output>
 
     /**
      * @suppress
@@ -104,7 +104,9 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? {
         context.pipeline.onBeforeNode(this, context, input)
         val output = execute(context, input as Input)
-        context.pipeline.onAfterNode(this, context, input, output)
+        if (output is NodeExecutionSuccess<*>) {
+            context.pipeline.onAfterNode(this, context, input, output.result)
+        }
 
         return output
     }
@@ -122,9 +124,9 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
  */
 internal class AIAgentNode<Input, Output> internal constructor(
     override val name: String,
-    val execute: suspend AIAgentContextBase.(input: Input) -> Output
+    val execute: suspend AIAgentContextBase.(input: Input) -> NodeExecutionResult<Output>
 ) : AIAgentNodeBase<Input, Output>() {
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output = context.execute(input)
+    override suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output> = context.execute(input)
 }
 
 /**
@@ -150,7 +152,8 @@ public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>(
 
     override val name: String get() = subgraphName?.let { "__start__$it" } ?: "__start__"
 
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Input = input
+    override suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Input> =
+        NodeExecutionSuccess(input)
 }
 
 /**
@@ -179,7 +182,8 @@ public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Outp
         throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
     }
 
-    override suspend fun execute(context: AIAgentContextBase, input: Output): Output = input
+    override suspend fun execute(context: AIAgentContextBase, input: Output): NodeExecutionResult<Output> =
+        NodeExecutionSuccess(input)
 }
 
 /**

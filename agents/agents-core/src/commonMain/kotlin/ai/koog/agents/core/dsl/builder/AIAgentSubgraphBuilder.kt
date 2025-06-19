@@ -52,7 +52,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         name: String? = null,
         execute: suspend AIAgentContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegateBase<Input, Output> {
-        return AIAgentNodeDelegate(name, AIAgentNodeBuilder(execute))
+        return AIAgentNodeDelegate(name, AIAgentNodeBuilder({
+            NodeExecutionSuccess(execute(this, it))
+        }))
     }
 
     /**
