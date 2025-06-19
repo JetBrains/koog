@@ -3,10 +3,8 @@ package ai.koog.agents.example.mcp
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.mcp.McpToolRegistryProvider
-import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -25,8 +23,6 @@ fun main(): Unit = runBlocking {
     // Get the API key from environment variables
     val googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY") ?: error("GOOGLE_MAPS_API_KEY environment variable not set")
     val openAIApiToken = ApiKeyService.openAIApiKey
-    val awsAccessKey = ApiKeyService.awsAccessKey
-    val awsSecretAccessKey = ApiKeyService.awsSecretAccessKey
 
     // Start the Docker container with the Google Maps MCP server
     val process = ProcessBuilder(
@@ -63,17 +59,6 @@ fun main(): Unit = runBlocking {
                         "You can only call tools. Get it by calling maps_geocode and maps_elevation tools."
             )
         }
-
-        val bedrockAgent = AIAgent(
-            executor = simpleBedrockExecutor(awsAccessKey, awsSecretAccessKey),
-            systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
-            llmModel = BedrockModels.AnthropicClaude3Sonnet
-        )
-
-        println("Using model: ${BedrockModels.AnthropicClaude3Sonnet.id} via Bedrock")
-
-        val result = bedrockAgent.runAndGetResult("Hello! How can you help me via Bedrock?")
-        println("Agent Response (Bedrock): $result")
     } finally {
         // Shutdown the Docker container
         process.destroy()

@@ -6,7 +6,6 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Clock
 
 internal actual class StaticCredentialsProvider actual constructor(
@@ -37,6 +36,6 @@ private class BedrockLLMClientJS : LLMClient {
 
     override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         console.warn(unsupportedMessage)
-        return flowOf()
+        throw UnsupportedOperationException(unsupportedMessage)
     }
 }
