@@ -52,7 +52,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
     }
 
     private fun parseParameterType(element: JsonObject, depth: Int = 0 ): ToolParameterType {
-        if (depth >= MAX_DEPTH) {
+        if (depth > MAX_DEPTH) {
             throw IllegalArgumentException(
                 "Maximum recursion depth ($MAX_DEPTH) exceeded. " +
                         "This may indicate a circular reference in the parameter definition."
