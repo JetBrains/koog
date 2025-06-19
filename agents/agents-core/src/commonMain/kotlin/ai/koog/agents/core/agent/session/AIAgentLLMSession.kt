@@ -230,7 +230,7 @@ public sealed class AIAgentLLMSession(
         fixingModel: LLModel = OpenAIModels.Chat.GPT4o
     ): Result<StructuredResponse<T>> {
         validateSession()
-        val preparedPrompt = preparePrompt(prompt, tools)
+        val preparedPrompt = preparePrompt(prompt, tools = emptyList())
         return executor.executeStructured(preparedPrompt, model, structure, retries, fixingModel)
     }
 
@@ -242,7 +242,7 @@ public sealed class AIAgentLLMSession(
      */
     public open suspend fun <T> requestLLMStructuredOneShot(structure: StructuredData<T>): StructuredResponse<T> {
         validateSession()
-        val preparedPrompt = preparePrompt(prompt, tools)
+        val preparedPrompt = preparePrompt(prompt, tools = emptyList())
         return executor.executeStructuredOneShot(preparedPrompt, model, structure)
     }
 
