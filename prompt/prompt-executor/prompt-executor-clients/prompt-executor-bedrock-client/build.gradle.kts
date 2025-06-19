@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
+import ai.grazie.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version
@@ -32,12 +32,6 @@ kotlin {
             }
         }
 
-        jsMain {
-            dependencies {
-                api(libs.ktor.client.js)
-            }
-        }
-
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
@@ -57,4 +51,4 @@ kotlin {
     explicitApi()
 }
 
-publishToGraziePublicMaven()
+publishToMaven()

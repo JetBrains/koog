@@ -8,6 +8,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
+import kotlinx.datetime.Clock
 
 /**
  * Creates a `SingleLLMPromptExecutor` instance configured to use the OpenAI client.
@@ -60,4 +61,4 @@ public fun simpleBedrockExecutor(
     awsSecretAccessKey: String,
     settings: BedrockClientSettings = BedrockClientSettings()
 ): SingleLLMPromptExecutor =
-    SingleLLMPromptExecutor(createBedrockLLMClient(awsAccessKeyId, awsSecretAccessKey, settings))
+    SingleLLMPromptExecutor(createBedrockLLMClient(awsAccessKeyId, awsSecretAccessKey, settings, Clock.System))

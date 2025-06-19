@@ -44,8 +44,26 @@ import kotlinx.serialization.json.putJsonObject
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 
-internal actual class StaticCredentialsProvider actual constructor(
+/**
+ * Configuration settings for connecting to the AWS Bedrock API.
+ *
+ * @property region The AWS region where Bedrock service is hosted.
+ * @property timeoutConfig Configuration for connection timeouts.
+ * @property endpointUrl Optional custom endpoint URL for testing or private deployments.
+ * @property maxRetries Maximum number of retries for failed requests.
+ * @property enableLogging Whether to enable detailed AWS SDK logging.
+ */
+public class BedrockClientSettings(
+    public val region: String = "us-east-1",
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val endpointUrl: String? = null,
+    public val maxRetries: Int = 3,
+    public val enableLogging: Boolean = false
+)
+
+internal class StaticCredentialsProvider(
     private val awsAccessKeyId: String,
     private val awsSecretAccessKey: String
 ) : CredentialsProvider {
@@ -63,7 +81,7 @@ internal actual class StaticCredentialsProvider actual constructor(
  * @param clock A clock used for time-based operations
  * @return A configured [LLMClient] instance for Bedrock
  */
-public actual fun createBedrockLLMClient(
+public fun createBedrockLLMClient(
     awsAccessKeyId: String,
     awsSecretAccessKey: String,
     settings: BedrockClientSettings,

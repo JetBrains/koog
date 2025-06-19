@@ -13,6 +13,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
@@ -35,7 +36,8 @@ class BedrockLLMClientTest {
         val client = createBedrockLLMClient(
             awsAccessKeyId = "test-key",
             awsSecretAccessKey = "test-secret",
-            settings = BedrockClientSettings(region = "us-east-1")
+            settings = BedrockClientSettings(region = "us-east-1"),
+            clock = Clock.System
         )
 
         assertNotNull(client)
@@ -165,7 +167,8 @@ class BedrockLLMClientTest {
         val client = createBedrockLLMClient(
             awsAccessKeyId = "test-key",
             awsSecretAccessKey = "test-secret",
-            settings = customSettings
+            settings = customSettings,
+            clock = Clock.System
         )
 
         assertNotNull(client)
@@ -262,7 +265,8 @@ class BedrockLLMClientTest {
         val client = createBedrockLLMClient(
             awsAccessKeyId = "test-key",
             awsSecretAccessKey = "test-secret",
-            settings = BedrockClientSettings(region = "us-east-1")
+            settings = BedrockClientSettings(region = "us-east-1"),
+            clock = Clock.System
         )
 
         // Verify that older Claude models don't support tools
