@@ -62,9 +62,13 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
          * Casts the current instance of `Result` to a `Success` type if it is a successful result.
          *
          * @return The current instance cast to `Success<TResult>`.
-         * @throws ClassCastException If the current instance is not of type `Success<TResult>`.
+         * @throws IllegalStateException if not [Success]
          */
-        public fun asSuccessful(): Success<TResult> = this as Success<TResult>
+        public fun asSuccessful(): Success<TResult> = when (this) {
+            is Success<TResult> -> this
+            is Failure<TResult> -> throw IllegalStateException("Result is not a success: $this")
+        }
+
         /**
          * Casts the current object to a `Failure` type.
          *
@@ -72,9 +76,12 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
          * Use it to retrieve the object as a `Failure` and access its specific properties and behaviors.
          *
          * @return The current instance cast to `Failure<TResult>`.
-         * @throws ClassCastException if the current instance is not of type `Failure<TResult>`.
+         * @throws IllegalStateException if not [Failure]
          */
-        public fun asFailure(): Failure<TResult> = this as Failure<TResult>
+        public fun asFailure(): Failure<TResult> = when (this) {
+            is Success<TResult> -> throw IllegalStateException("Result is not a failure: $this")
+            is Failure<TResult> -> this
+        }
 
         /**
          * Represents a successful result of an operation, wrapping a specific tool result and its corresponding content.

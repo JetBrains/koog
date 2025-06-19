@@ -7,7 +7,9 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegateBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
+import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.*
 import ai.koog.prompt.llm.LLModel
@@ -218,8 +220,15 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
         defineTask(input)
     }
 
-    val finalizeTask by node<ProvidedResult, ProvidedResult> { input ->
+    val finalizeTask by node<ReceivedToolResult, ProvidedResult> { input ->
         llm.writeSession {
+            // Append final tool call result to the prompt for further LLM calls to see it (otherwise they would fail)
+            updatePrompt {
+                tool {
+                    result(input)
+                }
+            }
+
             // Remove finish tool from tools
             tools = tools - finishTool.descriptor
 
@@ -228,7 +237,7 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
             changeLLMParams(storage.getValue(origParamsKey))
         }
 
-        input
+        input.toSafeResult<ProvidedResult>().asSuccessful().result
     }
 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
@@ -251,12 +260,7 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
             }
     )
 
-    edge(
-        callTool forwardTo finalizeTask
-            onCondition { it.tool == finishTool.name }
-            // result should always be successful, otherwise throw
-            transformed { it.toSafeResult<ProvidedResult>().asSuccessful().result }
-    )
+    edge(callTool forwardTo finalizeTask onCondition { it.tool == finishTool.name })
     edge(callTool forwardTo sendToolResult)
 
     edge(sendToolResult forwardTo nodeDecide)
