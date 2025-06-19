@@ -5,6 +5,7 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.prompt.message.Message
 
 public class AgentCheckpointData(
+    public val checkpointId: String,
     public val messageHistory: List<Message>,
     public val nodeId: String,
     public val lastInput: Any?,

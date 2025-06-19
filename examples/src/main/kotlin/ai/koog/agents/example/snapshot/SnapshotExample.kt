@@ -8,7 +8,7 @@ import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpoint
-import ai.koog.agents.snapshot.providers.InMemoryAgentCheckpointProvider
+import ai.koog.agents.snapshot.providers.InMemoryAgentCheckpointStorageProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -37,7 +37,7 @@ fun main() = runBlocking {
         maxAgentIterations = 50
     )
 
-    val snapshotProvider = InMemoryAgentCheckpointProvider()
+    val snapshotProvider = InMemoryAgentCheckpointStorageProvider()
     val agent = AIAgent(
         promptExecutor = executor,
         strategy = SnapshotStrategy.strategy,

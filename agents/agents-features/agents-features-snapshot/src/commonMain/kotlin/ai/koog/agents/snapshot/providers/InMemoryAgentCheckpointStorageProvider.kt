@@ -5,10 +5,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * In-memory implementation of [AgentCheckpointProvider].
+ * In-memory implementation of [AgentCheckpointStorageProvider].
  * This provider stores snapshots in a mutable map.
  */
-public class InMemoryAgentCheckpointProvider : AgentCheckpointProvider {
+public class InMemoryAgentCheckpointStorageProvider : AgentCheckpointStorageProvider {
     private val mutex = Mutex()
     private val snapshots = mutableMapOf<String, AgentCheckpointData>()
 

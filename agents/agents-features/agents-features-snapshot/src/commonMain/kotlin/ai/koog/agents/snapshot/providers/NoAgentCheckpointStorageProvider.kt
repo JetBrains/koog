@@ -4,9 +4,9 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
- * No-op implementation of [AgentCheckpointProvider].
+ * No-op implementation of [AgentCheckpointStorageProvider].
  */
-public object NoAgentCheckpointProvider: AgentCheckpointProvider {
+public object NoAgentCheckpointStorageProvider: AgentCheckpointStorageProvider {
     private val logger = KotlinLogging.logger {  }
 
     override suspend fun getCheckpoint(

@@ -7,11 +7,10 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
-import ai.koog.agents.snapshot.providers.AgentCheckpointProvider
-import ai.koog.prompt.message.Message
+import ai.koog.agents.snapshot.providers.AgentCheckpointStorageProvider
 import kotlin.uuid.ExperimentalUuidApi
 
-public class AgentCheckpoint(private val agentCheckpointProvider: AgentCheckpointProvider) {
+public class AgentCheckpoint(private val agentCheckpointStorageProvider: AgentCheckpointStorageProvider) {
     public companion object Feature : AIAgentFeature<AgentCheckpointFeatureConfig, AgentCheckpoint> {
         override val key: AIAgentStorageKey<AgentCheckpoint>
             get() = AIAgentStorageKey("agents-features-snapshot")
@@ -23,7 +22,7 @@ public class AgentCheckpoint(private val agentCheckpointProvider: AgentCheckpoin
             config: AgentCheckpointFeatureConfig,
             pipeline: AIAgentPipeline
         ) {
-            val featureImpl = AgentCheckpoint(config.agentCheckpointProvider)
+            val featureImpl = AgentCheckpoint(config.agentCheckpointStorageProvider)
             val interceptContext = InterceptContext(this, featureImpl)
 
             pipeline.interceptContextAgentFeature(this) {
@@ -51,17 +50,35 @@ public class AgentCheckpoint(private val agentCheckpointProvider: AgentCheckpoin
 
     @OptIn(ExperimentalUuidApi::class)
     public suspend fun createCheckpoint(
+        checkpointId: String,
         agentContext: AIAgentContextBase,
         nodeId: String,
         lastInput: Any?
     ): AgentCheckpointData {
         return agentContext.llm.readSession {
             return@readSession AgentCheckpointData(
+                checkpointId = checkpointId,
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
                 lastInput = lastInput
             )
         }
+    }
+
+    public suspend fun getCheckpoint(agentId: String, checkpointId: String): AgentCheckpointData? {
+        return agentCheckpointStorageProvider.getCheckpoint(agentId, checkpointId)
+    }
+
+    public suspend fun rollbackToCheckpoint(
+        agentId: String,
+        checkpointId: String,
+        agentContext: AIAgentContextBase
+    ): AgentCheckpointData? {
+        val checkpoint = getCheckpoint(agentId, checkpointId)
+        if (checkpoint != null) {
+//            agentContext.forcedContextData = checkpoint.messageHistory
+        }
+        return checkpoint
     }
 }
 
