@@ -484,7 +484,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.Google to googleClient,
         )
 
-        withRetry(times = 3, testName = "integration_testToolsWithNoParams[${model.id}]") {
+        withRetry {
             val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
         }
@@ -672,7 +672,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         scenario: MarkdownTestScenario,
         model: LLModel
     ) =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             assumeTrue(model.provider != LLMProvider.OpenAI, "File format md not supported for OpenAI")
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
             val prompt = prompt("markdown-test-${scenario.name.lowercase()}") {
@@ -726,7 +726,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("imageScenarioModelCombinations")
     fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
             val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
             val prompt = prompt("image-test-${scenario.name.lowercase()}") {
@@ -876,7 +876,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("audioScenarioModelCombinations")
     fun integration_testAudioProcessingBasic(scenario: AudioTestScenario, model: LLModel) =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             assumeTrue(
                 model.capabilities.contains(LLMCapability.Audio),
                 "Model must support audio capability"
@@ -936,7 +936,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @Test
     fun integration_testMultiInputCombinations() =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             val model = OpenAIModels.Chat.GPT4o
             assumeTrue(
                 model.capabilities.contains(LLMCapability.Vision.Image),
