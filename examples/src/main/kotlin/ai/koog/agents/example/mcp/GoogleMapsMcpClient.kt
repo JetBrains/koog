@@ -1,7 +1,6 @@
 package ai.koog.agents.example.mcp
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -19,10 +18,10 @@ import kotlinx.coroutines.runBlocking
  * The example specifically shows how to get the elevation of the JetBrains office in Munich
  * by using the maps_geocode and maps_elevation tools provided by the MCP server.
  */
-fun main(): Unit = runBlocking {
+fun main() {
     // Get the API key from environment variables
     val googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY") ?: error("GOOGLE_MAPS_API_KEY environment variable not set")
-    val openAIApiToken = ApiKeyService.openAIApiKey
+    val openAIApiToken = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable not set")
 
     // Start the Docker container with the Google Maps MCP server
     val process = ProcessBuilder(
