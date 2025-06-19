@@ -606,7 +606,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         scenario: MarkdownTestScenario,
         model: LLModel
     ) =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             assumeTrue(model.provider != LLMProvider.OpenAI, "File format md not supported for OpenAI")
 
             val client = getClient(model)
@@ -663,7 +663,7 @@ class SingleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("imageScenarioModelCombinations")
     fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
             val client = getClient(model)
@@ -821,7 +821,7 @@ class SingleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("audioScenarioModelCombinations")
     fun integration_testAudioProcessingBasic(scenario: AudioTestScenario, model: LLModel) =
-        runTest(timeout = 60.seconds) {
+        runTest(timeout = 300.seconds) {
             assumeTrue(
                 model.capabilities.contains(LLMCapability.Audio),
                 "Model must support audio capability"
@@ -883,7 +883,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
     @Test
-    fun integration_testMultipleMediaTypes() = runTest(timeout = 60.seconds) {
+    fun integration_testMultipleMediaTypes() = runTest(timeout = 300.seconds) {
         val model = OpenAIModels.Chat.GPT4o
         val client = OpenAILLMClient(readTestOpenAIKeyFromEnv())
         val executor = SingleLLMPromptExecutor(client)
