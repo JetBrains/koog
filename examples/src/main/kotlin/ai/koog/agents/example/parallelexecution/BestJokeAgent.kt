@@ -73,11 +73,16 @@ fun main(args: Array<String>) = runBlocking {
         }
 
         // Define a node to select the best joke
-        val nodeGenerateJokes by fork<String, String>(
+        val nodeGenerateJokes by parallel<String, String>(
             nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
         )
 
+        val nodeTransformJoke by transform<String, String, String> { joke ->
+            "My favorite joke: $joke"
+        }
+
         val nodeSelectBestJoke by merge<String, String>() { results ->
+            val results = results.map { it.result }
             val context = results.map { it.context }
             val jokes = results.map { it.output }
 
@@ -112,7 +117,7 @@ fun main(args: Array<String>) = runBlocking {
             context[bestJokeIndex] to jokes[bestJokeIndex]
         }
 
-        nodeStart then nodeGenerateJokes then nodeSelectBestJoke then nodeFinish
+        nodeStart then nodeGenerateJokes then nodeTransformJoke then nodeSelectBestJoke then nodeFinish
     }
 
 // Create agent config
