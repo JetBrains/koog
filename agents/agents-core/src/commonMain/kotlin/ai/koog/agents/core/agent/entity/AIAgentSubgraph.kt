@@ -77,17 +77,26 @@ public open class AIAgentSubgraph<Input, Output>(
             logger.info { formatLog(context, "Executing node ${currentNode.name}") }
             val nodeOutput = currentNode.executeUnsafe(context, currentInput)
             logger.info { formatLog(context, "Completed node ${currentNode.name}") }
-            if (nodeOutput is NodeExecutionSuccess<*>) {
-                // find the suitable edge to move to the next node, get the transformed output
-                val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput.result)
 
-                if (resolvedEdge == null) {
-                    logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
-                    throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+            when (nodeOutput) {
+                is NodeExecutionSuccess<*> -> {
+                    // find the suitable edge to move to the next node, get the transformed output
+                    val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput.result)
+
+                    if (resolvedEdge == null) {
+                        logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
+                        throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                    }
+
+                    currentNode = resolvedEdge.edge.toNode
+                    currentInput = resolvedEdge.output
                 }
 
-                currentNode = resolvedEdge.edge.toNode
-                currentInput = resolvedEdge.output
+                is NodeExecutionInterrupted<*> -> {
+                    return NodeExecutionInterrupted(
+                        reason = "Node ${currentNode.name} interrupted: ${nodeOutput.reason}"
+                    )
+                }
             }
 
         }
