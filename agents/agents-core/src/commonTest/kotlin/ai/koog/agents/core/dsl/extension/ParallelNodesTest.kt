@@ -3,7 +3,6 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.dsl.builder.AsyncParallelResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -52,7 +51,7 @@ class ParallelNodesTest {
             val reduceNode by merge<Unit, String>(name = "reduceNode") { results ->
                 // Use the context from the third node (node3)
                 val nodeResult = results.find { it.nodeName == "node3" }!!
-                nodeResult.context to nodeResult.output
+                nodeResult.result.context to nodeResult.result.output
             }
 
             // Node to verify the context after parallel execution
@@ -148,15 +147,15 @@ class ParallelNodesTest {
             )
 
             // Create nodes to verify the context isolation during parallel execution
-            val verifyNode by node<List<AsyncParallelResult<Unit, String>>, String>("verifyNode") { results ->
-                results.map {
+            val verifyNode by merge<Unit, String>("verifyNode") { results ->
+                this to results.map {
                     // This node should only see the changes from node1
-                    val value1 = it.context.storage.get(testKey1)
-                    val value2 = it.context.storage.get(testKey2)
-                    val value3 = it.context.storage.get(testKey3)
+                    val value1 = it.result.context.storage.get(testKey1)
+                    val value2 = it.result.context.storage.get(testKey2)
+                    val value3 = it.result.context.storage.get(testKey3)
 
                     var promptModified = false
-                    it.context.llm.readSession {
+                    it.result.context.llm.readSession {
                         promptModified = prompt.toString().contains("Additional text from node2")
                     }
 

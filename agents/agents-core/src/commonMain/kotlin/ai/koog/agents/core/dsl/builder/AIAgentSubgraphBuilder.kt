@@ -113,18 +113,6 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     /**
-     * Creates a node that merges the results of the forked nodes.
-     * @param execute Function to merge the contexts and outputs after parallel execution
-     * @param name Optional node name
-     */
-    public fun <Input, Output> merge(
-        name: String? = null,
-        execute: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
-    ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, Output>>, Output> {
-        return AIAgentNodeDelegate(name, AIAgentParallelMergeNodeBuilder(execute))
-    }
-
-    /**
      * Creates a node that applies a transform function to the output of parallel node executions.
      *
      * @param name Optional name for the node. If not provided, the property name of the delegate will be used.
@@ -139,6 +127,19 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, OldOutput>>, List<AsyncParallelResult<Input, NewOutput>>> {
         return AIAgentNodeDelegate(name, AIAgentParallelTransformNodeBuilder(transform, dispatcher))
     }
+
+    /**
+     * Creates a node that merges the results of the forked nodes.
+     * @param execute Function to merge the contexts and outputs after parallel execution
+     * @param name Optional node name
+     */
+    public fun <Input, Output> merge(
+        name: String? = null,
+        execute: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+    ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, Output>>, Output> {
+        return AIAgentNodeDelegate(name, AIAgentParallelMergeNodeBuilder(execute))
+    }
+
 
     /**
      * Creates an edge between nodes.
@@ -266,7 +267,10 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     }
 }
 
-public data class OutputWithContext<Output>(val output: Output, val context: AIAgentContextBase)
+/**
+ * Output and context of parallel node execution.
+ */
+public data class NodeExecutionResult<Output>(val output: Output, val context: AIAgentContextBase)
 
 /**
  * Async result of parallel node execution.
@@ -278,7 +282,7 @@ public data class OutputWithContext<Output>(val output: Output, val context: AIA
 public data class AsyncParallelResult<Input, Output>(
     val nodeName: String,
     val input: Input,
-    val asyncResult: Deferred<OutputWithContext<Output>>
+    val asyncResult: Deferred<NodeExecutionResult<Output>>
 ) {
     public suspend fun await(): ParallelResult<Input, Output> {
         return ParallelResult(nodeName, input, asyncResult.await())
@@ -295,7 +299,7 @@ public data class AsyncParallelResult<Input, Output>(
 public data class ParallelResult<Input, Output>(
     val nodeName: String,
     val input: Input,
-    val result: OutputWithContext<Output>
+    val result: NodeExecutionResult<Output>
 )
 
 
@@ -317,7 +321,7 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
                 val asyncResult = async(dispatcher) {
                     val nodeContext = initialContext.fork()
                     val result = node.execute(nodeContext, input)
-                    OutputWithContext(result, nodeContext)
+                    NodeExecutionResult(result, nodeContext)
                 }
                 AsyncParallelResult(node.name, input, asyncResult)
             }
@@ -326,22 +330,6 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
     }
 )
 
-/**
- * Builder for a node that merges the parallel tool results.
- *
- * @param merge Function to merge the contexts after parallel execution
- */
-@OptIn(ExperimentalUuidApi::class)
-public class AIAgentParallelMergeNodeBuilder<Input, Output> internal constructor(
-    private val merge: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
-) : AIAgentNodeBuilder<List<AsyncParallelResult<Input, Output>>, Output>(
-    execute = { input ->
-        val (context, output) = merge(input.map { it.await() })
-        this.replace(context)
-
-        output
-    }
-)
 
 /**
  * Builder for constructing a parallel outputs transformation node.
@@ -360,12 +348,29 @@ public class AIAgentParallelTransformNodeBuilder<Input, OldOutput, NewOutput> in
                 val asyncResult = async(dispatcher) {
                     val result = it.asyncResult.await()
                     with(result.context) {
-                        OutputWithContext(transform(result.output), this@with)
+                        NodeExecutionResult(transform(result.output), this@with)
                     }
                 }
                 AsyncParallelResult(it.nodeName, it.input, asyncResult)
             }
         }
         transformedResults
+    }
+)
+
+/**
+ * Builder for a node that merges the parallel tool results.
+ *
+ * @param merge Function to merge the contexts after parallel execution
+ */
+@OptIn(ExperimentalUuidApi::class)
+public class AIAgentParallelMergeNodeBuilder<Input, Output> internal constructor(
+    private val merge: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+) : AIAgentNodeBuilder<List<AsyncParallelResult<Input, Output>>, Output>(
+    execute = { input ->
+        val (context, output) = merge(input.map { it.await() })
+        this.replace(context)
+
+        output
     }
 )
