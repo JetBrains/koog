@@ -25,6 +25,15 @@ public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
 }
 
 /**
+ * Removes the last `n` messages from the current prompt in the write session.
+ *
+ * @param n The number of messages to remove from the end of the current message list.
+ */
+public fun AIAgentLLMWriteSession.dropLastNMessages(n: Int) {
+    prompt = prompt.withMessages { it.dropLast(n) }
+}
+
+/**
  * Removes all messages from the current session's prompt that have a timestamp
  * earlier than the specified timestamp.
  *
