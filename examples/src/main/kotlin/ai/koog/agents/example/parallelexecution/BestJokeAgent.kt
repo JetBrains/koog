@@ -104,12 +104,7 @@ fun main(args: Array<String>) = runBlocking {
                 }
 
 
-                val response = requestLLMStructured(
-                    structure = JsonStructuredData.createJsonStructure<JokeWinner>(
-                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                        schemaType = JsonStructuredData.JsonSchemaType.FULL
-                    )
-                )
+                val response = requestLLMStructured(JsonStructuredData.createJsonStructure<JokeWinner>())
                 val bestJoke = response.getOrNull()!!.structure
                 bestJoke.index
             }
