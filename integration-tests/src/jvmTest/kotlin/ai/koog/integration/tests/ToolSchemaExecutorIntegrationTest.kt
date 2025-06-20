@@ -14,13 +14,18 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
 
 class ToolSchemaExecutorIntegrationTest {
@@ -42,6 +47,8 @@ class ToolSchemaExecutorIntegrationTest {
     }
 
     class FileTools : ToolSet {
+        val toolCalls = mutableListOf<Map<String, Any>>()
+
         @Tool
         @LLMDescription("Writes content to a file (creates new or overwrites existing). BOTH filePath AND content parameters are REQUIRED.")
         fun writeFile(
@@ -50,8 +57,21 @@ class ToolSchemaExecutorIntegrationTest {
             @LLMDescription("Whether to overwrite if file exists (default: false)") overwrite: Boolean = false
         ) {
             println("Writing '$content' to file '$filePath' with overwrite=$overwrite")
+            toolCalls.add(
+                mapOf(
+                    "tool" to "writeFile",
+                )
+            )
         }
     }
+
+    @Serializable
+    data class FileOperation(
+        val filePath: String,
+        val content: String,
+        val overwrite: Boolean = false
+    )
+
 
     @ParameterizedTest
     @MethodSource("anthropicModels", "googleModels", "openAIModels")
@@ -73,22 +93,20 @@ class ToolSchemaExecutorIntegrationTest {
         val writeFileTool = tools.first { it.name == "writeFile" }
 
 
-        val prompt = prompt("test-write-file") {
-            system("You are a helpful assistant with access to a file writing tool. Always use the tool when asked to write a file.")
+        val prompt = prompt("test-write-file", params = LLMParams(toolChoice = ToolChoice.Required)) {
+            system("You are a helpful assistant with access to a file writing tool. ALWAYS use tools.")
             user("Please write 'Hello, World!' to a file named 'hello.txt'.")
         }
 
         withRetry {
             val response = client.execute(prompt, model, listOf(writeFileTool))
+            val responseText = response.joinToString("\n") { it.content }
+            val fileOperation = Json.decodeFromString<FileOperation>(responseText)
+
             assertNotNull(response)
             assertTrue(response.isNotEmpty())
-            assertTrue(
-                response.any { message ->
-                    message.content.contains("\"content\":\"Hello, World!\"")
-                    message.content.contains("\"filePath\":\"hello.txt\"")
-                },
-                "None of the messages contains the expected tool call schema"
-            )
+            assertEquals("hello.txt", fileOperation.filePath)
+            assertEquals("Hello, World!", fileOperation.content)
         }
     }
 }
