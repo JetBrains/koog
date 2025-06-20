@@ -31,9 +31,21 @@ public open class AIAgentSubgraph<Input, Output>(
     public val start: StartAIAgentNodeBase<Input>,
     public val finish: FinishAIAgentNodeBase<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
-) : AIAgentNodeBase<Input, Output>() {
+) : AIAgentNodeBase<Input, Output>(), HasSubnodes {
     private companion object {
         private val logger = KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
+    }
+
+    /**
+     * Node to start the subgraph execution.
+     */
+    public override var forcedNode: AIAgentNodeBase<*, *>? = null
+
+    public override  fun enforceNode(node: AIAgentNodeBase<*, *>) {
+        if (forcedNode != null) {
+            throw IllegalStateException("Forced node is already set to ${forcedNode!!.name}")
+        }
+        forcedNode = node
     }
 
     /**
@@ -44,7 +56,7 @@ public open class AIAgentSubgraph<Input, Output>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
+    override suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output> {
         if (toolSelectionStrategy == ToolSelectionStrategy.ALL) return doExecute(context, input)
 
         return doExecuteWithCustomTools(context, input)
@@ -55,9 +67,10 @@ public open class AIAgentSubgraph<Input, Output>(
         "$message [$name, ${context.strategyId}, ${context.sessionUuid}]"
 
     @OptIn(InternalAgentsApi::class)
-    protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
+    protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): NodeExecutionResult<Output> {
         logger.info { formatLog(context, "Executing subgraph $name") }
-        var currentNode: AIAgentNodeBase<*, *> = start
+        var currentNode: AIAgentNodeBase<*, *> = forcedNode ?: start
+        forcedNode = null // reset forced node for the next execution
         var currentInput: Any? = initialInput
 
         while (currentNode != finish) {
@@ -78,29 +91,49 @@ public open class AIAgentSubgraph<Input, Output>(
             val nodeOutput = currentNode.executeUnsafe(context, currentInput)
             logger.info { formatLog(context, "Completed node ${currentNode.name}") }
 
-            // find the suitable edge to move to the next node, get the transformed output
-            val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput)
+            when (nodeOutput) {
+                is NodeExecutionSuccess<*> -> {
+                    if (context.forcedContextData != null) {
+                        val interruptedResult = NodeExecutionInterrupted<Output>(
+                            reason = "Node ${currentNode.name} interrupted: ${nodeOutput}"
+                        )
+//                        context.forcedContextData = null // reset to prevent endless loop
+                        return interruptedResult
+                    } else {
+                        // find the suitable edge to move to the next node, get the transformed output
+                        val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput.result)
 
-            if (resolvedEdge == null) {
-                logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
-                throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                        if (resolvedEdge == null) {
+                            logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
+                            throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                        }
+
+                        currentNode = resolvedEdge.edge.toNode
+                        currentInput = resolvedEdge.output
+                    }
+                }
+
+                is NodeExecutionInterrupted<*> -> {
+                    return NodeExecutionInterrupted(
+                        reason = "Node ${currentNode.name} interrupted: ${nodeOutput.reason}"
+                    )
+                }
             }
 
-            currentNode = resolvedEdge.edge.toNode
-            currentInput = resolvedEdge.output
         }
 
         logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
-        return (currentInput as? Output) ?: run {
+        val result = (currentInput as? Output) ?: run {
             logger.error {
                 formatLog(
                     context,
                     "Invalid finish node output type: ${currentInput?.let { it::class.simpleName }}"
                 )
             }
-            throw IllegalStateException("${FinishAIAgentNodeBase::class.simpleName} should always return String")
+            throw IllegalStateException("${AIAgentSubgraph::class.simpleName} should always return String")
         }
+        return NodeExecutionSuccess(result)
     }
 
     @Serializable
@@ -109,7 +142,7 @@ public open class AIAgentSubgraph<Input, Output>(
         val tools: List<String>
     )
 
-    private suspend fun doExecuteWithCustomTools(context: AIAgentContextBase, input: Input): Output {
+    private suspend fun doExecuteWithCustomTools(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output> {
         @OptIn(InternalAgentsApi::class)
         val innerContext = when (toolSelectionStrategy) {
             ToolSelectionStrategy.ALL -> context

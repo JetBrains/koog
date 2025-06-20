@@ -18,8 +18,10 @@ public class AIAgentStrategyBuilder(
     public override val nodeFinish: FinishAIAgentNodeBase<String> = FinishNode()
 
     override fun build(): AIAgentStrategy {
+        val nodes: Map<String, AIAgentNodeBase<*, *>> = buildSubGraphNodesMap(nodeStart, name)
+
         return AIAgentStrategy(
-            name = name, nodeStart, nodeFinish, toolSelectionStrategy
+            name = name, nodeStart, nodeFinish, nodes, toolSelectionStrategy
         )
     }
 }

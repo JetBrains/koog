@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -10,6 +11,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
  * @param Input The type of input data this node processes.
  * @param Output The type of output data this node produces.
  */
+@OptIn(ExperimentalUuidApi::class)
 public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     /**
      * The name of the AI agent node.
@@ -17,6 +19,13 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * and is used to distinguish and reference nodes in the graph structure.
      */
     public abstract val name: String
+
+    /**
+     * Represents the result of executing a node in the AI agent strategy graph.
+     * It can either be a success with a result or an error indicating failure.
+     */
+//    public val id: String = Uuid.random().toString()
+    public val id: String get() = name // for debugging purposes, using name as id
 
     /**
      * Represents the directed edges connecting the current node in the AI agent strategy graph
@@ -94,7 +103,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @param input The input data required to perform the execution.
      * @return The result of the execution as an Output object.
      */
-    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output
+    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output>
 
     /**
      * @suppress
@@ -104,7 +113,9 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? {
         context.pipeline.onBeforeNode(this, context, input)
         val output = execute(context, input as Input)
-        context.pipeline.onAfterNode(this, context, input, output)
+        if (output is NodeExecutionSuccess<*>) {
+            context.pipeline.onAfterNode(this, context, input, output.result)
+        }
 
         return output
     }
@@ -122,9 +133,9 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
  */
 internal class AIAgentNode<Input, Output> internal constructor(
     override val name: String,
-    val execute: suspend AIAgentContextBase.(input: Input) -> Output
+    val execute: suspend AIAgentContextBase.(input: Input) -> NodeExecutionResult<Output>
 ) : AIAgentNodeBase<Input, Output>() {
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output = context.execute(input)
+    override suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Output> = context.execute(input)
 }
 
 /**
@@ -150,7 +161,8 @@ public open class StartAIAgentNodeBase<Input>() : AIAgentNodeBase<Input, Input>(
 
     override val name: String get() = subgraphName?.let { "__start__$it" } ?: "__start__"
 
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Input = input
+    override suspend fun execute(context: AIAgentContextBase, input: Input): NodeExecutionResult<Input> =
+        NodeExecutionSuccess(input)
 }
 
 /**
@@ -179,7 +191,8 @@ public open class FinishAIAgentNodeBase<Output>() : AIAgentNodeBase<Output, Outp
         throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
     }
 
-    override suspend fun execute(context: AIAgentContextBase, input: Output): Output = input
+    override suspend fun execute(context: AIAgentContextBase, input: Output): NodeExecutionResult<Output> =
+        NodeExecutionSuccess(input)
 }
 
 /**

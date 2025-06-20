@@ -68,4 +68,21 @@ public data class AIAgentLLMContext(
 
         session.use { block(it) }
     }
+
+    /**
+     * Returns the current prompt used in the LLM context.
+     *
+     * @return The current [Prompt] instance.
+     */
+    public fun copy(
+        tools: List<ToolDescriptor> = this.tools,
+        prompt: Prompt = this.prompt,
+        model: LLModel = this.model,
+        promptExecutor: PromptExecutor = this.promptExecutor,
+        environment: AIAgentEnvironment = this.environment,
+        config: AIAgentConfigBase = this.config,
+        clock: Clock = this.clock
+    ): AIAgentLLMContext {
+        return AIAgentLLMContext(tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock)
+    }
 }

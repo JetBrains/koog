@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalUuidApi::class)
+@file:OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
 
 package ai.koog.agents.testing.feature
 
@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.AIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.BaseBuilder
@@ -45,6 +46,7 @@ import kotlin.uuid.Uuid
  */
 public class DummyAgentContext(
     private val builder: AIAgentContextMockBuilder,
+    override var forcedContextData: AgentContextData? = null,
 ) : AIAgentContextBase {
     /**
      * Indicates whether a Language Learning Model (LLM) is defined in the current context.
@@ -107,6 +109,8 @@ public class DummyAgentContext(
 
     override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
         throw NotImplementedError("feature()  getting in runtime is not supported for mock")
+
+    override suspend fun getHistory(): List<Message> = emptyList()
 
     override fun copy(
         environment: AIAgentEnvironment?,

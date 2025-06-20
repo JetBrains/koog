@@ -52,7 +52,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         name: String? = null,
         execute: suspend AIAgentContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegateBase<Input, Output> {
-        return AIAgentNodeDelegate(name, AIAgentNodeBuilder(execute))
+        return AIAgentNodeDelegate(name, AIAgentNodeBuilder({
+            NodeExecutionSuccess(execute(this, it))
+        }))
     }
 
     /**
@@ -121,6 +123,35 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
 
         return visit(start)
     }
+
+    private fun getNodePath(node: AIAgentNodeBase<*, *>, parentPath: String): String {
+        return "${parentPath}:${node.id}"
+    }
+
+    protected fun buildSubGraphNodesMap(start: StartAIAgentNodeBase<*>, parentName: String): Map<String, AIAgentNodeBase<*, *>> {
+        val map = mutableMapOf<String, AIAgentNodeBase<*, *>>()
+
+        fun visit(node: AIAgentNodeBase<*, *>) {
+            if (node is FinishAIAgentNodeBase<*>) return
+            if (getNodePath(node, parentName) in map) return
+            if (node !is StartAIAgentNodeBase<*>) {
+                if (node.name in map)
+                    throw IllegalStateException("Node with name '${node.name}' already exists in the subgraph.")
+
+                map[getNodePath(node, parentName)] = node
+            }
+
+            if (node is AIAgentSubgraph<*, *>) {
+                val subgraphNodes = buildSubGraphNodesMap(node.start, getNodePath(node, parentName))
+                map.putAll(subgraphNodes)
+            }
+
+            return node.edges.forEach { visit(it.toNode) }
+        }
+
+        visit(start)
+        return map
+    }
 }
 
 /**
@@ -152,7 +183,6 @@ public class AIAgentSubgraphBuilder<Input, Output>(
 
         return AIAgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy)
     }
-
 }
 
 /**

@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.entity.NodeExecutionSuccess
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -153,7 +154,12 @@ suspend fun planWork(
             nextNode: AIAgentNodeBase<String, Message.Response>
         ): AIAgentNodeBase<T, Message.Response> {
             val result by node<T, Message.Response> { parsedMessage ->
-                nextNode.execute(this, parsedMessage.problemDescription)
+                val nodeResult = nextNode.execute(this, parsedMessage.problemDescription)
+                if (nodeResult is NodeExecutionSuccess<*>) {
+                    nodeResult.result as Message.Response
+                } else {
+                    throw IllegalStateException("Node execution failed, expected Message.Response")
+                }
             }
             return result
         }

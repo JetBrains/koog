@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -20,6 +22,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -163,7 +166,6 @@ public open class AIAgent(
         FeatureContext(this).installFeatures()
     }
 
-
     override suspend fun run(agentInput: String) {
         runningMutex.withLock {
             if (isRunning) {
@@ -205,7 +207,23 @@ public open class AIAgent(
             pipeline = pipeline,
         )
 
-        strategy.execute(context = agentContext, input = agentInput)
+        var strategyResult: NodeExecutionResult<String> = strategy.execute(context = agentContext, input = agentInput)
+        while (strategyResult !is NodeExecutionSuccess) {
+            val currentResult = strategyResult
+            if (currentResult !is NodeExecutionInterrupted) {
+                throw IllegalStateException(
+                    "Agent strategy execution failed with unexpected result: $strategyResult"
+                )
+            }
+            val contextData = agentContext.forcedContextData ?:
+             throw IllegalStateException("Forced context data is null, but it is required for retrying the strategy execution")
+            agentContext.forcedContextData = null
+
+            val nodeId = contextData.nodeId
+
+            // If the result is not a success, it should be a retryable result
+            strategyResult = strategy.execute(context = agentContext, input = agentInput)
+        }
 
         runningMutex.withLock {
             isRunning = false
