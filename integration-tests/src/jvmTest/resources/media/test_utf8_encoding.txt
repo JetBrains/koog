@@ -1,0 +1,1 @@
+This text contains UTF-8 characters: é, ü, ñ, ç, ß, 你好, こんにちは, Привет
