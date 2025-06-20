@@ -133,8 +133,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
 
         fun visit(node: AIAgentNodeBase<*, *>) {
             if (node is FinishAIAgentNodeBase<*>) return
-            if (node.name in map) return
-
+            if (getNodePath(node, parentName) in map) return
             if (node !is StartAIAgentNodeBase<*>) {
                 if (node.name in map)
                     throw IllegalStateException("Node with name '${node.name}' already exists in the subgraph.")
