@@ -28,6 +28,7 @@ dependencies {
     api(project(":prompt:prompt-structure"))
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+    api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
@@ -74,6 +75,7 @@ registerRunExampleTask("runExampleLoopComponent", "ai.koog.agents.example.compon
 registerRunExampleTask("runExampleInstagramPostDescriber", "ai.koog.agents.example.media.InstagramPostDescriberKt")
 registerRunExampleTask("runExampleRoutingViaGraph", "ai.koog.agents.example.banking.routing.RoutingViaGraphKt")
 registerRunExampleTask("runExampleRoutingViaAgentsAsTools", "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt")
+registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 
 dokka {
     dokkaSourceSets.named("main") {
