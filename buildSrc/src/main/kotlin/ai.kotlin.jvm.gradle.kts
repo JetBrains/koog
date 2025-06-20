@@ -1,5 +1,5 @@
-import ai.grazie.gradle.tests.TestType
-import ai.grazie.gradle.tests.configureFilter
+import ai.koog.gradle.tests.TestType
+import ai.koog.gradle.tests.configureFilter
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 
 plugins {

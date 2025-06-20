@@ -1,4 +1,4 @@
-package ai.grazie.gradle.plugins
+package ai.koog.gradle.plugins
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -11,9 +11,7 @@ import org.gradle.process.internal.ExecException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.util.Properties
-import kotlin.collections.component1
-import kotlin.collections.component2
+import java.util.*
 
 /**
  * This plugin provides a way to read properties file while attempting to inject credentials using 1password CLI.

@@ -1,4 +1,4 @@
-package ai.grazie.gradle.tests
+package ai.koog.gradle.tests
 
 import org.gradle.api.tasks.testing.TestFilter
 

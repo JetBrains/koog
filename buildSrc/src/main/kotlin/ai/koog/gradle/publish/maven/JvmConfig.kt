@@ -1,4 +1,4 @@
-package ai.grazie.gradle.publish.maven
+package ai.koog.gradle.publish.maven
 
 import org.gradle.api.Action
 import org.gradle.api.Project
