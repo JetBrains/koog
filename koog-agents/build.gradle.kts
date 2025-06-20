@@ -45,7 +45,9 @@ val included = setOf(
     ":prompt:prompt-model",
     ":prompt:prompt-structure",
     ":prompt:prompt-tokenizer",
-    ":prompt:prompt-xml"
+    ":prompt:prompt-xml",
+    ":rag:rag-base",
+    ":rag:vector-storage"
 )
 
 kotlin {

@@ -432,16 +432,16 @@ public open class AIAgent(
 }
 
 /**
-* Creates a single-run strategy for an AI agent.
-* This strategy defines a simple execution flow where the agent processes input,
-* calls tools, and sends results back to the agent.
-* The flow consists of the following steps:
-* 1. Start the agent.
-* 2. Call the LLM with the input.
-* 3. Execute a tool based on the LLM's response.
-* 4. Send the tool result back to the LLM.
-* 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
-*/
+ * Creates a single-run strategy for an AI agent.
+ * This strategy defines a simple execution flow where the agent processes input,
+ * calls tools, and sends results back to the agent.
+ * The flow consists of the following steps:
+ * 1. Start the agent.
+ * 2. Call the LLM with the input.
+ * 3. Execute a tool based on the LLM's response.
+ * 4. Send the tool result back to the LLM.
+ * 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
+ */
 public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
     val nodeCallLLM by nodeLLMRequest("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
