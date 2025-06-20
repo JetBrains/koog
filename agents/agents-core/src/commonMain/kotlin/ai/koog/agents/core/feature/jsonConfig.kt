@@ -24,6 +24,10 @@ import kotlinx.serialization.modules.polymorphic
  * - [AIAgentNodeExecutionEndEvent]
  * - [LLMCallStartEvent]
  * - [LLMCallEndEvent]
+ * - [ToolCallEvent]
+ * - [ToolCallResultEvent]
+ * - [ToolCallFailureEvent]
+ * - [ToolValidationErrorEvent]
  *
  * This configuration enables proper handling of the diverse event types encountered in the system by ensuring
  * that the polymorphic serialization framework can correctly serialize and deserialize each subclass.
@@ -39,6 +43,11 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
+                // tool tracing events
+                subclass(ToolCallEvent::class, ToolCallEvent.serializer())
+                subclass(ToolCallResultEvent::class, ToolCallResultEvent.serializer())
+                subclass(ToolCallFailureEvent::class, ToolCallFailureEvent.serializer())
+                subclass(ToolValidationErrorEvent::class, ToolValidationErrorEvent.serializer())
             }
 
             polymorphic(FeatureEvent::class) {
@@ -50,6 +59,11 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
+                // tool tracing events
+                subclass(ToolCallEvent::class, ToolCallEvent.serializer())
+                subclass(ToolCallResultEvent::class, ToolCallResultEvent.serializer())
+                subclass(ToolCallFailureEvent::class, ToolCallFailureEvent.serializer())
+                subclass(ToolValidationErrorEvent::class, ToolValidationErrorEvent.serializer())
             }
 
             polymorphic(DefinedFeatureEvent::class) {
@@ -61,5 +75,10 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
                 subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
                 subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
+                // tool tracing events
+                subclass(ToolCallEvent::class, ToolCallEvent.serializer())
+                subclass(ToolCallResultEvent::class, ToolCallResultEvent.serializer())
+                subclass(ToolCallFailureEvent::class, ToolCallFailureEvent.serializer())
+                subclass(ToolValidationErrorEvent::class, ToolValidationErrorEvent.serializer())
             }
         }
