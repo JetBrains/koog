@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
 
-internal object TestUtils {
+object TestUtils {
     fun readTestAnthropicKeyFromEnv(): String {
         return System.getenv("ANTHROPIC_API_TEST_KEY")
             ?: error("ERROR: environment variable `ANTHROPIC_API_TEST_KEY` is not set")
