@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -10,6 +11,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
  * @param Input The type of input data this node processes.
  * @param Output The type of output data this node produces.
  */
+@OptIn(ExperimentalUuidApi::class)
 public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     /**
      * The name of the AI agent node.
@@ -17,6 +19,13 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * and is used to distinguish and reference nodes in the graph structure.
      */
     public abstract val name: String
+
+    /**
+     * Represents the result of executing a node in the AI agent strategy graph.
+     * It can either be a success with a result or an error indicating failure.
+     */
+//    public val id: String = Uuid.random().toString()
+    public val id: String get() = name // for debugging purposes, using name as id
 
     /**
      * Represents the directed edges connecting the current node in the AI agent strategy graph

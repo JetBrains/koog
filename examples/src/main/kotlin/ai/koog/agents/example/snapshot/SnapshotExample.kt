@@ -40,7 +40,7 @@ fun main() = runBlocking {
     val snapshotProvider = InMemoryAgentCheckpointStorageProvider()
     val agent = AIAgent(
         promptExecutor = executor,
-        strategy = SnapshotStrategy.strategy,
+        strategy = SnapshotStrategy2.strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry
     ) {
@@ -50,7 +50,7 @@ fun main() = runBlocking {
     }
 
     runBlocking {
-        agent.run("(10 + 20) * (5 + 5) / (2 - 11)")
+        agent.run("Input some!!!")
     }
     println(snapshotProvider)
 }

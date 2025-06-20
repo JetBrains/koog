@@ -31,9 +31,21 @@ public open class AIAgentSubgraph<Input, Output>(
     public val start: StartAIAgentNodeBase<Input>,
     public val finish: FinishAIAgentNodeBase<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
-) : AIAgentNodeBase<Input, Output>() {
+) : AIAgentNodeBase<Input, Output>(), HasSubnodes {
     private companion object {
         private val logger = KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
+    }
+
+    /**
+     * Node to start the subgraph execution.
+     */
+    public override var forcedNode: AIAgentNodeBase<*, *>? = null
+
+    public override  fun enforceNode(node: AIAgentNodeBase<*, *>) {
+        if (forcedNode != null) {
+            throw IllegalStateException("Forced node is already set to ${forcedNode!!.name}")
+        }
+        forcedNode = node
     }
 
     /**
@@ -57,7 +69,8 @@ public open class AIAgentSubgraph<Input, Output>(
     @OptIn(InternalAgentsApi::class)
     protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): NodeExecutionResult<Output> {
         logger.info { formatLog(context, "Executing subgraph $name") }
-        var currentNode: AIAgentNodeBase<*, *> = start
+        var currentNode: AIAgentNodeBase<*, *> = forcedNode ?: start
+        forcedNode = null // reset forced node for the next execution
         var currentInput: Any? = initialInput
 
         while (currentNode != finish) {
@@ -80,16 +93,24 @@ public open class AIAgentSubgraph<Input, Output>(
 
             when (nodeOutput) {
                 is NodeExecutionSuccess<*> -> {
-                    // find the suitable edge to move to the next node, get the transformed output
-                    val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput.result)
+                    if (context.forcedContextData != null) {
+                        val interruptedResult = NodeExecutionInterrupted<Output>(
+                            reason = "Node ${currentNode.name} interrupted: ${nodeOutput}"
+                        )
+//                        context.forcedContextData = null // reset to prevent endless loop
+                        return interruptedResult
+                    } else {
+                        // find the suitable edge to move to the next node, get the transformed output
+                        val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput.result)
 
-                    if (resolvedEdge == null) {
-                        logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
-                        throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                        if (resolvedEdge == null) {
+                            logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
+                            throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                        }
+
+                        currentNode = resolvedEdge.edge.toNode
+                        currentInput = resolvedEdge.output
                     }
-
-                    currentNode = resolvedEdge.edge.toNode
-                    currentInput = resolvedEdge.output
                 }
 
                 is NodeExecutionInterrupted<*> -> {

@@ -1,21 +1,29 @@
 @file:Suppress("MissingKDocForPublicAPI")
+@file:OptIn(InternalAgentsApi::class)
 
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AgentContextData
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.snapshot.providers.AgentCheckpointStorageProvider
+import ai.koog.prompt.message.Message
 import kotlin.uuid.ExperimentalUuidApi
 
 public class AgentCheckpoint(private val agentCheckpointStorageProvider: AgentCheckpointStorageProvider) {
+    public var currentNodeId: String? = null
+
     public companion object Feature : AIAgentFeature<AgentCheckpointFeatureConfig, AgentCheckpoint> {
         override val key: AIAgentStorageKey<AgentCheckpoint>
             get() = AIAgentStorageKey("agents-features-snapshot")
 
         override fun createInitialConfig(): AgentCheckpointFeatureConfig = AgentCheckpointFeatureConfig()
+
 
         @OptIn(ExperimentalUuidApi::class)
         override fun install(
@@ -29,6 +37,9 @@ public class AgentCheckpoint(private val agentCheckpointStorageProvider: AgentCh
                 featureImpl
             }
 
+            pipeline.interceptBeforeNode(interceptContext) { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
+                featureImpl.currentNodeId = node.id
+            }
 //            pipeline.interceptAfterNode(interceptContext) { node: AIAgentNodeBase<*, *>,
 //                                                            context: AIAgentContextBase,
 //                                                            input: Any?,
@@ -48,7 +59,6 @@ public class AgentCheckpoint(private val agentCheckpointStorageProvider: AgentCh
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     public suspend fun createCheckpoint(
         checkpointId: String,
         agentContext: AIAgentContextBase,
@@ -69,14 +79,18 @@ public class AgentCheckpoint(private val agentCheckpointStorageProvider: AgentCh
         return agentCheckpointStorageProvider.getCheckpoint(agentId, checkpointId)
     }
 
+    public fun setExecutionPoint(agentContext: AIAgentContextBase, nodeId: String, messageHistory: List<Message>, input: Any?) {
+        agentContext.forcedContextData = AgentContextData(messageHistory, nodeId, input)
+    }
+
     public suspend fun rollbackToCheckpoint(
         agentId: String,
         checkpointId: String,
         agentContext: AIAgentContextBase
     ): AgentCheckpointData? {
-        val checkpoint = getCheckpoint(agentId, checkpointId)
+        val checkpoint: AgentCheckpointData? = getCheckpoint(agentId, checkpointId)
         if (checkpoint != null) {
-//            agentContext.forcedContextData = checkpoint.messageHistory
+            agentContext.forcedContextData = checkpoint.toAgentContextData()
         }
         return checkpoint
     }
