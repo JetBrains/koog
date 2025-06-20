@@ -27,21 +27,21 @@ class AIAgentToolTest {
             return
         }
 
-        override suspend fun runAndGetResult(input: String): String {
+        override suspend fun runAndGetResult(agentInput: String): String {
             return expectedResponse
         }
     }
 
     companion object {
-        private fun createMockAgent(expectedResponse: String): AIAgentBase {
+        const val RESPONSE = "This is the agent's response"
+        private fun createMockAgent(): AIAgentBase {
             val mockExecutor = getMockExecutor(clock = testClock) {
-                mockLLMAnswer(expectedResponse).asDefaultResponse
+                mockLLMAnswer(RESPONSE).asDefaultResponse
             }
-            return MockAgent(mockExecutor, expectedResponse)
+            return MockAgent(mockExecutor, RESPONSE)
         }
 
-        const val EXPECTED = "This is the agent's response"
-        val agent = createMockAgent(EXPECTED)
+        val agent = createMockAgent()
         val tool = agent.asTool(
             agentDescription = "Test agent description",
             name = "testAgent"
@@ -82,7 +82,7 @@ class AIAgentToolTest {
         val result = tool.execute(args, Enabler)
 
         assertTrue(result.successful)
-        assertEquals(EXPECTED, result.result)
+        assertEquals(RESPONSE, result.result)
         assertNotNull(result.result)
         assertEquals(null, result.errorMessage)
     }
@@ -93,7 +93,7 @@ class AIAgentToolTest {
         val agent = object : AIAgentBase {
             override suspend fun run(agentInput: String) {}
 
-            override suspend fun runAndGetResult(input: String): String {
+            override suspend fun runAndGetResult(agentInput: String): String {
                 throw RuntimeException("Test error")
             }
         }
