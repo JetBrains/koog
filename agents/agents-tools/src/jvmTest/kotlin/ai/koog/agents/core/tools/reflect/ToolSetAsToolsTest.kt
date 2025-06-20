@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlin.math.pow
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -64,7 +65,7 @@ interface AdvancedMathToolsInterface : ToolSet {
 class CombinedMathToolsImpl : MathToolsInterface, AdvancedMathToolsInterface {
     override fun add(a: Int, b: Int): Int = a + b
     override fun subtract(a: Int, b: Int): Int = a - b
-    override fun power(base: Int, exponent: Int): Int = Math.pow(base.toDouble(), exponent.toDouble()).toInt()
+    override fun power(base: Int, exponent: Int): Int = base.toDouble().pow(exponent.toDouble()).toInt()
 }
 
 @LLMDescription("A set of string manipulation tools")
