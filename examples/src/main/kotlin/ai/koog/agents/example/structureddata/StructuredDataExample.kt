@@ -235,7 +235,7 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 5
     )
 
-    val runner = AIAgent(
+    val agent = AIAgent(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
             LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
@@ -262,5 +262,5 @@ fun main(): Unit = runBlocking {
         """.trimIndent()
     )
 
-    runner.run("Get weather forecast for New York")
+    agent.run("Get weather forecast for New York")
 }

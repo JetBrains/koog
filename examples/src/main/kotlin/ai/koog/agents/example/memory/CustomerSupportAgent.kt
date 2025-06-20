@@ -158,31 +158,36 @@ fun createCustomerSupportAgent(
     // Create agent strategy
     val strategy = strategy("customer-support", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
         val loadMemory by subgraph<String, String>(tools = emptyList()) {
-            val nodeLoadUserPreferences by nodeLoadFromMemory<String>(
+            val loadUserPreferences by nodeLoadFromMemory<String>(
                 concept = userPreferencesConcept,
                 subject = MemorySubjects.User,
                 scope = MemoryScopeType.PRODUCT
             )
 
-            val nodeLoadUserIssues by nodeLoadFromMemory<String>(
+            val loadUserIssues by nodeLoadFromMemory<String>(
                 concept = userIssuesConcept,
                 subject = MemorySubjects.User,
                 scope = MemoryScopeType.PRODUCT
             )
 
-            val nodeLoadDiagnosticResults by nodeLoadFromMemory<String>(
+            val loadDiagnosticResults by nodeLoadFromMemory<String>(
                 concept = diagnosticResultsConcept,
                 subject = MemorySubjects.Machine,
                 scope = MemoryScopeType.PRODUCT
             )
 
-            val nodeLoadOrganizationSolutions by nodeLoadFromMemory<String>(
+            val loadOrganizationSolutions by nodeLoadFromMemory<String>(
                 concept = organizationSolutionsConcept,
                 subject = MemorySubjects.Organization,
                 scope = MemoryScopeType.PRODUCT
             )
 
-            nodeStart then nodeLoadUserPreferences then nodeLoadUserIssues then nodeLoadDiagnosticResults then nodeLoadOrganizationSolutions then nodeFinish
+            linearSteps(
+                loadUserPreferences
+                        then loadUserIssues
+                        then loadDiagnosticResults
+                        then loadOrganizationSolutions
+            )
         }
 
         val supportSession by subgraphWithTask<String>(
@@ -236,10 +241,15 @@ fun createCustomerSupportAgent(
                 scope = MemoryScopeType.PRODUCT
             )
 
-            nodeStart then saveUserPreferences then saveUserIssues then saveDiagnosticResults then saveOrganizationSolutions then nodeFinish
+            linearSteps(
+                saveUserPreferences
+                        then saveUserIssues
+                        then saveDiagnosticResults
+                        then saveOrganizationSolutions
+            )
         }
 
-        nodeStart then loadMemory then supportSession then retrieveResult then saveToMemory then nodeFinish
+        linearSteps(loadMemory then supportSession then retrieveResult then saveToMemory)
     }
 
     // Create and configure the agent runner
