@@ -241,7 +241,7 @@ class DefaultMcpToolDescriptorParserTest {
         }
     }
 
-    @Ignore("until https://github.com/JetBrains/koog/issues/213 is fixed")
+    @Ignore("until https://github.com/JetBrains/koog/issues/307 is fixed")
     @Test
     fun `test parsing enum parameter type with complex values`() {
         // Create an SDK Tool with an enum parameter that has complex values (JsonArray)
