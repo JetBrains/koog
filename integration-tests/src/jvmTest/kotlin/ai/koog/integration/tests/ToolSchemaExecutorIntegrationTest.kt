@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -77,15 +78,17 @@ class ToolSchemaExecutorIntegrationTest {
             user("Please write 'Hello, World!' to a file named 'hello.txt'.")
         }
 
-        val response = client.execute(prompt, model, listOf(writeFileTool))
-        assertNotNull(response)
-        assertTrue(response.isNotEmpty())
-        assertTrue(
-            response.any { message ->
-                message.content.contains("\"content\":\"Hello, World!\"")
-                message.content.contains("\"filePath\":\"hello.txt\"")
-            },
-            "None of the messages contains the expected tool call schema"
-        )
+        withRetry {
+            val response = client.execute(prompt, model, listOf(writeFileTool))
+            assertNotNull(response)
+            assertTrue(response.isNotEmpty())
+            assertTrue(
+                response.any { message ->
+                    message.content.contains("\"content\":\"Hello, World!\"")
+                    message.content.contains("\"filePath\":\"hello.txt\"")
+                },
+                "None of the messages contains the expected tool call schema"
+            )
+        }
     }
 }
