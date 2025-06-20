@@ -23,6 +23,9 @@ public interface McpToolDescriptorParser {
  * Default implementation of [McpToolDescriptorParser].
  */
 public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
+    // Maximum depth of recursive parsing
+    private const val MAX_DEPTH = 30
+
     /**
      * Parses an MCP SDK Tool definition into tool descriptor format.
      *
@@ -48,10 +51,46 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         )
     }
 
-    private fun parseParameterType(element: JsonObject): ToolParameterType {
+    private fun parseParameterType(element: JsonObject, depth: Int = 0 ): ToolParameterType {
+        if (depth > MAX_DEPTH) {
+            throw IllegalArgumentException(
+                "Maximum recursion depth ($MAX_DEPTH) exceeded. " +
+                        "This may indicate a circular reference in the parameter definition."
+            )
+        }
+
         // Extract the type string from the JSON object
         val typeStr = element["type"]?.jsonPrimitive?.content
-            ?: throw IllegalArgumentException("Parameter type must have type property")
+
+        if (typeStr == null) {
+            /**
+             * Special case for nullable types.
+             * Schema example:
+             * {
+             *   "nullableParam": {
+             *     "anyOf": [
+             *       { "type": "string" },
+             *       { "type": "null" }
+             *     ],
+             *     "title": "Nullable string parameter"
+             *   }
+             * }
+             */
+            val anyOf = element["anyOf"]?.jsonArray
+            if (anyOf != null && anyOf.size == 2) {
+                val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
+                if (types.contains("null")) {
+                    val nonNullType = anyOf.first {
+                        it.jsonObject["type"]?.jsonPrimitive?.content != "null"
+                    }.jsonObject
+                    return parseParameterType(nonNullType, depth + 1)
+                }
+            }
+            val title =
+                element["title"]?.jsonPrimitive?.content ?: element["description"]?.jsonPrimitive?.content.orEmpty()
+            throw IllegalArgumentException("Parameter $title must have type property")
+        }
+
 
         // Convert the type string to a ToolParameterType
         return when (typeStr.lowercase()) {
@@ -69,7 +108,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                 val items = element["items"]?.jsonObject
                     ?: throw IllegalArgumentException("Array type parameters must have items property")
 
-                val itemType = parseParameterType(items)
+                val itemType = parseParameterType(items, depth + 1)
 
                 ToolParameterType.List(itemsType = itemType)
             }
@@ -81,7 +120,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                     rawProperties.map { (name, property) ->
                         // Description is optional
                         val description = element["description"]?.jsonPrimitive?.content.orEmpty()
-                        ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject))
+                        ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject, depth + 1))
                     }
                 } ?: emptyList()
 
@@ -100,7 +139,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
                 val additionalPropertiesType = if ("additionalProperties" in element) {
                     when (element.getValue("additionalProperties")) {
-                        is JsonObject -> parseParameterType(element.getValue("additionalProperties").jsonObject)
+                        is JsonObject -> parseParameterType(element.getValue("additionalProperties").jsonObject, depth + 1)
                         else -> null
                     }
                 } else {
