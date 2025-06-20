@@ -47,7 +47,6 @@ class ToolSchemaExecutorIntegrationTest {
     }
 
     class FileTools : ToolSet {
-        val toolCalls = mutableListOf<Map<String, Any>>()
 
         @Tool
         @LLMDescription("Writes content to a file (creates new or overwrites existing). BOTH filePath AND content parameters are REQUIRED.")
@@ -57,11 +56,6 @@ class ToolSchemaExecutorIntegrationTest {
             @LLMDescription("Whether to overwrite if file exists (default: false)") overwrite: Boolean = false
         ) {
             println("Writing '$content' to file '$filePath' with overwrite=$overwrite")
-            toolCalls.add(
-                mapOf(
-                    "tool" to "writeFile",
-                )
-            )
         }
     }
 
