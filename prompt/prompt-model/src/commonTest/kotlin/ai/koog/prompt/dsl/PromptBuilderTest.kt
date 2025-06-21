@@ -42,8 +42,8 @@ class PromptBuilderTest {
         // in the subList call, which causes the last attachment to be skipped. This test is adjusted to match the current behavior.
         val prompt = Prompt.build("test") {
             user("Check these files") {
-                imageFromUrl("https://example.com/photo.jpg")
-                fileFromUrl("https://example.com/report.pdf", "application/pdf")
+                image("https://example.com/photo.jpg")
+                file("https://example.com/report.pdf", "application/pdf")
             }
         }
 
@@ -83,7 +83,7 @@ class PromptBuilderTest {
                     text("How do I implement a binary search in Kotlin?")
                 }
                 attachments {
-                    imageFromUrl("https://example.com/screenshot.png")
+                    image("https://example.com/screenshot.png")
                 }
             }
         }
@@ -114,9 +114,9 @@ class PromptBuilderTest {
                     text("Please analyze these files")
                 }
                 attachments {
-                    imageFromUrl("https://example.com/chart.png")
-                    fileFromUrl("https://example.com/data.pdf", "application/pdf")
-                    fileFromUrl("https://example.com/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    image("https://example.com/chart.png")
+                    file("https://example.com/data.pdf", "application/pdf")
+                    file("https://example.com/report.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                 }
             }
         }
@@ -169,7 +169,7 @@ class PromptBuilderTest {
                     text("How do I implement a binary search in Kotlin?")
                 }
                 attachments {
-                    imageFromUrl("https://example.com/code_example.png")
+                    image("https://example.com/code_example.png")
                 }
             }
 

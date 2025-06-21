@@ -43,8 +43,8 @@ fun main() {
             }
 
             attachments {
-                imageFromPath(Path("$resourcePath/photo1.png"))
-                imageFromPath(Path("$resourcePath/photo2.png"))
+                image(Path("$resourcePath/photo1.png"))
+                image(Path("$resourcePath/photo2.png"))
             }
         }
     }

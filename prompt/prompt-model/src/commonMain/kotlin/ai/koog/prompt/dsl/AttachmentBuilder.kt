@@ -84,7 +84,7 @@ public class AttachmentBuilder {
      * @param url Image URL
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
      */
-    public fun imageFromUrl(url: String) {
+    public fun image(url: String) {
         val fileData = url.urlFileData()
         image(Attachment.Image(content = AttachmentContent.URL(url), format = fileData.extension, fileName = fileData.name))
     }
@@ -95,7 +95,7 @@ public class AttachmentBuilder {
      * @param path Path to local image file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
-    public fun imageFromPath(path: Path) {
+    public fun image(path: Path) {
         val fileData = path.fileData()
         image(Attachment.Image(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
     }
@@ -113,7 +113,7 @@ public class AttachmentBuilder {
      * @param url Audio URL
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
      */
-    public fun audioFromUrl(url: String) {
+    public fun audio(url: String) {
         val fileData = url.urlFileData()
         audio(Attachment.Audio(content = AttachmentContent.URL(url), format = fileData.extension, fileName = fileData.name))
     }
@@ -124,7 +124,7 @@ public class AttachmentBuilder {
      * @param path Path to local audio file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
-    public fun audioFromPath(path: Path) {
+    public fun audio(path: Path) {
         val fileData = path.fileData()
         audio(Attachment.Audio(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
     }
@@ -142,7 +142,7 @@ public class AttachmentBuilder {
      * @param url Video URL
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
      */
-    public fun videoFromUrl(url: String) {
+    public fun video(url: String) {
         val fileData = url.urlFileData()
         video(Attachment.Video(content = AttachmentContent.URL(url), format = fileData.extension, fileName = fileData.name))
     }
@@ -153,7 +153,7 @@ public class AttachmentBuilder {
      * @param path Path to local video file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
-    public fun videoFromPath(path: Path) {
+    public fun video(path: Path) {
         val fileData = path.fileData()
         video(Attachment.Video(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, fileName = fileData.name))
     }
@@ -172,7 +172,7 @@ public class AttachmentBuilder {
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
      */
-    public fun fileFromUrl(url: String, mimeType: String) {
+    public fun file(url: String, mimeType: String) {
         val fileData = url.urlFileData()
         file(Attachment.File(content = AttachmentContent.URL(url), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
     }
@@ -184,7 +184,7 @@ public class AttachmentBuilder {
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
-    public fun binaryFileFromPath(path: Path, mimeType: String) {
+    public fun binaryFile(path: Path, mimeType: String) {
         val fileData = path.fileData()
         file(Attachment.File(content = AttachmentContent.Binary.Bytes(path.readByteArray()), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
     }
@@ -196,7 +196,7 @@ public class AttachmentBuilder {
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
      */
-    public fun textFileFromPath(path: Path, mimeType: String) {
+    public fun textFile(path: Path, mimeType: String) {
         val fileData = path.fileData()
         file(Attachment.File(content = AttachmentContent.PlainText(path.readText()), format = fileData.extension, mimeType = mimeType, fileName = fileData.name))
     }

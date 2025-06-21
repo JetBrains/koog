@@ -36,8 +36,8 @@ class MessageContentBuilderTest {
     fun testAttachmentsOnly() {
         val builder = MessageContentBuilder()
         builder.attachments {
-            imageFromUrl("https://example.com/test.png")
-            fileFromUrl("https://example.com/report.pdf", "application/pdf")
+            image("https://example.com/test.png")
+            file("https://example.com/report.pdf", "application/pdf")
         }
         val result = builder.build()
 
@@ -69,7 +69,7 @@ class MessageContentBuilderTest {
             newline()
         }
         builder.attachments {
-            imageFromUrl("https://example.com/photo.jpg")
+            image("https://example.com/photo.jpg")
         }
         val result = builder.build()
 
@@ -89,12 +89,12 @@ class MessageContentBuilderTest {
     fun testMultipleAttachmentCalls() {
         val builder = MessageContentBuilder()
         builder.attachments {
-            imageFromUrl("https://example.com/photo1.jpg")
+            image("https://example.com/photo1.jpg")
         }
         // Second call should replace the first attachments
         builder.attachments {
-            imageFromUrl("https://example.com/photo2.jpg")
-            fileFromUrl("https://example.com/doc.pdf", "application/pdf")
+            image("https://example.com/photo2.jpg")
+            file("https://example.com/doc.pdf", "application/pdf")
         }
         val result = builder.build()
 
@@ -130,9 +130,9 @@ class MessageContentBuilderTest {
             text("Supporting documents:")
         }
         builder.attachments {
-            imageFromUrl("https://example.com/chart.png")
-            fileFromUrl("https://example.com/report.pdf", "application/pdf")
-            fileFromUrl("https://example.com/data.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            image("https://example.com/chart.png")
+            file("https://example.com/report.pdf", "application/pdf")
+            file("https://example.com/data.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         }
         val result = builder.build()
 
@@ -150,7 +150,7 @@ class MessageContentBuilderTest {
                 text("World")
             }
             attachments {
-                imageFromUrl("https://example.com/photo.png")
+                image("https://example.com/photo.png")
             }
         }.build()
 

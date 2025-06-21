@@ -19,7 +19,7 @@ class AttachmentBuilderTest {
     @Test
     fun testAddSingleImage() {
         val builder = AttachmentBuilder()
-        builder.imageFromUrl("https://example.com/test.png")
+        builder.image("https://example.com/test.png")
         val result = builder.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
@@ -168,7 +168,7 @@ class AttachmentBuilderTest {
     @Test
     fun testImageWithUrl() {
         val result = AttachmentBuilder().apply {
-            imageFromUrl("https://example.com/image.jpg")
+            image("https://example.com/image.jpg")
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
@@ -185,7 +185,7 @@ class AttachmentBuilderTest {
     @Test
     fun testAudioWithUrl() {
         val result = AttachmentBuilder().apply {
-            audioFromUrl("https://example.com/music.mp3")
+            audio("https://example.com/music.mp3")
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
