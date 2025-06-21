@@ -285,7 +285,7 @@ public class OpenRouterLLMClient(
                 when (attachment) {
                     is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
 
                         val imageUrl: String = when (val content = attachment.content) {

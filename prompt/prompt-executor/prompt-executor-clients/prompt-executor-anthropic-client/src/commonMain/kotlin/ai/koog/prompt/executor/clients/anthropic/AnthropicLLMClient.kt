@@ -280,7 +280,7 @@ public open class AnthropicLLMClient(
                 when (attachment) {
                     is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
 
                         val imageSource: ImageSource = when (val content = attachment.content) {
@@ -306,7 +306,7 @@ public open class AnthropicLLMClient(
                         add(AnthropicContent.Document(documentSource))
                     }
 
-                    else -> throw IllegalArgumentException("Media content not supported: $attachment")
+                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
                 }
             }
         }

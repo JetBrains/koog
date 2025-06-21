@@ -84,7 +84,7 @@ public class OllamaClient(
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
-                    messages = prompt.toOllamaChatMessages(),
+                    messages = prompt.toOllamaChatMessages(model),
                     tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
                     format = prompt.extractOllamaJsonFormat(),
                     options = prompt.extractOllamaOptions(),
@@ -158,7 +158,7 @@ public class OllamaClient(
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
-                    messages = prompt.toOllamaChatMessages(),
+                    messages = prompt.toOllamaChatMessages(model),
                     options = prompt.extractOllamaOptions(),
                     stream = true,
                 )

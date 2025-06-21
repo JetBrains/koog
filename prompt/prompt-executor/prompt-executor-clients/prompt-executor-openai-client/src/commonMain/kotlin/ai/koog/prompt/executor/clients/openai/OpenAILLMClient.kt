@@ -348,7 +348,7 @@ public open class OpenAILLMClient(
                 when (attachment) {
                     is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
 
                         val imageUrl: String = when (val content = attachment.content) {
@@ -390,7 +390,7 @@ public open class OpenAILLMClient(
                         add(ContentPart.File(fileData))
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported attachment content: $attachment")
+                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
                 }
             }
         }

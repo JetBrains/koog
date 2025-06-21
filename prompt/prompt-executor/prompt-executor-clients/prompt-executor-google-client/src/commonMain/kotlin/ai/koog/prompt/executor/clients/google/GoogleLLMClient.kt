@@ -337,7 +337,7 @@ public open class GoogleLLMClient(
                 when (attachment) {
                     is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
