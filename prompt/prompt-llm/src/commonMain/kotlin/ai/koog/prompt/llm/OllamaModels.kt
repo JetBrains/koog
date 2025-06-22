@@ -115,7 +115,7 @@ public object OllamaModels {
          *
          */
         public val LLAMA_4: LLModel = LLModel(
-            provider = LLMProvider.Meta,
+            provider = LLMProvider.Ollama,
             id = "llama4:latest",
             capabilities = listOf(
                 LLMCapability.Temperature,
