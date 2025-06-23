@@ -682,9 +682,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze markdown files.")
 
                 user {
-                    markdown {
-                        "I'm sending you a markdown file with different markdown elements. "
-                        +"Please list all the markdown elements used in it and describe its structure clearly."
+                    content {
+                        markdown {
+                            "I'm sending you a markdown file with different markdown elements. "
+                            +"Please list all the markdown elements used in it and describe its structure clearly."
+                        }
                     }
 
                     attachments {
@@ -736,8 +738,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze images.")
 
                 user {
-                    markdown {
-                        +"I'm sending you an image. Please describe what you see in it and identify the image format if possible."
+                    content {
+                        markdown {
+                            +"I'm sending you an image. Please describe what you see in it and identify the image format if possible."
+                        }
                     }
 
                     attachments {
@@ -802,8 +806,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze and process text.")
 
                 user {
-                    markdown {
-                        "I'm sending you a text file. Please analyze it and summarize its content."
+                    content {
+                        markdown {
+                            "I'm sending you a text file. Please analyze it and summarize its content."
+                        }
                     }
 
                     attachments {
@@ -891,24 +897,30 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze audio files.")
 
                 user {
-                    markdown {
-                        "I'm sending you an audio file. Please tell me a couple of words about it."
+                    content {
+                        markdown {
+                            "I'm sending you an audio file. Please tell me a couple of words about it."
+                        }
                     }
 
                     attachments {
                         when (scenario) {
                             AudioTestScenario.BASIC_WAV, AudioTestScenario.BIG_AUDIO, AudioTestScenario.CORRUPTED_AUDIO -> {
-                                audio(Attachment.Audio(
-                                    content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
-                                    format = "wav"
-                                ))
+                                audio(
+                                    Attachment.Audio(
+                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
+                                        format = "wav"
+                                    )
+                                )
                             }
 
                             AudioTestScenario.BASIC_MP3 -> {
-                                audio(Attachment.Audio(
-                                    content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
-                                    format = "mp3"
-                                ))
+                                audio(
+                                    Attachment.Audio(
+                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
+                                        format = "mp3"
+                                    )
+                                )
                             }
                         }
                     }
@@ -962,8 +974,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze different types of media files.")
 
                 user {
-                    markdown {
-                        +"I'm sending you a PDF file and an image. Please analyze both and tell me about their content."
+                    content {
+                        markdown {
+                            +"I'm sending you a PDF file and an image. Please analyze both and tell me about their content."
+                        }
                     }
 
                     attachments {
@@ -989,8 +1003,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     * Checking just images to make sure the file is uploaded in base64 format
     * */
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", /*"googleModels"*/)
-    // ToDo: uncomment Google models after fixing #316
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testBase64EncodedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(
             model.capabilities.contains(LLMCapability.Vision.Image),
@@ -1013,10 +1026,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
             system("You are a helpful assistant that can analyze different types of media files.")
 
             user {
-                markdown {
-                    +"I'm sending you an image. Please analyze it and tell me about its content."
+                content {
+                    markdown {
+                        +"I'm sending you an image. Please analyze it and tell me about its content."
+                    }
                 }
-
                 attachments {
                     image(Path(tempImageFile.absolutePath))
                 }
@@ -1052,8 +1066,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
             system("You are a helpful assistant that can analyze images.")
 
             user {
-                markdown {
-                    +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
+                content {
+                    markdown {
+                        +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
+                    }
                 }
 
                 attachments {
