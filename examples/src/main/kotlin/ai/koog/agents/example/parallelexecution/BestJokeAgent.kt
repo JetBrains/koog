@@ -2,6 +2,8 @@ package ai.koog.agents.example.parallelexecution
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.dsl.builder.NodeExecutionResult
+import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -13,7 +15,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -73,7 +74,7 @@ fun main(args: Array<String>) = runBlocking {
         }
 
         // Define a node to select the best joke
-        val nodeGenerateJokes by parallel<String, String>(
+        val nodeGenerateJokes by parallel(
             nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
         )
 
@@ -109,7 +110,7 @@ fun main(args: Array<String>) = runBlocking {
                 bestJoke.index
             }
 
-            context[bestJokeIndex] to jokes[bestJokeIndex]
+            NodeExecutionResult(jokes[bestJokeIndex], context[bestJokeIndex])
         }
 
         nodeStart then nodeGenerateJokes then nodeTransformJoke then nodeSelectBestJoke then nodeFinish

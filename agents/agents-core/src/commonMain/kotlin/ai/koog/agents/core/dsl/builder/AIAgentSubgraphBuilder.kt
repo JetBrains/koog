@@ -135,7 +135,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      */
     public fun <Input, Output> merge(
         name: String? = null,
-        execute: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+        execute: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> NodeExecutionResult<Output>,
     ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, Output>>, Output> {
         return AIAgentNodeDelegate(name, AIAgentParallelMergeNodeBuilder(execute))
     }
@@ -269,6 +269,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
 
 /**
  * Output and context of parallel node execution.
+ *
  */
 public data class NodeExecutionResult<Output>(val output: Output, val context: AIAgentContextBase)
 
@@ -284,6 +285,11 @@ public data class AsyncParallelResult<Input, Output>(
     val input: Input,
     val asyncResult: Deferred<NodeExecutionResult<Output>>
 ) {
+    /**
+     * Awaits for the asynchronous execution of a parallel node and converts it into a [ParallelResult].
+     *
+     * @return A [ParallelResult] instance that contains the node's name, its input, and the result of its execution.
+     */
     public suspend fun await(): ParallelResult<Input, Output> {
         return ParallelResult(nodeName, input, asyncResult.await())
     }
@@ -365,12 +371,12 @@ public class AIAgentParallelTransformNodeBuilder<Input, OldOutput, NewOutput> in
  */
 @OptIn(ExperimentalUuidApi::class)
 public class AIAgentParallelMergeNodeBuilder<Input, Output> internal constructor(
-    private val merge: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> Pair<AIAgentContextBase, Output>,
+    private val merge: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> NodeExecutionResult<Output>,
 ) : AIAgentNodeBuilder<List<AsyncParallelResult<Input, Output>>, Output>(
     execute = { input ->
-        val (context, output) = merge(input.map { it.await() })
-        this.replace(context)
+        val result = merge(input.map { it.await() })
+        this.replace(result.context)
 
-        output
+        result.output
     }
 )
