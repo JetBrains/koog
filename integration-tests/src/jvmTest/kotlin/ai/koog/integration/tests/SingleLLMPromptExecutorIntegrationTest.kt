@@ -32,8 +32,11 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import kotlinx.io.files.Path
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -66,11 +69,15 @@ class SingleLLMPromptExecutorIntegrationTest {
         fun modelClientCombinations(): Stream<Arguments> {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+            val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
             val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
 
             return Stream.concat(
-                Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
-                Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
+                Stream.concat(
+                    Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
+                    Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
+                ),
+                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) }
                 // Will enable when there're models that support tool calls
                 /*Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }*/
             )
@@ -624,7 +631,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        document(file.absolutePath)
+                        file(file.absolutePath, "text/markdown")
                     }
                 }
             }
@@ -749,7 +756,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        document(file.absolutePath)
+                        file(file.absolutePath, "text/plain")
                     }
                 }
             }
@@ -843,11 +850,21 @@ class SingleLLMPromptExecutorIntegrationTest {
                     attachments {
                         when (scenario) {
                             AudioTestScenario.BASIC_WAV, AudioTestScenario.BIG_AUDIO, AudioTestScenario.CORRUPTED_AUDIO -> {
-                                audio(audioFile.readBytes(), "wav")
+                                audio(
+                                    Attachment.Audio(
+                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
+                                        format = "wav"
+                                    )
+                                )
                             }
 
                             AudioTestScenario.BASIC_MP3 -> {
-                                audio(audioFile.readBytes(), "mp3")
+                                audio(
+                                    Attachment.Audio(
+                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
+                                        format = "mp3"
+                                    )
+                                )
                             }
                         }
                     }
@@ -908,7 +925,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 }
 
                 attachments {
-                    document(pdfFile.absolutePath)
+                    file(pdfFile.absolutePath, "application/pdf")
                     image(imageFile.absolutePath)
                 }
             }
@@ -922,5 +939,99 @@ class SingleLLMPromptExecutorIntegrationTest {
                     response.content.contains("PDF", ignoreCase = true),
             "Response should mention both image & PDF files"
         )
+    }
+
+    /*
+    * Checking just images to make sure the file is uploaded in base64 format
+    * */
+    @ParameterizedTest
+    @MethodSource("modelClientCombinations")
+    fun integration_testBase64EncodedAttachment(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
+        val executor = SingleLLMPromptExecutor(client)
+
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Vision.Image),
+            "Model must support vision capability"
+        )
+
+        // Skip audio-only models
+        assumeTrue(
+            !model.id.contains("audio", ignoreCase = true),
+            "Audio-only models are not supported for this test"
+        )
+
+        val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
+        val imageBytes = imageFile.readBytes()
+
+        val tempImageFile = File(testResourcesDir, "small.png")
+
+        tempImageFile.writeBytes(imageBytes)
+        val prompt = prompt("base64-encoded-attachments-test") {
+            system("You are a helpful assistant that can analyze different types of media files.")
+
+            user {
+                markdown {
+                    +"I'm sending you an image. Please analyze them and tell me about their content."
+                }
+
+                attachments {
+                    image(Path(tempImageFile.absolutePath))
+                }
+            }
+        }
+
+        withRetry {
+            val response = executor.execute(prompt, model)
+            checkExecutorMediaResponse(response)
+
+
+            assertTrue(
+                response.content.contains("image", ignoreCase = true),
+                "Response should mention the image"
+            )
+        }
+    }
+
+    /*
+    * Checking just images to make sure the file is uploaded by URL
+    * */
+    @ParameterizedTest
+    @MethodSource("modelClientCombinations")
+    fun integration_testUrlBasedAttachment(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
+        val executor = SingleLLMPromptExecutor(client)
+
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Vision.Image),
+            "Model must support vision capability"
+        )
+
+        val imageUrl =
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png"
+
+        val prompt = prompt("url-based-attachments-test") {
+            system("You are a helpful assistant that can analyze images.")
+
+            user {
+                markdown {
+                    +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
+                }
+
+                attachments {
+                    image(imageUrl)
+                }
+            }
+        }
+
+        withRetry {
+            val response = executor.execute(prompt, model)
+            checkExecutorMediaResponse(response)
+
+            assertTrue(
+                response.content.contains("image", ignoreCase = true) ||
+                        response.content.contains("python", ignoreCase = true) ||
+                        response.content.contains("logo", ignoreCase = true),
+                "Response should mention the image content"
+            )
+        }
     }
 }
