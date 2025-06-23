@@ -81,37 +81,49 @@ fun main(args: Array<String>) = runBlocking {
             "My favorite joke: $joke"
         }
 
-        val nodeSelectBestJoke by merge<String, String>() {
-            val results = results.map { it.result }
-            val context = results.map { it.context }
-            val jokes = results.map { it.output }
-
-            // Use LLM to determine the best joke
-            val bestJokeIndex = this.llm.writeSession {
-                model = OpenAIModels.Chat.GPT4o
-                updatePrompt {
-                    prompt("best-joke-selector") {
-                        system(jokeCritiqueSystemPrompt)
-                        user(
-                            """
+        val nodeSelectBestJoke by merge<String, String> {
+            selectByIndex { jokes ->
+                // Another LLM (ex: GPT4o) would find the funniest joke:
+                llm.writeSession {
+                    model = OpenAIModels.Chat.GPT4o
+                    updatePrompt {
+                        prompt("best-joke-selector") {
+                            system(jokeCritiqueSystemPrompt)
+                            user(
+                                """
                                 Here are three jokes about the same topic:
 
                                 ${jokes.mapIndexed { index, joke -> "Joke $index:\n$joke" }.joinToString("\n\n")}
 
                                 Select the best joke and explain why it's the best.
                             """.trimIndent()
-                        )
+                            )
+                        }
                     }
+
+                    val response = requestLLMStructured(JsonStructuredData.createJsonStructure<JokeWinner>())
+                    val bestJoke = response.getOrNull()!!.structure
+                    bestJoke.index
                 }
-
-                val response = requestLLMStructured(JsonStructuredData.createJsonStructure<JokeWinner>())
-                val bestJoke = response.getOrNull()!!.structure
-                bestJoke.index
             }
-
-            NodeExecutionResult(jokes[bestJokeIndex], context[bestJokeIndex])
         }
 
+        // unused
+        val concatenateJokes by merge<String, String> {
+            fold("Jokes:\n") { result, joke -> "$result\n$joke" }
+        }
+
+        // unused
+        val longestJoke by merge<String, String> {
+            selectByMax { it.length }
+        }
+
+        // unused
+        val jokeContainingJetBrains by merge<String, String> {
+            selectBy { it.contains("jetbrains") }
+        }
+
+        // Feel free to use `concatenateJokes` or `longestJoke` or `jokeContainingJetBrains` here:
         nodeStart then nodeGenerateJokes then nodeTransformJoke then nodeSelectBestJoke then nodeFinish
     }
 

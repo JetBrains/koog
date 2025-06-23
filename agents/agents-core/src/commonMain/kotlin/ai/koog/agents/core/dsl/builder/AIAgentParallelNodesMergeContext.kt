@@ -80,8 +80,35 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @return The NodeExecutionResult with the selected output and context
      * @throws NoSuchElementException if no result matches the predicate
      */
-    public fun selectBy(predicate: (Output) -> Boolean): NodeExecutionResult<Output> {
+    public suspend fun selectBy(predicate: suspend (Output) -> Boolean): NodeExecutionResult<Output> {
         return results.first(predicate = { predicate(it.result.output) }).result
+    }
+
+    /**
+     * Selects the maximum result based on a given comparison function and returns the corresponding
+     * `NodeExecutionResult` containing the selected output and its associated context.
+     *
+     * @param function A lambda function to extract a comparable value from the `Output` object
+     *                 for determining the maximum result.
+     * @return The `NodeExecutionResult` containing the output and context of the result with the maximum
+     *         value as determined by the comparison function.
+     * @throws NoSuchElementException if the results list is empty.
+     */
+    public suspend fun <T : Comparable<T>> selectByMax(function: suspend (Output) -> T): NodeExecutionResult<Output> {
+        return results.maxBy { function(it.result.output) }
+            .let { NodeExecutionResult(it.result.output, it.result.context) }
+    }
+
+    /**
+     * Selects a result from a list of outputs based on a provided selection function.
+     *
+     * @param selectIndex A lambda function that takes a list of outputs and returns the index of the desired output.
+     * @return The NodeExecutionResult containing the output and context at the selected index.
+     * @throws IndexOutOfBoundsException if the index returned by the selectIndex function is out of bounds.
+     */
+    public suspend fun selectByIndex(selectIndex: suspend (List<Output>) -> Int): NodeExecutionResult<Output> {
+        val indexOfBest = results.map { it.result.output }.let { selectIndex(it) }
+        return NodeExecutionResult(results[indexOfBest].result.output, results[indexOfBest].result.context)
     }
 
     /**
@@ -92,11 +119,11 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @return The NodeExecutionResult with the folded output and the context from the first result
      * @throws NoSuchElementException if the results list is empty
      */
-    public fun <R> fold(
+    public suspend fun <R> fold(
         initial: R,
-        operation: (acc: R, result: Output) -> R
+        operation: suspend (acc: R, result: Output) -> R
     ): NodeExecutionResult<R> {
-        val folded = results.map { it.result.output }.fold(initial, operation)
+        val folded = results.map { it.result.output }.fold(initial) { r, t -> operation(r, t) }
         return NodeExecutionResult(folded, underlyingContextBase)
     }
 }
