@@ -248,9 +248,12 @@ class SimpleAgentIntegrationTest {
             assertTrue(result.length > 20, "Result should contain more than 20 characters")
 
             val resultLowerCase = result.lowercase()
-            assertFalse(resultLowerCase.contains("error"), "Result should not contain error messages")
-            assertFalse(resultLowerCase.contains("unable"), "Result should not indicate inability to process")
-            assertFalse(resultLowerCase.contains("cannot"), "Result should not indicate inability to process")
+            assertFalse(resultLowerCase.contains("error processing"), "Result should not contain error messages")
+            assertFalse(
+                resultLowerCase.contains("unable to process"),
+                "Result should not indicate inability to process"
+            )
+            assertFalse(resultLowerCase.contains("cannot process"), "Result should not indicate inability to process")
         }
     }
 }

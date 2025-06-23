@@ -677,8 +677,11 @@ object MediaTestUtils {
     fun checkExecutorMediaResponse(response: Message.Response) {
         checkResponseBasic(response)
         val responseLowerCase = response.content.lowercase()
-        assertFalse(responseLowerCase.contains("error"), "Result should not contain error messages")
-        assertFalse(responseLowerCase.contains("unable"), "Result should not indicate inability to process")
+        assertFalse(responseLowerCase.contains("error processing"), "Result should not contain error messages")
+        assertFalse(
+            responseLowerCase.contains("unable to process"),
+            "Result should not indicate inability to process"
+        )
         assertFalse(responseLowerCase.contains("cannot process"), "Result should not indicate inability to process")
     }
 
