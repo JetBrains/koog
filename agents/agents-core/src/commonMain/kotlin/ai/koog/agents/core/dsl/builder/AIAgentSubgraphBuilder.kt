@@ -135,11 +135,10 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      */
     public fun <Input, Output> merge(
         name: String? = null,
-        execute: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> NodeExecutionResult<Output>,
+        execute: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> NodeExecutionResult<Output>,
     ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, Output>>, Output> {
         return AIAgentNodeDelegate(name, AIAgentParallelMergeNodeBuilder(execute))
     }
-
 
     /**
      * Creates an edge between nodes.
@@ -371,10 +370,12 @@ public class AIAgentParallelTransformNodeBuilder<Input, OldOutput, NewOutput> in
  */
 @OptIn(ExperimentalUuidApi::class)
 public class AIAgentParallelMergeNodeBuilder<Input, Output> internal constructor(
-    private val merge: suspend AIAgentContextBase.(List<ParallelResult<Input, Output>>) -> NodeExecutionResult<Output>,
+    private val merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> NodeExecutionResult<Output>,
 ) : AIAgentNodeBuilder<List<AsyncParallelResult<Input, Output>>, Output>(
     execute = { input ->
-        val result = merge(input.map { it.await() })
+        val parallelResults = input.map { it.await() }
+        val mergeContext = AIAgentParallelNodesMergeContext(this, parallelResults)
+        val result = with(mergeContext) { merge() }
         this.replace(result.context)
 
         result.output

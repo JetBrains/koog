@@ -3,7 +3,6 @@ package ai.koog.agents.example.parallelexecution
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.NodeExecutionResult
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -82,11 +81,12 @@ fun main(args: Array<String>) = runBlocking {
             "My favorite joke: $joke"
         }
 
-        val nodeSelectBestJoke by merge<String, String>() { results ->
+        val nodeSelectBestJoke by merge<String, String>() {
             val results = results.map { it.result }
             val context = results.map { it.context }
             val jokes = results.map { it.output }
 
+            // Use LLM to determine the best joke
             val bestJokeIndex = this.llm.writeSession {
                 model = OpenAIModels.Chat.GPT4o
                 updatePrompt {
@@ -104,7 +104,6 @@ fun main(args: Array<String>) = runBlocking {
                     }
                 }
 
-
                 val response = requestLLMStructured(JsonStructuredData.createJsonStructure<JokeWinner>())
                 val bestJoke = response.getOrNull()!!.structure
                 bestJoke.index
@@ -116,7 +115,7 @@ fun main(args: Array<String>) = runBlocking {
         nodeStart then nodeGenerateJokes then nodeTransformJoke then nodeSelectBestJoke then nodeFinish
     }
 
-// Create agent config
+    // Create agent config
     val agentConfig = AIAgentConfig(
         prompt = prompt("best-joke-agent") {
             system("You are a joke generator that creates the best jokes about given topics.")
@@ -125,7 +124,7 @@ fun main(args: Array<String>) = runBlocking {
         maxAgentIterations = 10
     )
 
-// Create the agent
+    // Create the agent
     val agent = AIAgent(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
@@ -141,7 +140,7 @@ fun main(args: Array<String>) = runBlocking {
     val topic = "programming"
     println("Generating jokes about: $topic")
 
-// Run the agent
+    // Run the agent
     val result = agent.run(topic)
     println("Final result: $result")
 }

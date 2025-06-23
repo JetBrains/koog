@@ -3,10 +3,10 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.dsl.builder.NodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
@@ -16,12 +16,12 @@ import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 class ParallelNodesTest {
 
     @Test
-    fun testContextSubstitution() = runTest {
+    fun testParallelTransformMergeFold() = runTest {
         // Create a key to store and retrieve values from the context
         val testKey = AIAgentStorageKey<String>("testKey")
 
@@ -43,32 +43,27 @@ class ParallelNodesTest {
             }
 
             // Create a parallel node that executes all three nodes
-            val parallelNode by parallel<Unit, String>(
+            val parallelNode by parallel(
                 node1, node2, node3,
                 name = "parallelNode",
             )
 
-            val reduceNode by merge<Unit, String>(name = "reduceNode") { results ->
-                // Use the context from the third node (node3)
-                val nodeResult = results.find { it.nodeName == "node3" }!!
-                nodeResult.result.context to nodeResult.result.output
+            // Node to verify the context after parallel execution
+            val verifyNode by transform<Unit, String, String>("verifyNode") { input ->
+                // The context should have been replaced with node3's context
+                input + " with value: " + storage.get(testKey)
             }
 
-            // Node to verify the context after parallel execution
-            val verifyNode by node<String, String>("verifyNode") { input ->
-                // The context should have been replaced with node3's context
-                val value = storage.get(testKey)
-                "$input, context value: $value"
+            val reduceNode by merge<Unit, String>(name = "reduceNode") {
+                fold("All results:\n") { acc, output -> acc + output + "\n" }
             }
 
             // Connect the nodes
             edge(nodeStart forwardTo parallelNode transformed { })
-            edge(parallelNode forwardTo reduceNode)
-            edge(reduceNode forwardTo verifyNode)
-            edge(verifyNode forwardTo nodeFinish)
+            edge(parallelNode forwardTo verifyNode)
+            edge(verifyNode forwardTo reduceNode)
+            edge(reduceNode forwardTo nodeFinish)
         }
-
-        val results = mutableListOf<String?>()
 
         val agentConfig = AIAgentConfig(
             prompt = prompt("test-agent") {},
@@ -80,30 +75,22 @@ class ParallelNodesTest {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
-        val runner = AIAgent(
+        val agent = AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry.Companion {
                 tool(DummyTool())
             }
-        ) {
-            install(EventHandler.Feature) {
-                onAgentFinished = { _, result -> results += result }
-            }
-        }
-
-        runner.run("")
-
-        // Verify that we have one result
-        assertEquals(1, results.size)
-
-        // Verify that the context was properly substituted (should contain value3)
-        val result = results.first() ?: ""
-        assertTrue(
-            result.contains("context value: value3"),
-            "Result should contain 'context value: value3', but was: $result"
         )
+
+        val result = agent.runAndGetResult("")
+
+        assertNotNull(result)
+        assertEquals("All results:\n" +
+                "Result from node1 with value: value1\n" +
+                "Result from node2 with value: value2\n" +
+                "Result from node3 with value: value3\n", result)
     }
 
     @Test
@@ -147,8 +134,8 @@ class ParallelNodesTest {
             )
 
             // Create nodes to verify the context isolation during parallel execution
-            val verifyNode by merge<Unit, String>("verifyNode") { results ->
-                this to results.map {
+            val verifyNode by merge<Unit, String>("verifyNode") {
+                val output = results.map {
                     // This node should only see the changes from node1
                     val value1 = it.result.context.storage.get(testKey1)
                     val value2 = it.result.context.storage.get(testKey2)
@@ -194,6 +181,8 @@ class ParallelNodesTest {
 
                     "Correct: Node ${it.nodeName} sees no changes from other nodes"
                 }.joinToString("\n")
+
+                NodeExecutionResult(output, this)
             }
 
             // Connect the nodes
