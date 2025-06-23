@@ -27,7 +27,7 @@ version = run {
                 }
             } else {
                 if (!customVersion.isNullOrBlank()) {
-                    "-feat-$customVersion"
+                    "-feat-$customVersion" // todo check for develop
                 } else if (branch == "develop" && !tcCounter.isNullOrBlank()) {
                     ".$tcCounter"
                 } else {
