@@ -55,10 +55,20 @@ public class JsonStructuredData<TStruct>(
         +"You must adhere to the following JSON schema:"
         +structureLanguage.pretty(jsonSchema.schema)
 
-        +"Here are the examples of valid responses:"
-        examples.forEach {
-            structure(structureLanguage, it, serializer)
+        when {
+            examples.isEmpty() -> {}
+            examples.size == 1 -> {
+                +"Here is an example of a valid response:"
+                structure(structureLanguage, examples.first(), serializer)
+            }
+            else -> {
+                +"Here are some examples of valid responses:"
+                examples.forEach {
+                    structure(structureLanguage, it, serializer)
+                }
+            }
         }
+
         newline()
     }
 
