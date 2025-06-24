@@ -137,7 +137,7 @@ public sealed class AIAgentLLMSession(
             .withUpdatedParams { toolChoice = null }
             .let { preparePrompt(it, emptyList()) }
 
-        return executeSingle(promptWithDisabledTools, tools)
+        return executeSingle(promptWithDisabledTools, emptyList())
     }
 
     /**
