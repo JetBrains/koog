@@ -691,7 +691,21 @@ class SingleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        image(imageFile.absolutePath)
+                        when (scenario) {
+                            ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                                image(
+                                    Attachment.Image(
+                                        content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
+                                        format = "jpg",
+                                        mimeType = "image/jpeg"
+                                    )
+                                )
+                            }
+
+                            else -> {
+                                image(Path(imageFile.absolutePath))
+                            }
+                        }
                     }
                 }
             }
