@@ -15,6 +15,13 @@ import org.jetbrains.annotations.TestOnly
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+/**
+ * A mock implementation of the [AIAgentContextBase] interface, used for testing purposes.
+ *
+ * @constructor Creates a new instance of `DummyAIAgentContext` using a predefined
+ * `AIAgentContextMockBuilder`.
+ * @param builder A builder object used to initialize the mock properties of the context.
+ */
 @TestOnly
 @OptIn(ExperimentalUuidApi::class)
 public class DummyAIAgentContext(
