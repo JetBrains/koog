@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -330,3 +331,91 @@ public inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIA
             toolResult
         }
     }
+
+
+/**
+ * Represents the result of a retry operation, encapsulating the output of the operation
+ * and a flag indicating whether the operation was successful.
+ *
+ * @property output The output of the retry operation.
+ * @property isSuccess A boolean value indicating whether the success condition is satisfied.
+ */
+public data class RetryResult<Output>(val output: Output, val isSuccess: Boolean)
+
+
+/**
+ * Creates a node that retries execution of another node until it succeeds or reaches the maximum number of retries.
+ * If none of the retries were unsuccessful, returns the output of the first execution.
+ * If all retries failed with an exception, throws an exception.
+ *
+ * @param node The node to retry
+ * @param maxRetries Maximum number of retry attempts (must be greater than 0)
+ * @param successCondition Function that determines if the output is considered successful
+ * @return A node that returns a [RetryResult] containing the output of the node and the success status
+ *
+ * Example usage:
+ * ```
+ * val nodeCallLLM by nodeLLMRequest("sendInput")
+ * val nodeRetryCallLLM by nodeRetry(nodeCallLLM) { it is Message.Tool.Call }
+ * val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
+ *
+ * // Forward successful results to the appropriate node based on the message type
+ * edge(nodeRetryCallLLM forwardTo nodeExecuteTool transformed { it.output } onToolCall { true })
+ * edge(nodeRetryCallLLM forwardTo nodeFinish transformed { it.output } onAssistantMessage { true })
+ * ```
+ */
+public fun <Input, Output> AIAgentSubgraphBuilderBase<*, *>.nodeRetry(
+    node: AIAgentNodeBase<Input, Output>,
+    maxRetries: Int = 3,
+    successCondition: (Output) -> Boolean,
+): AIAgentNodeDelegateBase<Input, RetryResult<Output>> {
+    require(maxRetries > 0) { "maxRetries must be greater than 0" }
+    return node("retry_${node.name}") execute@{ input ->
+        (1..maxRetries).mapNotNull {
+            try {
+                val newContext = fork()
+                val output = node.execute(newContext, input)
+                if (successCondition(output)) {
+                    replace(newContext)
+                    return@execute RetryResult(output, true)
+                } else {
+                    RetryResult(output, false)
+                }
+            } catch (_: Exception) { null }
+        }.firstOrNull() ?: throw Error("Max retries limit reached, all retries failed with an exception.")
+    }
+}
+
+
+/**
+ * Creates a node that retries execution of another node until it succeeds or reaches the maximum number of retries.
+ * If none of the retries were successful, throws an exception.
+ *
+ * @param node The node to retry
+ * @param maxRetries Maximum number of retry attempts (must be greater than 0)
+ * @param successCondition Function that determines if the output is considered successful
+ * @return A node that returns a [Output] containing the successful result
+ *
+ * Example usage:
+ * ```
+ * val nodeCallLLM by nodeLLMRequest("sendInput")
+ * val nodeRetryCallLLM by nodeRetryStrict(nodeCallLLM) { it is Message.Tool.Call }
+ * val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
+ *
+ * // Forward to the appropriate node based on the message type
+ * edge(nodeRetryCallLLM forwardTo nodeExecuteTool onToolCall { true })
+ * // no need for other branches as the strict retry component will allow only specified output
+ * ```
+ */
+public fun <Input, Output> AIAgentSubgraphBuilderBase<*, *>.nodeRetryStrict(
+    node: AIAgentNodeBase<Input, Output>,
+    maxRetries: Int = 3,
+    successCondition: (Output) -> Boolean,
+): AIAgentNodeDelegateBase<Input, Output> {
+    val retryNode by nodeRetry(node, maxRetries) { successCondition(it) }
+    return node("retryStrict_${node.name}") { input ->
+        retryNode.execute(this, input).let {
+            if (it.isSuccess) it.output else throw Error("Max retries limit reached, none of the retries succeeded.")
+        }
+    }
+}
