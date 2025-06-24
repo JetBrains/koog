@@ -27,11 +27,11 @@ class TestEventsCollector {
 
     val eventHandlerFeatureConfig: EventHandlerConfig.() -> Unit = {
 
-        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+        onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
             _collectedEvents.add("OnBeforeAgentStarted (strategy: ${strategy.name})")
         }
 
-        onAgentFinished { strategyName: String, result: String? ->
+        onAgentFinished { strategyName: String, result: Any? ->
             _collectedEvents.add("OnAgentFinished (strategy: $strategyName, result: $result)")
         }
 
@@ -39,11 +39,11 @@ class TestEventsCollector {
             _collectedEvents.add("OnAgentRunError (strategy: $strategyName, throwable: ${throwable.message})")
         }
 
-        onStrategyStarted { strategy: AIAgentStrategy ->
+        onStrategyStarted { strategy: AIAgentStrategy<*, *> ->
             _collectedEvents.add("OnStrategyStarted (strategy: ${strategy.name})")
         }
 
-        onStrategyFinished { strategy: AIAgentStrategy, result: String ->
+        onStrategyFinished { strategy: AIAgentStrategy<*, *>, result: Any? ->
             _collectedEvents.add("OnStrategyFinished (strategy: ${strategy.name}, result: $result)")
         }
 

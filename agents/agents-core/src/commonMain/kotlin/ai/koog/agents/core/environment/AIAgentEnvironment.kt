@@ -26,16 +26,6 @@ public interface AIAgentEnvironment {
      * @param exception The exception representing the problem to report.
      */
     public suspend fun reportProblem(exception: Throwable)
-    /**
-     * Sends a termination signal with an optional result message to the AI agent environment.
-     *
-     * This method is used to indicate the end of an operation or interaction by providing
-     * an optional termination message that represents the outcome or status of the operation.
-     *
-     * @param result An optional string message representing the result or status of the termination
-     *               operation. It can be null if no specific result needs to be communicated.
-     */
-    public suspend fun sendTermination(result: String?)
 }
 
 /**

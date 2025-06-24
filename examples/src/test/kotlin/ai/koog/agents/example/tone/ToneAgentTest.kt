@@ -37,7 +37,7 @@ class ToneAgentTest {
     fun testToneAgent() = runTest {
         // Create a list to track tool calls
         val toolCalls = mutableListOf<String>()
-        var result: String? = null
+        var result: Any? = null
 
         // Create a tool registry
         val toolRegistry = ToolRegistry {

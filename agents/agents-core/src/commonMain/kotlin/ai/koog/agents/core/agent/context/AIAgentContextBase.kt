@@ -37,7 +37,7 @@ public interface AIAgentContextBase {
      *
      * @see [AIAgentEnvironment.input]
      */
-    public val agentInput: String
+    public val agentInput: Any?
 
     /**
      * Represents the configuration for an AI agent.
@@ -186,3 +186,11 @@ public interface AIAgentContextBase {
      */
     public suspend fun replace(context: AIAgentContextBase)
 }
+
+/**
+ * Utility function to get [AIAgentContextBase.agentInput] and try to cast it to some expected type.
+ *
+ * @throws ClassCastException If agent input can't be cast to [T]
+ */
+public inline fun <reified T> AIAgentContextBase.agentInput(): T =
+    agentInput as? T ?: throw ClassCastException("Can't cast agent input to ${T::class}. Agent input: $agentInput")

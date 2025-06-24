@@ -13,7 +13,7 @@ import kotlinx.coroutines.runBlocking
  * The agent processes a single input and provides a response.
  */
 fun main() = runBlocking {
-    var result: String? = null
+    var result: Any? = null
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onAgentFinished { strategyName, agentResult -> result = agentResult }
     }

@@ -32,8 +32,8 @@ import kotlin.uuid.ExperimentalUuidApi
  */
 public open class AIAgentSubgraph<Input, Output>(
     override val name: String,
-    public val start: AIAgentStartNodeBase<Input>,
-    public val finish: AIAgentFinishNodeBase<Output>,
+    public val start: StartNode<Input>,
+    public val finish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
@@ -159,7 +159,7 @@ public open class AIAgentSubgraph<Input, Output>(
                     "Invalid finish node output type: ${currentInput?.let { it::class.simpleName }}"
                 )
             }
-            throw IllegalStateException("${AIAgentFinishNodeBase::class.simpleName} should always return String")
+            throw IllegalStateException("${FinishNode::class.simpleName} should always return String")
         }
     }
 

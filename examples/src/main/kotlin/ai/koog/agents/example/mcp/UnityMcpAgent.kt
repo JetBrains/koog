@@ -81,7 +81,7 @@ fun main() {
             val executor = simpleOpenAIExecutor(token)
 
 
-            val strategy = strategy("unity_interaction") {
+            val strategy = strategy<String, String>("unity_interaction") {
                 val nodePlanIngredients by nodeLLMRequest(allowToolCalls = false)
                 val interactionWithUnity by subgraphWithTask<String>(
                     //work with plan 
@@ -107,26 +107,26 @@ fun main() {
                     install(Tracing)
 
                     install(EventHandler) {
-                        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                        onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
                             println("OnBeforeAgentStarted first (strategy: ${strategy.name})")
                         }
 
-                        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                        onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
                             println("OnBeforeAgentStarted second (strategy: ${strategy.name})")
                         }
 
-                        onAgentFinished { strategyName: String, result: String? ->
+                        onAgentFinished { strategyName: String, result: Any? ->
                             println("OnAgentFinished (strategy: $strategyName, result: $result)")
                         }
                     }
                 }
             )
 
-            val runAndGetResult = agent.runAndGetResult(
+            val run = agent.run(
                 " extend current opened scene for the towerdefence game. " +
                         "Add more placements for the towers, change the path for the enemies"
             )
-            println(runAndGetResult)
+            println(run)
 
 
         }

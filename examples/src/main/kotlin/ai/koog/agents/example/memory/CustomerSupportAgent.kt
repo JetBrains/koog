@@ -94,7 +94,7 @@ fun createCustomerSupportAgent(
     featureName: String? = null,
     productName: String? = null,
     organizationName: String? = null,
-): AIAgent {
+): AIAgent<String, String> {
     // Memory concepts
     val userPreferencesConcept = Concept(
         keyword = "user-preferences",
@@ -156,7 +156,7 @@ fun createCustomerSupportAgent(
     )
 
     // Create agent strategy
-    val strategy = strategy("customer-support", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
+    val strategy = strategy<String, String>("customer-support", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
         val loadMemory by subgraph<String, String>(tools = emptyList()) {
             val nodeLoadUserPreferences by nodeLoadFromMemory<String>(
                 concept = userPreferencesConcept,

@@ -13,23 +13,21 @@ import ai.koog.agents.core.utils.runCatchingCancellable
  * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
  */
 @OptIn(InternalAgentsApi::class)
-public class AIAgentStrategy(
+public class AIAgentStrategy<Input, Output>(
     override val name: String,
-    public val nodeStart: AIAgentStartNodeBase<String>,
-    public val nodeFinish: AIAgentFinishNodeBase<String>,
+    public val nodeStart: StartNode<Input>,
+    public val nodeFinish: FinishNode<Output>,
     toolSelectionStrategy: ToolSelectionStrategy
-) : AIAgentSubgraph<String, String>(
+) : AIAgentSubgraph<Input, Output>(
     name, nodeStart, nodeFinish, toolSelectionStrategy
 ) {
 
-    override suspend fun execute(context: AIAgentContextBase, input: String): String {
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
         return runCatchingCancellable {
             context.pipeline.onStrategyStarted(this, context)
             val result = super.execute(context, input)
             context.pipeline.onStrategyFinished(this, context, result)
             result
-        }.onSuccess {
-            context.environment.sendTermination(it)
         }.onFailure {
             context.environment.reportProblem(it)
         }.getOrThrow()

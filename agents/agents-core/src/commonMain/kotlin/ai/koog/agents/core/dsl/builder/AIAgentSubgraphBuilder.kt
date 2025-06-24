@@ -29,8 +29,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      *
      * @param Input The type of input data that this starting node processes.
      */
-    public abstract val nodeStart: AIAgentStartNodeBase<Input>
-
+    public abstract val nodeStart: StartNode<Input>
     /**
      * Represents the "finish" node in the AI agent's subgraph structure. This node indicates
      * the endpoint of the subgraph and acts as a terminal stage where the workflow stops.
@@ -45,7 +44,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      *
      * @param Output The type of data processed and produced by this node.
      */
-    public abstract val nodeFinish: AIAgentFinishNodeBase<Output>
+    public abstract val nodeFinish: FinishNode<Output>
 
     /**
      * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
@@ -56,7 +55,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     public fun <Input, Output> node(
         name: String? = null,
         execute: suspend AIAgentContextBase.(input: Input) -> Output
-    ): AIAgentNodeDelegateBase<Input, Output> {
+    ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(name, AIAgentNodeBuilder(execute))
     }
 
@@ -71,8 +70,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
-        define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
-    ): AIAgentSubgraphDelegateBase<Input, Output> {
+        define: AIAgentSubgraphBuilder<Input, Output>.() -> Unit
+    ): AIAgentSubgraphDelegate<Input, Output> {
         return AIAgentSubgraphBuilder<Input, Output>(name, toolSelectionStrategy, llmModel, llmParams).also { it.define() }.build()
     }
 
@@ -87,8 +86,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         tools: List<Tool<*, *>>,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
-        define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
-    ): AIAgentSubgraphDelegateBase<Input, Output> {
+        define: AIAgentSubgraphBuilder<Input, Output>.() -> Unit
+    ): AIAgentSubgraphDelegate<Input, Output> {
         return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), llmModel, llmParams, define)
     }
 
@@ -114,7 +113,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         vararg nodes: AIAgentNodeBase<Input, Output>,
         dispatcher: CoroutineDispatcher = Dispatchers.Default,
         name: String? = null,
-    ): AIAgentNodeDelegateBase<Input, List<AsyncParallelResult<Input, Output>>> {
+    ): AIAgentNodeDelegate<Input, List<AsyncParallelResult<Input, Output>>> {
         return AIAgentNodeDelegate(name, AIAgentParallelNodeBuilder(nodes.asList(), dispatcher))
     }
 
@@ -130,7 +129,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         name: String? = null,
         dispatcher: CoroutineDispatcher = Dispatchers.Default,
         transform: suspend AIAgentContextBase.(OldOutput) -> NewOutput,
-    ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, OldOutput>>, List<AsyncParallelResult<Input, NewOutput>>> {
+    ): AIAgentNodeDelegate<List<AsyncParallelResult<Input, OldOutput>>, List<AsyncParallelResult<Input, NewOutput>>> {
         return AIAgentNodeDelegate(name, AIAgentParallelTransformNodeBuilder(transform, dispatcher))
     }
 
@@ -142,7 +141,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     public fun <Input, Output> merge(
         name: String? = null,
         execute: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> NodeExecutionResult<Output>,
-    ): AIAgentNodeDelegateBase<List<AsyncParallelResult<Input, Output>>, Output> {
+    ): AIAgentNodeDelegate<List<AsyncParallelResult<Input, Output>>, Output> {
         return AIAgentNodeDelegate(name, AIAgentParallelMergeNodeBuilder(execute))
     }
 
@@ -158,11 +157,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     /**
-     * Checks if the finish node is reachable from start node.
+     * Checks if finish node is reachable from start node.
      * @param start Starting node
-     * @return True if the finish node is reachable
+     * @return True if finish node is reachable
      */
-    protected fun isFinishReachable(start: AIAgentStartNodeBase<Input>): Boolean {
+    protected fun isFinishReachable(start: StartNode<Input>): Boolean {
         val visited = mutableSetOf<AIAgentNodeBase<*, *>>()
 
         fun visit(node: AIAgentNodeBase<*, *>): Boolean {
@@ -197,8 +196,8 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     private val llmParams: LLMParams?,
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
-    override val nodeStart: AIAgentStartNodeBase<Input> = AIAgentStartNodeBase()
-    override val nodeFinish: AIAgentFinishNodeBase<Output> = AIAgentFinishNodeBase()
+    override val nodeStart: StartNode<Input> = StartNode()
+    override val nodeFinish: FinishNode<Output> = FinishNode()
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
@@ -211,28 +210,7 @@ public class AIAgentSubgraphBuilder<Input, Output>(
 }
 
 /**
- * AIAgentSubgraphDelegateBase defines a delegate interface for accessing an instance of [AIAgentSubgraph].
- * This interface allows dynamically providing subgraph instances based on context or property reference.
- *
- * @param Input The type of the input data that the subgraph is designed to handle.
- * @param Output The type of the output data that the subgraph emits after processing.
- */
-public interface AIAgentSubgraphDelegateBase<Input, Output> {
-    /**
-     * Provides access to an instance of [AIAgentSubgraph] based on the specified property reference.
-     *
-     * This operator function acts as a delegate to dynamically retrieve and return an appropriate
-     * instance of [AIAgentSubgraph] associated with the input and output types specified by the containing context.
-     *
-     * @param thisRef The reference to the object that contains the delegated property. Can be null if the property is a top-level or package-level property.
-     * @param property The property metadata used to identify the property for which the subgraph instance is being accessed.
-     * @return An [AIAgentSubgraph] instance that handles the specified input and output data types.
-     */
-    public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentSubgraph<Input, Output>
-}
-
-/**
- * A delegate implementation that provides dynamic access to an instance of [AIAgentSubgraph].
+ * A delegate that provides dynamic access to an instance of [AIAgentSubgraph].
  * This class facilitates constructing and associating a subgraph with specific start and finish nodes
  * and a defined tool selection strategy upon access.
  *
@@ -251,20 +229,30 @@ public interface AIAgentSubgraphDelegateBase<Input, Output> {
  */
 public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     private val name: String?,
-    public val nodeStart: AIAgentStartNodeBase<Input>,
-    public val nodeFinish: AIAgentFinishNodeBase<Output>,
+    public val nodeStart: StartNode<Input>,
+    public val nodeFinish: FinishNode<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?
-) : AIAgentSubgraphDelegateBase<Input, Output> {
+) {
     private var subgraph: AIAgentSubgraph<Input, Output>? = null
 
-    override operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentSubgraph<Input, Output> {
+    /**
+     * Provides access to an instance of [AIAgentSubgraph] based on the specified property reference.
+     *
+     * This operator function acts as a delegate to dynamically retrieve and return an appropriate
+     * instance of [AIAgentSubgraph] associated with the input and output types specified by the containing context.
+     *
+     * @param thisRef The reference to the object that contains the delegated property. Can be null if the property is a top-level or package-level property.
+     * @param property The property metadata used to identify the property for which the subgraph instance is being accessed.
+     * @return An [AIAgentSubgraph] instance that handles the specified input and output data types.
+     */
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentSubgraph<Input, Output> {
         if (subgraph == null) {
             // if name is explicitly defined, use it, otherwise use property name as node name
             val nameOfSubgraph = this@AIAgentSubgraphDelegate.name ?: property.name
 
-            subgraph = AIAgentSubgraph(
+            subgraph = AIAgentSubgraph<Input, Output>(
                 name = nameOfSubgraph,
                 start = nodeStart.apply { subgraphName = nameOfSubgraph },
                 finish = nodeFinish.apply { subgraphName = nameOfSubgraph },

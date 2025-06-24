@@ -94,7 +94,7 @@ class SimpleAgentMockedTest {
 
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
-    val results = mutableListOf<String?>()
+    val results = mutableListOf<Any?>()
     var iterationCount = 0
 
     @AfterTest

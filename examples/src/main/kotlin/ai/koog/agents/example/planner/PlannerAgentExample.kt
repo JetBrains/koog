@@ -61,17 +61,17 @@ class SequentialNode(override val children: List<PlannerNode>) : IntermediatePla
     class Builder(override val subtaskDescription: String) : IntermediatePlannerNode.Builder(mutableListOf())
 }
 
-class DelegateNode(val agent: AIAgent, val input: String) : PlannerNode {
+class DelegateNode(val agent: AIAgent<String, String>, val input: String) : PlannerNode {
     override suspend fun execute(dispatcher: CoroutineDispatcher) {
         agent.run(input)
     }
 
-    class Builder(override val subtaskDescription: String, val agent: AIAgent) : PlannerNode.Builder {
+    class Builder(override val subtaskDescription: String, val agent: AIAgent<String, String>) : PlannerNode.Builder {
         override fun build() = DelegateNode(agent, subtaskDescription)
     }
 }
 
-data class AgentDescriptor(val agent: AIAgent, val description: String)
+data class AgentDescriptor(val agent: AIAgent<String, String>, val description: String)
 
 interface ParsedMessage
 
@@ -98,7 +98,7 @@ suspend fun planWork(
 
     val result = CompletableDeferred<PlannerNode>()
 
-    val planner = strategy("planner") {
+    val planner = strategy<String, String>("planner") {
         suspend fun AIAgentContextBase.defineTask(inputTask: String, prompt: String): Message.Response {
             return llm.writeSession {
                 updatePrompt {

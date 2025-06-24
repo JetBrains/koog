@@ -129,7 +129,7 @@ class SimpleAgentIntegrationTest {
 
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
-    val results = mutableListOf<String?>()
+    val results = mutableListOf<Any?>()
 
     @AfterTest
     fun teardown() {
@@ -242,7 +242,7 @@ class SimpleAgentIntegrationTest {
             assertTrue(errors.isEmpty(), "There should be no errors")
             assertTrue(results.isNotEmpty(), "There should be results")
 
-            val result = results.first()
+            val result = results.first() as String
             assertNotNull(result, "Result should not be null")
             assertTrue(result.isNotBlank(), "Result should not be empty or blank")
             assertTrue(result.length > 20, "Result should contain more than 20 characters")

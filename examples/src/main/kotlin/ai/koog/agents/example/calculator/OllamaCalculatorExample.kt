@@ -18,7 +18,7 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val executor: PromptExecutor = simpleOllamaAIExecutor()
 
     // Create tool registry with calculator tools
@@ -53,7 +53,7 @@ fun main() = runBlocking {
                 println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
             }
 
-            onAgentFinished { strategyName: String, result: String? ->
+            onAgentFinished { strategyName: String, result: Any? ->
                 println("Result: $result")
             }
         }

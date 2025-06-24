@@ -2,7 +2,7 @@ package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
+import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -25,7 +25,7 @@ class EventHandlerTest {
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
 
-        val strategy = strategy(strategyName) {
+        val strategy = strategy<String, String>(strategyName) {
             edge(nodeStart forwardTo nodeFinish transformed { agentResult })
         }
 
@@ -60,7 +60,7 @@ class EventHandlerTest {
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
 
-        val strategy = strategy(strategyName) {
+        val strategy = strategy<String, String>(strategyName) {
             val llmCallNode by nodeLLMRequest("test LLM call")
 
             edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
@@ -102,7 +102,7 @@ class EventHandlerTest {
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
 
-        val strategy = strategy(strategyName) {
+        val strategy = strategy<String, String>(strategyName) {
             val llmCallNode by nodeLLMRequest("test LLM call")
 
             edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
@@ -146,7 +146,7 @@ class EventHandlerTest {
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
 
-        val strategy = strategy(strategyName) {
+        val strategy = strategy<String, String>(strategyName) {
             val llmCallNode by nodeLLMRequest("test LLM call")
             val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -195,7 +195,7 @@ class EventHandlerTest {
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
 
-        val strategy = strategy(strategyName) {
+        val strategy = strategy<String, String>(strategyName) {
             edge(nodeStart forwardTo nodeFinish transformed { agentResult })
         }
 
@@ -204,15 +204,15 @@ class EventHandlerTest {
             configureTools = { },
             installFeatures = {
                 install(EventHandler) {
-                    onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                    onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<* , *> ->
                         collectedEvents.add("OnBeforeAgentStarted first (strategy: ${strategy.name})")
                     }
 
-                    onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                    onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
                         collectedEvents.add("OnBeforeAgentStarted second (strategy: ${strategy.name})")
                     }
 
-                    onAgentFinished { strategyName: String, result: String? ->
+                    onAgentFinished { strategyName: String, result: Any? ->
                         collectedEvents.add("OnAgentFinished (strategy: $strategyName, result: $agentResult)")
                     }
                 }
@@ -239,7 +239,7 @@ class EventHandlerTest {
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
 
-        val strategy = strategy(strategyName) {
+        val strategy = strategy<String, String>(strategyName) {
             val llmCallNode by nodeLLMRequest("test LLM call")
             val llmCallWithToolsNode by nodeException("test LLM call with tools")
 
@@ -261,6 +261,6 @@ class EventHandlerTest {
         agent.run("Hello, world!!!")
     }
 
-    fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegateBase<String, Message.Response> =
+    fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
         node(name) { message -> throw IllegalStateException("Test exception") }
 }

@@ -9,6 +9,7 @@ import ai.koog.integration.tests.utils.TestLogPrinter
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
@@ -388,7 +389,7 @@ class AIAgentMultipleLLMIntegrationTest {
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int,
         prompt: Prompt = prompt("test") {},
-    ): AIAgent {
+    ): AIAgent<String, String> {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
@@ -397,7 +398,7 @@ class AIAgentMultipleLLMIntegrationTest {
             LLMProvider.Anthropic to anthropicClient
         )
 
-        val strategy = strategy("test") {
+        val strategy = strategy<String, String>("test") {
             val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
@@ -420,7 +421,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
 
                 edge(nodeStart forwardTo definePromptAnthropic transformed {})
-                edge(definePromptAnthropic forwardTo callLLM transformed { agentInput })
+                edge(definePromptAnthropic forwardTo callLLM transformed { agentInput<String>() })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
                 edge(callTool forwardTo sendToolResult)
@@ -453,7 +454,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
 
                 edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
                 edge(callTool forwardTo sendToolResult)
@@ -495,7 +496,7 @@ class AIAgentMultipleLLMIntegrationTest {
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int,
         prompt: Prompt = prompt("test") {},
-    ): AIAgent {
+    ): AIAgent<String, String> {
         val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
 
@@ -507,7 +508,7 @@ class AIAgentMultipleLLMIntegrationTest {
             )
 
         // Create a simple agent strategy
-        val strategy = strategy("test") {
+        val strategy = strategy<String, String>("test") {
             val openaiSubgraphFirst by subgraph<String, Unit>("openai0") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
@@ -532,7 +533,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
 
                 edge(nodeStart forwardTo definePromptOpenAI transformed {})
-                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
                 edge(callTool forwardTo sendToolResult)
@@ -563,7 +564,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
 
                 edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
                 edge(callLLM forwardTo callTool onToolCall { true })
                 edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
                 edge(callTool forwardTo sendToolResult)
@@ -618,7 +619,7 @@ class AIAgentMultipleLLMIntegrationTest {
         }
         val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
 
-        val result = agent.runAndGetResult(
+        val result = agent.run(
             "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
         )
 
@@ -682,7 +683,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = steps)
 
         try {
-            val result = agent.runAndGetResult(
+            val result = agent.run(
                 "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
             )
             assertNull(result)
@@ -715,7 +716,7 @@ class AIAgentMultipleLLMIntegrationTest {
             }
         }
         val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
-        val result = agent.runAndGetResult(
+        val result = agent.run(
             "Name me a capital of France"
         )
 
@@ -741,7 +742,7 @@ class AIAgentMultipleLLMIntegrationTest {
         }
         val agent = createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
 
-        val result = agent.runAndGetResult(
+        val result = agent.run(
             "Name me a capital of France"
         )
 
@@ -775,7 +776,7 @@ class AIAgentMultipleLLMIntegrationTest {
                 }
             )
 
-            val result = agent.runAndGetResult("calculate 10 plus 15, and then subtract 8")
+            val result = agent.run("calculate 10 plus 15, and then subtract 8")
             println("result = $result")
             assertNotNull(result)
             assertContains(result, "17")
@@ -804,7 +805,7 @@ class AIAgentMultipleLLMIntegrationTest {
                 else -> createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 20)
             }
 
-            val result = agent.runAndGetResult(
+            val result = agent.run(
                 """
             I'm sending you an image encoded in base64 format.
 
@@ -866,7 +867,7 @@ class AIAgentMultipleLLMIntegrationTest {
         }
 
 
-        val result = agent.runAndGetResult("Hi! Please analyse my image.")
+        val result = agent.run("Hi! Please analyse my image.")
 
         assertNotNull(result, "Result should not be null")
         assertTrue(result.isNotBlank(), "Result should not be empty or blank")

@@ -14,7 +14,7 @@ fun customWizardStrategy(
     generateTools: List<Tool<*, *>>,
     verifyTools: List<Tool<*, *>>,
     fixTools: List<Tool<*, *>>
-) = strategy("wizard-with-checkstyle") {
+) = strategy<String, String>("wizard-with-checkstyle") {
     val generate by subgraphWithTask<Unit>(
         generateTools,
         llmModel = OpenAIModels.Chat.GPT4o,

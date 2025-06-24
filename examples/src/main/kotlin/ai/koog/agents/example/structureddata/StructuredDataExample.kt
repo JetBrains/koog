@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
@@ -15,10 +14,10 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.text.text
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -135,6 +134,11 @@ data class WeatherForecast(
     }
 }
 
+data class WeatherForecastRequest(
+    val city: String,
+    val country: String
+)
+
 fun main(): Unit = runBlocking {
 
     // Optional examples, to help LLM understand the format better
@@ -208,18 +212,24 @@ fun main(): Unit = runBlocking {
         examples = exampleForecasts,
     )
 
-    val agentStrategy = strategy("weather-forecast") {
-        val setup by nodeLLMRequest()
+    val agentStrategy = strategy<WeatherForecastRequest, WeatherForecast>("weather-forecast") {
+        val prepareRequest by node<WeatherForecastRequest, String> { request ->
+            text {
+                +"Requesting forecast for"
+                +"City: ${request.city}"
+                +"Country: ${request.country}"
+            }
+        }
+
         val getStructuredForecast by nodeLLMRequestStructured(
             structure = weatherForecastStructure,
-            retries = 1,
+            retries = 2,
             // the model that would handle coercion if the output does not conform to the requested structure
-            fixingModel = OpenAIModels.Reasoning.GPT4oMini,
+            fixingModel = AnthropicModels.Haiku_3_5,
         )
 
-        edge(nodeStart forwardTo setup)
-        edge(setup forwardTo getStructuredForecast transformed { it.content })
-        edge(getStructuredForecast forwardTo nodeFinish transformed { "Structured response:\n${it.getOrThrow().structure}" })
+        nodeStart then prepareRequest then getStructuredForecast
+        edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().structure })
     }
 
     val agentConfig = AIAgentConfig(
@@ -235,7 +245,7 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 5
     )
 
-    val runner = AIAgent(
+    val runner = AIAgent<WeatherForecastRequest, WeatherForecast>(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
             LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
@@ -246,10 +256,6 @@ fun main(): Unit = runBlocking {
         handleEvents {
             onAgentRunError { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
                 println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
-            }
-
-            onAgentFinished { strategyName: String, result: String? ->
-                println("Result: $result")
             }
         }
     }
@@ -262,5 +268,6 @@ fun main(): Unit = runBlocking {
         """.trimIndent()
     )
 
-    runner.run("Get weather forecast for New York")
+    val result: WeatherForecast = runner.run(WeatherForecastRequest(city = "New York", country = "USA"))
+    println("Agent run result: $result")
 }

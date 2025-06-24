@@ -33,7 +33,7 @@ fun main() = runBlocking {
         tool(ProvideStringSubgraphResult)
     }
 
-    val strategy = strategy("banking assistant") {
+    val strategy = strategy<String, String>("banking assistant") {
         val classifyRequest by subgraph<String, ClassifiedBankRequest>(
             tools = listOf(AskUser)
         ) {
@@ -117,7 +117,7 @@ fun main() = runBlocking {
         maxAgentIterations = 50
     )
 
-    val agent = AIAgent(
+    val agent = AIAgent<String, String>(
         promptExecutor = simpleOpenAIExecutor(apiKey),
         strategy = strategy,
         agentConfig = agentConfig,
@@ -134,6 +134,6 @@ fun main() = runBlocking {
 //         "What's my maximum check at a restaurant this month?"
 //         "How much did I spend on groceries in the first week of May?"
 //         "What's my total spending on entertainment in May?"
-    val result = agent.runAndGetResult(message)
+    val result = agent.run(message)
     println(result)
 }

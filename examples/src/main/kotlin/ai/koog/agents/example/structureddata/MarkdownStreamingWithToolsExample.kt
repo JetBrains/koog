@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 
 
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
-    val agentStrategy = strategy("library-assistant") {
+    val agentStrategy = strategy<String, String>("library-assistant") {
         val getMdOutput by node<String, String> { input ->
             val mdDefinition = markdownBookDefinition()
 
