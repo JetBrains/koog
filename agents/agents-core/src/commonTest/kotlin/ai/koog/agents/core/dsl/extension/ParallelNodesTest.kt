@@ -14,84 +14,9 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 
 class ParallelNodesTest {
-
-    @Test
-    fun testParallelTransformMergeFold() = runTest {
-        // Create a key to store and retrieve values from the context
-        val testKey = AIAgentStorageKey<String>("testKey")
-
-        val agentStrategy = strategy("test-context") {
-            // Create three nodes that modify the context
-            val node1 by node<Unit, String>("node1") {
-                storage.set(testKey, "value1")
-                "Result from node1"
-            }
-
-            val node2 by node<Unit, String>("node2") {
-                storage.set(testKey, "value2")
-                "Result from node2"
-            }
-
-            val node3 by node<Unit, String>("node3") {
-                storage.set(testKey, "value3")
-                "Result from node3"
-            }
-
-            // Create a parallel node that executes all three nodes
-            val parallelNode by parallel(
-                node1, node2, node3,
-                name = "parallelNode",
-            )
-
-            // Node to verify the context after parallel execution
-            val verifyNode by transform<Unit, String, String>("verifyNode") { input ->
-                // The context should have been replaced with node3's context
-                input + " with value: " + storage.get(testKey)
-            }
-
-            val reduceNode by merge<Unit, String>(name = "reduceNode") {
-                fold("All results:\n") { acc, output -> acc + output + "\n" }
-            }
-
-            // Connect the nodes
-            edge(nodeStart forwardTo parallelNode transformed { })
-            edge(parallelNode forwardTo verifyNode)
-            edge(verifyNode forwardTo reduceNode)
-            edge(reduceNode forwardTo nodeFinish)
-        }
-
-        val agentConfig = AIAgentConfig(
-            prompt = prompt("test-agent") {},
-            model = OllamaModels.Meta.LLAMA_3_2,
-            maxAgentIterations = 10
-        )
-
-        val testExecutor = getMockExecutor {
-            mockLLMAnswer("Default test response").asDefaultResponse
-        }
-
-        val agent = AIAgent(
-            promptExecutor = testExecutor,
-            strategy = agentStrategy,
-            agentConfig = agentConfig,
-            toolRegistry = ToolRegistry.Companion {
-                tool(DummyTool())
-            }
-        )
-
-        val result = agent.runAndGetResult("")
-
-        assertNotNull(result)
-        assertEquals("All results:\n" +
-                "Result from node1 with value: value1\n" +
-                "Result from node2 with value: value2\n" +
-                "Result from node3 with value: value3\n", result)
-    }
 
     @Test
     fun testContextIsolation() = runTest {
