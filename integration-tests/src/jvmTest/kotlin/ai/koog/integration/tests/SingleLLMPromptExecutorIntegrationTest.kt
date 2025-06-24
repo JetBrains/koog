@@ -982,6 +982,7 @@ class SingleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testUrlBasedAttachment(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
+        assumeTrue(model.provider !== LLMProvider.Google, "Google models do not support URL attachments")
         val executor = SingleLLMPromptExecutor(client)
 
         assumeTrue(
