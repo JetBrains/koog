@@ -51,7 +51,7 @@ public class AIAgentStateManager internal constructor(
         result
     }
 
-    public suspend fun copy(): AIAgentStateManager {
+    internal suspend fun copy(): AIAgentStateManager {
         return withStateLock {
             AIAgentStateManager(state.copy())
         }
