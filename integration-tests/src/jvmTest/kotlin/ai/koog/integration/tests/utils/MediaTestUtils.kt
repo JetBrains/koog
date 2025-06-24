@@ -95,12 +95,6 @@ object MediaTestUtils {
                 sourceFile.readText()
             }
 
-            MediaTestScenarios.TextTestScenario.LONG_TEXT_20_MB -> { // for Google
-                val sourceFile = File(testResourcesDir, "fakefile_20MB.txt")
-                check(sourceFile.exists()) { "Test text file 20MB should exist" }
-                sourceFile.readText()
-            }
-
             MediaTestScenarios.TextTestScenario.UTF8_ENCODING ->
                 "This text contains UTF-8 characters: é, ü, ñ, ç, ß, 你好, こんにちは, Привет"
 

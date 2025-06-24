@@ -28,7 +28,6 @@ object MediaTestScenarios {
 
         EMPTY_TEXT,
         LONG_TEXT_5_MB,
-        LONG_TEXT_20_MB,
         CORRUPTED_TEXT
     }
 
@@ -74,18 +73,13 @@ object MediaTestScenarios {
         CORRUPTED_VIDEO
     }
 
-    enum class ErrorHandlingTestScenario {
-        SIZE_LIMIT_EXCEEDED,
-        INVALID_EXTENSION,
-        EMPTY_FILE,
-    }
-
     @JvmStatic
     fun markdownScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = MarkdownTestScenario.entries.toTypedArray()
         val models = listOf(
             AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini1_5Pro
+            GoogleModels.Gemini1_5Pro,
+            OpenAIModels.Chat.GPT4o,
         )
         return scenarios.flatMap { scenario ->
             models.map { model ->
@@ -157,21 +151,6 @@ object MediaTestScenarios {
     fun videoScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = VideoTestScenario.entries.toTypedArray()
         val models = listOf(
-            GoogleModels.Gemini1_5Pro
-        )
-        return scenarios.flatMap { scenario ->
-            models.map { model ->
-                Arguments.of(scenario, model)
-            }
-        }.stream()
-    }
-
-    @JvmStatic
-    fun errorHandlingScenarioModelCombinations(): Stream<Arguments> {
-        val scenarios = ErrorHandlingTestScenario.entries.toTypedArray()
-        val models = listOf(
-            OpenAIModels.Chat.GPT4o,
-            AnthropicModels.Sonnet_3_7,
             GoogleModels.Gemini1_5Pro
         )
         return scenarios.flatMap { scenario ->

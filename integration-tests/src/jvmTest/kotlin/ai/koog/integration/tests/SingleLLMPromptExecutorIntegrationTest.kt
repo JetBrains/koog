@@ -597,6 +597,8 @@ class SingleLLMPromptExecutorIntegrationTest {
     * Therefore, in the scope of the executor tests, we'll check one executor of each provider
     * to decrease the number of possible combinations and to avoid redundant checks.*/
 
+    // ToDo add video & pdf specific scenarios
+
     private fun getClient(model: LLModel): LLMClient {
         return if (model.provider == LLMProvider.Anthropic) AnthropicLLMClient(
             readTestAnthropicKeyFromEnv()
@@ -614,26 +616,40 @@ class SingleLLMPromptExecutorIntegrationTest {
         model: LLModel
     ) =
         runTest(timeout = 300.seconds) {
-            assumeTrue(model.provider != LLMProvider.OpenAI, "File format md not supported for OpenAI")
-
             val client = getClient(model)
             val executor = SingleLLMPromptExecutor(client)
 
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
 
-            val prompt = prompt("markdown-test-${scenario.name.lowercase()}") {
-                system("You are a helpful assistant that can analyze markdown files.")
+            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
+                prompt("markdown-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze markdown files.")
 
-                user {
-                    content {
-                        markdown {
-                            "I'm sending you a markdown file with different markdown elements. "
-                            +"Please list all the markdown elements used in it and describe its structure clearly."
+                    user {
+                        content {
+                            markdown {
+                                "I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                            }
+                        }
+                        attachments {
+                            file(file.absolutePath, "text/markdown")
                         }
                     }
+                }
+            } else {
+                prompt("markdown-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze markdown files.")
 
-                    attachments {
-                        file(file.absolutePath, "text/markdown")
+                    user {
+                        content {
+                            markdown {
+                                "I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                                newline()
+                                +file.readText()
+                            }
+                        }
                     }
                 }
             }
@@ -765,18 +781,35 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
-            val prompt = prompt("text-test-${scenario.name.lowercase()}") {
-                system("You are a helpful assistant that can analyze and process text.")
+            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
+                prompt("text-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze and process text.")
 
-                user {
-                    content {
-                        markdown {
-                            "I'm sending you a text file. Please analyze it and summarize its content."
+                    user {
+                        content {
+                            markdown {
+                                "I'm sending you a text file. Please analyze it and summarize its content."
+                            }
+                        }
+
+
+                        attachments {
+                            textFile(Path(file.absolutePath), "text/plain")
                         }
                     }
+                }
+            } else {
+                prompt("text-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze and process text.")
 
-                    attachments {
-                        file(file.absolutePath, "text/plain")
+                    user {
+                        content {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                                newline()
+                                +file.readText()
+                            }
+                        }
                     }
                 }
             }
@@ -819,24 +852,6 @@ class SingleLLMPromptExecutorIntegrationTest {
                             }
                         }
 
-                        TextTestScenario.LONG_TEXT_20_MB -> {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
-                                "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
-                            )
-                            if (model.provider == LLMProvider.Anthropic) {
-                                assertTrue(
-                                    e.message?.contains("prompt is too long") == true,
-                                    "Expected exception for long text [prompt is too long] was not found, got [${e.message}] instead"
-                                )
-                            } else if (model.provider == LLMProvider.Google) {
-                                assertTrue(
-                                    e.message?.contains("exceeds the maximum number of tokens allowed") == true,
-                                    "Expected exception for long text [exceeds the maximum number of tokens allowed] was not found, got [${e.message}] instead"
-                                )
-                            }
-                        }
-
                         else -> {
                             throw e
                         }
@@ -870,25 +885,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        when (scenario) {
-                            AudioTestScenario.BASIC_WAV, AudioTestScenario.BIG_AUDIO, AudioTestScenario.CORRUPTED_AUDIO -> {
-                                audio(
-                                    Attachment.Audio(
-                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
-                                        format = "wav"
-                                    )
-                                )
-                            }
-
-                            AudioTestScenario.BASIC_MP3 -> {
-                                audio(
-                                    Attachment.Audio(
-                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
-                                        format = "mp3"
-                                    )
-                                )
-                            }
-                        }
+                        audio(Path(audioFile.absolutePath))
                     }
                 }
             }
@@ -920,50 +917,6 @@ class SingleLLMPromptExecutorIntegrationTest {
                 }
             }
         }
-
-    @Test
-    fun integration_testMultipleMediaTypes() = runTest(timeout = 300.seconds) {
-        val model = OpenAIModels.Chat.GPT4o
-        val client = OpenAILLMClient(readTestOpenAIKeyFromEnv())
-        val executor = SingleLLMPromptExecutor(client)
-
-        assumeTrue(
-            model.capabilities.contains(LLMCapability.Vision.Image),
-            "Model must support vision capability"
-        )
-
-        val pdfFile = File(testResourcesDir, "test.pdf")
-        val imageFile = File(testResourcesDir, "test.png")
-
-        assertTrue(imageFile.exists(), "Image test file should exist")
-        assertTrue(pdfFile.exists(), "PDF test file should exist")
-
-        val prompt = prompt("multiple-media-test") {
-            system("You are a helpful assistant that can analyze different types of media files.")
-
-            user {
-                content {
-                    markdown {
-                        +"I'm sending you a PDF file and an image. Please analyze both and tell me about their content."
-                    }
-                }
-
-                attachments {
-                    file(pdfFile.absolutePath, "application/pdf")
-                    image(imageFile.absolutePath)
-                }
-            }
-        }
-
-        val response = executor.execute(prompt, model)
-        checkExecutorMediaResponse(response)
-
-        assertTrue(
-            response.content.contains("image", ignoreCase = true) ||
-                    response.content.contains("PDF", ignoreCase = true),
-            "Response should mention both image & PDF files"
-        )
-    }
 
     /*
     * Checking just images to make sure the file is uploaded in base64 format

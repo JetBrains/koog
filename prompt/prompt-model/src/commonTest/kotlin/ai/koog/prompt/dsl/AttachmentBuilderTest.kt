@@ -304,4 +304,63 @@ class AttachmentBuilderTest {
             "Local audio should be recognized as Binary content"
         )
     }
+
+    @Test
+    fun testVideoWithUrl() {
+        val result = AttachmentBuilder().apply {
+            video("https://example.com/video.mp4")
+        }.build()
+
+        assertEquals(1, result.size, "Should contain one attachment")
+        assertEquals(
+            Attachment.Video(
+                content = AttachmentContent.URL("https://example.com/video.mp4"),
+                format = "mp4",
+                fileName = "video.mp4"
+            ),
+            result[0]
+        )
+    }
+
+    @Test
+    fun testBinaryFile() {
+        val fileData = byteArrayOf(1, 2, 3, 4, 5)
+        val result = AttachmentBuilder().apply {
+            file(
+                Attachment.File(
+                    content = AttachmentContent.Binary.Bytes(fileData),
+                    format = "pdf",
+                    mimeType = "application/pdf",
+                    fileName = "document.pdf"
+                )
+            )
+        }.build()
+
+        assertEquals(1, result.size, "Should contain one attachment")
+        val resultFile = result[0] as Attachment.File
+        assertTrue(resultFile.content is AttachmentContent.Binary, "File should be recognized as Binary content")
+        assertEquals("application/pdf", resultFile.mimeType, "MIME type should match")
+        assertEquals("document.pdf", resultFile.fileName, "File name should match")
+    }
+
+    @Test
+    fun testTextFile() {
+        val result = AttachmentBuilder().apply {
+            file(
+                Attachment.File(
+                    content = AttachmentContent.PlainText("This is a text file content"),
+                    format = "txt",
+                    mimeType = "text/plain",
+                    fileName = "document.txt"
+                )
+            )
+        }.build()
+
+        assertEquals(1, result.size, "Should contain one attachment")
+        val resultFile = result[0] as Attachment.File
+        assertTrue(resultFile.content is AttachmentContent.PlainText, "File should be recognized as PlainText content")
+        assertEquals("This is a text file content", (resultFile.content as AttachmentContent.PlainText).text, "Text content should match")
+        assertEquals("text/plain", resultFile.mimeType, "MIME type should match")
+        assertEquals("document.txt", resultFile.fileName, "File name should match")
+    }
 }
