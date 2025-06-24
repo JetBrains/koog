@@ -359,7 +359,7 @@ class AttachmentBuilderTest {
         assertEquals(1, result.size, "Should contain one attachment")
         val resultFile = result[0] as Attachment.File
         assertTrue(resultFile.content is AttachmentContent.PlainText, "File should be recognized as PlainText content")
-        assertEquals("This is a text file content", (resultFile.content as AttachmentContent.PlainText).text, "Text content should match")
+        assertEquals("This is a text file content", (resultFile.content).text, "Text content should match")
         assertEquals("text/plain", resultFile.mimeType, "MIME type should match")
         assertEquals("document.txt", resultFile.fileName, "File name should match")
     }

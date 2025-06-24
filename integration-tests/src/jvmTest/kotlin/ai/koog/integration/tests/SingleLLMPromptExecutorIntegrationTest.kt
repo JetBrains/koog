@@ -42,7 +42,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -600,13 +599,19 @@ class SingleLLMPromptExecutorIntegrationTest {
     // ToDo add video & pdf specific scenarios
 
     private fun getClient(model: LLModel): LLMClient {
-        return if (model.provider == LLMProvider.Anthropic) AnthropicLLMClient(
-            readTestAnthropicKeyFromEnv()
-        ) else if (model.provider == LLMProvider.OpenAI) OpenAILLMClient(
-            readTestOpenAIKeyFromEnv()
-        ) else GoogleLLMClient(
-            readTestGoogleAIKeyFromEnv()
-        )
+        return when (model.provider) {
+            LLMProvider.Anthropic -> AnthropicLLMClient(
+                readTestAnthropicKeyFromEnv()
+            )
+
+            LLMProvider.OpenAI -> OpenAILLMClient(
+                readTestOpenAIKeyFromEnv()
+            )
+
+            else -> GoogleLLMClient(
+                readTestGoogleAIKeyFromEnv()
+            )
+        }
     }
 
     @ParameterizedTest
