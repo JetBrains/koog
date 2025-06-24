@@ -90,7 +90,7 @@ class AIAgentPipelineTest {
         val actualEvents = interceptedEvents.filter { it.startsWith("LLM: ") }
         // , metadata=ResponseMetadata(timestamp=2023-01-01T00:00:00Z, tokensCount=null)
         val expectedEvents = listOf(
-            "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
+            "LLM: start LLM call (prompt: Test user message, tools: [])",
             "LLM: finish LLM call (responses: [Assistant: Default test response])",
             "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
             "LLM: finish LLM call (responses: [Assistant: Default test response])",
