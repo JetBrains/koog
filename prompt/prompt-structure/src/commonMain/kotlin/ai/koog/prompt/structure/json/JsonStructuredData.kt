@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.StructuredData
 import ai.koog.prompt.structure.structure
-import ai.koog.prompt.text.TextContentBuilder
+import ai.koog.prompt.text.TextContentBuilderBase
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
@@ -47,7 +47,7 @@ public class JsonStructuredData<TStruct>(
     override fun parse(text: String): TStruct = structureLanguage.parse(text, serializer)
     override fun pretty(value: TStruct): String = structureLanguage.pretty(value, serializer)
 
-    override fun definition(builder: TextContentBuilder): TextContentBuilder = builder.apply {
+    override fun definition(builder: TextContentBuilderBase<*>): TextContentBuilderBase<*> = builder.apply {
         +"DEFINITION OF $id"
         +"The $id format is defined only and solely with JSON, without any additional characters, backticks or anything similar."
         newline()

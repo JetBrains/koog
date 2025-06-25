@@ -683,12 +683,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze markdown files.")
 
                     user {
-                        content {
-                            markdown {
-                                "I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                            }
+                        markdown {
+                            "I'm sending you a markdown file with different markdown elements. "
+                            +"Please list all the markdown elements used in it and describe its structure clearly."
                         }
+
                         attachments {
                             file(file.absolutePath, "text/markdown")
                         }
@@ -699,13 +698,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze markdown files.")
 
                     user {
-                        content {
-                            markdown {
-                                "I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                                newline()
-                                +file.readText()
-                            }
+                        markdown {
+                            "I'm sending you a markdown file with different markdown elements. "
+                            +"Please list all the markdown elements used in it and describe its structure clearly."
+                            newline()
+                            +file.readText()
                         }
                     }
                 }
@@ -754,10 +751,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze images.")
 
                 user {
-                    content {
-                        markdown {
-                            +"I'm sending you an image. Please describe what you see in it and identify the image format if possible."
-                        }
+                    markdown {
+                        +"I'm sending you an image. Please describe what you see in it and identify the image format if possible."
                     }
 
                     attachments {
@@ -837,12 +832,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze and process text.")
 
                     user {
-                        content {
-                            markdown {
-                                "I'm sending you a text file. Please analyze it and summarize its content."
-                            }
+                        markdown {
+                            "I'm sending you a text file. Please analyze it and summarize its content."
                         }
-
 
                         attachments {
                             textFile(Path(file.absolutePath), "text/plain")
@@ -854,12 +846,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze and process text.")
 
                     user {
-                        content {
-                            markdown {
-                                +"I'm sending you a text file. Please analyze it and summarize its content."
-                                newline()
-                                +file.readText()
-                            }
+                        markdown {
+                            +"I'm sending you a text file. Please analyze it and summarize its content."
+                            newline()
+                            +file.readText()
                         }
                     }
                 }
@@ -926,10 +916,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze audio files.")
 
                 user {
-                    content {
-                        markdown {
-                            "I'm sending you an audio file. Please tell me a couple of words about it."
-                        }
+                    markdown {
+                        "I'm sending you an audio file. Please tell me a couple of words about it."
                     }
 
                     attachments {
@@ -993,11 +981,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
             system("You are a helpful assistant that can analyze different types of media files.")
 
             user {
-                content {
-                    markdown {
-                        +"I'm sending you an image. Please analyze it and tell me about its content."
-                    }
+                markdown {
+                    +"I'm sending you an image. Please analyze it and tell me about its content."
                 }
+
                 attachments {
                     image(Path(tempImageFile.absolutePath))
                 }
@@ -1033,10 +1020,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
             system("You are a helpful assistant that can analyze images.")
 
             user {
-                content {
-                    markdown {
-                        +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
-                    }
+                markdown {
+                    +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
                 }
 
                 attachments {

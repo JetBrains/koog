@@ -122,7 +122,7 @@ public open class AIAgentSubgraph<Input, Output>(
                     replaceHistoryWithTLDR()
                     updatePrompt {
                         user {
-                            content { selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription) }
+                            selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
                         }
                     }
 

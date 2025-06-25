@@ -1,6 +1,7 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.text.TextContentBuilderBase
 import ai.koog.prompt.text.TextContentBuilder
 
 /**
@@ -10,16 +11,8 @@ import ai.koog.prompt.text.TextContentBuilder
  * @see AttachmentBuilder
  */
 @PromptDSL
-public class MessageContentBuilder {
-    private var content: String = ""
+public class MessageContentBuilder : TextContentBuilderBase<MessageContent>() {
     private var attachments: List<Attachment> = emptyList()
-
-    /**
-     * Configures text content for this content builder.
-     */
-    public fun content(body: TextContentBuilder.() -> Unit) {
-        content = TextContentBuilder().apply(body).build()
-    }
 
     /**
      * Configures media attachments for this content builder.
@@ -31,7 +24,7 @@ public class MessageContentBuilder {
     /**
      * Builds and returns both the text content and attachments.
      */
-    public fun build(): MessageContent = MessageContent(content, attachments)
+    override fun build(): MessageContent = MessageContent(textBuilder.toString(), attachments)
 }
 
 /**

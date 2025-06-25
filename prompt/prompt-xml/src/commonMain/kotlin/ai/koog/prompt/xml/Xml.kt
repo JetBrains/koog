@@ -1,5 +1,6 @@
 package ai.koog.prompt.xml
 
+import ai.koog.prompt.text.TextContentBuilderBase
 import ai.koog.prompt.text.TextContentBuilder
 
 /**
@@ -152,7 +153,7 @@ public inline fun StringBuilder.xml(indented: Boolean = true, init: XmlContentBu
  * Extension function to add XML content to a TextContentBuilder.
  * @param init The XML content builder
  */
-public inline fun TextContentBuilder.xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit) {
+public inline fun TextContentBuilderBase<*>.xml(indented: Boolean = true, init: XmlContentBuilder.() -> Unit) {
     text(XmlContentBuilder(indented).apply(init).build())
 }
 

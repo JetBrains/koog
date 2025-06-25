@@ -10,7 +10,7 @@ package ai.koog.prompt.text
  * @param body The content builder function
  * @return The [TextContentBuilder] instance with numbered lines
  */
-public fun TextContentBuilder.numbered(startLineNumber: Int = 1, body: TextContentBuilder.() -> Unit): TextContentBuilder {
+public fun TextContentBuilderBase<*>.numbered(startLineNumber: Int = 1, body: TextContentBuilderBase<*>.() -> Unit): TextContentBuilderBase<*> {
     // Create a temporary builder to capture the content
     val tempBuilder = TextContentBuilder()
     tempBuilder.body()

@@ -1,5 +1,6 @@
 package ai.koog.prompt.markdown
 
+import ai.koog.prompt.text.TextContentBuilderBase
 import ai.koog.prompt.text.TextContentBuilder
 
 /**
@@ -505,7 +506,7 @@ public inline fun StringBuilder.markdown(init: MarkdownContentBuilder.() -> Unit
  *
  * @param init The markdown content builder
  */
-public inline fun TextContentBuilder.markdown(init: MarkdownContentBuilder.() -> Unit) {
+public inline fun TextContentBuilderBase<*>.markdown(init: MarkdownContentBuilder.() -> Unit) {
     text(MarkdownContentBuilder().apply(init).build())
 }
 

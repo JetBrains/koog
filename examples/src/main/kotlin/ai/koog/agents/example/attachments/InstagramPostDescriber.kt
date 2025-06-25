@@ -25,20 +25,18 @@ fun main() {
         system("You are professional assistant that can write cool and funny descriptions for Instagram posts.")
 
         user {
-            content {
-                markdown {
-                    +"I want to create a new post on Instagram."
-                    br()
-                    +"Can you write something creative under my instagram post with the following photos?"
-                    br()
-                    h2("Requirements")
-                    bulleted {
-                        item("It must be very funny and creative")
-                        item("It must increase my chance of becoming an ultra-famous blogger!!!!")
-                        item("It not contain explicit content, harassment or bullying")
-                        item("It must be a short catching phrase")
-                        item("You must include relevant hashtags that would increase the visibility of my post")
-                    }
+            markdown {
+                +"I want to create a new post on Instagram."
+                br()
+                +"Can you write something creative under my instagram post with the following photos?"
+                br()
+                h2("Requirements")
+                bulleted {
+                    item("It must be very funny and creative")
+                    item("It must increase my chance of becoming an ultra-famous blogger!!!!")
+                    item("It not contain explicit content, harassment or bullying")
+                    item("It must be a short catching phrase")
+                    item("You must include relevant hashtags that would increase the visibility of my post")
                 }
             }
 

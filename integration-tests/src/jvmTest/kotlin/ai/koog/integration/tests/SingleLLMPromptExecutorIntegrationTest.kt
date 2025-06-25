@@ -631,12 +631,11 @@ class SingleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze markdown files.")
 
                     user {
-                        content {
-                            markdown {
-                                "I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                            }
+                        markdown {
+                            "I'm sending you a markdown file with different markdown elements. "
+                            +"Please list all the markdown elements used in it and describe its structure clearly."
                         }
+
                         attachments {
                             file(file.absolutePath, "text/markdown")
                         }
@@ -647,13 +646,11 @@ class SingleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze markdown files.")
 
                     user {
-                        content {
-                            markdown {
-                                "I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                                newline()
-                                +file.readText()
-                            }
+                        markdown {
+                            "I'm sending you a markdown file with different markdown elements. "
+                            +"Please list all the markdown elements used in it and describe its structure clearly."
+                            newline()
+                            +file.readText()
                         }
                     }
                 }
@@ -705,10 +702,8 @@ class SingleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant that can analyze images.")
 
                 user {
-                    content {
-                        markdown {
-                            +"I'm sending you an image. Please analyze it and identify the image format if possible."
-                        }
+                    markdown {
+                        +"I'm sending you an image. Please analyze it and identify the image format if possible."
                     }
 
                     attachments {
@@ -791,10 +786,8 @@ class SingleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze and process text.")
 
                     user {
-                        content {
-                            markdown {
-                                "I'm sending you a text file. Please analyze it and summarize its content."
-                            }
+                        markdown {
+                            "I'm sending you a text file. Please analyze it and summarize its content."
                         }
 
 
@@ -808,12 +801,10 @@ class SingleLLMPromptExecutorIntegrationTest {
                     system("You are a helpful assistant that can analyze and process text.")
 
                     user {
-                        content {
-                            markdown {
-                                +"I'm sending you a text file. Please analyze it and summarize its content."
-                                newline()
-                                +file.readText()
-                            }
+                        markdown {
+                            +"I'm sending you a text file. Please analyze it and summarize its content."
+                            newline()
+                            +file.readText()
                         }
                     }
                 }
@@ -883,10 +874,8 @@ class SingleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant.")
 
                 user {
-                    content {
-                        markdown {
-                            "I'm sending you an audio file. Please tell me a couple of words about it."
-                        }
+                    markdown {
+                        "I'm sending you an audio file. Please tell me a couple of words about it."
                     }
 
                     attachments {
@@ -952,10 +941,8 @@ class SingleLLMPromptExecutorIntegrationTest {
             system("You are a helpful assistant that can analyze different types of media files.")
 
             user {
-                content {
-                    markdown {
-                        +"I'm sending you an image. Please analyze them and tell me about their content."
-                    }
+                markdown {
+                    +"I'm sending you an image. Please analyze them and tell me about their content."
                 }
 
                 attachments {
@@ -997,10 +984,8 @@ class SingleLLMPromptExecutorIntegrationTest {
             system("You are a helpful assistant that can analyze images.")
 
             user {
-                content {
-                    markdown {
-                        +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
-                    }
+                markdown {
+                    +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
                 }
 
                 attachments {
