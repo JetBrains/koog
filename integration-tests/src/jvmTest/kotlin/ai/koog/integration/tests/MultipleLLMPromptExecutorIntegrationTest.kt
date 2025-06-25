@@ -31,6 +31,8 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
@@ -759,7 +761,21 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        image(Path(imageFile.absolutePath))
+                        when (scenario) {
+                            ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                                image(
+                                    Attachment.Image(
+                                        content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
+                                        format = "jpg",
+                                        mimeType = "image/jpeg"
+                                    )
+                                )
+                            }
+
+                            else -> {
+                                image(Path(imageFile.absolutePath))
+                            }
+                        }
                     }
                 }
             }
