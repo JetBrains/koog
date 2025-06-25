@@ -18,6 +18,8 @@ dokka = "2.0.0"
 jetsign = "45.47"
 testcontainers = "1.19.7"
 kover = "0.9.1"
+spring-boot = "3.5.3"
+spring-management = "1.1.7"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -25,6 +27,7 @@ junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", vers
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
@@ -48,7 +51,38 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 
+# Spring
+spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
+spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter"}
+spring-boot-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator"}
+spring-boot-security = { module = "org.springframework.boot:spring-boot-starter-security"}
+spring-boot-validation = { module = "org.springframework.boot:spring-boot-starter-validation"}
+spring-boot-web = { module = "org.springframework.boot:spring-boot-starter-web"}
+spring-boot-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux"}
+spring-boot-processor = { module = "org.springframework.boot:spring-boot-configuration-processor"}
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin"}
+reactor-kotlin-extensions = { module = "io.projectreactor.kotlin:reactor-kotlin-extensions" }
+
+[bundles]
+spring-boot-core = [
+    "spring-boot-starter",
+    "jackson-module-kotlin",
+    "kotlinx-coroutines-reactor"
+]
+
+spring-boot-web = [
+    "spring-boot-web",
+    "spring-boot-webflux"
+]
+
+spring-boot-security = [
+    "spring-boot-security",
+    "spring-boot-validation"
+]
+
 [plugins]
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
