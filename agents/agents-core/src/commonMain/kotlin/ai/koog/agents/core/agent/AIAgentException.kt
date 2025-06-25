@@ -2,13 +2,12 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 
-// TODO: why it extends Throwable? Should it be a RuntimeException instead?
 // TODO: how it differs from AgentRuntimeException?
 /**
  * Represents a custom exception class for use in AI Agent-related processes.
  *
  * This exception is thrown when the AI Agent encounters a specific problem
- * that requires handling or reporting. It extends the base `Throwable` class
+ * that requires handling or reporting. It extends the base `Exception` class
  * and provides a detailed message for easier identification of the issue.
  *
  * @constructor Creates an instance of `AgentException`.
@@ -17,7 +16,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
  * context about the error.
  */
 public open class AIAgentException(problem: String, throwable: Throwable? = null) :
-    Throwable("AI Agent has run into a problem: $problem", throwable)
+    Exception("AI Agent has run into a problem: $problem", throwable)
 
 /**
  * Exception thrown when an agent becomes stuck in a specific node during the execution
