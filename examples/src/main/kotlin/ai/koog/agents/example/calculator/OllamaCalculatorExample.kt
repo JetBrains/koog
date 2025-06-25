@@ -2,6 +2,7 @@ package ai.koog.agents.example.calculator
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
@@ -13,6 +14,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -31,7 +33,7 @@ fun main(): Unit = runBlocking {
 
     // Create agent config with proper prompt
     val agentConfig = AIAgentConfig(
-        prompt = prompt("test") {
+        prompt = prompt("test", LLMParams(temperature = 0.0)) {
             system("You are a calculator.")
         },
         model = OllamaModels.Meta.LLAMA_3_2,
@@ -40,7 +42,7 @@ fun main(): Unit = runBlocking {
 
     val agent = AIAgent(
         promptExecutor = executor,
-        strategy = CalculatorStrategy.strategy,
+        strategy = singleRunStrategy(),
         agentConfig = agentConfig,
         toolRegistry = toolRegistry
     ) {
@@ -60,6 +62,6 @@ fun main(): Unit = runBlocking {
     }
 
     runBlocking {
-        agent.run("(10 + 20) * (5 + 5) / (2 - 11)")
+        agent.run("Use provided tools to calculate (10 + 20) * (5 + 5) / (2 - 11). Please call all the tools at once")
     }
 }

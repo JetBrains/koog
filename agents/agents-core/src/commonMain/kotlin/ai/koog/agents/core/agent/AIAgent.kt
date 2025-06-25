@@ -367,3 +367,14 @@ public fun AIAgent(
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
 )
+public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
+    val nodeCallLLMMultiple by nodeLLMRequestMultiple("sendInput")
+    val executeToolAndSendResult by nodeLLMExecuteMultipleToolsAndSendResults("executeToolAndSendResult")
+
+    edge(nodeStart forwardTo nodeCallLLMMultiple)
+    edge(nodeCallLLMMultiple forwardTo executeToolAndSendResult onMultipleToolCalls { true })
+    edge((nodeCallLLMMultiple forwardTo nodeFinish) transformed { it.first() } onAssistantMessage { true })
+
+    edge(executeToolAndSendResult forwardTo executeToolAndSendResult onMultipleToolCalls { true })
+    edge((executeToolAndSendResult forwardTo nodeFinish) transformed { it.first()} onAssistantMessage { true })
+}
