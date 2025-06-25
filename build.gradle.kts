@@ -19,25 +19,29 @@ version = run {
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
         if (releaseBuild) {
-            if (branch == "main") {
-                if (customVersion.isNullOrBlank()) {
-                    ""
-                } else {
-                    throw GradleException("Custom version is not allowed during release from the main branch")
+            when (branch) {
+                "main" -> {
+                    if (customVersion.isNullOrBlank()) {
+                        ""
+                    } else {
+                        throw GradleException("Custom version is not allowed during release from the main branch")
+                    }
                 }
-            } else if (branch == "develop") {
-                if (!customVersion.isNullOrBlank()) {
-                    throw GradleException("Custom version is not allowed during release from the develop branch")
-                } else if (tcCounter.isNullOrBlank()) {
-                    throw GradleException("TC_BUILD_COUNTER is required during release from the develop branch")
-                } else {
-                    ".$tcCounter"
+                "develop" -> {
+                    if (!customVersion.isNullOrBlank()) {
+                        throw GradleException("Custom version is not allowed during release from the develop branch")
+                    } else if (tcCounter.isNullOrBlank()) {
+                        throw GradleException("TC_BUILD_COUNTER is required during release from the develop branch")
+                    } else {
+                        ".$tcCounter"
+                    }
                 }
-            } else {
-                if (!customVersion.isNullOrBlank()) {
-                    "-feat-$customVersion"
-                } else {
-                    throw GradleException("Custom version is required during release from a feature branch")
+                else -> {
+                    if (!customVersion.isNullOrBlank()) {
+                        "-feat-$customVersion"
+                    } else {
+                        throw GradleException("Custom version is required during release from a feature branch")
+                    }
                 }
             }
         } else {
