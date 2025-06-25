@@ -174,7 +174,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+            assumeTrue(false, "There is no text response for audio models.")
         }
 
         val prompt = Prompt.build("test-streaming") {
@@ -496,7 +496,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+            assumeTrue(false, "There is no text response for audio models.")
         }
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
@@ -535,7 +535,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+            assumeTrue(false, "There is no text response for audio models.")
         }
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
@@ -921,7 +921,21 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        audio(Path(audioFile.absolutePath))
+                        when (scenario) {
+                            AudioTestScenario.BIG_AUDIO -> {
+                                audio(
+                                    Attachment.Audio(
+                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
+                                        format = "wav",
+                                        mimeType = "audio/wav"
+                                    )
+                                )
+                            }
+
+                            else -> {
+                                audio(Path(audioFile.absolutePath))
+                            }
+                        }
                     }
                 }
             }
