@@ -187,6 +187,6 @@ internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
     AnthropicModels.Sonnet_3_5 to "claude-3-5-sonnet-20241022",
     AnthropicModels.Haiku_3_5 to "claude-3-5-haiku-20241022",
     AnthropicModels.Sonnet_3_7 to "claude-3-7-sonnet-20250219",
-    AnthropicModels.Sonnet_4 to "claude-opus-4-20250514",
-    AnthropicModels.Opus_4 to "claude-sonnet-4-20250514",
+    AnthropicModels.Sonnet_4 to "claude-sonnet-4-20250514",
+    AnthropicModels.Opus_4 to "claude-opus-4-20250514"
 )

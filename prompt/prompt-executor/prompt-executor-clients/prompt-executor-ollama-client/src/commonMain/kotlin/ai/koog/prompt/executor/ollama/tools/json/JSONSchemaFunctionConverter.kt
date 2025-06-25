@@ -44,33 +44,26 @@ public fun ToolDescriptor.toJSONSchema(): JsonObject {
 
             is ToolParameterType.Object -> {
                 put("type", JsonPrimitive("object"))
+
                 put("properties", buildJsonObject {
                     type.properties.forEach { property ->
-                        put(property.name, buildJsonObject {
-                            toolParameterToSchema(property.type)
-                            put("description", property.description)
-                        })
+                        put(property.name, toolParameterToSchema(property.type, property.description))
                     }
-                }
-                )
+                })
+
+                put("required", JsonArray(type.requiredProperties.map { JsonPrimitive(it) }))
             }
         }
 
         if (description != null) {
-            put("description", JsonPrimitive(description))
+            put("description", description)
         }
     }
 
     // Build the properties object by converting each parameter to its JSON schema.
-    val properties = mutableMapOf<String, JsonElement>()
-
-    // Process required parameters.
-    for (param in requiredParameters) {
-        properties[param.name] = toolParameterToSchema(param.type)
-    }
-    // Process optional parameters.
-    for (param in optionalParameters) {
-        properties[param.name] = toolParameterToSchema(param.type)
+    val properties: JsonObject = buildJsonObject {
+        (requiredParameters + optionalParameters)
+            .map { param -> put(param.name, toolParameterToSchema(param.type, param.description)) }
     }
 
     // Build the outer JSON schema.

@@ -94,17 +94,61 @@ class DefaultMcpToolDescriptorParserTest {
                     put("type", "string")
                     put("description", "String parameter")
                 }
+                putJsonObject("nullableStringParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "string")
+                        }
+                    }
+                    put("description", "Nullable string parameter")
+                }
                 putJsonObject("integerParam") {
                     put("type", "integer")
                     put("description", "Integer parameter")
+                }
+                putJsonObject("nullableIntegerParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "integer")
+                        }
+                    }
+                    put("description", "Nullable integer parameter")
                 }
                 putJsonObject("numberParam") {
                     put("type", "number")
                     put("description", "Number parameter")
                 }
+                putJsonObject("nullableNumberParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "number")
+                        }
+                    }
+                    put("description", "Nullable number parameter")
+                }
                 putJsonObject("booleanParam") {
                     put("type", "boolean")
                     put("description", "Boolean parameter")
+                }
+                putJsonObject("nullableBooleanParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "boolean")
+                        }
+                    }
+                    put("description", "Nullable boolean parameter")
                 }
 
                 // Array types
@@ -114,6 +158,22 @@ class DefaultMcpToolDescriptorParserTest {
                     putJsonObject("items") {
                         put("type", "string")
                     }
+                }
+
+                putJsonObject("nullableArrayParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "array")
+                            put("description", "Array parameter")
+                            putJsonObject("items") {
+                                put("type", "string")
+                            }
+                        }
+                    }
+                    put("description", "Nullable array parameter")
                 }
 
                 // Object type
@@ -151,8 +211,18 @@ class DefaultMcpToolDescriptorParserTest {
                     type = ToolParameterType.String
                 ),
                 ToolParameterDescriptor(
+                    name = "nullableStringParam",
+                    description = "Nullable string parameter",
+                    type = ToolParameterType.String
+                ),
+                ToolParameterDescriptor(
                     name = "integerParam",
                     description = "Integer parameter",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "nullableIntegerParam",
+                    description = "Nullable integer parameter",
                     type = ToolParameterType.Integer
                 ),
                 ToolParameterDescriptor(
@@ -161,8 +231,18 @@ class DefaultMcpToolDescriptorParserTest {
                     type = ToolParameterType.Float
                 ),
                 ToolParameterDescriptor(
+                    name = "nullableNumberParam",
+                    description = "Nullable number parameter",
+                    type = ToolParameterType.Float
+                ),
+                ToolParameterDescriptor(
                     name = "booleanParam",
                     description = "Boolean parameter",
+                    type = ToolParameterType.Boolean
+                ),
+                ToolParameterDescriptor(
+                    name = "nullableBooleanParam",
+                    description = "Nullable boolean parameter",
                     type = ToolParameterType.Boolean
                 ),
 
@@ -170,6 +250,11 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "arrayParam",
                     description = "Array parameter",
+                    type = ToolParameterType.List(ToolParameterType.String)
+                ),
+                ToolParameterDescriptor(
+                    name = "nullableArrayParam",
+                    description = "Nullable array parameter",
                     type = ToolParameterType.List(ToolParameterType.String)
                 ),
 

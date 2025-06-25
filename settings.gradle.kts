@@ -1,17 +1,8 @@
 rootProject.name = "koog-agents"
 
 pluginManagement {
-    resolutionStrategy {
-        this.eachPlugin {
-            if (requested.id.id == "ai.grazie.gradle") {
-                useModule("ai.grazie.gradle:gradle:${this.requested.version}")
-            }
-        }
-    }
-
     repositories {
         gradlePluginPortal()
-        maven(url = "https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public")
     }
 }
 

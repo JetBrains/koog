@@ -8,6 +8,7 @@ import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 
@@ -99,6 +100,16 @@ class JsonStructuredDataTest {
         examples = listOf(SimpleData("example1"), SimpleData("example2"))
     )
 
+    private val structuredSimpleOneExample = JsonStructuredData.createJsonStructure<SimpleData>(
+        id = "simple",
+        examples = listOf(SimpleData("example1"))
+    )
+
+    private val structuredSimpleNoExample = JsonStructuredData.createJsonStructure<SimpleData>(
+        id = "simple",
+        examples = listOf()
+    )
+
     @Test
     fun testSimpleParseValid() {
         val json = """{"value":"test"}"""
@@ -132,6 +143,47 @@ class JsonStructuredDataTest {
         assertTrue(content.contains("SimpleData description"))
         assertTrue(content.contains("SimpleData.value description"))
         assertTrue(content.contains("is defined only and solely with JSON, without any additional characters, backticks or anything similar."))
+    }
+
+    @Test
+    fun testSimpleDefinitionWithExamples() {
+        val builder = TextContentBuilder()
+        structuredSimple.definition(builder)
+        val content = builder.build()
+
+        assertTrue(content.contains("""
+            Here are some examples of valid responses:
+            {
+              "value": "example1"
+            }
+            {
+              "value": "example2"
+            }
+        """.trimIndent()))
+    }
+
+    @Test
+    fun testSimpleDefinitionWithOneExample() {
+        val builder = TextContentBuilder()
+        structuredSimpleOneExample.definition(builder)
+        val content = builder.build()
+
+        assertTrue(content.contains("""
+            Here is an example of a valid response:
+            {
+              "value": "example1"
+            }
+        """.trimIndent()))
+    }
+
+    @Test
+    fun testSimpleDefinitionWithNoExamples() {
+        val builder = TextContentBuilder()
+        structuredSimpleNoExample.definition(builder)
+        val content = builder.build()
+
+        assertFalse(content.contains("Here are some examples of valid responses"))
+        assertFalse(content.contains("Here is an example of a valid response"))
     }
 
     // Array data tests

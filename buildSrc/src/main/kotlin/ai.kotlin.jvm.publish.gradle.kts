@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.configureJvmJarManifest
+import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import jetbrains.sign.GpgSignSignatoryProvider
 
 plugins {

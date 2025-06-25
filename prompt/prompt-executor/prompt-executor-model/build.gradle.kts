@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.Publishing.publishToMaven
+import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version

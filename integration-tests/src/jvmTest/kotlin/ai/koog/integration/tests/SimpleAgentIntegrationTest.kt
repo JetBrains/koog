@@ -19,12 +19,19 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
 import java.util.stream.Stream
 import kotlin.test.AfterTest
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
@@ -32,6 +39,16 @@ class SimpleAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     companion object {
+        private lateinit var testResourcesDir: File
+
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            testResourcesDir = File("src/jvmTest/resources/media")
+            testResourcesDir.mkdirs()
+            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+        }
+
         @JvmStatic
         fun openAIModels(): Stream<LLModel> {
             return Models.openAIModels()
@@ -45,6 +62,11 @@ class SimpleAgentIntegrationTest {
         @JvmStatic
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
+        }
+
+        @JvmStatic
+        fun modelsWithVisionCapability(): Stream<Arguments> {
+            return Models.modelsWithVisionCapability()
         }
     }
 
@@ -119,22 +141,21 @@ class SimpleAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
+        withRetry {
+            val executor = when (model.provider) {
+                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            }
 
-        val agent = AIAgent(
-            executor = executor,
-            systemPrompt = systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
-
-        withRetry(times = 3, testName = "integration_AIAgentShouldNotCallToolsByDefault[${model.id}]") {
+            val agent = AIAgent(
+                executor = executor,
+                systemPrompt = systemPrompt,
+                llmModel = model,
+                temperature = 1.0,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+            )
             agent.run("Repeat what I say: hello, I'm good.")
             // by default, AIAgent has no tools underneath
             assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
@@ -155,29 +176,84 @@ class SimpleAgentIntegrationTest {
             tool(CalculatorTool)
         }
 
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
+        withRetry {
+            val executor = when (model.provider) {
+                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            }
 
-        val agent = AIAgent(
-            executor = executor,
-            systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
-            llmModel = model,
-            temperature = 1.0,
-            toolRegistry = toolRegistry,
-            maxIterations = 10,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
+            val agent = AIAgent(
+                executor = executor,
+                systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
+                llmModel = model,
+                temperature = 1.0,
+                toolRegistry = toolRegistry,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
 
-        withRetry(times = 3, testName = "integration_AIAgentShouldCallCustomTool[${model.id}]") {
             agent.run("How much is 3 times 5?")
             assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model $model")
             assertTrue(
                 actualToolCalls.contains(CalculatorTool.name),
                 "The ${CalculatorTool.name} tool was not called for model $model"
             )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("modelsWithVisionCapability")
+    fun integration_AIAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+
+        val imageFile = File(testResourcesDir, "test.png")
+        assertTrue(imageFile.exists(), "Image test file should exist")
+
+        val imageBytes = imageFile.readBytes()
+        val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
+
+        val promptWithImage = """
+            I'm sending you an image encoded in base64 format.
+
+            data:image/png,$base64Image
+
+            Please analyze this image and identify the image format if possible.
+        """.trimIndent()
+
+        withRetry {
+            val executor = when (model.provider) {
+                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            }
+
+            val agent = AIAgent(
+                executor = executor,
+                systemPrompt = "You are a helpful assistant that can analyze images.",
+                llmModel = model,
+                temperature = 0.7,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
+
+            agent.run(promptWithImage)
+
+            assertTrue(errors.isEmpty(), "There should be no errors")
+            assertTrue(results.isNotEmpty(), "There should be results")
+
+            val result = results.first()
+            assertNotNull(result, "Result should not be null")
+            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+            assertTrue(result.length > 20, "Result should contain more than 20 characters")
+
+            val resultLowerCase = result.lowercase()
+            assertFalse(resultLowerCase.contains("error processing"), "Result should not contain error messages")
+            assertFalse(
+                resultLowerCase.contains("unable to process"),
+                "Result should not indicate inability to process"
+            )
+            assertFalse(resultLowerCase.contains("cannot process"), "Result should not indicate inability to process")
         }
     }
 }

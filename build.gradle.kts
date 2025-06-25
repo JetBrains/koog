@@ -1,4 +1,4 @@
-import ai.grazie.gradle.fixups.DisableDistTasks.disableDistTasks
+import ai.koog.gradle.fixups.DisableDistTasks.disableDistTasks
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -19,19 +19,29 @@ version = run {
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
         if (releaseBuild) {
-            if (branch == "main") {
-                if (customVersion.isNullOrBlank()) {
-                    ""
-                } else {
-                    throw GradleException("Custom version is not allowed during release from the main branch")
+            when (branch) {
+                "main" -> {
+                    if (customVersion.isNullOrBlank()) {
+                        ""
+                    } else {
+                        throw GradleException("Custom version is not allowed during release from the main branch")
+                    }
                 }
-            } else {
-                if (!customVersion.isNullOrBlank()) {
-                    "-feat-$customVersion"
-                } else if (branch == "develop" && !tcCounter.isNullOrBlank()) {
-                    ".$tcCounter"
-                } else {
-                    throw GradleException("Custom version is required during release from the non-main branch")
+                "develop" -> {
+                    if (!customVersion.isNullOrBlank()) {
+                        throw GradleException("Custom version is not allowed during release from the develop branch")
+                    } else if (tcCounter.isNullOrBlank()) {
+                        throw GradleException("TC_BUILD_COUNTER is required during release from the develop branch")
+                    } else {
+                        ".$tcCounter"
+                    }
+                }
+                else -> {
+                    if (!customVersion.isNullOrBlank()) {
+                        "-feat-$customVersion"
+                    } else {
+                        throw GradleException("Custom version is required during release from a feature branch")
+                    }
                 }
             }
         } else {
@@ -50,7 +60,6 @@ buildscript {
 }
 
 plugins {
-    alias(libs.plugins.grazie)
     id("ai.kotlin.dokka")
     alias(libs.plugins.kotlinx.kover)
 }
@@ -87,7 +96,7 @@ subprojects {
     }
 }
 
-task("reportProjectVersionToTeamCity") {
+tasks.register("reportProjectVersionToTeamCity") {
     doLast {
         println("##teamcity[buildNumber '${project.version}']")
     }
@@ -106,6 +115,7 @@ tasks {
         destinationDirectory.set(layout.buildDirectory)
     }
 
+    @Suppress("unused")
     val publishMavenToCentralPortal by registering {
         group = "publishing"
 

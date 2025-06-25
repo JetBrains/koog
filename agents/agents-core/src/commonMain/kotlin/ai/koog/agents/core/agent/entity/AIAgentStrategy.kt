@@ -15,8 +15,8 @@ import ai.koog.agents.core.utils.runCatchingCancellable
 @OptIn(InternalAgentsApi::class)
 public class AIAgentStrategy(
     override val name: String,
-    public val nodeStart: StartAIAgentNodeBase<String>,
-    public val nodeFinish: FinishAIAgentNodeBase<String>,
+    public val nodeStart: AIAgentStartNodeBase<String>,
+    public val nodeFinish: AIAgentFinishNodeBase<String>,
     toolSelectionStrategy: ToolSelectionStrategy
 ) : AIAgentSubgraph<String, String>(
     name, nodeStart, nodeFinish, toolSelectionStrategy

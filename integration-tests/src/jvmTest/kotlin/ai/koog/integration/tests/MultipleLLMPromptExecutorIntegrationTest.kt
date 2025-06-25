@@ -3,6 +3,14 @@ package ai.koog.integration.tests
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.utils.MediaTestScenarios
+import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
+import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
+import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
+import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
+import ai.koog.integration.tests.utils.MediaTestUtils
+import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
+import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils
@@ -10,6 +18,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
@@ -17,16 +26,24 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.io.files.Path
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -34,17 +51,18 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class MultipleLLMPromptExecutorIntegrationTest {
-    // API keys for testing
-    private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
-    private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
-    private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
-
-    // LLM clients
-    private val openAIClient get() = OpenAILLMClient(openAIApiKey)
-    private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
-    private val googleClient get() = GoogleLLMClient(geminiApiKey)
 
     companion object {
+        private lateinit var testResourcesDir: File
+
+        @JvmStatic
+        @BeforeAll
+        fun setupTestResources() {
+            testResourcesDir = File("src/jvmTest/resources/media")
+            testResourcesDir.mkdirs()
+            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+        }
+
         @JvmStatic
         fun openAIModels(): Stream<LLModel> {
             return Models.openAIModels()
@@ -59,12 +77,80 @@ class MultipleLLMPromptExecutorIntegrationTest {
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
         }
+
+        @JvmStatic
+        fun markdownScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.markdownScenarioModelCombinations()
+        }
+
+        @JvmStatic
+        fun imageScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.imageScenarioModelCombinations()
+        }
+
+        @JvmStatic
+        fun textScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.textScenarioModelCombinations()
+        }
+
+        @JvmStatic
+        fun audioScenarioModelCombinations(): Stream<Arguments> {
+            return MediaTestScenarios.audioScenarioModelCombinations()
+        }
     }
+
+    // API keys for testing
+    private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
+    private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
+    private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+
+    // LLM clients
+    private val openAIClient get() = OpenAILLMClient(openAIApiKey)
+    private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
+    private val googleClient get() = GoogleLLMClient(geminiApiKey)
+    val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+
+
+    private fun createCalculatorTool(): ToolDescriptor {
+        return ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operation",
+                    description = "The operation to perform.",
+                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor(
+                    name = "a",
+                    description = "The first argument (number)",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "b",
+                    description = "The second argument (number)",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+    }
+
+    private fun getClientForModel(model: LLModel) = when (model.provider) {
+        is LLMProvider.Anthropic -> anthropicClient
+        is LLMProvider.Google -> googleClient
+        else -> openAIClient
+    }
+
+    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
+        system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
+        user("What is 123 + 456?")
+    }
+
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+
 
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
@@ -90,8 +176,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
         }
-
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
@@ -121,8 +205,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools))
-
-        val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
@@ -404,7 +486,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             LLMProvider.Google to googleClient,
         )
 
-        withRetry(times = 3, testName = "integration_testToolsWithNoParams[${model.id}]") {
+        withRetry {
             val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
         }
@@ -486,42 +568,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
             assertTrue(countries.isNotEmpty(), "Countries list should not be empty")
         }
     }
-
-    private fun createCalculatorTool(): ToolDescriptor {
-        return ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-    }
-
-    private fun getClientForModel(model: LLModel) = when (model.provider) {
-        is LLMProvider.Anthropic -> anthropicClient
-        is LLMProvider.Google -> googleClient
-        else -> openAIClient
-    }
-
-    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
-        system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
-        user("What is 123 + 456?")
-    }
-
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
@@ -619,6 +665,396 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             val toolCall = response.first() as Message.Tool.Call
             assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
+        }
+    }
+
+    // ToDo add video & pdf specific scenarios
+
+    @ParameterizedTest
+    @MethodSource("markdownScenarioModelCombinations")
+    fun integration_testMarkdownProcessingBasic(
+        scenario: MarkdownTestScenario,
+        model: LLModel
+    ) =
+        runTest(timeout = 300.seconds) {
+            val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
+            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
+                prompt("markdown-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze markdown files.")
+
+                    user {
+                        content {
+                            markdown {
+                                "I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                            }
+                        }
+                        attachments {
+                            file(file.absolutePath, "text/markdown")
+                        }
+                    }
+                }
+            } else {
+                prompt("markdown-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze markdown files.")
+
+                    user {
+                        content {
+                            markdown {
+                                "I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                                newline()
+                                +file.readText()
+                            }
+                        }
+                    }
+                }
+            }
+
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    when (scenario) {
+                        MarkdownTestScenario.MALFORMED_SYNTAX,
+                        MarkdownTestScenario.MATH_NOTATION,
+                        MarkdownTestScenario.BROKEN_LINKS,
+                        MarkdownTestScenario.IRREGULAR_TABLES -> {
+                            checkResponseBasic(response)
+                        }
+
+                        else -> {
+                            checkExecutorMediaResponse(response)
+                        }
+                    }
+                } catch (e: Exception) {
+                    when (scenario) {
+                        MarkdownTestScenario.EMPTY_MARKDOWN -> {
+                            when (model.provider) {
+                                LLMProvider.Google -> {
+                                    println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
+                                }
+                            }
+                        }
+
+                        else -> {
+                            throw e
+                        }
+                    }
+                }
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("imageScenarioModelCombinations")
+    fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) =
+        runTest(timeout = 300.seconds) {
+            assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
+            val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
+            val prompt = prompt("image-test-${scenario.name.lowercase()}") {
+                system("You are a helpful assistant that can analyze images.")
+
+                user {
+                    content {
+                        markdown {
+                            +"I'm sending you an image. Please describe what you see in it and identify the image format if possible."
+                        }
+                    }
+
+                    attachments {
+                        when (scenario) {
+                            ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                                image(
+                                    Attachment.Image(
+                                        content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
+                                        format = "jpg",
+                                        mimeType = "image/jpeg"
+                                    )
+                                )
+                            }
+
+                            else -> {
+                                image(Path(imageFile.absolutePath))
+                            }
+                        }
+                    }
+                }
+            }
+
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    checkExecutorMediaResponse(response)
+                } catch (e: Exception) {
+                    // For some edge cases, exceptions are expected
+                    when (scenario) {
+                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
+                            assertTrue(
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
+                            )
+                            assertTrue(
+                                e.message?.contains("image exceeds") == true,
+                                "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
+                            )
+                        }
+
+                        ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                            assertTrue(
+                                e.message?.contains("400 Bad Request") == true,
+                                "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
+                            )
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("Could not process image") == true,
+                                    "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.OpenAI) {
+                                assertTrue(
+                                    e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                    "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
+
+                        else -> {
+                            throw e
+                        }
+                    }
+                }
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("textScenarioModelCombinations")
+    fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
+        runTest(timeout = 300.seconds) {
+            assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
+
+            val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
+
+            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
+                prompt("text-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze and process text.")
+
+                    user {
+                        content {
+                            markdown {
+                                "I'm sending you a text file. Please analyze it and summarize its content."
+                            }
+                        }
+
+
+                        attachments {
+                            textFile(Path(file.absolutePath), "text/plain")
+                        }
+                    }
+                }
+            } else {
+                prompt("text-test-${scenario.name.lowercase()}") {
+                    system("You are a helpful assistant that can analyze and process text.")
+
+                    user {
+                        content {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                                newline()
+                                +file.readText()
+                            }
+                        }
+                    }
+                }
+            }
+
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    if (scenario == TextTestScenario.CORRUPTED_TEXT) {
+                        checkResponseBasic(response)
+                    } else {
+                        checkExecutorMediaResponse(response)
+                    }
+                } catch (e: Exception) {
+                    when (scenario) {
+                        TextTestScenario.EMPTY_TEXT -> {
+                            if (model.provider == LLMProvider.Google) {
+                                assertTrue(
+                                    e.message?.contains("400 Bad Request") == true,
+                                    "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
+                                )
+                                assertTrue(
+                                    e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
+                                    "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
+                                )
+                            }
+                        }
+
+                        TextTestScenario.LONG_TEXT_5_MB -> {
+                            if (model.provider == LLMProvider.Anthropic) {
+                                assertTrue(
+                                    e.message?.contains("400 Bad Request") == true,
+                                    "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
+                                )
+                                assertTrue(
+                                    e.message?.contains("prompt is too long") == true,
+                                    "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
+                                )
+                            } else if (model.provider == LLMProvider.Google) {
+                                throw e
+                            }
+                        }
+
+                        else -> {
+                            throw e
+                        }
+                    }
+                }
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("audioScenarioModelCombinations")
+    fun integration_testAudioProcessingBasic(scenario: AudioTestScenario, model: LLModel) =
+        runTest(timeout = 300.seconds) {
+            assumeTrue(
+                model.capabilities.contains(LLMCapability.Audio),
+                "Model must support audio capability"
+            )
+
+            val audioFile = MediaTestUtils.createAudioFileForScenario(scenario, testResourcesDir)
+
+            val prompt = prompt("audio-test-${scenario.name.lowercase()}") {
+                system("You are a helpful assistant that can analyze audio files.")
+
+                user {
+                    content {
+                        markdown {
+                            "I'm sending you an audio file. Please tell me a couple of words about it."
+                        }
+                    }
+
+                    attachments {
+                        audio(Path(audioFile.absolutePath))
+                    }
+                }
+            }
+
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model)
+                    checkExecutorMediaResponse(response)
+                } catch (e: Exception) {
+                    if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
+                        assertTrue(
+                            e.message?.contains("400 Bad Request") == true,
+                            "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
+                        )
+                        if (model.provider == LLMProvider.OpenAI) {
+                            assertTrue(
+                                e.message?.contains("This model does not support the format you provided.") == true,
+                                "Expected exception for corrupted audio [This model does not support the format you provided.]"
+                            )
+                        } else if (model.provider == LLMProvider.Google) {
+                            assertTrue(
+                                e.message?.contains("Request contains an invalid argument.") == true,
+                                "Expected exception for corrupted audio [Request contains an invalid argument.]"
+                            )
+                        }
+                    } else {
+                        throw e
+                    }
+                }
+            }
+        }
+
+    /*
+    * Checking just images to make sure the file is uploaded in base64 format
+    * */
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testBase64EncodedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Vision.Image),
+            "Model must support vision capability"
+        )
+
+        // Skip audio-only models
+        assumeTrue(
+            !model.id.contains("audio", ignoreCase = true),
+            "Audio-only models are not supported for this test"
+        )
+
+        val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
+        val imageBytes = imageFile.readBytes()
+
+        val tempImageFile = File(testResourcesDir, "small.png")
+
+        tempImageFile.writeBytes(imageBytes)
+        val prompt = prompt("base64-encoded-attachments-test") {
+            system("You are a helpful assistant that can analyze different types of media files.")
+
+            user {
+                content {
+                    markdown {
+                        +"I'm sending you an image. Please analyze it and tell me about its content."
+                    }
+                }
+                attachments {
+                    image(Path(tempImageFile.absolutePath))
+                }
+            }
+        }
+
+        withRetry {
+            val response = executor.execute(prompt, model)
+            checkExecutorMediaResponse(response)
+
+            assertTrue(
+                response.content.contains("image", ignoreCase = true),
+                "Response should mention the image"
+            )
+        }
+    }
+
+    /*
+    * Checking just images to make sure the file is uploaded by URL
+    * */
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels")
+    fun integration_testUrlBasedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Vision.Image),
+            "Model must support vision capability"
+        )
+
+        val imageUrl =
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/1200px-Python-logo-notext.svg.png"
+
+        val prompt = prompt("url-based-attachments-test") {
+            system("You are a helpful assistant that can analyze images.")
+
+            user {
+                content {
+                    markdown {
+                        +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
+                    }
+                }
+
+                attachments {
+                    image(imageUrl)
+                }
+            }
+        }
+
+        withRetry {
+            val response = executor.execute(prompt, model)
+            checkExecutorMediaResponse(response)
+
+            assertTrue(
+                response.content.contains("image", ignoreCase = true) ||
+                        response.content.contains("python", ignoreCase = true) ||
+                        response.content.contains("logo", ignoreCase = true),
+                "Response should mention the image content"
+            )
         }
     }
 }

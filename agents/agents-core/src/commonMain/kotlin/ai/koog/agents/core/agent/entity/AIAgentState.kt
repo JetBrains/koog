@@ -15,6 +15,12 @@ internal class AIAgentState internal constructor(
     override fun close() {
         isActive = false
     }
+
+    internal fun copy(): AIAgentState {
+        return AIAgentState(
+            iterations = iterations
+        )
+    }
 }
 
 /**
@@ -43,5 +49,11 @@ public class AIAgentStateManager internal constructor(
         state = newState
 
         result
+    }
+
+    internal suspend fun copy(): AIAgentStateManager {
+        return withStateLock {
+            AIAgentStateManager(state.copy())
+        }
     }
 }
