@@ -36,6 +36,11 @@ kotlin {
     }
 }
 
+tasks.withType<Test> {
+    maxParallelForks = 2
+}
+
+
 dokka {
     dokkaSourceSets.configureEach {
         suppress.set(true)
