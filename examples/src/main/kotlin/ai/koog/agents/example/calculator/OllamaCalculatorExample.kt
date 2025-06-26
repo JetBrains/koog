@@ -42,7 +42,7 @@ fun main(): Unit = runBlocking {
 
     val agent = AIAgent(
         promptExecutor = executor,
-        strategy = singleRunStrategy(),
+        strategy = CalculatorStrategy.strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry
     ) {
