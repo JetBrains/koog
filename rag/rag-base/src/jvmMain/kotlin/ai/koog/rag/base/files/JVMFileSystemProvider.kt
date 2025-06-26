@@ -84,7 +84,13 @@ public object JVMFileSystemProvider {
          * @return The file path string adapted to use the system-dependent file separator.
          */
         private fun toSystemDependentName(path: String): String {
-            return path.replace("/", FileSystems.getDefault().separator).replace("\\", FileSystems.getDefault().separator)
+            val separator = FileSystems.getDefault().separator
+            val adjustedPath = path.replace("/", separator).replace("\\", separator)
+            // remove the leading slash for windows, it breaks further parsing
+            if (separator == "\\" && adjustedPath.contains(':')) {
+                return adjustedPath.trimStart('\\')
+            }
+            return adjustedPath
         }
     }
 
