@@ -99,7 +99,11 @@ public sealed interface AttachmentContent {
      * Plain text content.
      */
     @Serializable
-    public data class PlainText(val text: String): AttachmentContent
+    public data class PlainText(val text: String): AttachmentContent {
+        override fun toString(): String {
+            return "PlainText(length=${text.length})"
+        }
+    }
 
     /**
      * URL of the content (e.g. image or a document).
@@ -142,7 +146,7 @@ public sealed interface AttachmentContent {
             }
 
             override fun toString(): String {
-                return "Bytes(data=${data.size} bytes)"
+                return "Bytes(length=${data.size})"
             }
         }
 
