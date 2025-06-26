@@ -45,6 +45,11 @@ public sealed interface Message {
     @Serializable
     public sealed interface Response : Message {
         override val metaInfo: ResponseMetaInfo
+
+        /**
+         * Creates a copy of the current Response instance with updated metadata.
+         */
+        public fun copy(updatedMetaInfo: ResponseMetaInfo): Response
     }
 
     /**
@@ -109,6 +114,8 @@ public sealed interface Message {
         val finishReason: String? = null
     ) : Response {
         override val role: Role = Role.Assistant
+
+        override fun copy(updatedMetaInfo: ResponseMetaInfo): Assistant = this.copy(metaInfo = updatedMetaInfo)
     }
 
     /**
@@ -149,6 +156,8 @@ public sealed interface Message {
             val contentJson: JsonObject by lazy {
                 Json.parseToJsonElement(content).jsonObject
             }
+
+            override fun copy(updatedMetaInfo: ResponseMetaInfo): Call = this.copy(metaInfo = updatedMetaInfo)
         }
 
         /**
@@ -227,6 +236,12 @@ public data class RequestMetaInfo(
          * @return A new RequestMetadata instance with the timestamp from the provided clock.
          */
         public fun create(clock: Clock): RequestMetaInfo = RequestMetaInfo(clock.now())
+
+        /**
+         * Creates an empty instance of [RequestMetaInfo] with the timestamp set to a distant past.
+         * @return A [RequestMetaInfo] instance initialized with an [Instant.DISTANT_PAST] timestamp.
+         */
+        public fun empty(): RequestMetaInfo = RequestMetaInfo(Instant.DISTANT_PAST)
     }
 }
 
@@ -279,5 +294,11 @@ public data class ResponseMetaInfo(
             additionalInfo: Map<String, String> = emptyMap()
         ): ResponseMetaInfo =
             ResponseMetaInfo(clock.now(), totalTokensCount, inputTokensCount, outputTokensCount, additionalInfo)
+
+        /**
+         * Provides an empty instance of the [ResponseMetaInfo] class.
+         * @returns a [ResponseMetaInfo] object with its timestamp set to the distant past.
+         */
+        public fun empty(): ResponseMetaInfo = ResponseMetaInfo(Instant.DISTANT_PAST)
     }
 }

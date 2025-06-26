@@ -19,6 +19,7 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.time.Duration.Companion.milliseconds
+import ai.koog.prompt.cache.model.*
 
 class FilePromptCacheTest {
     @TempDir
@@ -30,7 +31,9 @@ class FilePromptCacheTest {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    private val realClock: Clock = Clock.System
+    private val differentTestClock: Clock = object : Clock {
+        override fun now(): Instant = testClock.now().plus(1.milliseconds)
+    }
 
     @BeforeEach
     fun setUp() {
@@ -158,15 +161,14 @@ class FilePromptCacheTest {
         val content = "test prompt"
         val id = "test-id-${content.hashCode()}"
 
-        val originalPrompt = prompt(id, clock = realClock) { user(content) }
-        delay(1.milliseconds)
-        val samePromptDifferentTime = prompt(id, clock = realClock) { user(content) }
+        val originalPrompt = prompt(id, clock = testClock) { user(content) }
+        val samePromptDifferentTime = prompt(id, clock = differentTestClock) { user(content) }
 
         val response = listOf(assistantMessage("test response"))
         cache.put(originalPrompt, emptyList(), response)
 
         // Try to retrieve the cached response
-        val cachedResponse = cache.get(samePromptDifferentTime, emptyList())
+        val cachedResponse = cache.get(samePromptDifferentTime, emptyList(), clock = testClock)
 
         // Verify the response is retrieved successfully
         assertNotNull(cachedResponse, "Should retrieve cache entry despite different timestamps")

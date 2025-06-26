@@ -1,13 +1,14 @@
 package ai.koog.prompt.executor.cached
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.prompt.cache.model.PromptCache
+import ai.koog.prompt.cache.model.*
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.Clock
 
 /**
  * A CodePromptExecutor that caches responses from a nested executor.
@@ -17,7 +18,8 @@ import kotlinx.coroutines.flow.flow
  */
 public class CachedPromptExecutor(
     private val cache: PromptCache,
-    private val nested: PromptExecutor
+    private val nested: PromptExecutor,
+    private val clock: Clock = Clock.System
 ) : PromptExecutor {
 
     override suspend fun execute(
@@ -32,7 +34,7 @@ public class CachedPromptExecutor(
         flow { emit(getOrPut(prompt, model).content) }
 
     private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {
-        return cache.get(prompt)
+        return cache.get(prompt, emptyList(), clock)
             ?.first() as Message.Assistant?
             ?: nested
                 .execute(prompt, model, emptyList()).first()
@@ -41,6 +43,6 @@ public class CachedPromptExecutor(
     }
 
     private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): List<Message.Response> {
-        return cache.get(prompt, tools) ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
+        return cache.get(prompt, tools, clock) ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
     }
 }
