@@ -32,20 +32,23 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = nu
 
 /**
  * A node that adds messages to the LLM prompt using the provided prompt builder.
+ * The input is passed as it is to the output.
  *
  * @param name Optional node name, defaults to delegate's property name.
  * @param body Lambda to modify the prompt using PromptBuilder.
  */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     name: String? = null,
     body: PromptBuilder.() -> Unit
-): AIAgentNodeDelegateBase<Unit, Unit> =
-    node(name) {
+): AIAgentNodeDelegateBase<T, T> =
+    node(name) { input ->
         llm.writeSession {
             updatePrompt {
                 body()
             }
         }
+
+        input
     }
 
 /**
