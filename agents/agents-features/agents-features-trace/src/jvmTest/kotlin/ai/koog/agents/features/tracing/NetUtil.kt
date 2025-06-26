@@ -1,6 +1,5 @@
 package ai.koog.agents.features.tracing
 
-import io.ktor.utils.io.core.*
 import java.net.ServerSocket
 
 object NetUtil {

@@ -1,6 +1,9 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import ai.koog.gradle.tests.configureTests
 import jetbrains.sign.GpgSignSignatoryProvider
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
@@ -23,6 +26,12 @@ kotlin {
         }
 
         configureTests()
+    }
+
+    wasmJs {
+        browser()
+        nodejs()
+        binaries.library()
     }
 }
 

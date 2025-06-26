@@ -20,6 +20,7 @@ kotlin {
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
+                api(libs.kotlinx.datetime)
             }
         }
 
