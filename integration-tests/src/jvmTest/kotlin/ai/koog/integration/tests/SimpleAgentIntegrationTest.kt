@@ -26,8 +26,11 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.stream.Stream
+import kotlin.io.path.readBytes
 import kotlin.test.AfterTest
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -39,14 +42,19 @@ class SimpleAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     companion object {
-        private lateinit var testResourcesDir: File
+        private lateinit var testResourcesDir: Path
 
         @JvmStatic
         @BeforeAll
         fun setup() {
-            testResourcesDir = File("src/jvmTest/resources/media")
-            testResourcesDir.mkdirs()
-            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+            testResourcesDir =
+                Paths.get(SimpleAgentIntegrationTest::class.java.getResource("/media")!!.toURI())
+
+            if (!Files.exists(testResourcesDir)) {
+                Files.createDirectories(testResourcesDir)
+            }
+
+            assertTrue(Files.exists(testResourcesDir), "Test resources directory should exist")
         }
 
         @JvmStatic
@@ -207,8 +215,8 @@ class SimpleAgentIntegrationTest {
     fun integration_AIAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
-        val imageFile = File(testResourcesDir, "test.png")
-        assertTrue(imageFile.exists(), "Image test file should exist")
+        val imageFile = testResourcesDir.resolve("test.png")
+        assertTrue(Files.exists(imageFile), "Image test file should exist")
 
         val imageBytes = imageFile.readBytes()
         val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
