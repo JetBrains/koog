@@ -150,6 +150,10 @@ public sealed interface AttachmentContent {
          * Binary content represented as Base64 encoded string.
          */
         @Serializable
-        public data class Base64(override val base64: String): Binary
+        public data class Base64(override val base64: String): Binary {
+            override fun toString(): String {
+                return "Base64(length=${base64.length})"
+            }
+        }
     }
 }
