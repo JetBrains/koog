@@ -140,6 +140,10 @@ public sealed interface AttachmentContent {
             override fun hashCode(): Int {
                 return data.contentHashCode()
             }
+
+            override fun toString(): String {
+                return "Bytes(data=${data.size} bytes)"
+            }
         }
 
         /**
