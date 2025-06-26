@@ -113,4 +113,8 @@ open class KoogTestBase {
         }
         return current
     }
+
+    fun String.normalizeForAssertion(): String {
+        return this.replace("\r\n", "\n").replace("\r", "\n")
+    }
 }
