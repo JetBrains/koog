@@ -1,10 +1,10 @@
-# Module spring-starter
+# Module spring-boot-starter
 
 Spring Boot auto-configuration and integration for Koog AI agents framework.
 
 ### Overview
 
-The spring-starter module provides seamless integration between the Koog AI agents framework and Spring Boot applications. It includes:
+The spring-boot-starter module provides seamless integration between the Koog AI agents framework and Spring Boot applications. It includes:
 
 - Auto-configuration for LLM clients (Anthropic, Google, OpenAI, OpenRouter, Ollama)
 - Configuration properties for easy setup through application.properties/yml
@@ -17,7 +17,7 @@ Add the dependency to your `build.gradle.kts`:
 
 ```kotlin
 dependencies {
-    implementation("ai.koog:spring-starter:$koogVersion")
+    implementation("ai.koog:koog-spring-boot-starter:$koogVersion")
 }
 ```
 

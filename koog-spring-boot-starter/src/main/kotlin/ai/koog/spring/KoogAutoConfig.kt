@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Bean
 
 @AutoConfiguration
 @EnableConfigurationProperties(KoogProperties::class)
-public class KoogAutoConfig {
+public class KoogAutoConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.anthropic.api-key")
@@ -44,7 +44,7 @@ public class KoogAutoConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.ollama.base-url")
+    @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.ollama")
     public fun ollamaExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
         val props = properties.ollamaClientProperties
         return SingleLLMPromptExecutor(
