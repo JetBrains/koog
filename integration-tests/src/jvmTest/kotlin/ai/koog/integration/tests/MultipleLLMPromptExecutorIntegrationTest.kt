@@ -35,6 +35,7 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.ktor.utils.io.charsets.MalformedInputException
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path as KtPath
@@ -889,6 +890,13 @@ class MultipleLLMPromptExecutorIntegrationTest {
                             }
                         }
 
+                        TextTestScenario.CORRUPTED_TEXT -> {
+                            assertTrue(
+                                e is MalformedInputException,
+                                "Expected exception for corrupted text [MalformedInputException] was not found, got [${e.message}] instead"
+                            )
+                        }
+
                         TextTestScenario.LONG_TEXT_5_MB -> {
                             if (model.provider == LLMProvider.Anthropic) {
                                 assertTrue(
@@ -932,7 +940,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        audio(audioFile.pathString)
+                        audio(KtPath(audioFile.pathString))
                     }
                 }
             }
