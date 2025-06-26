@@ -30,6 +30,8 @@ class FilePromptCacheTest {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
+    private val realClock: Clock = Clock.System
+
     @BeforeEach
     fun setUp() {
         cache = FilePromptCache(tempDir)
@@ -148,5 +150,26 @@ class FilePromptCacheTest {
         field.isAccessible = true
         val maxFiles = field.get(defaultCache) as Int
         assertEquals(3000, maxFiles, "Default maxFiles should be 3000")
+    }
+
+    @Test
+    fun `test cache retrieval with different timestamps`() = runBlocking {
+        // Create and cache a prompt with testClock
+        val content = "test prompt"
+        val id = "test-id-${content.hashCode()}"
+
+        val originalPrompt = prompt(id, clock = realClock) { user(content) }
+        delay(1.milliseconds)
+        val samePromptDifferentTime = prompt(id, clock = realClock) { user(content) }
+
+        val response = listOf(assistantMessage("test response"))
+        cache.put(originalPrompt, emptyList(), response)
+
+        // Try to retrieve the cached response
+        val cachedResponse = cache.get(samePromptDifferentTime, emptyList())
+
+        // Verify the response is retrieved successfully
+        assertNotNull(cachedResponse, "Should retrieve cache entry despite different timestamps")
+        assertEquals(response, cachedResponse, "Retrieved response should match original")
     }
 }
