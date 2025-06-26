@@ -274,7 +274,12 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMExecuteToolAndSendResult(
     }
 
 /**
+ * Defines a node in the AI agent graph that executes multiple tools and sends the results
+ * to the language model for processing.
  *
+ * @param name An optional name for the node. If not provided, a default name will be generated.
+ * @param parallelTools If true, tools are executed in parallel. If false, tools are executed sequentially.
+ * @return A node which manages the execution of tools and their results processing
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMExecuteMultipleToolsAndSendResults(
     name: String? = null,

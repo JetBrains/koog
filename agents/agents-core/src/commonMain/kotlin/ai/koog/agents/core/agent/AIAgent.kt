@@ -368,8 +368,8 @@ public fun AIAgent(
     installFeatures = installFeatures
 )
 public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
-    val nodeCallLLMMultiple by nodeLLMRequestMultiple("sendInput")
-    val executeToolAndSendResult by nodeLLMExecuteMultipleToolsAndSendResults("executeToolAndSendResult")
+    val nodeCallLLMMultiple by nodeLLMRequestMultiple()
+    val executeToolAndSendResult by nodeLLMExecuteMultipleToolsAndSendResults()
 
     edge(nodeStart forwardTo nodeCallLLMMultiple)
     edge(nodeCallLLMMultiple forwardTo executeToolAndSendResult onMultipleToolCalls { true })
