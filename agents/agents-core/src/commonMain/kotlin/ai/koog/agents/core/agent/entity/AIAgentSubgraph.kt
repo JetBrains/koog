@@ -36,6 +36,12 @@ public open class AIAgentSubgraph<Input, Output>(
         private val logger = KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
     }
 
+    @Serializable
+    private data class SelectedTools(
+        @property:LLMDescription("List of selected tools for the given subtask")
+        val tools: List<String>
+    )
+
     /**
      * Executes the desired operation based on the input and the provided context.
      * This function determines the execution strategy based on the tool selection strategy configured in the class.
@@ -44,15 +50,48 @@ public open class AIAgentSubgraph<Input, Output>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
+    @OptIn(InternalAgentsApi::class, ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
-        if (toolSelectionStrategy == ToolSelectionStrategy.ALL) return doExecute(context, input)
+        val innerContext = when (toolSelectionStrategy) {
+            ToolSelectionStrategy.ALL -> context
+            ToolSelectionStrategy.NONE -> context.copy(llm = context.llm.copy(tools = emptyList()))
+            is ToolSelectionStrategy.Tools -> context.copy(llm = context.llm.copy(tools = toolSelectionStrategy.tools))
+            is ToolSelectionStrategy.AutoSelectForTask -> {
+                val newTools = context.llm.writeSession {
+                    val initialPrompt = prompt
 
-        return doExecuteWithCustomTools(context, input)
+                    replaceHistoryWithTLDR()
+                    updatePrompt {
+                        user {
+                            selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                        }
+                    }
+
+                    val selectedTools = this.requestLLMStructured(
+                        structure = JsonStructuredData.createJsonStructure<SelectedTools>(
+                            schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                            examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                        ),
+                        retries = toolSelectionStrategy.maxRetries,
+                    ).getOrThrow()
+
+                    rewritePrompt { initialPrompt }
+
+                    tools.filter { it.name in selectedTools.structure.tools.toSet() }
+                }
+                context.copy(llm = context.llm.copy(tools = newTools))
+            }
+        }
+
+        val subgraphResult = doExecute(innerContext, input)
+        val newPrompt = innerContext.llm.readSession { prompt }
+        context.llm.writeSession {
+            rewritePrompt {
+                newPrompt
+            }
+        }
+        return subgraphResult
     }
-
-    @OptIn(ExperimentalUuidApi::class)
-    private fun formatLog(context: AIAgentContextBase, message: String): String =
-        "$message [$name, ${context.strategyId}, ${context.sessionUuid}]"
 
     @OptIn(InternalAgentsApi::class)
     protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
@@ -103,54 +142,9 @@ public open class AIAgentSubgraph<Input, Output>(
         }
     }
 
-    @Serializable
-    private data class SelectedTools(
-        @property:LLMDescription("List of selected tools for the given subtask")
-        val tools: List<String>
-    )
-
-    private suspend fun doExecuteWithCustomTools(context: AIAgentContextBase, input: Input): Output {
-        @OptIn(InternalAgentsApi::class)
-        val innerContext = when (toolSelectionStrategy) {
-            ToolSelectionStrategy.ALL -> context
-            ToolSelectionStrategy.NONE -> context.copyWithTools(emptyList())
-            is ToolSelectionStrategy.Tools -> context.copyWithTools(toolSelectionStrategy.tools)
-            is ToolSelectionStrategy.AutoSelectForTask -> {
-                val newTools = context.llm.writeSession {
-                    val initialPrompt = prompt
-
-                    replaceHistoryWithTLDR()
-                    updatePrompt {
-                        user {
-                            selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
-                        }
-                    }
-
-                    val selectedTools = this.requestLLMStructured(
-                        structure = JsonStructuredData.createJsonStructure<SelectedTools>(
-                            schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                            examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
-                        ),
-                        retries = toolSelectionStrategy.maxRetries,
-                    ).getOrThrow()
-
-                    rewritePrompt { initialPrompt }
-
-                    tools.filter { it.name in selectedTools.structure.tools.toSet() }
-                }
-                context.copyWithTools(newTools)
-            }
-        }
-
-        val subgraphResult = doExecute(innerContext, input)
-        val newPrompt = innerContext.llm.readSession { prompt }
-        context.llm.writeSession {
-            rewritePrompt {
-                newPrompt
-            }
-        }
-        return subgraphResult
-    }
+    @OptIn(ExperimentalUuidApi::class)
+    private fun formatLog(context: AIAgentContextBase, message: String): String =
+        "$message [$name, ${context.strategyId}, ${context.sessionUuid}]"
 }
 
 /**

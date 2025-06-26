@@ -4,10 +4,12 @@ package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
@@ -28,6 +30,7 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 /**
@@ -733,7 +736,16 @@ public class Testing {
                  * @return a new NodeOutputAssertionsBuilder that contains a copy of the current stageBuilder
                  * and a copied context.
                  */
-                override fun copy(): NodeOutputAssertionsBuilder =
+                override fun copy(
+                    environment: AIAgentEnvironment?,
+                    agentInput: String?,
+                    config: AIAgentConfigBase?,
+                    llm: AIAgentLLMContext?,
+                    stateManager: AIAgentStateManager?,
+                    storage: AIAgentStorage?,
+                    sessionUuid: Uuid?,
+                    strategyId: String?,
+                ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
@@ -831,7 +843,16 @@ public class Testing {
                  *
                  * @return A new EdgeAssertionsBuilder instance with the same stageBuilder and a copied context.
                  */
-                override fun copy(): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
+                override fun copy(
+                    environment: AIAgentEnvironment?,
+                    agentInput: String?,
+                    config: AIAgentConfigBase?,
+                    llm: AIAgentLLMContext?,
+                    stateManager: AIAgentStateManager?,
+                    storage: AIAgentStorage?,
+                    sessionUuid: Uuid?,
+                    strategyId: String?,
+                ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
                  * Executes a given block of logic within the context of a copied instance of the current `EdgeAssertionsBuilder`.

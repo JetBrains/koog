@@ -142,43 +142,30 @@ public interface AIAgentContextBase {
             ?: throw IllegalStateException("Feature `${feature::class.simpleName}` is not installed to the agent")
 
     /**
-     * Creates a new instance of [AIAgentContext] with updated tools, while preserving the other properties
-     * of the original context.
-     *
-     * @param tools The new list of [ToolDescriptor] instances to be set in the context.
-     * @return A new [AIAgentContext] instance with the specified tools.
-     *
-     * @suppress
-     */
-    @InternalAgentsApi
-    public fun copyWithTools(tools: List<ToolDescriptor>): AIAgentContextBase {
-        return this.copy(llm = llm.copy(tools = tools))
-    }
-
-    /**
      * Creates a copy of the current [AIAgentContext] with optional overrides for its properties.
      *
-     * @param environment The agent environment to be used, or null to retain the current environment.
-     * @param agentInput The agent input to be used, or null to retain the current input.
-     * @param config The AI agent configuration, or null to retain the current configuration.
-     * @param llm The AI agent LLM context, or null to retain the current LLM context.
-     * @param stateManager The state manager for the AI agent, or null to retain the current state manager.
-     * @param storage The AI agent's key-value storage, or null to retain the current storage.
-     * @param sessionUuid The UUID of the session, or null to retain the current session UUID.
-     * @param strategyId The strategy ID, or null to retain the current strategy ID.
-     * @param pipeline The AI agent pipeline, or null to retain the current pipeline.
+     * @param environment The agent environment to be used
+     * @param agentInput The agent input to be used
+     * @param config The AI agent configuration
+     * @param llm The AI agent LLM context
+     * @param stateManager The state manager for the AI agent
+     * @param storage The AI agent's key-value storage
+     * @param sessionUuid The UUID of the session
+     * @param strategyId The strategy ID
+     * @param pipeline The AI agent pipeline
      * @return A new instance of [AIAgentContext] with the specified overrides.
      */
+    @OptIn(InternalAgentsApi::class)
     public fun copy(
-        environment: AIAgentEnvironment? = null,
-        agentInput: String? = null,
-        config: AIAgentConfigBase? = null,
-        llm: AIAgentLLMContext? = null,
-        stateManager: AIAgentStateManager? = null,
-        storage: AIAgentStorage? = null,
-        sessionUuid: Uuid? = null,
-        strategyId: String? = null,
-        pipeline: AIAgentPipeline? = null,
+        environment: AIAgentEnvironment = this.environment,
+        agentInput: String = this.agentInput,
+        config: AIAgentConfigBase = this.config,
+        llm: AIAgentLLMContext = this.llm,
+        stateManager: AIAgentStateManager = this.stateManager,
+        storage: AIAgentStorage = this.storage,
+        sessionUuid: Uuid = this.sessionUuid,
+        strategyId: String = this.strategyId,
+        pipeline: AIAgentPipeline = this.pipeline,
     ): AIAgentContextBase
 
     /**
