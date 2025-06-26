@@ -13,7 +13,6 @@ import kotlin.math.min
  * @property start The inclusive start index of the range.
  * @property endExclusive The exclusive end index of the range.
  */
-@JsExport
 @Serializable
 internal data class TextRange(val start: Int, val endExclusive: Int) {
     /**
