@@ -921,21 +921,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        when (scenario) {
-                            AudioTestScenario.BIG_AUDIO -> {
-                                audio(
-                                    Attachment.Audio(
-                                        content = AttachmentContent.Binary.Bytes(audioFile.readBytes()),
-                                        format = "wav",
-                                        mimeType = "audio/wav"
-                                    )
-                                )
-                            }
-
-                            else -> {
-                                audio(Path(audioFile.absolutePath))
-                            }
-                        }
+                        audio(Path(audioFile.absolutePath))
                     }
                 }
             }

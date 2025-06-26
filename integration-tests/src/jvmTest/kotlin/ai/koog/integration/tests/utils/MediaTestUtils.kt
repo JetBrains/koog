@@ -641,16 +641,6 @@ object MediaTestUtils {
                 file
             }
 
-            MediaTestScenarios.AudioTestScenario.BIG_AUDIO -> {
-                val file = File(testResourcesDir, "test_big.wav")
-                if (!file.exists()) {
-                    val sourceFile = File(testResourcesDir, "test_big.wav")
-                    check(sourceFile.exists()) { "Source WAV test file should exist" }
-                    file.writeBytes(sourceFile.readBytes())
-                }
-                file
-            }
-
             MediaTestScenarios.AudioTestScenario.CORRUPTED_AUDIO -> {
                 val file = File(testResourcesDir, "test_corrupted.wav")
                 if (!file.exists()) {

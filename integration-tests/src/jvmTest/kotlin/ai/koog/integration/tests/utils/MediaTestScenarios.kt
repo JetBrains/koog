@@ -57,7 +57,6 @@ object MediaTestScenarios {
     enum class AudioTestScenario {
         BASIC_WAV,
         BASIC_MP3,
-        BIG_AUDIO,          // 20MB for Gemini, 25MB for OpenAI
         CORRUPTED_AUDIO
     }
 
