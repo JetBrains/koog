@@ -8,6 +8,8 @@ import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -25,12 +27,16 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param start The starting node of the subgraph, which initiates the processing.
  * @param finish The finishing node of the subgraph, which concludes the processing.
  * @param toolSelectionStrategy Strategy determining which tools should be available during this subgraph's execution.
+ * @param llmModel Optional [LLModel] override for the subgraph execution.
+ * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
  */
 public open class AIAgentSubgraph<Input, Output>(
     override val name: String,
     public val start: AIAgentStartNodeBase<Input>,
     public val finish: AIAgentFinishNodeBase<Output>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
+    private val llmModel: LLModel? = null,
+    private val llmParams: LLMParams? = null,
 ) : AIAgentNodeBase<Input, Output>() {
     private companion object {
         private val logger = KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
@@ -52,45 +58,60 @@ public open class AIAgentSubgraph<Input, Output>(
      */
     @OptIn(InternalAgentsApi::class, ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
-        val innerContext = when (toolSelectionStrategy) {
-            ToolSelectionStrategy.ALL -> context
-            ToolSelectionStrategy.NONE -> context.copy(llm = context.llm.copy(tools = emptyList()))
-            is ToolSelectionStrategy.Tools -> context.copy(llm = context.llm.copy(tools = toolSelectionStrategy.tools))
-            is ToolSelectionStrategy.AutoSelectForTask -> {
-                val newTools = context.llm.writeSession {
-                    val initialPrompt = prompt
+        val newTools = when (toolSelectionStrategy) {
+            ToolSelectionStrategy.ALL -> context.llm.tools
 
-                    replaceHistoryWithTLDR()
-                    updatePrompt {
-                        user {
-                            selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
-                        }
+            ToolSelectionStrategy.NONE -> emptyList()
+
+            is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
+
+            is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
+                val initialPrompt = prompt
+
+                replaceHistoryWithTLDR()
+
+                updatePrompt {
+                    user {
+                        selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
                     }
-
-                    val selectedTools = this.requestLLMStructured(
-                        structure = JsonStructuredData.createJsonStructure<SelectedTools>(
-                            schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                            examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
-                        ),
-                        retries = toolSelectionStrategy.maxRetries,
-                    ).getOrThrow()
-
-                    rewritePrompt { initialPrompt }
-
-                    tools.filter { it.name in selectedTools.structure.tools.toSet() }
                 }
-                context.copy(llm = context.llm.copy(tools = newTools))
+
+                val selectedTools = this.requestLLMStructured(
+                    structure = JsonStructuredData.createJsonStructure<SelectedTools>(
+                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                        examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                    ),
+                    retries = toolSelectionStrategy.maxRetries,
+                ).getOrThrow()
+
+                prompt = initialPrompt
+
+                tools.filter { it.name in selectedTools.structure.tools.toSet() }
             }
         }
 
-        val subgraphResult = doExecute(innerContext, input)
-        val newPrompt = innerContext.llm.readSession { prompt }
-        context.llm.writeSession {
-            rewritePrompt {
-                newPrompt
-            }
+        // Copy inner context with new tools, model and LLM params
+        val innerContext = with(context) {
+            copy(
+                llm = llm.copy(
+                    tools = newTools,
+                    model = llmModel ?: llm.model,
+                    prompt = llm.prompt.copy(params = llmParams ?: llm.prompt.params)
+                )
+            )
         }
-        return subgraphResult
+
+        /*
+         Execute subgraph with inner context and get result and updated prompt.
+         Restore original LLM params on the new prompt.
+        */
+        val result = doExecute(innerContext, input)
+        val newPrompt = innerContext.llm.readSession { prompt.copy(params = context.llm.prompt.params) }
+
+        // Update outer context with new prompt
+        context.llm.writeSession { prompt = newPrompt }
+
+        return result
     }
 
     @OptIn(InternalAgentsApi::class)

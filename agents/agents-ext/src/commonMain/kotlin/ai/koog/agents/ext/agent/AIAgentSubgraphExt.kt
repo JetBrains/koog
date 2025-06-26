@@ -2,7 +2,6 @@ package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
-import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegateBase
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -182,26 +181,24 @@ public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraph
  * @property finishTool The tool which LLM must call in order to complete the task.
  * The tool interface here is used as a descriptor of the structured result that LLM must produce.
  * The tool itself is never called.
- * @property model LLM used for this task
- * @property params Specific LLM parameters for this task
+ * @property llmModel LLM used for this task
+ * @property llmParams Specific LLM parameters for this task
  * @property defineTask A block which defines the task. It may just return a system prompt for the task,
  * but may also alter agent context, prompt, storage, etc.
  */
 public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
-    model: LLModel? = null,
-    params: LLMParams? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
-): AIAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraph(toolSelectionStrategy = toolSelectionStrategy) {
-    val origModelKey = createStorageKey<LLModel>("original_model")
-    val origParamsKey = createStorageKey<LLMParams>("original_params")
-
+): AIAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraph(
+    toolSelectionStrategy = toolSelectionStrategy,
+    llmModel = llmModel,
+    llmParams = llmParams,
+) {
     val setupTask by node<Input, String> { input ->
         llm.writeSession {
-            // Save original parameters to restore them when exiting the subgraph
-            storage.set(origModelKey, this.model)
-            storage.set(origParamsKey, this.prompt.params)
 
             // Append finish tool to tools if it's not present yet
             if (finishTool.descriptor !in tools) {
@@ -210,10 +207,6 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
 
             // Model must always call tools in the loop until it decides (via finish tool) that the exit condition is reached
             setToolChoiceRequired()
-
-            // Apply custom values, if provided
-            model?.let(::changeModel)
-            params?.let(::changeLLMParams)
         }
 
         // Output task description
@@ -231,10 +224,6 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
 
             // Remove finish tool from tools
             tools = tools - finishTool.descriptor
-
-            // Restore original parameters (this will also restore original tool choice since it's part of LLMParams)
-            changeModel(storage.getValue(origModelKey))
-            changeLLMParams(storage.getValue(origParamsKey))
         }
 
         input.toSafeResult<ProvidedResult>().asSuccessful().result
@@ -274,8 +263,8 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
  *
  * @param tools The list of tools that are available for use within the subgraph.
  * @param finishTool The tool responsible for producing the final result of the subgraph.
- * @param model An optional language model to be used in the subgraph. If not specified, a default model may be used.
- * @param params Optional parameters to customize the behavior of the language model in the subgraph.
+ * @param llmModel An optional language model to be used in the subgraph. If not specified, a default model may be used.
+ * @param llmParams Optional parameters to customize the behavior of the language model in the subgraph.
  * @param defineTask A suspend function that defines the task to be executed by the subgraph based on the given input.
  * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
  */
@@ -283,14 +272,14 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
 public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
-    model: LLModel? = null,
-    params: LLMParams? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, ProvidedResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     finishTool = finishTool,
-    model = model,
-    params = params,
+    llmModel = llmModel,
+    llmParams = llmParams,
     defineTask = defineTask
 )
 
@@ -300,14 +289,14 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
 @Suppress("unused")
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
-    model: LLModel? = null,
-    params: LLMParams? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
     finishTool = ProvideStringSubgraphResult,
-    model = model,
-    params = params,
+    llmModel = llmModel,
+    llmParams = llmParams,
     defineTask = defineTask
 )
 
@@ -319,21 +308,21 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  * which is executed in the given context.
  *
  * @param tools A list of tools available for use within the subgraph.
- * @param model An optional language model to be used within the subgraph. Defaults to `null`.
- * @param params Optional parameters for the language model. Defaults to `null`.
+ * @param llmModel An optional language model to be used within the subgraph. Defaults to `null`.
+ * @param llmParams Optional parameters for the language model. Defaults to `null`.
  * @param defineTask A suspendable function that defines the task for the subgraph, given an input in the context.
  * @return A delegate representing the constructed subgraph with task execution capabilities.
  */
 @Suppress("unused")
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
-    model: LLModel? = null,
-    params: LLMParams? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
-    model = model,
-    params = params,
+    llmModel = llmModel,
+    llmParams = llmParams,
     defineTask = defineTask
 )
 
@@ -344,14 +333,14 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
 @Suppress("unused")
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
-    model: LLModel? = null,
-    params: LLMParams? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithTask(
     finishTool = ProvideVerifiedSubgraphResult,
     toolSelectionStrategy = toolSelectionStrategy,
-    model = model,
-    params = params,
+    llmModel = llmModel,
+    llmParams = llmParams,
     defineTask = defineTask
 )
 
@@ -364,8 +353,8 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
  *
  * @param Input The input type accepted by the subgraph.
  * @param tools A list of tools available to the subgraph.
- * @param model Optional language model to be used within the subgraph.
- * @param params Optional parameters to configure the language model's behavior.
+ * @param llmModel Optional language model to be used within the subgraph.
+ * @param llmParams Optional parameters to configure the language model's behavior.
  * @param defineTask A suspendable function defining the task that the subgraph will execute,
  *                   which takes an input and produces a string-based task description.
  * @return A delegate representing the constructed subgraph with input type `Input` and output type
@@ -374,12 +363,12 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
 @Suppress("unused")
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
-    model: LLModel? = null,
-    params: LLMParams? = null,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
     defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegateBase<Input, VerifiedSubgraphResult> = subgraphWithVerification(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
-    model = model,
-    params = params,
+    llmModel = llmModel,
+    llmParams = llmParams,
     defineTask = defineTask
 )

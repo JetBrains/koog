@@ -78,7 +78,7 @@ fun main() = runBlocking {
 
         val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
             tools = MoneyTransferTools().asTools() + AskUser,
-            model = OpenAIModels.Chat.GPT4o
+            llmModel = OpenAIModels.Chat.GPT4o
         ) { request ->
             """
                 ${bankingAssistantSystemPrompt}
