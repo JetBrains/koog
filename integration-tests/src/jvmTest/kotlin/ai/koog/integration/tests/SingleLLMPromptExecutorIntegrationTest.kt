@@ -730,7 +730,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                             }
 
                             else -> {
-                                image(imageFile.pathString)
+                                image(KtPath(imageFile.pathString))
                             }
                         }
                     }
