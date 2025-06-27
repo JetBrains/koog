@@ -70,7 +70,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
-        define: AIAgentSubgraphBuilder<Input, Output>.() -> Unit
+        define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
     ): AIAgentSubgraphDelegate<Input, Output> {
         return AIAgentSubgraphBuilder<Input, Output>(name, toolSelectionStrategy, llmModel, llmParams).also { it.define() }.build()
     }
@@ -86,7 +86,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         tools: List<Tool<*, *>>,
         llmModel: LLModel? = null,
         llmParams: LLMParams? = null,
-        define: AIAgentSubgraphBuilder<Input, Output>.() -> Unit
+        define: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit
     ): AIAgentSubgraphDelegate<Input, Output> {
         return subgraph(name, ToolSelectionStrategy.Tools(tools.map { it.descriptor }), llmModel, llmParams, define)
     }
