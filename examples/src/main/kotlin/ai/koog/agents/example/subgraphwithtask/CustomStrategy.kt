@@ -40,7 +40,7 @@ fun customWizardStrategy(
         """
             You are an AI agent that can create files, delete files, create folders, and delete folders.
 
-            Your primary task is to fix the project buld and makes sure that all the following problems are resolved:
+            Your primary task is to fix the project build and makes sure that all the following problems are resolved:
             ${verificationResult.message}
 
             3. DO NOT FINISH BEFORE YOU CHANGED EVERYTHING THAT IS REQUIRED TO MAKE THE PROJECT WORK.
