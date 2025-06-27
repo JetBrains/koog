@@ -2,7 +2,7 @@ package ai.koog.integration.tests
 
 import ai.koog.prompt.executor.clients.ollama.findByNameOrNull
 import ai.koog.prompt.llm.LLMCapability.*
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.clients.ollama.OllamaModels
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test

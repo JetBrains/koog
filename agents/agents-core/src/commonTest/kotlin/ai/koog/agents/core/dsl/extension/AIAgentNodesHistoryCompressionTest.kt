@@ -9,7 +9,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.clients.ollama.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

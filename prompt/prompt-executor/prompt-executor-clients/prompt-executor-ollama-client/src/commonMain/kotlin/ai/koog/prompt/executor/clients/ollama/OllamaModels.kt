@@ -1,4 +1,8 @@
-package ai.koog.prompt.llm
+package ai.koog.prompt.executor.clients.ollama
+
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 
 /**
  * Represents a collection of predefined Large Language Models (LLM) categorized by makers.
