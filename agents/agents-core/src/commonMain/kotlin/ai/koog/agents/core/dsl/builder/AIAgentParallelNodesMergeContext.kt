@@ -52,7 +52,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
 
     override fun copy(
         environment: AIAgentEnvironment,
-        agentInput: String,
+        agentInput: Any?,
         config: AIAgentConfigBase,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,

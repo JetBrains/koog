@@ -135,7 +135,7 @@ public class AIAgentContext(
      */
     override fun copy(
         environment: AIAgentEnvironment,
-        agentInput: String,
+        agentInput: Any?,
         config: AIAgentConfigBase,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,

@@ -46,7 +46,7 @@ public class DummyAIAgentContext(
     public val isEnvironmentDefined: Boolean = builder.environment != null
 
     private var _environment: AIAgentEnvironment? = builder.environment
-    private var _agentInput: String? = builder.agentInput
+    private var _agentInput: Any? = builder.agentInput
     private var _config: AIAgentConfigBase? = builder.config
     private var _llm: AIAgentLLMContext? = builder.llm
     private var _stateManager: AIAgentStateManager? = builder.stateManager
@@ -60,7 +60,7 @@ public class DummyAIAgentContext(
     override val environment: AIAgentEnvironment
         get() = _environment ?: throw NotImplementedError("Environment is not mocked")
 
-    override val agentInput: String
+    override val agentInput: Any?
         get() = _agentInput ?: throw NotImplementedError("Agent input is not mocked")
 
     override val config: AIAgentConfigBase
@@ -93,7 +93,7 @@ public class DummyAIAgentContext(
 
     override fun copy(
         environment: AIAgentEnvironment,
-        agentInput: String,
+        agentInput: Any?,
         config: AIAgentConfigBase,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
@@ -156,7 +156,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * This variable can be set to define specific data or context relevant to the agent's task.
      * It is nullable, indicating that the agent may operate without an explicitly defined input.
      */
-    public var agentInput: String?
+    public var agentInput: Any?
     /**
      * Specifies the configuration for the AI agent.
      *
@@ -224,7 +224,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      */
     public fun copy(
         environment: AIAgentEnvironment? = this.environment,
-        agentInput: String? = this.agentInput,
+        agentInput: Any? = this.agentInput,
         config: AIAgentConfigBase? = this.config,
         llm: AIAgentLLMContext? = this.llm,
         stateManager: AIAgentStateManager? = this.stateManager,
@@ -270,7 +270,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * This property is optional and can be null, indicating that no specific input is provided for the agent.
      * It is utilized during the construction or copying of an agent's context to define the data the agent operates on.
      */
-    override var agentInput: String? = null
+    override var agentInput: Any? = null
     /**
      * Represents the AI agent configuration used in the mock builder.
      *
@@ -346,7 +346,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      */
     override fun copy(
         environment: AIAgentEnvironment?,
-        agentInput: String?,
+        agentInput: Any?,
         config: AIAgentConfigBase?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,

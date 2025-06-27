@@ -8,7 +8,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.core.tools.ToolDescriptor
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -158,7 +157,7 @@ public interface AIAgentContextBase {
     @OptIn(InternalAgentsApi::class)
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
-        agentInput: String = this.agentInput,
+        agentInput: Any? = this.agentInput,
         config: AIAgentConfigBase = this.config,
         llm: AIAgentLLMContext = this.llm,
         stateManager: AIAgentStateManager = this.stateManager,

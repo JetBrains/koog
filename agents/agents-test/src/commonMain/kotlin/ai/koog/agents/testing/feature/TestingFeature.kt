@@ -739,7 +739,7 @@ public class Testing {
                  */
                 override fun copy(
                     environment: AIAgentEnvironment?,
-                    agentInput: String?,
+                    agentInput: Any?,
                     config: AIAgentConfigBase?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
@@ -846,7 +846,7 @@ public class Testing {
                  */
                 override fun copy(
                     environment: AIAgentEnvironment?,
-                    agentInput: String?,
+                    agentInput: Any?,
                     config: AIAgentConfigBase?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
