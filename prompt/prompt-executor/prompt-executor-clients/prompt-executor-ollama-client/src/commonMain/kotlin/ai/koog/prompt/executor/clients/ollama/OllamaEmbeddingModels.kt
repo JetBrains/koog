@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.ollama
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -10,7 +11,7 @@ import ai.koog.prompt.llm.LLModel
  * Models are sourced from https://ollama.com/blog/embedding-models and other official Ollama resources.
  * Each model has a specific purpose and performance characteristics.
  */
-public object OllamaEmbeddingModels {
+public object OllamaEmbeddingModels : LLModelDefinitions {
     /**
      * Nomic's text embedding model, optimized for text embeddings.
      * A good general-purpose embedding model.
