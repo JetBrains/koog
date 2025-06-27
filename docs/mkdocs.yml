@@ -1,0 +1,88 @@
+site_name: Koog
+nav:
+  - Documentation:
+      - Overview: index.md
+      - Key concepts: key-concepts.md
+      - Getting started:
+          - Single-run agents: single-run-agents.md
+          - Complex workflow agents: complex-workflow-agents.md
+      - Prompt API: prompt-api.md
+      - Tools:
+          - Overview: tools-overview.md
+          - Built-in tools: built-in-tools.md
+          - Annotation-based tools: annotation-based-tools.md
+          - Advanced implementation: advanced-tool-implementation.md
+      - Agent events: agent-events.md
+      - Custom strategy graphs: custom-strategy-graphs.md
+      - Pre-defined nodes and components: nodes-and-components.md
+      - History compression: history-compression.md
+      - Model Context Protocol: model-context-protocol.md
+      - Advanced usage:
+          - Structured data: structured-data.md
+          - Streaming API: streaming-api.md
+          - Custom nodes: custom-nodes.md
+          - LLM sessions and manual history management: sessions.md
+          - Subgraphs:
+              - Overview: subgraphs-overview.md
+              - Custom subgraphs: custom-subgraphs.md
+          - Embeddings: embeddings.md
+          - Features:
+              - Overview: features-overview.md
+              - Tracing: tracing.md
+              - Memory: agent-memory.md
+      - Testing: testing.md
+  - Examples: examples.md
+  - API reference: https://api.koog.ai/
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+
+theme:
+  name: material
+  custom_dir: overrides
+  favicon: img/favicon.ico
+  logo: img/favicon.ico
+  features:
+    - content.code.copy
+    - navigation.expand
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.instant
+  color_mode: light
+  nav_style: light
+  user_color_mode_toggle: true
+  palette:
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+      primary: black
+      accent: blue
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+      primary: black
+      accent: blue
+
+extra_css:
+  - stylesheets/extra.css
+
+repo_url: https://github.com/JetBrains/koog
+repo_name: "Koog on GitHub"
+copyright: Copyright © 2000-2025 JetBrains s.r.o.
+
+extra:
+  social:
+    - icon: fontawesome/brands/slack
+      link: https://kotlinlang.slack.com/messages/koog-agentic-framework/
+      name: Koog on Slack

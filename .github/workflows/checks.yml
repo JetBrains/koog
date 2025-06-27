@@ -41,6 +41,29 @@ jobs:
       - name: TestClasses with Gradle Wrapper
         run: ./gradlew jvmTestClasses jsTestClasses
 
+  docs:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+
+      - name: Build docs
+        run: |
+          cd ./docs
+          pip install mkdocs-material
+          mkdocs build
+
   tests:
 
     runs-on: ${{ matrix.os }}
