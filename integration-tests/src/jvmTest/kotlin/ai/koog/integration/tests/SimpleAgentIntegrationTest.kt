@@ -26,7 +26,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Stream
@@ -49,12 +48,6 @@ class SimpleAgentIntegrationTest {
         fun setup() {
             testResourcesDir =
                 Paths.get(SimpleAgentIntegrationTest::class.java.getResource("/media")!!.toURI())
-
-            if (!Files.exists(testResourcesDir)) {
-                Files.createDirectories(testResourcesDir)
-            }
-
-            assertTrue(Files.exists(testResourcesDir), "Test resources directory should exist")
         }
 
         @JvmStatic
@@ -216,7 +209,6 @@ class SimpleAgentIntegrationTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
         val imageFile = testResourcesDir.resolve("test.png")
-        assertTrue(Files.exists(imageFile), "Image test file should exist")
 
         val imageBytes = imageFile.readBytes()
         val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)

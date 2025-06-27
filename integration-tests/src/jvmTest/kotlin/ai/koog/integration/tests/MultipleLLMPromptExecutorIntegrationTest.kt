@@ -43,7 +43,6 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Stream
@@ -66,12 +65,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
         fun setupTestResources() {
             testResourcesDir =
                 Paths.get(MultipleLLMPromptExecutorIntegrationTest::class.java.getResource("/media")!!.toURI())
-
-            if (!Files.exists(testResourcesDir)) {
-                Files.createDirectories(testResourcesDir)
-            }
-
-            assertTrue(Files.exists(testResourcesDir), "Test resources directory should exist")
         }
 
         @JvmStatic
