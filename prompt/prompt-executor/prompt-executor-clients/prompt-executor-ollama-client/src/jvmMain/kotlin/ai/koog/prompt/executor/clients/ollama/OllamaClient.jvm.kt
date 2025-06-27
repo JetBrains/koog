@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.ollama.client
+package ai.koog.prompt.executor.clients.ollama
 
 import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.engine.cio.CIO

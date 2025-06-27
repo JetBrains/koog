@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.ollama.client.dto
+package ai.koog.prompt.executor.clients.ollama.dto
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt

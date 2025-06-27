@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.ollama.client.dto
+package ai.koog.prompt.executor.clients.ollama.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

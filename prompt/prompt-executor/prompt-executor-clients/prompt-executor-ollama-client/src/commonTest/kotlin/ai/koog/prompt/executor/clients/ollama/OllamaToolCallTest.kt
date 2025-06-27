@@ -1,21 +1,25 @@
-package ai.koog.prompt.executor.ollama.client
+package ai.koog.prompt.executor.clients.ollama
 
-import ai.koog.prompt.executor.ollama.client.dto.OllamaChatMessageDTO
-import ai.koog.prompt.executor.ollama.client.dto.OllamaToolCallDTO
-import ai.koog.prompt.executor.ollama.client.dto.getFirstToolCall
-import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
+import ai.koog.prompt.executor.clients.ollama.dto.OllamaChatMessageDTO
+import ai.koog.prompt.executor.clients.ollama.dto.OllamaToolCallDTO
+import ai.koog.prompt.executor.clients.ollama.dto.getFirstToolCall
+import ai.koog.prompt.executor.clients.ollama.dto.getToolCalls
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Tests for Ollama tool call ID generation and extraction.
  */
 class OllamaToolCallTest {
 
-    val testResponseMetadata = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+    val testResponseMetadata = ResponseMetaInfo(timestamp = Instant.Companion.parse("2023-01-01T00:00:00Z"))
 
     @Test
     fun testGetToolCallWithNoToolCalls() {

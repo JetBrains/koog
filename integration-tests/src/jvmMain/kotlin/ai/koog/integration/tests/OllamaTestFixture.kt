@@ -1,7 +1,7 @@
 package ai.koog.integration.tests
 
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
-import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.clients.ollama.OllamaClient
 import ai.koog.prompt.llm.OllamaModels
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*

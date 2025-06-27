@@ -1,6 +1,6 @@
 package ai.koog.integration.tests
 
-import ai.koog.prompt.executor.ollama.client.findByNameOrNull
+import ai.koog.prompt.executor.clients.ollama.findByNameOrNull
 import ai.koog.prompt.llm.LLMCapability.*
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest

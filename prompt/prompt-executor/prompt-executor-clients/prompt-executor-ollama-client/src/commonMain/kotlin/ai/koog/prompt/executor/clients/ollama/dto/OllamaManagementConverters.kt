@@ -1,6 +1,6 @@
-package ai.koog.prompt.executor.ollama.client.dto
+package ai.koog.prompt.executor.clients.ollama.dto
 
-import ai.koog.prompt.executor.ollama.client.OllamaModelCard
+import ai.koog.prompt.executor.clients.ollama.OllamaModelCard
 import ai.koog.prompt.llm.LLMCapability
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
