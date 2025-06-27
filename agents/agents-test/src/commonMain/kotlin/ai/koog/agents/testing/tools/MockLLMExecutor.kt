@@ -38,6 +38,7 @@ import kotlinx.datetime.Clock
  * @property tokenizer: Tokenizer that will be used to estimate token counts in mock messages
  */
 internal class MockLLMExecutor(
+    private val handleLastAssistantMessage: Boolean,
     private val partialMatches: Map<String, List<Message.Response>>? = null,
     private val exactMatches: Map<String, List<Message.Response>>? = null,
     private val conditional: Map<(String) -> Boolean, String>? = null,
@@ -77,6 +78,13 @@ internal class MockLLMExecutor(
         return flowOf(response.content)
     }
 
+    private fun getLastMessage(prompt: Prompt): Message? {
+        return if (handleLastAssistantMessage && prompt.messages.any { it is Message.Assistant })
+            prompt.messages.lastOrNull { it is Message.Assistant }
+        else
+            prompt.messages.lastOrNull()
+    }
+
     /**
      * Handles a prompt and returns an appropriate response based on the configured matches.
      *
@@ -95,7 +103,7 @@ internal class MockLLMExecutor(
 
         val inputTokensCount = tokenizer?.let { prompt.messages.map { it.content }.sumOf(it::countTokens) }
 
-        val lastMessage = prompt.messages.lastOrNull() ?: return listOf(Message.Assistant(
+        val lastMessage = getLastMessage(prompt) ?: return listOf(Message.Assistant(
             defaultResponse,
             metaInfo = ResponseMetaInfo.create(
                 clock,
@@ -109,36 +117,20 @@ internal class MockLLMExecutor(
         val exactMatchedResponse = findExactResponse(lastMessage, exactMatches)
         if (exactMatchedResponse != null) {
             logger.debug { "Returning response for exact prompt match: $exactMatchedResponse" }
-
-            // Check if LLM messages contain any of the patterns and call the corresponding tool if they do
-            return exactMatchedResponse
         }
 
         // Check partial response match
-        val partiallyMatchedResponse = findPartialResponse(lastMessage, partialMatches)
-        if (partiallyMatchedResponse != null) {
+        val partiallyMatchedResponse = if (exactMatchedResponse == null) findPartialResponse(lastMessage, partialMatches) ?: listOf() else listOf()
+        if (partiallyMatchedResponse.any()) {
             logger.debug { "Returning response for partial prompt match: $partiallyMatchedResponse" }
-
-            // Check if LLM messages contain any of the patterns and call the corresponding tool if they do
-            return partiallyMatchedResponse
         }
 
         // Check request conditions
-        if (!conditional.isNullOrEmpty()) {
-            conditional.entries.firstOrNull { it.key(lastMessage.content) }?.let { (_, response) ->
-                logger.debug { "Returning response for conditional match: $response" }
+        val conditionals = getConditionalResponse(lastMessage, inputTokensCount) ?: listOf()
 
-                // Check if LLM messages contain any of the patterns and call the corresponding tool if they do
-                return listOf(Message.Assistant(
-                    response,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = tokenizer?.countTokens(response)?.let { it + inputTokensCount!! },
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = tokenizer?.countTokens(response)
-                    )
-                ))
-            }
+        val result = (exactMatchedResponse ?: listOf()) + partiallyMatchedResponse + conditionals
+        if (result.any()) {
+            return result
         }
 
         // Process the default LLM response
@@ -152,6 +144,26 @@ internal class MockLLMExecutor(
             )
         ))
     }
+
+    private fun getConditionalResponse(
+        lastMessage: Message,
+        inputTokensCount: Int?
+    ): List<Message.Response>? = if (!conditional.isNullOrEmpty()) {
+        conditional.entries.firstOrNull { it.key(lastMessage.content) }?.let { (_, response) ->
+            logger.debug { "Returning response for conditional match: $response" }
+            listOf(
+                Message.Assistant(
+                    response,
+                    metaInfo = ResponseMetaInfo.create(
+                        clock,
+                        totalTokensCount = tokenizer?.countTokens(response)?.let { it + inputTokensCount!! },
+                        inputTokensCount = inputTokensCount,
+                        outputTokensCount = tokenizer?.countTokens(response)
+                    )
+                )
+            )
+        }
+    } else emptyList()
 
 
     /*

@@ -367,14 +367,68 @@ public fun AIAgent(
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
 )
-public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
-    val nodeCallLLMMultiple by nodeLLMRequestMultiple()
-    val executeToolAndSendResult by nodeLLMExecuteMultipleToolsAndSendResults()
 
-    edge(nodeStart forwardTo nodeCallLLMMultiple)
-    edge(nodeCallLLMMultiple forwardTo executeToolAndSendResult onMultipleToolCalls { true })
-    edge((nodeCallLLMMultiple forwardTo nodeFinish) transformed { it.first() } onAssistantMessage { true })
+/**
+ * Creates an AI agent strategy based on the specified single-run mode.
+ *
+ * This method determines the type of strategy to be used for executing single-run tasks,
+ * depending on the provided mode. It supports sequential, parallel, and single execution modes.
+ *
+ * @param runMode The mode in which the single-run strategy should operate. Defaults to SingleRunMode.SINGLE.
+ *                - SingleRunMode.SINGLE: Executes without allowing multiple simultaneous tool calls.
+ *                - SingleRunMode.SEQUENTIAL: Executes simultaneous tool calls sequentially.
+ *                - SingleRunMode.PARALLEL: Executes multiple tool calls in parallel.
+ * @return An instance of AIAgentStrategy configured according to the specified single-run mode.
+ */
 
-    edge(executeToolAndSendResult forwardTo executeToolAndSendResult onMultipleToolCalls { true })
-    edge((executeToolAndSendResult forwardTo nodeFinish) transformed { it.first()} onAssistantMessage { true })
+public fun singleRunStrategy(runMode: SingleRunMode = SingleRunMode.SINGLE): AIAgentStrategy =
+    when (runMode) {
+        SingleRunMode.SEQUENTIAL -> singleRunWithParallelAbility(false)
+        SingleRunMode.PARALLEL   -> singleRunWithParallelAbility(true)
+        SingleRunMode.SINGLE     -> singleRunModeStrategy()
+    }
+
+private fun singleRunWithParallelAbility(parallelTools: Boolean) = strategy("single_run_sequential") {
+    val nodeCallLLM by nodeLLMRequestMultiple()
+    val nodeExecuteTool by nodeExecuteMultipleTools(parallelTools = parallelTools)
+    val nodeSendToolResult by nodeLLMSendMultipleToolResults()
+
+    edge(nodeStart forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo nodeExecuteTool onMultipleToolCalls { true })
+    edge(nodeCallLLM forwardTo nodeFinish
+                                        onMultipleAssistantMessages { true }
+                                        transformed { it.joinToString("\n") { message -> message.content } })
+
+    edge(nodeExecuteTool forwardTo nodeSendToolResult)
+
+    edge(nodeSendToolResult forwardTo nodeFinish
+                                                onMultipleAssistantMessages { true }
+                                                transformed { it.joinToString("\n") { message -> message.content } })
+
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onMultipleToolCalls { true })
+}
+
+private fun singleRunModeStrategy() = strategy("single_run") {
+    val nodeCallLLM by nodeLLMRequest()
+    val nodeExecuteTool by nodeExecuteTool()
+    val nodeSendToolResult by nodeLLMSendToolResult()
+
+    edge(nodeStart forwardTo nodeCallLLM)
+    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
+    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeExecuteTool forwardTo nodeSendToolResult)
+    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
+}
+
+/**
+ * Enum representing the modes in which a single-run strategy for an AI agent can be executed.
+ *
+ * These modes define how tasks or operations are processed during the agent's run:
+ * - SEQUENTIAL: Multiple tool calls allowed but will be executed sequentially.
+ * - PARALLEL: Tool calls executed in parallel.
+ * - SINGLE: Multiple tool calls are not allowed.
+ */
+public enum class SingleRunMode {
+    SEQUENTIAL, PARALLEL, SINGLE
 }

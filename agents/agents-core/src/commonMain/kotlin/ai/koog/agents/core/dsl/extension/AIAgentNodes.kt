@@ -255,55 +255,6 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     }
 
 /**
- * Combination of [nodeExecuteTool] and [nodeLLMSendToolResult]
- */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMExecuteToolAndSendResult(
-    name: String? = null
-): AIAgentNodeDelegateBase<Message.Tool.Call, Message.Response> =
-    node(name) { tc ->
-        val toolExecResult = environment.executeTool(tc)
-        return@node llm.writeSession {
-            updatePrompt {
-                tool {
-                    result(toolExecResult)
-                }
-            }
-
-            requestLLM()
-        }
-    }
-
-/**
- * Defines a node in the AI agent graph that executes multiple tools and sends the results
- * to the language model for processing.
- *
- * @param name An optional name for the node. If not provided, a default name will be generated.
- * @param parallelTools If true, tools are executed in parallel. If false, tools are executed sequentially.
- * @return A node which manages the execution of tools and their results processing
- */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMExecuteMultipleToolsAndSendResults(
-    name: String? = null,
-    parallelTools: Boolean = false
-): AIAgentNodeDelegateBase<List<Message.Tool.Call>, List<Message.Response>> =
-    node(name) { tc ->
-        val tcResults = if (parallelTools) {
-            environment.executeTools(tc)
-        } else {
-            tc.map { environment.executeTool(it) }
-        }
-
-        return@node llm.writeSession {
-            updatePrompt {
-                tool {
-                    tcResults.forEach { result(it) }
-                }
-            }
-
-            requestLLMMultiple()
-        }
-    }
-
-/**
  * A node that executes multiple tool calls. These calls can optionally be executed in parallel.
  *
  * @param name Optional node name.
