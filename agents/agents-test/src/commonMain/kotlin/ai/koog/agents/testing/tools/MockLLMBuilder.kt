@@ -98,6 +98,14 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     private var toolRegistry: ToolRegistry? = null
     private var toolActions: MutableList<ToolCondition<*, *>> = mutableListOf()
 
+    /**
+     * Determines whether the last message handled in a sequence should focus specifically on
+     * the most recent message categorized as `Message.Assistant` when resolving mock responses.
+     *
+     * Useful in scenarios where the mock response handling involves mixed results
+     * from the LLM, and there is a need to differentiate between handling the general
+     * last message vs the last assistant-specific message.
+     */
     public var handleLastAssistantMessage: Boolean = false
 
     /**
@@ -163,11 +171,11 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     }
 
     /**
-     * Adds a partial pattern match for an LLM answer that triggers a tool call.
+     * Adds a partial pattern match for an LLM answer that triggers a set of tool calls.
      *
-     * @param pattern The exact input string to match
-     * @param tool The tool to be called when the input matches
-     * @param args The arguments to pass to the tool
+     * @param pattern The substring pattern to partially match in the user request.
+     * @param toolCalls A list of pairs, where each pair consists of a tool and the arguments
+     *                  to pass to the tool. These tool calls will be triggered when the input matches the pattern.
      */
     public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
         toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
