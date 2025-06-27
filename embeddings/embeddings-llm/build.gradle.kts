@@ -19,6 +19,9 @@ kotlin {
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
+
+                // TODO Remove once deprecated ai.koog.embeddings.local.OllamaEmbeddingModels is removed
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
             }
         }
 

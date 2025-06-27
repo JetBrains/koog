@@ -2,6 +2,7 @@ package ai.koog.embeddings.local
 
 import ai.koog.embeddings.base.Vector
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.ollama.OllamaEmbeddingModels
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
