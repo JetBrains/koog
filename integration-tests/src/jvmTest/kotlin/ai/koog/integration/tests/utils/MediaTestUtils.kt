@@ -168,11 +168,11 @@ object MediaTestUtils {
                 if (!Files.exists(file)) {
                     file.writeBytes(
                         byteArrayOf(
-                            0x48, 0x65, 0x6C, 0x6C, 0x6F,
-                            0x20,
-                            0xFF.toByte(), 0xFE.toByte(),
-                            0x57, 0x6F, 0x72, 0x6C, 0x64,
-                            0x21
+                            0x48, 0x65, 0x6C, 0x6C, 0x6F, // "Hello"
+                            0x20, // space
+                            0xFF.toByte(), 0xFE.toByte(), // invalid UTF-8 bytes
+                            0x57, 0x6F, 0x72, 0x6C, 0x64, // "World"
+                            0x21 // "!"
                         )
                     )
                 }
@@ -181,7 +181,7 @@ object MediaTestUtils {
         }
 
         val file = testResourcesDir.resolve("test_${scenario.name.lowercase()}.txt")
-        Files.writeString(file, textContent) // Теперь textContent всегда String
+        Files.writeString(file, textContent)
         return file
     }
 

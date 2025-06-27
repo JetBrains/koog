@@ -36,7 +36,6 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
-import io.ktor.utils.io.charsets.MalformedInputException
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.files.Path as KtPath
@@ -825,11 +824,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             withRetry {
                 try {
                     val response = executor.execute(prompt, model)
-                    if (scenario == TextTestScenario.CORRUPTED_TEXT) {
-                        checkResponseBasic(response)
-                    } else {
-                        checkExecutorMediaResponse(response)
-                    }
+                    checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
@@ -843,13 +838,6 @@ class SingleLLMPromptExecutorIntegrationTest {
                                     "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
                                 )
                             }
-                        }
-
-                        TextTestScenario.CORRUPTED_TEXT -> {
-                            assertTrue(
-                                e is MalformedInputException,
-                                "Expected exception for corrupted text [MalformedInputException] was not found, got [${e.message}] instead"
-                            )
                         }
 
                         TextTestScenario.LONG_TEXT_5_MB -> {
