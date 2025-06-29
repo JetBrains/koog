@@ -28,8 +28,8 @@ import ai.koog.prompt.llm.LLModel
  * | [CostOptimized.GPT4oMini]           | Fast      | $0.15-$0.6         | Text, Image, Tools | Text, Tools        |
  * | [CostOptimized.O1Mini]              | Slow      | $1.1-$4.4          | Text               | Text               |
  * | [CostOptimized.O3Mini]              | Medium    | $1.1-$4.4          | Text, Tools        | Text, Tools        |
- * | [Embeddings.TextEmbeddingAda3Small] | Medium    | $0.02              | Text               | Text               |
- * | [Embeddings.TextEmbeddingAda3Large] | Slow      | $0.13              | Text               | Text               |
+ * | [Embeddings.TextEmbedding3Small]    | Medium    | $0.02              | Text               | Text               |
+ * | [Embeddings.TextEmbedding3Large]    | Slow      | $0.13              | Text               | Text               |
  * | [Embeddings.TextEmbeddingAda002]    | Slow      | $0.1               | Text               | Text               |
  */
 public object OpenAIModels: LLModelDefinitions {
@@ -330,7 +330,7 @@ public object OpenAIModels: LLModelDefinitions {
          *
          * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-small">
          */
-        public val TextEmbeddingAda3Small: LLModel = LLModel(
+        public val TextEmbedding3Small: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "text-embedding-3-small", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             )
@@ -355,7 +355,7 @@ public object OpenAIModels: LLModelDefinitions {
          *
          * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-large">
          */
-        public val TextEmbeddingAda3Large: LLModel = LLModel(
+        public val TextEmbedding3Large: LLModel = LLModel(
             provider = LLMProvider.OpenAI, id = "text-embedding-3-large", capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             )
@@ -363,7 +363,7 @@ public object OpenAIModels: LLModelDefinitions {
 
         /**
          * text-embedding-ada-002 is more performant version of the initial ada embedding model. But it's an older
-         * model compared to [TextEmbeddingAda3Small] and [TextEmbeddingAda3Large].
+         * model compared to [TextEmbedding3Small] and [TextEmbedding3Large].
          *
          * Fast, cheap, good for many general tasks
          *

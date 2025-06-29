@@ -12,7 +12,7 @@ class OpenAIEmbedderTest {
     @Test
     fun testEmbed() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
-        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
+        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbedding3Small)
 
         val text = "Hello, world!"
         val expectedVector = Vector(listOf(0.1, 0.2, 0.3))
@@ -25,7 +25,7 @@ class OpenAIEmbedderTest {
     @Test
     fun testDiff_identicalVectors() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
-        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
+        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbedding3Small)
 
         val vector1 = Vector(listOf(1.0, 2.0, 3.0))
         val vector2 = Vector(listOf(1.0, 2.0, 3.0))
@@ -37,7 +37,7 @@ class OpenAIEmbedderTest {
     @Test
     fun testDiff_differentVectors() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
-        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
+        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbedding3Small)
 
         val vector1 = Vector(listOf(1.0, 0.0, 0.0))
         val vector2 = Vector(listOf(0.0, 1.0, 0.0))
@@ -49,7 +49,7 @@ class OpenAIEmbedderTest {
     @Test
     fun testDiff_oppositeVectors() = runTest {
         val mockClient = MockOpenAIEmbedderClient()
-        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
+        val embedder = LLMEmbedder(mockClient, OpenAIModels.Embeddings.TextEmbedding3Small)
 
         val vector1 = Vector(listOf(1.0, 2.0, 3.0))
         val vector2 = Vector(listOf(-1.0, -2.0, -3.0))
