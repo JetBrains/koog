@@ -1,6 +1,7 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
@@ -96,7 +97,13 @@ public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat
  *
  * 7. Finish: Execution complete
  */
-public fun reActStrategy(reasoningInterval: Int = 1): AIAgentStrategy<String, String> = strategy("re_act") {
+public fun reActStrategy(reasoningInterval: Int = 1, name: String = "re_act"): AIAgentStrategy<String, String> = strategy(name) {
+    require(reasoningInterval > 0) { "Reasoning interval must be greater than 0" }
+    val reasoningStepKey = createStorageKey<Int>("reasoning_step")
+    val nodeSetup by node<String, String> {
+        storage.set(reasoningStepKey, 0)
+        it
+    }
     val nodeCallLLM by node<Unit, Message.Response> {
         llm.writeSession {
             requestLLM()
@@ -104,7 +111,6 @@ public fun reActStrategy(reasoningInterval: Int = 1): AIAgentStrategy<String, St
     }
     val nodeExecuteTool by nodeExecuteTool()
 
-    var reasoningStep = 0
     val reasoningPrompt = "Please give your thoughts about the task and plan the next steps."
     val nodeCallLLMReasonInput by node<String, Unit> { stageInput ->
         llm.writeSession {
@@ -117,7 +123,7 @@ public fun reActStrategy(reasoningInterval: Int = 1): AIAgentStrategy<String, St
         }
     }
     val nodeCallLLMReason by node<ReceivedToolResult, Unit> { result ->
-        reasoningStep++
+        val reasoningStep = storage.getValue(reasoningStepKey)
         llm.writeSession {
             updatePrompt {
                 tool {
@@ -132,9 +138,11 @@ public fun reActStrategy(reasoningInterval: Int = 1): AIAgentStrategy<String, St
                 requestLLMWithoutTools()
             }
         }
+        storage.set(reasoningStepKey, reasoningStep + 1)
     }
 
-    edge(nodeStart forwardTo nodeCallLLMReasonInput)
+    edge(nodeStart forwardTo nodeSetup)
+    edge(nodeSetup forwardTo nodeCallLLMReasonInput)
     edge(nodeCallLLMReasonInput forwardTo nodeCallLLM)
     edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
     edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
