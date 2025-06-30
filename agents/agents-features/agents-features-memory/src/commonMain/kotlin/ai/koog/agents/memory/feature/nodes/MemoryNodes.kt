@@ -1,6 +1,6 @@
 package ai.koog.agents.memory.feature.nodes
 
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
+import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.withMemory
@@ -25,7 +25,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType = MemoryScopeType.AGENT
-): AIAgentNodeDelegateBase<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope))
+): AIAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope))
 
 /**
  * Node that loads facts from memory for a given concept
@@ -39,7 +39,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     concepts: List<Concept>,
     subject: MemorySubject,
     scope: MemoryScopeType = MemoryScopeType.AGENT
-): AIAgentNodeDelegateBase<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
+): AIAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
 
 
 /**
@@ -54,7 +54,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemory(
     concepts: List<Concept>,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
-): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
+): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
             loadFactsToAgent(concept, scopes, subjects)
@@ -74,7 +74,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
     name: String? = null,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
-): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
+): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         loadAllFactsToAgent(scopes, subjects)
     }
@@ -94,7 +94,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     subject: MemorySubject,
     scope: MemoryScopeType,
     concepts: List<Concept>,
-): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
+): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
             saveFactsFromHistory(
@@ -121,13 +121,13 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType,
-): AIAgentNodeDelegateBase<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept))
+): AIAgentNodeDelegate<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept))
 
 /**
  * Node that automatically detects and extracts facts from the chat history and saves them to memory.
  * It uses LLM to identify concepts about user, organization, project, etc.
  *
- * @param subject The subject scope of the memory (USER, PROJECT, etc.)
+ * @param subjects The subject scope of the memory (USER, PROJECT, etc.)
  * @param scopes List of memory scopes (Agent, Feature, etc.). By default only Agent scope would be chosen
  * @param subjects List of subjects (user, project, organization, etc.) to look for.
  * By default, all subjects will be included and looked for.
@@ -136,7 +136,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects
-): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
+): AIAgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
         updatePrompt {
             val prompt = MemoryPrompts.autoDetectFacts(subjects)

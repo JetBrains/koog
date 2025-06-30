@@ -43,11 +43,11 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Agent Handlers
 
-    private var _onBeforeAgentStarted: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit =
-        { strategy: AIAgentStrategy, agent: AIAgent -> }
+    private var _onBeforeAgentStarted: suspend (strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *>) -> Unit =
+        { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> -> }
 
-    private var _onAgentFinished: suspend (strategyName: String, result: String?) -> Unit =
-        { strategyName: String, result: String? -> }
+    private var _onAgentFinished: suspend (strategyName: String, result: Any?) -> Unit =
+        { strategyName: String, result: Any? -> }
 
     private var _onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit =
         { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
@@ -56,11 +56,11 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Strategy Handlers
 
-    private var _onStrategyStarted: suspend (strategy: AIAgentStrategy) -> Unit =
-        { strategy: AIAgentStrategy -> }
+    private var _onStrategyStarted: suspend (strategy: AIAgentStrategy<*, *>) -> Unit =
+        { strategy: AIAgentStrategy<*, *> -> }
 
-    private var _onStrategyFinished: suspend (strategy: AIAgentStrategy, result: String) -> Unit =
-        { strategy: AIAgentStrategy, result: String -> }
+    private var _onStrategyFinished: suspend (strategy: AIAgentStrategy<*, *>, result: Any?) -> Unit =
+        { strategy: AIAgentStrategy<*, *>, result: Any? -> }
 
     //endregion Strategy Handlers
 
@@ -114,7 +114,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * To ensure future compatibility, transition to the recommended function-based approach for appending handlers.
      */
     @Deprecated(message = "Please use onBeforeAgentStarted() instead", replaceWith = ReplaceWith("onBeforeAgentStarted(handler)"))
-    public var onBeforeAgentStarted: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit = { strategy: AIAgentStrategy, agent: AIAgent -> }
+    public var onBeforeAgentStarted: suspend (strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *>) -> Unit = { strategy: AIAgentStrategy<* ,*>, agent: AIAgent<*, *> -> }
         set(value) = this.onBeforeAgentStarted(value)
 
     /**
@@ -129,7 +129,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * @deprecated Use `onAgentFinished(handler)` instead.
      */
     @Deprecated(message = "Please use onAgentFinished() instead", replaceWith = ReplaceWith("onAgentFinished(handler)"))
-    public var onAgentFinished: suspend (strategyName: String, result: String?) -> Unit = { strategyName: String, result: String? -> }
+    public var onAgentFinished: suspend (strategyName: String, result: Any?) -> Unit = { strategyName: String, result: Any? -> }
         set(value) = this.onAgentFinished(value)
 
     /**
@@ -158,7 +158,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * Replace this property with the `onStrategyStarted(handler)` function for better extensibility.
      */
     @Deprecated(message = "Please use onStrategyStarted() instead", replaceWith = ReplaceWith("onStrategyStarted(handler)"))
-    public var onStrategyStarted: suspend (strategy: AIAgentStrategy) -> Unit = { strategy: AIAgentStrategy -> }
+    public var onStrategyStarted: suspend (strategy: AIAgentStrategy<*, *>) -> Unit = { strategy: AIAgentStrategy<*, *> -> }
         set(value) = this.onStrategyStarted(value)
 
     /**
@@ -169,7 +169,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * This variable is retained for backward compatibility but is not the recommended approach.
      */
     @Deprecated(message = "Please use onStrategyFinished() instead", replaceWith = ReplaceWith("onStrategyFinished(handler)"))
-    public var onStrategyFinished: suspend (strategy: AIAgentStrategy, result: String) -> Unit = { strategy: AIAgentStrategy, result: String -> }
+    public var onStrategyFinished: suspend (strategy: AIAgentStrategy<*, *>, result: Any?) -> Unit = { strategy: AIAgentStrategy<*, *>, result: Any? -> }
         set(value) = this.onStrategyFinished(value)
 
     //endregion Deprecated Strategy Handlers
@@ -304,9 +304,9 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an agent is started.
      */
-    public fun onBeforeAgentStarted(handler: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit) {
+    public fun onBeforeAgentStarted(handler: suspend (strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *>) -> Unit) {
         val originalHandler = this._onBeforeAgentStarted
-        this._onBeforeAgentStarted = { strategy: AIAgentStrategy, agent: AIAgent ->
+        this._onBeforeAgentStarted = { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
             originalHandler(strategy, agent)
             handler.invoke(strategy, agent)
         }
@@ -315,9 +315,9 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an agent finishes execution.
      */
-    public fun onAgentFinished(handler: suspend (strategyName: String, result: String?) -> Unit) {
+    public fun onAgentFinished(handler: suspend (strategyName: String, result: Any?) -> Unit) {
         val originalHandler = this._onAgentFinished
-        this._onAgentFinished = { strategyName: String, result: String? ->
+        this._onAgentFinished = { strategyName: String, result: Any? ->
             originalHandler(strategyName, result)
             handler.invoke(strategyName, result)
         }
@@ -341,9 +341,9 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a strategy starts execution.
      */
-    public fun onStrategyStarted(handler: suspend (strategy: AIAgentStrategy) -> Unit) {
+    public fun onStrategyStarted(handler: suspend (strategy: AIAgentStrategy<*, *>) -> Unit) {
         val originalHandler = this._onStrategyStarted
-        this._onStrategyStarted = { strategy: AIAgentStrategy ->
+        this._onStrategyStarted = { strategy: AIAgentStrategy<*, *> ->
             originalHandler(strategy)
             handler.invoke(strategy)
         }
@@ -352,9 +352,9 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a strategy finishes execution.
      */
-    public fun onStrategyFinished(handler: suspend (strategy: AIAgentStrategy, result: String) -> Unit) {
+    public fun onStrategyFinished(handler: suspend (strategy: AIAgentStrategy<*, *>, result: Any?) -> Unit) {
         val originalHandler = this._onStrategyFinished
-        this._onStrategyFinished = { strategy: AIAgentStrategy, result: String ->
+        this._onStrategyFinished = { strategy: AIAgentStrategy<*, *>, result: Any? ->
             originalHandler(strategy, result)
             handler.invoke(strategy, result)
         }
@@ -468,14 +468,14 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when an agent is started.
      */
-    internal suspend fun invokeOnBeforeAgentStarted(strategy: AIAgentStrategy, agent: AIAgent) {
+    internal suspend fun invokeOnBeforeAgentStarted(strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *>) {
         _onBeforeAgentStarted.invoke(strategy, agent)
     }
 
     /**
      * Invoke handlers for after a node in the agent's execution graph has been processed event.
      */
-    internal suspend fun invokeOnAgentFinished(strategyName: String, result: String?) {
+    internal suspend fun invokeOnAgentFinished(strategyName: String, result: Any?) {
         _onAgentFinished.invoke(strategyName, result)
     }
 
@@ -493,14 +493,14 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when strategy starts execution.
      */
-    internal suspend fun invokeOnStrategyStarted(strategy: AIAgentStrategy) {
+    internal suspend fun invokeOnStrategyStarted(strategy: AIAgentStrategy<*, *>) {
         _onStrategyStarted.invoke(strategy)
     }
 
     /**
      * Invoke handlers for an event when a strategy finishes execution.
      */
-    internal suspend fun invokeOnStrategyFinished(strategy: AIAgentStrategy, result: String) {
+    internal suspend fun invokeOnStrategyFinished(strategy: AIAgentStrategy<*, *>, result: Any?) {
         _onStrategyFinished.invoke(strategy, result)
     }
 

@@ -1,8 +1,9 @@
 package ai.koog.embeddings.local
 
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
-import ai.koog.prompt.llm.LLModel
 import ai.koog.embeddings.base.Vector
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -66,6 +67,7 @@ class MockOllamaEmbedderClient : LLMEmbeddingProvider {
     }
 
     override suspend fun embed(text: String, model: LLModel): List<Double> {
+        require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
         return embeddings[text]?.values ?: throw IllegalArgumentException("No mock embedding for text: $text")
     }
 }

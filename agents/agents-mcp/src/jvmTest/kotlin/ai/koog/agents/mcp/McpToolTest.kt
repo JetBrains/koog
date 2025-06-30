@@ -61,6 +61,13 @@ class McpToolTest {
                         type = ToolParameterType.String,
                         description = "A name to greet",
                     )
+                ),
+                optionalParameters = listOf(
+                    ToolParameterDescriptor(
+                        name = "title",
+                        type = ToolParameterType.String,
+                        description = "Title to use in the greeting",
+                    )
                 )
             )
         )
@@ -81,5 +88,18 @@ class McpToolTest {
 
         val content = result.promptMessageContents.first() as TextContent
         assertEquals("Hello, Test!", content.text)
+
+        val argsWithTitle = McpTool.Args(buildJsonObject {
+            put("name", "Test")
+            put("title", "Mr.")
+        })
+        val resultWithTitle = withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(1.minutes) {
+                greetingTool.execute(argsWithTitle, TestToolEnabler)
+            }
+        }
+
+        val contentWithTitle = resultWithTitle.promptMessageContents.first() as TextContent
+        assertEquals("Hello, Mr. Test!", contentWithTitle.text)
     }
 }

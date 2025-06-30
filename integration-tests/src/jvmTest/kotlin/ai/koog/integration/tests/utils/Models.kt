@@ -1,10 +1,16 @@
 package ai.koog.integration.tests.utils
 
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import org.junit.jupiter.params.provider.Arguments
 import java.util.stream.Stream
 
 object Models {
@@ -57,7 +63,6 @@ object Models {
             GoogleModels.Gemini2_0FlashLite001,
             GoogleModels.Gemini1_5Flash,
             GoogleModels.Gemini1_5FlashLatest,
-            GoogleModels.Gemini1_5Flash001,
             GoogleModels.Gemini1_5Flash002,
             GoogleModels.Gemini1_5Flash8B,
             GoogleModels.Gemini1_5Flash8B001,
@@ -71,4 +76,24 @@ object Models {
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.Phi4Reasoning
     )
+
+    @JvmStatic
+    fun modelsWithVisionCapability(): Stream<Arguments> {
+        val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
+        val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
+
+        return Stream.concat(
+            openAIModels()
+                .filter { model ->
+                    model.capabilities.contains(LLMCapability.Vision.Image)
+                }
+                .map { model -> Arguments.of(model, openAIClient) },
+
+            anthropicModels()
+                .filter { model ->
+                    model.capabilities.contains(LLMCapability.Vision.Image)
+                }
+                .map { model -> Arguments.of(model, anthropicClient) }
+        )
+    }
 }

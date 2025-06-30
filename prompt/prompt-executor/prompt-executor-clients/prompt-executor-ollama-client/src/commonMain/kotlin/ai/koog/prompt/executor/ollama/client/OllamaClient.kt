@@ -80,23 +80,28 @@ public class OllamaClient(
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response: OllamaChatResponseDTO = client.post(DEFAULT_MESSAGE_PATH) {
+        val response = client.post(DEFAULT_MESSAGE_PATH) {
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
-                    messages = prompt.toOllamaChatMessages(),
+                    messages = prompt.toOllamaChatMessages(model),
                     tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
                     format = prompt.extractOllamaJsonFormat(),
                     options = prompt.extractOllamaOptions(),
                     stream = false,
                 ))
-        }.body<OllamaChatResponseDTO>()
+        }
 
-        return parseResponse(response, prompt)
+        if (response.status.isSuccess()) {
+            return parseResponse(response.body<OllamaChatResponseDTO>())
+        } else {
+            val errorResponse = response.body<OllamaErrorResponseDTO>()
+            logger.error { "Ollama error: ${errorResponse.error}" }
+            throw RuntimeException("Ollama API error: ${errorResponse.error}")
+        }
     }
 
-
-    private fun parseResponse(response: OllamaChatResponseDTO, prompt: Prompt): List<Message.Response> {
+    private fun parseResponse(response: OllamaChatResponseDTO): List<Message.Response> {
         val messages = response.message ?: return emptyList()
         val content = messages.content
         val toolCalls = messages.toolCalls ?: emptyList()
@@ -153,7 +158,7 @@ public class OllamaClient(
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
-                    messages = prompt.toOllamaChatMessages(),
+                    messages = prompt.toOllamaChatMessages(model),
                     options = prompt.extractOllamaOptions(),
                     stream = true,
                 )

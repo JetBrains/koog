@@ -53,10 +53,6 @@ class AIAgentLLMWriteSessionTest {
         override suspend fun reportProblem(exception: Throwable) {
             throw exception
         }
-
-        override suspend fun sendTermination(result: String?) {
-            // No-op for testing
-        }
     }
 
     class TestTool : SimpleTool<TestTool.Args>() {

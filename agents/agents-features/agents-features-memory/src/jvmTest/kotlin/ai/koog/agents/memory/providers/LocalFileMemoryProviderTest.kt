@@ -3,6 +3,8 @@ package ai.koog.agents.memory.providers
 import ai.koog.agents.memory.model.*
 import ai.koog.agents.memory.storage.Aes256GCMEncryptor
 import ai.koog.agents.memory.storage.EncryptedStorage
+import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test

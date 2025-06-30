@@ -78,14 +78,14 @@ public sealed interface Message {
      *
      * @property content The main content of the user's message.
      * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
-     * @property mediaContent Optional media content attached to the message.
+     * @property attachments Optional media content attached to the message.
      * @property role The role of the message, which is fixed as [Role.User] for this implementation.
      */
     @Serializable
     public data class User(
         override val content: String,
         override val metaInfo: RequestMetaInfo,
-        val mediaContent: List<MediaContent> = emptyList(),
+        val attachments: List<Attachment> = emptyList(),
     ) : Request {
         override val role: Role = Role.User
     }
@@ -96,7 +96,7 @@ public sealed interface Message {
      *
      * @property content The textual content of the assistant's response.
      * @property metaInfo Metadata related to the response, including token counts and timestamp.
-     * @property mediaContent Optional media content attached to the message.
+     * @property attachment Optional media content attached to the message.
      * @property finishReason An optional explanation for why the assistant's response was finalized.
      * Defaults to null if not provided.
      * @property role The role associated with the response, which is fixed as `Role.Assistant`.
@@ -105,7 +105,7 @@ public sealed interface Message {
     public data class Assistant(
         override val content: String,
         override val metaInfo: ResponseMetaInfo,
-        val mediaContent: MediaContent? = null,
+        val attachment: Attachment? = null,
         val finishReason: String? = null
     ) : Response {
         override val role: Role = Role.Assistant

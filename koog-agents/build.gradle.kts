@@ -1,4 +1,4 @@
-import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven
+import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version
@@ -45,7 +45,9 @@ val included = setOf(
     ":prompt:prompt-model",
     ":prompt:prompt-structure",
     ":prompt:prompt-tokenizer",
-    ":prompt:prompt-xml"
+    ":prompt:prompt-xml",
+    ":rag:rag-base",
+    ":rag:vector-storage"
 )
 
 kotlin {
@@ -73,11 +75,11 @@ kotlin {
                 projects.forEach {
                     val text = it.buildFile.readText()
 
-                    require("import ai.grazie.gradle.publish.maven.Publishing.publishToGraziePublicMaven" in text) {
+                    require("import ai.koog.gradle.publish.maven.Publishing.publishToMaven" in text) {
                         "Module ${it.path} is used as a dependency for '${project.name}' main jar. Hence, it should be published. If not, please mark it as excluded in ${project.name}/build.gradle.kts"
                     }
 
-                    require("publishToGraziePublicMaven()" in text) {
+                    require("publishToMaven()" in text) {
                         "Module ${it.path} is used as a dependency for '${project.name}' main jar. Hence, it should be published. If not, please mark it as excluded in ${project.name}/build.gradle.kts"
                     }
                 }
@@ -96,4 +98,4 @@ dokka {
     }
 }
 
-publishToGraziePublicMaven()
+publishToMaven()

@@ -9,8 +9,8 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 /**
  * Creates a strategy for the tone analysis agent.
  */
-fun toneStrategy(name: String): AIAgentStrategy {
-    return strategy(name) {
+fun toneStrategy(name: String): AIAgentStrategy<String, String> {
+    return strategy<String, String>(name) {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteTool()
         val nodeSendToolResult by nodeLLMSendToolResult()

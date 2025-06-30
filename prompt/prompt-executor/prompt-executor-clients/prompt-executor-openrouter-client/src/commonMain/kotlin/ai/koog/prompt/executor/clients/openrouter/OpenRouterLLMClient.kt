@@ -10,7 +10,8 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterToolChoice.FunctionName
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -276,59 +277,57 @@ public class OpenRouterLLMClient(
 
     private fun Message.User.toOpenRouterMessage(model: LLModel): OpenRouterMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+            if (content.isNotEmpty() || attachments.isEmpty()) {
                 add(ContentPart.Text(content))
             }
 
-            mediaContent.forEach { media ->
-                when (media) {
-                    is MediaContent.Image -> {
+            attachments.forEach { attachment ->
+                when (attachment) {
+                    is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
-                        val imageUrl = if (media.isUrl()) {
-                            media.source
-                        } else {
-                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                                "Image format ${media.format} not supported"
-                            }
-                            "data:${media.getMimeType()};base64,${media.toBase64()}"
-                        }
-                        add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
 
+                        val imageUrl: String = when (val content = attachment.content) {
+                            is AttachmentContent.URL -> content.url
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                        }
+
+                        add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
                     }
 
-                    is MediaContent.Audio -> {
+                    is Attachment.Audio -> {
                         require(model.capabilities.contains(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
 
-                        require(media.format in listOf("wav", "mp3")) {
-                            "Audio format ${media.format} not supported"
+                        val inputAudio: ContentPart.InputAudio = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> ContentPart.InputAudio(content.base64, attachment.format)
+                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
                         }
-                        add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+
+                        add(ContentPart.Audio(inputAudio))
                     }
 
-                    is MediaContent.File -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    is Attachment.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
-                        require(media.format == "pdf") {
-                            "File format ${media.format} not supported. Supported formats: `pdf`"
-                        }
-                        val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
-                        add(
-                            ContentPart.File(
-                                ContentPart.FileData(
-                                    fileData = fileData,
-                                    filename = media.fileName()
-                                )
+                        val fileData: ContentPart.FileData = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> ContentPart.FileData(
+                                fileData = "data:${attachment.mimeType};base64,${content.base64}",
+                                filename = attachment.fileName
                             )
-                        )
+
+                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                        }
+
+                        add(ContentPart.File(fileData))
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported media content: $media")
+                    else -> throw IllegalArgumentException("Unsupported attachment content: $attachment")
                 }
             }
         }

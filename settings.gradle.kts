@@ -1,17 +1,8 @@
 rootProject.name = "koog-agents"
 
 pluginManagement {
-    resolutionStrategy {
-        this.eachPlugin {
-            if (requested.id.id == "ai.grazie.gradle") {
-                useModule("ai.grazie.gradle:gradle:${this.requested.version}")
-            }
-        }
-    }
-
     repositories {
         gradlePluginPortal()
-        maven(url = "https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public")
     }
 }
 
@@ -28,9 +19,6 @@ include(":agents:agents-mcp")
 include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")
-
-include(":embeddings:embeddings-base")
-include(":embeddings:embeddings-llm")
 
 include(":examples")
 
@@ -61,4 +49,9 @@ include(":prompt:prompt-model")
 include(":prompt:prompt-structure")
 include(":prompt:prompt-tokenizer")
 include(":prompt:prompt-xml")
-include("prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client")
+
+include(":embeddings:embeddings-base")
+include(":embeddings:embeddings-llm")
+include(":rag:rag-base")
+include(":rag:vector-storage")

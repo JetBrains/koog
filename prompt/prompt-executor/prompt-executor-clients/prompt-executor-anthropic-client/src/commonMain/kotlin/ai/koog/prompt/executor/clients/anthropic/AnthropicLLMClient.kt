@@ -8,43 +8,27 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
-import io.ktor.client.request.header
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNamingStrategy
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -288,49 +272,41 @@ public open class AnthropicLLMClient(
 
     private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+            if (content.isNotEmpty() || attachments.isEmpty()) {
                 add(AnthropicContent.Text(content))
             }
 
-            mediaContent.forEach { media ->
-                when (media) {
-                    is MediaContent.Image -> {
+            attachments.forEach { attachment ->
+                when (attachment) {
+                    is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
 
-                        if (media.isUrl()) {
-                            add(AnthropicContent.Image(ImageSource.Url(media.source)))
-                        } else {
-                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                                "Image format ${media.format} not supported"
-                            }
-                            add(
-                                AnthropicContent.Image(
-                                    ImageSource.Base64(
-                                        data = media.toBase64(),
-                                        mediaType = media.getMimeType()
-                                    )
-                                )
-                            )
+                        val imageSource: ImageSource = when (val content = attachment.content) {
+                            is AttachmentContent.URL -> ImageSource.Url(content.url)
+                            is AttachmentContent.Binary -> ImageSource.Base64(content.base64, attachment.mimeType)
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                         }
+
+                        add(AnthropicContent.Image(imageSource))
                     }
 
-                    is MediaContent.File -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    is Attachment.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
-                        val docSource = when {
-                            media.isUrl() -> DocumentSource.PDFUrl(media.source)
-                            media.format == "pdf" -> DocumentSource.PDFBase64(media.toBase64())
-                            media.format == "txt" || media.format == "md" -> DocumentSource.PlainText(media.readText())
-                            else -> throw IllegalArgumentException("File format ${media.format} not supported. Supported formats: `pdf`, `text`")
+                        val documentSource: DocumentSource = when (val content = attachment.content) {
+                            is AttachmentContent.URL-> DocumentSource.Url(content.url)
+                            is AttachmentContent.Binary -> DocumentSource.Base64(content.base64, attachment.mimeType)
+                            is AttachmentContent.PlainText -> DocumentSource.PlainText(content.text, attachment.mimeType)
                         }
-                        add(AnthropicContent.Document(docSource))
+
+                        add(AnthropicContent.Document(documentSource))
                     }
 
-                    else -> throw IllegalArgumentException("Media content not supported: $media")
+                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
                 }
             }
         }

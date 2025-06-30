@@ -116,7 +116,7 @@ public class Tracing {
             pipeline.interceptAgentFinished(interceptContext) intercept@{ strategyName, result ->
                 val event = AIAgentFinishedEvent(
                     strategyName = strategyName,
-                    result = result,
+                    result = result?.toString(),
                 )
                 processMessage(config, event)
             }
@@ -145,7 +145,7 @@ public class Tracing {
             pipeline.interceptStrategyFinished(interceptContext) intercept@{ result ->
                 val event = AIAgentStrategyFinishedEvent(
                     strategyName = strategy.name,
-                    result = result,
+                    result = result?.toString(),
                 )
                 processMessage(config, event)
             }

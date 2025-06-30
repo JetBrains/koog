@@ -150,7 +150,7 @@ public fun interface AgentFinishedHandler {
      * @param strategyName The name of the strategy that has finished processing.
      * @param result The result or output associated with the completion of the strategy, if available.
      */
-    public suspend fun handle(strategyName: String, result: String?)
+    public suspend fun handle(strategyName: String, result: Any?)
 }
 
 /**
@@ -181,8 +181,8 @@ public fun interface AgentRunErrorHandler {
  * @property feature An additional feature or configuration associated with the context.
  */
 public class AgentCreateContext<FeatureT>(
-    public val strategy: AIAgentStrategy,
-    public val agent: AIAgent,
+    public val strategy: AIAgentStrategy<*, *>,
+    public val agent: AIAgent<*, *>,
     public val feature: FeatureT
 ) {
     /**
@@ -190,7 +190,7 @@ public class AgentCreateContext<FeatureT>(
      *
      * @param block A suspending lambda function that receives the `AIAgentStrategy` instance.
      */
-    public suspend fun readStrategy(block: suspend (AIAgentStrategy) -> Unit) {
+    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
         block(strategy)
     }
 }
@@ -204,8 +204,8 @@ public class AgentCreateContext<FeatureT>(
  * @property feature The feature-specific data associated with this context.
  */
 public class AgentStartContext<TFeature>(
-    public val strategy: AIAgentStrategy,
-    public val agent: AIAgent,
+    public val strategy: AIAgentStrategy<*, *>,
+    public val agent: AIAgent<*, *>,
     public val feature: TFeature
 ) {
     /**
@@ -213,7 +213,7 @@ public class AgentStartContext<TFeature>(
      *
      * @param block A suspendable block of code that receives the current [AIAgentStrategy] as its parameter.
      */
-    public suspend fun readStrategy(block: suspend (AIAgentStrategy) -> Unit) {
+    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
         block(strategy)
     }
 }
@@ -228,7 +228,7 @@ public class AgentStartContext<TFeature>(
  */
 @OptIn(ExperimentalUuidApi::class)
 public class StrategyUpdateContext<FeatureT>(
-    public val strategy: AIAgentStrategy,
+    public val strategy: AIAgentStrategy<*, *>,
     public val sessionUuid: Uuid,
     public val feature: FeatureT
 ) {
@@ -239,7 +239,7 @@ public class StrategyUpdateContext<FeatureT>(
      *              provided as an instance of [AIAgentStrategy] and allows reading its configuration
      *              or properties without modifying the state.
      */
-    public suspend fun readStrategy(block: suspend (AIAgentStrategy) -> Unit) {
+    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
         block(strategy)
     }
 }

@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import io.modelcontextprotocol.kotlin.sdk.Tool
 import kotlinx.serialization.json.*
 import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -93,17 +94,61 @@ class DefaultMcpToolDescriptorParserTest {
                     put("type", "string")
                     put("description", "String parameter")
                 }
+                putJsonObject("nullableStringParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "string")
+                        }
+                    }
+                    put("description", "Nullable string parameter")
+                }
                 putJsonObject("integerParam") {
                     put("type", "integer")
                     put("description", "Integer parameter")
+                }
+                putJsonObject("nullableIntegerParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "integer")
+                        }
+                    }
+                    put("description", "Nullable integer parameter")
                 }
                 putJsonObject("numberParam") {
                     put("type", "number")
                     put("description", "Number parameter")
                 }
+                putJsonObject("nullableNumberParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "number")
+                        }
+                    }
+                    put("description", "Nullable number parameter")
+                }
                 putJsonObject("booleanParam") {
                     put("type", "boolean")
                     put("description", "Boolean parameter")
+                }
+                putJsonObject("nullableBooleanParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "boolean")
+                        }
+                    }
+                    put("description", "Nullable boolean parameter")
                 }
 
                 // Array types
@@ -113,6 +158,22 @@ class DefaultMcpToolDescriptorParserTest {
                     putJsonObject("items") {
                         put("type", "string")
                     }
+                }
+
+                putJsonObject("nullableArrayParam") {
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "null")
+                        }
+                        addJsonObject {
+                            put("type", "array")
+                            put("description", "Array parameter")
+                            putJsonObject("items") {
+                                put("type", "string")
+                            }
+                        }
+                    }
+                    put("description", "Nullable array parameter")
                 }
 
                 // Object type
@@ -150,8 +211,18 @@ class DefaultMcpToolDescriptorParserTest {
                     type = ToolParameterType.String
                 ),
                 ToolParameterDescriptor(
+                    name = "nullableStringParam",
+                    description = "Nullable string parameter",
+                    type = ToolParameterType.String
+                ),
+                ToolParameterDescriptor(
                     name = "integerParam",
                     description = "Integer parameter",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "nullableIntegerParam",
+                    description = "Nullable integer parameter",
                     type = ToolParameterType.Integer
                 ),
                 ToolParameterDescriptor(
@@ -160,8 +231,18 @@ class DefaultMcpToolDescriptorParserTest {
                     type = ToolParameterType.Float
                 ),
                 ToolParameterDescriptor(
+                    name = "nullableNumberParam",
+                    description = "Nullable number parameter",
+                    type = ToolParameterType.Float
+                ),
+                ToolParameterDescriptor(
                     name = "booleanParam",
                     description = "Boolean parameter",
+                    type = ToolParameterType.Boolean
+                ),
+                ToolParameterDescriptor(
+                    name = "nullableBooleanParam",
+                    description = "Nullable boolean parameter",
                     type = ToolParameterType.Boolean
                 ),
 
@@ -169,6 +250,11 @@ class DefaultMcpToolDescriptorParserTest {
                 ToolParameterDescriptor(
                     name = "arrayParam",
                     description = "Array parameter",
+                    type = ToolParameterType.List(ToolParameterType.String)
+                ),
+                ToolParameterDescriptor(
+                    name = "nullableArrayParam",
+                    description = "Nullable array parameter",
                     type = ToolParameterType.List(ToolParameterType.String)
                 ),
 
@@ -238,6 +324,55 @@ class DefaultMcpToolDescriptorParserTest {
         expectedOptions.forEachIndexed { index, option ->
             assertEquals(option, enumType.entries[index])
         }
+    }
+
+    @Ignore("until https://github.com/JetBrains/koog/issues/307 is fixed")
+    @Test
+    fun `test parsing enum parameter type with complex values`() {
+        // Create an SDK Tool with an enum parameter that has complex values (JsonArray)
+        val sdkTool = createSdkTool(
+            name = "test-tool-complex-enum",
+            description = "A test tool with complex enum parameter",
+            properties = buildJsonObject {
+                putJsonObject("complexEnumParam") {
+                    put("type", "enum")
+                    put("description", "Complex enum parameter")
+                    putJsonArray("enum") {
+                        add("option1")
+                        addJsonArray {
+                            add("nested1")
+                            add("nested2")
+                        }
+                        addJsonObject {
+                            put("key", "value")
+                        }
+                    }
+                }
+            },
+            required = listOf("complexEnumParam")
+        )
+
+        // Parse the tool
+        val toolDescriptor = parser.parse(sdkTool)
+
+        // Verify the basic properties
+        assertEquals("test-tool-complex-enum", toolDescriptor.name)
+        assertEquals("A test tool with complex enum parameter", toolDescriptor.description)
+        assertEquals(1, toolDescriptor.requiredParameters.size)
+        assertEquals(0, toolDescriptor.optionalParameters.size)
+
+        // Verify the enum parameter
+        val enumParam = toolDescriptor.requiredParameters.first()
+        assertEquals("complexEnumParam", enumParam.name)
+        assertEquals("Complex enum parameter", enumParam.description)
+        assertTrue(enumParam.type is ToolParameterType.Enum)
+
+        // Verify the enum values
+        val enumType = enumParam.type as ToolParameterType.Enum
+        assertEquals(3, enumType.entries.size)
+        assertEquals("option1", enumType.entries[0])
+        assertEquals("[\"nested1\",\"nested2\"]", enumType.entries[1])
+        assertEquals("{\"key\":\"value\"}", enumType.entries[2])
     }
 
     @Test

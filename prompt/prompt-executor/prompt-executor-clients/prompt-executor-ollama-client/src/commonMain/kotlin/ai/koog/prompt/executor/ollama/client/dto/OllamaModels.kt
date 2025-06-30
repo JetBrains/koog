@@ -87,6 +87,12 @@ internal data class OllamaChatResponseDTO(
 )
 
 /**
+ * Error response from the /api/chat endpoint.
+ */
+@Serializable
+internal data class OllamaErrorResponseDTO(val error: String)
+
+/**
  * Represents a request to generate an embedding using a specific model.
  *
  * The request includes the model to be used and the prompt text for which the embedding is to be generated.

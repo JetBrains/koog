@@ -217,7 +217,7 @@ class MessageTokenizerTest {
         }
 
         runBlocking {
-            val result = agent.runAndGetResult("France")
+            val result = agent.run("France")
 
             println(result)
 

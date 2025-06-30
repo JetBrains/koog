@@ -62,27 +62,6 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
 }
 
 /**
- * Represents a delegate interface for accessing an instance of [AIAgentNodeBase].
- * This serves as a mechanism to retrieve an AI agent node by delegating the responsibility
- * to the implementing class. It simplifies the process of referencing nodes dynamically
- * within the AI agent's structure.
- *
- * @param Input The type of input data the associated AI agent node processes.
- * @param Output The type of output data the associated AI agent node produces.
- */
-public interface AIAgentNodeDelegateBase<Input, Output> {
-    /**
-     * Retrieves an instance of [AIAgentNodeBase] associated with the given property.
-     * This operator function acts as a delegate to dynamically provide a reference to an AI agent node.
-     *
-     * @param thisRef The object on which the property is accessed. This parameter can be null.
-     * @param property The metadata of the property for which this delegate is being used.
-     * @return The instance of [AIAgentNodeBase] corresponding to the property.
-     */
-    public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<Input, Output>
-}
-
-/**
  * A delegate for creating and managing an instance of [AIAgentNodeBase].
  *
  * This class simplifies the instantiation and management of AI agent nodes. It leverages
@@ -99,10 +78,18 @@ public interface AIAgentNodeDelegateBase<Input, Output> {
 public open class AIAgentNodeDelegate<Input, Output> internal constructor(
     private val name: String?,
     private val nodeBuilder: AIAgentNodeBuilder<Input, Output>,
-) : AIAgentNodeDelegateBase<Input, Output> {
+) {
     private var node: AIAgentNodeBase<Input, Output>? = null
 
-    override operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<Input, Output> {
+    /**
+     * Retrieves an instance of [AIAgentNodeBase] associated with the given property.
+     * This operator function acts as a delegate to dynamically provide a reference to an AI agent node.
+     *
+     * @param thisRef The object on which the property is accessed. This parameter can be null.
+     * @param property The metadata of the property for which this delegate is being used.
+     * @return The instance of [AIAgentNodeBase] corresponding to the property.
+     */
+    public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<Input, Output> {
         if (node == null) {
             // if name is explicitly defined, use it, otherwise use property name as node name
             node = nodeBuilder.also { it.name = name ?: property.name }.build()

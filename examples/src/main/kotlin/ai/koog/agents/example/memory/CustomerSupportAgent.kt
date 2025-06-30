@@ -11,6 +11,7 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.memory.tools.DiagnosticToolSet
 import ai.koog.agents.example.memory.tools.KnowledgeBaseToolSet
 import ai.koog.agents.example.memory.tools.UserInfoToolSet
+import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.StringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.memory.config.MemoryScopeType
@@ -21,7 +22,6 @@ import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.providers.AgentMemoryProvider
-import ai.koog.agents.memory.providers.JVMFileSystemProvider
 import ai.koog.agents.memory.providers.LocalFileMemoryProvider
 import ai.koog.agents.memory.providers.LocalMemoryConfig
 import ai.koog.agents.memory.storage.Aes256GCMEncryptor
@@ -31,6 +31,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.markdown.markdown
+import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlin.io.path.Path
@@ -93,7 +94,7 @@ fun createCustomerSupportAgent(
     featureName: String? = null,
     productName: String? = null,
     organizationName: String? = null,
-): AIAgent {
+): AIAgent<String, String> {
     // Memory concepts
     val userPreferencesConcept = Concept(
         keyword = "user-preferences",
@@ -155,7 +156,7 @@ fun createCustomerSupportAgent(
     )
 
     // Create agent strategy
-    val strategy = strategy("customer-support", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
+    val strategy = strategy<String, String>("customer-support", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
         val loadMemory by subgraph<String, String>(tools = emptyList()) {
             val nodeLoadUserPreferences by nodeLoadFromMemory<String>(
                 concept = userPreferencesConcept,
@@ -250,6 +251,8 @@ fun createCustomerSupportAgent(
             tools(userInfoToolSet.asTools())
             tools(diagnosticToolSet.asTools())
             tools(knowledgeBaseToolSet.asTools())
+
+            tool(ProvideStringSubgraphResult)
         }
     ) {
         install(AgentMemory) {

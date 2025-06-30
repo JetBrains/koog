@@ -155,6 +155,6 @@ fun main() = runBlocking {
 //         "What's my maximum check at a restaurant this month?"
 //         "How much did I spend on groceries in the first week of May?"
 //         "What's my total spending on entertainment in May?"
-    val result = agent.runAndGetResult(message)
+    val result = agent.run(message)
     println(result)
 }

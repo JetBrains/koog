@@ -115,7 +115,7 @@ public object OllamaModels {
          *
          */
         public val LLAMA_4: LLModel = LLModel(
-            provider = LLMProvider.Meta,
+            provider = LLMProvider.Ollama,
             id = "llama4:latest",
             capabilities = listOf(
                 LLMCapability.Temperature,
@@ -165,6 +165,26 @@ public object OllamaModels {
         public val QWEN_3_06B: LLModel = LLModel(
             provider = LLMProvider.Ollama,
             id = "qwen3:0.6b",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Tools
+            )
+        )
+
+        /**
+         * Represents the QWQ model with 32 billion parameters.
+         *
+         * This predefined instance of `LLModel` is provided by Alibaba and supports the following capabilities:
+         * - `Temperature`: Allows adjustment of the temperature setting for controlling the randomness in responses.
+         * - `Schema.JSON.Simple`: Supports tasks requiring JSON schema validation and handling in a simplified manner.
+         * - `Tools`: Enables interaction with external tools or functionalities within the model's ecosystem.
+         *
+         * The model is identified by the unique ID "qwq:32b" and categorized under the Ollama provider.
+         */
+        public val QWQ_32B: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "qwq:32b",
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Simple,

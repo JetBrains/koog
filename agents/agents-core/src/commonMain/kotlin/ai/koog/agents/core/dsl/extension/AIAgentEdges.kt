@@ -7,7 +7,7 @@ import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KClass
 
@@ -207,11 +207,11 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessageWithMedia(
     block: suspend (Message.Assistant) -> Boolean
-): AIAgentEdgeBuilderIntermediate<IncomingOutput, MediaContent, OutgoingInput> {
+): AIAgentEdgeBuilderIntermediate<IncomingOutput, Attachment, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)
         .onCondition {
-            it.mediaContent != null
+            it.attachment != null
         }
         .onCondition { signature -> block(signature) }
-        .transformed { it.mediaContent!! }
+        .transformed { it.attachment!! }
 }

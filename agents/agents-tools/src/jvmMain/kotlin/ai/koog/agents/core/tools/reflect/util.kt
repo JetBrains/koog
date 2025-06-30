@@ -92,6 +92,22 @@ public inline fun <reified T : ToolSet> T.asToolsByInterface(json: Json = Json):
 }
 
 /**
+ * Registers a set of tools in the `ToolRegistry` using a given [ToolSet].
+ *
+ * This method simplifies the process of adding multiple tools by internally converting
+ * the tool set into a list of tools and registering them in the registry.
+ *
+ * @param toolSet The [ToolSet] containing the tools to be registered.
+ * @param json The Json instance to use for serialization. Defaults to a standard `Json` instance if not provided.
+ */
+public fun ToolRegistry.Builder.tools(
+    toolSet: ToolSet,
+    json: Json = Json
+) {
+    tools(toolSet.asTools(json = json))
+}
+
+/**
  * Converts all functions of [this] class marked as [Tool] to a list of tools.
  *
  * @param json The Json instance to use for serialization.

@@ -14,10 +14,10 @@ fun customWizardStrategy(
     generateTools: List<Tool<*, *>>,
     verifyTools: List<Tool<*, *>>,
     fixTools: List<Tool<*, *>>
-) = strategy("wizard-with-checkstyle") {
+) = strategy<String, String>("wizard-with-checkstyle") {
     val generate by subgraphWithTask<Unit>(
         generateTools,
-        model = OpenAIModels.Chat.GPT4o,
+        llmModel = OpenAIModels.Chat.GPT4o,
     ) { input ->
         """
             You are an AI agent that can create files and folders inside some empty project repository.
@@ -35,8 +35,7 @@ fun customWizardStrategy(
 
     val fix by subgraphWithTask<VerifiedSubgraphResult>(
         tools = fixTools,
-        model = AnthropicModels.Sonnet_3_7,
-        shouldTLDRHistory = true
+        llmModel = AnthropicModels.Sonnet_3_7,
     ) { verificationResult ->
         """
             You are an AI agent that can create files, delete files, create folders, and delete folders.

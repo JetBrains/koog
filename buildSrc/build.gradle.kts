@@ -20,8 +20,8 @@ kotlin {
 gradlePlugin {
     plugins {
         create("credentialsResolver") {
-            id = "ai.grazie.gradle.plugins.credentialsresolver"
-            implementationClass = "ai.grazie.gradle.plugins.CredentialsResolverPlugin"
+            id = "ai.koog.gradle.plugins.credentialsresolver"
+            implementationClass = "ai.koog.gradle.plugins.CredentialsResolverPlugin"
         }
     }
 }

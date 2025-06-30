@@ -9,50 +9,30 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
-import io.ktor.client.request.header
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readRawBytes
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.ClassDiscriminatorMode
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNamingStrategy
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlin.io.encoding.Base64
+import kotlinx.serialization.json.*
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -118,32 +98,8 @@ public open class OpenAILLMClient(
         }
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
-            "Model ${model.id} does not support chat completions"
-        }
-        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
-            "Model ${model.id} does not support tools"
-        }
-
-        val request = createOpenAIRequest(prompt, tools, model, false)
-
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(settings.chatCompletionsPath) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                val openAIResponse = response.body<OpenAIResponse>()
-                processOpenAIResponse(openAIResponse)
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
-                error("Error from OpenAI API: ${response.status}: $errorBody")
-            }
-        }
-    }
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> =
+        processOpenAIResponse(getOpenAIResponse(prompt, model, tools)).first()
 
     override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
@@ -184,6 +140,9 @@ public open class OpenAILLMClient(
             error(e.message ?: "Unknown error during streaming")
         }
     }
+
+    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> =
+        processOpenAIResponse(getOpenAIResponse(prompt, model, tools))
 
     /**
      * Embeds the given text using the OpenAI embeddings API.
@@ -344,6 +303,7 @@ public open class OpenAILLMClient(
             model = model.id,
             messages = messages,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            numberOfChoices = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
             tools = if (tools.isNotEmpty()) openAITools else null,
             modalities = modalities,
             audio = audio,
@@ -352,60 +312,85 @@ public open class OpenAILLMClient(
         )
     }
 
+    private suspend fun getOpenAIResponse(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): OpenAIResponse {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
+        }
+        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+            "Model ${model.id} does not support tools"
+        }
+
+        val request = createOpenAIRequest(prompt, tools, model, false)
+
+        return withContext(Dispatchers.SuitableForIO) {
+            val response = httpClient.post(settings.chatCompletionsPath) {
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                response.body<OpenAIResponse>()
+            } else {
+                val errorBody = response.bodyAsText()
+                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
+                error("Error from OpenAI API: ${response.status}: $errorBody")
+            }
+        }
+    }
+
     private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+            if (content.isNotEmpty() || attachments.isEmpty()) {
                 add(ContentPart.Text(content))
             }
 
-            mediaContent.forEach { media ->
-                when (media) {
-                    is MediaContent.Image -> {
+            attachments.forEach { attachment ->
+                when (attachment) {
+                    is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
-                        val imageUrl = if (media.isUrl()) {
-                            media.source
-                        } else {
-                            require(media.format in listOf("png", "jpg", "jpeg", "webp", "gif")) {
-                                "Image format ${media.format} not supported"
-                            }
-                            "data:${media.getMimeType()};base64,${media.toBase64()}"
+
+                        val imageUrl: String = when (val content = attachment.content) {
+                            is AttachmentContent.URL -> content.url
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                         }
+
                         add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
                     }
 
-                    is MediaContent.Audio -> {
+                    is Attachment.Audio -> {
                         require(model.capabilities.contains(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
 
-                        require(media.format in listOf("wav", "mp3")) {
-                            "Audio format ${media.format} not supported"
+                        val inputAudio: ContentPart.InputAudio = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> ContentPart.InputAudio(content.base64, attachment.format)
+                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
                         }
-                        add(ContentPart.Audio(ContentPart.InputAudio(media.toBase64(), media.format)))
+
+                        add(ContentPart.Audio(inputAudio))
                     }
 
-                    is MediaContent.File -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                    is Attachment.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
-                        require(media.format == "pdf") {
-                            "File format ${media.format} not supported. Supported formats: `pdf`"
-                        }
-                        val fileData = "data:${media.getMimeType()};base64,${media.toBase64()}"
-                        add(
-                            ContentPart.File(
-                                ContentPart.FileData(
-                                    fileData = fileData,
-                                    filename = media.fileName()
-                                )
+                        val fileData: ContentPart.FileData = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> ContentPart.FileData(
+                                fileData = "data:${attachment.mimeType};base64,${content.base64}",
+                                filename = attachment.fileName
                             )
-                        )
+
+                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                        }
+
+                        add(ContentPart.File(fileData))
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported media content: $media")
+                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
                 }
             }
         }
@@ -457,22 +442,30 @@ public open class OpenAILLMClient(
         }
     }
 
-    @OptIn(ExperimentalEncodingApi::class)
-    private fun processOpenAIResponse(response: OpenAIResponse): List<Message.Response> {
+    private fun processOpenAIResponse(response: OpenAIResponse): List<LLMChoice> {
         if (response.choices.isEmpty()) {
             logger.error { "Empty choices in OpenAI response" }
             error("Empty choices in OpenAI response")
         }
-
-        val (choice, message) = response.choices
-            .firstOrNull()
-            ?.let { it to it.message } ?: throw IllegalStateException("No choice found in OpenAI response")
 
         // Extract token count from the response
         val totalTokensCount = response.usage?.totalTokens
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
 
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokensCount,
+            inputTokensCount = inputTokensCount,
+            outputTokensCount = outputTokensCount
+        )
+
+        return response.choices.map { processOpenAIMessage(it, metaInfo) }
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    private fun processOpenAIMessage(choice: OpenAIChoice, metaInfo: ResponseMetaInfo): List<Message.Response> {
+        val message = choice.message
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
                 message.toolCalls.map { toolCall ->
@@ -480,12 +473,7 @@ public open class OpenAILLMClient(
                         id = toolCall.id,
                         tool = toolCall.function.name,
                         content = toolCall.function.arguments,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock,
-                            totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount
-                        )
+                        metaInfo = metaInfo
                     )
                 }
             }
@@ -495,27 +483,22 @@ public open class OpenAILLMClient(
                     Message.Assistant(
                         content = message.content.text(),
                         finishReason = choice.finishReason,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock, totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount
-                        )
+                        metaInfo = metaInfo
                     )
                 )
             }
 
             message.audio != null -> {
-                val audio = Base64.decode(message.audio.data)
                 listOf(
                     Message.Assistant(
                         content = message.audio.transcript ?: "",
-                        mediaContent = MediaContent.Audio(audio, format = ""),
+                        attachment = Attachment.Audio(
+                            content = AttachmentContent.Binary.Base64(message.audio.data),
+                            // FIXME not a proper solution. Seems like there is no data in response about format, need to clarify
+                            format = "unknown",
+                        ),
                         finishReason = choice.finishReason,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock, totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount
-                        )
+                        metaInfo = metaInfo
                     )
                 )
             }

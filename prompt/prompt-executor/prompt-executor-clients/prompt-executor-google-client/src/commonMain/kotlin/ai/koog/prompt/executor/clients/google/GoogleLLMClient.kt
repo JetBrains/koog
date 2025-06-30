@@ -7,46 +7,34 @@ import ai.koog.agents.utils.SuitableForIO
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.sse.*
 import io.ktor.client.request.accept
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.contentType
+import io.ktor.client.statement.*
+import io.ktor.http.*
 import io.ktor.http.headers
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.*
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -120,22 +108,8 @@ public open class GoogleLLMClient(
             "Model ${model.id} does not support tools"
         }
 
-        val request = createGoogleRequest(prompt, model, tools)
-
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post("$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_GENERATE_CONTENT") {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                val googleResponse = response.body<GoogleResponse>()
-                processGoogleResponse(googleResponse)
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from GoogleAI API: ${response.status}: $errorBody" }
-                error("Error from GoogleAI API: ${response.status}: $errorBody")
-            }
-        }
+        val response = getGoogleResponse(prompt, model, tools)
+        return processGoogleResponse(response).first()
     }
 
     override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
@@ -176,6 +150,55 @@ public open class GoogleLLMClient(
         } catch (e: Exception) {
             logger.error { "Exception during streaming: $e" }
             error(e.message ?: "Unknown error during streaming")
+        }
+    }
+
+    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
+        logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
+        }
+        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+            "Model ${model.id} does not support tools"
+        }
+        require(model.capabilities.contains(LLMCapability.MultipleChoices)) {
+            "Model ${model.id} does not support multiple choices"
+        }
+
+        return processGoogleResponse(getGoogleResponse(prompt, model, tools))
+    }
+
+    /**
+     * Gets a response from the Google AI API.
+     *
+     * @param prompt The prompt to execute
+     * @param model The model to use
+     * @param tools The tools to include in the request
+     * @return The raw response from the Google AI API
+     */
+    private suspend fun getGoogleResponse(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleResponse {
+        logger.debug { "Getting Google response for prompt: $prompt with tools: $tools and model: $model" }
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
+        }
+        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+            "Model ${model.id} does not support tools"
+        }
+
+        val request = createGoogleRequest(prompt, model, tools)
+
+        return withContext(Dispatchers.SuitableForIO) {
+            val response = httpClient.post("$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_GENERATE_CONTENT") {
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                response.body<GoogleResponse>()
+            } else {
+                val errorBody = response.bodyAsText()
+                logger.error { "Error from GoogleAI API: ${response.status}: $errorBody" }
+                error("Error from GoogleAI API: ${response.status}: $errorBody")
+            }
         }
     }
 
@@ -277,6 +300,7 @@ public open class GoogleLLMClient(
 
         val generationConfig = GoogleGenerationConfig(
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            numberOfChoices = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
             maxOutputTokens = 2048,
         )
 
@@ -306,61 +330,61 @@ public open class GoogleLLMClient(
 
     private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
         val contentParts = buildList {
-            if (content.isNotEmpty() || mediaContent.isEmpty()) {
+            if (content.isNotEmpty() || attachments.isEmpty()) {
                 add(GooglePart.Text(content))
             }
-            mediaContent.forEach { media ->
-                when (media) {
-                    is MediaContent.Image -> {
+            attachments.forEach { attachment ->
+                when (attachment) {
+                    is Attachment.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image"
+                            "Model ${model.id} does not support images"
                         }
-                        if (media.isUrl()) {
-                            throw IllegalArgumentException("URL images not supported for Gemini models")
-                        }
-                        require(media.format in listOf("png", "jpg", "jpeg", "webp", "heic", "heif")) {
-                            "Image format ${media.format} not supported"
-                        }
-                        add(
-                            GooglePart.InlineData(
-                                GoogleData.Blob(
-                                    mimeType = media.getMimeType(),
-                                    data = media.toBase64()
-                                )
-                            )
-                        )
 
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                        }
+
+                        add(GooglePart.InlineData(blob))
                     }
 
-                    is MediaContent.Audio -> {
+                    is Attachment.Audio -> {
                         require(model.capabilities.contains(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
-                        require(media.format in listOf("wav", "mp3", "aiff", "aac", "ogg", "flac")) {
-                            "Audio format ${media.format} not supported"
+
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
                         }
-                        add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+
+                        add(GooglePart.InlineData(blob))
                     }
 
-                    is MediaContent.File -> {
-                        if (media.isUrl()) {
-                            throw IllegalArgumentException("URL files not supported for Gemini models")
+                    is Attachment.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
+                            "Model ${model.id} does not support documents"
                         }
-                        add(
-                            GooglePart.InlineData(
-                                GoogleData.Blob(
-                                    mimeType = media.getMimeType(),
-                                    data = media.toBase64()
-                                )
-                            )
-                        )
+
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                        }
+
+                        add(GooglePart.InlineData(blob))
                     }
 
-                    is MediaContent.Video -> {
+                    is Attachment.Video -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Video)) {
                             "Model ${model.id} does not support video"
                         }
-                        add(GooglePart.InlineData(GoogleData.Blob(media.getMimeType(), media.toBase64())))
+
+                        val blob: GoogleData.Blob = when (val content = attachment.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            else -> throw IllegalArgumentException("Unsupported video attachment content: ${content::class}")
+                        }
+
+                        add(GooglePart.InlineData(blob))
                     }
                 }
             }
@@ -413,51 +437,28 @@ public open class GoogleLLMClient(
     }
 
     /**
-     * Processes the Google AI API response into our internal message format.
+     * Processes a single Google AI API candidate into internal message format.
      *
-     * @param response The raw response from the Google AI API
+     * @param candidate The candidate from the Google AI API response
+     * @param metaInfo The metadata for the response
      * @return A list of response messages
      */
     @OptIn(ExperimentalUuidApi::class)
-    private fun processGoogleResponse(response: GoogleResponse): List<Message.Response> {
-        if (response.candidates.isEmpty()) {
-            logger.error { "Empty candidates in Gemini response" }
-            error("Empty candidates in Gemini response")
-        }
-
-        val (candidate, parts) = response.candidates
-            .firstOrNull()
-            ?.let { it to it.content?.parts.orEmpty() }
-            ?: throw IllegalArgumentException("No responses found in Gemini response")
-
-        // Extract token count from the response
-        val inputTokensCount = response.usageMetadata?.promptTokenCount
-        val outputTokensCount = response.usageMetadata?.candidatesTokenCount
-        val totalTokensCount = response.usageMetadata?.totalTokenCount
-
+    private fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
+        val parts = candidate.content?.parts.orEmpty()
         val responses = parts.map { part ->
             when (part) {
                 is GooglePart.Text -> Message.Assistant(
                     content = part.text,
                     finishReason = candidate.finishReason,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokensCount,
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = outputTokensCount
-                    )
+                    metaInfo = metaInfo
                 )
 
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     id = Uuid.random().toString(),
                     tool = part.functionCall.name,
                     content = part.functionCall.args.toString(),
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokensCount,
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = outputTokensCount
-                    )
+                    metaInfo = metaInfo
                 )
 
                 else -> error("Not supported part type: $part")
@@ -472,11 +473,40 @@ public open class GoogleLLMClient(
                 Message.Assistant(
                     content = "",
                     finishReason = candidate.finishReason,
-                    metaInfo = ResponseMetaInfo.create(clock, totalTokensCount = totalTokensCount)
+                    metaInfo = metaInfo
                 )
             )
             // Just return responses
             else -> responses
+        }
+    }
+
+    /**
+     * Processes the Google AI API response into a list of choices.
+     *
+     * @param response The raw response from the Google AI API
+     * @return A list of choices, where each choice is a list of response messages
+     */
+    private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
+        if (response.candidates.isEmpty()) {
+            logger.error { "Empty candidates in Gemini response" }
+            error("Empty candidates in Gemini response")
+        }
+
+        // Extract token count from the response
+        val inputTokensCount = response.usageMetadata?.promptTokenCount
+        val outputTokensCount = response.usageMetadata?.candidatesTokenCount
+        val totalTokensCount = response.usageMetadata?.totalTokenCount
+
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokensCount,
+            inputTokensCount = inputTokensCount,
+            outputTokensCount = outputTokensCount
+        )
+
+        return response.candidates.map { candidate ->
+            processGoogleCandidate(candidate, metaInfo)
         }
     }
 }

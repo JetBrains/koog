@@ -1,6 +1,5 @@
 [versions]
 annotations = "26.0.1"
-grazie-gradle = "0.3.6"
 junit = "5.8.2"
 kotlin = "2.1.21"
 kotlinx-coroutines = "1.10.2"
@@ -50,7 +49,6 @@ jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jets
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 
 [plugins]
-grazie = { id = "ai.grazie.gradle", version.ref = "grazie-gradle" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

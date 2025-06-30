@@ -49,7 +49,7 @@ private object MockToolsEnabler : DirectToolCallsEnabler
  * ```
  */
 @OptIn(InternalAgentToolsApi::class)
-internal class MockEnvironment(
+public class MockEnvironment(
     internal val toolRegistry: ToolRegistry,
     internal val promptExecutor: PromptExecutor,
     internal val baseEnvironment: AIAgentEnvironment? = null
@@ -122,15 +122,4 @@ internal class MockEnvironment(
         throw exception
     }
 
-    /**
-     * Sends a termination signal with an optional result.
-     *
-     * If a base environment is provided, the termination signal is delegated to it.
-     * Otherwise, the termination is effectively a no-op in the mock environment.
-     *
-     * @param result An optional result string to include with the termination
-     */
-    override suspend fun sendTermination(result: String?) {
-        baseEnvironment?.sendTermination(result)
-    }
 }

@@ -32,6 +32,17 @@ public class AIAgentStorage internal constructor() {
     private val storage = mutableMapOf<AIAgentStorageKey<*>, Any>()
 
     /**
+     * Creates a deep copy of this storage.
+     *
+     * @return A new instance of [AIAgentStorage] with the same content as this one.
+     */
+    internal suspend fun copy(): AIAgentStorage {
+        val newStorage = AIAgentStorage()
+        newStorage.putAll(this.toMap())
+        return newStorage
+    }
+
+    /**
      * Sets the value associated with the given key in the storage.
      *
      * @param key The key of type [AIAgentStorageKey] used to identify the value in the storage.
@@ -50,6 +61,19 @@ public class AIAgentStorage internal constructor() {
     @Suppress("UNCHECKED_CAST")
     public suspend fun <T : Any> get(key: AIAgentStorageKey<T>): T? = mutex.withLock {
         storage[key] as T?
+    }
+
+
+    /**
+     * Retrieves the non-null value associated with the given key from the storage.
+     * If the key does not exist in the storage, a [NoSuchElementException] is thrown.
+     *
+     * @param key The key of type [AIAgentStorageKey] used to identify the value in the storage.
+     * @return The value associated with the key, of type [T].
+     * @throws NoSuchElementException if the key does not exist in the storage.
+     */
+    public suspend fun <T : Any> getValue(key: AIAgentStorageKey<T>): T {
+        return get(key) ?: throw NoSuchElementException("Key $key not found in storage")
     }
 
     /**

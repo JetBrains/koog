@@ -7,6 +7,8 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -58,11 +60,15 @@ fun main() {
             // Create the ToolRegistry with tools from the MCP server
             val toolRegistry = McpToolRegistryProvider.fromTransport(
                 transport = McpToolRegistryProvider.defaultStdioTransport(process)
-            )
+            ) + ToolRegistry {
+                tool(ProvideStringSubgraphResult)
+            }
+
             toolRegistry.tools.forEach {
                 println(it.name)
                 println(it.descriptor)
             }
+
             val agentConfig = AIAgentConfig(
                 prompt = prompt("cook_agent_system_prompt") {
                     system { "Your are a unity assistant. You can exucute different tasks by interacting with the tools from Unity3d engine." }
@@ -75,12 +81,11 @@ fun main() {
             val executor = simpleOpenAIExecutor(token)
 
 
-            val strategy = strategy("unity_interaction") {
+            val strategy = strategy<String, String>("unity_interaction") {
                 val nodePlanIngredients by nodeLLMRequest(allowToolCalls = false)
                 val interactionWithUnity by subgraphWithTask<String>(
                     //work with plan 
                     tools = toolRegistry.tools,
-                    shouldTLDRHistory = false,
                 ) { input ->
                     "Start interact with Unity according to the plan: $input"
                 }
@@ -102,26 +107,26 @@ fun main() {
                     install(Tracing)
 
                     install(EventHandler) {
-                        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                        onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
                             println("OnBeforeAgentStarted first (strategy: ${strategy.name})")
                         }
 
-                        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
+                        onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
                             println("OnBeforeAgentStarted second (strategy: ${strategy.name})")
                         }
 
-                        onAgentFinished { strategyName: String, result: String? ->
+                        onAgentFinished { strategyName: String, result: Any? ->
                             println("OnAgentFinished (strategy: $strategyName, result: $result)")
                         }
                     }
                 }
             )
 
-            val runAndGetResult = agent.runAndGetResult(
+            val run = agent.run(
                 " extend current opened scene for the towerdefence game. " +
                         "Add more placements for the towers, change the path for the enemies"
             )
-            println(runAndGetResult)
+            println(run)
 
 
         }
