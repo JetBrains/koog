@@ -35,7 +35,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(0, actualToolCalls.size)
         assertEquals("Task solved!!", result)
@@ -65,7 +65,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(1, actualToolCalls.size)
         assertEquals("Tools called!", result)
@@ -94,7 +94,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(0, actualToolCalls.size)
         assertEquals("Task solved!", result)
@@ -123,7 +123,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(0, actualToolCalls.size)
         assertEquals("Task solved!", result)
@@ -161,7 +161,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(3, actualToolCalls.size)
         assertEquals("Tools called!", result)
@@ -199,7 +199,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(3, actualToolCalls.size)
         assertEquals("Tools called!", result)
@@ -238,7 +238,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(3, actualToolCalls.size)
         assertEquals(assistantResponse, result)
@@ -277,7 +277,7 @@ class SingleRunStrategyTests {
             }
         }
 
-        val result = agent.runAndGetResult("Solve task")
+        val result = agent.run("Solve task")
 
         assertEquals(3, actualToolCalls.size)
         assertEquals(assistantResponse, result)
