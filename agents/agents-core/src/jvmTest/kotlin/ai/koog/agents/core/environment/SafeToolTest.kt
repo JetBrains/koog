@@ -13,6 +13,15 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class SafeToolTest {
+    private fun testInvalidArguments(vararg args: Any?) = runTest {
+        val mockEnvironment = MockEnvironment(shouldSucceed = true)
+        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
+
+        assertThrows<IllegalStateException> {
+            safeTool.execute(*args)
+        }
+    }
 
     companion object {
         private const val TEST_RESULT = "Test result"
@@ -148,37 +157,13 @@ class SafeToolTest {
     }
 
     @Test
-    fun testInvalidArgumentCount() = runTest {
-        val mockEnvironment = MockEnvironment(shouldSucceed = true)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
-
-        assertThrows<IllegalStateException> {
-            safeTool.execute("test")
-        }
-    }
+    fun testInvalidArgumentCount() = testInvalidArguments("test")
 
     @Test
-    fun testZeroArgumentCount() = runTest {
-        val mockEnvironment = MockEnvironment(shouldSucceed = true)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
-
-        assertThrows<IllegalStateException> {
-            safeTool.execute()
-        }
-    }
+    fun testZeroArgumentCount() = testInvalidArguments()
 
     @Test
-    fun testTooManyArguments() = runTest {
-        val mockEnvironment = MockEnvironment(shouldSucceed = true)
-        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
-        assertEquals(safeTool.toolFunction, ::testFunction)
-
-        assertThrows<IllegalStateException> {
-            safeTool.execute("test", 123, "extra argument")
-        }
-    }
+    fun testTooManyArguments() = testInvalidArguments("test", 123, "extra argument")
 
     @Test
     fun testWithNullArgumentInMockEnvironment() = runTest {
