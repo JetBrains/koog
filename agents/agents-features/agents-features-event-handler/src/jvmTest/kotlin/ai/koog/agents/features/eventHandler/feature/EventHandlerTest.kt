@@ -17,7 +17,6 @@ class EventHandlerTest {
     @Test
     fun `test event handler for agent without nodes and tools`() = runBlocking {
 
-        val agentId = "test-agent-id"
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
@@ -27,7 +26,6 @@ class EventHandlerTest {
         }
 
         val agent = createAgent(
-            agentId = agentId,
             strategy = strategy,
             configureTools = { },
             installFeatures = {
@@ -48,6 +46,7 @@ class EventHandlerTest {
             "OnAfterNode (session id: $sessionId, node: __start__, input: $agentInput, output: $agentInput)",
             "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
             "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnAgentBeforeClose (agent id: test-agent-id)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -95,7 +94,9 @@ class EventHandlerTest {
             "OnAfterNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
             "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
             "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnAgentBeforeClose (agent id: $agentId)",
         )
+
 
         assertEquals(expectedEvents.size, eventsCollector.size)
         assertContentEquals(expectedEvents, eventsCollector.collectedEvents)
@@ -104,7 +105,6 @@ class EventHandlerTest {
     @Test
     fun `test event handler single node with tools`() = runBlocking {
 
-        val agentId = "test-agent-id"
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
@@ -117,7 +117,6 @@ class EventHandlerTest {
         }
 
         val agent = createAgent(
-            agentId = agentId,
             strategy = strategy,
             configureTools = {
                 tool(DummyTool())
@@ -144,6 +143,7 @@ class EventHandlerTest {
             "OnAfterNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
             "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
             "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnAgentBeforeClose (agent id: test-agent-id)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -153,7 +153,6 @@ class EventHandlerTest {
     @Test
     fun `test event handler several nodes`() = runBlocking {
 
-        val agentId = "test-agent-id"
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
@@ -168,7 +167,6 @@ class EventHandlerTest {
         }
 
         val agent = createAgent(
-            agentId = agentId,
             strategy = strategy,
             configureTools = {
                 tool(DummyTool())
@@ -199,6 +197,7 @@ class EventHandlerTest {
             "OnAfterNode (session id: $sessionId, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
             "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
             "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnAgentBeforeClose (agent id: test-agent-id)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -208,7 +207,6 @@ class EventHandlerTest {
     @Test
     fun `test event handler with multiple handlers`() = runBlocking {
         val collectedEvents = mutableListOf<String>()
-        val agentId = "test-agent-id"
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
 
@@ -219,7 +217,6 @@ class EventHandlerTest {
         var sessionId = ""
 
         val agent = createAgent(
-            agentId = agentId,
             strategy = strategy,
             configureTools = { },
             installFeatures = {
@@ -257,7 +254,6 @@ class EventHandlerTest {
     @Test
     fun testEventHandlerWithErrors() = runBlocking {
         val eventsCollector = TestEventsCollector()
-        val agentId = "test-agent-id"
         val strategyName = "tracing-test-strategy"
 
         val strategy = strategy<String, String>(strategyName) {
@@ -270,7 +266,6 @@ class EventHandlerTest {
         }
 
         val agent = createAgent(
-            agentId = agentId,
             strategy = strategy,
             configureTools = {
                 tool(DummyTool())

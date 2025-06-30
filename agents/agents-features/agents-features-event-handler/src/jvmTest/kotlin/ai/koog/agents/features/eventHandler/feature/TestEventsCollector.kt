@@ -30,6 +30,10 @@ class TestEventsCollector {
             _collectedEvents.add("OnAgentRunError (agent id: ${eventContext.agentId}, session id: ${eventContext.sessionId}, throwable: ${eventContext.throwable.message})")
         }
 
+        onAgentBeforeClose { eventContext ->
+            _collectedEvents.add("OnAgentBeforeClose (agent id: ${eventContext.agentId})")
+        }
+
         onStrategyStarted { eventContext ->
             _collectedEvents.add("OnStrategyStarted (session id: ${eventContext.sessionId}, strategy: ${eventContext.strategy.name})")
         }

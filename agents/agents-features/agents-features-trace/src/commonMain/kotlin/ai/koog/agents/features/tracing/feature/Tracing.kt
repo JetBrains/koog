@@ -126,6 +126,13 @@ public class Tracing {
                 processMessage(config, event)
             }
 
+            pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
+                val event = AIAgentBeforeCloseEvent(
+                    agentId = eventContext.agentId,
+                )
+                processMessage(config, event)
+            }
+
             //endregion Intercept Agent Events
 
             //region Intercept Strategy Events

@@ -1,9 +1,10 @@
-package ai.koog.agents.features.tracing.writer
+package ai.koog.agents.features.tracing
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.features.tracing.writer.DummyTool
 import ai.koog.prompt.dsl.AttachmentBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels

@@ -204,6 +204,7 @@ public open class AIAgent<Input, Output>(
     }
 
     override suspend fun close() {
+        pipeline.onAgentBeforeClosed(agentId = id)
         pipeline.closeFeaturesStreamProviders()
     }
 

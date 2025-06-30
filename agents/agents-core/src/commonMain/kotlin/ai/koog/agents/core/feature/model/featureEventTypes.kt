@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
@@ -102,6 +103,18 @@ public data class AIAgentRunErrorEvent(
     val sessionId: String,
     val error: AIAgentError,
     override val eventId: String = AIAgentRunErrorEvent::class.simpleName!!,
+) : DefinedFeatureEvent()
+
+/**
+ * Represents an event that signifies the closure or termination of an AI agent identified
+ * by a unique `agentId`.
+ *
+ * @property agentId The unique identifier of the AI agent.
+ */
+@Serializable
+public data class AIAgentBeforeCloseEvent(
+    val agentId: String,
+    override val eventId: String = AIAgentBeforeCloseEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 //endregion Agent
@@ -326,7 +339,7 @@ public data class ToolCallFailureEvent(
  * the system's event-handling framework.
  *
  * @property toolName The name of the tool that was executed.
- * @property toolArgs The arguments used for executing the tool, represented as an instance of [Tool.Args].
+ * @property toolArgs The arguments used for executing the tool.
  * @property result The result of the tool execution, which may be null if no result was produced or an error occurred.
  * @property eventId A unique identifier for this event, defaulting to the class name of `ToolCallResultEvent`.
  */

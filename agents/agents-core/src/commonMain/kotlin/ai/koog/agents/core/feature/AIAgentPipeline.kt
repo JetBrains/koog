@@ -14,6 +14,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -187,6 +188,18 @@ public class AIAgentPipeline {
     ) {
         val eventContext = AgentRunErrorContext(agentId = agentId, sessionId = sessionId, throwable = throwable)
         agentHandlers.values.forEach { handler -> handler.agentRunErrorHandler.handle(eventContext) }
+    }
+
+    /**
+     * Invoked before an agent is closed to perform necessary pre-closure operations.
+     *
+     * @param agentId The unique identifier of the agent that will be closed.
+     */
+    public suspend fun onAgentBeforeClosed(
+        agentId: String
+    ) {
+        val eventContext = AgentBeforeCloseContext(agentId = agentId)
+        agentHandlers.values.forEach { handler -> handler.agentBeforeCloseHandler.handle(eventContext) }
     }
 
     /**
@@ -501,6 +514,32 @@ public class AIAgentPipeline {
         val existingHandler = agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) }
 
         existingHandler.agentRunErrorHandler = AgentRunErrorHandler { eventContext ->
+            with(context.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts and sets a handler to be invoked before an agent is closed.
+     *
+     * @param TFeature The type of feature this handler is associated with.
+     * @param context The context containing details about the feature and its implementation.
+     * @param handle A suspendable function that is executed during the agent's pre-close phase.
+     *                The function receives the feature instance and the event context as parameters.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptAgentBeforeClosed(InterceptContext) { eventContext ->
+     *     // Handle agent run before close event.
+     * }
+     * ```
+     */
+    public fun <TFeature : Any> interceptAgentBeforeClosed(
+        context: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: AgentBeforeCloseContext) -> Unit
+    ) {
+        val existingHandler = agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) }
+
+        existingHandler.agentBeforeCloseHandler = AgentBeforeCloseHandler { eventContext ->
             with(context.featureImpl) { handle(eventContext) }
         }
     }

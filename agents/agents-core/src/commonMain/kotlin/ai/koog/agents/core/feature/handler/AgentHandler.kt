@@ -50,6 +50,19 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
         AgentRunErrorHandler { _ -> }
 
     /**
+     * A handler that is triggered before an agent is closed.
+     *
+     * This variable represents an implementation of the `AgentBeforeCloseHandler` functional interface,
+     * which defines the behavior to execute in the pre-closing phase of an agent's lifecycle. It receives
+     * the necessary context encapsulating specific details related to the agent and its closing event.
+     *
+     * Use this handler to implement custom logic, resource cleanup, or other operations that should occur
+     * before the agent is terminated or closed.
+     */
+    public var agentBeforeCloseHandler: AgentBeforeCloseHandler =
+        AgentBeforeCloseHandler { _ -> }
+
+    /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
      *
      * @param environment The AgentEnvironment to be transformed
@@ -169,4 +182,25 @@ public fun interface AgentRunErrorHandler {
      * Handles an error that occurs during the execution of an agent's strategy.
      */
     public suspend fun handle(eventContext: AgentRunErrorContext)
+}
+
+/**
+ * Functional interface for handling logic that needs to be executed
+ * before an agent is closed.
+ *
+ * This handler provides an opportunity to perform cleanup operations
+ * or any necessary pre-termination processes based on the context
+ * provided through `AgentBeforeCloseHandlerContext`.
+ *
+ * @see AgentBeforeCloseContext
+ */
+public fun interface AgentBeforeCloseHandler {
+    /**
+     * Handles an event that occurs before an agent is closed, allowing for any necessary
+     * pre-termination or cleanup operations to be executed.
+     *
+     * @param eventContext The context of the agent that is about to be closed, containing
+     *                     information such as the agent's identifier.
+     */
+    public suspend fun handle(eventContext: AgentBeforeCloseContext)
 }

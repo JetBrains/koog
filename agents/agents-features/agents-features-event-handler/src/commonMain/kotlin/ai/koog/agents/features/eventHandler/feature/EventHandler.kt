@@ -84,6 +84,10 @@ public class EventHandler {
                 config.invokeOnAgentRunError(eventContext)
             }
 
+            pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
+                config.invokeOnAgentBeforeClose(eventContext)
+            }
+
             //endregion Intercept Agent Events
 
             //region Intercept Strategy Events

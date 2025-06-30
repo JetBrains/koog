@@ -144,6 +144,7 @@ class TraceFeatureMessageFileWriterTest {
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (session id: ${sessionId}, node: test LLM call with tools, input: Test LLM call with tools prompt, output: $expectedResponse)",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (session id: ${sessionId}, strategy: $strategyName, result: Done)",
                 "${AIAgentFinishedEvent::class.simpleName} (agent id: ${agent.id}, session id: ${sessionId}, result: Done)",
+                "${AIAgentBeforeCloseEvent::class.simpleName} (agent id: ${agent.id})",
             )
 
             val actualMessages = writer.targetPath.readLines()
@@ -214,6 +215,7 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentStrategyFinishedEvent::class.simpleName}",
             "CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",
+            "CUSTOM. ${AIAgentBeforeCloseEvent::class.simpleName}",
         )
 
         TraceFeatureMessageFileWriter(

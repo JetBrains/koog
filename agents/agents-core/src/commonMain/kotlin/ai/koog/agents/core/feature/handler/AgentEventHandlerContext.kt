@@ -67,3 +67,12 @@ public data class AgentRunErrorContext(
     val sessionId: String,
     val throwable: Throwable
 ) : AgentEventHandlerContext
+
+/**
+ * Represents the context passed to the handler that is executed before an agent is closed.
+ *
+ * @property agentId Identifier of the agent that is about to be closed.
+ */
+public data class AgentBeforeCloseContext(
+    val agentId: String,
+)

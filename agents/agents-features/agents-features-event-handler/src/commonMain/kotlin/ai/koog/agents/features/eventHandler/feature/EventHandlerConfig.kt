@@ -49,6 +49,8 @@ public class EventHandlerConfig : FeatureConfig() {
 
     private var _onAgentRunError: suspend (eventHandler: AgentRunErrorContext) -> Unit = { _ -> }
 
+    private var _onAgentBeforeClose: suspend (eventHandler: AgentBeforeCloseContext) -> Unit = { _ -> }
+
     //endregion Agent Handlers
 
     //region Strategy Handlers
@@ -72,7 +74,6 @@ public class EventHandlerConfig : FeatureConfig() {
     private var _onBeforeLLMCall: suspend (eventHandler: BeforeLLMCallContext) -> Unit = { _ -> }
 
     private var _onAfterLLMCall: suspend (eventHandler: AfterLLMCallContext) -> Unit = { _ -> }
-
 
     //endregion LLM Call Handlers
 
@@ -375,6 +376,18 @@ public class EventHandlerConfig : FeatureConfig() {
         }
     }
 
+    /**
+     * Appends a handler called before an agent is closed. This allows for additional behavior
+     * to be executed prior to the agent being closed.
+     */
+    public fun onAgentBeforeClose(handler: suspend (eventContext: AgentBeforeCloseContext) -> Unit) {
+        val originalHandler = this._onAgentBeforeClose
+        this._onAgentBeforeClose = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
     //endregion Trigger Agent Handlers
 
     //region Strategy Handlers
@@ -524,6 +537,13 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     internal suspend fun invokeOnAgentRunError(eventContext: AgentRunErrorContext) {
         _onAgentRunError.invoke(eventContext)
+    }
+
+    /**
+     * Invokes the handler associated with the event that occurs before an agent is closed.
+     */
+    internal suspend fun invokeOnAgentBeforeClose(eventContext: AgentBeforeCloseContext) {
+        _onAgentBeforeClose.invoke(eventContext)
     }
 
     //endregion Invoke Agent Handlers

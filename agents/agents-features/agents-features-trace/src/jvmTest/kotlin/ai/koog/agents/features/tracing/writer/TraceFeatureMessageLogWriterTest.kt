@@ -131,6 +131,7 @@ class TraceFeatureMessageLogWriterTest {
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (session id: ${sessionId}, node: test LLM call with tools, input: Test LLM call with tools prompt, output: $expectedResponse)",
                 "[INFO] Received feature message [event]: ${AIAgentStrategyFinishedEvent::class.simpleName} (session id: ${sessionId}, strategy: $strategyName, result: Done)",
                 "[INFO] Received feature message [event]: ${AIAgentFinishedEvent::class.simpleName} (agent id: ${agent.id}, session id: ${sessionId}, result: Done)",
+                "[INFO] Received feature message [event]: ${AIAgentBeforeCloseEvent::class.simpleName} (agent id: ${agent.id})",
             )
 
             val actualMessages = targetLogger.messages
@@ -196,6 +197,7 @@ class TraceFeatureMessageLogWriterTest {
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStrategyFinishedEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentBeforeCloseEvent::class.simpleName}",
         )
 
         TraceFeatureMessageLogWriter(targetLogger = targetLogger, format = customFormat).use { writer ->

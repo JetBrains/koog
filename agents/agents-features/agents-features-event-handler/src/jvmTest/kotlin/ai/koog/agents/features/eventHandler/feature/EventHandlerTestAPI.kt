@@ -17,8 +17,8 @@ val testClock: Clock = object : Clock {
 }
 
 fun createAgent(
-    agentId: String = "test-agent-id",
     strategy: AIAgentStrategy<String, String>,
+    agentId: String = "test-agent-id",
     configureTools: Builder.() -> Unit = { },
     installFeatures: AIAgent.FeatureContext.() -> Unit = { }
 ): AIAgent<String, String> {
