@@ -29,13 +29,12 @@ import ai.koog.agents.core.dsl.extension.onToolCall
  *                - SingleRunMode.SEQUENTIAL: Executes simultaneous tool calls sequentially.
  *                - SingleRunMode.PARALLEL: Executes multiple tool calls in parallel.
  * @return An instance of AIAgentStrategy configured according to the specified single-run mode.
-
  */
-public fun singleRunStrategy(runMode: ToolCalls = ToolCalls.SINGLE): AIAgentStrategy<String, String> =
+public fun singleRunStrategy(runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL): AIAgentStrategy<String, String> =
     when (runMode) {
         ToolCalls.SEQUENTIAL -> singleRunWithParallelAbility(false)
         ToolCalls.PARALLEL   -> singleRunWithParallelAbility(true)
-        ToolCalls.SINGLE     -> singleRunModeStrategy()
+        ToolCalls.SINGLE_RUN_SEQUENTIAL     -> singleRunModeStrategy()
     }
 
 
@@ -81,5 +80,5 @@ private fun singleRunModeStrategy() = strategy("single_run") {
  * - SINGLE: Multiple tool calls are not allowed.
  */
 public enum class ToolCalls {
-    SEQUENTIAL, PARALLEL, SINGLE
+    SEQUENTIAL, PARALLEL, SINGLE_RUN_SEQUENTIAL
 }
