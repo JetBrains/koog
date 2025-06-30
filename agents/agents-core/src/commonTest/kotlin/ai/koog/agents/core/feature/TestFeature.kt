@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
@@ -11,8 +9,6 @@ import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 class TestFeature(val events: MutableList<String>) {
 
@@ -46,11 +42,11 @@ class TestFeature(val events: MutableList<String>) {
                 TestFeature(mutableListOf())
             }
 
-            pipeline.interceptBeforeLLMCall(context) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid ->
+            pipeline.interceptBeforeLLMCall(context) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String ->
                 feature.events += "LLM: start LLM call (prompt: ${prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}, tools: [${tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptAfterLLMCall(context) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid ->
+            pipeline.interceptAfterLLMCall(context) { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String ->
                 feature.events += "LLM: finish LLM call (responses: [${responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}])"
             }
 

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -29,8 +27,6 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 
 /**
@@ -744,7 +740,7 @@ public class Testing {
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
-                    sessionUuid: Uuid?,
+                    sessionId: String?,
                     strategyId: String?,
                 ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
@@ -851,7 +847,7 @@ public class Testing {
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
-                    sessionUuid: Uuid?,
+                    sessionId: String?,
                     strategyId: String?,
                 ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
@@ -1010,7 +1006,7 @@ public class Testing {
                         promptExecutor = PromptExecutorProxy(
                             agent.promptExecutor,
                             pipeline,
-                            assertion.context.sessionUuid,
+                            assertion.context.sessionId,
                         ),
                         environment = environment,
                         config = agent.agentConfig,

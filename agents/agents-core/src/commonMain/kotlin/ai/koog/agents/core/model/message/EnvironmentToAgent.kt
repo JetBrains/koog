@@ -1,13 +1,9 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.core.model.message
 
 import ai.koog.agents.core.model.AgentServiceError
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Base class of all messages sent from the environment to the AI agent.
@@ -98,7 +94,7 @@ public abstract class EnvironmentInitializeToAgentMessage : EnvironmentToAgentMe
  * This interface extends [EnvironmentToAgentMessage], inheriting the characteristics of environment-to-agent communication.
  * Implementations of this interface provide additional context, such as single or multiple tool results.
  *
- * @property sessionUuid Unique identifier for the session. This ensures that the message is linked
+ * @property sessionId Unique identifier for the session. This ensures that the message is linked
  * to a specific session within which the tool results are relevant.
  */
 @Serializable
@@ -109,7 +105,7 @@ public sealed interface EnvironmentToolResultToAgentMessage : EnvironmentToAgent
      * This UUID is used to tie the message to a particular session context,
      * enabling clear association and tracking across environment-agent interactions.
      */
-    public val sessionUuid: Uuid
+    public val sessionId: String
 }
 
 /**
@@ -146,13 +142,13 @@ public abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentCo
  * Encapsulates execution outcomes: if and how exactly the environment changed,
  * were there any errors while executing, etc.
  *
- * @property sessionUuid Unique identifier for the session.
+ * @property sessionId Unique identifier for the session.
  * @property content Content of the message.
  */
 @Serializable
 @SerialName("OBSERVATION")
 public data class EnvironmentToolResultSingleToAgentMessage(
-    override val sessionUuid: Uuid,
+    override val sessionId: String,
     val content: EnvironmentToolResultToAgentContent,
 ) : EnvironmentToolResultToAgentMessage
 
@@ -160,13 +156,13 @@ public data class EnvironmentToolResultSingleToAgentMessage(
  * Represents a message sent after multiple tool calls.
  * Bundles multiple execution outcomes: environment changes, errors encountered, etc.
  *
- * @property sessionUuid Unique identifier for the session.
+ * @property sessionId Unique identifier for the session.
  * @property content List of content messages representing multiple tool results.
  */
 @Serializable
 @SerialName("OBSERVATIONS_MULTIPLE")
 public data class EnvironmentToolResultMultipleToAgentMessage(
-    override val sessionUuid: Uuid,
+    override val sessionId: String,
     val content: List<EnvironmentToolResultToAgentContent>,
 ) : EnvironmentToolResultToAgentMessage
 
@@ -188,13 +184,13 @@ public data class EnvironmentToAgentTerminationContent(
  * These are a communication essential, as they signal to the server
  * that it should perform cleanup for a particular session.
  *
- * @property sessionUuid Unique identifier for the session.
+ * @property sessionId Unique identifier for the session.
  * @property error Optional environment error details.
  */
 @Serializable
 @SerialName("TERMINATION")
 public data class EnvironmentToAgentTerminationMessage(
-    val sessionUuid: Uuid,
+    val sessionId: String,
     val content: EnvironmentToAgentTerminationContent? = null,
     val error: AgentServiceError? = null,
 ) : EnvironmentToAgentMessage
@@ -204,13 +200,13 @@ public data class EnvironmentToAgentTerminationMessage(
  * For errors resulting from failed [Tool][ai.koog.agents.core.tools.Tool] executions,
  * use [EnvironmentToolResultSingleToAgentMessage] instead.
  *
- * @property sessionUuid Unique identifier for the session.
+ * @property sessionId Unique identifier for the session.
  * @property error Environment error details.
  * @see <a href="https://youtrack.jetbrains.com/articles/JBRes-A-102/#:~:text=ERROR%20messages%20are%20mostly%20not%20used%20now">Knowledge Base Article</a>
  */
 @Serializable
 @SerialName("ERROR")
 public data class EnvironmentToAgentErrorMessage(
-    val sessionUuid: Uuid,
+    val sessionId: String,
     val error: AgentServiceError,
 ) : EnvironmentToAgentMessage

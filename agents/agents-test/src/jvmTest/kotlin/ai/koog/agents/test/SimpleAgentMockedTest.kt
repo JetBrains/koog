@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.test
 
 import ai.koog.agents.core.agent.AIAgent
@@ -19,7 +17,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import kotlin.uuid.ExperimentalUuidApi
 
 class SimpleAgentMockedTest {
     companion object {
@@ -73,7 +70,7 @@ class SimpleAgentMockedTest {
             iterationCount++
         }
 
-        onAgentRunError { strategyName, sessionUuid, throwable ->
+        onAgentRunError { strategyName, sessionId, throwable ->
             errors.add(throwable)
         }
 

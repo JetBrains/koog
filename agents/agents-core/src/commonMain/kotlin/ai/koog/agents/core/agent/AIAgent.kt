@@ -139,14 +139,14 @@ public open class AIAgent<Input, Output>(
                 toolRegistry = toolRegistry,
                 prompt = agentConfig.prompt,
                 model = agentConfig.model,
-                promptExecutor = PromptExecutorProxy(promptExecutor, pipeline, sessionUuid!!),
+                promptExecutor = PromptExecutorProxy(promptExecutor, pipeline, sessionUuid!!.toString()),
                 environment = preparedEnvironment,
                 config = agentConfig,
                 clock = clock
             ),
             stateManager = stateManager,
             storage = storage,
-            sessionUuid = sessionUuid!!,
+            sessionId = sessionUuid!!.toString(),
             strategyId = strategy.name,
             pipeline = pipeline,
         )
@@ -171,7 +171,7 @@ public open class AIAgent<Input, Output>(
         logger.info { formatLog("Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]") }
 
         val message = AgentToolCallsToEnvironmentMessage(
-            sessionUuid = sessionUuid ?: throw IllegalStateException("Session UUID is null"),
+            sessionId = sessionUuid?.toString() ?: throw IllegalStateException("Session UUID is null"),
             content = toolCalls.map { call ->
                 AgentToolCallToEnvironmentContent(
                     agentId = strategy.name,
@@ -289,7 +289,7 @@ public open class AIAgent<Input, Output>(
         }
 
         return EnvironmentToolResultMultipleToAgentMessage(
-            sessionUuid = message.sessionUuid,
+            sessionId = message.sessionId,
             content = results
         )
     }
@@ -313,7 +313,7 @@ public open class AIAgent<Input, Output>(
             throw error.asException()
         } catch (e: AgentEngineException) {
             logger.error(e) { "Execution exception reported by server!" }
-            pipeline.onAgentRunError(strategyName = strategy.name, sessionUuid = sessionUuid, throwable = e)
+            pipeline.onAgentRunError(strategyName = strategy.name, sessionId = sessionUuid.toString(), throwable = e)
         }
     }
 

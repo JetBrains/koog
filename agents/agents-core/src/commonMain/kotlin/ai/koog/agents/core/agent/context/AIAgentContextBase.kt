@@ -8,8 +8,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * The [AIAgentContextBase] interface represents the context of an AI agent in the lifecycle.
@@ -17,7 +15,6 @@ import kotlin.uuid.Uuid
  * metadata necessary for the operation of the agent.
  * Additionally, it supports features for custom workflows and extensibility.
  */
-@OptIn(ExperimentalUuidApi::class)
 public interface AIAgentContextBase {
     /**
      * Represents the environment in which the agent operates.
@@ -83,7 +80,7 @@ public interface AIAgentContextBase {
      * A unique identifier for the current session associated with the AI agent context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
-    public val sessionUuid: Uuid
+    public val sessionId: String
 
     /**
      * Represents the unique identifier for the strategy being used in the current AI agent context.
@@ -149,7 +146,7 @@ public interface AIAgentContextBase {
      * @param llm The AI agent LLM context
      * @param stateManager The state manager for the AI agent
      * @param storage The AI agent's key-value storage
-     * @param sessionUuid The UUID of the session
+     * @param sessionId The UUID of the session
      * @param strategyId The strategy ID
      * @param pipeline The AI agent pipeline
      * @return A new instance of [AIAgentContext] with the specified overrides.
@@ -162,7 +159,7 @@ public interface AIAgentContextBase {
         llm: AIAgentLLMContext = this.llm,
         stateManager: AIAgentStateManager = this.stateManager,
         storage: AIAgentStorage = this.storage,
-        sessionUuid: Uuid = this.sessionUuid,
+        sessionId: String = this.sessionId,
         strategyId: String = this.strategyId,
         pipeline: AIAgentPipeline = this.pipeline,
     ): AIAgentContextBase

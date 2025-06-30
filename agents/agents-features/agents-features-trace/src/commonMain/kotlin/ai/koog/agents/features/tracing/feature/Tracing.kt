@@ -10,7 +10,6 @@ import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
@@ -89,7 +88,6 @@ public class Tracing {
 
         override fun createInitialConfig(): TraceFeatureConfig = TraceFeatureConfig()
 
-        @OptIn(ExperimentalUuidApi::class)
         override fun install(
             config: TraceFeatureConfig,
             pipeline: AIAgentPipeline,
@@ -121,7 +119,7 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptAgentRunError(interceptContext) intercept@{ strategyName, sessionUuid, throwable ->
+            pipeline.interceptAgentRunError(interceptContext) intercept@{ strategyName, sessionId, throwable ->
                 val event = AIAgentRunErrorEvent(
                     strategyName = strategyName,
                     error = throwable.toAgentError(),
@@ -175,7 +173,7 @@ public class Tracing {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ prompt, tools, model, sessionUuid ->
+            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ prompt, tools, model, sessionId ->
                 val event = LLMCallStartEvent(
                     prompt = prompt,
                     tools = tools.map { it.name }
@@ -184,7 +182,7 @@ public class Tracing {
                 config.messageProcessor.onMessageForEachSafe(event)
             }
 
-            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ prompt, tools, model, responses, sessionUuid ->
+            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ prompt, tools, model, responses, sessionId ->
                 val event = LLMCallEndEvent(
                     responses = responses
                 )

@@ -9,8 +9,6 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.utils.RWLock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Implements the [AIAgentContext] interface, providing the context required for an AI agent's execution.
@@ -25,11 +23,10 @@ import kotlin.uuid.Uuid
  * @param llm The contextual data and execution utilities for the AI agent's interaction with LLMs.
  * @param stateManager Manages the internal state of the AI agent.
  * @param storage Concurrent-safe storage for managing key-value data across the agent's lifecycle.
- * @param sessionUuid The unique identifier for the agent session.
+ * @param sessionId The unique identifier for the agent session.
  * @param strategyId The identifier for the selected strategy in the agent's lifecycle.
  * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
  */
-@OptIn(ExperimentalUuidApi::class)
 public class AIAgentContext(
     override val environment: AIAgentEnvironment,
     override val agentInput: Any?,
@@ -37,7 +34,7 @@ public class AIAgentContext(
     llm: AIAgentLLMContext,
     stateManager: AIAgentStateManager,
     storage: AIAgentStorage,
-    override val sessionUuid: Uuid,
+    override val sessionId: String,
     override val strategyId: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
@@ -129,7 +126,7 @@ public class AIAgentContext(
      * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
-     * @param sessionUuid The session UUID, or `null` to retain the current session ID.
+     * @param sessionId The session UUID, or `null` to retain the current session ID.
      * @param strategyId The strategy identifier, or `null` to retain the current identifier.
      * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
      */
@@ -140,7 +137,7 @@ public class AIAgentContext(
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
-        sessionUuid: Uuid,
+        sessionId: String,
         strategyId: String,
         pipeline: AIAgentPipeline,
     ): AIAgentContextBase = AIAgentContext(
@@ -150,7 +147,7 @@ public class AIAgentContext(
         llm = llm,
         stateManager = stateManager,
         storage = storage,
-        sessionUuid = sessionUuid,
+        sessionId = sessionId,
         strategyId = strategyId,
         pipeline = pipeline,
     )

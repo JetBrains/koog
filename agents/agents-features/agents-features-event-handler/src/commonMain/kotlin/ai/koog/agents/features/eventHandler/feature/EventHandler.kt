@@ -8,7 +8,6 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * A feature that allows hooking into various events in the agent's lifecycle.
@@ -54,7 +53,6 @@ public class EventHandler {
      *     }
      * }
      */
-    @OptIn(ExperimentalUuidApi::class)
     public companion object Feature : AIAgentFeature<EventHandlerConfig, EventHandler> {
 
         private val logger = KotlinLogging.logger {  }
@@ -83,8 +81,8 @@ public class EventHandler {
                 config.invokeOnAgentFinished(strategyName, result)
             }
 
-            pipeline.interceptAgentRunError(interceptContext) intercept@{ strategyName, sessionUuid, throwable ->
-                config.invokeOnAgentRunError(strategyName, sessionUuid, throwable)
+            pipeline.interceptAgentRunError(interceptContext) intercept@{ strategyName, sessionId, throwable ->
+                config.invokeOnAgentRunError(strategyName, sessionId, throwable)
             }
 
             //endregion Intercept Agent Events
@@ -119,12 +117,12 @@ public class EventHandler {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ prompt, tools, model, sessionUuid ->
-                config.invokeOnBeforeLLMCall(prompt, tools, model, sessionUuid)
+            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ prompt, tools, model, sessionId ->
+                config.invokeOnBeforeLLMCall(prompt, tools, model, sessionId)
             }
 
-            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ prompt, tools, model, responses, sessionUuid ->
-                config.invokeOnAfterLLMCall(prompt, tools, model, responses, sessionUuid)
+            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ prompt, tools, model, responses, sessionId ->
+                config.invokeOnAfterLLMCall(prompt, tools, model, responses, sessionId)
             }
 
             //endregion Intercept LLM Call Events

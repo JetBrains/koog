@@ -1,13 +1,9 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.core.feature.handler
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Feature implementation for agent and strategy interception.
@@ -53,7 +49,7 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      *
      * The handler accepts three parameters:
      * - `strategyName`: The name of the strategy during which the error occurred.
-     * - `sessionUuid`: The unique identifier of the session where the error happened. Might be `null` if the context is unavailable.
+     * - `sessionId`: The unique identifier of the session where the error happened. Might be `null` if the context is unavailable.
      * - `throwable`: The exception or error that was thrown during execution.
      */
     public var agentRunErrorHandler: AgentRunErrorHandler =
@@ -160,16 +156,15 @@ public fun interface AgentFinishedHandler {
  * strategy execution. It can be used to implement custom error-handling logic tailored to the
  * requirements of an agent or strategy.
  */
-@OptIn(ExperimentalUuidApi::class)
 public fun interface AgentRunErrorHandler {
     /**
      * Handles an error that occurs during the execution of an agent's strategy.
      *
      * @param strategyName The name of the strategy where the error occurred.
-     * @param sessionUuid The unique identifier of the session in which the strategy is being executed. Can be null if no session is available.
+     * @param sessionId The unique identifier of the session in which the strategy is being executed. Can be null if no session is available.
      * @param throwable The exception or error that occurred during the strategy's execution.
      */
-    public suspend fun handle(strategyName: String, sessionUuid: Uuid?, throwable: Throwable)
+    public suspend fun handle(strategyName: String, sessionId: String, throwable: Throwable)
 }
 
 /**
@@ -223,13 +218,12 @@ public class AgentStartContext<TFeature>(
  *
  * @param FeatureT The type of feature associated with the strategy update.
  * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
- * @property sessionUuid A unique identifier for the session during which the strategy is being updated.
+ * @property sessionId A unique identifier for the session during which the strategy is being updated.
  * @property feature The feature bound to the strategy update, providing additional contextual information.
  */
-@OptIn(ExperimentalUuidApi::class)
 public class StrategyUpdateContext<FeatureT>(
     public val strategy: AIAgentStrategy<*, *>,
-    public val sessionUuid: Uuid,
+    public val sessionId: String,
     public val feature: FeatureT
 ) {
     /**

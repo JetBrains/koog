@@ -47,11 +47,9 @@ import kotlin.test.AfterTest
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
-import kotlin.uuid.ExperimentalUuidApi
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 
-@OptIn(ExperimentalUuidApi::class)
 class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
@@ -143,7 +141,7 @@ class AIAgentIntegrationTest {
             results.add(result)
         }
 
-        onAgentRunError { strategyName, sessionUuid, throwable ->
+        onAgentRunError { strategyName, sessionId, throwable ->
             println("Agent error: strategy=$strategyName, error=${throwable.message}")
             errors.add(throwable)
         }
@@ -186,11 +184,11 @@ class AIAgentIntegrationTest {
             println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
         }
 
-        onBeforeLLMCall { prompt, tools, model, sessionUuid ->
+        onBeforeLLMCall { prompt, tools, model, sessionId ->
             println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
         }
 
-        onAfterLLMCall { prompt, tools, model, responses, sessionUuid ->
+        onAfterLLMCall { prompt, tools, model, responses, sessionId ->
             println("After LLM call with tools: response=${responses.map { it.content.take(50) }}")
         }
 

@@ -11,10 +11,7 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
-@OptIn(ExperimentalUuidApi::class)
 class TestEventsCollector {
 
     val size: Int
@@ -35,7 +32,7 @@ class TestEventsCollector {
             _collectedEvents.add("OnAgentFinished (strategy: $strategyName, result: $result)")
         }
 
-        onAgentRunError { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
+        onAgentRunError { strategyName: String, sessionId: String, throwable: Throwable ->
             _collectedEvents.add("OnAgentRunError (strategy: $strategyName, throwable: ${throwable.message})")
         }
 
@@ -55,11 +52,11 @@ class TestEventsCollector {
             _collectedEvents.add("OnAfterNode (node: ${node.name}, input: $input, output: $output)")
         }
 
-        onBeforeLLMCall { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid ->
+        onBeforeLLMCall { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String ->
             _collectedEvents.add("OnBeforeLLMCall (prompt: ${prompt.messages}, tools: [${tools.joinToString { it.name } }])")
         }
 
-        onAfterLLMCall { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid ->
+        onAfterLLMCall { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String ->
             _collectedEvents.add("OnAfterLLMCall (responses: [${responses.joinToString { "${it.role.name}: ${it.content}" }}])")
         }
 

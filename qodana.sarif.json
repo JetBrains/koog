@@ -74844,8 +74844,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getSessionUuid' coverage is below the threshold 50%",
-            "markdown": "Method `getSessionUuid` coverage is below the threshold 50%"
+            "text": "Method 'getsessionId' coverage is below the threshold 50%",
+            "markdown": "Method `getsessionId` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -74860,7 +74860,7 @@
                   "charOffset": 6360,
                   "charLength": 11,
                   "snippet": {
-                    "text": "sessionUuid"
+                    "text": "sessionId"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -74870,7 +74870,7 @@
                   "charOffset": 6352,
                   "charLength": 26,
                   "snippet": {
-                    "text": "    val sessionUuid: Uuid,"
+                    "text": "    val sessionId: String,"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -87488,8 +87488,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getSessionUuid' coverage is below the threshold 50%",
-            "markdown": "Method `getSessionUuid` coverage is below the threshold 50%"
+            "text": "Method 'getsessionId' coverage is below the threshold 50%",
+            "markdown": "Method `getsessionId` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -87504,7 +87504,7 @@
                   "charOffset": 4752,
                   "charLength": 11,
                   "snippet": {
-                    "text": "sessionUuid"
+                    "text": "sessionId"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -87514,7 +87514,7 @@
                   "charOffset": 4735,
                   "charLength": 35,
                   "snippet": {
-                    "text": "    override val sessionUuid: Uuid,"
+                    "text": "    override val sessionId: String,"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -92882,8 +92882,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getSessionUuid' coverage is below the threshold 50%",
-            "markdown": "Method `getSessionUuid` coverage is below the threshold 50%"
+            "text": "Method 'getsessionId' coverage is below the threshold 50%",
+            "markdown": "Method `getsessionId` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -92898,7 +92898,7 @@
                   "charOffset": 2428,
                   "charLength": 27,
                   "snippet": {
-                    "text": "get() = builder.sessionUuid"
+                    "text": "get() = builder.sessionId"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -92908,7 +92908,7 @@
                   "charOffset": 2420,
                   "charLength": 35,
                   "snippet": {
-                    "text": "        get() = builder.sessionUuid"
+                    "text": "        get() = builder.sessionId"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -99636,7 +99636,7 @@
                   "charOffset": 6988,
                   "charLength": 216,
                   "snippet": {
-                    "text": "    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }"
+                    "text": "    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -100944,8 +100944,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getSessionUuid' coverage is below the threshold 50%",
-            "markdown": "Method `getSessionUuid` coverage is below the threshold 50%"
+            "text": "Method 'getsessionId' coverage is below the threshold 50%",
+            "markdown": "Method `getsessionId` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -100960,7 +100960,7 @@
                   "charOffset": 3623,
                   "charLength": 11,
                   "snippet": {
-                    "text": "sessionUuid"
+                    "text": "sessionId"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -100970,7 +100970,7 @@
                   "charOffset": 3606,
                   "charLength": 35,
                   "snippet": {
-                    "text": "    override val sessionUuid: Uuid,"
+                    "text": "    override val sessionId: String,"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -109528,8 +109528,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getSessionUuid' coverage is below the threshold 50%",
-            "markdown": "Method `getSessionUuid` coverage is below the threshold 50%"
+            "text": "Method 'getsessionId' coverage is below the threshold 50%",
+            "markdown": "Method `getsessionId` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -109544,7 +109544,7 @@
                   "charOffset": 7106,
                   "charLength": 11,
                   "snippet": {
-                    "text": "sessionUuid"
+                    "text": "sessionId"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -109554,7 +109554,7 @@
                   "charOffset": 7098,
                   "charLength": 26,
                   "snippet": {
-                    "text": "    val sessionUuid: Uuid,"
+                    "text": "    val sessionId: String,"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -112454,7 +112454,7 @@
                   "charOffset": 7374,
                   "charLength": 285,
                   "snippet": {
-                    "text": "    public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid -> }"
+                    "text": "    public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -115354,7 +115354,7 @@
                   "charOffset": 5020,
                   "charLength": 184,
                   "snippet": {
-                    "text": "    public var onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }"
+                    "text": "    public var onAgentRunError: suspend (strategyName: String, sessionId: String?, throwable: Throwable) -> Unit = { strategyName: String, sessionId: String?, throwable: Throwable -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }

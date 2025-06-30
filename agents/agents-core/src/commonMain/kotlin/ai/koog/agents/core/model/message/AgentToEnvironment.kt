@@ -1,20 +1,16 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.core.model.message
 
 import ai.koog.agents.core.model.AgentServiceError
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Represents a message sent from an agent to the environment.
  * This is a base interface for all communication from agents to their respective environments.
  * Each message under this interface is tied to a specific session identified by a universally unique identifier.
  *
- * @property sessionUuid A unique identifier for the session associated with the message.
+ * @property sessionId A unique identifier for the session associated with the message.
  */
 @Serializable
 public sealed interface AgentToEnvironmentMessage {
@@ -23,7 +19,7 @@ public sealed interface AgentToEnvironmentMessage {
      * Each session is identified by a universally unique identifier (UUID) to ensure proper association
      * and tracking of messages between the agent and its environment.
      */
-    public val sessionUuid: Uuid
+    public val sessionId: String
 }
 
 /**
@@ -52,14 +48,14 @@ public data class AgentToolCallToEnvironmentContent(
 /**
  * Represents a message sent from the server to the environment to perform multiple tool calls.
  *
- * @property sessionUuid Unique identifier for the session.
+ * @property sessionId Unique identifier for the session.
  * @property content List of individual tool call requests, each containing details about
  * the agent, tool name, arguments, and an optional tool call identifier.
  */
 @Serializable
 @SerialName("ACTION_MULTIPLE")
 public data class AgentToolCallsToEnvironmentMessage(
-    override val sessionUuid: Uuid,
+    override val sessionId: String,
     val content: List<AgentToolCallToEnvironmentContent>
 ) : AgentToolCallToEnvironmentMessage
 
@@ -72,12 +68,12 @@ public data class AgentToolCallsToEnvironmentMessage(
  * - [Trying to use an agent that is not available][ai.koog.agents.core.model.AgentServiceErrorType.AGENT_NOT_FOUND];
  * - [Other, unexpected errors][ai.koog.agents.core.model.AgentServiceErrorType.UNEXPECTED_ERROR].
  *
- * @property sessionUuid Unique identifier for the session.
+ * @property sessionId Unique identifier for the session.
  * @property error Error details.
  */
 @Serializable
 @SerialName("ERROR")
 public data class AgentErrorToEnvironmentMessage(
-    override val sessionUuid: Uuid,
+    override val sessionId: String,
     val error: AgentServiceError
 ) : AgentToEnvironmentMessage

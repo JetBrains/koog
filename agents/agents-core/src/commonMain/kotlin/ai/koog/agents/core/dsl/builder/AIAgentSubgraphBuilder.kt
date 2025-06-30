@@ -7,7 +7,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.*
 import kotlin.reflect.KProperty
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -314,7 +313,6 @@ public data class ParallelResult<Input, Output>(
  * @param nodes List of nodes to execute in parallel
  * @param dispatcher Coroutine dispatcher to use for parallel execution
  */
-@OptIn(ExperimentalUuidApi::class)
 public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
     private val nodes: List<AIAgentNodeBase<Input, Output>>,
     private val dispatcher: CoroutineDispatcher
@@ -342,7 +340,6 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
  * @param transform A suspend function defining the transformation logic to be applied to the elements in the output list.
  * @param dispatcher The [CoroutineDispatcher] used to control the parallel execution of the transformation operations.
  */
-@OptIn(ExperimentalUuidApi::class)
 public class AIAgentParallelTransformNodeBuilder<Input, OldOutput, NewOutput> internal constructor(
     transform: suspend AIAgentContextBase.(OldOutput) -> NewOutput,
     private val dispatcher: CoroutineDispatcher
@@ -368,7 +365,6 @@ public class AIAgentParallelTransformNodeBuilder<Input, OldOutput, NewOutput> in
  *
  * @param merge Function to merge the contexts after parallel execution
  */
-@OptIn(ExperimentalUuidApi::class)
 public class AIAgentParallelMergeNodeBuilder<Input, Output> internal constructor(
     private val merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> NodeExecutionResult<Output>,
 ) : AIAgentNodeBuilder<List<AsyncParallelResult<Input, Output>>, Output>(

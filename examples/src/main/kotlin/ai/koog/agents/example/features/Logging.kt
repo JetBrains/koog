@@ -1,12 +1,10 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.example.features
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.example.ApiKeyService
@@ -17,7 +15,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * An example of a feature that provides logging capabilities for the agent to trace a particular event
@@ -74,11 +71,11 @@ class Logging(val logger: Logger) {
                 logger.info("Node ${node.name} with input: $input produced output: $output")
             }
 
-            pipeline.interceptBeforeLLMCall(interceptContext) { prompt, tools, model, sessionUuid ->
+            pipeline.interceptBeforeLLMCall(interceptContext) { prompt, tools, model, sessionId ->
                 logger.info("Before LLM call with prompt: ${prompt}, tools: [${tools.joinToString { it.name }}]")
             }
 
-            pipeline.interceptAfterLLMCall(interceptContext) { prompt, tools, model, responses, sessionUuid ->
+            pipeline.interceptAfterLLMCall(interceptContext) { prompt, tools, model, responses, sessionId ->
                 logger.info("After LLM call with response: $responses")
             }
         }
