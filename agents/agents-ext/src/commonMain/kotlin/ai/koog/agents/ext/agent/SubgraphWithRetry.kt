@@ -123,7 +123,7 @@ public fun <Input : Any, Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRe
  *
  * Example usage:
  * ```
- * val subgraphRetryCallLLM by subgraphWithRetryPlain(
+ * val subgraphRetryCallLLM by subgraphWithRetrySimple(
  *     condition = { it is Message.Tool.Call},
  *     maxRetries = 2,
  * ) {
@@ -134,7 +134,7 @@ public fun <Input : Any, Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRe
  * edge(subgraphRetryCallLLM forwardTo nodeExecuteTool onToolCall { true })
  * ```
  */
-public fun <Input : Any, Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetryPlain(
+public fun <Input : Any, Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
     condition: suspend (Output) -> Boolean,
     maxRetries: Int,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
