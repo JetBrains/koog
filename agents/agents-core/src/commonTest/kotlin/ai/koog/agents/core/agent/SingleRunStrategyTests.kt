@@ -87,7 +87,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(SingleRunMode.SEQUENTIAL),
+            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
                 onToolCall { _, args -> actualToolCalls += args.toString() }
@@ -116,7 +116,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(SingleRunMode.PARALLEL),
+            strategy = singleRunStrategy(ToolCalls.PARALLEL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
                 onToolCall { _, args -> actualToolCalls += args.toString() }
@@ -154,7 +154,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(SingleRunMode.SEQUENTIAL),
+            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
                 onToolCall { _, args -> actualToolCalls += args.toString() }
@@ -192,7 +192,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(SingleRunMode.PARALLEL),
+            strategy = singleRunStrategy(ToolCalls.PARALLEL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
                 onToolCall { _, args -> actualToolCalls += args.toString() }
@@ -231,7 +231,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(SingleRunMode.SEQUENTIAL),
+            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
                 onToolCall { _, args -> actualToolCalls += args.toString() }
@@ -270,7 +270,7 @@ class SingleRunStrategyTests {
         val agent = AIAgent(
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
-            strategy = singleRunStrategy(SingleRunMode.PARALLEL),
+            strategy = singleRunStrategy(ToolCalls.PARALLEL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
                 onToolCall { _, args -> actualToolCalls += args.toString() }

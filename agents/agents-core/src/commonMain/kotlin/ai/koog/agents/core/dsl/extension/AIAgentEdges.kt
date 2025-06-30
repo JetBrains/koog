@@ -206,8 +206,8 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  *
  * @param block A function that evaluates whether to accept an assistant message
  */
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleAssistantMessages(
+public infix fun <IncomingOutput, OutgoingInput>
+        AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleAssistantMessages(
     block: suspend (List<Message.Assistant>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Assistant>, OutgoingInput> {
     return onIsInstance(List::class)

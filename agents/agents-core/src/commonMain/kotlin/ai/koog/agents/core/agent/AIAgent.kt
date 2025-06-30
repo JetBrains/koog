@@ -380,12 +380,11 @@ public fun AIAgent(
  *                - SingleRunMode.PARALLEL: Executes multiple tool calls in parallel.
  * @return An instance of AIAgentStrategy configured according to the specified single-run mode.
  */
-
-public fun singleRunStrategy(runMode: SingleRunMode = SingleRunMode.SINGLE): AIAgentStrategy =
+public fun singleRunStrategy(runMode: ToolCalls = ToolCalls.SINGLE): AIAgentStrategy =
     when (runMode) {
-        SingleRunMode.SEQUENTIAL -> singleRunWithParallelAbility(false)
-        SingleRunMode.PARALLEL   -> singleRunWithParallelAbility(true)
-        SingleRunMode.SINGLE     -> singleRunModeStrategy()
+        ToolCalls.SEQUENTIAL -> singleRunWithParallelAbility(false)
+        ToolCalls.PARALLEL   -> singleRunWithParallelAbility(true)
+        ToolCalls.SINGLE     -> singleRunModeStrategy()
     }
 
 private fun singleRunWithParallelAbility(parallelTools: Boolean) = strategy("single_run_sequential") {
@@ -429,6 +428,6 @@ private fun singleRunModeStrategy() = strategy("single_run") {
  * - PARALLEL: Tool calls executed in parallel.
  * - SINGLE: Multiple tool calls are not allowed.
  */
-public enum class SingleRunMode {
+public enum class ToolCalls {
     SEQUENTIAL, PARALLEL, SINGLE
 }
