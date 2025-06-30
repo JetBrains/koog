@@ -59,10 +59,12 @@ class SafeToolTest {
         }
     }
 
+
     @Test
     fun testExecuteSuccess() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
 
         val result = safeTool.execute("test", 123)
 
@@ -75,6 +77,7 @@ class SafeToolTest {
     fun testExecuteFailure() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = false)
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
 
         val result = safeTool.execute("test", 123)
 
@@ -87,6 +90,7 @@ class SafeToolTest {
     fun testExecuteRaw() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true, resultContent = "Raw result content")
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
 
         val result = safeTool.executeRaw("test", 123)
 
@@ -115,6 +119,7 @@ class SafeToolTest {
     fun testInvalidArgumentCount() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
 
         assertThrows<IllegalStateException> {
             safeTool.execute("test")
@@ -125,6 +130,7 @@ class SafeToolTest {
     fun testZeroArgumentCount() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
 
         assertThrows<IllegalStateException> {
             safeTool.execute()
@@ -135,6 +141,7 @@ class SafeToolTest {
     fun testTooManyArguments() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
 
         assertThrows<IllegalStateException> {
             safeTool.execute("test", 123, "extra argument")
@@ -142,13 +149,72 @@ class SafeToolTest {
     }
 
     @Test
-    fun testWithNullArgument() = runTest {
+    fun testWithNullArgumentInMockEnvironment() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
 
         val result = safeTool.execute("test", null)
 
         assertTrue(result.isSuccessful())
         assertEquals(TEST_RESULT, result.asSuccessful().result)
+    }
+
+    @Test
+    fun testSafeToolParameters() = runTest {
+        val mockEnvironment = MockEnvironment(shouldSucceed = true)
+        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
+
+        val safeToolParams = safeTool.toolFunction.parameters.joinToString(", ") { it.name.toString() }
+
+        assertEquals("param1, param2", safeToolParams)
+    }
+
+    @Test
+    fun testWithNullArgumentInDirectCallEnvironment() = runTest {
+        val directCallEnvironment = object : AIAgentEnvironment {
+            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
+                return toolCalls.map { toolCall ->
+                    try {
+                        val result = testFunction("test", null as Int)
+
+                        ReceivedToolResult(
+                            id = toolCall.id,
+                            tool = toolCall.tool,
+                            content = "Success: $result",
+                            result = ToolFromCallable.Result(
+                                result = result,
+                                type = typeOf<String>(),
+                                json = Json,
+                            )
+                        )
+                    } catch (e: Exception) {
+                        ReceivedToolResult(
+                            id = toolCall.id,
+                            tool = toolCall.tool,
+                            content = "Error: ${e.message}",
+                            result = null
+                        )
+                    }
+                }
+            }
+
+            override suspend fun reportProblem(exception: Throwable) {
+                throw exception
+            }
+
+            override suspend fun sendTermination(result: String?) {
+                // No-op for testing
+            }
+        }
+
+        val safeTool = SafeToolFromCallable(::testFunction, directCallEnvironment, testClock)
+        assertEquals(safeTool.toolFunction, ::testFunction)
+
+        val result = safeTool.execute("test", null)
+
+        assertTrue(result.isFailure())
+        assertTrue(result.content.contains("null cannot be cast to non-null type kotlin.Int"))
     }
 }
