@@ -9,6 +9,7 @@ import ai.koog.integration.tests.utils.TestLogPrinter
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
@@ -16,6 +17,8 @@ import ai.koog.agents.core.tools.*
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
+import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -27,6 +30,7 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.CoroutineScope
@@ -39,6 +43,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.io.File
+import java.util.stream.Stream
 import kotlin.coroutines.coroutineContext
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
@@ -101,12 +112,69 @@ internal fun LLMClient.reportingTo(
     eventsChannel: Channel<Event>
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
-@Suppress("SSBasedInspection")
-class KotlinAIAgentWithMultipleLLMIntegrationTest {
+class AIAgentMultipleLLMIntegrationTest {
+
+    companion object {
+        private lateinit var testResourcesDir: File
+
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            testResourcesDir = File("src/jvmTest/resources/media")
+            testResourcesDir.mkdirs()
+            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+        }
+
+        @JvmStatic
+        fun modelsWithVisionCapability(): Stream<Arguments> {
+            return Models.modelsWithVisionCapability()
+        }
+    }
 
     // API keys for testing
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+
+    @Serializable
+    enum class CalculatorOperation {
+        ADD, SUBTRACT, MULTIPLY, DIVIDE
+    }
+
+    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
+        @Serializable
+        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
+
+        override val argsSerializer = Args.serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operation",
+                    description = "The operation to perform.",
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor(
+                    name = "a",
+                    description = "The first argument (number)",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "b",
+                    description = "The second argument (number)",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+
+        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
+            CalculatorOperation.ADD -> args.a + args.b
+            CalculatorOperation.SUBTRACT -> args.a - args.b
+            CalculatorOperation.MULTIPLY -> args.a * args.b
+            CalculatorOperation.DIVIDE -> args.a / args.b
+        }.let(ToolResult::Number)
+    }
 
     sealed interface OperationResult<T> {
         class Success<T>(val result: T) : OperationResult<T>
@@ -298,8 +366,230 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun createTestOpenaiAnthropicAgent(
+        fs: MockFileSystem,
+        eventHandlerConfig: EventHandlerConfig.() -> Unit,
+        maxAgentIterations: Int,
+        prompt: Prompt = prompt("test") {},
+        eventsChannel: Channel<Event>? = null,
+    ): AIAgent<String, String> {
+        val openAIClient = if (eventsChannel != null) {
+            OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        } else {
+            OpenAILLMClient(openAIApiKey)
+        }
+
+        val anthropicClient = if (eventsChannel != null) {
+            AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
+        } else {
+            AnthropicLLMClient(anthropicApiKey)
+        }
+
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient
+        )
+
+        val strategy = strategy<String, String>("test") {
+            val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
+                val definePromptAnthropic by node<Unit, Unit> {
+                    llm.writeSession {
+                        model = AnthropicModels.Sonnet_3_7
+                        rewritePrompt {
+                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+                                system(
+                                    "You are a helpful assistant. You need to solve my task. " +
+                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
+                                            "WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+                val callTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+
+
+                edge(nodeStart forwardTo definePromptAnthropic transformed {})
+                edge(definePromptAnthropic forwardTo callLLM transformed { agentInput<String>() })
+                edge(callLLM forwardTo callTool onToolCall { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
+                edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo callTool onToolCall { true })
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
+            }
+
+            val openaiSubgraph by subgraph("openai") {
+                val definePromptOpenAI by node<Unit, Unit> {
+                    llm.writeSession {
+                        model = OpenAIModels.Chat.GPT4o
+                        rewritePrompt {
+                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+                                system(
+                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
+                                            "Please analyze the whole produced solution, and check that it is valid." +
+                                            "Write concise verification result." +
+                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! " +
+                                            "ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE " +
+                                            "AFTER CALLING THE TOOLS!"
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+                val callTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+
+
+                edge(nodeStart forwardTo definePromptOpenAI)
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
+                edge(callLLM forwardTo callTool onToolCall { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+                edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo callTool onToolCall { true })
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val compressHistoryNode by nodeLLMCompressHistory<Unit>("compress_history")
+
+            nodeStart then anthropicSubgraph then compressHistoryNode then openaiSubgraph then nodeFinish
+        }
+
+        val tools = ToolRegistry {
+            tool(CreateFile(fs))
+            tool(DeleteFile(fs))
+            tool(ReadFile(fs))
+            tool(ListFiles(fs))
+        }
+
+        // Create the agent
+        return AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            toolRegistry = tools,
+        ) {
+            install(Tracing) {
+                addMessageProcessor(TestLogPrinter())
+            }
+
+            install(EventHandler, eventHandlerConfig)
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun createTestOpenaiAgent(
+        fs: MockFileSystem,
+        eventHandlerConfig: EventHandlerConfig.() -> Unit,
+        maxAgentIterations: Int,
+        prompt: Prompt = prompt("test") {},
+    ): AIAgent<String, String> {
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+
+        // Create the executor
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+        )
+
+        // Create a simple agent strategy
+        val strategy = strategy<String, String>("test") {
+            val openaiSubgraphFirst by subgraph<String, Unit>("openai0") {
+                val definePromptOpenAI by node<Unit, Unit> {
+                    llm.writeSession {
+                        model = OpenAIModels.Chat.GPT4o
+                        rewritePrompt {
+                            prompt("test") {
+                                system(
+                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
+                                            "Please analyze the whole produced solution, and check that it is valid." +
+                                            "Write concise verification result." +
+                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                )
+                            }
+                        }
+                    }
+                }
+
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+                val callTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+
+
+                edge(nodeStart forwardTo definePromptOpenAI transformed {})
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
+                edge(callLLM forwardTo callTool onToolCall { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
+                edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo callTool onToolCall { true })
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
+            }
+
+            val openaiSubgraphSecond by subgraph("openai1") {
+                val definePromptOpenAI by node<Unit, Unit> {
+                    llm.writeSession {
+                        model = OpenAIModels.Chat.GPT4o
+                        rewritePrompt {
+                            prompt("test") {
+                                system(
+                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
+                                            "Please analyze the whole produced solution, and check that it is valid." +
+                                            "Write concise verification result." +
+                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val callLLM by nodeLLMRequest(allowToolCalls = true)
+                val callTool by nodeExecuteTool()
+                val sendToolResult by nodeLLMSendToolResult()
+
+
+                edge(nodeStart forwardTo definePromptOpenAI)
+                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
+                edge(callLLM forwardTo callTool onToolCall { true })
+                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+                edge(callTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo callTool onToolCall { true })
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val compressHistoryNode by nodeLLMCompressHistory<Unit>("compress_history")
+
+            nodeStart then openaiSubgraphFirst then compressHistoryNode then openaiSubgraphSecond then nodeFinish
+        }
+
+        val tools = ToolRegistry {
+            tool(CreateFile(fs))
+            tool(DeleteFile(fs))
+            tool(ReadFile(fs))
+            tool(ListFiles(fs))
+        }
+
+        // Create the agent
+        return AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            toolRegistry = tools,
+        ) {
+            install(Tracing) {
+                addMessageProcessor(TestLogPrinter())
+            }
+
+            install(EventHandler, eventHandlerConfig)
+        }
+    }
+
     @Test
-    fun integration_testKotlinAIAgentWithOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+    fun integration_testAIAgentOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
@@ -316,9 +606,14 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 eventsChannel.send(Event.Termination)
             }
         }
-        val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
+        val agent = createTestOpenaiAnthropicAgent(
+            fs,
+            eventHandlerConfig,
+            maxAgentIterations = 42,
+            eventsChannel = eventsChannel,
+        )
 
-        val result = agent.runAndGetResult(
+        val result = agent.run(
             "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
         )
 
@@ -379,10 +674,14 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
             }
         }
         val steps = 10
-        val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = steps)
+        val agent = createTestOpenaiAnthropicAgent(
+            fs,
+            eventHandlerConfig,
+            maxAgentIterations = steps,
+        )
 
         try {
-            val result = agent.runAndGetResult(
+            val result = agent.run(
                 "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
             )
             assertNull(result)
@@ -396,222 +695,6 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
             )
         }
     }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun createTestOpenaiAnthropicAgent(
-        eventsChannel: Channel<Event>,
-        fs: MockFileSystem,
-        eventHandlerConfig: EventHandlerConfig.() -> Unit,
-        maxAgentIterations: Int
-    ): AIAgent {
-        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
-        val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
-
-        val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to openAIClient,
-            LLMProvider.Anthropic to anthropicClient
-        )
-
-        val strategy = strategy("test") {
-            val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
-                val definePromptAnthropic by node<Unit, Unit> {
-                    llm.writeSession {
-                        model = AnthropicModels.Sonnet_3_7
-                        rewritePrompt {
-                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
-                                system(
-                                    "You are a helpful assistant. You need to solve my task. " +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
-                                            "WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
-                                )
-                            }
-                        }
-                    }
-                }
-
-                val callLLM by nodeLLMRequest(allowToolCalls = true)
-                val callTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
-
-
-                edge(nodeStart forwardTo definePromptAnthropic transformed {})
-                edge(definePromptAnthropic forwardTo callLLM transformed { agentInput })
-                edge(callLLM forwardTo callTool onToolCall { true })
-                edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
-                edge(callTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo callTool onToolCall { true })
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
-            }
-
-            val openaiSubgraph by subgraph("openai") {
-                val definePromptOpenAI by node<Unit, Unit> {
-                    llm.writeSession {
-                        model = OpenAIModels.Chat.GPT4o
-                        rewritePrompt {
-                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
-                                system(
-                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
-                                            "Please analyze the whole produced solution, and check that it is valid." +
-                                            "Write concise verification result." +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! " +
-                                            "ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE " +
-                                            "AFTER CALLING THE TOOLS!"
-                                )
-                            }
-                        }
-                    }
-                }
-
-                val callLLM by nodeLLMRequest(allowToolCalls = true)
-                val callTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
-
-
-                edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
-                edge(callLLM forwardTo callTool onToolCall { true })
-                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
-                edge(callTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo callTool onToolCall { true })
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            }
-
-            val compressHistoryNode by nodeLLMCompressHistory<Unit>("compress_history")
-
-            nodeStart then anthropicSubgraph then compressHistoryNode then openaiSubgraph then nodeFinish
-        }
-
-        val tools = ToolRegistry {
-            tool(CreateFile(fs))
-            tool(DeleteFile(fs))
-            tool(ReadFile(fs))
-            tool(ListFiles(fs))
-        }
-
-        // Create the agent
-        return AIAgent(
-            promptExecutor = executor,
-            strategy = strategy,
-            agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
-            toolRegistry = tools,
-        ) {
-            install(Tracing) {
-                addMessageProcessor(TestLogPrinter())
-            }
-
-            install(EventHandler, eventHandlerConfig)
-        }
-    }
-
-    @OptIn(DelicateCoroutinesApi::class)
-    private fun createTestOpenaiAgent(
-        eventsChannel: Channel<Event>,
-        fs: MockFileSystem,
-        eventHandlerConfig: EventHandlerConfig.() -> Unit,
-        maxAgentIterations: Int
-    ): AIAgent {
-        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
-        val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
-
-        // Create the executor
-        val executor = //grazieExecutor
-            MultiLLMPromptExecutor(
-                LLMProvider.OpenAI to openAIClient,
-                LLMProvider.Anthropic to anthropicClient
-            )
-
-        // Create a simple agent strategy
-        val strategy = strategy("test") {
-            val openaiSubgraphFirst by subgraph<String, Unit>("openai0") {
-                val definePromptOpenAI by node<Unit, Unit> {
-                    llm.writeSession {
-                        model = OpenAIModels.Chat.GPT4o
-                        rewritePrompt {
-                            prompt("test") {
-                                system(
-                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
-                                            "Please analyze the whole produced solution, and check that it is valid." +
-                                            "Write concise verification result." +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
-                                )
-                            }
-                        }
-                    }
-                }
-
-
-                val callLLM by nodeLLMRequest(allowToolCalls = true)
-                val callTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
-
-
-                edge(nodeStart forwardTo definePromptOpenAI transformed {})
-                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
-                edge(callLLM forwardTo callTool onToolCall { true })
-                edge(callLLM forwardTo nodeFinish onAssistantMessage { true } transformed {})
-                edge(callTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo callTool onToolCall { true })
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed {})
-            }
-
-            val openaiSubgraphSecond by subgraph("openai1") {
-                val definePromptOpenAI by node<Unit, Unit> {
-                    llm.writeSession {
-                        model = OpenAIModels.Chat.GPT4o
-                        rewritePrompt {
-                            prompt("test") {
-                                system(
-                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
-                                            "Please analyze the whole produced solution, and check that it is valid." +
-                                            "Write concise verification result." +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
-                                )
-                            }
-                        }
-                    }
-                }
-
-                val callLLM by nodeLLMRequest(allowToolCalls = true)
-                val callTool by nodeExecuteTool()
-                val sendToolResult by nodeLLMSendToolResult()
-
-
-                edge(nodeStart forwardTo definePromptOpenAI)
-                edge(definePromptOpenAI forwardTo callLLM transformed { agentInput })
-                edge(callLLM forwardTo callTool onToolCall { true })
-                edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
-                edge(callTool forwardTo sendToolResult)
-                edge(sendToolResult forwardTo callTool onToolCall { true })
-                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
-            }
-
-            val compressHistoryNode by nodeLLMCompressHistory<Unit>("compress_history")
-
-            nodeStart then openaiSubgraphFirst then compressHistoryNode then openaiSubgraphSecond then nodeFinish
-        }
-
-        val tools = ToolRegistry {
-            tool(CreateFile(fs))
-            tool(DeleteFile(fs))
-            tool(ReadFile(fs))
-            tool(ListFiles(fs))
-        }
-
-        // Create the agent
-        return AIAgent(
-            promptExecutor = executor,
-            strategy = strategy,
-            agentConfig = AIAgentConfig(prompt("test") {}, OpenAIModels.Chat.GPT4o, maxAgentIterations),
-            toolRegistry = tools,
-        ) {
-            install(Tracing) {
-                addMessageProcessor(TestLogPrinter())
-            }
-
-            install(EventHandler, eventHandlerConfig)
-        }
-    }
-
 
     @Test
     fun integration_testAnthropicAgent() = runTest {
@@ -630,8 +713,13 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 eventsChannel.send(Event.Termination)
             }
         }
-        val agent = createTestOpenaiAnthropicAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
-        val result = agent.runAndGetResult(
+        val agent = createTestOpenaiAnthropicAgent(
+            fs,
+            eventHandlerConfig,
+            maxAgentIterations = 42,
+            eventsChannel = eventsChannel,
+        )
+        val result = agent.run(
             "Name me a capital of France"
         )
 
@@ -640,7 +728,6 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
 
     @Test
     fun integration_testOpenAIAnthropicAgentWithTools() = runTest(timeout = 300.seconds) {
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall { tool, arguments ->
@@ -650,59 +737,14 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                     }"
                 )
             }
-
-            onAgentFinished { _, _ ->
-                eventsChannel.send(Event.Termination)
-            }
         }
-        val agent = createTestOpenaiAgent(eventsChannel, fs, eventHandlerConfig, maxAgentIterations = 42)
+        val agent = createTestOpenaiAgent(fs, eventHandlerConfig, maxAgentIterations = 42)
 
-        val result = agent.runAndGetResult(
+        val result = agent.run(
             "Name me a capital of France"
         )
 
         assertNotNull(result)
-    }
-
-    @Serializable
-    enum class CalculatorOperation {
-        ADD, SUBTRACT, MULTIPLY, DIVIDE
-    }
-
-    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
-        @Serializable
-        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-
-        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
-            CalculatorOperation.ADD -> args.a + args.b
-            CalculatorOperation.SUBTRACT -> args.a - args.b
-            CalculatorOperation.MULTIPLY -> args.a * args.b
-            CalculatorOperation.DIVIDE -> args.a / args.b
-        }.let(ToolResult::Number)
     }
 
     @Test
@@ -732,10 +774,136 @@ class KotlinAIAgentWithMultipleLLMIntegrationTest {
                 }
             )
 
-            val result = agent.runAndGetResult("calculate 10 plus 15, and then subtract 8")
+            val result = agent.run("calculate 10 plus 15, and then subtract 8")
             println("result = $result")
             assertNotNull(result)
             assertContains(result, "17")
         }
+    }
+
+    // TODO remove when APIs for non-encoded images are ready
+    @ParameterizedTest
+    @MethodSource("modelsWithVisionCapability")
+    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+        val fs = MockFileSystem()
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCall { tool, arguments ->
+                println(
+                    "Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+        }
+
+        val imageFile = File(testResourcesDir, "test.png")
+        assertTrue(imageFile.exists(), "Image test file should exist")
+
+        val imageBytes = imageFile.readBytes()
+        val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
+
+        withRetry {
+            val agent = when (model.provider) {
+                is LLMProvider.Anthropic -> createTestOpenaiAnthropicAgent(
+                    fs,
+                    eventHandlerConfig,
+                    maxAgentIterations = 20,
+                )
+
+                else -> createTestOpenaiAgent(fs, eventHandlerConfig, maxAgentIterations = 20)
+            }
+
+            val result = agent.run(
+                """
+            I'm sending you an image encoded in base64 format.
+
+            data:image/png,$base64Image
+
+            Please analyze this image and identify the image format if possible.
+            """
+            )
+
+            assertNotNull(result, "Result should not be null")
+            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+            assertTrue(result.length > 20, "Result should contain more than 20 characters")
+
+            val resultLowerCase = result.lowercase()
+            assertFalse(
+                resultLowerCase.contains("error processing"),
+                "Result should not contain error messages"
+            )
+            assertFalse(
+                resultLowerCase.contains("unable to process"),
+                "Result should not indicate inability to process"
+            )
+            assertFalse(
+                resultLowerCase.contains("cannot process"),
+                "Result should not indicate inability to process"
+            )
+        }
+    }
+
+    @Ignore("The functionality is not ready yet")
+    @ParameterizedTest
+    @MethodSource("modelsWithVisionCapability")
+    fun integration_testAgentWithImageCapabilityPrompt(model: LLModel) = runTest(timeout = 120.seconds) {
+        val fs = MockFileSystem()
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onToolCall { tool, arguments ->
+                println(
+                    "Calling tool ${tool.name} with arguments ${
+                        arguments.toString().lines().first().take(100)
+                    }"
+                )
+            }
+        }
+
+        val imageFile = File(testResourcesDir, "test.png")
+        assertTrue(imageFile.exists(), "Image test file should exist")
+
+        val prompt = prompt("example-prompt") {
+            system("You are a professional helpful assistant.")
+
+            user {
+                markdown {
+                    +"I'm sending you an image."
+                    br()
+                    +"Please analyze this image and identify the image format if possible."
+                }
+
+                attachments {
+                    image(imageFile.absolutePath)
+                }
+            }
+        }
+
+        val agent = when (model.provider) {
+            is LLMProvider.Anthropic -> createTestOpenaiAnthropicAgent(
+                fs,
+                eventHandlerConfig,
+                maxAgentIterations = 20,
+                prompt = prompt,
+            )
+
+            else -> createTestOpenaiAgent(fs, eventHandlerConfig, maxAgentIterations = 20)
+        }
+
+
+        val result = agent.run("Hi! Please analyse my image.")
+
+        assertNotNull(result, "Result should not be null")
+        assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+        assertTrue(result.length > 20, "Result should contain more than 20 characters")
+
+        val resultLowerCase = result.lowercase()
+        assertFalse(resultLowerCase.contains("error processing"), "Result should not contain error messages")
+        assertFalse(
+            resultLowerCase.contains("unable to process"),
+            "Result should not indicate inability to process"
+        )
+        assertFalse(
+            resultLowerCase.contains("cannot process"),
+            "Result should not indicate inability to process"
+        )
     }
 }

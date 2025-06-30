@@ -37,7 +37,7 @@ class AIAgentPipelineTest {
         val interceptedEvents = mutableListOf<String>()
 
         val dummyNodeName = "dummy node"
-        val strategy = strategy("test-interceptors-strategy") {
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
             val dummyNode by nodeDoNothing<Unit>(dummyNodeName)
 
             edge(nodeStart forwardTo dummyNode transformed { })
@@ -72,7 +72,7 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = strategy("test-interceptors-strategy") {
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
             val llmCallWithoutTools by nodeLLMRequest("test LLM call", allowToolCalls = false)
             val llmCall by nodeLLMRequest("test LLM call with tools")
 
@@ -90,7 +90,7 @@ class AIAgentPipelineTest {
         val actualEvents = interceptedEvents.filter { it.startsWith("LLM: ") }
         // , metadata=ResponseMetadata(timestamp=2023-01-01T00:00:00Z, tokensCount=null)
         val expectedEvents = listOf(
-            "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
+            "LLM: start LLM call (prompt: Test user message, tools: [])",
             "LLM: finish LLM call (responses: [Assistant: Default test response])",
             "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
             "LLM: finish LLM call (responses: [Assistant: Default test response])",
@@ -157,7 +157,7 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = strategy("test-interceptors-strategy") {
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
@@ -187,7 +187,7 @@ class AIAgentPipelineTest {
 
         val interceptedEvents = mutableListOf<String>()
 
-        val strategy = strategy("test-interceptors-strategy") {
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
@@ -215,7 +215,7 @@ class AIAgentPipelineTest {
     fun `test pipeline interceptors for stage context events`() = runTest {
 
         val interceptedEvents = mutableListOf<String>()
-        val strategy = strategy("test-interceptors-strategy") {
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
@@ -228,6 +228,7 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent Context: ") }
         val expectedEvents = listOf(
+            "Agent Context: request features from agent context",
             "Agent Context: request features from agent context",
         )
 
@@ -287,14 +288,14 @@ class AIAgentPipelineTest {
     }
 
     private fun createAgent(
-        strategy: AIAgentStrategy,
+        strategy: AIAgentStrategy<String, String>,
         userPrompt: String? = null,
         systemPrompt: String? = null,
         assistantPrompt: String? = null,
         toolRegistry: ToolRegistry? = null,
         promptExecutor: PromptExecutor? = null,
         installFeatures: FeatureContext.() -> Unit = {}
-    ): AIAgent {
+    ): AIAgent<String, String> {
 
         val agentConfig = AIAgentConfig(
             prompt = prompt("test", clock = testClock) {

@@ -20,14 +20,14 @@ class ParallelNodesMergeContextTest {
 
     private val testKey = AIAgentStorageKey<String>("testKey")
 
-    private fun AIAgentStrategyBuilder.testNode(name: String, value: String): AIAgentNodeDelegateBase<Unit, String> {
+    private fun AIAgentStrategyBuilder<String, String>.testNode(name: String, value: String): AIAgentNodeDelegate<Unit, String> {
         return node(name) {
             storage.set(testKey, value)
             "Output from $name"
         }
     }
 
-    suspend fun runAgent(strategy: AIAgentStrategy): String? {
+    suspend fun runAgent(strategy: AIAgentStrategy<String, String>): String? {
         val agentConfig = AIAgentConfig(
             prompt = prompt("test-agent") {},
             model = OllamaModels.Meta.LLAMA_3_2,
@@ -47,7 +47,7 @@ class ParallelNodesMergeContextTest {
             }
         )
 
-        return agent.runAndGetResult("")
+        return agent.run("")
     }
 
     @Test

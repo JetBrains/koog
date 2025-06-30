@@ -64,25 +64,6 @@ public data class AgentToolCallsToEnvironmentMessage(
 ) : AgentToolCallToEnvironmentMessage
 
 /**
- * Represents a termination message sent on behalf of the server.
- * Indicates that the server has no further actions for the client to perform,
- * and is usually accompanied by the final result of the inquiry.
- * Can also be received as an acknowledgement of a client-initiated termination,
- * in which case the result will be absent.
- *
- * @property sessionUuid Unique identifier for the session.
- * @property content Optional content of the message.
- * @property error Optional error details.
- */
-@Serializable
-@SerialName("TERMINATION")
-public data class AgentTerminationToEnvironmentMessage(
-    override val sessionUuid: Uuid,
-    val content: AgentToolCallToEnvironmentContent? = null,
-    val error: AgentServiceError? = null,
-) : AgentToEnvironmentMessage
-
-/**
  * Represents an error response from the server.
  * These may occur for several reasons:
  *

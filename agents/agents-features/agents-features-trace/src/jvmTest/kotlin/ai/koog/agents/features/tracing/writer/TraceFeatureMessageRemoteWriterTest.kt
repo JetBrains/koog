@@ -64,7 +64,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
 
-                val strategy = strategy("tracing-test-strategy") {
+                val strategy = strategy<String, String>("tracing-test-strategy") {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -161,7 +161,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
 
-                val strategy = strategy(strategyName) {
+                val strategy = strategy<String, String>(strategyName) {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -239,7 +239,7 @@ class TraceFeatureMessageRemoteWriterTest {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
                 TestFeatureMessageWriter().use { fakeWriter ->
 
-                    val strategy = strategy(strategyName) {
+                    val strategy = strategy<String, String>(strategyName) {
                         val llmCallNode by nodeLLMRequest("test LLM call")
                         val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -342,7 +342,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
 
-                val strategy = strategy(strategyName) {
+                val strategy = strategy<String, String>(strategyName) {
                     val llmCallNode by nodeLLMRequest("test LLM call")
                     val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 

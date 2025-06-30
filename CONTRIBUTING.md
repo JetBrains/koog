@@ -52,3 +52,7 @@ This library is built with Gradle.
 
 You can import this project into IDEA, but you have to delegate build actions
 to Gradle (in Preferences -> Build, Execution, Deployment -> Build Tools -> Gradle -> Build and run).
+
+## Running tests
+
+Please find more information in the [TESTING.md](TESTING.md).

@@ -129,12 +129,18 @@ internal class AIAgentNode<Input, Output> internal constructor(
 
 /**
  * Represents the base node for starting a subgraph in an AI agent strategy graph.
- * Derived from [AIAgentNodeBase], this node acts as an entry point for executing subgraphs
- * identified by a unique name.
+ * This node acts as an entry point for executing subgraphs.
+ *
+ * This node effectively passes its input as-is to the next node in the execution
+ * pipeline, allowing downstream nodes to transform or handle the data further.
+ *
+ * The `name` property of the node reflects a uniquely identifiable pattern using
+ * the prefix "__start__" and the optional subgraph name, enabling traceability of
+ * execution flow in multi-subgraph setups.
  *
  * @param Input The type of input data this node processes and produces as output.
  */
-public open class AIAgentStartNodeBase<Input>() : AIAgentNodeBase<Input, Input>() {
+public class StartNode<Input> internal constructor() : AIAgentNodeBase<Input, Input>() {
     /**
      * The name of the subgraph associated with the AI agent's starting node.
      *
@@ -154,13 +160,20 @@ public open class AIAgentStartNodeBase<Input>() : AIAgentNodeBase<Input, Input>(
 }
 
 /**
- * Represents a specialized node within an AI agent strategy graph that marks the endpoint
- * of a subgraph. This node serves as a "finish" node and directly passes its input
- * to its output without modification, acting as an identity operation.
+ * Represents a specialized node within an AI agent strategy graph that marks the endpoint of a subgraph.
+ * This node serves as a "finish" node and directly passes its input to its output without modification.
+ *
+ * This node enforces the following constraints:
+ * - It cannot have outgoing edges, meaning no further nodes can follow it in the execution graph.
+ * - It simply returns the input it receives as its output, ensuring no modification occurs at the end of execution.
+ *
+ * The `name` property of the node reflects a uniquely identifiable pattern using
+ * the prefix "__finish__" and the optional subgraph name, enabling traceability of
+ * execution flow in multi-subgraph setups.
  *
  * @param Output The type of data this node processes and produces.
  */
-public open class AIAgentFinishNodeBase<Output>() : AIAgentNodeBase<Output, Output>() {
+public class FinishNode<Output> internal constructor() : AIAgentNodeBase<Output, Output>() {
     /**
      * Stores the name of the subgraph associated with the node.
      *
@@ -181,34 +194,3 @@ public open class AIAgentFinishNodeBase<Output>() : AIAgentNodeBase<Output, Outp
 
     override suspend fun execute(context: AIAgentContextBase, input: Output): Output = input
 }
-
-/**
- * Represents the starting node in an AI agent's graph structure.
- *
- * This node serves as the initial entry point of execution within the strategy.
- * It inherits behavior from `StartAIAgentNodeBase` and uses `String` as the input
- * type. The `StartNode` is responsible for initiating the subgraph where it resides.
- *
- * The `name` property of the node reflects a uniquely identifiable pattern using
- * the prefix "__start__" and the optional subgraph name, enabling traceability of
- * execution flow in multi-subgraph setups.
- *
- * This node effectively passes its input as-is to the next node in the execution
- * pipeline, allowing downstream nodes to transform or handle the data further.
- */
-internal class StartNode internal constructor() : AIAgentStartNodeBase<String>()
-
-/**
- * A specialized implementation of [FinishNode] that finalizes the execution of an AI agent subgraph.
- *
- * This object represents the terminal node within a subgraph structure that returns the final output.
- * It is parameterized to work with output data of type `String`.
- *
- * The [FinishNode] enforces the following constraints:
- * - It cannot have outgoing edges, meaning no further nodes can follow it in the execution graph.
- * - It simply returns the input it receives as its output, ensuring no modification occurs at the end of execution.
- *
- * This node is critical to denote the completion of localized processing within a subgraph context.
- */
-internal class FinishNode internal constructor() : AIAgentFinishNodeBase<String>()
-

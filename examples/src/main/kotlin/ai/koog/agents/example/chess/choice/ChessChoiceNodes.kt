@@ -20,7 +20,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val game = ChessGame()
 
     val toolRegistry = ToolRegistry {
@@ -36,7 +36,7 @@ fun main() = runBlocking {
         }
     })
 
-    val strategy = strategy("chess_strategy") {
+    val strategy = strategy<String, String>("chess_strategy") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
         val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
         val nodeSendToolResult by nodeLLMSendResultsMultipleChoices("nodeSendToolResult")

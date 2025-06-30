@@ -9,10 +9,10 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
-    val agentStrategy = strategy("library-assistant") {
+    val agentStrategy = strategy<String, String>("library-assistant") {
         val getMdOutput by node<String, String> { input ->
             val books = mutableListOf<Book>()
             val mdDefinition = markdownBookDefinition()
@@ -47,6 +47,6 @@ fun main() = runBlocking {
         agentConfig = agentConfig,
     )
 
-    val res = runner.runAndGetResult("Please provide a list of the top 10 books in the world.")
+    val res = runner.run("Please provide a list of the top 10 books in the world.")
     println("Final Result:\n$res")
 }

@@ -77,11 +77,10 @@ class PromptBuilderTest {
     fun testUserMessageWithContentBuilderWithAttachment() {
         val prompt = Prompt.build("test") {
             user {
-                content {
-                    text("Here's my question:")
-                    newline()
-                    text("How do I implement a binary search in Kotlin?")
-                }
+                text("Here's my question:")
+                newline()
+                text("How do I implement a binary search in Kotlin?")
+
                 attachments {
                     image("https://example.com/screenshot.png")
                 }
@@ -110,9 +109,8 @@ class PromptBuilderTest {
     fun testUserMessageWithMultipleAttachmentsUsingContentBuilder() {
         val prompt = Prompt.build("test") {
             user {
-                content {
-                    text("Please analyze these files")
-                }
+                text("Please analyze these files")
+
                 attachments {
                     image("https://example.com/chart.png")
                     file("https://example.com/data.pdf", "application/pdf")
@@ -163,11 +161,10 @@ class PromptBuilderTest {
             }
 
             user {
-                content {
-                    text("I have a question about programming.")
-                    newline()
-                    text("How do I implement a binary search in Kotlin?")
-                }
+                text("I have a question about programming.")
+                newline()
+                text("How do I implement a binary search in Kotlin?")
+
                 attachments {
                     image("https://example.com/code_example.png")
                 }

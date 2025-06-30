@@ -10,7 +10,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.core.tools.ToolDescriptor
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -32,7 +31,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
 ) : AIAgentContextBase {
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
-    override val agentInput: String get() = underlyingContextBase.agentInput
+    override val agentInput: Any? get() = underlyingContextBase.agentInput
     override val config: AIAgentConfigBase get() = underlyingContextBase.config
     override val llm: AIAgentLLMContext get() = underlyingContextBase.llm
     override val stateManager: AIAgentStateManager get() = underlyingContextBase.stateManager
@@ -51,22 +50,26 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
         underlyingContextBase.featureOrThrow(feature)
 
-    override fun copyWithTools(tools: List<ToolDescriptor>): AIAgentContextBase =
-        underlyingContextBase.copyWithTools(tools)
-
     override fun copy(
-        environment: AIAgentEnvironment?,
-        agentInput: String?,
-        config: AIAgentConfigBase?,
-        llm: AIAgentLLMContext?,
-        stateManager: AIAgentStateManager?,
-        storage: AIAgentStorage?,
-        sessionUuid: Uuid?,
-        strategyId: String?,
-        pipeline: AIAgentPipeline?
+        environment: AIAgentEnvironment,
+        agentInput: Any?,
+        config: AIAgentConfigBase,
+        llm: AIAgentLLMContext,
+        stateManager: AIAgentStateManager,
+        storage: AIAgentStorage,
+        sessionUuid: Uuid,
+        strategyId: String,
+        pipeline: AIAgentPipeline
     ): AIAgentContextBase = underlyingContextBase.copy(
-        environment, agentInput, config, llm, stateManager,
-        storage, sessionUuid, strategyId, pipeline
+        environment = environment,
+        agentInput = agentInput,
+        config = config,
+        llm = llm,
+        stateManager = stateManager,
+        storage = storage,
+        sessionUuid = sessionUuid,
+        strategyId = strategyId,
+        pipeline = pipeline
     )
 
     override suspend fun fork(): AIAgentContextBase = underlyingContextBase.fork()

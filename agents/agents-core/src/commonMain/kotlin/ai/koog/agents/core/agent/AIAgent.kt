@@ -7,9 +7,6 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -30,7 +27,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.text.TextContentBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -39,10 +35,7 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.Json
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -73,57 +66,18 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
  * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
  */
 @OptIn(ExperimentalUuidApi::class)
-public open class AIAgent(
+public open class AIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
-    private val strategy: AIAgentStrategy,
+    private val strategy: AIAgentStrategy<Input, Output>,
     public val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     public val clock: Clock = Clock.System,
     private val installFeatures: FeatureContext.() -> Unit = {},
-) : AIAgentBase, AIAgentEnvironment, Closeable {
+) : AIAgentBase<Input, Output>, AIAgentEnvironment, Closeable {
 
     private companion object {
         private val logger = KotlinLogging.logger {}
-        private const val INVALID_TOOL = "Can not call tools beside \"${TerminationTool.NAME}\"!"
-        private const val NO_CONTENT = "Could not find \"content\", but \"error\" is also absent!"
-        private const val NO_RESULT = "Required tool argument value not found: \"${TerminationTool.ARG}\"!"
     }
-
-    /**
-     * Creates an instance of [AIAgent] with the specified parameters.
-     *
-     * @param executor The [PromptExecutor] responsible for executing prompts.
-     * @param strategy The [AIAgentStrategy] defining the agent's behavior. Default is a single-run strategy.
-     * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
-     * @param llmModel The language model to be used by the agent.
-     * @param temperature The sampling temperature for the language model, controlling randomness. Default is 1.0.
-     * @param toolRegistry The [ToolRegistry] containing tools available to the agent. Default is an empty registry.
-     * @param maxIterations Maximum number of iterations for the agent's execution. Default is 50.
-     * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
-     */
-    public constructor(
-        executor: PromptExecutor,
-        llmModel: LLModel,
-        strategy: AIAgentStrategy = singleRunStrategy(),
-        systemPrompt: String = "",
-        temperature: Double = 1.0,
-        numberOfChoices: Int = 1,
-        toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-        maxIterations: Int = 50,
-        installFeatures: FeatureContext.() -> Unit = {}
-    ) : this(
-        promptExecutor = executor,
-        strategy = strategy,
-        agentConfig = AIAgentConfig(
-            prompt = prompt("chat", params = LLMParams(temperature = temperature, numberOfChoices = numberOfChoices)) {
-                system(systemPrompt)
-            },
-            model = llmModel,
-            maxAgentIterations = maxIterations,
-        ),
-        toolRegistry = toolRegistry,
-        installFeatures = installFeatures
-    )
 
     /**
      * The context for adding and configuring features in a Kotlin AI Agent instance.
@@ -132,7 +86,7 @@ public open class AIAgent(
      *       calls in an [AIAgent] instance, like `agent.install(MyFeature) { ... }`.
      *       This makes the API a bit stricter and clear.
      */
-    public class FeatureContext internal constructor(private val agent: AIAgent) {
+    public class FeatureContext internal constructor(private val agent: AIAgent<*, *>) {
         /**
          * Installs and configures a feature into the current AI agent context.
          *
@@ -153,8 +107,6 @@ public open class AIAgent(
 
     private val runningMutex = Mutex()
 
-    private val agentResultDeferred: CompletableDeferred<String?> = CompletableDeferred()
-
     private val pipeline = AIAgentPipeline()
 
     init {
@@ -162,7 +114,7 @@ public open class AIAgent(
     }
 
 
-    override suspend fun run(agentInput: String) {
+    override suspend fun run(agentInput: Input): Output {
         runningMutex.withLock {
             if (isRunning) {
                 throw IllegalStateException("Agent is already running")
@@ -173,7 +125,6 @@ public open class AIAgent(
         }
 
         pipeline.prepareFeatures()
-        pipeline.onBeforeAgentStarted(strategy, this)
 
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
@@ -187,14 +138,14 @@ public open class AIAgent(
             agentInput = agentInput,
             config = agentConfig,
             llm = AIAgentLLMContext(
-                toolRegistry.tools.map { it.descriptor },
-                toolRegistry,
-                agentConfig.prompt,
-                agentConfig.model,
+                tools = toolRegistry.tools.map { it.descriptor },
+                toolRegistry = toolRegistry,
+                prompt = agentConfig.prompt,
+                model = agentConfig.model,
                 promptExecutor = PromptExecutorProxy(promptExecutor, pipeline, sessionUuid!!),
                 environment = preparedEnvironment,
-                agentConfig,
-                clock
+                config = agentConfig,
+                clock = clock
             ),
             stateManager = stateManager,
             storage = storage,
@@ -203,34 +154,20 @@ public open class AIAgent(
             pipeline = pipeline,
         )
 
-        strategy.execute(context = agentContext, input = agentInput)
+        logger.debug { formatLog("Starting agent execution") }
+        pipeline.onBeforeAgentStarted(strategy, this)
+
+        val result = strategy.execute(context = agentContext, input = agentInput)
+
+        logger.debug { formatLog("Finished agent execution") }
+        pipeline.onAgentFinished(strategy.name, result)
 
         runningMutex.withLock {
             isRunning = false
             sessionUuid = null
-            if (!agentResultDeferred.isCompleted) {
-                agentResultDeferred.complete(null)
-            }
         }
-    }
 
-    /**
-     * Executes the AI agent using a builder to construct the textual input.
-     *
-     * This method allows for constructing a complex input by utilizing the functionalities
-     * of [TextContentBuilder]. The builder is applied to create the structured input which
-     * is then used to initiate the agent's execution.
-     *
-     * @param builder a lambda function applied to a [TextContentBuilder] instance to build the input text for the agent
-     */
-    public suspend fun run(builder: suspend TextContentBuilder.() -> Unit) {
-        run(agentInput = TextContentBuilder().apply { this.builder() }.build())
-    }
-
-    override suspend fun runAndGetResult(agentInput: String): String? {
-        run(agentInput)
-        agentResultDeferred.await()
-        return agentResultDeferred.getCompleted()
+        return result
     }
 
     override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
@@ -266,21 +203,6 @@ public open class AIAgent(
                 message = exception.message ?: "unknown error"
             )
         )
-    }
-
-    override suspend fun sendTermination(result: String?) {
-        logger.info { formatLog("Sending final result") }
-        val message = AgentTerminationToEnvironmentMessage(
-            sessionUuid ?: throw IllegalStateException("Session UUID is null"),
-            content = AgentToolCallToEnvironmentContent(
-                agentId = strategy.name,
-                toolCallId = null,
-                toolName = TerminationTool.NAME,
-                toolArgs = JsonObject(mapOf(TerminationTool.ARG to JsonPrimitive(result)))
-            )
-        )
-
-        terminate(message)
     }
 
     override suspend fun close() {
@@ -389,31 +311,6 @@ public open class AIAgent(
         toolResult = result
     )
 
-    private suspend fun terminate(message: AgentTerminationToEnvironmentMessage) {
-        val messageContent = message.content
-        val messageError = message.error
-
-        logger.debug { "Finished execution chain, processing final result (content: $messageContent, error: $messageError)" }
-
-        if (messageError == null) {
-
-            check(messageContent != null) { NO_CONTENT }
-            check(messageContent.toolName == TerminationTool.NAME) { INVALID_TOOL }
-
-            val element = messageContent.toolArgs[TerminationTool.ARG]
-            check(element != null) { NO_RESULT }
-
-            val result = element.jsonPrimitive.contentOrNull
-
-            logger.debug { "Final result sent by server: $result" }
-
-            pipeline.onAgentFinished(strategyName = strategy.name, result = result)
-            agentResultDeferred.complete(result)
-        } else {
-            processError(messageError)
-        }
-    }
-
     private suspend fun processError(error: AgentServiceError) {
         try {
             throw error.asException()
@@ -430,25 +327,43 @@ public open class AIAgent(
 }
 
 /**
- * Creates a single-run strategy for an AI agent.
- * This strategy defines a simple execution flow where the agent processes input,
- * calls tools, and sends results back to the agent.
- * The flow consists of the following steps:
- * 1. Start the agent.
- * 2. Call the LLM with the input.
- * 3. Execute a tool based on the LLM's response.
- * 4. Send the tool result back to the LLM.
- * 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
+ * Convenience builder that creates an instance of an [AIAgent] with string input and output and the specified parameters.
+ *
+ * @param executor The [PromptExecutor] responsible for executing prompts.
+ * @param strategy The [AIAgentStrategy] defining the agent's behavior. Default is a single-run strategy.
+ * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
+ * @param llmModel The language model to be used by the agent.
+ * @param temperature The sampling temperature for the language model, controlling randomness. Default is 1.0.
+ * @param toolRegistry The [ToolRegistry] containing tools available to the agent. Default is an empty registry.
+ * @param maxIterations Maximum number of iterations for the agent's execution. Default is 50.
+ * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
  */
-public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
-    val nodeCallLLM by nodeLLMRequest("sendInput")
-    val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
-    val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
-
-    edge(nodeStart forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-}
+public fun AIAgent(
+    executor: PromptExecutor,
+    llmModel: LLModel,
+    strategy: AIAgentStrategy<String, String> = singleRunStrategy(),
+    systemPrompt: String = "",
+    temperature: Double = 1.0,
+    numberOfChoices: Int = 1,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    maxIterations: Int = 50,
+    installFeatures: AIAgent.FeatureContext.() -> Unit = {}
+): AIAgent<String, String> = AIAgent(
+    promptExecutor = executor,
+    strategy = strategy,
+    agentConfig = AIAgentConfig(
+        prompt = prompt(
+            id = "chat",
+            params = LLMParams(
+                temperature = temperature,
+                numberOfChoices = numberOfChoices
+            )
+        ) {
+            system(systemPrompt)
+        },
+        model = llmModel,
+        maxAgentIterations = maxIterations,
+    ),
+    toolRegistry = toolRegistry,
+    installFeatures = installFeatures
+)

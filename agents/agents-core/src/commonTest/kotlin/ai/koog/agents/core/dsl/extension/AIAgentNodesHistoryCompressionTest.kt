@@ -37,7 +37,7 @@ class AIAgentNodesHistoryCompressionTest {
         val testExecutor = TestLLMExecutor()
         testExecutor.reset()
 
-        val agentStrategy = strategy("test") {
+        val agentStrategy = strategy<String, String>("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.WholeHistory
             )
@@ -46,7 +46,7 @@ class AIAgentNodesHistoryCompressionTest {
             edge(compress forwardTo nodeFinish transformed { "Done" })
         }
 
-        val results = mutableListOf<String?>()
+        val results = mutableListOf<Any?>()
 
         // Create a prompt with 15 message pairs
         val agentConfig = AIAgentConfig(
@@ -89,7 +89,7 @@ class AIAgentNodesHistoryCompressionTest {
         val testExecutor = TestLLMExecutor()
         testExecutor.reset()
 
-        val agentStrategy = strategy("test") {
+        val agentStrategy = strategy<String, String>("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.FromLastNMessages(4)
             )
@@ -98,7 +98,7 @@ class AIAgentNodesHistoryCompressionTest {
             edge(compress forwardTo nodeFinish transformed { "Done" })
         }
 
-        val results = mutableListOf<String?>()
+        val results = mutableListOf<Any?>()
 
         // Create a prompt with 15 message pairs
         val agentConfig = AIAgentConfig(
@@ -143,7 +143,7 @@ class AIAgentNodesHistoryCompressionTest {
 
         // Use a chunk size of 4 (each chunk will have 4 messages)
         val chunkSize = 4
-        val agentStrategy = strategy("test") {
+        val agentStrategy = strategy<String, String>("test") {
             val compress by nodeLLMCompressHistory<Unit>(
                 strategy = HistoryCompressionStrategy.Chunked(chunkSize)
             )
@@ -152,7 +152,7 @@ class AIAgentNodesHistoryCompressionTest {
             edge(compress forwardTo nodeFinish transformed { "Done" })
         }
 
-        val results = mutableListOf<String?>()
+        val results = mutableListOf<Any?>()
 
         // Create a prompt with 15 message pairs (30 messages total)
         val messageCount = 15

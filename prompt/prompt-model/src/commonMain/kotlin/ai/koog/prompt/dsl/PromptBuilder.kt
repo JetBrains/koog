@@ -106,7 +106,7 @@ public class PromptBuilder internal constructor(
      *
      * // Message with attachments using a lambda
      * user("Please analyze this image") {
-     *     imageFromPath("photo.jpg")
+     *     image("photo.jpg")
      * }
      * ```
      *
@@ -125,12 +125,11 @@ public class PromptBuilder internal constructor(
      * Example:
      * ```kotlin
      * user {
-     *      content {
-     *          text("I have a question about programming.")
-     *          text("How do I implement a binary search in Kotlin?")
-     *      }
+ *          text("I have a question about programming.")
+ *          text("How do I implement a binary search in Kotlin?")
+     *
      *      attachments {
-     *          imageFromPath("screenshot.png")
+     *          image("screenshot.png")
      *      }
      * }
      * ```

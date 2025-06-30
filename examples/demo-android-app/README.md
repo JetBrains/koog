@@ -5,8 +5,8 @@ This is a simple demo Android app built with Jetpack Compose that demonstrates t
 
 ## Setup
 1. Open the project in IntelliJ IDEA or Android Studio
-2. Configure your API keys in the app settings
-3. Build and run the application
+2. Build and run the application
+3. Configure your API keys in the app settings
 
 ## Usage Examples
 

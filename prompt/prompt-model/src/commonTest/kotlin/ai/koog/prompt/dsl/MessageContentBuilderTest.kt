@@ -20,8 +20,7 @@ class MessageContentBuilderTest {
 
     @Test
     fun testTextOnly() {
-        val builder = MessageContentBuilder()
-        builder.content {
+        val builder = MessageContentBuilder().apply {
             text("Hello")
             text(" ")
             text("World")
@@ -63,8 +62,7 @@ class MessageContentBuilderTest {
 
     @Test
     fun testTextWithAttachments() {
-        val builder = MessageContentBuilder()
-        builder.content {
+        val builder = MessageContentBuilder().apply {
             text("Check out this image:")
             newline()
         }
@@ -119,8 +117,7 @@ class MessageContentBuilderTest {
 
     @Test
     fun testComplexContent() {
-        val builder = MessageContentBuilder()
-        builder.content {
+        val builder = MessageContentBuilder().apply {
             text("Here's my analysis:")
             newline()
             text("1. First point")
@@ -128,11 +125,12 @@ class MessageContentBuilderTest {
             text("2. Second point")
             newline()
             text("Supporting documents:")
-        }
-        builder.attachments {
-            image("https://example.com/chart.png")
-            file("https://example.com/report.pdf", "application/pdf")
-            file("https://example.com/data.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+            attachments {
+                image("https://example.com/chart.png")
+                file("https://example.com/report.pdf", "application/pdf")
+                file("https://example.com/data.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            }
         }
         val result = builder.build()
 
@@ -144,11 +142,10 @@ class MessageContentBuilderTest {
     @Test
     fun testDslSyntax() {
         val result = MessageContentBuilder().apply {
-            content {
-                text("Hello")
-                newline()
-                text("World")
-            }
+            text("Hello")
+            newline()
+            text("World")
+
             attachments {
                 image("https://example.com/photo.png")
             }
@@ -169,12 +166,10 @@ class MessageContentBuilderTest {
     @Test
     fun testInheritedTextBuilderFunctionality() {
         val result = MessageContentBuilder().apply {
-            content {
-                numbered {
-                    text("First line")
-                    newline()
-                    text("Second line")
-                }
+            numbered {
+                text("First line")
+                newline()
+                text("Second line")
             }
         }.build()
 

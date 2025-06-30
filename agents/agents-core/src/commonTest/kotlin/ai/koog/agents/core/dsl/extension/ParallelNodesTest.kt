@@ -29,7 +29,7 @@ class ParallelNodesTest {
             user("Base prompt content")
         }
 
-        val agentStrategy = strategy("test-isolation") {
+        val agentStrategy = strategy<String, String>("test-isolation") {
             // Create three nodes that modify different aspects of the context
             val node1 by node<Unit, String>("node1") {
                 // Modify storage
@@ -136,8 +136,8 @@ class ParallelNodesTest {
         ) {
         }
 
-        val result = runner.runAndGetResult("")
+        val result = runner.run("")
 
-        assertFalse(result?.contains("Incorrect") ?: false)
+        assertFalse(result.contains("Incorrect"))
     }
 }

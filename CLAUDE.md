@@ -90,4 +90,4 @@ The project has extensive testing support:
   }
   ```
 
-For detailed testing guidelines, refer to `agents/TESTING.md`.
+For detailed testing guidelines, refer to `agents/agents-test/TESTING.md`.

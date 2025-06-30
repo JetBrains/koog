@@ -148,7 +148,7 @@ class MemoryNodesTest {
 
         val result = mutableListOf<Fact>()
 
-        val strategy = strategy("test-agent") {
+        val strategy = strategy<String, String>("test-agent") {
             val saveAutoDetect by nodeSaveToMemoryAutoDetectFacts<Unit>(
                 subjects = listOf(MemorySubjects.User)
             )
@@ -212,7 +212,7 @@ class MemoryNodesTest {
 
     @Test
     fun testAutoDetectFacts() = runTest {
-        val strategy = strategy("test-agent") {
+        val strategy = strategy<String, String>("test-agent") {
             val detect by nodeSaveToMemoryAutoDetectFacts<Unit>(
                 subjects = listOf(MemorySubjects.User, MemorySubjects.Project)
             )

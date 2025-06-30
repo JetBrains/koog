@@ -1,7 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
+import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
@@ -11,12 +10,12 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.prompt.structure.StructuredData
-import ai.koog.prompt.structure.StructuredDataDefinition
-import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.structure.StructuredData
+import ai.koog.prompt.structure.StructuredDataDefinition
+import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -24,7 +23,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * @param name Optional node name, defaults to delegate's property name.
  */
-public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null): AIAgentNodeDelegateBase<T, T> =
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null): AIAgentNodeDelegate<T, T> =
     node(name) { input -> input }
 
 // ================
@@ -33,20 +32,23 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = nu
 
 /**
  * A node that adds messages to the LLM prompt using the provided prompt builder.
+ * The input is passed as it is to the output.
  *
  * @param name Optional node name, defaults to delegate's property name.
  * @param body Lambda to modify the prompt using PromptBuilder.
  */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     name: String? = null,
     body: PromptBuilder.() -> Unit
-): AIAgentNodeDelegateBase<Unit, Unit> =
-    node(name) {
+): AIAgentNodeDelegate<T, T> =
+    node(name) { input ->
         llm.writeSession {
             updatePrompt {
                 body()
             }
         }
+
+        input
     }
 
 /**
@@ -54,7 +56,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
  *
  * @param name Optional name for the node.
  */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name: String? = null): AIAgentNodeDelegateBase<String, Message.Response> =
+public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -74,7 +76,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(n
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: ToolDescriptor
-): AIAgentNodeDelegateBase<String, Message.Response> =
+): AIAgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -94,7 +96,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: Tool<*, *>
-): AIAgentNodeDelegateBase<String, Message.Response> =
+): AIAgentNodeDelegate<String, Message.Response> =
     nodeLLMSendMessageForceOneTool(name, tool.descriptor)
 
 /**
@@ -106,7 +108,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     name: String? = null,
     allowToolCalls: Boolean = true
-): AIAgentNodeDelegateBase<String, Message.Response> =
+): AIAgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -131,7 +133,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     structure: StructuredData<T>,
     retries: Int,
     fixingModel: LLModel
-): AIAgentNodeDelegateBase<String, Result<StructuredResponse<T>>> =
+): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -157,7 +159,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
     transformStreamData: suspend (Flow<String>) -> Flow<T>
-): AIAgentNodeDelegateBase<String, Flow<T>> =
+): AIAgentNodeDelegate<String, Flow<T>> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -179,14 +181,14 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
-): AIAgentNodeDelegateBase<String, Flow<String>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
+): AIAgentNodeDelegate<String, Flow<String>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
 
 /**
  * A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled.
  *
  * @param name Optional node name.
  */
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = null): AIAgentNodeDelegateBase<String, List<Message.Response>> =
+public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = null): AIAgentNodeDelegate<String, List<Message.Response>> =
     node(name) { message ->
         llm.writeSession {
             updatePrompt {
@@ -208,7 +210,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
     strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
     preserveMemory: Boolean = true
-): AIAgentNodeDelegateBase<T, T> = node(name) { input ->
+): AIAgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
         replaceHistoryWithTLDR(strategy, preserveMemory)
     }
@@ -227,7 +229,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
     name: String? = null
-): AIAgentNodeDelegateBase<Message.Tool.Call, ReceivedToolResult> =
+): AIAgentNodeDelegate<Message.Tool.Call, ReceivedToolResult> =
     node(name) { toolCall ->
         environment.executeTool(toolCall)
     }
@@ -239,7 +241,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     name: String? = null
-): AIAgentNodeDelegateBase<ReceivedToolResult, Message.Response> =
+): AIAgentNodeDelegate<ReceivedToolResult, Message.Response> =
     node(name) { result ->
         llm.writeSession {
             updatePrompt {
@@ -261,7 +263,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     name: String? = null,
     parallelTools: Boolean = false,
-): AIAgentNodeDelegateBase<List<Message.Tool.Call>, List<ReceivedToolResult>> =
+): AIAgentNodeDelegate<List<Message.Tool.Call>, List<ReceivedToolResult>> =
     node(name) { toolCalls ->
         if (parallelTools) {
             environment.executeTools(toolCalls)
@@ -277,7 +279,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
     name: String? = null
-): AIAgentNodeDelegateBase<List<ReceivedToolResult>, List<Message.Response>> =
+): AIAgentNodeDelegate<List<ReceivedToolResult>, List<Message.Response>> =
     node(name) { results ->
         llm.writeSession {
             updatePrompt {
@@ -301,7 +303,7 @@ public inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIA
     name: String? = null,
     tool: Tool<ToolArg, TResult>,
     doUpdatePrompt: Boolean = true
-): AIAgentNodeDelegateBase<ToolArg, SafeTool.Result<TResult>> =
+): AIAgentNodeDelegate<ToolArg, SafeTool.Result<TResult>> =
     node(name) { toolArgs ->
         llm.writeSession {
             if (doUpdatePrompt) {
@@ -331,91 +333,3 @@ public inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIA
             toolResult
         }
     }
-
-
-/**
- * Represents the result of a retry operation, encapsulating the output of the operation
- * and a flag indicating whether the operation was successful.
- *
- * @property output The output of the retry operation.
- * @property isSuccess A boolean value indicating whether the success condition is satisfied.
- */
-public data class RetryResult<Output>(val output: Output, val isSuccess: Boolean)
-
-
-/**
- * Creates a node that retries execution of another node until it succeeds or reaches the maximum number of retries.
- * If none of the retries were unsuccessful, returns the output of the first execution.
- * If all retries failed with an exception, throws an exception.
- *
- * @param node The node to retry
- * @param maxRetries Maximum number of retry attempts (must be greater than 0)
- * @param successCondition Function that determines if the output is considered successful
- * @return A node that returns a [RetryResult] containing the output of the node and the success status
- *
- * Example usage:
- * ```
- * val nodeCallLLM by nodeLLMRequest("sendInput")
- * val nodeRetryCallLLM by nodeRetry(nodeCallLLM) { it is Message.Tool.Call }
- * val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
- *
- * // Forward successful results to the appropriate node based on the message type
- * edge(nodeRetryCallLLM forwardTo nodeExecuteTool transformed { it.output } onToolCall { true })
- * edge(nodeRetryCallLLM forwardTo nodeFinish transformed { it.output } onAssistantMessage { true })
- * ```
- */
-public fun <Input, Output> AIAgentSubgraphBuilderBase<*, *>.nodeRetry(
-    node: AIAgentNodeBase<Input, Output>,
-    maxRetries: Int = 3,
-    successCondition: (Output) -> Boolean,
-): AIAgentNodeDelegateBase<Input, RetryResult<Output>> {
-    require(maxRetries > 0) { "maxRetries must be greater than 0" }
-    return node("retry_${node.name}") execute@{ input ->
-        (1..maxRetries).mapNotNull {
-            try {
-                val newContext = fork()
-                val output = node.execute(newContext, input)
-                if (successCondition(output)) {
-                    replace(newContext)
-                    return@execute RetryResult(output, true)
-                } else {
-                    RetryResult(output, false)
-                }
-            } catch (_: Exception) { null }
-        }.firstOrNull() ?: throw Error("Max retries limit reached, all retries failed with an exception.")
-    }
-}
-
-
-/**
- * Creates a node that retries execution of another node until it succeeds or reaches the maximum number of retries.
- * If none of the retries were successful, throws an exception.
- *
- * @param node The node to retry
- * @param maxRetries Maximum number of retry attempts (must be greater than 0)
- * @param successCondition Function that determines if the output is considered successful
- * @return A node that returns a [Output] containing the successful result
- *
- * Example usage:
- * ```
- * val nodeCallLLM by nodeLLMRequest("sendInput")
- * val nodeRetryCallLLM by nodeRetryStrict(nodeCallLLM) { it is Message.Tool.Call }
- * val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
- *
- * // Forward to the appropriate node based on the message type
- * edge(nodeRetryCallLLM forwardTo nodeExecuteTool onToolCall { true })
- * // no need for other branches as the strict retry component will allow only specified output
- * ```
- */
-public fun <Input, Output> AIAgentSubgraphBuilderBase<*, *>.nodeRetryStrict(
-    node: AIAgentNodeBase<Input, Output>,
-    maxRetries: Int = 3,
-    successCondition: (Output) -> Boolean,
-): AIAgentNodeDelegateBase<Input, Output> {
-    val retryNode by nodeRetry(node, maxRetries) { successCondition(it) }
-    return node("retryStrict_${node.name}") { input ->
-        retryNode.execute(this, input).let {
-            if (it.isSuccess) it.output else throw Error("Max retries limit reached, none of the retries succeeded.")
-        }
-    }
-}

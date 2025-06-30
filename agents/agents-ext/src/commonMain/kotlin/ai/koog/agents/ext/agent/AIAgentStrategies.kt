@@ -12,7 +12,8 @@ import ai.koog.prompt.message.Message
  * handle user input, execute tools, and provide responses.
  * Allows the agent to interact with the user in a chat-like manner.
  */
-public fun chatAgentStrategy(): AIAgentStrategy = strategy("chat") {
+// FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
+public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat") {
     val nodeCallLLM by nodeLLMRequest("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
@@ -39,25 +40,5 @@ public fun chatAgentStrategy(): AIAgentStrategy = strategy("chat") {
 
     edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
     edge(nodeSendToolResult forwardTo nodeFinish onToolCall { tc -> tc.tool == "__exit__" } transformed { "Chat finished" })
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
-}
-
-/**
- * Creates a KotlinAgent instance configured to execute a sequence of operations for a single run process
- * involving stages for sending an input, calling tools, and returning the final result.
- *
- * Sometimes, it also called "one-shot" strategy.
- * Useful if you need to run a straightforward process that doesn't require a lot of additional logic.
- */
-public fun singleRunStrategy(): AIAgentStrategy = strategy("single_run") {
-    val nodeCallLLM by nodeLLMRequest("sendInput")
-    val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
-    val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
-
-    edge(nodeStart forwardTo nodeCallLLM)
-    edge(nodeCallLLM forwardTo nodeExecuteTool onToolCall { true })
-    edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeExecuteTool forwardTo nodeSendToolResult)
-    edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
 }

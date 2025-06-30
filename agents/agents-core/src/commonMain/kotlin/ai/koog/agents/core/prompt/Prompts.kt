@@ -2,10 +2,10 @@ package ai.koog.agents.core.prompt
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.text.TextContentBuilder
+import ai.koog.prompt.text.TextContentBuilderBase
 
 internal object Prompts {
-    fun TextContentBuilder.selectRelevantTools(tools: List<ToolDescriptor>, subtaskDescription: String) =
+    fun TextContentBuilderBase<*>.selectRelevantTools(tools: List<ToolDescriptor>, subtaskDescription: String) =
         markdown {
             +"You will be now concentrating on solving the following task:"
             br()
@@ -31,7 +31,7 @@ internal object Prompts {
             +"Think carefully about the tools you select, and make sure they are relevant to the task."
         }
 
-    fun TextContentBuilder.summarizeInTLDR() =
+    fun TextContentBuilderBase<*>.summarizeInTLDR() =
         markdown {
             +"Create a comprehensive summary of this conversation."
             br()

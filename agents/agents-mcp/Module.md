@@ -62,7 +62,7 @@ val agent = AIAgent(
 )
 
 // Run the agent
-agent.runAndGetResult("Your task here")
+agent.run("Your task here")
 ```
 
 #### Transport Types

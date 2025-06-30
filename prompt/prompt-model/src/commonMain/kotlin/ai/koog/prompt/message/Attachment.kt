@@ -99,7 +99,11 @@ public sealed interface AttachmentContent {
      * Plain text content.
      */
     @Serializable
-    public data class PlainText(val text: String): AttachmentContent
+    public data class PlainText(val text: String): AttachmentContent {
+        override fun toString(): String {
+            return "PlainText(length=${text.length})"
+        }
+    }
 
     /**
      * URL of the content (e.g. image or a document).
@@ -140,12 +144,20 @@ public sealed interface AttachmentContent {
             override fun hashCode(): Int {
                 return data.contentHashCode()
             }
+
+            override fun toString(): String {
+                return "Bytes(length=${data.size})"
+            }
         }
 
         /**
          * Binary content represented as Base64 encoded string.
          */
         @Serializable
-        public data class Base64(override val base64: String): Binary
+        public data class Base64(override val base64: String): Binary {
+            override fun toString(): String {
+                return "Base64(length=${base64.length})"
+            }
+        }
     }
 }

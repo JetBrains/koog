@@ -2,6 +2,7 @@ package ai.koog.prompt.structure.markdown
 
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.structure.StructuredDataDefinition
+import ai.koog.prompt.text.TextContentBuilderBase
 import ai.koog.prompt.text.TextContentBuilder
 
 /**
@@ -20,7 +21,7 @@ public class MarkdownStructuredDataDefinition(
     private val schema: TextContentBuilder.() -> Unit,
     private val examples: (TextContentBuilder.() -> Unit)? = null): StructuredDataDefinition {
 
-    override fun definition(builder: TextContentBuilder): TextContentBuilder {
+    override fun definition(builder: TextContentBuilderBase<*>): TextContentBuilderBase<*> {
         return builder.apply {
             +"DEFINITION OF $id"
             +"The $id format is defined only and solely with Markdown, without any additional characters, backticks or anything similar."

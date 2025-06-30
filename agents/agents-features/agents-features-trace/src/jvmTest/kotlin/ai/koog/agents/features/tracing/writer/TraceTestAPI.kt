@@ -66,13 +66,13 @@ fun systemMessage(content: String): Message.System =
  * @return A configured instance of the AIAgent class ready for execution.
  */
 fun createAgent(
-    strategy: AIAgentStrategy,
+    strategy: AIAgentStrategy<String, String>,
     promptId: String? = null,
     systemPrompt: String? = null,
     userPrompt: String? = null,
     assistantPrompt: String? = null,
     installFeatures: AIAgent.FeatureContext.() -> Unit = { }
-): AIAgent {
+): AIAgent<String, String> {
     val agentConfig = AIAgentConfig(
         prompt = prompt(promptId ?: "Test prompt", clock = testClock) {
             system(systemPrompt ?: "Test system message")
