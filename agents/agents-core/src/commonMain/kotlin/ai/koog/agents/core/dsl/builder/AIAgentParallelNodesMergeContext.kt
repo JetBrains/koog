@@ -34,7 +34,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val llm: AIAgentLLMContext get() = underlyingContextBase.llm
     override val stateManager: AIAgentStateManager get() = underlyingContextBase.stateManager
     override val storage: AIAgentStorage get() = underlyingContextBase.storage
-    override val sessionId: String get() = underlyingContextBase.sessionId
+    override val runId: String get() = underlyingContextBase.runId
     override val strategyName: String get() = underlyingContextBase.strategyName
     override val pipeline: AIAgentPipeline get() = underlyingContextBase.pipeline
 
@@ -55,7 +55,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
-        sessionId: String,
+        runId: String,
         strategyId: String,
         pipeline: AIAgentPipeline
     ): AIAgentContextBase = underlyingContextBase.copy(
@@ -65,7 +65,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         llm = llm,
         stateManager = stateManager,
         storage = storage,
-        sessionId = sessionId,
+        runId = runId,
         strategyId = strategyId,
         pipeline = pipeline
     )

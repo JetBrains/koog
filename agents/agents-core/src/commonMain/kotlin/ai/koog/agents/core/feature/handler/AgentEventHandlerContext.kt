@@ -37,7 +37,7 @@ public class AgentTransformEnvironmentContext<TFeature>(
  */
 public data class AgentStartContext<TFeature>(
     public val agent: AIAgent<*, *>,
-    public val sessionId: String,
+    public val runId: String,
     public val strategy: AIAgentStrategy<*, *>,
     public val feature: TFeature,
 ) : AgentEventHandlerContext
@@ -46,12 +46,12 @@ public data class AgentStartContext<TFeature>(
  * Represents the context for handling the completion of an agent's execution.
  *
  * @property agentId The unique identifier of the agent that completed its execution.
- * @property sessionId The identifier of the session in which the agent was executed.
+ * @property runId The identifier of the session in which the agent was executed.
  * @property result The optional result of the agent's execution, if available.
  */
 public data class AgentFinishedContext(
     public val agentId: String,
-    public val sessionId: String,
+    public val runId: String,
     public val result: Any?
 ) : AgentEventHandlerContext
 
@@ -59,12 +59,12 @@ public data class AgentFinishedContext(
  * Represents the context for handling errors that occur during the execution of an agent run.
  *
  * @property agentId The unique identifier of the agent associated with the error.
- * @property sessionId The identifier for the session during which the error occurred.
+ * @property runId The identifier for the session during which the error occurred.
  * @property throwable The exception or error thrown during the execution.
  */
 public data class AgentRunErrorContext(
     val agentId: String,
-    val sessionId: String,
+    val runId: String,
     val throwable: Throwable
 ) : AgentEventHandlerContext
 

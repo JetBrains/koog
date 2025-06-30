@@ -55,13 +55,13 @@ public sealed class DefinedFeatureEvent() : FeatureEvent {
  * monitoring, debugging, and tracking the lifecycle of AI agents within the system.
  *
  * @property agentId The unique identifier of the AI agent;
- * @property sessionId The unique identifier of the AI agen run;
+ * @property runId The unique identifier of the AI agen run;
  * @property strategyName The name of the strategy that the AI agent has started executing.
  */
 @Serializable
 public data class AIAgentStartedEvent(
     val agentId: String,
-    val sessionId: String,
+    val runId: String,
     val strategyName: String,
     override val eventId: String = AIAgentStartedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -74,13 +74,13 @@ public data class AIAgentStartedEvent(
  * or monitoring the outcomes of agent operations.
  *
  * @property agentId The unique identifier of the AI agent;
- * @property sessionId The unique identifier of the AI agen run;
+ * @property runId The unique identifier of the AI agen run;
  * @property result The result of the strategy execution, or null if unavailable.
  */
 @Serializable
 public data class AIAgentFinishedEvent(
     val agentId: String,
-    val sessionId: String,
+    val runId: String,
     val result: String?,
     override val eventId: String = AIAgentFinishedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -93,14 +93,14 @@ public data class AIAgentFinishedEvent(
  *
  * @constructor Creates an instance of [AIAgentRunErrorEvent].
  * @property agentId The unique identifier of the AI agent;
- * @property sessionId The unique identifier of the AI agen run;
+ * @property runId The unique identifier of the AI agen run;
  * @property error The [AIAgentError] instance encapsulating details about the encountered error,
  *                 such as its message, stack trace, and cause.
  */
 @Serializable
 public data class AIAgentRunErrorEvent(
     val agentId: String,
-    val sessionId: String,
+    val runId: String,
     val error: AIAgentError,
     override val eventId: String = AIAgentRunErrorEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -136,7 +136,7 @@ public data class AIAgentBeforeCloseEvent(
  */
 @Serializable
 public data class AIAgentStrategyStartEvent(
-    val sessionId: String,
+    val runId: String,
     val strategyName: String,
     override val eventId: String = AIAgentStrategyStartEvent::class.simpleName!!
 ) : DefinedFeatureEvent()
@@ -154,7 +154,7 @@ public data class AIAgentStrategyStartEvent(
  */
 @Serializable
 public data class AIAgentStrategyFinishedEvent(
-    val sessionId: String,
+    val runId: String,
     val strategyName: String,
     val result: String?,
     override val eventId: String = AIAgentStrategyFinishedEvent::class.simpleName!!,
@@ -181,7 +181,7 @@ public data class AIAgentStrategyFinishedEvent(
  */
 @Serializable
 public data class AIAgentNodeExecutionStartEvent(
-    val sessionId: String,
+    val runId: String,
     val nodeName: String,
     val input: String,
     override val eventId: String = AIAgentNodeExecutionStartEvent::class.simpleName!!,
@@ -205,7 +205,7 @@ public data class AIAgentNodeExecutionStartEvent(
  */
 @Serializable
 public data class AIAgentNodeExecutionEndEvent(
-    val sessionId: String,
+    val runId: String,
     val nodeName: String,
     val input: String,
     val output: String,
@@ -220,7 +220,7 @@ public data class AIAgentNodeExecutionEndEvent(
  * Represents an event indicating the start of a call to a Language Learning Model (LLM).
  *
  * This event captures the details of the LLM interaction at the point of invocation, including the
- * input prompt and any tools that will be utilized during the call. It extends the `DefinedFeatureEvent` class
+ * input prompt and any tools that will be used during the call. It extends the `DefinedFeatureEvent` class
  * and serves as a specific type of event in a feature-driven framework.
  *
  * @property prompt The input prompt encapsulated as a [Prompt] object. This represents the structured set of
@@ -232,7 +232,7 @@ public data class AIAgentNodeExecutionEndEvent(
  */
 @Serializable
 public data class BeforeLLMCallEvent(
-    val sessionId: String,
+    val runId: String,
     val prompt: Prompt,
     val model: String,
     val tools: List<String>,
@@ -256,7 +256,7 @@ public data class BeforeLLMCallEvent(
  */
 @Serializable
 public data class AfterLLMCallEvent(
-    val sessionId: String,
+    val runId: String,
     val prompt: Prompt,
     val model: String,
     val responses: List<Message.Response>,
@@ -281,7 +281,7 @@ public data class AfterLLMCallEvent(
  */
 @Serializable
 public data class ToolCallEvent(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,
@@ -301,7 +301,7 @@ public data class ToolCallEvent(
  */
 @Serializable
 public data class ToolValidationErrorEvent(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,
@@ -323,7 +323,7 @@ public data class ToolValidationErrorEvent(
  */
 @Serializable
 public data class ToolCallFailureEvent(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,
@@ -345,7 +345,7 @@ public data class ToolCallFailureEvent(
  */
 @Serializable
 public data class ToolCallResultEvent(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,

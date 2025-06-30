@@ -740,7 +740,7 @@ public class Testing {
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
-                    sessionId: String?,
+                    runId: String?,
                     strategyId: String?,
                 ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
@@ -847,7 +847,7 @@ public class Testing {
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
-                    sessionId: String?,
+                    runId: String?,
                     strategyId: String?,
                 ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
@@ -1005,7 +1005,7 @@ public class Testing {
                         promptExecutor = PromptExecutorProxy(
                             agent.promptExecutor,
                             pipeline,
-                            assertion.context.sessionId,
+                            assertion.context.runId,
                         ),
                         environment = environment,
                         config = agent.agentConfig,

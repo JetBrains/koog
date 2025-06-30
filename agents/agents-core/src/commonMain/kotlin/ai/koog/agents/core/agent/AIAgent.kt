@@ -128,7 +128,7 @@ public open class AIAgent<Input, Output>(
         val sessionUuid = Uuid.random()
         val runId = sessionUuid.toString()
 
-        return withContext(AgentRunInfoContextElement(agentId = id, sessionId = runId, agentConfig = agentConfig, strategyName = strategy.name)) {
+        return withContext(AgentRunInfoContextElement(agentId = id, runId = runId, agentConfig = agentConfig, strategyName = strategy.name)) {
 
             val stateManager = AIAgentStateManager()
             val storage = AIAgentStorage()
@@ -150,7 +150,7 @@ public open class AIAgent<Input, Output>(
                     promptExecutor = PromptExecutorProxy(
                         executor = promptExecutor,
                         pipeline = pipeline,
-                        sessionId = runId
+                        runId = runId
                     ),
                     environment = preparedEnvironment,
                     config = agentConfig,
@@ -158,18 +158,18 @@ public open class AIAgent<Input, Output>(
                 ),
                 stateManager = stateManager,
                 storage = storage,
-                sessionId = runId,
+                runId = runId,
                 strategyName = strategy.name,
                 pipeline = pipeline,
             )
 
-            logger.debug { formatLog(agentId = id, sessionId = runId, message = "Starting agent execution") }
-            pipeline.onBeforeAgentStarted(sessionId = runId, agent = this@AIAgent, strategy = strategy)
+            logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }
+            pipeline.onBeforeAgentStarted(runId = runId, agent = this@AIAgent, strategy = strategy)
 
             val result = strategy.execute(context = agentContext, input = agentInput)
 
-            logger.debug { formatLog(agentId = id, sessionId = runId, message = "Finished agent execution") }
-            pipeline.onAgentFinished(agentId = id, sessionId = runId, result = result)
+            logger.debug { formatLog(agentId = id, runId = runId, message = "Finished agent execution") }
+            pipeline.onAgentFinished(agentId = id, runId = runId, result = result)
 
             runningMutex.withLock {
                 isRunning = false
@@ -183,15 +183,15 @@ public open class AIAgent<Input, Output>(
         val agentRunInfo = currentCoroutineContext().getAgentRunInfoElement() ?: throw IllegalStateException("Agent run info not found")
 
         logger.info {
-            formatLog(agentRunInfo.agentId, agentRunInfo.sessionId, "Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]")
+            formatLog(agentRunInfo.agentId, agentRunInfo.runId, "Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]")
         }
 
         val message = AgentToolCallsToEnvironmentMessage(
-            sessionId = agentRunInfo.sessionId,
+            runId = agentRunInfo.runId,
             content = toolCalls.map { call ->
                 AgentToolCallToEnvironmentContent(
                     agentId = id,
-                    sessionId = agentRunInfo.sessionId,
+                    runId = agentRunInfo.runId,
                     toolCallId = call.id,
                     toolName = call.tool,
                     toolArgs = call.contentJson
@@ -213,12 +213,12 @@ public open class AIAgent<Input, Output>(
         val agentRunInfo = currentCoroutineContext().getAgentRunInfoElement() ?: throw IllegalStateException("Agent run info not found")
 
         logger.error(exception) {
-            formatLog(agentRunInfo.agentId, agentRunInfo.sessionId, "Reporting problem: ${exception.message}")
+            formatLog(agentRunInfo.agentId, agentRunInfo.runId, "Reporting problem: ${exception.message}")
         }
 
         processError(
             agentId = agentRunInfo.agentId,
-            sessionId = agentRunInfo.sessionId,
+            runId = agentRunInfo.runId,
             error = AgentServiceError(
                 type = AgentServiceErrorType.UNEXPECTED_ERROR,
                 message = exception.message ?: "unknown error"
@@ -259,7 +259,7 @@ public open class AIAgent<Input, Output>(
                 )
             }
 
-            pipeline.onToolCall(sessionId = content.sessionId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs)
+            pipeline.onToolCall(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs)
 
             // Tool Execution
             val toolResult = try {
@@ -267,7 +267,7 @@ public open class AIAgent<Input, Output>(
                 (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
 
-                pipeline.onToolValidationError(sessionId = content.sessionId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, error = e.message)
+                pipeline.onToolValidationError(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, error = e.message)
 
                 return toolResult(
                     message = e.message,
@@ -280,7 +280,7 @@ public open class AIAgent<Input, Output>(
 
                 logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
 
-                pipeline.onToolCallFailure(sessionId = content.sessionId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, throwable = e)
+                pipeline.onToolCallFailure(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, throwable = e)
 
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to execute because of ${e.message}!",
@@ -292,7 +292,7 @@ public open class AIAgent<Input, Output>(
             }
 
             // Tool Finished with Result
-            pipeline.onToolCallResult(sessionId = content.sessionId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, result = toolResult)
+            pipeline.onToolCallResult(runId = content.runId, toolCallId = content.toolCallId, tool = tool, toolArgs = toolArgs, result = toolResult)
 
             logger.debug { "Completed execution of ${content.toolName} with result: $toolResult" }
 
@@ -314,7 +314,7 @@ public open class AIAgent<Input, Output>(
         }
 
         return EnvironmentToolResultMultipleToAgentMessage(
-            sessionId = message.sessionId,
+            runId = message.runId,
             content = results
         )
     }
@@ -333,17 +333,17 @@ public open class AIAgent<Input, Output>(
         toolResult = result
     )
 
-    private suspend fun processError(agentId: String, sessionId: String, error: AgentServiceError) {
+    private suspend fun processError(agentId: String, runId: String, error: AgentServiceError) {
         try {
             throw error.asException()
         } catch (e: AgentEngineException) {
             logger.error(e) { "Execution exception reported by server!" }
-            pipeline.onAgentRunError(agentId = agentId, sessionId = sessionId, throwable = e)
+            pipeline.onAgentRunError(agentId = agentId, runId = runId, throwable = e)
         }
     }
 
-    private fun formatLog(agentId: String, sessionId: String, message: String): String =
-        "[agent id: $agentId, session id: $sessionId] $message"
+    private fun formatLog(agentId: String, runId: String, message: String): String =
+        "[agent id: $agentId, run id: $runId] $message"
 
     //endregion Private Methods
 }

@@ -80,7 +80,7 @@ public interface AIAgentContextBase {
      * A unique identifier for the current session associated with the AI agent context.
      * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
-    public val sessionId: String
+    public val runId: String
 
     /**
      * Represents the name of the strategy being used in the current AI agent context.
@@ -142,7 +142,7 @@ public interface AIAgentContextBase {
      * @param llm The AI agent LLM context
      * @param stateManager The state manager for the AI agent
      * @param storage The AI agent's key-value storage
-     * @param sessionId The UUID of the session
+     * @param runId The id of an agent run
      * @param strategyId The strategy ID
      * @param pipeline The AI agent pipeline
      * @return A new instance of [AIAgentContext] with the specified overrides.
@@ -155,7 +155,7 @@ public interface AIAgentContextBase {
         llm: AIAgentLLMContext = this.llm,
         stateManager: AIAgentStateManager = this.stateManager,
         storage: AIAgentStorage = this.storage,
-        sessionId: String = this.sessionId,
+        runId: String = this.runId,
         strategyId: String = this.strategyName,
         pipeline: AIAgentPipeline = this.pipeline,
     ): AIAgentContextBase

@@ -139,7 +139,7 @@ public class EventHandlerConfig : FeatureConfig() {
     public var onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
         set(value) {
             this.onAgentRunError { eventContext ->
-                value("", Uuid.parse(eventContext.sessionId), eventContext.throwable)
+                value("", Uuid.parse(eventContext.runId), eventContext.throwable)
             }
         }
 
@@ -242,7 +242,7 @@ public class EventHandlerConfig : FeatureConfig() {
     public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
         set(value) {
             this.onBeforeLLMCall { eventContext ->
-                value(eventContext.prompt, eventContext.tools, eventContext.model, Uuid.parse(eventContext.sessionId))
+                value(eventContext.prompt, eventContext.tools, eventContext.model, Uuid.parse(eventContext.runId))
             }
         }
 
@@ -265,7 +265,7 @@ public class EventHandlerConfig : FeatureConfig() {
     public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid -> }
         set(value) {
             this.onAfterLLMCall { eventContext ->
-                value(eventContext.prompt, eventContext.tools, eventContext.model, eventContext.responses, Uuid.parse(eventContext.sessionId))
+                value(eventContext.prompt, eventContext.tools, eventContext.model, eventContext.responses, Uuid.parse(eventContext.runId))
             }
         }
 

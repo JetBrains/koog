@@ -163,7 +163,7 @@ public open class AIAgentSubgraph<Input, Output>(
     }
 
     private fun formatLog(context: AIAgentContextBase, message: String): String =
-        "$message [$name, ${context.strategyName}, ${context.sessionId}]"
+        "$message [$name, ${context.strategyName}, ${context.runId}]"
 }
 
 /**

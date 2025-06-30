@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.Flow
 public class PromptExecutorProxy(
     private val executor: PromptExecutor,
     private val pipeline: AIAgentPipeline,
-    private val sessionId: String,
+    private val runId: String,
 ) : PromptExecutor {
 
     private companion object {
@@ -28,12 +28,12 @@ public class PromptExecutorProxy(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing LLM call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        pipeline.onBeforeLLMCall(sessionId, prompt, model, tools)
+        pipeline.onBeforeLLMCall(runId, prompt, model, tools)
 
         val responses = executor.execute(prompt, model, tools)
 
         logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" } }]" }
-        pipeline.onAfterLLMCall(sessionId, prompt, model, tools, responses)
+        pipeline.onAfterLLMCall(runId, prompt, model, tools, responses)
 
         return responses
     }

@@ -16,46 +16,46 @@ internal val FeatureStringMessage.featureStringMessage
     get() = "Feature string message (message: ${message})"
 
 internal val AIAgentStartedEvent.agentStartedEventFormat
-    get() = "$eventId (agent id: ${agentId}, session id: ${sessionId}, strategy: ${strategyName})"
+    get() = "$eventId (agent id: ${agentId}, run id: ${runId}, strategy: ${strategyName})"
 
 internal val AIAgentFinishedEvent.agentFinishedEventFormat
-    get() = "$eventId (agent id: ${agentId}, session id: ${sessionId}, result: ${result})"
+    get() = "$eventId (agent id: ${agentId}, run id: ${runId}, result: ${result})"
 
 internal val AIAgentRunErrorEvent.agentRunErrorEventFormat
-    get() = "$eventId (agent id: ${agentId}, session id: ${sessionId}, error: ${error.message})"
+    get() = "$eventId (agent id: ${agentId}, run id: ${runId}, error: ${error.message})"
 
 internal val AIAgentBeforeCloseEvent.agentBeforeCloseFormat
     get() = "$eventId (agent id: ${agentId})"
 
 internal val AIAgentStrategyStartEvent.strategyStartEventFormat
-    get() = "$eventId (session id: ${sessionId}, strategy: ${strategyName})"
+    get() = "$eventId (run id: ${runId}, strategy: ${strategyName})"
 
 internal val AIAgentStrategyFinishedEvent.strategyFinishedEventFormat
-    get() = "$eventId (session id: ${sessionId}, strategy: ${strategyName}, result: ${result})"
+    get() = "$eventId (run id: ${runId}, strategy: ${strategyName}, result: ${result})"
 
 internal val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
-    get() = "$eventId (session id: ${sessionId}, node: ${nodeName}, input: ${input})"
+    get() = "$eventId (run id: ${runId}, node: ${nodeName}, input: ${input})"
 
 internal val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
-    get() = "$eventId (session id: ${sessionId}, node: ${nodeName}, input: ${input}, output: ${output})"
+    get() = "$eventId (run id: ${runId}, node: ${nodeName}, input: ${input}, output: ${output})"
 
 internal val BeforeLLMCallEvent.llmCallStartEventFormat
-    get() = "$eventId (session id: ${sessionId}, prompt: ${prompt.traceString}, model: ${model}, tools: [${tools.joinToString()}])"
+    get() = "$eventId (run id: ${runId}, prompt: ${prompt.traceString}, model: ${model}, tools: [${tools.joinToString()}])"
 
 internal val AfterLLMCallEvent.llmCallEndEventFormat
-    get() = "$eventId (session id: ${sessionId}, prompt: ${prompt.traceString}, model: ${model}, responses: [${responses.joinToString { it.traceString }}])"
+    get() = "$eventId (run id: ${runId}, prompt: ${prompt.traceString}, model: ${model}, responses: [${responses.joinToString { it.traceString }}])"
 
 internal val ToolCallEvent.toolCallEventFormat
-    get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs})"
+    get() = "$eventId (run id: ${runId}, tool: ${toolName}, tool args: ${toolArgs})"
 
 internal val ToolValidationErrorEvent.toolValidationErrorEventFormat
-    get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs}, validation error: ${error})"
+    get() = "$eventId (run id: ${runId}, tool: ${toolName}, tool args: ${toolArgs}, validation error: ${error})"
 
 internal val ToolCallFailureEvent.toolCallFailureEventFormat
-    get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs}, error: ${error.message})"
+    get() = "$eventId (run id: ${runId}, tool: ${toolName}, tool args: ${toolArgs}, error: ${error.message})"
 
 internal val ToolCallResultEvent.toolCallResultEventFormat
-    get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs}, result: ${result})"
+    get() = "$eventId (run id: ${runId}, tool: ${toolName}, tool args: ${toolArgs}, result: ${result})"
 
 internal val FeatureMessage.traceMessage: String
     get() {

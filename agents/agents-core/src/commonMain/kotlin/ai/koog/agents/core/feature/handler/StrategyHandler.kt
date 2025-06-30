@@ -86,7 +86,7 @@ public fun interface StrategyStartedHandler<FeatureT : Any> {
      * Handles the processing of a strategy update within a specified context.
      *
      * @param context The context for the strategy update, encapsulating the strategy,
-     *                session identifier, and feature associated with the handling process.
+     *                run identifier, and feature associated with the handling process.
      */
     public suspend fun handle(context: StrategyStartContext<FeatureT>)
 }

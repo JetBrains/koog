@@ -37,15 +37,15 @@ class EventHandlerTest {
         agent.run(agentInput)
         agent.close()
 
-        val sessionId = eventsCollector.sessionId
+        val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, session id: $sessionId, strategy: $strategyName)",
-            "OnStrategyStarted (session id: $sessionId, strategy: $strategyName)",
-            "OnBeforeNode (session id: $sessionId, node: __start__, input: $agentInput)",
-            "OnAfterNode (session id: $sessionId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
+            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
+            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
+            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
+            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
             "OnAgentBeforeClose (agent id: test-agent-id)",
         )
 
@@ -81,19 +81,19 @@ class EventHandlerTest {
         agent.run(agentInput)
         agent.close()
 
-        val sessionId = eventsCollector.sessionId
+        val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, session id: $sessionId, strategy: $strategyName)",
-            "OnStrategyStarted (session id: $sessionId, strategy: $strategyName)",
-            "OnBeforeNode (session id: $sessionId, node: __start__, input: $agentInput)",
-            "OnAfterNode (session id: $sessionId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnBeforeNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [])",
-            "OnAfterLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
-            "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
+            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
+            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
+            "OnBeforeNode (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
+            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [])",
+            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [], responses: [role: Assistant, message: Default test response])",
+            "OnAfterNode (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
+            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
+            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
             "OnAgentBeforeClose (agent id: $agentId)",
         )
 
@@ -130,19 +130,19 @@ class EventHandlerTest {
         agent.run(agentInput)
         agent.close()
 
-        val sessionId = eventsCollector.sessionId
+        val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, session id: $sessionId, strategy: $strategyName)",
-            "OnStrategyStarted (session id: $sessionId, strategy: $strategyName)",
-            "OnBeforeNode (session id: $sessionId, node: __start__, input: ${agentInput})",
-            "OnAfterNode (session id: $sessionId, node: __start__, input: ${agentInput}, output: ${agentInput})",
-            "OnBeforeNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
-            "OnAfterLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
-            "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
+            "OnBeforeNode (run id: $runId, node: __start__, input: ${agentInput})",
+            "OnAfterNode (run id: $runId, node: __start__, input: ${agentInput}, output: ${agentInput})",
+            "OnBeforeNode (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
+            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
+            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
+            "OnAfterNode (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
+            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
+            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
             "OnAgentBeforeClose (agent id: test-agent-id)",
         )
 
@@ -180,23 +180,23 @@ class EventHandlerTest {
         agent.run(agentInput)
         agent.close()
 
-        val sessionId = eventsCollector.sessionId
+        val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, session id: $sessionId, strategy: $strategyName)",
-            "OnStrategyStarted (session id: $sessionId, strategy: $strategyName)",
-            "OnBeforeNode (session id: $sessionId, node: __start__, input: ${agentInput})",
-            "OnAfterNode (session id: $sessionId, node: __start__, input: ${agentInput}, output: ${agentInput})",
-            "OnBeforeNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
-            "OnAfterLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (session id: $sessionId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
-            "OnBeforeNode (session id: $sessionId, node: test LLM call with tools, input: Test LLM call with tools prompt)",
-            "OnBeforeLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, tools: [dummy])",
-            "OnAfterLLMCall (session id: $sessionId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (session id: $sessionId, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
-            "OnStrategyFinished (session id: $sessionId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, session id: $sessionId, result: $agentResult)",
+            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
+            "OnBeforeNode (run id: $runId, node: __start__, input: ${agentInput})",
+            "OnAfterNode (run id: $runId, node: __start__, input: ${agentInput}, output: ${agentInput})",
+            "OnBeforeNode (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
+            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
+            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
+            "OnAfterNode (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
+            "OnBeforeNode (run id: $runId, node: test LLM call with tools, input: Test LLM call with tools prompt)",
+            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, tools: [dummy])",
+            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
+            "OnAfterNode (run id: $runId, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachment=null, finishReason=null))",
+            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
+            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
             "OnAgentBeforeClose (agent id: test-agent-id)",
         )
 
@@ -214,7 +214,7 @@ class EventHandlerTest {
             edge(nodeStart forwardTo nodeFinish transformed { agentResult })
         }
 
-        var sessionId = ""
+        var runId = ""
 
         val agent = createAgent(
             strategy = strategy,
@@ -222,7 +222,7 @@ class EventHandlerTest {
             installFeatures = {
                 install(EventHandler) {
                     onBeforeAgentStarted { eventContext ->
-                        sessionId = eventContext.sessionId
+                        runId = eventContext.runId
                         collectedEvents.add("OnBeforeAgentStarted first (agent id: ${eventContext.agent.id}, strategy: ${eventContext.strategy.name})")
                     }
 
@@ -231,7 +231,7 @@ class EventHandlerTest {
                     }
 
                     onAgentFinished { eventContext ->
-                        collectedEvents.add("OnAgentFinished (agent id: ${eventContext.agentId}, sessionId: ${eventContext.sessionId}, result: $agentResult)")
+                        collectedEvents.add("OnAgentFinished (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: $agentResult)")
                     }
                 }
             }
@@ -243,7 +243,7 @@ class EventHandlerTest {
         val expectedEvents = listOf(
             "OnBeforeAgentStarted first (agent id: test-agent-id, strategy: $strategyName)",
             "OnBeforeAgentStarted second (agent id: test-agent-id, strategy: $strategyName)",
-            "OnAgentFinished (agent id: test-agent-id, sessionId: $sessionId, result: $agentResult)",
+            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
         )
 
         assertEquals(expectedEvents.size, collectedEvents.size)

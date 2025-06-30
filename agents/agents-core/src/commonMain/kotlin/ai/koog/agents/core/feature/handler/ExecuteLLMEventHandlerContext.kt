@@ -19,7 +19,7 @@ public interface LLMEventHandlerContext : EventHandlerContext
  * @property model The language model instance being used.
  */
 public data class BeforeLLMCallContext(
-    val sessionId: String,
+    val runId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
@@ -34,7 +34,7 @@ public data class BeforeLLMCallContext(
  * @property responses The response messages received from the language model.
  */
 public data class AfterLLMCallContext(
-    val sessionId: String,
+    val runId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,

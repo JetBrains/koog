@@ -23,7 +23,7 @@ public class ExecuteLLMHandler {
      * allowing post-processing or custom logic to be performed once the LLM has returned a response.
      *
      * The handler receives various pieces of information about the LLM call, including the original prompt,
-     * the tools used, the model invoked, the responses returned by the model, and a unique session identifier.
+     * the tools used, the model invoked, the responses returned by the model, and a unique run identifier.
      *
      * Customize this handler to implement specific behavior required immediately after LLM processing.
      */
@@ -34,7 +34,7 @@ public class ExecuteLLMHandler {
 /**
  * A functional interface implemented to handle logic that occurs before invoking a large language model (LLM).
  * It allows preprocessing steps or validation based on the provided prompt, available tools, targeted LLM model,
- * and a unique session identifier.
+ * and a unique run identifier.
  *
  * This can be particularly useful for custom input manipulation, logging, validation, or applying
  * configurations to the LLM request based on external context.

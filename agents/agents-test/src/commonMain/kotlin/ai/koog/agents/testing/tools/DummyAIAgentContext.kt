@@ -48,7 +48,7 @@ public class DummyAIAgentContext(
     private var _llm: AIAgentLLMContext? = builder.llm
     private var _stateManager: AIAgentStateManager? = builder.stateManager
     private var _storage: AIAgentStorage? = builder.storage
-    private var _sessionId: String? = builder.sessionId
+    private var _runId: String? = builder.runId
     private var _strategyId: String? = builder.strategyId
 
     @OptIn(InternalAgentsApi::class)
@@ -72,8 +72,8 @@ public class DummyAIAgentContext(
     override val storage: AIAgentStorage
         get() = _storage ?: throw NotImplementedError("Storage is not mocked")
 
-    override val sessionId: String
-        get() = _sessionId ?: throw NotImplementedError("Session UUID is not mocked")
+    override val runId: String
+        get() = _runId ?: throw NotImplementedError("Session UUID is not mocked")
 
     override val strategyName: String
         get() = _strategyId ?: throw NotImplementedError("Strategy ID is not mocked")
@@ -95,7 +95,7 @@ public class DummyAIAgentContext(
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
-        sessionId: String,
+        runId: String,
         strategyId: String,
         pipeline: AIAgentPipeline
     ): AIAgentContextBase = DummyAIAgentContext(
@@ -106,7 +106,7 @@ public class DummyAIAgentContext(
             llm = llm,
             stateManager = stateManager,
             storage = storage,
-            sessionId = sessionId,
+            runId = runId,
             strategyId = strategyId,
         )
     )
@@ -201,10 +201,10 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
     /**
      * Represents the unique identifier associated with the session in the mock builder context.
      *
-     * This property is optional and may be used to specify or retrieve the UUID that ties the
-     * session to a specific context or operation.
+     * This property is optional and may be used to specify or retrieve the id that ties the
+     * run to a specific context or operation.
      */
-    public var sessionId: String?
+    public var runId: String?
     /**
      * Represents the identifier of a strategy to be used within the context of an AI agent.
      *
@@ -225,7 +225,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
         llm: AIAgentLLMContext? = this.llm,
         stateManager: AIAgentStateManager? = this.stateManager,
         storage: AIAgentStorage? = this.storage,
-        sessionId: String? = this.sessionId,
+        runId: String? = this.runId,
         strategyId: String? = this.strategyId,
     ): AIAgentContextMockBuilderBase
 
@@ -319,9 +319,9 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * This property can be used to correlate and differentiate multiple sessions for the same agent
      * or across different agents.
      *
-     * The `sessionId` can be null, indicating that the session has not been associated with an identifier.
+     * The `runId` can be null, indicating that the session has not been associated with an identifier.
      */
-    override var sessionId: String? = null
+    override var runId: String? = null
     /**
      * Represents the identifier for the strategy to be used in the agent context.
      *
@@ -346,7 +346,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
-        sessionId: String?,
+        runId: String?,
         strategyId: String?,
     ): AIAgentContextMockBuilder {
         return AIAgentContextMockBuilder().also {
@@ -356,7 +356,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
             it.llm = llm
             it.stateManager = stateManager
             it.storage = storage
-            it.sessionId = sessionId
+            it.runId = runId
             it.strategyId = strategyId
         }
     }

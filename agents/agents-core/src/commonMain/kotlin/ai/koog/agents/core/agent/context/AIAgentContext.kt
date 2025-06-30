@@ -23,7 +23,7 @@ import ai.koog.agents.core.utils.RWLock
  * @param llm The contextual data and execution utilities for the AI agent's interaction with LLMs.
  * @param stateManager Manages the internal state of the AI agent.
  * @param storage Concurrent-safe storage for managing key-value data across the agent's lifecycle.
- * @param sessionId The unique identifier for the agent session.
+ * @param runId The unique identifier for the agent session.
  * @param strategyName The identifier for the selected strategy in the agent's lifecycle.
  * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
  */
@@ -34,7 +34,7 @@ public class AIAgentContext(
     llm: AIAgentLLMContext,
     stateManager: AIAgentStateManager,
     storage: AIAgentStorage,
-    override val sessionId: String,
+    override val runId: String,
     override val strategyName: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
@@ -126,7 +126,7 @@ public class AIAgentContext(
      * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
-     * @param sessionId The session UUID, or `null` to retain the current session ID.
+     * @param runId The run Id, or `null` to retain the current run ID.
      * @param strategyId The strategy identifier, or `null` to retain the current identifier.
      * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
      */
@@ -137,7 +137,7 @@ public class AIAgentContext(
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
-        sessionId: String,
+        runId: String,
         strategyId: String,
         pipeline: AIAgentPipeline,
     ): AIAgentContextBase = AIAgentContext(
@@ -147,7 +147,7 @@ public class AIAgentContext(
         llm = llm,
         stateManager = stateManager,
         storage = storage,
-        sessionId = sessionId,
+        runId = runId,
         strategyName = strategyId,
         pipeline = pipeline,
     )

@@ -16,7 +16,7 @@ public interface ToolEventHandlerContext : EventHandlerContext
  * @property toolArgs The arguments provided for the tool execution, adhering to the tool's expected input structure.
  */
 public data class ToolCallContext(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs
@@ -30,7 +30,7 @@ public data class ToolCallContext(
  * @param error The error message describing the validation issue.
  */
 public data class ToolValidationErrorContext(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs,
@@ -45,7 +45,7 @@ public data class ToolValidationErrorContext(
  * @param throwable The exception or error that caused the failure.
  */
 public data class ToolCallFailureContext(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs,
@@ -60,7 +60,7 @@ public data class ToolCallFailureContext(
  * @param result An optional result produced by the tool after execution can be null if not applicable.
  */
 public data class ToolCallResultContext(
-    val sessionId: String,
+    val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs,
