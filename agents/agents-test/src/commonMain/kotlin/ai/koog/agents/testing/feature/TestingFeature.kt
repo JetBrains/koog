@@ -944,16 +944,15 @@ public class Testing {
             if (config.enableGraphTesting) {
                 feature.graphAssertions.add(config.getAssertions())
 
-                pipeline.interceptBeforeAgentStarted(interceptContext) {
-                    readStrategy { strategyGraph ->
-                        val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
-                        config.assert(
-                            strategyAssertions != null,
-                            "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
-                        )
-                        strategyAssertions!!
-                        verifyGraph(agent, strategyAssertions, strategyGraph, pipeline, config)
-                    }
+                pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
+                    val strategyGraph = eventContext.strategy
+                    val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
+                    config.assert(
+                        strategyAssertions != null,
+                        "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
+                    )
+                    strategyAssertions!!
+                    verifyGraph(eventContext.agent, strategyAssertions, strategyGraph, pipeline, config)
                 }
             }
         }

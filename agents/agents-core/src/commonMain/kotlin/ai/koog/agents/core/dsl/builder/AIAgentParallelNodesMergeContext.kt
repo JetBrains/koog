@@ -35,7 +35,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val stateManager: AIAgentStateManager get() = underlyingContextBase.stateManager
     override val storage: AIAgentStorage get() = underlyingContextBase.storage
     override val sessionId: String get() = underlyingContextBase.sessionId
-    override val strategyId: String get() = underlyingContextBase.strategyId
+    override val strategyName: String get() = underlyingContextBase.strategyName
     override val pipeline: AIAgentPipeline get() = underlyingContextBase.pipeline
 
     // Delegate all methods to the underlying context

@@ -9,14 +9,14 @@ import ai.koog.agents.features.common.config.FeatureConfig
  * The feature stands for providing specific functionality and configuration capabilities.
  *
  * @param Config The type representing the configuration for this feature.
- * @param FeatureT The type of the feature implementation.
+ * @param TFeature The type of the feature implementation.
  */
-public interface AIAgentFeature<Config : FeatureConfig, FeatureT : Any> {
+public interface AIAgentFeature<Config : FeatureConfig, TFeature : Any> {
 
     /**
-     * A key used to uniquely identify a feature of type [FeatureT] within the local agent storage.
+     * A key used to uniquely identify a feature of type [TFeature] within the local agent storage.
      */
-    public val key: AIAgentStorageKey<FeatureT>
+    public val key: AIAgentStorageKey<TFeature>
 
     /**
      * Creates and returns an initial configuration for the feature.

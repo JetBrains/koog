@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -52,11 +53,14 @@ public sealed class DefinedFeatureEvent() : FeatureEvent {
  * This event provides details about the agent's strategy, making it useful for
  * monitoring, debugging, and tracking the lifecycle of AI agents within the system.
  *
+ * @property agentId The unique identifier of the AI agent;
+ * @property sessionId The unique identifier of the AI agen run;
  * @property strategyName The name of the strategy that the AI agent has started executing.
- * @property eventId Unique identifier for this event, defaulting to the class name.
  */
 @Serializable
 public data class AIAgentStartedEvent(
+    val agentId: String,
+    val sessionId: String,
     val strategyName: String,
     override val eventId: String = AIAgentStartedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -68,13 +72,14 @@ public data class AIAgentStartedEvent(
  * information about the strategy and its result. It can be used for logging, tracing,
  * or monitoring the outcomes of agent operations.
  *
- * @property strategyName The name of the executed strategy.
+ * @property agentId The unique identifier of the AI agent;
+ * @property sessionId The unique identifier of the AI agen run;
  * @property result The result of the strategy execution, or null if unavailable.
- * @property eventId The unique identifier for this event, defaulting to the name of the class.
  */
 @Serializable
 public data class AIAgentFinishedEvent(
-    val strategyName: String,
+    val agentId: String,
+    val sessionId: String,
     val result: String?,
     override val eventId: String = AIAgentFinishedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -86,14 +91,15 @@ public data class AIAgentFinishedEvent(
  * strategy, including details of the strategy and the encountered error.
  *
  * @constructor Creates an instance of [AIAgentRunErrorEvent].
- * @property strategyName The name of the strategy being executed when the error occurred.
+ * @property agentId The unique identifier of the AI agent;
+ * @property sessionId The unique identifier of the AI agen run;
  * @property error The [AIAgentError] instance encapsulating details about the encountered error,
- * such as its message, stack trace, and cause.
- * @property eventId A unique identifier for this event type, defaulting to the class name.
+ *                 such as its message, stack trace, and cause.
  */
 @Serializable
 public data class AIAgentRunErrorEvent(
-    val strategyName: String,
+    val agentId: String,
+    val sessionId: String,
     val error: AIAgentError,
     override val eventId: String = AIAgentRunErrorEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -117,6 +123,7 @@ public data class AIAgentRunErrorEvent(
  */
 @Serializable
 public data class AIAgentStrategyStartEvent(
+    val sessionId: String,
     val strategyName: String,
     override val eventId: String = AIAgentStrategyStartEvent::class.simpleName!!
 ) : DefinedFeatureEvent()
@@ -134,6 +141,7 @@ public data class AIAgentStrategyStartEvent(
  */
 @Serializable
 public data class AIAgentStrategyFinishedEvent(
+    val sessionId: String,
     val strategyName: String,
     val result: String?,
     override val eventId: String = AIAgentStrategyFinishedEvent::class.simpleName!!,
@@ -160,6 +168,7 @@ public data class AIAgentStrategyFinishedEvent(
  */
 @Serializable
 public data class AIAgentNodeExecutionStartEvent(
+    val sessionId: String,
     val nodeName: String,
     val input: String,
     override val eventId: String = AIAgentNodeExecutionStartEvent::class.simpleName!!,
@@ -183,6 +192,7 @@ public data class AIAgentNodeExecutionStartEvent(
  */
 @Serializable
 public data class AIAgentNodeExecutionEndEvent(
+    val sessionId: String,
     val nodeName: String,
     val input: String,
     val output: String,
@@ -208,10 +218,12 @@ public data class AIAgentNodeExecutionEndEvent(
  *                   the `LLMCallStartEvent` class.
  */
 @Serializable
-public data class LLMCallStartEvent(
+public data class BeforeLLMCallEvent(
+    val sessionId: String,
     val prompt: Prompt,
+    val model: String,
     val tools: List<String>,
-    override val eventId: String = LLMCallStartEvent::class.simpleName!!,
+    override val eventId: String = BeforeLLMCallEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 /**
@@ -226,13 +238,16 @@ public data class LLMCallStartEvent(
  * [Message.Response]. Each response contains content, metadata, and additional context about the
  * interaction.
  * @property eventId The unique identifier of the event, which is set to the simple name of the
- * [LLMCallEndEvent] class by default. This is used to tag and track this type of event within the
- * system.
+ *                   [AfterLLMCallEvent] class by default. This is used to tag and track this
+ *                   type of event within the system.
  */
 @Serializable
-public data class LLMCallEndEvent(
+public data class AfterLLMCallEvent(
+    val sessionId: String,
+    val prompt: Prompt,
+    val model: String,
     val responses: List<Message.Response>,
-    override val eventId: String = LLMCallEndEvent::class.simpleName!!,
+    override val eventId: String = AfterLLMCallEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
 //endregion LLM Call
@@ -253,6 +268,8 @@ public data class LLMCallEndEvent(
  */
 @Serializable
 public data class ToolCallEvent(
+    val sessionId: String,
+    val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,
     override val eventId: String = ToolCallEvent::class.simpleName!!,
@@ -266,14 +283,16 @@ public data class ToolCallEvent(
  *
  * @property toolName The name of the tool that encountered the validation error.
  * @property toolArgs The arguments associated with the tool at the time of validation failure.
- * @property errorMessage A message describing the validation error encountered.
+ * @property error A message describing the validation error encountered.
  * @property eventId A unique identifier for this event, defaulting to the name of the class.
  */
 @Serializable
 public data class ToolValidationErrorEvent(
+    val sessionId: String,
+    val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,
-    val errorMessage: String,
+    val error: String,
     override val eventId: String = ToolValidationErrorEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
@@ -291,6 +310,8 @@ public data class ToolValidationErrorEvent(
  */
 @Serializable
 public data class ToolCallFailureEvent(
+    val sessionId: String,
+    val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,
     val error: AIAgentError,
@@ -311,6 +332,8 @@ public data class ToolCallFailureEvent(
  */
 @Serializable
 public data class ToolCallResultEvent(
+    val sessionId: String,
+    val toolCallId: String?,
     val toolName: String,
     val toolArgs: ToolArgs,
     val result: ToolResult?,
@@ -318,3 +341,15 @@ public data class ToolCallResultEvent(
 ) : DefinedFeatureEvent()
 
 //endregion Tool Call
+
+/**
+ * A property that combines the provider ID and the model ID of an `LLModel` instance into a single string.
+ *
+ * It constructs a formatted identifier in the form of `providerId:modelId`, where:
+ * - `providerId` is the unique identifier of the `LLMProvider` associated with the model.
+ * - `modelId` is the unique identifier for the specific model instance.
+ *
+ * This property is typically used to uniquely identify an LLM instance for logging, tracing, or serialization purposes.
+ */
+public val LLModel.eventString: String
+    get() = "${this.provider.id}:${this.id}"

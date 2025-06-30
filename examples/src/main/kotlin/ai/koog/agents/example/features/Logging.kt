@@ -55,28 +55,28 @@ class Logging(val logger: Logger) {
         ) {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
             val interceptContext = InterceptContext(this, logging)
-            pipeline.interceptBeforeAgentStarted(interceptContext) {
-                logging.logger.info("Agent is going to be started with strategy: ${strategy.name}.")
+            pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
+                logging.logger.info("Agent is going to be started with strategy: ${eventContext.strategy.name}.")
             }
 
-            pipeline.interceptStrategyStarted(interceptContext) {
-                logging.logger.info("Strategy ${strategy.name} started")
+            pipeline.interceptStrategyStarted(interceptContext) { eventContext ->
+                logging.logger.info("Strategy ${eventContext.strategy.name} started")
             }
 
-            pipeline.interceptBeforeNode(interceptContext) { node, context, input ->
-                logger.info("Node ${node.name} received input: $input")
+            pipeline.interceptBeforeNode(interceptContext) { eventContext ->
+                logger.info("Node ${eventContext.node.name} received input: ${eventContext.input}")
             }
 
-            pipeline.interceptAfterNode(interceptContext) { node, context, input, output ->
-                logger.info("Node ${node.name} with input: $input produced output: $output")
+            pipeline.interceptAfterNode(interceptContext) { eventContext ->
+                logger.info("Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}")
             }
 
-            pipeline.interceptBeforeLLMCall(interceptContext) { prompt, tools, model, sessionId ->
-                logger.info("Before LLM call with prompt: ${prompt}, tools: [${tools.joinToString { it.name }}]")
+            pipeline.interceptBeforeLLMCall(interceptContext) { eventContext ->
+                logger.info("Before LLM call with prompt: ${eventContext.prompt}, tools: [${eventContext.tools.joinToString { it.name }}]")
             }
 
-            pipeline.interceptAfterLLMCall(interceptContext) { prompt, tools, model, responses, sessionId ->
-                logger.info("After LLM call with response: $responses")
+            pipeline.interceptAfterLLMCall(interceptContext) { eventContext ->
+                logger.info("After LLM call with response: ${eventContext.responses}")
             }
         }
     }

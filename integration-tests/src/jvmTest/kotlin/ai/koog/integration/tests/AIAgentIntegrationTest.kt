@@ -3,6 +3,7 @@ package ai.koog.integration.tests
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.feature.traceString
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -132,30 +133,31 @@ class AIAgentIntegrationTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onBeforeAgentStarted { strategy, agent ->
-            println("Agent started: strategy=${strategy.javaClass.simpleName}, agent=${agent.javaClass.simpleName}")
+        onBeforeAgentStarted { eventContext ->
+            println("Agent started: strategy=${eventContext.strategy.javaClass.simpleName}, agent=${eventContext.agent.javaClass.simpleName}")
         }
 
-        onAgentFinished { strategyName, result ->
-            println("Agent finished: strategy=$strategyName, result=$result")
-            results.add(result)
+        onAgentFinished { eventContext ->
+            println("Agent finished: agentId=${eventContext.agentId}, result=${eventContext.result}")
+            results.add(eventContext.result)
         }
 
-        onAgentRunError { strategyName, sessionId, throwable ->
-            println("Agent error: strategy=$strategyName, error=${throwable.message}")
-            errors.add(throwable)
+        onAgentRunError { eventContext ->
+            println("Agent error: agentId=${eventContext.agentId}, error=${eventContext.throwable.message}")
+            errors.add(eventContext.throwable)
         }
 
-        onStrategyStarted { strategy ->
-            println("Strategy started: ${strategy.javaClass.simpleName}")
+        onStrategyStarted { eventContext ->
+            println("Strategy started: ${eventContext.strategy.javaClass.simpleName}")
         }
 
-        onStrategyFinished { strategyName, result ->
-            println("Strategy finished: strategy=$strategyName, result=$result")
+        onStrategyFinished { eventContext ->
+            println("Strategy finished: strategy=${eventContext.strategy.name}, result=${eventContext.result}")
         }
 
-        onBeforeNode { node, context, input ->
-            println("Before node: node=${node.javaClass.simpleName}, input=$input")
+        onBeforeNode { eventContext ->
+            val input = eventContext.input
+            println("Before node: node=${eventContext.node.javaClass.simpleName}, input=${input}")
 
             if (input is List<*>) {
                 input.filterIsInstance<Message.Tool.Call>().forEach { call ->
@@ -180,33 +182,33 @@ class AIAgentIntegrationTest {
             }
         }
 
-        onAfterNode { node, context, input, output ->
-            println("After node: node=${node.javaClass.simpleName}, input=$input, output=$output")
+        onAfterNode { eventContext ->
+            println("After node: node=${eventContext.node.javaClass.simpleName}, input=${eventContext.input}, output=${eventContext.output}")
         }
 
-        onBeforeLLMCall { prompt, tools, model, sessionId ->
-            println("Before LLM call with tools: prompt=$prompt, tools=${tools.map { it.name }}")
+        onBeforeLLMCall { eventContext ->
+            println("Before LLM call with tools: prompt=${eventContext.prompt.traceString}, tools=${eventContext.tools.map { it.name }}")
         }
 
-        onAfterLLMCall { prompt, tools, model, responses, sessionId ->
-            println("After LLM call with tools: response=${responses.map { it.content.take(50) }}")
+        onAfterLLMCall { eventContext ->
+            println("After LLM call with tools: response=${eventContext.responses.map { it.content.take(50) }}")
         }
 
-        onToolCall { tool, args ->
-            println("Tool called: tool=${tool.name}, args=$args")
-            actualToolCalls.add(tool.name)
+        onToolCall { eventContext ->
+            println("Tool called: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}")
+            actualToolCalls.add(eventContext.tool.name)
         }
 
-        onToolValidationError { tool, args, value ->
-            println("Tool validation error: tool=${tool.name}, args=$args, value=$value")
+        onToolValidationError { eventContext ->
+            println("Tool validation error: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, value=${eventContext.error}")
         }
 
-        onToolCallFailure { tool, args, throwable ->
-            println("Tool call failure: tool=${tool.name}, args=$args, error=${throwable.message}")
+        onToolCallFailure { eventContext ->
+            println("Tool call failure: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, error=${eventContext.throwable.message}")
         }
 
-        onToolCallResult { tool, args, result ->
-            println("Tool call result: tool=${tool.name}, args=$args, result=$result")
+        onToolCallResult { eventContext ->
+            println("Tool call result: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, result=${eventContext.result}")
         }
     }
 

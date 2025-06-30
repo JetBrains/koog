@@ -1,12 +1,11 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
-import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.core.feature.handler.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -73,76 +72,72 @@ public class EventHandler {
 
             //region Intercept Agent Events
 
-            pipeline.interceptBeforeAgentStarted(interceptContext) intercept@{
-                config.invokeOnBeforeAgentStarted(strategy, agent)
+            pipeline.interceptBeforeAgentStarted(interceptContext) intercept@{ eventContext ->
+                config.invokeOnBeforeAgentStarted(eventContext)
             }
 
-            pipeline.interceptAgentFinished(interceptContext) intercept@{ strategyName, result ->
-                config.invokeOnAgentFinished(strategyName, result)
+            pipeline.interceptAgentFinished(interceptContext) intercept@{ eventContext ->
+                config.invokeOnAgentFinished(eventContext)
             }
 
-            pipeline.interceptAgentRunError(interceptContext) intercept@{ strategyName, sessionId, throwable ->
-                config.invokeOnAgentRunError(strategyName, sessionId, throwable)
+            pipeline.interceptAgentRunError(interceptContext) intercept@{ eventContext ->
+                config.invokeOnAgentRunError(eventContext)
             }
 
             //endregion Intercept Agent Events
 
             //region Intercept Strategy Events
 
-            pipeline.interceptStrategyStarted(interceptContext) intercept@{
-                config.invokeOnStrategyStarted(strategy)
+            pipeline.interceptStrategyStarted(interceptContext) intercept@{ eventContext ->
+                config.invokeOnStrategyStarted(eventContext)
             }
 
-            pipeline.interceptStrategyFinished(interceptContext) intercept@{ result ->
-                config.invokeOnStrategyFinished(strategy, result)
+            pipeline.interceptStrategyFinished(interceptContext) intercept@{ eventContext ->
+                config.invokeOnStrategyFinished(eventContext)
             }
 
             //endregion Intercept Strategy Events
 
             //region Intercept Node Events
 
-            pipeline.interceptBeforeNode(
-                interceptContext
-            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? ->
-                config.invokeOnBeforeNode(node, context, input)
+            pipeline.interceptBeforeNode(interceptContext) intercept@{ eventContext: NodeBeforeExecuteContext ->
+                config.invokeOnBeforeNode(eventContext)
             }
 
-            pipeline.interceptAfterNode(
-                interceptContext
-            ) intercept@{ node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? ->
-                config.invokeOnAfterNode(node, context, input, output)
+            pipeline.interceptAfterNode(interceptContext) intercept@{ eventContext: NodeAfterExecuteContext ->
+                config.invokeOnAfterNode(eventContext)
             }
 
             //endregion Intercept Node Events
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ prompt, tools, model, sessionId ->
-                config.invokeOnBeforeLLMCall(prompt, tools, model, sessionId)
+            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ eventContext: BeforeLLMCallContext ->
+                config.invokeOnBeforeLLMCall(eventContext)
             }
 
-            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ prompt, tools, model, responses, sessionId ->
-                config.invokeOnAfterLLMCall(prompt, tools, model, responses, sessionId)
+            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ eventContext: AfterLLMCallContext ->
+                config.invokeOnAfterLLMCall(eventContext)
             }
 
             //endregion Intercept LLM Call Events
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolCall(interceptContext) intercept@{ tool, toolArgs ->
-                config.invokeOnToolCall(tool, toolArgs)
+            pipeline.interceptToolCall(interceptContext) intercept@{ eventContext: ToolCallContext ->
+                config.invokeOnToolCall(eventContext)
             }
 
-            pipeline.interceptToolValidationError(interceptContext) intercept@{  tool, toolArgs, value ->
-                config.invokeOnToolValidationError(tool, toolArgs, value)
+            pipeline.interceptToolValidationError(interceptContext) intercept@{ eventContext: ToolValidationErrorContext ->
+                config.invokeOnToolValidationError(eventContext)
             }
 
-            pipeline.interceptToolCallFailure(interceptContext) intercept@{ tool, toolArgs, throwable ->
-                config.invokeOnToolCallFailure(tool, toolArgs, throwable)
+            pipeline.interceptToolCallFailure(interceptContext) intercept@{ eventContext: ToolCallFailureContext ->
+                config.invokeOnToolCallFailure(eventContext)
             }
 
-            pipeline.interceptToolCallResult(interceptContext) intercept@{ tool, toolArgs, result ->
-                config.invokeOnToolCallResult(tool, toolArgs, result)
+            pipeline.interceptToolCallResult(interceptContext) intercept@{ eventContext: ToolCallResultContext ->
+                config.invokeOnToolCallResult(eventContext)
             }
 
             //endregion Intercept Tool Call Events

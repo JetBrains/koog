@@ -250,8 +250,8 @@ fun main(): Unit = runBlocking {
         agentConfig = agentConfig
     ) {
         handleEvents {
-            onAgentRunError { strategyName: String, sessionId: String, throwable: Throwable ->
-                println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+            onAgentRunError { eventContext ->
+                println("An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}")
             }
         }
     }

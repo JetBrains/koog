@@ -1,19 +1,21 @@
 package ai.koog.agents.features.tracing.writer
 
-import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.AttachmentBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 internal val testClock: Clock = object : Clock {
-    override fun now(): kotlinx.datetime.Instant = kotlinx.datetime.Instant.parse("2023-01-01T00:00:00Z")
+    override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
 }
 
 /**
@@ -66,8 +68,10 @@ fun systemMessage(content: String): Message.System =
  * @return A configured instance of the AIAgent class ready for execution.
  */
 fun createAgent(
+    agentId: String = "test-agent-id",
     strategy: AIAgentStrategy<String, String>,
     promptId: String? = null,
+    model: LLModel? = null,
     systemPrompt: String? = null,
     userPrompt: String? = null,
     assistantPrompt: String? = null,
@@ -79,11 +83,12 @@ fun createAgent(
             user(userPrompt ?: "Test user message")
             assistant(assistantPrompt ?: "Test assistant response")
         },
-        model = OpenAIModels.Chat.GPT4o,
+        model = model ?: OpenAIModels.Chat.GPT4o,
         maxAgentIterations = 10
     )
 
     return AIAgent(
+        id = agentId,
         promptExecutor = TestLLMExecutor(),
         strategy = strategy,
         agentConfig = agentConfig,

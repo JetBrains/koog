@@ -37,8 +37,8 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
                 subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
-                subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
+                subclass(BeforeLLMCallEvent::class, BeforeLLMCallEvent.serializer())
+                subclass(AfterLLMCallEvent::class, AfterLLMCallEvent.serializer())
             }
 
             polymorphic(FeatureEvent::class) {
@@ -48,8 +48,8 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
                 subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
-                subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
+                subclass(BeforeLLMCallEvent::class, BeforeLLMCallEvent.serializer())
+                subclass(AfterLLMCallEvent::class, AfterLLMCallEvent.serializer())
             }
 
             polymorphic(DefinedFeatureEvent::class) {
@@ -59,7 +59,7 @@ public val agentFeatureMessageSerializersModule: SerializersModule
                 subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
                 subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
                 subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
-                subclass(LLMCallStartEvent::class, LLMCallStartEvent.serializer())
-                subclass(LLMCallEndEvent::class, LLMCallEndEvent.serializer())
+                subclass(BeforeLLMCallEvent::class, BeforeLLMCallEvent.serializer())
+                subclass(AfterLLMCallEvent::class, AfterLLMCallEvent.serializer())
             }
         }

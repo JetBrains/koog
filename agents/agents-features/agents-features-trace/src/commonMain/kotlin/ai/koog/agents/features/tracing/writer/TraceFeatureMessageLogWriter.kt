@@ -1,10 +1,27 @@
 package ai.koog.agents.features.tracing.writer
 
 import ai.koog.agents.core.feature.model.*
+import ai.koog.agents.core.feature.traceString
 import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.common.writer.FeatureMessageLogWriter
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.agentFinishedEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.agentRunErrorEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.agentStartedEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.featureEvent
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.featureMessage
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.featureStringMessage
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.llmCallEndEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.llmCallStartEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.nodeExecutionEndEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.nodeExecutionStartEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.strategyFinishedEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.strategyStartEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.toolCallEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.toolCallFailureEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.toolCallResultEventFormat
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter.Companion.toolValidationErrorEventFormat
 import io.github.oshai.kotlinlogging.KLogger
 
 /**
@@ -56,53 +73,53 @@ public class TraceFeatureMessageLogWriter(
 ) : FeatureMessageLogWriter(targetLogger, logLevel) {
 
     internal companion object {
-        val FeatureMessage.featureMessage
+        internal val FeatureMessage.featureMessage
             get() = "Feature message"
 
-        val FeatureEvent.featureEvent
+        internal val FeatureEvent.featureEvent
             get() = "Feature event"
 
-        val FeatureStringMessage.featureStringMessage
-            get() = "Feature string message (message: ${this.message})"
+        internal val FeatureStringMessage.featureStringMessage
+            get() = "Feature string message (message: ${message})"
 
-        val AIAgentStartedEvent.agentStartedEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName})"
+        internal val AIAgentStartedEvent.agentStartedEventFormat
+            get() = "$eventId (agent id: ${agentId}, session id: ${sessionId}, strategy: ${strategyName})"
 
-        val AIAgentFinishedEvent.agentFinishedEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
+        internal val AIAgentFinishedEvent.agentFinishedEventFormat
+            get() = "$eventId (agent id: ${agentId}, session id: ${sessionId}, result: ${result})"
 
-        val AIAgentRunErrorEvent.agentRunErrorEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName}, error: ${this.error.message})"
+        internal val AIAgentRunErrorEvent.agentRunErrorEventFormat
+            get() = "$eventId (agent id: ${agentId}, session id: ${sessionId}, error: ${error.message})"
 
-        val AIAgentStrategyStartEvent.strategyStartEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName})"
+        internal val AIAgentStrategyStartEvent.strategyStartEventFormat
+            get() = "$eventId (session id: ${sessionId}, strategy: ${strategyName})"
 
-        val AIAgentStrategyFinishedEvent.strategyFinishedEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
+        internal val AIAgentStrategyFinishedEvent.strategyFinishedEventFormat
+            get() = "$eventId (session id: ${sessionId}, strategy: ${strategyName}, result: ${result})"
 
-        val LLMCallStartEvent.llmCallStartEventFormat
-            get() = "${this.eventId} (prompt: ${this.prompt}, tools: [${this.tools.joinToString(", ")}])"
+        internal val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
+            get() = "$eventId (session id: ${sessionId}, node: ${nodeName}, input: ${input})"
 
-        val LLMCallEndEvent.llmCallEndEventFormat
-            get() = "${this.eventId} (responses: ${this.responses})"
+        internal val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
+            get() = "$eventId (session id: ${sessionId}, node: ${nodeName}, input: ${input}, output: ${output})"
 
-        val ToolCallEvent.toolCallEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs})"
+        internal val BeforeLLMCallEvent.llmCallStartEventFormat
+            get() = "$eventId (session id: ${sessionId}, prompt: ${prompt.traceString}, model: ${model}, tools: [${tools.joinToString()}])"
 
-        val ToolValidationErrorEvent.toolValidationErrorEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, validation error: ${this.errorMessage})"
+        internal val AfterLLMCallEvent.llmCallEndEventFormat
+            get() = "$eventId (session id: ${sessionId}, prompt: ${prompt.traceString}, model: ${model}, responses: [${responses.joinToString { it.traceString }}])"
 
-        val ToolCallFailureEvent.toolCallFailureEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, error: ${this.error.message})"
+        internal val ToolCallEvent.toolCallEventFormat
+            get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs})"
 
-        val ToolCallResultEvent.toolCallResultEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, result: ${this.result})"
+        internal val ToolValidationErrorEvent.toolValidationErrorEventFormat
+            get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs}, validation error: ${error})"
 
-        val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
-            get() = "${this.eventId} (node: ${this.nodeName}, input: ${this.input})"
+        internal val ToolCallFailureEvent.toolCallFailureEventFormat
+            get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs}, error: ${error.message})"
 
-        val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
-            get() = "${this.eventId} (node: ${this.nodeName}, input: ${this.input}, output: ${this.output})"
+        internal val ToolCallResultEvent.toolCallResultEventFormat
+            get() = "$eventId (session id: ${sessionId}, tool: ${toolName}, tool args: ${toolArgs}, result: ${result})"
     }
 
     override fun FeatureMessage.toLoggerMessage(): String {
@@ -116,8 +133,8 @@ public class TraceFeatureMessageLogWriter(
             is AIAgentRunErrorEvent           -> { this.agentRunErrorEventFormat}
             is AIAgentStrategyStartEvent      -> { this.strategyStartEventFormat }
             is AIAgentStrategyFinishedEvent   -> { this.strategyFinishedEventFormat }
-            is LLMCallStartEvent              -> { this.llmCallStartEventFormat}
-            is LLMCallEndEvent                -> { this.llmCallEndEventFormat}
+            is BeforeLLMCallEvent             -> { this.llmCallStartEventFormat}
+            is AfterLLMCallEvent              -> { this.llmCallEndEventFormat}
             is ToolCallEvent                  -> { this.toolCallEventFormat }
             is ToolValidationErrorEvent       -> { this.toolValidationErrorEventFormat }
             is ToolCallFailureEvent           -> { this.toolCallFailureEventFormat }

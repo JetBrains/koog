@@ -28,12 +28,12 @@ public class PromptExecutorProxy(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing LLM call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        pipeline.onBeforeLLMCall(prompt, tools, model, sessionId)
+        pipeline.onBeforeLLMCall(sessionId, prompt, model, tools)
 
         val responses = executor.execute(prompt, model, tools)
 
         logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" } }]" }
-        pipeline.onAfterLLMCall(prompt, tools, model, responses, sessionId)
+        pipeline.onAfterLLMCall(sessionId, prompt, model, tools, responses)
 
         return responses
     }

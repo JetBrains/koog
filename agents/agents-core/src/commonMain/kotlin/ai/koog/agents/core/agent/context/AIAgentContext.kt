@@ -24,7 +24,7 @@ import ai.koog.agents.core.utils.RWLock
  * @param stateManager Manages the internal state of the AI agent.
  * @param storage Concurrent-safe storage for managing key-value data across the agent's lifecycle.
  * @param sessionId The unique identifier for the agent session.
- * @param strategyId The identifier for the selected strategy in the agent's lifecycle.
+ * @param strategyName The identifier for the selected strategy in the agent's lifecycle.
  * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
  */
 public class AIAgentContext(
@@ -35,7 +35,7 @@ public class AIAgentContext(
     stateManager: AIAgentStateManager,
     storage: AIAgentStorage,
     override val sessionId: String,
-    override val strategyId: String,
+    override val strategyName: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
 ) : AIAgentContextBase {
@@ -148,7 +148,7 @@ public class AIAgentContext(
         stateManager = stateManager,
         storage = storage,
         sessionId = sessionId,
-        strategyId = strategyId,
+        strategyName = strategyId,
         pipeline = pipeline,
     )
 

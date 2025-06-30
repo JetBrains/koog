@@ -2,8 +2,6 @@ package ai.koog.agents.example.tone
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.tone.ToneTools.NegativeToneTool
@@ -64,16 +62,16 @@ fun main() {
             toolRegistry = toolRegistry
         ) {
             handleEvents {
-                onToolCall { tool: Tool<*, *>, toolArgs: ToolArgs ->
-                    println("Tool called: tool ${tool.name}, args $toolArgs")
+                onToolCall { eventContext ->
+                    println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
                 }
 
-                onAgentRunError { strategyName: String, sessionId: String, throwable: Throwable ->
-                    println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+                onAgentRunError { eventContext ->
+                    println("An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}")
                 }
 
-                onAgentFinished { strategyName: String, result: Any? ->
-                    println("Result: $result")
+                onAgentFinished { eventContext ->
+                    println("Result: ${eventContext.result}")
                 }
             }
         }

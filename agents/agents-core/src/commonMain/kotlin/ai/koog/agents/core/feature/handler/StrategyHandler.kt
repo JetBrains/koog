@@ -7,17 +7,17 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
  * are started or finished. It is designed to operate on a specific feature type and delegate
  * event handling to the assigned handlers.
  *
- * @param FeatureT The type of feature associated with the strategy operations.
+ * @param TFeature The type of feature associated with the strategy operations.
  * @property feature The specific feature instance associated with this handler.
  */
-public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
+public class StrategyHandler<TFeature : Any>(public val feature: TFeature) {
 
     /**
      * Handler invoked when a strategy is started. This can be used to perform custom logic
      * related to strategy initiation for a specific feature.
      */
-    public var strategyStartedHandler: StrategyStartedHandler<FeatureT> =
-        StrategyStartedHandler { context -> }
+    public var strategyStartedHandler: StrategyStartedHandler<TFeature> =
+        StrategyStartedHandler { _ -> }
 
     /**
      * A handler for processing the completion of a strategy within the context of a feature update.
@@ -32,15 +32,15 @@ public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
      * @see StrategyFinishedHandler
      * @see StrategyHandler.handleStrategyFinished
      */
-    public var strategyFinishedHandler: StrategyFinishedHandler<FeatureT> =
-        StrategyFinishedHandler { context, result -> }
+    public var strategyFinishedHandler: StrategyFinishedHandler<TFeature> =
+        StrategyFinishedHandler { _ -> }
 
     /**
      * Handles strategy starts events by delegating to the handler.
      *
      * @param context The context for updating the agent with the feature
      */
-    public suspend fun handleStrategyStarted(context: StrategyUpdateContext<FeatureT>) {
+    public suspend fun handleStrategyStarted(context: StrategyStartContext<TFeature>) {
         strategyStartedHandler.handle(context)
     }
 
@@ -51,8 +51,8 @@ public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun handleStrategyStartedUnsafe(context: StrategyUpdateContext<*>) {
-        handleStrategyStarted(context as StrategyUpdateContext<FeatureT>)
+    public suspend fun handleStrategyStartedUnsafe(context: StrategyStartContext<*>) {
+        handleStrategyStarted(context as StrategyStartContext<TFeature>)
     }
 
     /**
@@ -60,8 +60,8 @@ public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
      *
      * @param context The context for updating the agent with the feature
      */
-    public suspend fun handleStrategyFinished(context: StrategyUpdateContext<FeatureT>, result: Any?) {
-        strategyFinishedHandler.handle(context, result)
+    public suspend fun handleStrategyFinished(context: StrategyFinishContext<TFeature>) {
+        strategyFinishedHandler.handle(context)
     }
 
     /**
@@ -71,8 +71,8 @@ public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun handleStrategyFinishedUnsafe(context: StrategyUpdateContext<*>, result: Any?) {
-        handleStrategyFinished(context as StrategyUpdateContext<FeatureT>, result)
+    public suspend fun handleStrategyFinishedUnsafe(context: StrategyFinishContext<*>) {
+        handleStrategyFinished(context as StrategyFinishContext<TFeature>)
     }
 }
 
@@ -88,21 +88,20 @@ public fun interface StrategyStartedHandler<FeatureT : Any> {
      * @param context The context for the strategy update, encapsulating the strategy,
      *                session identifier, and feature associated with the handling process.
      */
-    public suspend fun handle(context: StrategyUpdateContext<FeatureT>)
+    public suspend fun handle(context: StrategyStartContext<FeatureT>)
 }
 
 /**
  * Functional interface representing a handler invoked when a strategy execution is finished.
  *
- * @param FeatureT The type of the feature tied to the strategy.
+ * @param TFeature The type of the feature tied to the strategy.
  */
-public fun interface StrategyFinishedHandler<FeatureT : Any> {
+public fun interface StrategyFinishedHandler<TFeature : Any> {
     /**
      * Handles the completion of a strategy update process by processing the given result and its related context.
      *
      * @param context The context of the strategy update, containing details about the current strategy,
      *                the session, and the feature associated with the update.
-     * @param result Result of the strategy update process.
      */
-    public suspend fun handle(context: StrategyUpdateContext<FeatureT>, result: Any?)
+    public suspend fun handle(context: StrategyFinishContext<TFeature>)
 }

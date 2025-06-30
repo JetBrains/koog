@@ -1,24 +1,23 @@
 package ai.koog.agents.core.feature.handler
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 
 /**
  * Feature implementation for agent and strategy interception.
  *
- * @param FeatureT The type of feature
+ * @param TFeature The type of feature
  * @property feature The feature instance
  */
-public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
+public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
 
     /**
      * Configurable transformer used to manipulate or modify an instance of AgentEnvironment.
      * Allows customization of the environment during agent creation or updates by applying
      * the provided transformation logic.
      */
-    public var environmentTransformer: AgentEnvironmentTransformer<FeatureT> =
+    public var environmentTransformer: AgentEnvironmentTransformer<TFeature> =
         AgentEnvironmentTransformer { _, it -> it }
 
     /**
@@ -28,11 +27,11 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      * The handler is triggered with the context of the agent start process.
      * It is intended to allow for feature-specific setup or preparation.
      */
-    public var beforeAgentStartedHandler: BeforeAgentStartedHandler<FeatureT> =
-        BeforeAgentStartedHandler { context -> }
+    public var beforeAgentStartedHandler: BeforeAgentStartedHandler<TFeature> =
+        BeforeAgentStartedHandler { _ -> }
 
     /**
-     * Defines a handler that is invoked when an agent execution is completed.
+     * Defines a handler invoked when an agent execution is completed.
      * This handler processes the outcome of the agent's operation, allowing
      * for custom behavior upon completion.
      *
@@ -41,19 +40,14 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      * optional result of the execution.
      */
     public var agentFinishedHandler: AgentFinishedHandler =
-        AgentFinishedHandler { _, _ -> }
+        AgentFinishedHandler { _ -> }
 
     /**
      * A handler invoked when an error occurs during an agent's execution.
      * This handler allows custom logic to be executed in response to execution errors.
-     *
-     * The handler accepts three parameters:
-     * - `strategyName`: The name of the strategy during which the error occurred.
-     * - `sessionId`: The unique identifier of the session where the error happened. Might be `null` if the context is unavailable.
-     * - `throwable`: The exception or error that was thrown during execution.
      */
     public var agentRunErrorHandler: AgentRunErrorHandler =
-        AgentRunErrorHandler { _, _, _ -> }
+        AgentRunErrorHandler { _ -> }
 
     /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
@@ -61,7 +55,7 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      * @param environment The AgentEnvironment to be transformed
      */
     public fun transformEnvironment(
-        context: AgentCreateContext<FeatureT>,
+        context: AgentTransformEnvironmentContext<TFeature>,
         environment: AIAgentEnvironment
     ): AIAgentEnvironment =
         environmentTransformer.transform(context, environment)
@@ -72,8 +66,8 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      * @param environment The AgentEnvironment to be transformed
      */
     @Suppress("UNCHECKED_CAST")
-    internal fun transformEnvironmentUnsafe(context: AgentCreateContext<*>, environment: AIAgentEnvironment) =
-        transformEnvironment(context as AgentCreateContext<FeatureT>, environment)
+    internal fun transformEnvironmentUnsafe(context: AgentTransformEnvironmentContext<*>, environment: AIAgentEnvironment) =
+        transformEnvironment(context as AgentTransformEnvironmentContext<TFeature>, environment)
 
     /**
      * Handles the logic to be executed before an agent starts.
@@ -81,21 +75,21 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
      * @param context The context containing necessary information about the agent,
      *                strategy, and feature to be processed before the agent starts.
      */
-    public suspend fun handleBeforeAgentStarted(context: AgentStartContext<FeatureT>) {
+    public suspend fun handleBeforeAgentStarted(context: AgentStartContext<TFeature>) {
         beforeAgentStartedHandler.handle(context)
     }
 
     /**
-     * Handles preliminary processes required before an agent is started, utilizing an unsafe context cast.
+     * Handles preliminary processes required before an agent is started, using an unsafe context cast.
      *
-     * @param context The agent start context containing information about the agent,
+     * @param eventContext The agent start context containing information about the agent,
      *                strategy, and associated feature. The context is cast unsafely to
      *                the expected generic type.
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun handleBeforeAgentStartedUnsafe(context: AgentStartContext<*>) {
-        handleBeforeAgentStarted(context as AgentStartContext<FeatureT>)
+    public suspend fun handleBeforeAgentStartedUnsafe(eventContext: AgentStartContext<*>) {
+        handleBeforeAgentStarted(eventContext as AgentStartContext<TFeature>)
     }
 }
 
@@ -104,9 +98,9 @@ public class AgentHandler<FeatureT : Any>(public val feature: FeatureT) {
  *
  * Ex: useful for mocks in tests
  *
- * @param FeatureT The type of the feature associated with the agent.
+ * @param TFeature The type of the feature associated with the agent.
  */
-public fun interface AgentEnvironmentTransformer<FeatureT : Any> {
+public fun interface AgentEnvironmentTransformer<TFeature : Any> {
     /**
      * Transforms the provided agent environment based on the given context.
      *
@@ -114,7 +108,22 @@ public fun interface AgentEnvironmentTransformer<FeatureT : Any> {
      * @param environment The current agent environment to be transformed
      * @return The transformed agent environment
      */
-    public fun transform(context: AgentCreateContext<FeatureT>, environment: AIAgentEnvironment): AIAgentEnvironment
+    public fun transform(context: AgentTransformEnvironmentContext<TFeature>, environment: AIAgentEnvironment): AIAgentEnvironment
+}
+
+/**
+ * Handler for creating a feature instance in a stage context.
+ *
+ * @param FeatureT The type of feature being handled
+ */
+public fun interface AgentContextHandler<FeatureT : Any> {
+    /**
+     * Creates a feature instance for the given stage context.
+     *
+     * @param context The stage context where the feature will be used
+     * @return A new instance of the feature
+     */
+    public fun handle(context: AIAgentContextBase): FeatureT
 }
 
 /**
@@ -143,10 +152,9 @@ public fun interface AgentFinishedHandler {
     /**
      * Handles the completion of an operation or process for the specified strategy.
      *
-     * @param strategyName The name of the strategy that has finished processing.
-     * @param result The result or output associated with the completion of the strategy, if available.
+     * @param context The context containing information about the completed agent operation.
      */
-    public suspend fun handle(strategyName: String, result: Any?)
+    public suspend fun handle(context: AgentFinishedContext)
 }
 
 /**
@@ -159,83 +167,6 @@ public fun interface AgentFinishedHandler {
 public fun interface AgentRunErrorHandler {
     /**
      * Handles an error that occurs during the execution of an agent's strategy.
-     *
-     * @param strategyName The name of the strategy where the error occurred.
-     * @param sessionId The unique identifier of the session in which the strategy is being executed. Can be null if no session is available.
-     * @param throwable The exception or error that occurred during the strategy's execution.
      */
-    public suspend fun handle(strategyName: String, sessionId: String, throwable: Throwable)
+    public suspend fun handle(eventContext: AgentRunErrorContext)
 }
-
-/**
- * Represents the context for creating and managing an AI agent within a specific strategy.
- *
- * @param FeatureT The type of the feature associated with the context.
- * @property strategy The AI agent strategy that defines the workflow and execution logic for the AI agent.
- * @property agent The AI agent being managed or operated upon in the context.
- * @property feature An additional feature or configuration associated with the context.
- */
-public class AgentCreateContext<FeatureT>(
-    public val strategy: AIAgentStrategy<*, *>,
-    public val agent: AIAgent<*, *>,
-    public val feature: FeatureT
-) {
-    /**
-     * Executes a given block of code with the `AIAgentStrategy` instance of this context.
-     *
-     * @param block A suspending lambda function that receives the `AIAgentStrategy` instance.
-     */
-    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
-        block(strategy)
-    }
-}
-
-/**
- * Represents the context available during the start of an AI agent.
- *
- * @param TFeature The type of the feature object associated with this context.
- * @property strategy The AI agent strategy that defines the workflow and execution logic.
- * @property agent The AI agent associated with this context.
- * @property feature The feature-specific data associated with this context.
- */
-public class AgentStartContext<TFeature>(
-    public val strategy: AIAgentStrategy<*, *>,
-    public val agent: AIAgent<*, *>,
-    public val feature: TFeature
-) {
-    /**
-     * Reads the current AI agent strategy and executes the provided block of logic with it as a parameter.
-     *
-     * @param block A suspendable block of code that receives the current [AIAgentStrategy] as its parameter.
-     */
-    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
-        block(strategy)
-    }
-}
-
-/**
- * Represents the context for updating AI agent strategies during execution.
- *
- * @param FeatureT The type of feature associated with the strategy update.
- * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
- * @property sessionId A unique identifier for the session during which the strategy is being updated.
- * @property feature The feature bound to the strategy update, providing additional contextual information.
- */
-public class StrategyUpdateContext<FeatureT>(
-    public val strategy: AIAgentStrategy<*, *>,
-    public val sessionId: String,
-    public val feature: FeatureT
-) {
-    /**
-     * Provides read-only access to the current AI agent strategy within the execution context.
-     *
-     * @param block A suspending lambda function to process the current strategy. The strategy is
-     *              provided as an instance of [AIAgentStrategy] and allows reading its configuration
-     *              or properties without modifying the state.
-     */
-    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
-        block(strategy)
-    }
-}
-
-

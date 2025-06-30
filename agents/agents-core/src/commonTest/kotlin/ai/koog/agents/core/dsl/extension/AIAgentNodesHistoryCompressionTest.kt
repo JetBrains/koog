@@ -64,7 +64,7 @@ class AIAgentNodesHistoryCompressionTest {
             }
         ) {
             install(EventHandler) {
-                onAgentFinished { _, result -> results += result }
+                onAgentFinished { eventContext -> results += eventContext.result }
             }
         }
 
@@ -116,7 +116,7 @@ class AIAgentNodesHistoryCompressionTest {
             }
         ) {
             install(EventHandler) {
-                onAgentFinished { _, result -> results += result }
+                onAgentFinished { eventContext -> results += eventContext.result }
             }
         }
 
@@ -171,7 +171,7 @@ class AIAgentNodesHistoryCompressionTest {
             }
         ) {
             handleEvents {
-                onAgentFinished { _, result -> results += result }
+                onAgentFinished { eventContext -> results += eventContext.result }
             }
         }
 

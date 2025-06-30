@@ -1,9 +1,5 @@
 package ai.koog.agents.core.feature.handler
 
-import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
-
 /**
  * Handler for executing tools with customizable behaviors for tool calls,
  * validation errors, failures, and results.
@@ -21,7 +17,7 @@ public class ExecuteToolHandler {
      * a suspended context, allowing asynchronous operations during execution.
      */
     public var toolCallHandler: ToolCallHandler =
-        ToolCallHandler { _, _ -> }
+        ToolCallHandler { _ -> }
 
     /**
      * Defines the handler responsible for processing validation errors that occur when a tool's arguments are invalid.
@@ -36,7 +32,7 @@ public class ExecuteToolHandler {
      * capturing metrics, or halting execution based on the severity of the error.
      */
     public var toolValidationErrorHandler: ToolValidationErrorHandler =
-        ToolValidationErrorHandler { _, _, _ -> }
+        ToolValidationErrorHandler { _ -> }
 
     /**
      * A customizable handler invoked when a tool call fails during execution.
@@ -45,7 +41,7 @@ public class ExecuteToolHandler {
      * This allows for logging, error handling, or recovery strategies to be applied.
      */
     public var toolCallFailureHandler: ToolCallFailureHandler =
-        ToolCallFailureHandler { _, _, _ -> }
+        ToolCallFailureHandler { _ -> }
 
     /**
      * A variable representing a handler for processing the result of a tool call.
@@ -54,7 +50,7 @@ public class ExecuteToolHandler {
      * implementation provided for the ToolCallResultHandler functional interface.
      */
     public var toolCallResultHandler: ToolCallResultHandler =
-        ToolCallResultHandler { _, _, _ -> }
+        ToolCallResultHandler { _ -> }
 }
 
 /**
@@ -64,16 +60,8 @@ public class ExecuteToolHandler {
 public fun interface ToolCallHandler {
     /**
      * Handles the execution of a given tool using the provided arguments.
-     *
-     * This function accepts a tool instance and its corresponding arguments, allowing it
-     * to perform the tool's specific operation asynchronously.
-     *
-     * @param tool The tool to be executed. This parameter represents an instance of `Tool`
-     *             and includes the logic for its execution and metadata about its behavior.
-     * @param toolArgs The arguments required for executing the tool. These arguments are
-     *                 used to configure or supply information needed for the tool's operation.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs)
+    public suspend fun handle(eventContext: ToolCallContext)
 }
 
 /**
@@ -83,12 +71,8 @@ public fun interface ToolCallHandler {
 public fun interface ToolValidationErrorHandler {
     /**
      * Handles the tool validation error with the provided tool, arguments, and error message.
-     *
-     * @param tool The tool instance associated with the validation error.
-     * @param toolArgs The arguments passed to the tool when the error occurred.
-     * @param error The error message describing the validation issue.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs, error: String)
+    public suspend fun handle(eventContext: ToolValidationErrorContext)
 }
 
 /**
@@ -99,12 +83,8 @@ public fun interface ToolValidationErrorHandler {
 public fun interface ToolCallFailureHandler {
     /**
      * Handles a failure that occurs during the execution of a tool call.
-     *
-     * @param tool The tool that was being executed when the failure occurred.
-     * @param toolArgs The arguments that were passed to the tool during execution.
-     * @param throwable The exception or error that caused the failure.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable)
+    public suspend fun handle(eventContext: ToolCallFailureContext)
 }
 
 /**
@@ -115,10 +95,6 @@ public fun interface ToolCallFailureHandler {
 public fun interface ToolCallResultHandler {
     /**
      * Handles the execution of a specific tool by processing its arguments and optionally handling its result.
-     *
-     * @param tool The tool being executed, which defines the operation to be performed.
-     * @param toolArgs The arguments required by the tool for execution.
-     * @param result An optional result produced by the tool after execution, can be null if not applicable.
      */
-    public suspend fun handle(tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?)
+    public suspend fun handle(eventContext: ToolCallResultContext)
 }

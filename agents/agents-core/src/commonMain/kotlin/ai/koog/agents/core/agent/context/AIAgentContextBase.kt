@@ -83,13 +83,9 @@ public interface AIAgentContextBase {
     public val sessionId: String
 
     /**
-     * Represents the unique identifier for the strategy being used in the current AI agent context.
-     *
-     * This identifier allows the system to specify and reference a particular strategy
-     * employed during the execution pipeline of an AI agent. It can be used
-     * for logging, debugging, and switching between different strategies dynamically.
+     * Represents the name of the strategy being used in the current AI agent context.
      */
-    public val strategyId: String
+    public val strategyName: String
 
     /**
      * Represents the AI agent pipeline used within an AI agent context.
@@ -160,7 +156,7 @@ public interface AIAgentContextBase {
         stateManager: AIAgentStateManager = this.stateManager,
         storage: AIAgentStorage = this.storage,
         sessionId: String = this.sessionId,
-        strategyId: String = this.strategyId,
+        strategyId: String = this.strategyName,
         pipeline: AIAgentPipeline = this.pipeline,
     ): AIAgentContextBase
 

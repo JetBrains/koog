@@ -75,7 +75,7 @@ public class DummyAIAgentContext(
     override val sessionId: String
         get() = _sessionId ?: throw NotImplementedError("Session UUID is not mocked")
 
-    override val strategyId: String
+    override val strategyName: String
         get() = _strategyId ?: throw NotImplementedError("Strategy ID is not mocked")
 
     @OptIn(InternalAgentsApi::class)

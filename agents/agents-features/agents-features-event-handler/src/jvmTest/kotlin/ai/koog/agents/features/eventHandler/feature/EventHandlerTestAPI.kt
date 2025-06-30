@@ -17,6 +17,7 @@ val testClock: Clock = object : Clock {
 }
 
 fun createAgent(
+    agentId: String = "test-agent-id",
     strategy: AIAgentStrategy<String, String>,
     configureTools: Builder.() -> Unit = { },
     installFeatures: AIAgent.FeatureContext.() -> Unit = { }
@@ -32,6 +33,7 @@ fun createAgent(
     )
 
     return AIAgent(
+        id = agentId,
         promptExecutor = TestLLMExecutor(testClock),
         strategy = strategy,
         agentConfig = agentConfig,
