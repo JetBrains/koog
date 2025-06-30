@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Bean
 public class KoogAutoConfiguration {
 
     @Bean
-    @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.anthropic.api-key")
+    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["anthropic.api-key"])
     public fun anthropicExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
         val props = properties.anthropicClientProperties
         return SingleLLMPromptExecutor(
@@ -32,7 +32,7 @@ public class KoogAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.google.api-key")
+    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["google.api-key"])
     public fun googleExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
         val props = properties.googleClientProperties
         return SingleLLMPromptExecutor(
@@ -44,7 +44,7 @@ public class KoogAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.ollama")
+    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["ollama"])
     public fun ollamaExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
         val props = properties.ollamaClientProperties
         return SingleLLMPromptExecutor(
@@ -53,7 +53,7 @@ public class KoogAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.openai.api-key")
+    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openai.api-key"])
     public fun openAIExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
         val props = properties.openAIClientProperties
         return SingleLLMPromptExecutor(
@@ -65,7 +65,7 @@ public class KoogAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "${KoogProperties.PREFIX}.openrouter.api-key")
+    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openrouter.api-key"])
     public fun openRouterExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
         val props = properties.openRouterClientProperties
         return SingleLLMPromptExecutor(
