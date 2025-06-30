@@ -40,6 +40,7 @@ public sealed interface AgentToolCallToEnvironmentMessage : AgentToEnvironmentMe
 @Serializable
 public data class AgentToolCallToEnvironmentContent(
     val agentId: String,
+    val sessionId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
