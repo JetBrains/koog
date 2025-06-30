@@ -328,6 +328,9 @@ public open class OpenAILLMClient(
                 setBody(request)
             }
 
+            val responseJson = response.bodyAsText()
+            println(responseJson)
+
             if (response.status.isSuccess()) {
                 response.body<OpenAIResponse>()
             } else {
@@ -450,8 +453,8 @@ public open class OpenAILLMClient(
 
         // Extract token count from the response
         val totalTokensCount = response.usage?.totalTokens
-        val inputTokensCount = response.usage?.inputTokens
-        val outputTokensCount = response.usage?.outputTokens
+        val inputTokensCount = response.usage?.promptTokens
+        val outputTokensCount = response.usage?.completionTokens
 
         val metaInfo = ResponseMetaInfo.create(
             clock,

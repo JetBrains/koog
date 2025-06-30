@@ -122,10 +122,15 @@ class SingleLLMPromptExecutorIntegrationTest {
             assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")
             assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
+
+            val message = response.first() as Message.Assistant
             assertTrue(
-                (response.first() as Message.Assistant).content.contains("Paris", ignoreCase = true),
+                message.content.contains("Paris", ignoreCase = true),
                 "Response should contain 'Paris'"
             )
+            assertNotNull(message.metaInfo.inputTokensCount, "Input tokens count should not be null")
+            assertNotNull(message.metaInfo.outputTokensCount, "Output tokens count should not be null")
+            assertNotNull(message.metaInfo.totalTokensCount, "Total tokens count should not be null")
         }
     }
 
