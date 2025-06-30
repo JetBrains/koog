@@ -94,10 +94,6 @@ class SafeToolTest {
         override suspend fun reportProblem(exception: Throwable) {
             throw exception
         }
-
-        override suspend fun sendTermination(result: String?) {
-            // No-op for testing
-        }
     }
 
 
@@ -220,10 +216,6 @@ class SafeToolTest {
             override suspend fun reportProblem(exception: Throwable) {
                 throw exception
             }
-
-            override suspend fun sendTermination(result: String?) {
-                // No-op for testing
-            }
         }
 
         val safeTool = SafeToolFromCallable(::testFunction, directCallEnvironment, testClock)
@@ -319,10 +311,6 @@ class SafeToolTest {
 
             override suspend fun reportProblem(exception: Throwable) {
                 throw exception
-            }
-
-            override suspend fun sendTermination(result: String?) {
-                // No-op for testing
             }
         }
 
