@@ -326,10 +326,7 @@ public open class OpenAILLMClient(
         return withContext(Dispatchers.SuitableForIO) {
             val response = httpClient.post(settings.chatCompletionsPath) {
                 setBody(request)
-            }
-
-            val responseJson = response.bodyAsText()
-            println(responseJson)
+           }
 
             if (response.status.isSuccess()) {
                 response.body<OpenAIResponse>()

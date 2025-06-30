@@ -94,6 +94,8 @@ Integration tests that interact with LLM services require API tokens to be set a
 - `OPEN_ROUTER_API_TEST_KEY` - Required for tests using OpenRouter
 
 You need to set these environment variables before running the integration tests that use the corresponding LLM clients.
+To simplify development, you can also create `env.properties` file (already gitignored) using [env.template.propertes](./integration-tests/env.template.properties) as a template.
+Then properties specified there would be automatically applied as environment variables when you run any test task.
 
 ## Running Ollama tests
 
