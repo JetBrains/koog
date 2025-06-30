@@ -68,7 +68,7 @@ fun systemMessage(content: String): Message.System =
  * @param installFeatures Lambda function allowing additional features to be installed on the agent.
  * @return A configured instance of the AIAgent class ready for execution.
  */
-fun createAgent(
+internal fun createAgent(
     agentId: String = "test-agent-id",
     strategy: AIAgentStrategy<String, String>,
     promptId: String? = null,

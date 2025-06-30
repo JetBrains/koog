@@ -1,7 +1,7 @@
 package ai.koog.agents.features.eventHandler.feature
 
-import ai.koog.agents.core.feature.model.eventString
-import ai.koog.agents.core.feature.traceString
+import ai.koog.agents.features.eventHandler.eventString
+import ai.koog.agents.features.eventHandler.traceString
 
 class TestEventsCollector {
 

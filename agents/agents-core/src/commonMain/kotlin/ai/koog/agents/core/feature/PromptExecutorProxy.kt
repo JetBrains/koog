@@ -50,17 +50,19 @@ public class PromptExecutorProxy(
 
         val responses = executor.executeMultipleChoices(prompt, model, tools)
 
-        val messageBuilder = StringBuilder()
-            .appendLine("Finished LLM call with LLM Choice response:")
+        logger.debug {
+            val messageBuilder = StringBuilder()
+                .appendLine("Finished LLM call with LLM Choice response:")
 
-        responses.forEachIndexed { index, response ->
-            messageBuilder.appendLine("- Response #${index}")
-            response.forEach { message ->
-                messageBuilder.appendLine("  -- [${message.role}] ${message.content}")
+            responses.forEachIndexed { index, response ->
+                messageBuilder.appendLine("- Response #${index}")
+                response.forEach { message ->
+                    messageBuilder.appendLine("  -- [${message.role}] ${message.content}")
+                }
             }
-        }
 
-        logger.debug { "Finished LLM call with responses: $messageBuilder" }
+            "Finished LLM call with responses: $messageBuilder"
+        }
 
         return responses
     }

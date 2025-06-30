@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
-import ai.koog.agents.core.agent.context.element.getAgentRunInfoElement
+import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
@@ -180,7 +180,7 @@ public open class AIAgent<Input, Output>(
     }
 
     override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-        val agentRunInfo = currentCoroutineContext().getAgentRunInfoElement() ?: throw IllegalStateException("Agent run info not found")
+        val agentRunInfo = currentCoroutineContext().getAgentRunInfoElementOrThrow()
 
         logger.info {
             formatLog(agentRunInfo.agentId, agentRunInfo.runId, "Executing tools: [${toolCalls.joinToString(", ") { it.tool }}]")
@@ -210,7 +210,7 @@ public open class AIAgent<Input, Output>(
     }
 
     override suspend fun reportProblem(exception: Throwable) {
-        val agentRunInfo = currentCoroutineContext().getAgentRunInfoElement() ?: throw IllegalStateException("Agent run info not found")
+        val agentRunInfo = currentCoroutineContext().getAgentRunInfoElementOrThrow()
 
         logger.error(exception) {
             formatLog(agentRunInfo.agentId, agentRunInfo.runId, "Reporting problem: ${exception.message}")
@@ -360,9 +360,11 @@ public open class AIAgent<Input, Output>(
  * @param maxIterations Maximum number of iterations for the agent's execution. Default is 50.
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
  */
+@OptIn(ExperimentalUuidApi::class)
 public fun AIAgent(
     executor: PromptExecutor,
     llmModel: LLModel,
+    id: String = Uuid.random().toString(),
     strategy: AIAgentStrategy<String, String> = singleRunStrategy(),
     systemPrompt: String = "",
     temperature: Double = 1.0,
@@ -371,6 +373,7 @@ public fun AIAgent(
     maxIterations: Int = 50,
     installFeatures: AIAgent.FeatureContext.() -> Unit = {}
 ): AIAgent<String, String> = AIAgent(
+    id = id,
     promptExecutor = executor,
     strategy = strategy,
     agentConfig = AIAgentConfig(

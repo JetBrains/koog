@@ -1,7 +1,6 @@
 package ai.koog.integration.tests
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.traceString
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -55,7 +54,7 @@ class OllamaSimpleAgentIntegrationTest {
         }
 
         onBeforeLLMCall { eventContext ->
-            println("Before LLM call: prompt=${eventContext.prompt.traceString}")
+            println("Before LLM call: prompt=${eventContext.prompt}")
         }
 
         onAfterLLMCall { eventContext ->

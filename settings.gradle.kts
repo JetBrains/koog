@@ -12,6 +12,7 @@ include(":agents:agents-ext")
 include(":agents:agents-features:agents-features-common")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
+include(":agents:agents-features:agents-features-opentelemetry")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-features:agents-features-tokenizer")
 

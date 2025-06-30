@@ -1,4 +1,4 @@
-package ai.koog.agents.example.features
+package ai.koog.agents.example.features.logging
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
