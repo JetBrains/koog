@@ -1,6 +1,5 @@
 package ai.koog.agents.features.writer
 
-import ai.koog.agents.features.NetUtil.findAvailablePort
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
@@ -8,6 +7,7 @@ import ai.koog.agents.features.common.remote.client.config.DefaultClientConnecti
 import ai.koog.agents.features.common.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.features.common.remote.server.config.ServerConnectionConfig
 import ai.koog.agents.features.common.writer.FeatureMessageRemoteWriter
+import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.utils.use
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging

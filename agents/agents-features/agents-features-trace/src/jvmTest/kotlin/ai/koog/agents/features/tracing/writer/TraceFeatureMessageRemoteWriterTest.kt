@@ -9,8 +9,8 @@ import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConn
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.features.tracing.*
-import ai.koog.agents.features.tracing.NetUtil.findAvailablePort
 import ai.koog.agents.features.tracing.feature.Tracing
+import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
@@ -33,7 +33,7 @@ class TraceFeatureMessageRemoteWriterTest {
     @Test
     fun `test health check on agent run`() = runBlocking {
 
-        val port = NetUtil.findAvailablePort()
+        val port = findAvailablePort()
         val serverConfig = AIAgentFeatureServerConnectionConfig(host = host, port = port)
         val clientConfig =
             AIAgentFeatureClientConnectionConfig(host = host, port = port, protocol = URLProtocol.HTTP)
