@@ -16,6 +16,8 @@ import ai.koog.agents.memory.model.DefaultTimeProvider.getCurrentTimestamp
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -46,7 +48,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *             storage = SimpleStorage(JVMFileSystemProvider),
  *             root = Path("memory/data")
  *         )
- *         
+ *
  *         // Configure scope names (optional)
  *         featureName = "code-assistant"
  *         productName = "my-ide"
@@ -84,7 +86,7 @@ public class AgentMemory(
     internal val llm: AIAgentLLMContext,
     internal val scopesProfile: MemoryScopesProfile
 ) {
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     private fun getCurrentTimestamp(): Long = DefaultTimeProvider.getCurrentTimestamp()
 
@@ -203,7 +205,8 @@ public class AgentMemory(
      * ```
      */
     public companion object Feature : AIAgentFeature<Config, AgentMemory> {
-        override val key: AIAgentStorageKey<AgentMemory> = createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
+        override val key: AIAgentStorageKey<AgentMemory> =
+            createStorageKey<AgentMemory>("local-ai-agent-memory-feature")
 
         /**
          * Creates the initial configuration for the AgentMemory feature.
@@ -232,7 +235,7 @@ public class AgentMemory(
          *             storage = SimpleStorage(JVMFileSystemProvider),
          *             root = Path("memory/data")
          *         )
-         *         
+         *
          *         // Configure scope names (optional)
          *         featureName = "bank-assistant"
          *         productName = "my-bank"
@@ -471,7 +474,31 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 
     // remove tailing tool calls as we didn't provide any result for them
     dropTrailingToolCalls()
-    updatePrompt { user(promptForCompression) }
+
+    rewritePrompt { oldPrompt ->
+        // Combine all history into one message with XML tags
+        // to prevent LLM from continuing answering in a tool_call -> tool_result pattern
+        val combinedMessage = buildString {
+            oldPrompt.messages.forEach { message ->
+                when (message) {
+                    is Message.System -> append("<system>\n${message.content}\n</system>\n")
+                    is Message.User -> append("<user>\n${message.content}\n</user>\n")
+                    is Message.Assistant -> append("<assistant>\n${message.content}\n</assistant>\n")
+                    is Message.Tool.Call -> append("<tool_call>\n${message.content}\n</tool_call>\n")
+                    is Message.Tool.Result -> append("<tool_result>\n${message.content}\n</tool_result>\n")
+                }
+            }
+        }
+
+        // Put Compression prompt as a System instruction
+        val newPrompt = Prompt.build(id = oldPrompt.id) {
+            system { promptForCompression }
+            user { combinedMessage }
+        }
+
+        return@rewritePrompt newPrompt
+    }
+
     val response = requestLLMWithoutTools()
 
     val timestamp = getCurrentTimestamp()
