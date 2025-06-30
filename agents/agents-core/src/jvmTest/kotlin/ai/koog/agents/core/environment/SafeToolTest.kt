@@ -9,10 +9,14 @@ import org.junit.jupiter.api.assertThrows
 import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class SafeToolTest {
+
+    companion object {
+        private const val TEST_RESULT = "Test result"
+        private const val TEST_ERROR = "Error: Test error"
+    }
 
     private fun testFunction(param1: String, param2: Int): String {
         return "Result: $param1 - $param2"
@@ -30,7 +34,7 @@ class SafeToolTest {
                         tool = toolCall.tool,
                         content = resultContent,
                         result = ToolFromCallable.Result(
-                            result = "Test result",
+                            result = TEST_RESULT,
                             type = typeOf<String>(),
                             json = Json,
                         )
@@ -39,7 +43,7 @@ class SafeToolTest {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
-                        content = "Error: Test error",
+                        content = TEST_ERROR,
                         result = null,
                     )
                 }
@@ -63,7 +67,7 @@ class SafeToolTest {
         val result = safeTool.execute("test", 123)
 
         assertTrue(result.isSuccessful())
-        assertEquals("Test result", result.asSuccessful().result)
+        assertEquals(TEST_RESULT, result.asSuccessful().result)
         assertEquals("Success content", result.content)
     }
 
@@ -75,8 +79,8 @@ class SafeToolTest {
         val result = safeTool.execute("test", 123)
 
         assertTrue(result.isFailure())
-        assertEquals("Error: Test error", result.content)
-        assertEquals("Error: Test error", result.asFailure().message)
+        assertEquals(TEST_ERROR, result.content)
+        assertEquals(TEST_ERROR, result.asFailure().message)
     }
 
     @Test
@@ -91,9 +95,10 @@ class SafeToolTest {
 
     @Test
     fun testResultSuccessHelpers() = runTest {
-        val success = SafeToolFromCallable.Result.Success("Test result", "Success content")
+        val success = SafeToolFromCallable.Result.Success(TEST_RESULT, "Success content")
 
-        assertEquals("Test result", success.asSuccessful().result)
+        assertTrue(success.isSuccessful())
+        assertEquals(TEST_RESULT, success.asSuccessful().result)
         assertEquals("Success content", success.content)
     }
 
@@ -101,7 +106,6 @@ class SafeToolTest {
     fun testResultFailureHelpers() = runTest {
         val failure = SafeToolFromCallable.Result.Failure<String>("Error message")
 
-        assertFalse(failure.isSuccessful())
         assertTrue(failure.isFailure())
         assertEquals("Error message", failure.asFailure().message)
         assertEquals("Error message", failure.content)
@@ -118,6 +122,26 @@ class SafeToolTest {
     }
 
     @Test
+    fun testZeroArgumentCount() = runTest {
+        val mockEnvironment = MockEnvironment(shouldSucceed = true)
+        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+
+        assertThrows<IllegalStateException> {
+            safeTool.execute()
+        }
+    }
+
+    @Test
+    fun testTooManyArguments() = runTest {
+        val mockEnvironment = MockEnvironment(shouldSucceed = true)
+        val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
+
+        assertThrows<IllegalStateException> {
+            safeTool.execute("test", 123, "extra argument")
+        }
+    }
+
+    @Test
     fun testWithNullArgument() = runTest {
         val mockEnvironment = MockEnvironment(shouldSucceed = true)
         val safeTool = SafeToolFromCallable(::testFunction, mockEnvironment, testClock)
@@ -125,6 +149,6 @@ class SafeToolTest {
         val result = safeTool.execute("test", null)
 
         assertTrue(result.isSuccessful())
-        assertEquals("Test result", result.asSuccessful().result)
+        assertEquals(TEST_RESULT, result.asSuccessful().result)
     }
 }
