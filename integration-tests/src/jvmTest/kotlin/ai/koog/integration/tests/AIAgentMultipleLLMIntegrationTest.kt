@@ -374,15 +374,16 @@ class AIAgentMultipleLLMIntegrationTest {
         prompt: Prompt = prompt("test") {},
         eventsChannel: Channel<Event>? = null,
     ): AIAgent<String, String> {
-        val openAIClient = OpenAILLMClient(openAIApiKey).apply {
-            if (eventsChannel != null) {
-                reportingTo(eventsChannel)
-            }
+        val openAIClient = if (eventsChannel != null) {
+            OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        } else {
+            OpenAILLMClient(openAIApiKey)
         }
-        val anthropicClient = AnthropicLLMClient(anthropicApiKey).apply {
-            if (eventsChannel != null) {
-                reportingTo(eventsChannel)
-            }
+
+        val anthropicClient = if (eventsChannel != null) {
+            AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
+        } else {
+            AnthropicLLMClient(anthropicApiKey)
         }
 
         val executor = MultiLLMPromptExecutor(
