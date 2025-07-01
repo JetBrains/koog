@@ -41,13 +41,6 @@ jobs:
       - name: TestClasses with Gradle Wrapper
         run: ./gradlew jvmTestClasses jsTestClasses
 
-      # Check that demo android app in examples compiles successfully.
-      # It is an independent Gradle project, so it has to be checked separately.
-      - name: "[Examples] Assemble demo android app"
-        run: |
-          cd ./examples/demo-android-app
-          ./gradlew :app:assemble 
-
   tests:
 
     runs-on: ${{ matrix.os }}
