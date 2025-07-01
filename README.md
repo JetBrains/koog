@@ -70,6 +70,8 @@ Currently, the framework supports the JVM and JS targets.
 
 On JVM, JDK 17 or higher is required to use the framework.
 
+Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about the Koog dependencies.
+
 ### Gradle (Kotlin DSL)
 
 1. Add dependencies to the `build.gradle.kts` file:
