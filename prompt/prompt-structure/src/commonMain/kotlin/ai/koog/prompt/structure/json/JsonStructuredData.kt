@@ -150,11 +150,12 @@ public class JsonStructuredData<TStruct>(
             schemaFormat: JsonSchemaGenerator.SchemaFormat = JsonSchemaGenerator.SchemaFormat.Simple,
             maxDepth: Int = 20,
             descriptionOverrides: Map<String, String> = emptyMap(),
+            excludedProperties: Set<String> = emptySet(),
             examples: List<T> = emptyList(),
             schemaType: JsonSchemaType = JsonSchemaType.SIMPLE
         ): StructuredData<T> {
             val structureLanguage = JsonStructureLanguage(json)
-            val schema = JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, descriptionOverrides)
+            val schema = JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, descriptionOverrides, excludedProperties)
 
             return JsonStructuredData(
                 id = id,

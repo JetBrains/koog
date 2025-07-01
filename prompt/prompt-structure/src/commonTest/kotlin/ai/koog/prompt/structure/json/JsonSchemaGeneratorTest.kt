@@ -9,6 +9,7 @@ import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 class JsonSchemaGeneratorTest {
     private val json = Json {
@@ -212,6 +213,65 @@ class JsonSchemaGeneratorTest {
         """.trimIndent()
 
         assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testGenerateSimpleSchemaExcludingProperties() {
+        val schema = json.encodeToString(simpleSchemaGenerator.generate(
+            "TestClass",
+            serializer<TestClass>(),
+            excludedProperties = setOf("TestClass.nullableProperty")
+        ))
+
+        val expectedSchema = """
+            {
+              "type": "object",
+              "description": "A test class",
+              "properties": {
+                "stringProperty": {
+                  "type": "string",
+                  "description": "A string property"
+                },
+                "intProperty": {
+                  "type": "integer"
+                },
+                "booleanProperty": {
+                  "type": "boolean"
+                },
+                "listProperty": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "mapProperty": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "stringProperty",
+                "intProperty",
+                "booleanProperty"
+              ]
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testGenerateSimpleSchemaExcludingRequiredProperties() {
+        val exception = assertFailsWith<IllegalArgumentException> {
+            json.encodeToString(simpleSchemaGenerator.generate(
+                "TestClass",
+                serializer<TestClass>(),
+                excludedProperties = setOf("TestClass.stringProperty")
+            ))
+        }
+        assertEquals("Property 'TestClass.stringProperty' is marked as excluded, but it is required in the schema.", exception.message)
     }
 
     @Test

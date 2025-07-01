@@ -76,7 +76,8 @@ public class JsonSchemaGenerator(
     public fun generate(
         id: String,
         serializer: KSerializer<*>,
-        descriptionOverrides: Map<String, String> = emptyMap()
+        descriptionOverrides: Map<String, String> = emptyMap(),
+        excludedProperties: Set<String> = emptySet(),
     ): JsonObject {
         val rootSchema: JsonObject
         val definitions = buildJsonObject {
@@ -84,6 +85,7 @@ public class JsonSchemaGenerator(
                 rootDefsBuilder = this,
                 processedDefs = emptySet(),
                 descriptionOverrides = descriptionOverrides,
+                excludedProperties = excludedProperties,
                 descriptor = serializer.descriptor,
                 currentDepth = 0,
             )
@@ -122,6 +124,7 @@ public class JsonSchemaGenerator(
         rootDefsBuilder: JsonObjectBuilder,
         processedDefs: Set<String>,
         descriptionOverrides: Map<String, String>,
+        excludedProperties: Set<String>,
         descriptor: SerialDescriptor,
         currentDepth: Int,
         isPolymorphicSubtype: Boolean = false,
@@ -159,6 +162,7 @@ public class JsonSchemaGenerator(
                             rootDefsBuilder = rootDefsBuilder,
                             processedDefs = processedDefs,
                             descriptionOverrides = descriptionOverrides,
+                            excludedProperties = excludedProperties,
                             descriptor = itemDescriptor,
                             currentDepth = currentDepth + 1,
                         )
@@ -181,6 +185,7 @@ public class JsonSchemaGenerator(
                             rootDefsBuilder = rootDefsBuilder,
                             processedDefs = processedDefs,
                             descriptionOverrides = descriptionOverrides,
+                            excludedProperties = excludedProperties,
                             descriptor = valueDescriptor,
                             currentDepth = currentDepth + 1,
                         )
@@ -208,9 +213,16 @@ public class JsonSchemaGenerator(
                                 val propertyName = descriptor.getElementName(i)
                                 val propertyDescriptor = descriptor.getElementDescriptor(i)
                                 val propertyAnnotations = descriptor.getElementAnnotations(i)
+                                val lookupKey = "${descriptor.serialName}.$propertyName"
+
+                                // Check if the property is excluded
+                                if (excludedProperties.contains(lookupKey)) {
+                                    if (!descriptor.isElementOptional(i))
+                                        throw IllegalArgumentException("Property '$lookupKey' is marked as excluded, but it is required in the schema.")
+                                    continue
+                                }
 
                                 // Description for a property
-                                val lookupKey = "${descriptor.serialName}.$propertyName"
                                 val propertyDescriptionOverride = descriptionOverrides[lookupKey]
                                 val propertyDescriptionAnnotation = propertyAnnotations
                                     .filterIsInstance<LLMDescription>()
@@ -227,6 +239,7 @@ public class JsonSchemaGenerator(
                                             rootDefsBuilder = rootDefsBuilder,
                                             processedDefs = updatedProcessedDefs,
                                             descriptionOverrides = descriptionOverrides,
+                                            excludedProperties = excludedProperties,
                                             descriptor = propertyDescriptor,
                                             currentDepth = currentDepth + 1,
                                         ).let { propertySchema ->
@@ -299,6 +312,7 @@ public class JsonSchemaGenerator(
                                     rootDefsBuilder = rootDefsBuilder,
                                     processedDefs = processedDefs,
                                     descriptionOverrides = descriptionOverrides,
+                                    excludedProperties = excludedProperties,
                                     descriptor = polymorphicDescriptor,
                                     currentDepth = currentDepth + 1,
                                     isPolymorphicSubtype = true,
