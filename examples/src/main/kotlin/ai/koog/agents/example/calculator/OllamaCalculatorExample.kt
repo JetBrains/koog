@@ -13,12 +13,13 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalUuidApi::class)
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val executor: PromptExecutor = simpleOllamaAIExecutor()
 
     // Create tool registry with calculator tools
@@ -31,7 +32,7 @@ fun main() = runBlocking {
 
     // Create agent config with proper prompt
     val agentConfig = AIAgentConfig(
-        prompt = prompt("test") {
+        prompt = prompt("test", LLMParams(temperature = 0.0)) {
             system("You are a calculator.")
         },
         model = OllamaModels.Meta.LLAMA_3_2,
@@ -53,13 +54,13 @@ fun main() = runBlocking {
                 println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
             }
 
-            onAgentFinished { strategyName: String, result: String? ->
+            onAgentFinished { strategyName: String, result: Any? ->
                 println("Result: $result")
             }
         }
     }
 
     runBlocking {
-        agent.run("(10 + 20) * (5 + 5) / (2 - 11)")
+        agent.run("Use provided tools to calculate (10 + 20) * (5 + 5) / (2 - 11). Please call all the tools at once")
     }
 }

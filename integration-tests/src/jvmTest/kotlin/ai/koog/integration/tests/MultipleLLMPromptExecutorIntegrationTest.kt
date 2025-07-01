@@ -37,14 +37,19 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.io.files.Path
+import kotlinx.io.files.Path as KtPath
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
-import java.io.File
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.stream.Stream
+import kotlin.io.path.pathString
+import kotlin.io.path.readBytes
+import kotlin.io.path.readText
+import kotlin.io.path.writeBytes
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -53,14 +58,13 @@ import kotlin.time.Duration.Companion.seconds
 class MultipleLLMPromptExecutorIntegrationTest {
 
     companion object {
-        private lateinit var testResourcesDir: File
+        private lateinit var testResourcesDir: Path
 
         @JvmStatic
         @BeforeAll
         fun setupTestResources() {
-            testResourcesDir = File("src/jvmTest/resources/media")
-            testResourcesDir.mkdirs()
-            assertTrue(testResourcesDir.exists(), "Test resources directory should exist")
+            testResourcesDir =
+                Paths.get(MultipleLLMPromptExecutorIntegrationTest::class.java.getResource("/media")!!.toURI())
         }
 
         @JvmStatic
@@ -174,7 +178,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+            assumeTrue(false, "There is no text response for audio models.")
         }
 
         val prompt = Prompt.build("test-streaming") {
@@ -496,7 +500,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+            assumeTrue(false, "There is no text response for audio models.")
         }
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
@@ -535,7 +539,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
+            assumeTrue(false, "There is no text response for audio models.")
         }
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
@@ -689,7 +693,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                         }
 
                         attachments {
-                            file(file.absolutePath, "text/markdown")
+                            file(file.pathString, "text/markdown")
                         }
                     }
                 }
@@ -768,7 +772,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                             }
 
                             else -> {
-                                image(Path(imageFile.absolutePath))
+                                image(KtPath(imageFile.pathString))
                             }
                         }
                     }
@@ -837,7 +841,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                         }
 
                         attachments {
-                            textFile(Path(file.absolutePath), "text/plain")
+                            textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
                 }
@@ -858,11 +862,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             withRetry {
                 try {
                     val response = executor.execute(prompt, model)
-                    if (scenario == TextTestScenario.CORRUPTED_TEXT) {
-                        checkResponseBasic(response)
-                    } else {
-                        checkExecutorMediaResponse(response)
-                    }
+                    checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
@@ -921,7 +921,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     }
 
                     attachments {
-                        audio(Path(audioFile.absolutePath))
+                        audio(KtPath(audioFile.pathString))
                     }
                 }
             }
@@ -974,7 +974,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
         val imageBytes = imageFile.readBytes()
 
-        val tempImageFile = File(testResourcesDir, "small.png")
+        val tempImageFile = testResourcesDir.resolve("small.png")
 
         tempImageFile.writeBytes(imageBytes)
         val prompt = prompt("base64-encoded-attachments-test") {
@@ -986,7 +986,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 }
 
                 attachments {
-                    image(Path(tempImageFile.absolutePath))
+                    image(KtPath(tempImageFile.pathString))
                 }
             }
         }

@@ -1,5 +1,7 @@
 package ai.koog.agents.core.feature.handler
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
+
 /**
  * A handler class for managing strategy-related events, providing callbacks for when strategies
  * are started or finished. It is designed to operate on a specific feature type and delegate
@@ -48,6 +50,7 @@ public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
      * @param context The context for updating the agent
      */
     @Suppress("UNCHECKED_CAST")
+    @InternalAgentsApi
     public suspend fun handleStrategyStartedUnsafe(context: StrategyUpdateContext<*>) {
         handleStrategyStarted(context as StrategyUpdateContext<FeatureT>)
     }
@@ -57,7 +60,7 @@ public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
      *
      * @param context The context for updating the agent with the feature
      */
-    public suspend fun handleStrategyFinished(context: StrategyUpdateContext<FeatureT>, result: String) {
+    public suspend fun handleStrategyFinished(context: StrategyUpdateContext<FeatureT>, result: Any?) {
         strategyFinishedHandler.handle(context, result)
     }
 
@@ -67,7 +70,8 @@ public class StrategyHandler<FeatureT : Any>(public val feature: FeatureT) {
      * @param context The context for updating the agent
      */
     @Suppress("UNCHECKED_CAST")
-    public suspend fun handleStrategyFinishedUnsafe(context: StrategyUpdateContext<*>, result: String) {
+    @InternalAgentsApi
+    public suspend fun handleStrategyFinishedUnsafe(context: StrategyUpdateContext<*>, result: Any?) {
         handleStrategyFinished(context as StrategyUpdateContext<FeatureT>, result)
     }
 }
@@ -98,7 +102,7 @@ public fun interface StrategyFinishedHandler<FeatureT : Any> {
      *
      * @param context The context of the strategy update, containing details about the current strategy,
      *                the session, and the feature associated with the update.
-     * @param result A string representing the outcome or result of the strategy update process.
+     * @param result Result of the strategy update process.
      */
-    public suspend fun handle(context: StrategyUpdateContext<FeatureT>, result: String)
+    public suspend fun handle(context: StrategyUpdateContext<FeatureT>, result: Any?)
 }

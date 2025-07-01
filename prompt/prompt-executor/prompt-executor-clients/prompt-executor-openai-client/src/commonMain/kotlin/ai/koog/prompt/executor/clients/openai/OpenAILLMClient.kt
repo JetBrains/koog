@@ -326,7 +326,7 @@ public open class OpenAILLMClient(
         return withContext(Dispatchers.SuitableForIO) {
             val response = httpClient.post(settings.chatCompletionsPath) {
                 setBody(request)
-            }
+           }
 
             if (response.status.isSuccess()) {
                 response.body<OpenAIResponse>()
@@ -450,8 +450,8 @@ public open class OpenAILLMClient(
 
         // Extract token count from the response
         val totalTokensCount = response.usage?.totalTokens
-        val inputTokensCount = response.usage?.inputTokens
-        val outputTokensCount = response.usage?.outputTokens
+        val inputTokensCount = response.usage?.promptTokens
+        val outputTokensCount = response.usage?.completionTokens
 
         val metaInfo = ResponseMetaInfo.create(
             clock,

@@ -157,13 +157,14 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Re
  *
  * @param block A function that evaluates whether to accept a list of tool call messages
  */
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleToolCalls(
+public infix fun <IncomingOutput, OutgoingInput>
+        AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleToolCalls(
     block: suspend (List<Message.Tool.Call>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Tool.Call>, OutgoingInput> {
     return onIsInstance(List::class)
         .transformed { it to it.filterIsInstance<Message.Tool.Call>() }
-        .onCondition { (original, filtered) -> original == filtered }
+        // skipping this edge in case we have list of only assistant messages
+        .onCondition { (_, filtered) -> filtered.any() }
         .transformed { (_, filtered) -> filtered }
         .onCondition { toolCalls -> block(toolCalls) }
 }
@@ -197,6 +198,24 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
     return onIsInstance(Message.Assistant::class)
         .onCondition { signature -> block(signature) }
         .transformed { it.content }
+}
+
+
+/**
+ * Creates an edge that filters assistant messages based on a custom condition and extracts their content.
+ *
+ * @param block A function that evaluates whether to accept an assistant message
+ */
+public infix fun <IncomingOutput, OutgoingInput>
+        AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleAssistantMessages(
+    block: suspend (List<Message.Assistant>) -> Boolean
+): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Assistant>, OutgoingInput> {
+    return onIsInstance(List::class)
+        .transformed { it to it.filterIsInstance<Message.Assistant>() }
+        .onCondition { (original, filtered) -> original == filtered }
+        .transformed { (_, filtered) -> filtered }
+        .onCondition { toolResults -> block(toolResults) }
+        .transformed { it }
 }
 
 /**

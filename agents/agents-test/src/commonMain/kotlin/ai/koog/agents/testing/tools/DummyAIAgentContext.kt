@@ -46,7 +46,7 @@ public class DummyAIAgentContext(
     public val isEnvironmentDefined: Boolean = builder.environment != null
 
     private var _environment: AIAgentEnvironment? = builder.environment
-    private var _agentInput: String? = builder.agentInput
+    private var _agentInput: Any? = builder.agentInput
     private var _config: AIAgentConfigBase? = builder.config
     private var _llm: AIAgentLLMContext? = builder.llm
     private var _stateManager: AIAgentStateManager? = builder.stateManager
@@ -60,7 +60,7 @@ public class DummyAIAgentContext(
     override val environment: AIAgentEnvironment
         get() = _environment ?: throw NotImplementedError("Environment is not mocked")
 
-    override val agentInput: String
+    override val agentInput: Any?
         get() = _agentInput ?: throw NotImplementedError("Agent input is not mocked")
 
     override val config: AIAgentConfigBase
@@ -92,26 +92,26 @@ public class DummyAIAgentContext(
         throw NotImplementedError("feature()  getting in runtime is not supported for mock")
 
     override fun copy(
-        environment: AIAgentEnvironment?,
-        agentInput: String?,
-        config: AIAgentConfigBase?,
-        llm: AIAgentLLMContext?,
-        stateManager: AIAgentStateManager?,
-        storage: AIAgentStorage?,
-        sessionUuid: Uuid?,
-        strategyId: String?,
-        pipeline: AIAgentPipeline?
+        environment: AIAgentEnvironment,
+        agentInput: Any?,
+        config: AIAgentConfigBase,
+        llm: AIAgentLLMContext,
+        stateManager: AIAgentStateManager,
+        storage: AIAgentStorage,
+        sessionUuid: Uuid,
+        strategyId: String,
+        pipeline: AIAgentPipeline
     ): AIAgentContextBase = DummyAIAgentContext(
-        builder.copy().apply {
-            environment?.let { this.environment = it }
-            agentInput?.let { this.agentInput = it }
-            config?.let { this.config = it }
-            llm?.let { this.llm = it }
-            stateManager?.let { this.stateManager = it }
-            storage?.let { this.storage = it }
-            sessionUuid?.let { this.sessionUuid = it }
-            strategyId?.let { this.strategyId = it }
-        }
+        builder.copy(
+            environment = environment,
+            agentInput = agentInput,
+            config = config,
+            llm = llm,
+            stateManager = stateManager,
+            storage = storage,
+            sessionUuid = sessionUuid,
+            strategyId = strategyId,
+        )
     )
 
     override suspend fun fork(): AIAgentContextBase {
@@ -156,7 +156,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * This variable can be set to define specific data or context relevant to the agent's task.
      * It is nullable, indicating that the agent may operate without an explicitly defined input.
      */
-    public var agentInput: String?
+    public var agentInput: Any?
     /**
      * Specifies the configuration for the AI agent.
      *
@@ -222,7 +222,16 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      *
      * @return A new instance of `AIAgentContextMockBuilderBase` with the same properties as the original.
      */
-    public fun copy(): AIAgentContextMockBuilderBase
+    public fun copy(
+        environment: AIAgentEnvironment? = this.environment,
+        agentInput: Any? = this.agentInput,
+        config: AIAgentConfigBase? = this.config,
+        llm: AIAgentLLMContext? = this.llm,
+        stateManager: AIAgentStateManager? = this.stateManager,
+        storage: AIAgentStorage? = this.storage,
+        sessionUuid: Uuid? = this.sessionUuid,
+        strategyId: String? = this.strategyId,
+    ): AIAgentContextMockBuilderBase
 
     /**
      * Builds and returns an instance of [AIAgentContextBase] based on the current properties
@@ -261,7 +270,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * This property is optional and can be null, indicating that no specific input is provided for the agent.
      * It is utilized during the construction or copying of an agent's context to define the data the agent operates on.
      */
-    override var agentInput: String? = null
+    override var agentInput: Any? = null
     /**
      * Represents the AI agent configuration used in the mock builder.
      *
@@ -335,7 +344,16 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * @return a new `AIAgentContextMockBuilder` instance with the same properties as the original.
      */
-    override fun copy(): AIAgentContextMockBuilder {
+    override fun copy(
+        environment: AIAgentEnvironment?,
+        agentInput: Any?,
+        config: AIAgentConfigBase?,
+        llm: AIAgentLLMContext?,
+        stateManager: AIAgentStateManager?,
+        storage: AIAgentStorage?,
+        sessionUuid: Uuid?,
+        strategyId: String?,
+    ): AIAgentContextMockBuilder {
         return AIAgentContextMockBuilder().also {
             it.environment = environment
             it.agentInput = agentInput

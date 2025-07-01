@@ -31,7 +31,7 @@ public data class AIAgentEnvironmentInitializeMessageContent(
 public data class AIAgentEnvironmentToAgentInitializeMessage(
     override val content: AIAgentEnvironmentInitializeMessageContent,
     val toolsForStages: Map<String, List<ToolDescriptor>>,
-    val agent: AIAgentStrategy,
+    val agent: AIAgentStrategy<*, *>,
 ) : EnvironmentInitializeToAgentMessage()
 
 /**

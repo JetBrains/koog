@@ -94,7 +94,7 @@ class SimpleAgentMockedTest {
 
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
-    val results = mutableListOf<String?>()
+    val results = mutableListOf<Any?>()
     var iterationCount = 0
 
     @AfterTest
@@ -295,7 +295,7 @@ class SimpleAgentMockedTest {
             llmModel = OpenAIModels.Reasoning.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
-            maxIterations = 3,
+            maxIterations = 2,
             executor = loopExecutor,
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )

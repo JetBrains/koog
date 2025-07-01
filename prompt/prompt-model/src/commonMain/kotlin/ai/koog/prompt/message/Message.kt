@@ -246,6 +246,8 @@ public data class RequestMetaInfo(
  * @property totalTokensCount The total number of tokens involved in the response, including both input and output tokens, or null if not available.
  * @property inputTokensCount The number of tokens used in the input, or null if not available.
  * @property outputTokensCount The number of tokens generated in the output, or null if not available.
+ * @property additionalInfo Additional metadata as a map of string keys to string values.
+ *                          This can be used to store custom metadata that doesn't fit into the standard fields.
  * @property timestamp The timestamp indicating when the response was created.
  * Defaults to the current system time if not explicitly set.
  */
@@ -255,6 +257,7 @@ public data class ResponseMetaInfo(
     public val totalTokensCount: Int? = null,
     public val inputTokensCount: Int? = null,
     public val outputTokensCount: Int? = null,
+    public val additionalInfo: Map<String, String> = emptyMap(),
 ) : MessageMetaInfo {
     /**
      * Companion object for the ResponseMetaInfo class.
@@ -272,8 +275,9 @@ public data class ResponseMetaInfo(
             clock: Clock,
             totalTokensCount: Int? = null,
             inputTokensCount: Int? = null,
-            outputTokensCount: Int? = null
+            outputTokensCount: Int? = null,
+            additionalInfo: Map<String, String> = emptyMap()
         ): ResponseMetaInfo =
-            ResponseMetaInfo(clock.now(), totalTokensCount, inputTokensCount, outputTokensCount)
+            ResponseMetaInfo(clock.now(), totalTokensCount, inputTokensCount, outputTokensCount, additionalInfo)
     }
 }

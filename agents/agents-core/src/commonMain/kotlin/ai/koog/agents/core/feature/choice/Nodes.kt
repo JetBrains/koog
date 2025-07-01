@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.choice
 
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
+import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.result
@@ -13,7 +13,7 @@ import ai.koog.prompt.executor.model.LLMChoice
  */
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendResultsMultipleChoices(
     name: String? = null
-): AIAgentNodeDelegateBase<List<ReceivedToolResult>, List<LLMChoice>> =
+): AIAgentNodeDelegate<List<ReceivedToolResult>, List<LLMChoice>> =
     node(name) { results ->
         llm.writeSession {
             updatePrompt {
@@ -36,7 +36,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendResultsMultipleChoices(
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeSelectLLMChoice(
     choiceSelectionStrategy: ChoiceSelectionStrategy,
     name: String? = null
-): AIAgentNodeDelegateBase<List<LLMChoice>, LLMChoice> =
+): AIAgentNodeDelegate<List<LLMChoice>, LLMChoice> =
     node(name) { choices ->
         llm.writeSession {
             choiceSelectionStrategy.choose(prompt, choices).also { choice ->

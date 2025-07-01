@@ -76,7 +76,7 @@ class GraphTestingFeatureTest {
             agentConfig = AIAgentConfig(prompt = basePrompt, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 100),
             toolRegistry = toolRegistry
         ) {
-            testGraph("test") {
+            testGraph<String, String>("test") {
                 val firstSubgraph = assertSubgraphByName<Unit, String>("first")
                 val secondSubgraph = assertSubgraphByName<Unit, String>("second")
 
@@ -129,7 +129,7 @@ class GraphTestingFeatureTest {
 
         // Create a Config instance directly to test the API
         val config = Testing.Config().apply {
-            verifyStrategy("test") {
+            verifyStrategy<String, String>("test") {
                 val first = assertSubgraphByName<String, String>("first")
                 val second = assertSubgraphByName<String, String>("second")
                 verifySubgraph(first) {

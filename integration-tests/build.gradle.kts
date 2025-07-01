@@ -4,6 +4,7 @@ version = rootProject.version
 plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)
+    id("ai.koog.gradle.plugins.credentialsresolver")
 }
 
 kotlin {
@@ -33,6 +34,16 @@ kotlin {
                 runtimeOnly(libs.slf4j.simple)
             }
         }
+    }
+}
+
+val envs = credentialsResolver.resolve(
+    layout.projectDirectory.file(provider { "env.properties" })
+)
+
+tasks.withType<Test> {
+    doFirst {
+        environment(envs.get())
     }
 }
 

@@ -89,7 +89,7 @@ public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  * }
  * ```
  */
-public fun FeatureContext.testGraph(name: String, test: Testing.Config.SubgraphAssertionsBuilder<*, *>.() -> Unit): Unit =
+public fun <Input, Output> FeatureContext.testGraph(name: String, test: Testing.Config.SubgraphAssertionsBuilder<Input, Output>.() -> Unit): Unit =
     withTesting {
         graph {
             verifyStrategy(name) {
@@ -107,7 +107,7 @@ private fun graphUsageExample() {
     val config = Testing.Config()
 
     config.graph {
-        verifyStrategy("strategy-name") {
+        verifyStrategy<String, String>("strategy-name") {
             val start = startNode()
             val finish = finishNode()
 

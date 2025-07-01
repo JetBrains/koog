@@ -22,7 +22,7 @@ fun main() = runBlocking {
         tools(listOf(Move(game)))
     }
 
-    val strategy = strategy("chess_strategy") {
+    val strategy = strategy<String, String>("chess_strategy") {
         val nodeCallLLM by nodeLLMRequest("sendInput")
         val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
         val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
