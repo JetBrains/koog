@@ -21,7 +21,8 @@ internal data class OpenAIRequest(
     val modalities: List<OpenAIModalities>? = null,
     val audio: OpenAIAudioConfig? = null,
     val stream: Boolean = false,
-    val toolChoice: OpenAIToolChoice? = null
+    val toolChoice: OpenAIToolChoice? = null,
+    val user: String? = null,
 )
 
 @Serializable

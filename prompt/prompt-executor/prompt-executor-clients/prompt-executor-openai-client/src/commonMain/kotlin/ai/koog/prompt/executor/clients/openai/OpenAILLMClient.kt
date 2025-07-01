@@ -309,6 +309,7 @@ public open class OpenAILLMClient(
             audio = audio,
             stream = stream,
             toolChoice = toolChoice,
+            user = prompt.params.user,
         )
     }
 
