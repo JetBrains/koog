@@ -35,6 +35,12 @@ class OllamaTestFixture {
         waitForOllamaServer(baseUrl)
 
         client = OllamaClient(baseUrl)
+
+        // Always pull the model to ensure it's available
+        runBlocking {
+            client.getModelOrNull(model.id, pullIfMissing = true)
+        }
+
         executor = SingleLLMPromptExecutor(client)
     }
 
