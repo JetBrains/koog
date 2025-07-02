@@ -109,7 +109,7 @@ class AIAgentIntegrationTest {
             else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
         }
 
-        fun getSimpleAgentWithRunMode(
+        fun getSingleRunAgentWithRunMode(
             model: LLModel,
             runMode: ToolCalls,
             toolRegistry: ToolRegistry = twoToolsRegistry,
@@ -421,7 +421,7 @@ class AIAgentIntegrationTest {
         */
 
         withRetry {
-            val multiToolAgentAgent = getSimpleAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
+            val multiToolAgentAgent = getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
             multiToolAgentAgent.run(twoToolsPrompt)
 
             assertTrue(
@@ -480,7 +480,7 @@ class AIAgentIntegrationTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         withRetry {
-            val sequentialAgent = getSimpleAgentWithRunMode(
+            val sequentialAgent = getSingleRunAgentWithRunMode(
                 model,
                 ToolCalls.SINGLE_RUN_SEQUENTIAL,
                 eventHandlerConfig = eventHandlerConfig
