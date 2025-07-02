@@ -16,7 +16,8 @@ import ai.koog.prompt.executor.clients.anthropic.SystemAnthropicMessage
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.MediaContent
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -59,25 +60,31 @@ public object BedrockAnthropicClaudeSerialization {
                     }
 
                     // Check for image content if present
-                    if (msg.mediaContent.isNotEmpty()) {
+                    if (msg.attachments.isNotEmpty()) {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support image input"
                         }
 
-                        msg.mediaContent.forEach { media ->
-                            when (media) {
-                                is MediaContent.Image -> {
-                                    val imageSource = if (media.isUrl()) {
-                                        throw IllegalArgumentException("URL images not yet supported, please provide base64 encoded images")
-                                    } else {
-                                        ImageSource.Base64(
-                                            data = media.toBase64(),
-                                            mediaType = media.getMimeType()
-                                        )
+                        msg.attachments.forEach { attachment ->
+                            when (attachment) {
+                                is Attachment.Image -> {
+                                    val imageSource = when (val content = attachment.content) {
+                                        is AttachmentContent.URL -> {
+                                            throw IllegalArgumentException("URL images not yet supported, please provide base64 encoded images")
+                                        }
+
+                                        is AttachmentContent.Binary -> {
+                                            ImageSource.Base64(
+                                                data = content.base64,
+                                                mediaType = attachment.mimeType
+                                            )
+                                        }
+
+                                        else -> throw IllegalArgumentException("Unsupported image content type: ${content::class.simpleName}")
                                     }
                                     contentParts.add(AnthropicContent.Image(source = imageSource))
                                 }
-                                else -> throw IllegalArgumentException("Unsupported media type: ${media::class.simpleName}")
+                                else -> throw IllegalArgumentException("Unsupported attachment type: ${attachment::class.simpleName}")
                             }
                         }
                     }
