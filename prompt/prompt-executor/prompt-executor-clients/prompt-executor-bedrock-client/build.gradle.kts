@@ -1,4 +1,4 @@
-import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import ai.grazie.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version
@@ -28,12 +28,10 @@ kotlin {
         jvmMain {
             dependencies {
                 api(libs.ktor.client.cio)
-            }
-        }
-
-        jsMain {
-            dependencies {
-                api(libs.ktor.client.js)
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
+                implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+                implementation(libs.aws.sdk.kotlin.bedrockruntime)
             }
         }
 

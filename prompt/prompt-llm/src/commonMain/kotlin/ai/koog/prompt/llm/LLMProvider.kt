@@ -96,4 +96,18 @@ public abstract class LLMProvider(public val id: String, public val display: Str
      */
     @Serializable
     public data object Ollama : LLMProvider("ollama", "Ollama")
+
+    /**
+     * Represents the AWS Bedrock provider within the available set of large language model providers.
+     *
+     * Bedrock is identified by its unique ID ("bedrock") and display name ("AWS Bedrock").
+     * It extends the `LLMProvider` sealed class, which serves as a base class for all supported language model providers.
+     *
+     * This data object adheres to the structure and serialization requirements defined by the parent class.
+     * It is part of the available LLM provider hierarchy, which is used to configure and identify specific
+     * providers for large language model functionalities and capabilities.
+     */
+    @Serializable
+    public data object Bedrock : LLMProvider("bedrock", "AWS Bedrock")
+
 }

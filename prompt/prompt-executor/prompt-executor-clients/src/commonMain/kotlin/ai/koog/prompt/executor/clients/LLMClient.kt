@@ -16,8 +16,8 @@ public interface LLMClient {
      * Executes a prompt and returns a list of response messages.
      *
      * @param prompt The prompt to execute
-     * @param tools Optional list of tools that can be used by the LLM
      * @param model The LLM model to use
+     * @param tools Optional list of tools that can be used by the LLM
      * @return List of response messages
      */
     public suspend fun execute(

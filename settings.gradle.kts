@@ -35,6 +35,7 @@ include(":prompt:prompt-executor:prompt-executor-cached")
 
 include(":prompt:prompt-executor:prompt-executor-clients")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
