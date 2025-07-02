@@ -253,7 +253,7 @@ public data class RequestMetaInfo(
  */
 @Serializable
 public data class ResponseMetaInfo(
-    override val timestamp: Instant,
+    public override val timestamp: Instant,
     public val totalTokensCount: Int? = null,
     public val inputTokensCount: Int? = null,
     public val outputTokensCount: Int? = null,

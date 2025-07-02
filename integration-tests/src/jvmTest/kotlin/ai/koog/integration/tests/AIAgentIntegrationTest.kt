@@ -31,6 +31,8 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.dsl.prompt
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -48,6 +50,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 
 @OptIn(ExperimentalUuidApi::class)
 class AIAgentIntegrationTest {
@@ -74,6 +78,11 @@ class AIAgentIntegrationTest {
         }
 
         @JvmStatic
+        fun anthropicModels4_0(): Stream<LLModel> {
+            return listOf(AnthropicModels.Opus_4, AnthropicModels.Sonnet_4).stream()
+        }
+
+        @JvmStatic
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
         }
@@ -82,6 +91,48 @@ class AIAgentIntegrationTest {
         fun modelsWithVisionCapability(): Stream<Arguments> {
             return Models.modelsWithVisionCapability()
         }
+
+        val twoToolsRegistry = ToolRegistry {
+            tool(CalculatorTool)
+            tool(DelayTool)
+        }
+
+        val twoToolsPrompt = """
+        I need you to perform two operations:
+        1. Calculate 7 times 2
+        2. Wait for 500 milliseconds
+        """.trimIndent()
+
+        fun getExecutor(model: LLModel): SingleLLMPromptExecutor = when (model.provider) {
+            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+        }
+
+        fun getSimpleAgentWithRunMode(
+            model: LLModel,
+            runMode: ToolCalls,
+            toolRegistry: ToolRegistry = twoToolsRegistry,
+            eventHandlerConfig: EventHandlerConfig.() -> Unit
+        ) = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = singleRunStrategy(runMode),
+            agentConfig = AIAgentConfig(
+                prompt = prompt(
+                    id = "multiple-tool-calls-agent",
+                    params = LLMParams(
+                        temperature = 0.0,
+                        toolChoice = ToolChoice.Auto,
+                    )
+                ) {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = toolRegistry,
+            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+        )
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
@@ -109,6 +160,28 @@ class AIAgentIntegrationTest {
 
         onBeforeNode { node, context, input ->
             println("Before node: node=${node.javaClass.simpleName}, input=$input")
+
+            if (input is List<*>) {
+                input.filterIsInstance<Message.Tool.Call>().forEach { call ->
+                    parallelToolCalls.add(
+                        ToolCallInfo(
+                            id = call.id,
+                            tool = call.tool,
+                            content = call.content,
+                            metaInfo = call.metaInfo
+                        )
+                    )
+                }
+            } else if (input is Message.Tool.Call) {
+                singleToolCalls.add(
+                    ToolCallInfo(
+                        id = input.id,
+                        tool = input.tool,
+                        content = input.content,
+                        metaInfo = input.metaInfo
+                    )
+                )
+            }
         }
 
         onAfterNode { node, context, input, output ->
@@ -141,6 +214,16 @@ class AIAgentIntegrationTest {
         }
     }
 
+    val parallelToolCalls = mutableListOf<ToolCallInfo>()
+    val singleToolCalls = mutableListOf<ToolCallInfo>()
+
+    data class ToolCallInfo(
+        val id: String?,
+        val tool: String,
+        val content: String,
+        val metaInfo: ResponseMetaInfo
+    )
+
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
     val results = mutableListOf<Any?>()
@@ -150,6 +233,8 @@ class AIAgentIntegrationTest {
         actualToolCalls.clear()
         errors.clear()
         results.clear()
+        parallelToolCalls.clear()
+        singleToolCalls.clear()
     }
 
     @ParameterizedTest
@@ -270,6 +355,7 @@ class AIAgentIntegrationTest {
         }
     }
 
+    private fun singleRunMultipleToolsTestTemplate(model: LLModel, runMode: ToolCalls) = runBlocking {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRequestLLMWithoutTools(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -323,118 +409,95 @@ class AIAgentIntegrationTest {
 //        val model = OpenAIModels.Chat.GPT4o
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val toolRegistry = ToolRegistry {
-            tool(CalculatorTool)
-            tool(DelayTool)
-        }
+        /* The models that are not calling tools in parallel:
+        OpenAI:
+        - O1
+        - O3
+        - O3Mini
+        - O4Mini
 
-        val prompt = """
-        I need you to perform two operations:
-        1. Calculate 7 times 8
-        2. Wait for 500 milliseconds
-    """.trimIndent()
+        Anthropic:
+        - every model before Claude 4.0
+        */
 
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+            val multiToolAgentAgent = getSimpleAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
+            multiToolAgentAgent.run(twoToolsPrompt)
+
+            assertTrue(
+                parallelToolCalls.size == 2,
+                "There should be at least 2 tool calls in a Multiple tool calls scenario"
+            )
+            assertTrue(
+                singleToolCalls.isEmpty(),
+                "There should be no single tool calls in a Multiple tool calls scenario"
+            )
+
+            val firstCall = parallelToolCalls.first()
+            val secondCall = parallelToolCalls.last()
+
+            if (runMode == ToolCalls.PARALLEL) {
+                assertTrue(
+                    firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
+                            firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
+                            firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
+                            firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
+                    "At least one of the metadata should be equal for parallel tool calls"
+                )
             }
 
-            actualToolCalls.clear()
-
-            val sequentialAgent = AIAgent(
-                promptExecutor = executor,
-                strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
-                agentConfig = AIAgentConfig(
-                    prompt = prompt(
-                        id = "sequential-agent",
-                        params = LLMParams(
-                            temperature = 0.0,
-                            toolChoice = ToolChoice.Auto,
-                        )
-                    ) {
-                        system("You are a helpful assistant.")
-                    },
-                    model = model,
-                    maxAgentIterations = 10
-                ),
-                toolRegistry = toolRegistry,
-                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-            )
-
-            sequentialAgent.run(prompt)
-
-            assertTrue(
-                actualToolCalls.contains(CalculatorTool.name),
-                "The ${CalculatorTool.name} tool was not called in sequential mode"
-            )
-            assertTrue(
-                actualToolCalls.contains(DelayTool.name),
-                "The ${DelayTool.name} tool was not called in sequential mode"
-            )
+            assertTrue(firstCall.tool == CalculatorTool.name, "First tool call should be ${CalculatorTool.name}")
+            assertTrue(secondCall.tool == DelayTool.name, "Second tool call should be ${DelayTool.name}")
         }
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-//    @Test
-    fun integration_AIAgentWithParallelTools(model: LLModel) = runBlocking {
-//        val model = OpenAIModels.Chat.GPT4o
+    fun integration_AIAgentSingleRunWithSequentialTools(model: LLModel) = runTest(timeout = 300.seconds) {
+        singleRunMultipleToolsTestTemplate(model, ToolCalls.SEQUENTIAL)
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels4_0", "googleModels")
+    fun integration_AIAgentSingleRunWithParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
+        assumeTrue(model.id != OpenAIModels.Reasoning.O1.id, "The model fails to call tools in parallel, see KG-115")
+        assumeTrue(model.id != OpenAIModels.Reasoning.O3.id, "The model fails to call tools in parallel, see KG-115")
+        assumeTrue(
+            model.id != OpenAIModels.Reasoning.O3Mini.id,
+            "The model fails to call tools in parallel, see KG-115"
+        )
+        assumeTrue(
+            model.id != OpenAIModels.CostOptimized.O4Mini.id,
+            "The model fails to call tools in parallel, see KG-115"
+        )
+
+        singleRunMultipleToolsTestTemplate(model, ToolCalls.PARALLEL)
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_AIAgentSingleRunNoParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
-        assumeTrue(!model.id.contains("flash"), "JBAI-14094")
-
-        val toolRegistry = ToolRegistry {
-            tool(CalculatorTool)
-            tool(DelayTool)
-        }
-
-        val prompt = """
-        I need you to perform two operations:
-        1. Calculate 7 times 8
-        2. Wait for 500 milliseconds
-    """.trimIndent()
 
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-            }
-
-            actualToolCalls.clear()
-
-            val parallelAgent = AIAgent(
-                promptExecutor = executor,
-                strategy = singleRunStrategy(ToolCalls.PARALLEL),
-                agentConfig = AIAgentConfig(
-                    prompt = prompt(
-                        id = "parallel-agent",
-                        params = LLMParams(
-                            temperature = 0.0,
-                            toolChoice = ToolChoice.Auto
-                        )
-                    ) {
-                        system("You are a helpful assistant.")
-                    },
-                    model = model,
-                    maxAgentIterations = 50
-                ),
-                toolRegistry = toolRegistry,
-                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            val sequentialAgent = getSimpleAgentWithRunMode(
+                model,
+                ToolCalls.SINGLE_RUN_SEQUENTIAL,
+                eventHandlerConfig = eventHandlerConfig
             )
-
-            parallelAgent.run(prompt)
+            sequentialAgent.run(twoToolsPrompt)
 
             assertTrue(
-                actualToolCalls.contains(CalculatorTool.name),
-                "The ${CalculatorTool.name} tool was not called in parallel mode"
+                parallelToolCalls.isEmpty(),
+                "There should be no parallel tool calls in a Sequential single run scenario"
             )
             assertTrue(
-                actualToolCalls.contains(DelayTool.name),
-                "The ${DelayTool.name} tool was not called in parallel mode"
+                singleToolCalls.size == 2,
+                "There should be only one tool call in a Sequential single run scenario"
+            )
+            assertTrue(
+                singleToolCalls.first().tool == CalculatorTool.name,
+                "First tool call should be ${CalculatorTool.name}"
             )
         }
     }
