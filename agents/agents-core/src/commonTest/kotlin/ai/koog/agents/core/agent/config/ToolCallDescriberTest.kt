@@ -7,32 +7,34 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant.Companion.fromEpochMilliseconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ToolCallDescriberTest {
 
-    private val testClock = object : Clock {
-        override fun now() = fromEpochMilliseconds(123)
+    private companion object {
+        private val describer = ToolCallDescriber.JSON
+
+        private val testClock = object : Clock {
+            override fun now() = fromEpochMilliseconds(123)
+        }
+
+        private val testToolCall = Message.Tool.Call(
+            id = "test-call-id",
+            tool = "test-tool",
+            content = """{"param": "value"}""",
+            metaInfo = ResponseMetaInfo.create(testClock),
+        )
+
+        private val testToolResult = Message.Tool.Result(
+            id = "test-call-id",
+            tool = "test-tool",
+            content = "Test result content",
+            metaInfo = RequestMetaInfo.create(testClock),
+        )
     }
-
-    private val testToolCall = Message.Tool.Call(
-        id = "test-call-id",
-        tool = "test-tool",
-        content = """{"param": "value"}""",
-        metaInfo = ResponseMetaInfo.create(testClock)
-    )
-
-    private val testToolResult = Message.Tool.Result(
-        id = "test-call-id",
-        tool = "test-tool",
-        content = "Test result content",
-        metaInfo = RequestMetaInfo.create(testClock)
-    )
 
     @Test
     fun testDescribeToolCall() {
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolCall(testToolCall)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
@@ -43,7 +45,6 @@ class ToolCallDescriberTest {
 
     @Test
     fun testDescribeToolResult() {
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolResult(testToolResult)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
@@ -58,10 +59,9 @@ class ToolCallDescriberTest {
             id = null,
             tool = "test-tool",
             content = """{"param": "value"}""",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolCall(nullIdToolCall)
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
@@ -75,10 +75,9 @@ class ToolCallDescriberTest {
             id = null,
             tool = "test-tool",
             content = "Test result content",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolResult(nullIdToolResult)
         val expectedContent =
             "{\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
@@ -93,10 +92,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = "{}",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolCall(emptyContentToolCall)
         val expectedContent = "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":{}}"
 
@@ -110,10 +108,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = "",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolResult(emptyContentToolResult)
         val expectedContent = "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"\"}"
 
@@ -127,10 +124,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = """{"param": "value with \"quotes\" and \\ backslashes"}""",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolCall(specialCharsToolCall)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value with \\\"quotes\\\" and \\\\ backslashes\"}}"
@@ -145,10 +141,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = "Result with \"quotes\" and \\ backslashes",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolResult(specialCharsToolResult)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"Result with \\\"quotes\\\" and \\\\ backslashes\"}"
@@ -163,14 +158,32 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = "{invalid json",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
+        val result = describer.describeToolCall(invalidJsonToolCall)
+        val expectedContent =
+            "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":\"{invalid json\"}"
 
-        assertFailsWith<Exception> {
-            describer.describeToolCall(invalidJsonToolCall)
-        }
+        assertEquals(expectedContent, result.content)
+        assertEquals(invalidJsonToolCall.metaInfo, result.metaInfo)
+    }
+
+    @Test
+    fun testDescribeToolResultWithInvalidJsonContent() {
+        val invalidJsonToolCall = Message.Tool.Result(
+            id = "test-call-id",
+            tool = "test-tool",
+            content = "{invalid json",
+            metaInfo = RequestMetaInfo.create(testClock),
+        )
+
+        val result = describer.describeToolResult(invalidJsonToolCall)
+        val expectedContent =
+            "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"{invalid json\"}"
+
+        assertEquals(expectedContent, result.content)
+        assertEquals(invalidJsonToolCall.metaInfo, result.metaInfo)
     }
 
     @Test
@@ -179,10 +192,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "",
             content = """{"param": "value"}""",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolCall(emptyToolNameCall)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"\",\"tool_args\":{\"param\":\"value\"}}"
@@ -197,10 +209,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "",
             content = "Test result content",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolResult(emptyToolNameResult)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"\",\"tool_result\":\"Test result content\"}"
@@ -215,14 +226,14 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = "null",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
+        val result = describer.describeToolCall(nullContentToolCall)
+        val expectedContent = "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":null}"
 
-        assertFailsWith<IllegalArgumentException> {
-            describer.describeToolCall(nullContentToolCall)
-        }
+        assertEquals(expectedContent, result.content)
+        assertEquals(result.metaInfo, result.metaInfo)
     }
 
     @Test
@@ -231,10 +242,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = "null",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolResult(nullContentToolResult)
         val expectedContent = "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"null\"}"
 
@@ -257,10 +267,9 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = largeContent,
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
         val result = describer.describeToolCall(largeContentToolCall)
 
         assertTrue(result.content.isNotEmpty())
@@ -273,13 +282,31 @@ class ToolCallDescriberTest {
             id = "test-call-id",
             tool = "test-tool",
             content = "This is not JSON",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val describer = ToolCallDescriber.JSON
+        val result = describer.describeToolCall(nonJsonToolCall)
+        val expectedContent =
+            "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":\"This is not JSON\"}"
 
-        assertFailsWith<Exception> {
-            describer.describeToolCall(nonJsonToolCall)
-        }
+        assertEquals(expectedContent, result.content)
+        assertEquals(nonJsonToolCall.metaInfo, result.metaInfo)
+    }
+
+    @Test
+    fun testDescribeResultCallWithNonJsonContent() {
+        val nonJsonToolCall = Message.Tool.Result(
+            id = "test-call-id",
+            tool = "test-tool",
+            content = "This is not JSON",
+            metaInfo = RequestMetaInfo.create(testClock),
+        )
+
+        val result = describer.describeToolResult(nonJsonToolCall)
+        val expectedContent =
+            "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"This is not JSON\"}"
+
+        assertEquals(expectedContent, result.content)
+        assertEquals(nonJsonToolCall.metaInfo, result.metaInfo)
     }
 }

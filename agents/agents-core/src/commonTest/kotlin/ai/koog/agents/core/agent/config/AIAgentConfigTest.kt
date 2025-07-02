@@ -2,32 +2,31 @@ package ai.koog.agents.core.agent.config
 
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 class AIAgentConfigTest {
+    private companion object {
+        private val testModel = OpenAIModels.Chat.GPT4o
+        private const val MAX_ITERATIONS = 5
+    }
 
     @Test
     fun testConstructorWithAllParameters() {
         val testPrompt = prompt("test-id") {
             system("Test system prompt")
         }
-        val testModel = OpenAIModels.Chat.GPT4o
-        val testMaxIterations = 5
         val testStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
 
         val config = AIAgentConfig(
             prompt = testPrompt,
             model = testModel,
-            maxAgentIterations = testMaxIterations,
-            missingToolsConversionStrategy = testStrategy
+            maxAgentIterations = MAX_ITERATIONS,
+            missingToolsConversionStrategy = testStrategy,
         )
 
         assertEquals(testPrompt, config.prompt)
         assertEquals(testModel, config.model)
-        assertEquals(testMaxIterations, config.maxAgentIterations)
+        assertEquals(MAX_ITERATIONS, config.maxAgentIterations)
         assertEquals(testStrategy, config.missingToolsConversionStrategy)
     }
 
@@ -36,44 +35,36 @@ class AIAgentConfigTest {
         val testPrompt = prompt("test-id") {
             system("Test system prompt")
         }
-        val testModel = OpenAIModels.Chat.GPT4o
-        val testMaxIterations = 5
-
         val config = AIAgentConfig(
             prompt = testPrompt,
             model = testModel,
-            maxAgentIterations = testMaxIterations
+            maxAgentIterations = MAX_ITERATIONS,
         )
 
         assertEquals(testPrompt, config.prompt)
         assertEquals(testModel, config.model)
-        assertEquals(testMaxIterations, config.maxAgentIterations)
+        assertEquals(MAX_ITERATIONS, config.maxAgentIterations)
         assertTrue(config.missingToolsConversionStrategy is MissingToolsConversionStrategy.Missing)
     }
 
     @Test
     fun testWithSystemPromptAllParameters() {
         val testPromptContent = "Test system prompt"
-        val testModel = OpenAIModels.Chat.GPT4o
         val testId = "custom-id"
-        val testMaxIterations = 10
 
         val config = AIAgentConfig.withSystemPrompt(
             prompt = testPromptContent,
             llm = testModel,
             id = testId,
-            maxAgentIterations = testMaxIterations
+            maxAgentIterations = MAX_ITERATIONS,
         )
+        val systemMessage = config.prompt.messages.firstOrNull()
 
         assertEquals(testModel, config.model)
-        assertEquals(testMaxIterations, config.maxAgentIterations)
+        assertEquals(MAX_ITERATIONS, config.maxAgentIterations)
         assertTrue(config.missingToolsConversionStrategy is MissingToolsConversionStrategy.Missing)
-
-        // Verify prompt properties
         assertEquals(testId, config.prompt.id)
-        val systemMessage = config.prompt.messages.firstOrNull()
-        assertNotNull(systemMessage)
-        assertEquals(testPromptContent, systemMessage.content)
+        assertEquals(testPromptContent, systemMessage?.content)
     }
 
     @Test
@@ -88,7 +79,6 @@ class AIAgentConfigTest {
         assertEquals(3, config.maxAgentIterations)
         assertTrue(config.missingToolsConversionStrategy is MissingToolsConversionStrategy.Missing)
 
-        // Verify prompt properties
         assertEquals("code-engine-agents", config.prompt.id)
         val systemMessage = config.prompt.messages.firstOrNull()
         assertNotNull(systemMessage)
@@ -96,13 +86,7 @@ class AIAgentConfigTest {
     }
 
     @Test
-    fun testConfigImplementsInterface() {
-        val config = AIAgentConfig.withSystemPrompt("Test prompt")
-        assertTrue(config is AIAgentConfigBase)
-    }
-
-    @Test
-    fun testEdgeCaseEmptyPrompt() {
+    fun testEmptyPrompt() {
         val config = AIAgentConfig.withSystemPrompt("")
         val systemMessage = config.prompt.messages.firstOrNull()
         assertNotNull(systemMessage)
@@ -110,20 +94,22 @@ class AIAgentConfigTest {
     }
 
     @Test
-    fun testEdgeCaseZeroMaxIterations() {
-        val config = AIAgentConfig.withSystemPrompt(
-            prompt = "Test prompt",
-            maxAgentIterations = 0
-        )
-        assertEquals(0, config.maxAgentIterations)
+    fun testZeroMaxIterations() {
+        assertFailsWith<IllegalArgumentException> {
+            AIAgentConfig.withSystemPrompt(
+                prompt = "Test prompt",
+                maxAgentIterations = 0,
+            )
+        }
     }
 
     @Test
-    fun testEdgeCaseNegativeMaxIterations() {
-        val config = AIAgentConfig.withSystemPrompt(
-            prompt = "Test prompt",
-            maxAgentIterations = -1
-        )
-        assertEquals(-1, config.maxAgentIterations)
+    fun testNegativeMaxIterations() {
+        assertFailsWith<IllegalArgumentException> {
+            AIAgentConfig.withSystemPrompt(
+                prompt = "Test prompt",
+                maxAgentIterations = -1,
+            )
+        }
     }
 }

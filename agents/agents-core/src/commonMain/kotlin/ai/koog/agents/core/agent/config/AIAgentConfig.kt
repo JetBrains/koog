@@ -24,7 +24,7 @@ public class AIAgentConfig(
     override val missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
         ToolCallDescriber.JSON
     )
-): AIAgentConfigBase {
+) : AIAgentConfigBase {
 
     /**
      * Companion object for providing utility methods related to `AIAgentConfig`.
@@ -48,13 +48,16 @@ public class AIAgentConfig(
             llm: LLModel = OpenAIModels.Chat.GPT4o,
             id: String = "code-engine-agents",
             maxAgentIterations: Int = 3,
-        ): AIAgentConfigBase =
-            AIAgentConfig(
+        ): AIAgentConfigBase {
+            require(maxAgentIterations > 0) { "maxAgentIterations must be greater than 0" }
+
+            return AIAgentConfig(
                 prompt = prompt(id) {
                     system(prompt)
                 },
                 model = llm,
                 maxAgentIterations = maxAgentIterations
             )
+        }
     }
 }
