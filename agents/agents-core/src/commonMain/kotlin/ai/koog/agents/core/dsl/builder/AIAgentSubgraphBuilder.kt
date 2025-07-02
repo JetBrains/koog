@@ -19,6 +19,7 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param Input The input type expected by the starting node of the subgraph.
  * @param Output The output type produced by the finishing node of the subgraph.
  */
+@AIAgentBuilderDslMarker
 public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     /**
      * Represents the starting node of the subgraph in the AI agent's strategy graph.

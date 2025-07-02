@@ -2,6 +2,7 @@ package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
+import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -186,6 +187,7 @@ public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraph
  * @property defineTask A block which defines the task. It may just return a system prompt for the task,
  * but may also alter agent context, prompt, storage, etc.
  */
+@AIAgentBuilderDslMarker
 public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
@@ -269,6 +271,7 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
  * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
  */
 @Suppress("unused")
+@AIAgentBuilderDslMarker
 public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
@@ -287,6 +290,7 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
  * [subgraphWithTask] with [StringSubgraphResult] result.
  */
 @Suppress("unused")
+@AIAgentBuilderDslMarker
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
@@ -314,6 +318,7 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  * @return A delegate representing the constructed subgraph with task execution capabilities.
  */
 @Suppress("unused")
+@AIAgentBuilderDslMarker
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
@@ -331,6 +336,7 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  * It verifies if the task was performed correctly or not, and describes the problems if any.
  */
 @Suppress("unused")
+@AIAgentBuilderDslMarker
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
@@ -361,6 +367,7 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
  *         as a verified subgraph result `VerifiedSubgraphResult`.
  */
 @Suppress("unused")
+@AIAgentBuilderDslMarker
 public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
