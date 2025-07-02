@@ -7,6 +7,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant.Companion.fromEpochMilliseconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ToolCallDescriberTest {
@@ -161,12 +162,9 @@ class ToolCallDescriberTest {
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val result = describer.describeToolCall(invalidJsonToolCall)
-        val expectedContent =
-            "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":\"{invalid json\"}"
-
-        assertEquals(expectedContent, result.content)
-        assertEquals(invalidJsonToolCall.metaInfo, result.metaInfo)
+        assertFailsWith<Exception> {
+            describer.describeToolCall(invalidJsonToolCall)
+        }
     }
 
     @Test
@@ -229,11 +227,9 @@ class ToolCallDescriberTest {
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val result = describer.describeToolCall(nullContentToolCall)
-        val expectedContent = "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":null}"
-
-        assertEquals(expectedContent, result.content)
-        assertEquals(result.metaInfo, result.metaInfo)
+        assertFailsWith<IllegalArgumentException> {
+            describer.describeToolCall(nullContentToolCall)
+        }
     }
 
     @Test
@@ -285,12 +281,9 @@ class ToolCallDescriberTest {
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
-        val result = describer.describeToolCall(nonJsonToolCall)
-        val expectedContent =
-            "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":\"This is not JSON\"}"
-
-        assertEquals(expectedContent, result.content)
-        assertEquals(nonJsonToolCall.metaInfo, result.metaInfo)
+        assertFailsWith<Exception> {
+            describer.describeToolCall(nonJsonToolCall)
+        }
     }
 
     @Test
