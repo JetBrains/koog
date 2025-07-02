@@ -20,46 +20,46 @@ class MissingToolsConversionStrategyTest {
         private val testToolDescriptor = ToolDescriptor(
             name = "test-tool",
             description = "Test tool description",
-            requiredParameters = emptyList()
+            requiredParameters = emptyList(),
         )
 
         private val anotherToolDescriptor = ToolDescriptor(
             name = "another-tool",
             description = "Another test tool description",
-            requiredParameters = emptyList()
+            requiredParameters = emptyList(),
         )
 
         private val testToolCall = Message.Tool.Call(
             id = "test-call-id",
             tool = "test-tool",
             content = """{"param": "value"}""",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
         private val anotherToolCall = Message.Tool.Call(
             id = "another-call-id",
             tool = "another-tool",
             content = """{"param": "another-value"}""",
-            metaInfo = ResponseMetaInfo.create(testClock)
+            metaInfo = ResponseMetaInfo.create(testClock),
         )
 
         private val testToolResult = Message.Tool.Result(
             id = "test-call-id",
             tool = "test-tool",
             content = "Test result content",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
 
         private val anotherToolResult = Message.Tool.Result(
             id = "another-call-id",
             tool = "another-tool",
             content = "Another test result content",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
 
         private val regularMessage = Message.User(
             content = "Regular message content",
-            metaInfo = RequestMetaInfo.create(testClock)
+            metaInfo = RequestMetaInfo.create(testClock),
         )
     }
 
