@@ -1,6 +1,11 @@
 package ai.koog.integration.tests
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -10,6 +15,7 @@ import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -20,6 +26,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -254,6 +261,52 @@ class SimpleAgentIntegrationTest {
                 "Result should not indicate inability to process"
             )
             assertFalse(resultLowerCase.contains("cannot process"), "Result should not indicate inability to process")
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testRequestLLMWithoutTools(model: LLModel) = runTest(timeout = 300.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val executor = when (model.provider) {
+            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+        }
+
+        val toolRegistry = ToolRegistry {
+            tool(CalculatorTool)
+        }
+
+        val customStrategy = strategy("test-without-tools") {
+            val callLLM by nodeLLMRequest(name = "callLLM", allowToolCalls = false)
+            edge(nodeStart forwardTo callLLM)
+            edge(callLLM forwardTo nodeFinish onAssistantMessage { true })
+        }
+
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = customStrategy,
+            agentConfig = AIAgentConfig(
+                prompt("test-without-tools") {},
+                model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = toolRegistry
+        )
+
+        withRetry(times = 3, testName = "integration_testRequestLLMWithoutTools[${model.id}]") {
+            val result = agent.run("What is 123 + 456?")
+
+            Assertions.assertNotNull(result, "Result should not be null")
+            assertTrue(result.isNotEmpty(), "Result should not be empty")
+            assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
+
+            assertTrue(
+                result.contains("579") || result.contains("123 + 456 = 579"),
+                "Result should contain the correct answer (579)"
+            )
         }
     }
 }
