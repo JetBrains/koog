@@ -101,7 +101,6 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
                 concept = concept,
                 subject = subject,
                 scope = scopesProfile.getScope(scope) ?: return@forEach,
-                preserveQuestionsInLLMChat = true
             )
         }
     }

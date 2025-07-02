@@ -8,6 +8,7 @@ import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
@@ -17,8 +18,11 @@ import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.Serializable
 
 /**
  * Memory implementation for AI agents that provides persistent storage and retrieval of facts.
@@ -277,16 +281,14 @@ public class AgentMemory(
      * @param concept The concept to extract facts about
      * @param subject The subject categorization for the facts (e.g., User, Project)
      * @param scope The visibility scope for the facts (e.g., Agent, Feature, Product)
-     * @param preserveQuestionsInLLMChat If true, keeps the fact extraction messages in the chat history
      */
     public suspend fun saveFactsFromHistory(
         concept: Concept,
         subject: MemorySubject,
         scope: MemoryScope,
-        preserveQuestionsInLLMChat: Boolean = false
     ) {
         llm.writeSession {
-            val facts = retrieveFactsFromHistory(concept, preserveQuestionsInLLMChat)
+            val facts = retrieveFactsFromHistory(concept)
 
             // Save facts to memory
             agentMemory.save(facts, subject, scope)
@@ -459,13 +461,23 @@ public class AgentMemory(
  * The function handles both single and multiple facts based on the concept's factType.
  *
  * @param concept The concept to extract facts about
- * @param preserveQuestionsInLLMChat If true, keeps the fact extraction messages in the chat history
  * @return A Fact object (either SingleFact or MultipleFacts) containing the extracted information
  */
 internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
-    concept: Concept,
-    preserveQuestionsInLLMChat: Boolean
+    concept: Concept
 ): Fact {
+    @Serializable
+    @LLMDescription("Fact text")
+    data class Fact(
+        val fact: String
+    )
+
+    @Serializable
+    @LLMDescription("Facts list")
+    data class FactList(
+        val facts: List<Fact>
+    )
+
     // Add a message asking to retrieve facts about the concept
     val promptForCompression = when (concept.factType) {
         FactType.SINGLE -> MemoryPrompts.singleFactPrompt(concept)
@@ -475,54 +487,52 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     // remove tailing tool calls as we didn't provide any result for them
     dropTrailingToolCalls()
 
-    rewritePrompt { oldPrompt ->
+    val oldPrompt = this.prompt
+
+    rewritePrompt {
         // Combine all history into one message with XML tags
         // to prevent LLM from continuing answering in a tool_call -> tool_result pattern
         val combinedMessage = buildString {
+            append("<${MemoryPrompts.historyWrapperTag}>\n")
             oldPrompt.messages.forEach { message ->
                 when (message) {
-                    is Message.System -> append("<system>\n${message.content}\n</system>\n")
+                    is Message.System -> append("<user>\n${message.content}\n</user>\n")
                     is Message.User -> append("<user>\n${message.content}\n</user>\n")
                     is Message.Assistant -> append("<assistant>\n${message.content}\n</assistant>\n")
-                    is Message.Tool.Call -> append("<tool_call>\n${message.content}\n</tool_call>\n")
-                    is Message.Tool.Result -> append("<tool_result>\n${message.content}\n</tool_result>\n")
+                    is Message.Tool.Call -> append("<tool_call tool=${message.tool}>\n${message.content}\n</tool_call>\n")
+                    is Message.Tool.Result -> append("<tool_result tool=${message.tool}>\n${message.content}\n</tool_result>\n")
                 }
             }
+            append("</${MemoryPrompts.historyWrapperTag}>\n")
         }
 
         // Put Compression prompt as a System instruction
         val newPrompt = Prompt.build(id = oldPrompt.id) {
-            system { promptForCompression }
-            user { combinedMessage }
+            system (promptForCompression)
+            user (combinedMessage)
         }
 
         return@rewritePrompt newPrompt
     }
 
-    val response = requestLLMWithoutTools()
-
     val timestamp = getCurrentTimestamp()
-    // Parse the response into facts
+
     val facts = when (concept.factType) {
         FactType.SINGLE -> {
-            SingleFact(concept = concept, value = response.content.trim(), timestamp = timestamp)
+            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<Fact>())
+            SingleFact(concept = concept, value = response.getOrNull()?.structure?.fact ?: "No facts extracted", timestamp = timestamp)
         }
 
         FactType.MULTIPLE -> {
-            val factsList = response.content
-                .split("\n")
-                .filter { it.isNotBlank() }
-                .map { it.trim().removePrefix("-").trim() }
-            MultipleFacts(concept = concept, values = factsList, timestamp = timestamp)
+            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactList>())
+            val factsList = response.getOrNull()?.structure?.facts ?: emptyList()
+            MultipleFacts(concept = concept, values = factsList.map { it.fact }, timestamp = timestamp)
         }
     }
 
-    // Remove the fact extraction messages if not preserving them
-    if (!preserveQuestionsInLLMChat) {
-        rewritePrompt { oldPrompt ->
-            oldPrompt.withMessages { it.dropLast(2) }
-        }
-    }
+    // Restore the original prompt
+    rewritePrompt { oldPrompt }
+
     return facts
 }
 
