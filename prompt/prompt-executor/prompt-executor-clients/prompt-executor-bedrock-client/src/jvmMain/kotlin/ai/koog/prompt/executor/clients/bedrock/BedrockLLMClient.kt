@@ -46,11 +46,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * @property enableLogging Whether to enable detailed AWS SDK logging.
  */
 public class BedrockClientSettings(
-    public val region: String = "us-east-1",
-    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-    public val endpointUrl: String? = null,
-    public val maxRetries: Int = 3,
-    public val enableLogging: Boolean = false
+    internal val region: String = "us-east-1",
+    internal val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    internal val endpointUrl: String? = null,
+    internal val maxRetries: Int = 3,
+    internal val enableLogging: Boolean = false
 )
 
 /**
@@ -137,26 +137,14 @@ public class BedrockLLMClient(
         }
 
         val requestBody = when (modelFamily) {
-            is BedrockModelFamilies.AI21Jamba ->
-                if (model.id.startsWith("ai21.jamba")) {
-                    json.encodeToString(
-                        JambaRequest.serializer(),
-                        BedrockAI21JambaSerialization.createJambaRequest(prompt, model, tools)
-                    )
-                } else {
-                    // AI21 Jurassic
-                    throw IllegalArgumentException("Model ${model.id} not supported in koog")
-                }
-            is BedrockModelFamilies.AmazonNova ->
-                if (model.id.startsWith("amazon.nova")) {
-                    json.encodeToString(
-                        NovaRequest.serializer(),
-                        BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
-                    )
-                } else {
-                    // Amazon Titan
-                    throw IllegalArgumentException("Model ${model.id} not supported in koog")
-                }
+            is BedrockModelFamilies.AI21Jamba -> json.encodeToString(
+                JambaRequest.serializer(),
+                BedrockAI21JambaSerialization.createJambaRequest(prompt, model, tools)
+            )
+            is BedrockModelFamilies.AmazonNova -> json.encodeToString(
+                NovaRequest.serializer(),
+                BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
+            )
             is BedrockModelFamilies.AnthropicClaude -> json.encodeToString(
                 AnthropicMessageRequest.serializer(),
                 BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
@@ -188,14 +176,7 @@ public class BedrockLLMClient(
 
             return@withContext when (modelFamily) {
                 is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaResponse(responseBodyString, clock)
-                is BedrockModelFamilies.AmazonNova -> {
-                    if (model.id.startsWith("amazon.nova")) {
-                        BedrockAmazonNovaSerialization.parseNovaResponse(responseBodyString, clock)
-                    } else {
-                        // Amazon Titan
-                        throw IllegalArgumentException("Model ${model.id} not supported in koog")
-                    }
-                }
+                is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaResponse(responseBodyString, clock)
                 is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseBodyString, clock)
                 is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaResponse(responseBodyString, clock)
             }
@@ -216,17 +197,10 @@ public class BedrockLLMClient(
                 JambaRequest.serializer(),
                 BedrockAI21JambaSerialization.createJambaRequest(prompt, model, emptyList())
             )
-            is BedrockModelFamilies.AmazonNova -> {
-                if (model.id.startsWith("amazon.nova")) {
-                    json.encodeToString(
-                        NovaRequest.serializer(),
-                        BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
-                    )
-                } else {
-                    // Amazon Titan
-                    throw IllegalArgumentException("Model ${model.id} not supported in koog")
-                }
-            }
+            is BedrockModelFamilies.AmazonNova -> json.encodeToString(
+                NovaRequest.serializer(),
+                BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
+            )
             is BedrockModelFamilies.AnthropicClaude -> json.encodeToString(
                 AnthropicMessageRequest.serializer(),
                 BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
@@ -271,20 +245,13 @@ public class BedrockLLMClient(
 
                 when (modelFamily) {
                     is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJsonString)
-                    is BedrockModelFamilies.AmazonNova -> {
-                        if (model.id.startsWith("amazon.nova")) {
-                            BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJsonString)
-                        } else {
-                            // Amazon Titan
-                            throw IllegalArgumentException("Model ${model.id} not supported in koog")
-                        }
-                    }
+                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJsonString)
                     is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJsonString)
                     is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
                 }
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to parse Bedrock stream chunk: $chunkJsonString" }
-                ""
+                throw e
             }
         }
     }

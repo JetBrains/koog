@@ -14,4 +14,4 @@ package ai.koog.prompt.executor.clients
     AnnotationTarget.PROPERTY_SETTER,
     AnnotationTarget.PROPERTY_SETTER
 )
-public annotation class InternalAPI
+public annotation class InternalLLMClientApi

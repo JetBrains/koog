@@ -1,13 +1,13 @@
 package ai.koog.prompt.executor.clients.anthropic
 
-import ai.koog.prompt.executor.clients.InternalAPI
+import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicMessageRequest(
     val model: String,
@@ -20,21 +20,21 @@ public data class AnthropicMessageRequest(
     val toolChoice: AnthropicToolChoice? = null,
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicMessage(
     val role: String,
     val content: List<AnthropicContent>
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class SystemAnthropicMessage(
     val text: String,
     @EncodeDefault(ALWAYS) val type: String = "text"
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public sealed class AnthropicContent {
     @Serializable
@@ -65,7 +65,7 @@ public sealed class AnthropicContent {
     ) : AnthropicContent()
 }
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public sealed interface ImageSource {
     @Serializable
@@ -77,7 +77,7 @@ public sealed interface ImageSource {
     public data class Base64(val data: String, val mediaType: String) : ImageSource
 }
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public sealed interface DocumentSource {
     @Serializable
@@ -93,7 +93,7 @@ public sealed interface DocumentSource {
     public data class PlainText(val data: String, val mediaType: String) : DocumentSource
 }
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicTool(
     val name: String,
@@ -101,7 +101,7 @@ public data class AnthropicTool(
     val inputSchema: AnthropicToolSchema
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicToolSchema(
     val type: String = "object",
@@ -109,7 +109,7 @@ public data class AnthropicToolSchema(
     val required: List<String>
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicResponse(
     val id: String,
@@ -121,7 +121,7 @@ public data class AnthropicResponse(
     val usage: AnthropicUsage? = null
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public sealed class AnthropicResponseContent {
     @Serializable
@@ -137,14 +137,14 @@ public sealed class AnthropicResponseContent {
     ) : AnthropicResponseContent()
 }
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicUsage(
     val inputTokens: Int,
     val outputTokens: Int
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamResponse(
     val type: String,
@@ -152,7 +152,7 @@ public data class AnthropicStreamResponse(
     val message: AnthropicResponse? = null
 )
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamDelta(
     val type: String,
@@ -161,7 +161,7 @@ public data class AnthropicStreamDelta(
 )
 
 
-@InternalAPI
+@InternalLLMClientApi
 @Serializable
 public sealed interface AnthropicToolChoice {
     @Serializable

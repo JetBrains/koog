@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val switch = Switch()
 
     val toolRegistry = ToolRegistry {
