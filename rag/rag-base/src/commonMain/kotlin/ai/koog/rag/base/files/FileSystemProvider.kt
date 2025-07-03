@@ -238,10 +238,11 @@ public object FileSystemProvider {
         /**
          * Deletes a file or directory from [parent] using [name].
          * If the item is a directory, it will be deleted recursively.
-         * It doesn't throw any error if a file/directory doesn't exist.
+         * It doesn't throw any errors if a file/directory doesn't exist.
          *
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
+         * @throws AccessDeniedException if there are not enough permissions to perform operation.
          */
         public suspend fun delete(parent: Path, name: String)
     }
