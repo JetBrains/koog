@@ -56,7 +56,7 @@ Please note that the single-run agent doesn't have any tools by default.
 
 ### Built-in Tools
 
-The SimpleAPI provides the following built-in tools:
+Koog framework provides the following built-in tools:
 
 1. **SayToUser**: Allows the agent to output a message to the user
    - Prints the agent's message to the console with "Agent says: " prefix
@@ -70,6 +70,10 @@ The SimpleAPI provides the following built-in tools:
 3. **ExitTool**: Allows the agent to end the conversation
    - Used in chat agents to terminate the session
    - Tool name: `__exit__`
+
+4. **TimeTool**: Allows the agent to get the current time
+   - Returns the current date and time at the given timezone or at the system default timezone
+   - Tool name: `__time__`
 
 ### Custom Tools
 
