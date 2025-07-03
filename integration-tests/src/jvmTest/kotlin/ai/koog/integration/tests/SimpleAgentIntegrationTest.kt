@@ -26,7 +26,6 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -299,12 +298,12 @@ class SimpleAgentIntegrationTest {
         withRetry(times = 3, testName = "integration_testRequestLLMWithoutTools[${model.id}]") {
             val result = agent.run("What is 123 + 456?")
 
-            Assertions.assertNotNull(result, "Result should not be null")
+            assertNotNull(result, "Result should not be null")
             assertTrue(result.isNotEmpty(), "Result should not be empty")
             assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
 
             assertTrue(
-                result.contains("579") || result.contains("123 + 456 = 579"),
+                result.contains("579"),
                 "Result should contain the correct answer (579)"
             )
         }
