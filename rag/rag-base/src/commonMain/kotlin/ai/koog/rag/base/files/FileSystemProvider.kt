@@ -177,13 +177,16 @@ public object FileSystemProvider {
      * Provides a read-only interface that combines the functionalities of [FileSystemProvider.Serialization], [FileSystemProvider.Select],
      * and [FileSystemProvider.Read].
      *
-     * It provides operations for path serialization,
-     * structure navigation, and content reading in a read-only manner.
+     * It provides operations for path serialization, structure navigation, and content reading
+     * in a read-only manner without modifying the filesystem.
      */
     public interface ReadOnly<Path> : Serialization<Path>, Select<Path>, Read<Path> {}
 
     /**
      * Provides operations for creating, moving, writing, and deleting files or directories.
+     *
+     * This interface focuses on write operations and complements the read operations
+     * provided by other interfaces.
      */
     public interface Write<Path> : Serialization<Path> {
         /**
@@ -237,18 +240,22 @@ public object FileSystemProvider {
 
         /**
          * Deletes a file or directory from [parent] using [name].
-         * If the item is a directory, it will be deleted recursively.
-         * It doesn't throw any errors if a file/directory doesn't exist.
+         * If the item is a directory, it will be deleted recursively with all its contents.
+         * This operation is idempotent - it doesn't throw any errors if a file/directory doesn't exist.
          *
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
          * @throws AccessDeniedException if there are not enough permissions to perform operation.
+         * @throws IOException if an error occurs during deletion (e.g., file is locked).
          */
         public suspend fun delete(parent: Path, name: String)
     }
 
     /**
      * Provides a read-write interface that combines the functionalities of [FileSystemProvider.ReadOnly] and [FileSystemProvider.Write] for full filesystem access.
+     *
+     * This is the most comprehensive interface, offering complete filesystem operations
+     * including reading, writing, and path manipulation.
      */
     public interface ReadWrite<Path> : ReadOnly<Path>, Write<Path>
 }
