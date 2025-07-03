@@ -111,7 +111,7 @@ class AIAgentIntegrationTest {
             model: LLModel,
             runMode: ToolCalls,
             toolRegistry: ToolRegistry = twoToolsRegistry,
-            eventHandlerConfig: EventHandlerConfig.() -> Unit
+            eventHandlerConfig: EventHandlerConfig.() -> Unit,
         ) = AIAgent(
             promptExecutor = getExecutor(model),
             strategy = singleRunStrategy(runMode),
@@ -126,10 +126,10 @@ class AIAgentIntegrationTest {
                     system("You are a helpful assistant.")
                 },
                 model = model,
-                maxAgentIterations = 10
+                maxAgentIterations = 10,
             ),
             toolRegistry = toolRegistry,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
         )
     }
 
@@ -166,7 +166,7 @@ class AIAgentIntegrationTest {
                             id = call.id,
                             tool = call.tool,
                             content = call.content,
-                            metaInfo = call.metaInfo
+                            metaInfo = call.metaInfo,
                         )
                     )
                 }
@@ -176,7 +176,7 @@ class AIAgentIntegrationTest {
                         id = input.id,
                         tool = input.tool,
                         content = input.content,
-                        metaInfo = input.metaInfo
+                        metaInfo = input.metaInfo,
                     )
                 )
             }
@@ -219,7 +219,7 @@ class AIAgentIntegrationTest {
         val id: String?,
         val tool: String,
         val content: String,
-        val metaInfo: ResponseMetaInfo
+        val metaInfo: ResponseMetaInfo,
     )
 
     val actualToolCalls = mutableListOf<String>()
@@ -233,6 +233,45 @@ class AIAgentIntegrationTest {
         results.clear()
         parallelToolCalls.clear()
         singleToolCalls.clear()
+    }
+
+    private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runBlocking {
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        /* Some models are not calling tools in parallel:
+        * see https://youtrack.jetbrains.com/issue/KG-115
+        */
+
+        withRetry {
+            val multiToolAgent =
+                getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
+            multiToolAgent.run(twoToolsPrompt)
+
+            assertTrue(
+                parallelToolCalls.size == 2,
+                "There should be exactly 2 tool calls in a Multiple tool calls scenario"
+            )
+            assertTrue(
+                singleToolCalls.isEmpty(),
+                "There should be no single tool calls in a Multiple tool calls scenario"
+            )
+
+            val firstCall = parallelToolCalls.first()
+            val secondCall = parallelToolCalls.last()
+
+            if (runMode == ToolCalls.PARALLEL) {
+                assertTrue(
+                    firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
+                            firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
+                            firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
+                            firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
+                    "At least one of the metadata should be equal for parallel tool calls"
+                )
+            }
+
+            assertTrue(firstCall.tool == CalculatorTool.name, "First tool call should be ${CalculatorTool.name}")
+            assertTrue(secondCall.tool == DelayTool.name, "Second tool call should be ${DelayTool.name}")
+        }
     }
 
     @ParameterizedTest
@@ -287,7 +326,7 @@ class AIAgentIntegrationTest {
                 temperature = 1.0,
                 toolRegistry = toolRegistry,
                 maxIterations = 10,
-                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
             )
 
             agent.run("How much is 3 times 5?")
@@ -330,7 +369,7 @@ class AIAgentIntegrationTest {
                 llmModel = model,
                 temperature = 0.7,
                 maxIterations = 10,
-                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
             )
 
             agent.run(promptWithImage)
@@ -355,7 +394,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testRequestLLMWithoutTools(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_testRequestLLMWithoutTools(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val executor = when (model.provider) {
@@ -380,9 +419,9 @@ class AIAgentIntegrationTest {
             agentConfig = AIAgentConfig(
                 prompt("test-without-tools") {},
                 model,
-                maxAgentIterations = 10
+                maxAgentIterations = 10,
             ),
-            toolRegistry = toolRegistry
+            toolRegistry = toolRegistry,
         )
 
         withRetry(times = 3, testName = "integration_testRequestLLMWithoutTools[${model.id}]") {
@@ -399,60 +438,15 @@ class AIAgentIntegrationTest {
         }
     }
 
-    private fun singleRunMultipleToolsTestTemplate(model: LLModel, runMode: ToolCalls) = runBlocking {
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        /* The models that are not calling tools in parallel:
-        OpenAI:
-        - O1
-        - O3
-        - O3Mini
-        - O4Mini
-
-        Anthropic:
-        - every model before Claude 4.0
-        */
-
-        withRetry {
-            val multiToolAgentAgent = getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
-            multiToolAgentAgent.run(twoToolsPrompt)
-
-            assertTrue(
-                parallelToolCalls.size == 2,
-                "There should be at least 2 tool calls in a Multiple tool calls scenario"
-            )
-            assertTrue(
-                singleToolCalls.isEmpty(),
-                "There should be no single tool calls in a Multiple tool calls scenario"
-            )
-
-            val firstCall = parallelToolCalls.first()
-            val secondCall = parallelToolCalls.last()
-
-            if (runMode == ToolCalls.PARALLEL) {
-                assertTrue(
-                    firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
-                            firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
-                            firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
-                            firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
-                    "At least one of the metadata should be equal for parallel tool calls"
-                )
-            }
-
-            assertTrue(firstCall.tool == CalculatorTool.name, "First tool call should be ${CalculatorTool.name}")
-            assertTrue(secondCall.tool == DelayTool.name, "Second tool call should be ${DelayTool.name}")
-        }
-    }
-
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentSingleRunWithSequentialTools(model: LLModel) = runTest(timeout = 300.seconds) {
-        singleRunMultipleToolsTestTemplate(model, ToolCalls.SEQUENTIAL)
+    fun integration_AIAgentSingleRunWithSequentialTools(model: LLModel) = runTest(timeout = 120.seconds) {
+        runMultipleToolsTest(model, ToolCalls.SEQUENTIAL)
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels4_0", "googleModels")
-    fun integration_AIAgentSingleRunWithParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_AIAgentSingleRunWithParallelTools(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.id != OpenAIModels.Reasoning.O1.id, "The model fails to call tools in parallel, see KG-115")
         assumeTrue(model.id != OpenAIModels.Reasoning.O3.id, "The model fails to call tools in parallel, see KG-115")
         assumeTrue(
@@ -464,19 +458,19 @@ class AIAgentIntegrationTest {
             "The model fails to call tools in parallel, see KG-115"
         )
 
-        singleRunMultipleToolsTestTemplate(model, ToolCalls.PARALLEL)
+        runMultipleToolsTest(model, ToolCalls.PARALLEL)
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentSingleRunNoParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_AIAgentSingleRunNoParallelTools(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         withRetry {
             val sequentialAgent = getSingleRunAgentWithRunMode(
                 model,
                 ToolCalls.SINGLE_RUN_SEQUENTIAL,
-                eventHandlerConfig = eventHandlerConfig
+                eventHandlerConfig = eventHandlerConfig,
             )
             sequentialAgent.run(twoToolsPrompt)
 
@@ -486,7 +480,7 @@ class AIAgentIntegrationTest {
             )
             assertTrue(
                 singleToolCalls.size == 2,
-                "There should be only one tool call in a Sequential single run scenario"
+                "There should be exactly 2 single tool calls in a Sequential single run scenario"
             )
             assertTrue(
                 singleToolCalls.first().tool == CalculatorTool.name,
