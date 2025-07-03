@@ -57,7 +57,6 @@ public object FileSystemProvider {
          *
          * @param path The path to examine.
          * @return The name of the file or directory.
-         * @throws IllegalArgumentException if the path is invalid.
          */
         public suspend fun name(path: Path): String
 
@@ -67,7 +66,6 @@ public object FileSystemProvider {
          *
          * @param path The path to examine.
          * @return The file extension or empty string if none exists.
-         * @throws IllegalArgumentException if the path is invalid.
          */
         public suspend fun extension(path: Path): String
     }
@@ -84,7 +82,6 @@ public object FileSystemProvider {
          * @param path The path to examine.
          * @return FileMetadata object or null if the path doesn't exist or isn't a regular file or directory.
          * @throws IOException if file/directory access fails.
-         * @throws IllegalArgumentException if the path is invalid.
          */
         public suspend fun metadata(path: Path): FileMetadata?
 
@@ -94,7 +91,6 @@ public object FileSystemProvider {
          * @param path The directory path to list.
          * @return List of paths contained in the directory, or empty list if the path doesn't exist, isn't a directory, or an error occurs.
          * @throws IOException if directory access fails.
-         * @throws IllegalArgumentException if the path is invalid.
          */
         public suspend fun list(path: Path): List<Path>
 
@@ -105,7 +101,6 @@ public object FileSystemProvider {
          * @param path The path to examine.
          * @return The parent path or null if no parent exists.
          * @throws IOException if directory access fails.
-         * @throws IllegalArgumentException if the path is invalid.
          */
         public suspend fun parent(path: Path): Path?
 
@@ -137,7 +132,6 @@ public object FileSystemProvider {
          * @param path The path to check.
          * @return true if the path exists, false otherwise.
          * @throws IOException if file/directory access fails.
-         * @throws IllegalArgumentException if the path is invalid.
          */
         public suspend fun exists(path: Path): Boolean
     }
