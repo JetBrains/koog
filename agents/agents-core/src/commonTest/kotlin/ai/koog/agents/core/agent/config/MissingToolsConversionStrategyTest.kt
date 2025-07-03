@@ -17,6 +17,9 @@ class MissingToolsConversionStrategyTest {
             override fun now() = fromEpochMilliseconds(123)
         }
 
+        private val allStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
+        private val missingStrategy = MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
+
         private val testToolDescriptor = ToolDescriptor(
             name = "test-tool",
             description = "Test tool description",
@@ -65,8 +68,7 @@ class MissingToolsConversionStrategyTest {
 
     @Test
     fun testConvertMessageWithToolCall() {
-        val strategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        val result = strategy.convertMessage(testToolCall)
+        val result = allStrategy.convertMessage(testToolCall)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
@@ -75,8 +77,7 @@ class MissingToolsConversionStrategyTest {
 
     @Test
     fun testConvertMessageWithToolResult() {
-        val strategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        val result = strategy.convertMessage(testToolResult)
+        val result = allStrategy.convertMessage(testToolResult)
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
@@ -85,8 +86,7 @@ class MissingToolsConversionStrategyTest {
 
     @Test
     fun testConvertMessageWithRegularMessage() {
-        val strategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        val result = strategy.convertMessage(regularMessage)
+        val result = allStrategy.convertMessage(regularMessage)
 
         assertEquals(regularMessage, result)
     }
@@ -102,8 +102,7 @@ class MissingToolsConversionStrategyTest {
             }
         }
 
-        val strategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        val result = strategy.convertPrompt(testPrompt, listOf(testToolDescriptor))
+        val result = allStrategy.convertPrompt(testPrompt, listOf(testToolDescriptor))
 
         val messages = result.messages
         val expectedToolCallContent =
@@ -133,8 +132,7 @@ class MissingToolsConversionStrategyTest {
         }
 
         // include only one tool
-        val strategy = MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
-        val result = strategy.convertPrompt(testPrompt, listOf(testToolDescriptor))
+        val result = missingStrategy.convertPrompt(testPrompt, listOf(testToolDescriptor))
         val messages = result.messages
 
         val expectedAnotherToolCallContent =
@@ -171,8 +169,7 @@ class MissingToolsConversionStrategyTest {
             }
         }
 
-        val strategy = MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
-        val result = strategy.convertPrompt(testPrompt, listOf(testToolDescriptor, anotherToolDescriptor))
+        val result = missingStrategy.convertPrompt(testPrompt, listOf(testToolDescriptor, anotherToolDescriptor))
 
         val messages = result.messages
         assertEquals(6, messages.size)
@@ -197,8 +194,7 @@ class MissingToolsConversionStrategyTest {
         }
 
         // empty tools
-        val strategy = MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
-        val result = strategy.convertPrompt(testPrompt, emptyList())
+        val result = missingStrategy.convertPrompt(testPrompt, emptyList())
         val messages = result.messages
 
         assertTrue(messages[2] is Message.Assistant)
@@ -210,9 +206,6 @@ class MissingToolsConversionStrategyTest {
     @Test
     fun testEmptyPrompt() {
         val emptyPrompt = prompt("empty-prompt") {}
-
-        val allStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        val missingStrategy = MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
 
         val allStrategyResult = allStrategy.convertPrompt(emptyPrompt, listOf(testToolDescriptor))
         val missingStrategyResult = missingStrategy.convertPrompt(emptyPrompt, listOf(testToolDescriptor))
@@ -230,8 +223,7 @@ class MissingToolsConversionStrategyTest {
             metaInfo = ResponseMetaInfo.create(testClock)
         )
 
-        val strategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        val result = strategy.convertMessage(nullIdToolCall)
+        val result = allStrategy.convertMessage(nullIdToolCall)
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
         assertTrue(result is Message.Assistant)
@@ -247,8 +239,7 @@ class MissingToolsConversionStrategyTest {
             metaInfo = RequestMetaInfo.create(testClock)
         )
 
-        val strategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        val result = strategy.convertMessage(nullIdToolResult)
+        val result = allStrategy.convertMessage(nullIdToolResult)
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
         assertTrue(result is Message.User)

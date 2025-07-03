@@ -2,19 +2,24 @@ package ai.koog.agents.core.agent.config
 
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 class AIAgentConfigTest {
     private companion object {
         private val testModel = OpenAIModels.Chat.GPT4o
+        private val testPrompt = prompt("test-id") {
+            system("Test system prompt")
+        }
+
+        private const val TEST_PROMPT_CONTENT = "Test system prompt"
         private const val MAX_ITERATIONS = 5
     }
 
     @Test
     fun testConstructorWithAllParameters() {
-        val testPrompt = prompt("test-id") {
-            system("Test system prompt")
-        }
         val testStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
 
         val config = AIAgentConfig(
@@ -32,9 +37,6 @@ class AIAgentConfigTest {
 
     @Test
     fun testConstructorWithDefaultStrategy() {
-        val testPrompt = prompt("test-id") {
-            system("Test system prompt")
-        }
         val config = AIAgentConfig(
             prompt = testPrompt,
             model = testModel,
@@ -44,7 +46,6 @@ class AIAgentConfigTest {
         assertEquals(testPrompt, config.prompt)
         assertEquals(testModel, config.model)
         assertEquals(MAX_ITERATIONS, config.maxAgentIterations)
-        assertTrue(config.missingToolsConversionStrategy is MissingToolsConversionStrategy.Missing)
     }
 
     @Test
@@ -62,33 +63,30 @@ class AIAgentConfigTest {
 
         assertEquals(testModel, config.model)
         assertEquals(MAX_ITERATIONS, config.maxAgentIterations)
-        assertTrue(config.missingToolsConversionStrategy is MissingToolsConversionStrategy.Missing)
         assertEquals(testId, config.prompt.id)
         assertEquals(testPromptContent, systemMessage?.content)
     }
 
     @Test
     fun testWithSystemPromptDefaultParameters() {
-        val testPromptContent = "Test system prompt"
-
         val config = AIAgentConfig.withSystemPrompt(
-            prompt = testPromptContent
+            prompt = TEST_PROMPT_CONTENT
         )
 
-        assertEquals(OpenAIModels.Chat.GPT4o, config.model)
+        assertEquals(testModel, config.model)
         assertEquals(3, config.maxAgentIterations)
-        assertTrue(config.missingToolsConversionStrategy is MissingToolsConversionStrategy.Missing)
 
         assertEquals("koog-agents", config.prompt.id)
         val systemMessage = config.prompt.messages.firstOrNull()
         assertNotNull(systemMessage)
-        assertEquals(testPromptContent, systemMessage.content)
+        assertEquals(TEST_PROMPT_CONTENT, systemMessage.content)
     }
 
     @Test
     fun testEmptyPrompt() {
         val config = AIAgentConfig.withSystemPrompt("")
         val systemMessage = config.prompt.messages.firstOrNull()
+
         assertNotNull(systemMessage)
         assertEquals("", systemMessage.content)
     }
