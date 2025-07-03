@@ -43,14 +43,14 @@ public class AIAgentConfig(
          *
          * @param prompt The content of the system prompt to define the context and instructions for the AI agent.
          * @param llm The Large Language Model (LLM) to be used for the AI agent. Defaults to OpenAIModels.Chat.GPT4o.
-         * @param id The identifier for the agent configuration. Defaults to "code-engine-agents".
+         * @param id The identifier for the agent configuration. Defaults to "koog-agents".
          * @param maxAgentIterations The maximum number of iterations the agent can perform to avoid infinite loops. Defaults to 3.
          * @return An instance of `AIAgentConfigBase` representing the AI agent configuration with the specified parameters.
          */
         public fun withSystemPrompt(
             prompt: String,
             llm: LLModel = OpenAIModels.Chat.GPT4o,
-            id: String = "code-engine-agents",
+            id: String = "koog-agents",
             maxAgentIterations: Int = 3,
         ): AIAgentConfigBase =
             AIAgentConfig(

@@ -79,7 +79,7 @@ class AIAgentConfigTest {
         assertEquals(3, config.maxAgentIterations)
         assertTrue(config.missingToolsConversionStrategy is MissingToolsConversionStrategy.Missing)
 
-        assertEquals("code-engine-agents", config.prompt.id)
+        assertEquals("koog-agents", config.prompt.id)
         val systemMessage = config.prompt.messages.firstOrNull()
         assertNotNull(systemMessage)
         assertEquals(testPromptContent, systemMessage.content)
