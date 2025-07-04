@@ -467,6 +467,7 @@ class AIAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentSingleRunNoParallelTools(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
 
         withRetry {
             val sequentialAgent = getSingleRunAgentWithRunMode(
