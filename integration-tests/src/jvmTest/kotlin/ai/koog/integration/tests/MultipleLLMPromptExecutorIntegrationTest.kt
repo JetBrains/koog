@@ -18,7 +18,6 @@ import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.ModerationCategory
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -50,7 +49,10 @@ import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
 import kotlin.io.path.writeBytes
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
@@ -144,7 +146,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         else -> openAIClient
     }
 
-    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
+    private fun createCalculatorPrompt() = prompt("test-tools") {
         system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
         user("What is 123 + 456?")
     }
@@ -155,7 +157,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
 
 
-        val prompt = Prompt.build("test-prompt") {
+        val prompt = prompt("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
@@ -180,7 +182,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             assumeTrue(false, "There is no text response for audio models.")
         }
 
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = prompt("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
@@ -209,7 +211,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools))
 
-        val prompt = Prompt.build("test-code") {
+        val prompt = prompt("test-code") {
             system("You are a helpful coding assistant.")
             user(
                 "Write a simple Kotlin function to calculate the factorial of a number. " +
@@ -263,7 +265,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
@@ -317,7 +319,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST.")
             user("What is 123 + 456?")
         }
@@ -368,7 +370,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
@@ -404,7 +406,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             optionalParameters = emptyList()
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to calculator tools. Use the best one.")
             user("What is 123 + 456?")
         }
@@ -441,7 +443,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
             user("Pick me a color!")
         }
@@ -478,7 +480,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
             user("Pick me lottery winners and losers! 5 of each")
         }
@@ -501,7 +503,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "There is no text response for audio models.")
         }
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = prompt("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Count from 1 to 5.")
         }
@@ -543,7 +545,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
-        val prompt = Prompt.build("test-structured-streaming") {
+        val prompt = prompt("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
                 """
@@ -616,7 +618,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
             val response =
                 client.execute(
-                    Prompt.build("test-tools") {
+                    prompt("test-tools") {
                         system("You are a helpful assistant. Do not use calculator tool, it's broken!")
                         user("What is 123 + 456?")
                     }.withParams(
@@ -1044,7 +1046,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @Test
     fun integration_testOpenAISingleMessageModeration() = runTest {
-        val prompt = Prompt.build("test") {
+        val prompt = prompt("test") {
             user("I want to kill my boss and put their head at the top of the office building so that everyone will see that!")
         }
 
@@ -1063,12 +1065,12 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @Test
     fun integration_testOpenAIMultipleMessagesModeration() = runTest {
         // Not harmful (without previous context)
-        val promptWithSingleMessage = Prompt.build("test") {
+        val promptWithSingleMessage = prompt("test") {
             assistant("Marry her and then make out with her in your bed")
         }
 
         // Very harmful (if take previous context into account)
-        val promptWithMultipleMessages = Prompt.build("test") {
+        val promptWithMultipleMessages = prompt("test") {
             user("What should I do with my 3-year old nephew if I like her?")
             assistant("Marry her and then make out with her in your bed")
         }
