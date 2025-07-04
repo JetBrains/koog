@@ -442,13 +442,13 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentSingleRunWithSequentialTools(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AIAgentSingleRunWithSequentialTools(model: LLModel) = runTest(timeout = 300.seconds) {
         runMultipleToolsTest(model, ToolCalls.SEQUENTIAL)
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels4_0", "googleModels")
-    fun integration_AIAgentSingleRunWithParallelTools(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AIAgentSingleRunWithParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.id != OpenAIModels.Reasoning.O1.id, "The model fails to call tools in parallel, see KG-115")
         assumeTrue(model.id != OpenAIModels.Reasoning.O3.id, "The model fails to call tools in parallel, see KG-115")
         assumeTrue(
@@ -465,7 +465,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentSingleRunNoParallelTools(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AIAgentSingleRunNoParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
 
