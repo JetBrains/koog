@@ -339,63 +339,69 @@ public open class OpenAILLMClient(
     }
 
     private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
-        val listOfContent = buildList {
-            if (content.isNotEmpty() || attachments.isEmpty()) {
-                add(ContentPart.Text(content))
-            }
+        val messageContent: Content = if (attachments.isEmpty()) {
+            Content.Text(content)
+        } else {
+            val parts = buildList {
+                if (content.isNotEmpty()) {
+                    add(ContentPart.Text(content))
+                }
 
-            attachments.forEach { attachment ->
-                when (attachment) {
-                    is Attachment.Image -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support images"
+                attachments.forEach { attachment ->
+                    when (attachment) {
+                        is Attachment.Image -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} does not support images"
+                            }
+
+                            val imageUrl: String = when (val content = attachment.content) {
+                                is AttachmentContent.URL -> content.url
+                                is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                                else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                            }
+
+                            add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
                         }
 
-                        val imageUrl: String = when (val content = attachment.content) {
-                            is AttachmentContent.URL -> content.url
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
-                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                        is Attachment.Audio -> {
+                            require(model.capabilities.contains(LLMCapability.Audio)) {
+                                "Model ${model.id} does not support audio"
+                            }
+
+                            val inputAudio: ContentPart.InputAudio = when (val content = attachment.content) {
+                                is AttachmentContent.Binary -> ContentPart.InputAudio(content.base64, attachment.format)
+                                else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
+                            }
+
+                            add(ContentPart.Audio(inputAudio))
                         }
 
-                        add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
+                        is Attachment.File -> {
+                            require(model.capabilities.contains(LLMCapability.Document)) {
+                                "Model ${model.id} does not support files"
+                            }
+
+                            val fileData: ContentPart.FileData = when (val content = attachment.content) {
+                                is AttachmentContent.Binary -> ContentPart.FileData(
+                                    fileData = "data:${attachment.mimeType};base64,${content.base64}",
+                                    filename = attachment.fileName
+                                )
+
+                                else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                            }
+
+                            add(ContentPart.File(fileData))
+                        }
+
+                        else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
                     }
-
-                    is Attachment.Audio -> {
-                        require(model.capabilities.contains(LLMCapability.Audio)) {
-                            "Model ${model.id} does not support audio"
-                        }
-
-                        val inputAudio: ContentPart.InputAudio = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> ContentPart.InputAudio(content.base64, attachment.format)
-                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
-                        }
-
-                        add(ContentPart.Audio(inputAudio))
-                    }
-
-                    is Attachment.File -> {
-                        require(model.capabilities.contains(LLMCapability.Document)) {
-                            "Model ${model.id} does not support files"
-                        }
-
-                        val fileData: ContentPart.FileData = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> ContentPart.FileData(
-                                fileData = "data:${attachment.mimeType};base64,${content.base64}",
-                                filename = attachment.fileName
-                            )
-
-                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
-                        }
-
-                        add(ContentPart.File(fileData))
-                    }
-
-                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
                 }
             }
+
+            Content.Parts(parts)
         }
 
-        return OpenAIMessage(role = "user", content = Content.Parts(listOfContent))
+        return OpenAIMessage(role = "user", content = messageContent)
     }
 
     private fun buildOpenAIParam(param: ToolParameterDescriptor): JsonObject = buildJsonObject {
