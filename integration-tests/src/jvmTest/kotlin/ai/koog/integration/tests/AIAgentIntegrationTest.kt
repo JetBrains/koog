@@ -99,6 +99,8 @@ class AIAgentIntegrationTest {
         I need you to perform two operations:
         1. Calculate 7 times 2
         2. Wait for 500 milliseconds
+        
+        Respond briefly after completing both tasks. DO NOT EXCEED THE LIMIT OF 20 WORDS.
         """.trimIndent()
 
         fun getExecutor(model: LLModel): SingleLLMPromptExecutor = when (model.provider) {
