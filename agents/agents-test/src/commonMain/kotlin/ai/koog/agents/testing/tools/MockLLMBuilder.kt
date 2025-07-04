@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -89,14 +90,22 @@ public class ToolCondition<Args : ToolArgs, Result : ToolResult>(
  * @property tokenizer: Tokenizer that will be used to estimate token counts in mock messages
  */
 public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tokenizer? = null) {
-    private val assistantPartialMatches = mutableMapOf<String, List<String>>()
-    private val assistantExactMatches = mutableMapOf<String, List<String>>()
-    private val conditional = mutableMapOf<(String) -> Boolean, String>()
     private val toolCallExactMatches = mutableMapOf<String, List<Message.Tool.Call>>()
     private val toolCallPartialMatches = mutableMapOf<String, List<Message.Tool.Call>>()
-    private var defaultResponse: String = ""
     private var toolRegistry: ToolRegistry? = null
     private var toolActions: MutableList<ToolCondition<*, *>> = mutableListOf()
+
+    private val assistantPartialMatches = mutableMapOf<String, List<String>>()
+    private val assistantExactMatches = mutableMapOf<String, List<String>>()
+    private val conditionalResponses = mutableMapOf<(String) -> Boolean, String>()
+    private var defaultResponse: String = ""
+
+    private val moderationPartialMatches = mutableMapOf<String, ModerationResult>()
+    private val moderationExactMatches = mutableMapOf<String, ModerationResult>()
+    private var defaultModerationResponse: ModerationResult = ModerationResult(
+        isHarmful = false,
+        categories = emptyMap()
+    )
 
     /**
      * Determines whether the last message handled in a sequence should focus specifically on
@@ -126,6 +135,15 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     }
 
     /**
+     * Sets the default moderation response to the provided result.
+     *
+     * @param result the moderation result to set as the default response
+     */
+    public fun setDefaultModerationResponse(result: ModerationResult) {
+        defaultModerationResponse = result
+    }
+
+    /**
      * Sets the tool registry to be used for tool execution.
      *
      * @param registry The tool registry containing all available tools
@@ -143,12 +161,14 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      */
     public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
         toolCallExactMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
-            listOf(Message.Tool.Call(
-                id = null,
-                tool = tool.name,
-                content = toolContent,
-                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
-            ))
+            listOf(
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            )
         }
     }
 
@@ -161,12 +181,14 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      */
     public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
         toolCallPartialMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
-            listOf(Message.Tool.Call(
-                id = null,
-                tool = tool.name,
-                content = toolContent,
-                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
-            ))
+            listOf(
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            )
         }
     }
 
@@ -177,7 +199,10 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param toolCalls A list of pairs, where each pair consists of a tool and the arguments
      *                  to pass to the tool. These tool calls will be triggered when the input matches the pattern.
      */
-    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
+    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(
+        pattern: String,
+        toolCalls: List<Pair<Tool<Args, *>, Args>>
+    ) {
         toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
@@ -217,7 +242,11 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param toolCalls A list of tool call and argument pairs to be triggered when the input matches.
      * @param responses A list of response strings corresponding to each tool call.
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>, responses: List<String>) {
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(
+        pattern: String,
+        toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        responses: List<String>
+    ) {
         toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
@@ -233,6 +262,15 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     }
 
     /**
+     * Adds a specific moderation response for an exact pattern match.
+     *
+     * @param pattern The exact string pattern that should be matched.
+     * @param response*/
+    public fun <Args : ToolArgs> addModerationResponseExactPattern(pattern: String, response: ModerationResult) {
+        moderationExactMatches[pattern] = response
+    }
+
+    /**
      * Adds a partial pattern match for an LLM answer that triggers a set of tool calls
      * with predefined responses.
      *
@@ -240,7 +278,11 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param toolCalls A list of tool call and argument pairs to be triggered when the input matches.
      * @param responses A list of response strings corresponding to each tool call.
      */
-    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>, responses: List<String>) {
+    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(
+        pattern: String,
+        toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        responses: List<String>
+    ) {
         toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
@@ -253,6 +295,16 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
         }
 
         assistantPartialMatches[pattern] = responses
+    }
+
+    /**
+     * Associates a given moderation response with a specific partial pattern.
+     *
+     * @param pattern The string pattern to be used as a key for the moderation response.
+     * @param response The ModerationResult object that corresponds to the given pattern.
+     */
+    public fun <Args : ToolArgs> addModerationResponsePartialPattern(pattern: String, response: ModerationResult) {
+        moderationPartialMatches[pattern] = response
     }
 
     /**
@@ -307,7 +359,10 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      *                  what the LLM should output for each tool call.
      * @return A [MixedResultsReceiver] to configure further mock behavior for the provided tool calls and responses.
      */
-    public fun <Args : ToolArgs> mockLLMMixedResponse(toolCalls: List<Pair<Tool<Args, *>, Args>>, responses: List<String>): MixedResultsReceiver<Args> =
+    public fun <Args : ToolArgs> mockLLMMixedResponse(
+        toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        responses: List<String>
+    ): MixedResultsReceiver<Args> =
         MixedResultsReceiver(toolCalls, responses, this)
 
     /**
@@ -352,7 +407,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @return The MockLLMBuilder instance for method chaining
      */
     public infix fun String.onCondition(condition: (String) -> Boolean): MockLLMBuilder {
-        conditional[condition] = this
+        conditionalResponses[condition] = this
         return this@MockLLMBuilder
     }
 
@@ -608,7 +663,10 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
         val processedAssistantMatches = assistantExactMatches.mapValues { (_, value) ->
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
-                Message.Assistant(text, ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text)))
+                Message.Assistant(
+                    text,
+                    ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
+                )
             }
         }
 
@@ -621,22 +679,45 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
         val processedAssistantPartialMatches = assistantPartialMatches.mapValues { (_, value) ->
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
-                Message.Assistant(text, ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text)))
+                Message.Assistant(
+                    text,
+                    ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
+                )
             }
         }
 
-        val combinedPartialMatches = (processedAssistantPartialMatches.keys + toolCallPartialMatches.keys).associateWith { key ->
-            val assistantList = processedAssistantPartialMatches[key] ?: emptyList()
-            val toolCallList = toolCallPartialMatches[key] ?: emptyList()
-            assistantList + toolCallList
-        }
+        val combinedPartialMatches =
+            (processedAssistantPartialMatches.keys + toolCallPartialMatches.keys).associateWith { key ->
+                val assistantList = processedAssistantPartialMatches[key] ?: emptyList()
+                val toolCallList = toolCallPartialMatches[key] ?: emptyList()
+                assistantList + toolCallList
+            }
+
+        val responseMatcher = ResponseMatcher(
+            partialMatches = combinedPartialMatches.takeIf { it.isNotEmpty() },
+            exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
+            conditional = conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
+                listOf(
+                    Message.Assistant(
+                        content = textResponse,
+                        metaInfo = ResponseMetaInfo.create(clock)
+                    )
+                )
+            },
+            defaultResponse = listOf(Message.Assistant(defaultResponse, ResponseMetaInfo.create(clock)))
+        )
+
+        val moderationResponseMatcher = ResponseMatcher(
+            partialMatches = moderationPartialMatches,
+            exactMatches = moderationExactMatches,
+            conditional = null, // TODO: support later once required
+            defaultResponse = defaultModerationResponse
+        )
 
         return MockLLMExecutor(
             handleLastAssistantMessage,
-            partialMatches = combinedPartialMatches.takeIf { it.isNotEmpty() },
-            exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
-            conditional = conditional.takeIf { it.isNotEmpty() },
-            defaultResponse = defaultResponse,
+            responseMatcher = responseMatcher,
+            moderationResponseMatcher = moderationResponseMatcher,
             toolRegistry = toolRegistry,
             toolActions = toolActions,
             clock = clock,
@@ -821,7 +902,7 @@ public fun getMockExecutor(
 
     // Call MockLLMBuilder and apply toolRegistry, eventHandler and set currentBuilder to this (to add mocked tool calls)
     val builder = MockLLMBuilder(clock, tokenizer).apply {
-        this.handleLastAssistantMessage  = handleLastAssistantMessage
+        this.handleLastAssistantMessage = handleLastAssistantMessage
         toolRegistry?.let { setToolRegistry(it) }
         MockLLMBuilder.currentBuilder = this
         init()
