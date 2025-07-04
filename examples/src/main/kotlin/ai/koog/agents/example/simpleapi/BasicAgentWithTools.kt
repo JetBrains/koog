@@ -8,7 +8,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+fun main(): Unit = runBlocking {
     val switch = Switch()
 
     /*

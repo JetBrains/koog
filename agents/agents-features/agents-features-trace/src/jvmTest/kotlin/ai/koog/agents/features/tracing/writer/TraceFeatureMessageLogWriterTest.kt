@@ -36,7 +36,7 @@ class TraceFeatureMessageLogWriterTest {
             val assistantPrompt = "Test assistant prompt"
             val promptId = "Test prompt id"
 
-            val strategy = strategy(strategyName) {
+            val strategy = strategy<String, String>(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -151,7 +151,7 @@ class TraceFeatureMessageLogWriterTest {
         TraceFeatureMessageLogWriter(targetLogger = targetLogger, format = customFormat).use { writer ->
             val strategyName = "tracing-test-strategy"
 
-            val strategy = strategy(strategyName) {
+            val strategy = strategy<String, String>(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -180,7 +180,7 @@ class TraceFeatureMessageLogWriterTest {
 
             val strategyName = "tracing-test-strategy"
 
-            val strategy = strategy(strategyName) {
+            val strategy = strategy<String, String>(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
@@ -217,7 +217,7 @@ class TraceFeatureMessageLogWriterTest {
             val assistantPrompt = "Test assistant prompt"
             val promptId = "Test prompt id"
 
-            val strategy = strategy(strategyName) {
+            val strategy = strategy<String, String>(strategyName) {
                 val llmCallNode by nodeLLMRequest("test LLM call")
                 val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 

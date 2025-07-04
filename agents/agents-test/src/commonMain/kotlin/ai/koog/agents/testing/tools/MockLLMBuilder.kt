@@ -89,14 +89,24 @@ public class ToolCondition<Args : ToolArgs, Result : ToolResult>(
  * @property tokenizer: Tokenizer that will be used to estimate token counts in mock messages
  */
 public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tokenizer? = null) {
-    private val assistantPartialMatches = mutableMapOf<String, String>()
-    private val assistantExactMatches = mutableMapOf<String, String>()
+    private val assistantPartialMatches = mutableMapOf<String, List<String>>()
+    private val assistantExactMatches = mutableMapOf<String, List<String>>()
     private val conditional = mutableMapOf<(String) -> Boolean, String>()
-    private val toolCallExactMatches = mutableMapOf<String, Message.Tool.Call>()
-    private val toolCallPartialMatches = mutableMapOf<String, Message.Tool.Call>()
+    private val toolCallExactMatches = mutableMapOf<String, List<Message.Tool.Call>>()
+    private val toolCallPartialMatches = mutableMapOf<String, List<Message.Tool.Call>>()
     private var defaultResponse: String = ""
     private var toolRegistry: ToolRegistry? = null
     private var toolActions: MutableList<ToolCondition<*, *>> = mutableListOf()
+
+    /**
+     * Determines whether the last message handled in a sequence should focus specifically on
+     * the most recent message categorized as `Message.Assistant` when resolving mock responses.
+     *
+     * Useful in scenarios where the mock response handling involves mixed results
+     * from the LLM, and there is a need to differentiate between handling the general
+     * last message vs the last assistant-specific message.
+     */
+    public var handleLastAssistantMessage: Boolean = false
 
     /**
      * Companion object for the MockLLMBuilder class.
@@ -133,12 +143,12 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      */
     public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
         toolCallExactMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
-            Message.Tool.Call(
+            listOf(Message.Tool.Call(
                 id = null,
                 tool = tool.name,
                 content = toolContent,
                 metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
-            )
+            ))
         }
     }
 
@@ -151,13 +161,98 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      */
     public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
         toolCallPartialMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
-            Message.Tool.Call(
+            listOf(Message.Tool.Call(
                 id = null,
                 tool = tool.name,
                 content = toolContent,
                 metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
-            )
+            ))
         }
+    }
+
+    /**
+     * Adds a partial pattern match for an LLM answer that triggers a set of tool calls.
+     *
+     * @param pattern The substring pattern to partially match in the user request.
+     * @param toolCalls A list of pairs, where each pair consists of a tool and the arguments
+     *                  to pass to the tool. These tool calls will be triggered when the input matches the pattern.
+     */
+    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
+        toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
+            tool.encodeArgsToString(args).let { toolContent ->
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            }
+        }
+    }
+
+    /**
+     * Adds an exact pattern match for an LLM answer that triggers a set of tool calls.
+     *
+     * @param pattern The exact input string to match
+     * @param toolCalls Tool calls with args
+     */
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
+        toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
+            tool.encodeArgsToString(args).let { toolContent ->
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            }
+        }
+    }
+
+    /**
+     * Adds an exact pattern match for an LLM answer that triggers a set of tool calls
+     * with predefined responses.
+     *
+     * @param pattern The exact input string to match.
+     * @param toolCalls A list of tool call and argument pairs to be triggered when the input matches.
+     * @param responses A list of response strings corresponding to each tool call.
+     */
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>, responses: List<String>) {
+        toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
+            tool.encodeArgsToString(args).let { toolContent ->
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            }
+        }
+
+        assistantExactMatches[pattern] = responses
+    }
+
+    /**
+     * Adds a partial pattern match for an LLM answer that triggers a set of tool calls
+     * with predefined responses.
+     *
+     * @param pattern The substring pattern to partially match in the user request.
+     * @param toolCalls A list of tool call and argument pairs to be triggered when the input matches.
+     * @param responses A list of response strings corresponding to each tool call.
+     */
+    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>, responses: List<String>) {
+        toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
+            tool.encodeArgsToString(args).let { toolContent ->
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            }
+        }
+
+        assistantPartialMatches[pattern] = responses
     }
 
     /**
@@ -185,9 +280,35 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param args The arguments to pass to the tool
      * @return A [ToolCallReceiver] for further configuration
      */
-    public fun <Args : ToolArgs> mockLLMToolCall(tool: Tool<Args, *>, args: Args): ToolCallReceiver<Args> {
-        return ToolCallReceiver(tool, args, this)
-    }
+    public fun <Args : ToolArgs> mockLLMToolCall(tool: Tool<Args, *>, args: Args): ToolCallReceiver<Args> =
+        ToolCallReceiver(tool, args, this)
+
+    /**
+     * Creates a mock for a list of LLM tool calls.
+     *
+     * This method is used to define how the LLM should respond with multiple tool calls
+     * when specific inputs or conditions are encountered during testing.
+     *
+     * @param toolCalls A list of pairs, where each pair consists of a tool and corresponding arguments.
+     *                  These define the mock calls to be returned by the LLM.
+     * @return A [MultiToolCallReceiver] to configure further mock behavior for the provided tool calls.
+     */
+    public fun <Args : ToolArgs> mockLLMToolCall(toolCalls: List<Pair<Tool<Args, *>, Args>>): MultiToolCallReceiver<Args> =
+        MultiToolCallReceiver(toolCalls, this)
+
+    /**
+     * Creates a mock response with a combination of tool calls and predefined string responses.
+     *
+     * This method is used to define a mixed behavior where the LLM produces a sequence of tool
+     * calls along with corresponding responses for testing purposes.
+     *
+     * @param toolCalls A list of pairs, where each pair consists of a tool and the corresponding arguments.
+     * @param responses A list of response strings corresponding to the provided tool calls. These define
+     *                  what the LLM should output for each tool call.
+     * @return A [MixedResultsReceiver] to configure further mock behavior for the provided tool calls and responses.
+     */
+    public fun <Args : ToolArgs> mockLLMMixedResponse(toolCalls: List<Pair<Tool<Args, *>, Args>>, responses: List<String>): MixedResultsReceiver<Args> =
+        MixedResultsReceiver(toolCalls, responses, this)
 
     /**
      * Creates a mock for a tool.
@@ -209,7 +330,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @return The MockLLMBuilder instance for method chaining
      */
     public infix fun String.onUserRequestContains(pattern: String): MockLLMBuilder {
-        assistantPartialMatches[pattern] = this
+        assistantPartialMatches[pattern] = listOf(this)
         return this@MockLLMBuilder
     }
 
@@ -220,7 +341,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @return The MockLLMBuilder instance for method chaining
      */
     public infix fun String.onUserRequestEquals(pattern: String): MockLLMBuilder {
-        assistantExactMatches[pattern] = this
+        assistantExactMatches[pattern] = listOf(this)
         return this@MockLLMBuilder
     }
 
@@ -274,6 +395,85 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
          */
         public infix fun onRequestContains(pattern: String): String {
             builder.addLLMAnswerPartialPattern(pattern, tool, args)
+
+            return pattern
+        }
+    }
+
+    /**
+     * Represents a class responsible for handling and managing mixed tool call results
+     * based on mock responses and predefined configurations.
+     *
+     * @param Args The type of tool arguments extending [ToolArgs].
+     * @property toolCalls A list of tool-arguments pairs representing mocked tool calls and their configurations.
+     * @property responses A list of response strings to be used when handling tool call results.
+     * @property builder An instance of [MockLLMBuilder] used to configure and mock behaviors.
+     */
+    public class MixedResultsReceiver<Args : ToolArgs>(
+        private val toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        private val responses: List<String>,
+        private val builder: MockLLMBuilder
+    ) {
+        /**
+         * Configures the LLM to respond with a tool call when the user request exactly matches the specified pattern.
+         *
+         * @param pattern The exact string to match in the user request
+         * @return The [pattern] string for method chaining
+         */
+        public infix fun onRequestEquals(pattern: String): String {
+            // Using the llmAnswer directly as the response, which should contain the tool call JSON
+            builder.addLLMAnswerExactPattern(pattern, toolCalls, responses)
+
+            // Return the llmAnswer as is, which should be a valid tool call JSON
+            return pattern
+        }
+
+        /**
+         * Configures the system to partially match user requests containing the specified pattern.
+         * If the pattern is found within a user request, the associated tool call response will be triggered.
+         *
+         * @param pattern The substring pattern to match within user requests.
+         * @return The [pattern] string for method chaining
+         */
+        public infix fun onRequestContains(pattern: String): String {
+            builder.addLLMAnswerPartialPattern(pattern, toolCalls, responses)
+
+            return pattern
+        }
+    }
+
+    /**
+     * Receiver class for configuring tool call responses from the LLM.
+     * This class is part of the fluent API for configuring how the LLM should respond
+     * with tool calls when it receives specific inputs.
+     */
+    public class MultiToolCallReceiver<Args : ToolArgs>(
+        private val toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        private val builder: MockLLMBuilder
+    ) {
+        /**
+         * Configures the LLM to respond with a tool call when the user request exactly matches the specified pattern.
+         *
+         * @param pattern The exact string to match in the user request
+         * @return The [pattern] string for method chaining
+         */
+        public infix fun onRequestEquals(pattern: String): String {
+            // Using the llmAnswer directly as the response, which should contain the tool call JSON
+            builder.addLLMAnswerExactPattern(pattern, toolCalls)
+
+            // Return the llmAnswer as is, which should be a valid tool call JSON
+            return pattern
+        }
+
+        /**
+         * Configures the system to partially match user requests containing the specified pattern.
+         * If the pattern is found within a user request, the associated tool call response will be triggered.
+         *
+         * @param pattern The substring pattern to match within user requests.
+         * @return The [pattern] string for method chaining
+         */
+        public infix fun onRequestContains(pattern: String): String {
+            builder.addLLMAnswerPartialPattern(pattern, toolCalls)
 
             return pattern
         }
@@ -393,7 +593,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param action A function that produces the string result
      * @return The result of the does call
      */
-    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String): MockLLMBuilder.MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
+    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String): MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
         does { ToolResult.Text(action()) }
 
     /**
@@ -405,22 +605,34 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @return A configured MockLLMExecutor instance
      */
     public fun build(): PromptExecutor {
-        val combinedExactMatches = assistantExactMatches.mapValues {
-            val text = it.value.trimIndent()
-            Message.Assistant(
-                content = text,
-                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
-            )
-        } + toolCallExactMatches
-        val combinedPartialMatches = assistantPartialMatches.mapValues {
-            val text = it.value.trimIndent()
-            Message.Assistant(
-                content = text,
-                metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
-            )
-        } + toolCallPartialMatches
+        val processedAssistantMatches = assistantExactMatches.mapValues { (_, value) ->
+            val texts = value.map { text -> text.trimIndent() }
+            texts.map { text ->
+                Message.Assistant(text, ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text)))
+            }
+        }
+
+        val combinedExactMatches = (processedAssistantMatches.keys + toolCallExactMatches.keys).associateWith { key ->
+            val assistantList = processedAssistantMatches[key] ?: emptyList()
+            val toolCallList = toolCallExactMatches[key] ?: emptyList()
+            assistantList + toolCallList
+        }
+
+        val processedAssistantPartialMatches = assistantPartialMatches.mapValues { (_, value) ->
+            val texts = value.map { text -> text.trimIndent() }
+            texts.map { text ->
+                Message.Assistant(text, ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text)))
+            }
+        }
+
+        val combinedPartialMatches = (processedAssistantPartialMatches.keys + toolCallPartialMatches.keys).associateWith { key ->
+            val assistantList = processedAssistantPartialMatches[key] ?: emptyList()
+            val toolCallList = toolCallPartialMatches[key] ?: emptyList()
+            assistantList + toolCallList
+        }
 
         return MockLLMExecutor(
+            handleLastAssistantMessage,
             partialMatches = combinedPartialMatches.takeIf { it.isNotEmpty() },
             exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
             conditional = conditional.takeIf { it.isNotEmpty() },
@@ -600,6 +812,7 @@ public fun getMockExecutor(
     toolRegistry: ToolRegistry? = null,
     clock: Clock = Clock.System,
     tokenizer: Tokenizer? = null,
+    handleLastAssistantMessage: Boolean = false,
     init: MockLLMBuilder.() -> Unit
 ): PromptExecutor {
 
@@ -608,6 +821,7 @@ public fun getMockExecutor(
 
     // Call MockLLMBuilder and apply toolRegistry, eventHandler and set currentBuilder to this (to add mocked tool calls)
     val builder = MockLLMBuilder(clock, tokenizer).apply {
+        this.handleLastAssistantMessage  = handleLastAssistantMessage
         toolRegistry?.let { setToolRegistry(it) }
         MockLLMBuilder.currentBuilder = this
         init()

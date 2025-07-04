@@ -59,7 +59,7 @@ public interface ToolCallDescriber {
             return Assistant(
                 content = Json.encodeToString(
                     buildJsonObject {
-                        message.id ?: put("tool_call_id", JsonPrimitive(message.id))
+                        message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
                         put("tool_name", JsonPrimitive(message.tool))
                         put("tool_args", message.contentJson)
                     }
@@ -79,7 +79,7 @@ public interface ToolCallDescriber {
             return User(
                 content = Json.encodeToString(
                     buildJsonObject {
-                        message.id ?: put("tool_call_id", JsonPrimitive(message.id))
+                        message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
                         put("tool_name", JsonPrimitive(message.tool))
                         put("tool_result", JsonPrimitive(message.content))
                     }

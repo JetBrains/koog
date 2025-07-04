@@ -26,13 +26,8 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
-                implementation(libs.oshai.kotlin.logging)
-            }
-        }
-
-        jvmMain {
-            dependencies {
                 api(libs.ktor.client.cio)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

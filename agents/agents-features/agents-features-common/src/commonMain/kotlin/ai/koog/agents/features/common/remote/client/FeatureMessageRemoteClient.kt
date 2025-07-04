@@ -5,7 +5,6 @@ import ai.koog.agents.features.common.remote.client.config.ClientConnectionConfi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
-import io.ktor.client.engine.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
@@ -21,14 +20,6 @@ import kotlinx.serialization.serializer
 import kotlin.properties.Delegates
 
 /**
- * Platform-specific HTTP client engine factory provider.
- * Each platform (JVM, Native, JS) implements this function to provide appropriate HTTP client engine.
- *
- * @return HTTP client engine factory for the current platform
- */
-internal expect fun engineFactoryProvider(): HttpClientEngineFactory<HttpClientEngineConfig>
-
-/**
  * A remote client implementation for handling feature messages via HTTP and Server-Sent Events (SSE).
  *
  * Note: Please make sure you call [connect] before starting a communication process.
@@ -41,7 +32,7 @@ internal expect fun engineFactoryProvider(): HttpClientEngineFactory<HttpClientE
 public class FeatureMessageRemoteClient(
     public val connectionConfig: ClientConnectionConfig,
     private val scope: CoroutineScope,
-    baseClient: HttpClient = HttpClient(engineFactoryProvider()),
+    baseClient: HttpClient = HttpClient(),
     private val requestBuilder: HttpRequestBuilder.() -> Unit = {}
 ) : FeatureMessageClient {
 

@@ -17,10 +17,10 @@ val testClock: Clock = object : Clock {
 }
 
 fun createAgent(
-    strategy: AIAgentStrategy,
+    strategy: AIAgentStrategy<String, String>,
     configureTools: Builder.() -> Unit = { },
     installFeatures: AIAgent.FeatureContext.() -> Unit = { }
-): AIAgent {
+): AIAgent<String, String> {
     val agentConfig = AIAgentConfig(
         prompt = prompt("test", clock = testClock) {
             system("Test system message")

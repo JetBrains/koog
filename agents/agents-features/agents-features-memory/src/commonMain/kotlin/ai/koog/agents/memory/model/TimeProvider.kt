@@ -1,5 +1,8 @@
 package ai.koog.agents.memory.model
 
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+
 /**
  * Provides platform-independent access to time-related functionality for the memory system.
  * This interface enables consistent timestamp generation across different platforms while
@@ -35,6 +38,7 @@ public interface TimeProvider {
  * Example JVM implementation might use System.currentTimeMillis(),
  * while JS implementation might use Date.now().
  */
-public expect object DefaultTimeProvider : TimeProvider {
-    override fun getCurrentTimestamp(): Long
+@OptIn(ExperimentalTime::class)
+public object DefaultTimeProvider : TimeProvider {
+    override fun getCurrentTimestamp(): Long = Clock.System.now().toEpochMilliseconds()
 }

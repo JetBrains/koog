@@ -1,6 +1,6 @@
 package ai.koog.agents.example.chess
 
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegateBase
+import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 
 /**
@@ -9,7 +9,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
  */
 fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeTrimHistory(
     name: String? = null
-): AIAgentNodeDelegateBase<T, T> =
+): AIAgentNodeDelegate<T, T> =
     node(name) { result ->
         llm.writeSession {
             rewritePrompt { prompt ->

@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import ai.koog.gradle.tests.configureTests
 import jetbrains.sign.GpgSignSignatoryProvider
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
 plugins {
@@ -23,6 +26,12 @@ kotlin {
         }
 
         configureTests()
+    }
+
+    wasmJs {
+        browser()
+        nodejs()
+        binaries.library()
     }
 }
 
@@ -51,7 +60,7 @@ signing {
 //setupKarmaConfigs()
 
 plugins.withType<NodeJsRootPlugin>().configureEach {
-    extensions.configure<NodeJsRootExtension> {
+    extensions.configure<NodeJsEnvSpec> {
         downloadBaseUrl = "https://packages.jetbrains.team/files/p/grazi/node-mirror"
     }
 }

@@ -18,7 +18,7 @@ import kotlin.test.assertEquals
 class AIAgentNodesTest {
     @Test
     fun testNodeLLMCompressHistory() = runTest {
-        val agentStrategy = strategy("test") {
+        val agentStrategy = strategy<String, String>("test") {
             val compress by nodeLLMCompressHistory<Unit>()
 
             edge(nodeStart forwardTo compress transformed { })
@@ -26,7 +26,7 @@ class AIAgentNodesTest {
 
         }
 
-        val results = mutableListOf<String?>()
+        val results = mutableListOf<Any?>()
 
         val agentConfig = AIAgentConfig(
             prompt = prompt("test-agent") {},

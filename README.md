@@ -8,7 +8,6 @@
 [![GitHub license](https://img.shields.io/github/license/JetBrains/koog)](LICENSE.txt)
 [![docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
 [![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
-<!-- TODO: maven central link -->
 
 ## Overview
 
@@ -30,7 +29,7 @@ Key features of Koog include:
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
 - **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
-- **Multiplatform**: Run agents on both JVM and JS targets with Kotlin Multiplatform.
+- **Multiplatform**: Run agents on JVM, JS, WasmJS targets with Kotlin Multiplatform.
 
 ### Available LLM providers and platforms
 
@@ -57,7 +56,7 @@ fun main() = runBlocking {
       llmModel = OpenAIModels.Chat.GPT4o
    )
 
-   val result = agent.runAndGetResult("Hello! How can you help me?")
+   val result = agent.run("Hello! How can you help me?")
    println(result)
 }
 ```
@@ -66,9 +65,11 @@ fun main() = runBlocking {
 
 ### Supported targets
 
-Currently, the framework supports the JVM and JS targets.
+Currently, the framework supports the JVM, JS and WasmJS targets.
 
 On JVM, JDK 17 or higher is required to use the framework.
+
+Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about the Koog dependencies.
 
 ### Gradle (Kotlin DSL)
 

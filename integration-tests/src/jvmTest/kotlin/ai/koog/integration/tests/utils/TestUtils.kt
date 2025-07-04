@@ -86,6 +86,34 @@ object TestUtils {
         }
     }
 
+    val delayMillis = 500L
+
+    @Serializable
+    data class DelayArgs(val milliseconds: Int = delayMillis.toInt()) : ToolArgs
+
+    object DelayTool : SimpleTool<DelayArgs>() {
+        override val argsSerializer = DelayArgs.serializer()
+
+        val delayToolDescriptor = ToolDescriptor(
+            name = "delay",
+            description = "A tool that introduces a delay to simulate a time-consuming operation.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "milliseconds",
+                    description = "The number of milliseconds to delay",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+
+        override val descriptor = delayToolDescriptor
+
+        override suspend fun doExecute(args: DelayArgs): String {
+            kotlinx.coroutines.delay(args.milliseconds.toLong())
+            return "Delayed for ${args.milliseconds} milliseconds"
+        }
+    }
+
     @Serializable
     data class Country(
         val name: String,

@@ -18,7 +18,7 @@ class OpenAIEmbeddingsIntegrationTest {
         val client = OpenAILLMClient(apiKey)
 
         val text = "This is a test text for embedding."
-        val embedding = client.embed(text, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
+        val embedding = client.embed(text, OpenAIModels.Embeddings.TextEmbedding3Small)
 
         // Verify the embedding is not null and has the expected structure
         assertNotNull(embedding)
@@ -41,7 +41,7 @@ class OpenAIEmbeddingsIntegrationTest {
         val client = OpenAILLMClient(apiKey)
 
         val text = "This is a test text for embedding with a custom model."
-        val embedding = client.embed(text, OpenAIModels.Embeddings.TextEmbeddingAda3Large)
+        val embedding = client.embed(text, OpenAIModels.Embeddings.TextEmbedding3Large)
 
         // Verify the embedding is not null and has the expected structure
         assertNotNull(embedding)

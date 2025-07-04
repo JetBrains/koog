@@ -61,7 +61,7 @@ fun main() {
         val strategy = toneStrategy("tone_analysis")
 
         // Create the agent
-        val agent = AIAgent(
+        val agent = AIAgent<String, String>(
             promptExecutor = executor,
             strategy = strategy,
             agentConfig = agentConfig,
@@ -76,7 +76,7 @@ fun main() {
                     println("An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
                 }
 
-                onAgentFinished { strategyName: String, result: String? ->
+                onAgentFinished { strategyName: String, result: Any? ->
                     println("Result: $result")
                 }
             }

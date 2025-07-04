@@ -14,8 +14,8 @@ import kotlinx.io.readString
  * Example usage:
  * ```kotlin
  * val attachments = AttachmentBuilder().apply {
- *     imageFromPath("screenshot.png")
- *     fileFromPath("report.pdf")
+ *     image("screenshot.png")
+ *     binaryFile("report.pdf")
  * }.build()
  * ```
  *

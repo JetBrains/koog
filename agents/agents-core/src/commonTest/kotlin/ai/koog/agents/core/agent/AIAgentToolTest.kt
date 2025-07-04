@@ -1,13 +1,16 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,19 +25,15 @@ class AIAgentToolTest {
     private class MockAgent(
         private val executor: PromptExecutor,
         private val expectedResponse: String
-    ) : AIAgentBase {
-        override suspend fun run(agentInput: String) {
-            return
-        }
-
-        override suspend fun runAndGetResult(agentInput: String): String {
+    ) : AIAgentBase<String, String> {
+        override suspend fun run(agentInput: String): String {
             return expectedResponse
         }
     }
 
     companion object {
         const val RESPONSE = "This is the agent's response"
-        private fun createMockAgent(): AIAgentBase {
+        private fun createMockAgent(): AIAgentBase<String, String> {
             val mockExecutor = getMockExecutor(clock = testClock) {
                 mockLLMAnswer(RESPONSE).asDefaultResponse
             }
@@ -43,8 +42,13 @@ class AIAgentToolTest {
 
         val agent = createMockAgent()
         val tool = agent.asTool(
+            agentName = "testAgent",
             agentDescription = "Test agent description",
-            name = "testAgent"
+            inputDescriptor = ToolParameterDescriptor(
+                name = "request",
+                description = "Test request description",
+                type = ToolParameterType.String
+            )
         )
 
         val argsJson = buildJsonObject {
@@ -55,10 +59,15 @@ class AIAgentToolTest {
     @Test
     fun testAsToolCreation() = runTest {
         val tool = agent.asTool(
+            agentName = "testAgent",
             agentDescription = "Test agent description",
-            name = "testAgent",
-            requestDescription = "Test request description"
+            inputDescriptor = ToolParameterDescriptor(
+                name = "request",
+                description = "Test request description",
+                type = ToolParameterType.String
+            )
         )
+
         assertEquals("testAgent", tool.descriptor.name)
         assertEquals("Test agent description", tool.descriptor.description)
         assertEquals(1, tool.descriptor.requiredParameters.size)
@@ -70,9 +79,15 @@ class AIAgentToolTest {
     @Test
     fun testAsToolWithDefaultName() = runTest {
         val tool = agent.asTool(
-            agentDescription = "Test agent description"
+            agentName = "testAgent",
+            agentDescription = "Test agent description",
+            inputDescriptor = ToolParameterDescriptor(
+                name = "request",
+                description = "Test request description",
+                type = ToolParameterType.String
+            )
         )
-        assertEquals("mockagent", tool.descriptor.name)
+        assertEquals("testAgent", tool.descriptor.name)
     }
 
     @OptIn(InternalAgentToolsApi::class)
@@ -82,7 +97,7 @@ class AIAgentToolTest {
         val result = tool.execute(args, Enabler)
 
         assertTrue(result.successful)
-        assertEquals(RESPONSE, result.result)
+        assertEquals(RESPONSE, result.result?.jsonPrimitive?.content)
         assertNotNull(result.result)
         assertEquals(null, result.errorMessage)
     }
@@ -90,17 +105,20 @@ class AIAgentToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolErrorHandling() = runTest {
-        val agent = object : AIAgentBase {
-            override suspend fun run(agentInput: String) {}
-
-            override suspend fun runAndGetResult(agentInput: String): String {
-                throw RuntimeException("Test error")
+        val agent = object : AIAgentBase<String, String> {
+            override suspend fun run(agentInput: String): String {
+                throw IllegalStateException("Test error")
             }
         }
 
         val tool = agent.asTool(
+            agentName = "testAgent",
             agentDescription = "Test agent description",
-            name = "testAgent"
+            inputDescriptor = ToolParameterDescriptor(
+                name = "request",
+                description = "Test request description",
+                type = ToolParameterType.String
+            )
         )
 
         val args = tool.decodeArgs(argsJson)
@@ -115,15 +133,20 @@ class AIAgentToolTest {
     @Test
     fun testAsToolResultSerialization() = runTest {
         val tool = agent.asTool(
+            agentName = "testAgent",
             agentDescription = "Test agent description",
-            name = "testAgent"
+            inputDescriptor = ToolParameterDescriptor(
+                name = "request",
+                description = "Test request description",
+                type = ToolParameterType.String
+            )
         )
 
         val args = tool.decodeArgs(argsJson)
         val result = tool.execute(args, Enabler)
 
         val serialized = result.toStringDefault()
-        assertTrue(serialized.contains("\"successful\":true"))
-        assertTrue(serialized.contains("\"result\":\"This is the agent's response\""))
+        assertTrue(serialized.contains("\"successful\": true"))
+        assertTrue(serialized.contains("\"result\": \"This is the agent's response\""))
     }
 }

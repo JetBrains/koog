@@ -199,6 +199,7 @@ dependencies {
     dokka(project(":prompt:prompt-structure"))
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
+    dokka(project(":koog-spring-boot-starter"))
 }
 
 kover {

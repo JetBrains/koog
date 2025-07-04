@@ -6,6 +6,7 @@ import ai.koog.agents.features.common.remote.server.config.ServerConnectionConfi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.cio.CIO
 import io.ktor.server.engine.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -19,8 +20,6 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.serialization.serializer
 import kotlin.properties.Delegates
 import kotlin.time.Duration.Companion.milliseconds
-
-internal expect fun engineFactoryProvider(): ApplicationEngineFactory<ApplicationEngine, ApplicationEngine.Configuration>
 
 /**
  * A server for managing remote feature message communication via server-sent events (SSE) and HTTP endpoints.
@@ -156,11 +155,12 @@ public class FeatureMessageRemoteServer(
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun createServer(host: String, port: Int): EmbeddedServer<ApplicationEngine, ApplicationEngine.Configuration> {
 
         logger.debug { "Feature Message Remote Server. Start creating server on port: $port" }
 
-        val factory = engineFactoryProvider()
+        val factory = CIO as ApplicationEngineFactory<ApplicationEngine, ApplicationEngine.Configuration>
         server = embeddedServer(factory = factory, host = host, port = port) {
             install(SSE)
 

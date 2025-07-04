@@ -4,10 +4,12 @@ package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.*
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
@@ -28,6 +30,7 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 
 /**
@@ -109,7 +112,7 @@ public sealed class NodeReference<Input, Output> {
         override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentNodeBase<Input, Output> {
             val visited = mutableSetOf<String>()
             fun visit(node: AIAgentNodeBase<*, *>): AIAgentNodeBase<Input, Output>? {
-                if (node is AIAgentFinishNodeBase) return null
+                if (node is FinishNode) return null
                 if (visited.contains(node.name)) return null
                 visited.add(node.name)
                 if (node.name == name) return node as? AIAgentNodeBase<Input, Output>
@@ -164,7 +167,7 @@ public sealed class NodeReference<Input, Output> {
      *
      * @param name The unique identifier for the strategy.
      */
-    public class Strategy(name: String) : SubgraphNode<String, String>(name) {
+    public class Strategy<Input, Output>(name: String) : SubgraphNode<Input, Output>(name) {
         /**
          * Resolves the given subgraph into an `AIAgentStrategy` instance to ensure that the resolved object
          * matches the expected strategy name and type.
@@ -175,7 +178,8 @@ public sealed class NodeReference<Input, Output> {
          * @throws IllegalArgumentException If the subgraph's name does not match the name of the current strategy.
          * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
          */
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy {
+        @Suppress("UNCHECKED_CAST")
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy<Input, Output> {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
             }
@@ -184,7 +188,7 @@ public sealed class NodeReference<Input, Output> {
                 throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
             }
 
-            return subgraph
+            return subgraph as AIAgentStrategy<Input, Output>
         }
     }
 }
@@ -502,9 +506,9 @@ public class Testing {
          * @param name The name of the strategy to be verified.
          * @param buildAssertions A lambda defining the assertions to be built for the strategy.
          */
-        public fun verifyStrategy(name: String, buildAssertions: SubgraphAssertionsBuilder<String, String>.() -> Unit) {
+        public fun <Input, Output> verifyStrategy(name: String, buildAssertions: SubgraphAssertionsBuilder<Input, Output>.() -> Unit) {
             assertions =
-                SubgraphAssertionsBuilder(NodeReference.Strategy(name), clock, tokenizer).apply(buildAssertions).build()
+                SubgraphAssertionsBuilder(NodeReference.Strategy<Input, Output>(name), clock, tokenizer).apply(buildAssertions).build()
         }
 
         /**
@@ -733,7 +737,16 @@ public class Testing {
                  * @return a new NodeOutputAssertionsBuilder that contains a copy of the current stageBuilder
                  * and a copied context.
                  */
-                override fun copy(): NodeOutputAssertionsBuilder =
+                override fun copy(
+                    environment: AIAgentEnvironment?,
+                    agentInput: Any?,
+                    config: AIAgentConfigBase?,
+                    llm: AIAgentLLMContext?,
+                    stateManager: AIAgentStateManager?,
+                    storage: AIAgentStorage?,
+                    sessionUuid: Uuid?,
+                    strategyId: String?,
+                ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
@@ -831,7 +844,16 @@ public class Testing {
                  *
                  * @return A new EdgeAssertionsBuilder instance with the same stageBuilder and a copied context.
                  */
-                override fun copy(): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
+                override fun copy(
+                    environment: AIAgentEnvironment?,
+                    agentInput: Any?,
+                    config: AIAgentConfigBase?,
+                    llm: AIAgentLLMContext?,
+                    stateManager: AIAgentStateManager?,
+                    storage: AIAgentStorage?,
+                    sessionUuid: Uuid?,
+                    strategyId: String?,
+                ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
                  * Executes a given block of logic within the context of a copied instance of the current `EdgeAssertionsBuilder`.
@@ -940,8 +962,8 @@ public class Testing {
             }
         }
 
-        private suspend fun verifyGraph(
-            agent: AIAgent,
+        private suspend fun <Input, Output> verifyGraph(
+            agent: AIAgent<Input, Output>,
             graphAssertions: GraphAssertions,
             graph: AIAgentSubgraph<*, *>,
             pipeline: AIAgentPipeline,

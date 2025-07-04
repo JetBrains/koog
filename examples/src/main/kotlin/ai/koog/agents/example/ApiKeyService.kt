@@ -9,4 +9,7 @@ internal object ApiKeyService {
 
     val googleApiKey: String
         get() = System.getenv("GOOGLE_API_KEY") ?: throw IllegalArgumentException("GOOGLE_API_KEY env is not set")
+
+    val openRouterApiKey: String
+        get() = System.getenv("OPENROUTER_API_KEY") ?: throw IllegalArgumentException("OPENROUTER_API_KEY env is not set")
 }

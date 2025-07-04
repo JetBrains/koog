@@ -145,7 +145,7 @@ val pdfResponse = client.execute(
 // Embedding example
 val embedding = client.embed(
     text = "This is a sample text for embedding",
-    model = OpenAIModels.Embeddings.TextEmbeddingAda3Small
+    model = OpenAIModels.Embeddings.TextEmbedding3Small
 )
 
 // Mixed content (image + PDF)

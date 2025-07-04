@@ -2,6 +2,8 @@ package ai.koog.agents.example.banking.routing
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
@@ -41,14 +43,16 @@ fun main() = runBlocking {
             tool(AskUser)
             tool(
                 transferAgent.asTool(
-                    "Transfers money and solves all arising problems",
-                    name = "transferMoney"
+                    agentName = "Transfers money and solves all arising problems",
+                    agentDescription = "transferMoney",
+                    inputDescriptor = ToolParameterDescriptor("request", "Transfer request", ToolParameterType.String)
                 )
             )
             tool(
                 analysisAgent.asTool(
-                    "Performs analytics for user transactions",
-                    name = "analyzeTransactions"
+                    agentName = "analyzeTransactions",
+                    agentDescription = "Performs analytics for user transactions",
+                    inputDescriptor = ToolParameterDescriptor("request", "Transaction analytics request", ToolParameterType.String)
                 )
             )
         },
@@ -65,6 +69,6 @@ fun main() = runBlocking {
 //         "What's my maximum check at a restaurant this month?"
 //         "How much did I spend on groceries in the first week of May?"
 //         "What's my total spending on entertainment in May?"
-    val result = classifierAgent.runAndGetResult(message)
+    val result = classifierAgent.run(message)
     println(result)
 }

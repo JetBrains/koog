@@ -3,97 +3,51 @@ package ai.koog.integration.tests.utils
 import ai.koog.prompt.message.Message
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
-import java.io.File
+import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.test.assertTrue
 
 object MediaTestUtils {
-    fun getImageFileForScenario(scenario: MediaTestScenarios.ImageTestScenario, testResourcesDir: File): File {
+    fun getImageFileForScenario(scenario: MediaTestScenarios.ImageTestScenario, testResourcesDir: Path): Path {
         return when (scenario) {
             MediaTestScenarios.ImageTestScenario.BASIC_PNG -> {
-                val file = File(testResourcesDir, "test.png")
-                check(file.exists()) { "PNG test file should exist" }
-                file
+                testResourcesDir.resolve("test.png")
             }
 
             MediaTestScenarios.ImageTestScenario.BASIC_JPG -> {
-                val file = File(testResourcesDir, "test.jpeg")
-                check(file.exists()) { "Test image file should exist" }
-                file
+                testResourcesDir.resolve("test.jpeg")
+
             }
 
             MediaTestScenarios.ImageTestScenario.EMPTY_IMAGE -> {
-                val file = File(testResourcesDir, "empty.png")
-                if (!file.exists()) {
-                    file.writeBytes(
-                        byteArrayOf(
-                            -119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
-                            73, 72, 68, 82, 0, 0, 0, 0, 0, 0, 0, 0, 8, 6,
-                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 73, 69, 78, 68,
-                            -82, 66, 96, -126
-                        )
-                    )
-                }
-                file
+                testResourcesDir.resolve("empty.png")
             }
 
             MediaTestScenarios.ImageTestScenario.CORRUPTED_IMAGE -> {
-                val file = File(testResourcesDir, "corrupted.png")
-                if (!file.exists()) {
-                    file.writeBytes(
-                        byteArrayOf(
-                            -119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
-                            73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,
-                            0, 0, 0, 31, 21, -60, -119, 0, 0, 0, 10, 73, 68, 65,
-                            84, 120, -100, 99, 0, 1, 0, 0, 5, 0, 1
-                        )
-                    )
-                }
-                file
+                testResourcesDir.resolve("corrupted.png")
             }
 
             MediaTestScenarios.ImageTestScenario.LARGE_IMAGE -> {
-                val file = File(testResourcesDir, "large.jpg")
-                check(file.exists()) { "Test image file should exist" }
-                file
+                testResourcesDir.resolve("large.jpg")
             }
 
             MediaTestScenarios.ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                val file = File(testResourcesDir, "large_5.jpg")
-                check(file.exists()) { "Test image file should exist" }
-                file
+                testResourcesDir.resolve("large_5.jpg")
             }
 
             MediaTestScenarios.ImageTestScenario.SMALL_IMAGE -> {
-                val file = File(testResourcesDir, "small.png")
-                if (!file.exists()) {
-                    file.writeBytes(
-                        byteArrayOf(
-                            -119, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13,
-                            73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6,
-                            0, 0, 0, 31, 21, -60, -119, 0, 0, 0, 10, 73, 68, 65,
-                            84, 120, -100, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45,
-                            -76, 0, 0, 0, 0, 73, 69, 78, 68, -82, 66, 96, -126
-                        )
-                    )
-                }
-                file
+                testResourcesDir.resolve("small.png")
             }
         }
     }
 
-    fun createTextFileForScenario(scenario: MediaTestScenarios.TextTestScenario, testResourcesDir: File): File {
+    fun createTextFileForScenario(scenario: MediaTestScenarios.TextTestScenario, testResourcesDir: Path): Path {
         val textContent = when (scenario) {
             MediaTestScenarios.TextTestScenario.BASIC_TEXT ->
                 "This is a simple text for testing basic text processing capabilities."
 
             MediaTestScenarios.TextTestScenario.EMPTY_TEXT ->
                 ""
-
-            MediaTestScenarios.TextTestScenario.LONG_TEXT_5_MB -> { // for Anthropic
-                val sourceFile = File(testResourcesDir, "fakefile_5MB.txt")
-                check(sourceFile.exists()) { "Test text file 5MB should exist" }
-                sourceFile.readText()
-            }
 
             MediaTestScenarios.TextTestScenario.UTF8_ENCODING ->
                 "This text contains UTF-8 characters: é, ü, ñ, ç, ß, 你好, こんにちは, Привет"
@@ -161,29 +115,21 @@ object MediaTestUtils {
             Currency Symbols: $ € £ ¥ ₹ ₽ ₩
             """.trimIndent()
 
+            MediaTestScenarios.TextTestScenario.LONG_TEXT_5_MB -> { // for Anthropic
+                return testResourcesDir.resolve("fakefile_5MB.txt")
+            }
+
             MediaTestScenarios.TextTestScenario.CORRUPTED_TEXT -> {
-                val file = File(testResourcesDir, "corrupted.txt")
-                if (!file.exists()) {
-                    file.writeBytes(
-                        byteArrayOf(
-                            0x48, 0x65, 0x6C, 0x6C, 0x6F,
-                            0x20,
-                            0xFF.toByte(), 0xFE.toByte(),
-                            0x57, 0x6F, 0x72, 0x6C, 0x64,
-                            0x21
-                        )
-                    )
-                }
-                file.readText()
+                return testResourcesDir.resolve("corrupted.txt")
             }
         }
 
-        val file = File(testResourcesDir, "test_${scenario.name.lowercase()}.txt")
-        file.writeText(textContent) // Теперь textContent всегда String
+        val file = testResourcesDir.resolve("test_${scenario.name.lowercase()}.txt")
+        Files.writeString(file, textContent)
         return file
     }
 
-    fun createMarkdownFileForScenario(scenario: MediaTestScenarios.MarkdownTestScenario, testResourcesDir: File): File {
+    fun createMarkdownFileForScenario(scenario: MediaTestScenarios.MarkdownTestScenario, testResourcesDir: Path): Path {
         val markdownContent = when (scenario) {
             MediaTestScenarios.MarkdownTestScenario.BASIC_MARKDOWN -> """
                 This is a simple markdown file for testing basic markdown processing.
@@ -618,52 +564,23 @@ object MediaTestUtils {
             """.trimIndent()
         }
 
-        val file = File(testResourcesDir, "test_${scenario.name.lowercase()}.md")
-        file.writeText(markdownContent)
+        val file = testResourcesDir.resolve("test_${scenario.name.lowercase()}.md")
+        Files.writeString(file, markdownContent)
         return file
     }
 
-    fun createAudioFileForScenario(scenario: MediaTestScenarios.AudioTestScenario, testResourcesDir: File): File {
+    fun createAudioFileForScenario(scenario: MediaTestScenarios.AudioTestScenario, testResourcesDir: Path): Path {
         return when (scenario) {
             MediaTestScenarios.AudioTestScenario.BASIC_WAV -> {
-                val file = File(testResourcesDir, "test.wav")
-                check(file.exists()) { "WAV test file should exist" }
-                file
+                testResourcesDir.resolve("test.wav")
             }
 
             MediaTestScenarios.AudioTestScenario.BASIC_MP3 -> {
-                val file = File(testResourcesDir, "test.mp3")
-                if (!file.exists()) {
-                    val sourceFile = File(testResourcesDir, "test.mp3")
-                    check(sourceFile.exists()) { "MP3 test file should exist" }
-                    file.writeBytes(sourceFile.readBytes())
-                }
-                file
-            }
-
-            MediaTestScenarios.AudioTestScenario.BIG_AUDIO -> {
-                val file = File(testResourcesDir, "test_big.wav")
-                if (!file.exists()) {
-                    val sourceFile = File(testResourcesDir, "test_big.wav")
-                    check(sourceFile.exists()) { "Source WAV test file should exist" }
-                    file.writeBytes(sourceFile.readBytes())
-                }
-                file
+                testResourcesDir.resolve("test.mp3")
             }
 
             MediaTestScenarios.AudioTestScenario.CORRUPTED_AUDIO -> {
-                val file = File(testResourcesDir, "test_corrupted.wav")
-                if (!file.exists()) {
-                    file.writeBytes(
-                        byteArrayOf(
-                            82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69, 102, 109, 116, 32,
-                            16, 0, 0, 0, 1, 0, 1, 0, 68, -84, 0, 0, -120, 88, 1, 0,
-                            2, 0, 16, 0
-                            // Missing the data chunk
-                        )
-                    )
-                }
-                file
+                testResourcesDir.resolve("test_corrupted.wav")
             }
         }
     }

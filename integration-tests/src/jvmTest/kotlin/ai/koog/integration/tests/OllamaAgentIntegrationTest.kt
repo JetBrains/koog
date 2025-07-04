@@ -4,6 +4,7 @@ package ai.koog.integration.tests
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -36,7 +37,7 @@ class OllamaAgentIntegrationTest {
         private val model get() = fixture.model
     }
 
-    private fun createTestStrategy() = strategy("test-ollama") {
+    private fun createTestStrategy() = strategy<String, String>("test-ollama") {
         val askCapitalSubgraph by subgraph<String, String>("ask-capital") {
             val definePrompt by node<Unit, Unit> {
                 llm.writeSession {
@@ -70,7 +71,7 @@ class OllamaAgentIntegrationTest {
             val sendToolResult by nodeLLMSendToolResult()
 
             edge(nodeStart forwardTo definePrompt transformed {})
-            edge(definePrompt forwardTo callLLM transformed { agentInput })
+            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
             edge(callLLM forwardTo callTool onToolCall { true })
             edge(callTool forwardTo sendToolResult)
             edge(sendToolResult forwardTo callTool onToolCall { true })
@@ -110,7 +111,7 @@ class OllamaAgentIntegrationTest {
             val sendToolResult by nodeLLMSendToolResult()
 
             edge(nodeStart forwardTo definePrompt transformed {})
-            edge(definePrompt forwardTo callLLM transformed { agentInput })
+            edge(definePrompt forwardTo callLLM transformed { agentInput<String>() })
             edge(callLLM forwardTo callTool onToolCall { true })
             edge(callTool forwardTo sendToolResult)
             edge(sendToolResult forwardTo callTool onToolCall { true })
@@ -131,8 +132,8 @@ class OllamaAgentIntegrationTest {
     }
 
     private fun createAgent(
-        executor: PromptExecutor, strategy: AIAgentStrategy, toolRegistry: ToolRegistry
-    ): AIAgent {
+        executor: PromptExecutor, strategy: AIAgentStrategy<String, String>, toolRegistry: ToolRegistry
+    ): AIAgent<String, String> {
         val promptsAndResponses = mutableListOf<String>()
 
         return AIAgent(
@@ -181,7 +182,7 @@ class OllamaAgentIntegrationTest {
         val toolRegistry = createToolRegistry()
         val agent = createAgent(executor, strategy, toolRegistry)
 
-        val result = agent.runAndGetResult("What is the capital of France?")
+        val result = agent.run("What is the capital of France?")
 
         assertNotNull(result, "Result should not be empty")
         assertTrue(result.isNotEmpty(), "Result should not be empty")

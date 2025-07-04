@@ -135,7 +135,7 @@ public data class AIAgentStrategyStartEvent(
 @Serializable
 public data class AIAgentStrategyFinishedEvent(
     val strategyName: String,
-    val result: String,
+    val result: String?,
     override val eventId: String = AIAgentStrategyFinishedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 

@@ -18,6 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    timeout-minutes: 90  # Prevent hanging builds
 
     strategy:
       matrix:

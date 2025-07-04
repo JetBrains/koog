@@ -152,7 +152,7 @@ public class AIAgentPipeline {
      * @param agent The agent instance for which the execution has started
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(strategy: AIAgentStrategy, agent: AIAgent) {
+    public suspend fun onBeforeAgentStarted(strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *>) {
         agentHandlers.values.forEach { handler ->
             val context = AgentStartContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.handleBeforeAgentStartedUnsafe(context)
@@ -165,7 +165,7 @@ public class AIAgentPipeline {
      * @param strategyName The name of the strategy that was executed
      * @param result The result produced by the agent, or null if no result was produced
      */
-    public suspend fun onAgentFinished(strategyName: String, result: String?) {
+    public suspend fun <TResult> onAgentFinished(strategyName: String, result: TResult) {
         agentHandlers.values.forEach { handler -> handler.agentFinishedHandler.handle(strategyName, result) }
     }
 
@@ -192,8 +192,8 @@ public class AIAgentPipeline {
      * @return The transformed environment after all handlers have been applied
      */
     public fun transformEnvironment(
-        strategy: AIAgentStrategy,
-        agent: AIAgent,
+        strategy: AIAgentStrategy<*, *>,
+        agent: AIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
         return agentHandlers.values.fold(baseEnvironment) { env, handler ->
@@ -212,8 +212,8 @@ public class AIAgentPipeline {
      * @param strategy The strategy that has started execution
      * @param context The context of the strategy execution
      */
-    @OptIn(ExperimentalUuidApi::class)
-    public suspend fun onStrategyStarted(strategy: AIAgentStrategy, context: AIAgentContextBase) {
+    @OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
+    public suspend fun onStrategyStarted(strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase) {
         strategyHandlers.values.forEach { handler ->
             val updateContext = StrategyUpdateContext(strategy, context.sessionUuid, handler.feature)
             handler.handleStrategyStartedUnsafe(updateContext)
@@ -227,8 +227,8 @@ public class AIAgentPipeline {
      * @param context The context of the strategy execution
      * @param result The result produced by the strategy execution
      */
-    @OptIn(ExperimentalUuidApi::class)
-    public suspend fun onStrategyFinished(strategy: AIAgentStrategy, context: AIAgentContextBase, result: String) {
+    @OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
+    public suspend fun <TResult> onStrategyFinished(strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase, result: TResult) {
         strategyHandlers.values.forEach { handler ->
             val updateContext = StrategyUpdateContext(strategy, context.sessionUuid, handler.feature)
             handler.handleStrategyFinishedUnsafe(updateContext, result)
@@ -459,7 +459,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptAgentFinished(
         context: InterceptContext<TFeature>,
-        handle: suspend TFeature.(strategyName: String, result: String?) -> Unit
+        handle: suspend TFeature.(strategyName: String, result: Any?) -> Unit
     ) {
         val existingHandler = agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) }
 
@@ -540,7 +540,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptStrategyFinished(
         context: InterceptContext<TFeature>,
-        handle: suspend StrategyUpdateContext<TFeature>.(String) -> Unit
+        handle: suspend StrategyUpdateContext<TFeature>.(Any?) -> Unit
     ) {
         val existingHandler = strategyHandlers.getOrPut(context.feature.key) { StrategyHandler(context.featureImpl) }
 
