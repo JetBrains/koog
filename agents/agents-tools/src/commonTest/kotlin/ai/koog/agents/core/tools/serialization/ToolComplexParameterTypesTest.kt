@@ -4,13 +4,7 @@ import ai.koog.agents.core.tools.*
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.addJsonArray
-import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
