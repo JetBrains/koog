@@ -468,14 +468,14 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 ): Fact {
     @Serializable
     @LLMDescription("Fact text")
-    data class Fact(
+    data class FactStructure(
         val fact: String
     )
 
     @Serializable
     @LLMDescription("Facts list")
-    data class FactList(
-        val facts: List<Fact>
+    data class FactListStructure(
+        val facts: List<FactStructure>
     )
 
     // Add a message asking to retrieve facts about the concept
@@ -519,12 +519,12 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 
     val facts = when (concept.factType) {
         FactType.SINGLE -> {
-            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<Fact>())
+            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactStructure>())
             SingleFact(concept = concept, value = response.getOrNull()?.structure?.fact ?: "No facts extracted", timestamp = timestamp)
         }
 
         FactType.MULTIPLE -> {
-            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactList>())
+            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactListStructure>())
             val factsList = response.getOrNull()?.structure?.facts ?: emptyList()
             MultipleFacts(concept = concept, values = factsList.map { it.fact }, timestamp = timestamp)
         }
