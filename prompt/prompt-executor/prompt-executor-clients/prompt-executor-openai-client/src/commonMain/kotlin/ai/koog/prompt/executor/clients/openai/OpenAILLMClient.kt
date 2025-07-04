@@ -10,7 +10,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
-import ai.koog.prompt.executor.clients.openai.ImageSource.Companion.text
 import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
@@ -210,11 +209,11 @@ public open class OpenAILLMClient(
         }
         val input = buildList {
             prompt.messages.forEach { message ->
-                add(OpenAIModerationInput.Text(message.content))
+                add(OpenAIModerationInput.text(message.content))
 
                 if (message is MessageWithAttachments) {
                     message.attachments
-                        .map(ImageSource::fromImageContent)
+                        .map(OpenAIModerationInput::fromImageContent)
                         .forEach(::add)
                 }
             }
@@ -272,31 +271,31 @@ public open class OpenAILLMClient(
                     // Convert category applied input types if available
                     val categoryAppliedInputTypes = result.categoryAppliedInputTypes?.let { appliedTypes ->
                         buildMap {
-                            appliedTypes.harassment?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.harassment?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Harassment, it) }
-                            appliedTypes.harassmentThreatening?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.harassmentThreatening?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.HarassmentThreatening, it) }
-                            appliedTypes.hate?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.hate?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Hate, it) }
-                            appliedTypes.hateThreatening?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.hateThreatening?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.HateThreatening, it) }
-                            appliedTypes.sexual?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.sexual?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Sexual, it) }
-                            appliedTypes.sexualMinors?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.sexualMinors?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.SexualMinors, it) }
-                            appliedTypes.violence?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.violence?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Violence, it) }
-                            appliedTypes.violenceGraphic?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.violenceGraphic?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.ViolenceGraphic, it) }
-                            appliedTypes.selfHarm?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.selfHarm?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.SelfHarm, it) }
-                            appliedTypes.selfHarmIntent?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.selfHarmIntent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.SelfHarmIntent, it) }
-                            appliedTypes.selfHarmInstructions?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.selfHarmInstructions?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.SelfHarmInstructions, it) }
-                            appliedTypes.illicit?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.illicit?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Illicit, it) }
-                            appliedTypes.illicitViolent?.map { ModerationResult.InputType.valueOf(it.lowercase()) }
+                            appliedTypes.illicitViolent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.IllicitViolent, it) }
                         }
                     } ?: emptyMap()

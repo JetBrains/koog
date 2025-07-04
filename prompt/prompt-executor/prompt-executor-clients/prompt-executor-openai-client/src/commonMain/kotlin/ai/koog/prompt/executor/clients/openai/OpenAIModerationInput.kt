@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
-import ai.koog.prompt.executor.clients.openai.ImageSource.Companion.text
+import ai.koog.prompt.executor.clients.openai.OpenAIModerationInput.Companion.text
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import kotlinx.serialization.SerialName
@@ -10,108 +10,52 @@ import kotlinx.serialization.Serializable
  * Represents a moderation input for OpenAI's moderation API.
  * This can be either text or an image.
  */
+@ConsistentCopyVisibility
 @Serializable
-public sealed class OpenAIModerationInput {
+public data class OpenAIModerationInput private constructor(
+    val type: String,
+    val text: String? = null,
+    @SerialName("image_url") val imageUrl: String? = null,
+) {
     /**
-     * Represents a text input for moderation.
-     *
-     * @property text The text to moderate.
-     */
-    @Serializable
-    public data class Text(
-        val text: String,
-        val type: String = "text"
-    ) : OpenAIModerationInput()
-
-    /**
-     * Represents an image input for moderation.
-     *
-     * @property imageUrl The URL or base64 data of the image to moderate.
-     */
-    @Serializable
-    public data class Image(
-        @SerialName("image_url") val imageUrl: ImageSource,
-        val type: String = "image_url"
-    ) : OpenAIModerationInput()
-}
-
-/**
- * Represents an image source for moderation.
- * This can be either a URL or base64-encoded image data.
- */
-@Serializable
-public sealed interface ImageSource {
-    /**
-     * The URL or base64 data of the image.
-     */
-    public val url: String
-
-    /**
-     * Represents an image URL.
-     *
-     * @property url The URL of the image.
-     */
-    @Serializable
-    public data class Url(
-        override val url: String
-    ) : ImageSource
-
-    /**
-     * Represents a base64-encoded image.
-     *
-     * @property data The base64-encoded image data.
-     * @property mediaType The media type of the image (e.g., "image/png").
-     */
-    @Serializable
-    public data class Base64(
-        val data: String,
-        val mediaType: String
-    ) : ImageSource {
-        override val url: String
-            get() = "data:$mediaType;base64,$data"
-    }
-
-    /**
-     * Companion object with utility methods for creating moderation inputs.
+     * Companion object for the OpenAIModerationInput class, providing factory methods to create instances
+     * for text or image moderation.
      */
     public companion object {
         /**
-         * Creates a text moderation input.
+         * Creates a new OpenAIModerationInput instance configured to represent textual input.
          *
-         * @param text The text to moderate
-         * @return A text moderation input
+         * @param text The textual content to be moderated.
+         * @return An OpenAIModerationInput instance configured with the specified text and a type of "text".
          */
-        public fun text(text: String): OpenAIModerationInput.Text {
-            return OpenAIModerationInput.Text(text)
-        }
+        public fun text(text: String): OpenAIModerationInput = OpenAIModerationInput(type = "text", text = text)
 
         /**
-         * Creates an image moderation input from a URL.
+         * Converts a given image URL into an `OpenAIModerationInput` instance with the appropriate type and URL.
          *
-         * @param url The URL of the image to moderate
-         * @return An image moderation input
+         * @param imageUrl The URL of the image to be used as input for moderation.
+         * @return An instance of `OpenAIModerationInput` containing the specified image URL and type.
          */
-        public fun imageUrl(url: String): OpenAIModerationInput.Image {
-            return OpenAIModerationInput.Image(ImageSource.Url(url))
-        }
+        public fun imageFromUrl(imageUrl: String): OpenAIModerationInput =
+            OpenAIModerationInput(type = "image_url", imageUrl = imageUrl)
 
         /**
-         * Creates an image moderation input from base64-encoded data.
+         * Converts a base64-encoded image into an `OpenAIModerationInput` object.
          *
-         * @param data The base64-encoded image data
-         * @param mediaType The media type of the image (e.g., "image/png")
-         * @return An image moderation input
+         * @param data The base64-encoded string representation of the image.
+         * @param mimeType The MIME type of the image (e.g., "image/png", "image/jpeg").
+         * @return An `OpenAIModerationInput` object containing the image URL in a format suitable for OpenAI's moderation API input.
          */
-        public fun imageBase64(data: String, mediaType: String): OpenAIModerationInput.Image {
-            return OpenAIModerationInput.Image(ImageSource.Base64(data, mediaType))
-        }
+        public fun imageFromBase64(data: String, mimeType: String): OpenAIModerationInput =
+            OpenAIModerationInput(type = "image_url", imageUrl = "data:$mimeType;base64,$data\"")
 
         /**
-         * Creates a moderation input from a MediaContent.Image object.
+         * Converts an `Attachment` to an `OpenAIModerationInput` object, supporting only image attachments.
          *
-         * @param media The image media content to convert
-         * @return A moderation input for the image
-         * @throws IllegalArgumentException if the media is not an image
+         * Throws an `IllegalArgumentException` if the provided attachment is not an image or contains unsupported content.
+         *
+         * @param media The `Attachment` instance to be converted, which must be of type `Attachment.Image`.
+         * @return An instance of `OpenAIModerationInput` created from the image content, either based on a URL or base64 representation.
          */
         public fun fromImageContent(media: Attachment): OpenAIModerationInput {
             if (media !is Attachment.Image) {
@@ -119,11 +63,12 @@ public sealed interface ImageSource {
             }
 
             return when (media.content) {
-                is AttachmentContent.URL -> imageUrl((media.content as AttachmentContent.URL).url)
-                is AttachmentContent.Binary.Base64 -> imageBase64(
+                is AttachmentContent.URL -> imageFromUrl((media.content as AttachmentContent.URL).url)
+                is AttachmentContent.Binary.Base64 -> imageFromBase64(
                     (media.content as AttachmentContent.Binary.Base64).base64,
                     media.mimeType
                 )
+
                 else -> throw IllegalArgumentException("Unsupported image attachment content: ${media.content::class}")
             }
         }

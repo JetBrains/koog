@@ -316,8 +316,8 @@ public class OllamaClient(
 
     private fun parseModerationResult(result: String): Boolean {
         return when (result) {
-            "safe" -> true
-            "unsafe" -> false
+            "safe" -> false
+            "unsafe" -> true
             else -> throw IllegalStateException("Unknown moderation result: $result")
         }
     }

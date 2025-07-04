@@ -135,9 +135,7 @@ public object OllamaModels {
             provider = LLMProvider.Ollama,
             id = "llama-guard3:latest",
             capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
-                LLMCapability.Tools
+                LLMCapability.Moderation
             )
         )
     }
