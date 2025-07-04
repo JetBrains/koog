@@ -105,7 +105,7 @@ class ToolParameterTypeTest {
         val result = NestedListsTool.execute(
             NestedListsTool.decodeArgs(
                 buildJsonObject {
-                    putJsonArray("nested_list") {
+                    putJsonArray("nestedList") {
                         addJsonArray {
                             add(1)
                             add(2)
@@ -140,7 +140,7 @@ class ToolParameterTypeTest {
             description = "Tool with nested lists parameter",
             requiredParameters = listOf(
                 ToolParameterDescriptor(
-                    name = "nested_list",
+                    name = "nestedList",
                     description = "A nested list of integers",
                     type = ToolParameterType.List(
                         ToolParameterType.List(
