@@ -83,6 +83,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     //endregion
 
     //region JVMFileSystemProvider.Select
+
     @Test
     fun `test list dir sorted`() = runBlocking {
         val testList = select.list(resources)
@@ -163,6 +164,17 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     //endregion
 
     //region FileSystemProvider.Read
+    @Test
+    fun `test read throws IOException when file doesn't exist`() {
+        val testFile = dirEmpty.resolve("non-existing-file.txt")
+
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                read.read(testFile)
+            }
+        }
+    }
+
     @Test
     fun `test extension`() = runBlocking {
         val testExtension = select.extension(file1)
@@ -280,6 +292,18 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     //endregion
 
     //region JVMFileSystemProvider.Write
+    @Test
+    fun `test move throws IOException when source file doesn't exist`() {
+        val sourcePath = dirEmpty.resolve("non-existing-file.txt")
+        val targetPath = dirEmpty.resolve("target-path")
+
+        assertThrows(IOException::class.java) {
+            runBlocking {
+                write.move(sourcePath, targetPath)
+            }
+        }
+    }
+
     @Test
     fun `test create file`() {
         runBlocking {

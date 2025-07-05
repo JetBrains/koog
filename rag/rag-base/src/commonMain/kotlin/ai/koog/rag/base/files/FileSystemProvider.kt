@@ -4,25 +4,16 @@ import kotlinx.io.Sink
 import kotlinx.io.Source
 
 /**
- * Provides interfaces for interacting with a filesystem.
- *
- * Contains nested interfaces for path serialization, file operations,
- * and content reading/writing.
+ * Provides [ReadOnly] and [ReadWrite] interfaces
+ * for interacting with a filesystem through file operations and content reading/writing.
  */
 public object FileSystemProvider {
 
     /**
      * Handles serialization and deserialization of file paths.
      */
+    @Deprecated("For internal use only.")
     public interface Serialization<Path> {
-        /**
-         * Converts a [path] to its string representation.
-         *
-         * @param path The path to convert.
-         * @return String representation of the path.
-         */
-        @Deprecated("Use toAbsolutePathString instead", ReplaceWith("toAbsolutePathString(path)"))
-        public fun toPathString(path: Path): String
 
         /**
          * Converts a [path] to its absolute path string representation.
@@ -53,21 +44,19 @@ public object FileSystemProvider {
 
         /**
          * Gets the name component of a [path].
-         * This is a suspending function as it may require filesystem access.
          *
          * @param path The path to examine.
          * @return The name of the file or directory.
          */
-        public suspend fun name(path: Path): String
+        public fun name(path: Path): String
 
         /**
          * Gets the file extension from a [path].
-         * This is a suspending function as it may require filesystem access.
          *
          * @param path The path to examine.
          * @return The file extension or empty string if none exists.
          */
-        public suspend fun extension(path: Path): String
+        public fun extension(path: Path): String
     }
 
     /**
@@ -80,19 +69,18 @@ public object FileSystemProvider {
          * Retrieves metadata for a file or directory using a [path].
          *
          * @param path The path to examine.
-         * @return FileMetadata object or null if the path doesn't exist or isn't a regular file or directory.
-         * @throws IOException if file/directory access fails.
+         * @return [FileMetadata] object or null if the path doesn't exist or isn't a regular file or directory.
          */
         public suspend fun metadata(path: Path): FileMetadata?
 
         /**
-         * Lists contents of a directory using a [path].
+         * Lists contents of a directory using a [directory].
          *
-         * @param path The directory path to list.
-         * @return List of paths contained in the directory, or empty list if the path doesn't exist, isn't a directory, or an error occurs.
-         * @throws IOException if directory access fails.
+         * @param directory The directory path to list.
+         * @return List of paths contained in the directory.
+         * @throws IllegalArgumentException if passed argument is not a directory, or it doesn't exist.
          */
-        public suspend fun list(path: Path): List<Path>
+        public suspend fun list(directory: Path): List<Path>
 
         /**
          * Gets the parent path of a given [path].
@@ -100,20 +88,8 @@ public object FileSystemProvider {
          *
          * @param path The path to examine.
          * @return The parent path or null if no parent exists.
-         * @throws IOException if directory access fails.
          */
-        public suspend fun parent(path: Path): Path?
-
-        /**
-         * Computes the relative path from a [root] to a target [path].
-         *
-         * @param root The root path.
-         * @param path The target path.
-         * @return The relative path as a string, or null if not relativizable.
-         * @throws IllegalArgumentException if either path is invalid.
-         */
-        @Deprecated("Use relativize instead", ReplaceWith("relativize(root, path)"))
-        public suspend fun relative(root: Path, path: Path): String? = relativize(root, path)
+        public fun parent(path: Path): Path?
 
         /**
          * Computes the relative path from a [root] to a target [path].
@@ -122,16 +98,14 @@ public object FileSystemProvider {
          * @param root The root path.
          * @param path The target path.
          * @return The relative path as a string, or null if the paths cannot be relativized (e.g., they have no common prefix).
-         * @throws IllegalArgumentException if either path is invalid.
          */
-        public suspend fun relativize(root: Path, path: Path): String?
+        public fun relativize(root: Path, path: Path): String?
 
         /**
          * Checks if a [path] exists in the filesystem.
          *
          * @param path The path to check.
          * @return true if the path exists, false otherwise.
-         * @throws IOException if file/directory access fails.
          */
         public suspend fun exists(path: Path): Boolean
     }
@@ -157,8 +131,7 @@ public object FileSystemProvider {
          *
          * @param path The path to read from.
          * @return A Source object for reading.
-         * @throws NoSuchFileException if the path doesn't exist.
-         * @throws IllegalArgumentException if the path isn't a regular file.
+         * @throws IllegalArgumentException if the path isn't a regular file, or it doesn't exist.
          */
         public suspend fun source(path: Path): Source
 
@@ -208,9 +181,7 @@ public object FileSystemProvider {
          *
          * @param source The source path to move from.
          * @param target The target path to move to.
-         * @throws IOException if the source path doesn't exist, isn't a file or directory, or if an error occurs during move operation.
-         * @throws NoSuchFileException if the path doesn't exist.
-         * @throws AccessDeniedException if there are not enough permissions to perform operation.
+         * @throws IOException if the source path doesn't exist, isn't a file or directory, or any IO error occurs.
          */
         public suspend fun move(source: Path, target: Path)
 
@@ -234,7 +205,6 @@ public object FileSystemProvider {
          * @param path The path where Sink will be created.
          * @param append Append to existing content (true) or overwrite (false). Default is false (overwrite).
          * @return A Sink object for writing.
-         * @throws IOException if an IO error occurs during sink creation.
          */
         public suspend fun sink(path: Path, append: Boolean = false): Sink
 
@@ -245,8 +215,6 @@ public object FileSystemProvider {
          *
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
-         * @throws AccessDeniedException if there are not enough permissions to perform operation.
-         * @throws IOException if an error occurs during deletion (e.g., file is locked).
          */
         public suspend fun delete(parent: Path, name: String)
     }

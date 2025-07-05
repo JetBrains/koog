@@ -28,15 +28,6 @@ public object JVMFileSystemProvider {
      */
     public object Serialization : FileSystemProvider.Serialization<Path> {
         /**
-         * Converts the given [Path] to a normalized string representation.
-         * This function is deprecated and should be replaced by the `toAbsolutePathString` method.
-         *
-         * @param path the [Path] to be converted to a string
-         * @return the string representation of the normalized [Path]
-         */
-        @Deprecated("Use toAbsolutePathString instead", replaceWith = ReplaceWith("toAbsolutePathString(path)"))
-        override fun toPathString(path: Path): String = path.normalize().pathString
-        /**
          * Converts the given [path] to its absolute path representation as a string.
          * The path is normalized before being converted.
          *
@@ -67,14 +58,14 @@ public object JVMFileSystemProvider {
          * @param path the file path from which to extract the name
          * @return the name of the file or directory represented by the provided path
          */
-        override suspend fun name(path: Path): String = path.name
+        override fun name(path: Path): String = path.name
         /**
          * Retrieves the file extension of the specified path.
          *
          * @param path the path from which to extract the file extension.
          * @return the file extension as a string.
          */
-        override suspend fun extension(path: Path): String = path.extension
+        override fun extension(path: Path): String = path.extension
 
         /**
          * Converts a given file path to a system-dependent format by replacing universal separators
@@ -125,11 +116,12 @@ public object JVMFileSystemProvider {
         /**
          * Retrieves a sorted list of paths within the specified directory.
          *
-         * @param path The directory path whose contents are to be listed.
+         * @param directory The directory path whose contents are to be listed.
          * @return A list of paths within the specified directory, sorted by name.
          *         Returns an empty list if an error occurs or the directory is empty.
          */
-        override suspend fun list(path: Path): List<Path> = runCatching { Files.list(path).use {
+        override suspend fun list(directory: Path): List<Path> = runCatching {
+            Files.list(directory).use {
             it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
         }}.getOrElse { emptyList() }
 
@@ -139,18 +131,7 @@ public object JVMFileSystemProvider {
          * @param path the path for which to retrieve the parent directory
          * @return the parent path if it exists, or null if the path does not have a parent
          */
-        override suspend fun parent(path: Path): Path? = path.parent
-
-        /**
-         * Computes the relative path from the specified root to the given path.
-         *
-         * @param root The root path to which the relative computation is performed.
-         * @param path The path for which the relative computation is performed.
-         * @return The relative path as a string, or null if the relative computation is not possible.
-         */
-        @Deprecated("Use relativize instead", replaceWith = ReplaceWith("relativize(root, path)"))
-        override suspend fun relative(root: Path, path: Path): String? =
-            path.relativeToOrNull(root)?.normalize()?.pathString
+        override fun parent(path: Path): Path? = path.parent
 
         /**
          * Computes the relative path from the given root to the specified path.
@@ -159,7 +140,7 @@ public object JVMFileSystemProvider {
          * @param path the path for which the relative path needs to be determined.
          * @return the relative path from the root to the given path as a normalized string, or null if the paths have no common prefix.
          */
-        override suspend fun relativize(root: Path, path: Path): String? {
+        override fun relativize(root: Path, path: Path): String? {
             return path.relativeToOrNull(root)?.normalize()?.pathString
         }
 
@@ -227,15 +208,6 @@ public object JVMFileSystemProvider {
         FileSystemProvider.Read<Path> by Read {
 
         /**
-         * Converts the specified [path] to its string representation.
-         *
-         * @param path the file system path to convert to a string.
-         * @return the string representation of the specified path.
-         * @deprecated Use toAbsolutePathString instead.
-         */
-        @Deprecated("Use toAbsolutePathString instead", replaceWith = ReplaceWith("toAbsolutePathString(path)"))
-        override fun toPathString(path: Path): String = Serialization.toPathString(path)
-        /**
          * Converts the given Path to its absolute path string representation.
          *
          * @param path the path to be converted to an absolute path string
@@ -265,14 +237,14 @@ public object JVMFileSystemProvider {
          * @param path the Path object from which the name will be extracted.
          * @return the name of the provided path as a String.
          */
-        override suspend fun name(path: Path): String = Serialization.name(path)
+        override fun name(path: Path): String = Serialization.name(path)
         /**
          * Retrieves the file extension from the specified path using the serialization logic.
          *
          * @param path The path from which to extract the file extension.
          * @return The file extension as a string.
          */
-        override suspend fun extension(path: Path): String = Serialization.extension(path)
+        override fun extension(path: Path): String = Serialization.extension(path)
 
     }
 
@@ -287,15 +259,6 @@ public object JVMFileSystemProvider {
         FileSystemProvider.ReadOnly<Path> by ReadOnly,
         FileSystemProvider.Write<Path> by Write {
 
-        /**
-         * Converts the given [path] to its string representation.
-         * The method is deprecated and it is recommended to use `toAbsolutePathString` instead.
-         *
-         * @param path the path to be converted to a string.
-         * @return the string representation of the provided path.
-         */
-        @Deprecated("Use toAbsolutePathString instead", replaceWith = ReplaceWith("toAbsolutePathString(path)"))
-        override fun toPathString(path: Path): String = Serialization.toPathString(path)
         /**
          * Converts the specified [path] to its absolute path represented as a string.
          *
@@ -324,14 +287,14 @@ public object JVMFileSystemProvider {
          * @param path the path from which the name should be extracted
          * @return the name of the file or directory as a string
          */
-        override suspend fun name(path: Path): String = Serialization.name(path)
+        override fun name(path: Path): String = Serialization.name(path)
         /**
          * Gets the extension of the file represented by the given path.
          *
          * @param path The path of the file whose extension is to be determined.
          * @return The file extension as a string.
          */
-        override suspend fun extension(path: Path): String = Serialization.extension(path)
+        override fun extension(path: Path): String = Serialization.extension(path)
     }
 
     /**
