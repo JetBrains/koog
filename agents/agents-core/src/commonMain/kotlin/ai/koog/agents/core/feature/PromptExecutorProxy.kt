@@ -24,7 +24,7 @@ public class PromptExecutorProxy(
 ) : PromptExecutor {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
@@ -33,7 +33,7 @@ public class PromptExecutorProxy(
 
         val responses = executor.execute(prompt, model, tools)
 
-        logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" } }]" }
+        logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
         pipeline.onAfterLLMCall(runId, prompt, model, tools, responses)
 
         return responses
@@ -80,7 +80,7 @@ public class PromptExecutorProxy(
         pipeline.onBeforeLLMCall(runId, prompt, model, emptyList())
         val result = executor.moderate(prompt, model)
         logger.debug { "Finished moderation LLM request with response: $result" }
-        pipeline.onAfterLLMCall(runId, prompt, model, emptyList(), result)
+        pipeline.onAfterLLMCall(runId, prompt, model, emptyList(), responses = emptyList(), moderationResponse = result)
         return result
     }
 }

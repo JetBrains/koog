@@ -13,6 +13,7 @@ import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -45,7 +46,7 @@ public class AIAgentPipeline {
         /**
          * Logger instance for the AIAgentPipeline class.
          */
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     private val featurePrepareDispatcher = Dispatchers.Default.limitedParallelism(5)
@@ -152,7 +153,8 @@ public class AIAgentPipeline {
     @OptIn(InternalAgentsApi::class)
     public suspend fun onBeforeAgentStarted(runId: String, agent: AIAgent<*, *>, strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase,) {
         agentHandlers.values.forEach { handler ->
-            val eventContext = AgentStartContext(agent = agent, runId = runId, strategy = strategy, feature = handler.feature, context = context)
+            val eventContext =
+                AgentStartContext(agent = agent, runId = runId, strategy = strategy, feature = handler.feature, context = context)
             handler.handleBeforeAgentStartedUnsafe(eventContext)
         }
     }
@@ -218,7 +220,8 @@ public class AIAgentPipeline {
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
         return agentHandlers.values.fold(baseEnvironment) { environment, handler ->
-            val eventContext = AgentTransformEnvironmentContext(strategy = strategy, agent = agent, feature = handler.feature)
+            val eventContext =
+                AgentTransformEnvironmentContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.transformEnvironmentUnsafe(eventContext, environment)
         }
     }
@@ -251,7 +254,8 @@ public class AIAgentPipeline {
     @OptIn(InternalAgentsApi::class)
     public suspend fun onStrategyStarted(strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase) {
         strategyHandlers.values.forEach { handler ->
-            val eventContext = StrategyStartContext(runId = context.runId, strategy = strategy, feature = handler.feature)
+            val eventContext =
+                StrategyStartContext(runId = context.runId, strategy = strategy, feature = handler.feature)
             handler.handleStrategyStartedUnsafe(eventContext)
         }
     }
@@ -264,9 +268,18 @@ public class AIAgentPipeline {
      * @param result The result produced by the strategy execution
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun <TResult> onStrategyFinished(strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase, result: TResult) {
+    public suspend fun <TResult> onStrategyFinished(
+        strategy: AIAgentStrategy<*, *>,
+        context: AIAgentContextBase,
+        result: TResult
+    ) {
         strategyHandlers.values.forEach { handler ->
-            val eventContext = StrategyFinishContext(runId = context.runId, strategy = strategy, feature = handler.feature, result = result)
+            val eventContext = StrategyFinishContext(
+                runId = context.runId,
+                strategy = strategy,
+                feature = handler.feature,
+                result = result
+            )
             handler.handleStrategyFinishedUnsafe(eventContext)
         }
     }
@@ -330,8 +343,15 @@ public class AIAgentPipeline {
      * @param model The language model instance that processed the request
      * @param responses The response messages received from the language model
      */
-    public suspend fun onAfterLLMCall(runId: String, prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>, responses: List<Message.Response>) {
-        val eventContext = AfterLLMCallContext(runId, prompt,  model, tools, responses)
+    public suspend fun onAfterLLMCall(
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        responses: List<Message.Response>,
+        moderationResponse: ModerationResult? = null,
+    ) {
+        val eventContext = AfterLLMCallContext(runId, prompt, model, tools, responses, moderationResponse)
         executeLLMHandlers.values.forEach { handler -> handler.afterLLMCallHandler.handle(eventContext) }
     }
 
@@ -359,7 +379,13 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments that failed validation
      * @param error The validation error message
      */
-    public suspend fun onToolValidationError(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: ToolArgs, error: String) {
+    public suspend fun onToolValidationError(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs,
+        error: String
+    ) {
         val eventContext = ToolValidationErrorContext(runId, toolCallId, tool, toolArgs, error)
         executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(eventContext) }
     }
@@ -372,7 +398,13 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments provided to the tool
      * @param throwable The exception that caused the failure
      */
-    public suspend fun onToolCallFailure(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable) {
+    public suspend fun onToolCallFailure(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs,
+        throwable: Throwable
+    ) {
         val eventContext = ToolCallFailureContext(runId, toolCallId, tool, toolArgs, throwable)
         executeToolHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(eventContext) }
     }
@@ -385,7 +417,13 @@ public class AIAgentPipeline {
      * @param toolArgs The arguments that were provided to the tool
      * @param result The result produced by the tool, or null if no result was produced
      */
-    public suspend fun onToolCallResult(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?) {
+    public suspend fun onToolCallResult(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs,
+        result: ToolResult?
+    ) {
         val eventContext = ToolCallResultContext(runId, toolCallId, tool, toolArgs, result)
         executeToolHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(eventContext) }
     }
@@ -439,7 +477,8 @@ public class AIAgentPipeline {
     ) {
         @Suppress("UNCHECKED_CAST")
         val existingHandler: AgentHandler<TFeature> =
-            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature> ?: return
+            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature>
+                ?: return
 
         existingHandler.environmentTransformer = AgentEnvironmentTransformer { context, env -> context.transform(env) }
     }
@@ -464,7 +503,8 @@ public class AIAgentPipeline {
     ) {
         @Suppress("UNCHECKED_CAST")
         val existingHandler: AgentHandler<TFeature> =
-            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature> ?: return
+            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature>
+                ?: return
 
         existingHandler.beforeAgentStartedHandler = BeforeAgentStartedHandler { context ->
             handle(context)
