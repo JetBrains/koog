@@ -54,6 +54,24 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test relative path from absolute string`() {
+        // Create a relative path string (without leading slash)
+        val relativePathString = "relative/test/path"
+
+        // Call fromAbsoluteString with the relative path
+        val resolvedPath = serialization.fromAbsoluteString(relativePathString)
+
+        // Get the expected path by using Path.of directly
+        val expectedPath = Path.of(relativePathString).normalize()
+        
+        // Verify that the method returns a Path object with the relative path
+        assertEquals(expectedPath, resolvedPath)
+
+        // Verify that the path is still relative (not absolute)
+        assertFalse(resolvedPath.isAbsolute)
+    }
+
+    @Test
     fun `test to path string`() {
         val filePathString = file1.absolute().pathString
 
