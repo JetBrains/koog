@@ -3,7 +3,6 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.simpleStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -68,31 +67,6 @@ class AIAgentNodesHistoryCompressionTest {
                 onAgentFinished { eventContext -> results += eventContext.result }
             }
         }
-
-        val myStrategy = simpleStrategy("loop") {
-            while (true) {
-                val response = callLLM()
-                onAssistantMessage(response) {
-                    return@simpleStrategy it.content
-                }
-                val tools = extractTools(response)
-
-                if (latestTokenUsage() > 100500) {
-                    compressHistory()
-                }
-
-                callTools(tools)
-            }
-
-            "Should not be reached"
-        }
-
-        AIAgent(
-            promptExecutor = testExecutor,
-            toolRegistry = ToolRegistry {},
-            agentConfig = agentConfig,
-            strategy = myStrategy
-        )
 
         runner.run("")
 
@@ -213,10 +187,8 @@ class AIAgentNodesHistoryCompressionTest {
         // In the Chunked strategy, we expect multiple TLDR messages
         // The exact number depends on how the implementation chunks the messages
         // For now, we'll just verify that we have more than one TLDR message
-        assertTrue(
-            testExecutor.tldrCount > 1,
-            "Chunked strategy should create multiple TLDR messages"
-        )
+        assertTrue(testExecutor.tldrCount > 1, 
+            "Chunked strategy should create multiple TLDR messages")
 
         // Verify that the final messages include the TLDRs
         val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
