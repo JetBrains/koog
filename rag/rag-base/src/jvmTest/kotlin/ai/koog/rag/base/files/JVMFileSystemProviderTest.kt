@@ -61,14 +61,14 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         // Call fromAbsoluteString with the relative path
         val resolvedPath = serialization.fromAbsoluteString(relativePathString)
 
-        // Get the expected path by using Path.of directly
-        val expectedPath = Path.of(relativePathString).normalize()
-        
-        // Verify that the method returns a Path object with the relative path
+        // Get the expected path by resolving against the current working directory
+        val expectedPath = Path.of("").toAbsolutePath().resolve(relativePathString).normalize()
+
+        // Verify that the method returns a Path object resolved against the current working directory
         assertEquals(expectedPath, resolvedPath)
 
-        // Verify that the path is still relative (not absolute)
-        assertFalse(resolvedPath.isAbsolute)
+        // Verify that the path is now absolute (resolved against current working directory)
+        assertTrue(resolvedPath.isAbsolute)
     }
 
     @Test
