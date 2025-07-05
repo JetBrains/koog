@@ -24,11 +24,11 @@ public object FileSystemProvider {
         public fun toAbsolutePathString(path: Path): String
 
         /**
-         * Creates a [Path] object from a path string.
-         * If a relative path is provided, it will remain relative.
+         * Creates a [Path] object from an absolute path string.
+         * If a relative path is provided, it will be resolved against the current working directory.
          *
-         * @param path The path string to convert. Can be absolute or relative.
-         * @return A path object representing the given path.
+         * @param path The absolute path string to convert. Can also accept a relative path.
+         * @return A path object representing the absolute path.
          */
         public fun fromAbsoluteString(path: String): Path
 

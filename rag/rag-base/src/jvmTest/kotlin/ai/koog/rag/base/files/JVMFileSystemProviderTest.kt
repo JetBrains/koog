@@ -55,19 +55,11 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test relative path from absolute string`() {
-        // Create a relative path string (without leading slash)
         val relativePathString = "relative/test/path"
-
-        // Call fromAbsoluteString with the relative path
         val resolvedPath = serialization.fromAbsoluteString(relativePathString)
-
-        // Get the expected path by resolving against the current working directory
         val expectedPath = Path.of("").toAbsolutePath().resolve(relativePathString).normalize()
 
-        // Verify that the method returns a Path object resolved against the current working directory
         assertEquals(expectedPath, resolvedPath)
-
-        // Verify that the path is now absolute (resolved against current working directory)
         assertTrue(resolvedPath.isAbsolute)
     }
 
@@ -97,6 +89,16 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     fun `test from relative string to root`() {
         val rootPath = serialization.fromRelativeString(file3, FileSystems.getDefault().separator)
         assertEquals(getRoot(file3), rootPath)
+    }
+
+    @Test
+    fun `test from relative string with absolute path`() {
+        val absolutePath = file1.absolute().pathString
+        val fileFromPath = serialization.fromRelativeString(src3, absolutePath)
+        
+        // If the path is absolute, the base path should be ignored
+        val expectedPath = serialization.fromAbsoluteString(absolutePath)
+        assertEquals(expectedPath, fileFromPath)
     }
     //endregion
 
