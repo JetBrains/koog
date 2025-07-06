@@ -1,4 +1,4 @@
-package ai.koog.agents.features.opentelemetry.feature
+package ai.koog.agents.features.opentelemetry.span
 
 import io.opentelemetry.api.trace.StatusCode
 

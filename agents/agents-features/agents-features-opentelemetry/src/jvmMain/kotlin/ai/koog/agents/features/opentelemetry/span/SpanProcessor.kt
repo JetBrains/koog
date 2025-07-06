@@ -1,12 +1,9 @@
-package ai.koog.agents.features.opentelemetry.feature
+package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
+import ai.koog.agents.features.opentelemetry.attribute.toSdkAttributes
 import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
-import ai.koog.agents.features.opentelemetry.span.CreateAgentSpan
-import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
-import ai.koog.agents.features.opentelemetry.span.InvokeAgentSpan
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanBuilder
 import io.opentelemetry.api.trace.StatusCode
@@ -52,9 +49,7 @@ internal class SpanProcessor(private val tracer: Tracer) {
             .setSpanKind(spanKind)
             .setParent(parentContext)
 
-        span.attributes.forEach { attribute ->
-            spanBuilder.setAttribute(attribute)
-        }
+        spanBuilder.setAttributes(span.attributes)
 
         val startedSpan = spanBuilder.startSpan()
 
@@ -83,8 +78,7 @@ internal class SpanProcessor(private val tracer: Tracer) {
 
             val spanToFinish = existingSpan.span
 
-            attributes.forEach { attribute -> spanToFinish.setAttribute(attribute) }
-
+            spanToFinish.setAttributes(attributes)
             spanToFinish.setSpanStatus(spanEndStatus)
             spanToFinish.end()
 
@@ -147,44 +141,12 @@ internal class SpanProcessor(private val tracer: Tracer) {
         this.setStatus(statusCode, statusDescription)
     }
 
-    private fun SpanBuilder.setAttribute(attribute: Attribute) {
-        logger.debug { "Set gen_ai span attribute '${attribute.key}' with value '${attribute.value}' in a Span Builder" }
-
-        when (attribute.value) {
-            is String  -> setAttribute(attribute.key, attribute.value as String)
-            is Boolean -> setAttribute(attribute.key, attribute.value as Boolean)
-            is Long    -> setAttribute(attribute.key, attribute.value as Long)
-            is Double  -> setAttribute(attribute.key, attribute.value as Double)
-            is List<*> -> {
-                when (attribute.value) {
-                    String  -> setAttribute(AttributeKey.stringArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString() })
-                    Boolean -> setAttribute(AttributeKey.booleanArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString().toBoolean() })
-                    Long    -> setAttribute(AttributeKey.longArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString().toLong() })
-                    Double  -> setAttribute(AttributeKey.doubleArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString().toDouble() })
-                }
-            }
-            else -> throw IllegalStateException("Attribute '${attribute.key}' has unsupported type for value: ${attribute.value::class.simpleName}")
-        }
+    private fun SpanBuilder.setAttributes(attributes: List<Attribute>) {
+        setAllAttributes(attributes.toSdkAttributes())
     }
 
-    private fun Span.setAttribute(attribute: Attribute) {
-        logger.debug { "Set gen_ai span attribute '${attribute.key}' with value '${attribute.value}' in a Span" }
-
-        when (attribute.value) {
-            is String  -> setAttribute(attribute.key, attribute.value as String)
-            is Boolean -> setAttribute(attribute.key, attribute.value as Boolean)
-            is Long    -> setAttribute(attribute.key, attribute.value as Long)
-            is Double  -> setAttribute(attribute.key, attribute.value as Double)
-            is List<*> -> {
-                when (attribute.value) {
-                    String  -> setAttribute(AttributeKey.stringArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString() })
-                    Boolean -> setAttribute(AttributeKey.booleanArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString().toBoolean() })
-                    Long    -> setAttribute(AttributeKey.longArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString().toLong() })
-                    Double  -> setAttribute(AttributeKey.doubleArrayKey(attribute.key), (attribute.value as List<*>).map { it.toString().toDouble() })
-                }
-            }
-            else -> throw IllegalStateException("Attribute '${attribute.key}' has unsupported type for value: ${attribute.value::class.simpleName}")
-        }
+    private fun Span.setAttributes(attributes: List<Attribute>) {
+        setAllAttributes(attributes.toSdkAttributes())
     }
 
     //endregion Private Methods

@@ -1,7 +1,7 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.feature.MockGenAIAgentSpan
-import ai.koog.agents.features.opentelemetry.feature.MockSpan
+import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.mock.MockSpan
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import io.opentelemetry.api.trace.SpanKind

@@ -1,10 +1,10 @@
 package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
-import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.propagation.ContextPropagators
@@ -281,13 +281,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
             val spanProcessor = processorCreator(exporter)
             logger.debug { "Adding span processor: ${spanProcessor::class.simpleName}" }
             addSpanProcessor(spanProcessor)
-        }
-    }
-
-    private fun AttributesBuilder.addAttributes(attributes: Map<AttributeKey<*>, Any>) {
-        attributes.forEach { (key, value) ->
-            @Suppress("UNCHECKED_CAST")
-            put(key as AttributeKey<Any>, value)
         }
     }
 

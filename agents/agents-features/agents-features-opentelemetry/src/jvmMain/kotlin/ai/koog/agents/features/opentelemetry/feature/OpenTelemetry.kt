@@ -212,7 +212,6 @@ public class OpenTelemetry {
                 val model = eventContext.model
                 val temperature = eventContext.prompt.params.temperature ?: 0.0
                 val promptId = eventContext.prompt.id
-                val tools = eventContext.tools
 
                 val inferenceSpan = InferenceSpan(
                     provider = provider,
@@ -221,7 +220,6 @@ public class OpenTelemetry {
                     model = model,
                     temperature = temperature,
                     promptId = promptId,
-                    tools = tools
                 )
 
                 // Start span
@@ -305,9 +303,7 @@ public class OpenTelemetry {
 
                 val executeToolSpan = ExecuteToolSpan(
                     parent = nodeExecuteSpan,
-                    runId = eventContext.runId,
-                    tool = eventContext.tool,
-                    toolArgs = eventContext.toolArgs,
+                    tool = eventContext.tool
                 )
 
                 spanProcessor.startSpan(executeToolSpan)

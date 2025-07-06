@@ -145,7 +145,7 @@ internal object SpanAttributes {
         }
 
         // gen_ai.request.model
-        data class Model(private val model: LLModel, ) : Request {
+        data class Model(private val model: LLModel) : Request {
             override val key: String = super.key.concatKey("model")
             override val value: String = model.id
         }

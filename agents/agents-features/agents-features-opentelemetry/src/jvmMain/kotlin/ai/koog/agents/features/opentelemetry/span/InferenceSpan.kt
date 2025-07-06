@@ -18,7 +18,6 @@ internal class InferenceSpan(
     private val model: LLModel,
     private val temperature: Double,
     private val promptId: String,
-    private val tools: List<ToolDescriptor>
 ) : GenAIAgentSpan(parent) {
 
     companion object {

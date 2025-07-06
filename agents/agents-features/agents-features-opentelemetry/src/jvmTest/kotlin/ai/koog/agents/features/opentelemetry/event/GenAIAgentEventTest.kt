@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.event
 
+import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import org.junit.jupiter.api.Test
@@ -9,10 +10,9 @@ class GenAIAgentEventTest {
 
     @Test
     fun `default name should be gen_ai`() {
-        // Create a simple implementation that uses the default name
         val event = object : GenAIAgentEvent {
             override val verbose: Boolean = false
-            override val attributes: List<ai.koog.agents.features.opentelemetry.attribute.Attribute> = emptyList()
+            override val attributes: List<Attribute> = emptyList()
         }
         
         assertEquals("gen_ai", event.name)
