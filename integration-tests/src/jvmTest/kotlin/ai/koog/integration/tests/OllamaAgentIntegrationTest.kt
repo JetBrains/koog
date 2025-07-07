@@ -13,17 +13,21 @@ import ai.koog.integration.tests.tools.AnswerVerificationTool
 import ai.koog.integration.tests.tools.GenericParameterTool
 import ai.koog.integration.tests.tools.GeographyQueryTool
 import ai.koog.integration.tests.utils.annotations.Retry
+import ai.koog.integration.tests.utils.annotations.RetryExtension
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@ExtendWith(OllamaTestFixtureExtension::class)
+@ExtendWith(RetryExtension::class)
 class OllamaAgentIntegrationTest {
     companion object {
         @field:InjectOllamaTestFixture
