@@ -74,7 +74,7 @@ internal class InvokeAgentSpan(
         // gen_ai.conversation.id
         add(SpanAttributes.Conversation.Id(runId))
 
-        // custom. strategy
-        add(CustomAttribute("koog.agent.strategy",  strategyName))
+        // custom: strategy name
+        add(CustomAttribute("koog.agent.strategy.name",  strategyName))
     }
 }

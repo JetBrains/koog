@@ -3,8 +3,7 @@ package ai.koog.agents.features.opentelemetry.event
 internal object EventBodyFields {
 
     data class ToolCalls(
-        private val tools: List<ai.koog.prompt.message.Message.Tool>,
-        override val verbose: Boolean = false
+        private val tools: List<ai.koog.prompt.message.Message.Tool>
     ) : EventBodyField() {
         override val key: String = "tool_calls"
         override val value: List<Map<String, Any>>
@@ -13,9 +12,7 @@ internal object EventBodyFields {
                     buildMap {
                         val functionMap = buildMap {
                             put("name", tool.tool)
-                            if (verbose) {
-                                put("arguments", tool.content)
-                            }
+                            put("arguments", tool.content)
                         }
 
                         put("function", functionMap)

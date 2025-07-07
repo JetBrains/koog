@@ -5,11 +5,12 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.common.AttributesBuilder
 import java.util.function.BiConsumer
 
-internal fun AttributesBuilder.addAttributes(attributes: Map<AttributeKey<*>, Any>) {
+internal fun AttributesBuilder.addAttributes(attributes: Map<AttributeKey<*>, Any>): AttributesBuilder {
     attributes.forEach { (key, value) ->
         @Suppress("UNCHECKED_CAST")
         put(key as AttributeKey<Any>, value)
     }
+    return this
 }
 
 internal fun List<Attribute>.toSdkAttributes() : Attributes {
@@ -33,7 +34,7 @@ internal fun List<Attribute>.toSdkAttributes() : Attributes {
 
         override fun asMap(): Map<AttributeKey<*>, Any> = sdkAttributesMap
 
-        override fun toBuilder(): AttributesBuilder = Attributes.builder().also { builder -> builder.addAttributes(sdkAttributesMap) }
+        override fun toBuilder(): AttributesBuilder = Attributes.builder().addAttributes(sdkAttributesMap)
     }
 }
 
@@ -69,7 +70,7 @@ private fun Attribute.toSdkAttribute(): Pair<AttributeKey<*>, Any> {
             else if (value.all { it is Boolean }) {
                 Pair(AttributeKey.booleanArrayKey(key), value)
             }
-            else if (value.all { it is Int}) {
+            else if (value.all { it is Int }) {
                 Pair(AttributeKey.longArrayKey(key), value.map { (it as Int).toLong() })
             }
             else if (value.all { it is Long }) {

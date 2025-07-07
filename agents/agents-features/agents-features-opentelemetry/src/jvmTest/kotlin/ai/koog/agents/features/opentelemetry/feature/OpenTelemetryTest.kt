@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
+import java.util.*
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -30,6 +31,78 @@ class OpenTelemetryTest {
 
     companion object {
         private val logger = KotlinLogging.logger { }
+    }
+
+    @Test
+    fun `test Open Telemetry feature default configuration`() = runBlocking {
+        val testClock = Clock.System
+
+        val strategy = strategy("test-strategy") {
+            val nodeSendInput by nodeLLMRequest("test-llm-call")
+
+            edge(nodeStart forwardTo nodeSendInput)
+            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+        }
+
+        var actualServiceName: String? = null
+        var actualServiceVersion: String? = null
+        var actualIsVerbose: Boolean? = null
+
+        createAgent(
+            strategy = strategy,
+            clock = testClock,
+        ) {
+            install(OpenTelemetry) {
+                actualServiceName = serviceName
+                actualServiceVersion = serviceVersion
+                actualIsVerbose = isVerbose
+            }
+        }
+
+        val props = Properties()
+        this::class.java.classLoader.getResourceAsStream("product.properties")?.use { stream -> props.load(stream) }
+
+        assertEquals(props["name"], actualServiceName)
+        assertEquals(props["version"], actualServiceVersion)
+        assertEquals(false, actualIsVerbose)
+    }
+
+    @Test
+    fun `test Open Telemetry feature custom configuration`() = runBlocking {
+        val testClock = Clock.System
+
+        val strategy = strategy("test-strategy") {
+            val nodeSendInput by nodeLLMRequest("test-llm-call")
+
+            edge(nodeStart forwardTo nodeSendInput)
+            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+        }
+
+        val expectedServiceName = "test-service-name"
+        val expectedServiceVersion = "test-service-version"
+        val expectedIsVerbose = true
+
+        var actualServiceName: String? = null
+        var actualServiceVersion: String? = null
+        var actualIsVerbose: Boolean? = null
+
+        createAgent(
+            strategy = strategy,
+            clock = testClock,
+        ) {
+            install(OpenTelemetry) {
+                setServiceInfo(expectedServiceName, expectedServiceVersion)
+                setVerbose(expectedIsVerbose)
+
+                actualServiceName = serviceName
+                actualServiceVersion = serviceVersion
+                actualIsVerbose = isVerbose
+            }
+        }
+
+        assertEquals(expectedServiceName, actualServiceName)
+        assertEquals(expectedServiceVersion, actualServiceVersion)
+        assertEquals(expectedIsVerbose, actualIsVerbose)
     }
 
     @Test
@@ -67,6 +140,7 @@ class OpenTelemetryTest {
             ) {
                 install(OpenTelemetry) {
                     addSpanExporter(mockExporter)
+                    setVerbose(true)
                 }
             }
 
@@ -96,7 +170,7 @@ class OpenTelemetryTest {
                     "run.${mockExporter.lastRunId}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy" to "test-strategy",
+                            "koog.agent.strategy.name" to "test-strategy",
                             "gen_ai.system" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.lastRunId
@@ -127,19 +201,143 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to "\"${userPrompt}\""
+                                "body" to "{\"content\":\"${userPrompt}\"}"
                             )
                         ),
 
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to "\"${userPrompt}\""
+                                "body" to "{\"content\":\"${userPrompt}\"}"
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to "{\"content\": \"${mockResponse}\"}",
-                                "index" to 0L
+                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse}\"}}"
+                            )
+                        )
+                    )
+                ),
+
+                mapOf(
+                    "node.__start__" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "koog.node.name" to "__start__"
+                        ),
+                        "events" to emptyMap()
+                    )
+                )
+            )
+
+            assertSpans(expectedSpans, collectedSpans)
+        }
+    }
+
+    @Test
+    fun `test spans are created for agent with one llm call verbose set to false`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+
+            val userPrompt = "What's the weather in Paris?"
+            val agentId = "test-agent-id"
+            val promptId = "test-prompt-id"
+            val testClock = Clock.System
+            val model = OpenAIModels.Chat.GPT4o
+            val temperature = 0.4
+
+            val strategy = strategy("test-strategy") {
+                val nodeSendInput by nodeLLMRequest("test-llm-call")
+
+                edge(nodeStart forwardTo nodeSendInput)
+                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
+
+            val mockExecutor = getMockExecutor(clock = testClock) {
+                mockLLMAnswer(mockResponse) onRequestEquals userPrompt
+            }
+
+            val agent = createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                promptId = promptId,
+                promptExecutor = mockExecutor,
+                model = model,
+                clock = testClock,
+                temperature = temperature
+            ) {
+                install(OpenTelemetry) {
+                    addSpanExporter(mockExporter)
+                    setVerbose(false)
+                }
+            }
+
+            agent.run(userPrompt)
+
+            val collectedSpans = mockExporter.collectedSpans
+            assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
+
+            agent.close()
+
+            // Check each span
+
+            val expectedSpans = listOf(
+                mapOf(
+                    "agent.$agentId" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to "create_agent",
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.request.model" to model.id
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
+                    "run.${mockExporter.lastRunId}" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to "invoke_agent",
+                            "koog.agent.strategy.name" to "test-strategy",
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.conversation.id" to mockExporter.lastRunId
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
+                    "node.test-llm-call" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "koog.node.name" to "test-llm-call",
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
+                    "llm.$promptId" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to "chat",
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "gen_ai.request.temperature" to temperature,
+                            "gen_ai.request.model" to model.id,
+                        ),
+                        "events" to mapOf(
+                            "gen_ai.user.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                            )
+                        ),
+
+                        "events" to mapOf(
+                            "gen_ai.user.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                            ),
+                            "gen_ai.choice" to mapOf(
+                                "gen_ai.system" to model.provider.id,
                             )
                         )
                     )
@@ -199,6 +397,7 @@ class OpenTelemetryTest {
             ) {
                 install(OpenTelemetry) {
                     addSpanExporter(mockExporter)
+                    setVerbose(true)
                 }
             }
 
@@ -230,7 +429,7 @@ class OpenTelemetryTest {
                     "run.${mockExporter.runIds[1]}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy" to "test-strategy",
+                            "koog.agent.strategy.name" to "test-strategy",
                             "gen_ai.system" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.runIds[1]
@@ -261,12 +460,11 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to "\"${userPrompt1}\""
+                                "body" to "{\"content\":\"${userPrompt1}\"}"
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to "{\"content\": \"${mockResponse1}\"}",
-                                "index" to 0L
+                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse1}\"}}"
                             )
                         )
                     )
@@ -287,7 +485,7 @@ class OpenTelemetryTest {
                     "run.${mockExporter.runIds[0]}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy" to "test-strategy",
+                            "koog.agent.strategy.name" to "test-strategy",
                             "gen_ai.system" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.runIds[0]
@@ -318,12 +516,11 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to "\"${userPrompt0}\""
+                                "body" to "{\"content\":\"${userPrompt0}\"}"
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to "{\"content\": \"${mockResponse0}\"}",
-                                "index" to 0L
+                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse0}\"}}"
                             )
                         )
                     )
@@ -391,6 +588,7 @@ class OpenTelemetryTest {
             ) {
                 install(OpenTelemetry) {
                     addSpanExporter(mockExporter)
+                    setVerbose(true)
                 }
             }
 
@@ -412,8 +610,7 @@ class OpenTelemetryTest {
                             "gen_ai.request.model" to model.id,
                             "gen_ai.operation.name" to "create_agent",
                         ),
-                        "events" to mapOf(
-                        )
+                        "events" to emptyMap()
                     )
                 ),
                 mapOf(
@@ -423,10 +620,9 @@ class OpenTelemetryTest {
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy" to "test-strategy",
+                            "koog.agent.strategy.name" to "test-strategy",
                         ),
-                        "events" to mapOf(
-                        )
+                        "events" to emptyMap()
                     )
                 ),
                 mapOf(
@@ -435,8 +631,7 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "koog.node.name" to "test-node-llm-send-tool-result",
                         ),
-                        "events" to mapOf(
-                        )
+                        "events" to emptyMap()
                     )
                 ),
                 mapOf(
@@ -451,8 +646,7 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to "{\"content\": \"${mockResponse}\"}",
-                                "index" to 0L
+                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse}\"}}"
                             )
                         )
                     )
@@ -463,8 +657,7 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "koog.node.name" to "test-tool-call",
                         ),
-                        "events" to mapOf(
-                        )
+                        "events" to emptyMap()
                     )
                 ),
                 mapOf(
@@ -476,7 +669,7 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to "\"rainy, 57°F\"" // Mocked return result defined in the Tool
+                                "body" to "{\"content\":\"rainy, 57°F\"}" // Mocked return result defined in the Tool
                             ),
                         )
                     )
@@ -487,8 +680,7 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "koog.node.name" to "test-llm-call",
                         ),
-                        "events" to mapOf(
-                        )
+                        "events" to emptyMap()
                     )
                 ),
                 mapOf(
@@ -503,7 +695,7 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to "\"${userPrompt}\""
+                                "body" to "{\"content\":\"${userPrompt}\"}"
                             ),
                         )
                     )
@@ -514,8 +706,7 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "koog.node.name" to "__start__",
                         ),
-                        "events" to mapOf(
-                        )
+                        "events" to emptyMap()
                     )
                 ),
             )
@@ -534,6 +725,7 @@ class OpenTelemetryTest {
      *       events: Map<EventName, Attributes>
      *           Attributes: Map<AttributeKey, AttributeValue>
      */
+    @Suppress("UNCHECKED_CAST")
     private fun assertSpans(expectedSpans: List<Map<String, Map<String, Any>>>, actualSpans: List<SpanData>) {
         // Span names
         val expectedSpanNames = expectedSpans.flatMap { it.keys }

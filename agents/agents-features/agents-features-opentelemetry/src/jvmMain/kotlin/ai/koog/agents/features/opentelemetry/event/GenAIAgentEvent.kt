@@ -1,6 +1,7 @@
 package ai.koog.agents.features.opentelemetry.event
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 
 internal interface GenAIAgentEvent {
 
@@ -21,4 +22,20 @@ internal interface GenAIAgentEvent {
     val bodyFields: List<EventBodyField>
 
     fun String.concatName(other: String): String = "$this.$other"
+
+    fun bodyFieldsAsAttribute(): Attribute {
+        check(bodyFields.isNotEmpty()) {
+            "Unable to convert Event Body Fields into Attribute because no body fields found"
+        }
+
+        check(verbose) {
+            "Unable to convert Event Body Fields into Attribute because 'verbose' is set to 'false'"
+        }
+
+        val value = bodyFields.joinToString(separator = ",", prefix = "{", postfix = "}") { bodyField ->
+            "\"${bodyField.key}\":${bodyField.valueString}"
+        }
+
+        return CustomAttribute("body", value, verbose)
+    }
 }

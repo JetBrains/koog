@@ -28,11 +28,11 @@ internal data class AssistantMessageEvent(
             }
 
             is Message.Tool.Call -> {
-                add(EventBodyFields.ToolCalls(tools = listOf(message), verbose = verbose))
+                add(EventBodyFields.ToolCalls(tools = listOf(message)))
             }
 
             is Message.Tool.Result -> {
-                add(EventBodyFields.ToolCalls(tools = listOf(message), verbose = verbose))
+                add(EventBodyFields.ToolCalls(tools = listOf(message)))
             }
 
             else -> error(

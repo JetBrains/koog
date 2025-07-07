@@ -50,9 +50,14 @@ internal abstract class GenAIAgentSpan(
 
             // The 'opentelemetry-java' SDK does not have support for event body fields at the moment.
             // Pass body fields as attributes until an API is updated.
-            val mergedAttributes = event.attributes + event.bodyFields.map { it.toAttribute() }
+            val attributes = buildList {
+                addAll(event.attributes)
+                if (event.bodyFields.isNotEmpty() && event.verbose) {
+                    add(event.bodyFieldsAsAttribute())
+                }
+            }
 
-            span.addEvent(event.name, mergedAttributes.toSdkAttributes())
+            span.addEvent(event.name, attributes.toSdkAttributes())
         }
     }
 }

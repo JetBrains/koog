@@ -20,7 +20,6 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 import java.util.*
-import javax.swing.UIManager.put
 
 /**
  * Configuration class for OpenTelemetry integration.
@@ -57,11 +56,9 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private var _sdk: OpenTelemetrySdk? = null
 
-    private var _serviceName: String = productProperties.getProperty("product.name") ?: "ai.koog"
+    private var _serviceName: String = productProperties.getProperty("name") ?: "ai.koog"
 
-    private var _serviceVersion: String = productProperties.getProperty("product.name") ?: ""
-
-    private var _serviceNamespace: String? = null
+    private var _serviceVersion: String = productProperties.getProperty("version") ?: "0.0.0"
 
     private var _instrumentationScopeName: String = _serviceName
 
@@ -88,8 +85,8 @@ public class OpenTelemetryConfig : FeatureConfig() {
      * Provides an instance of the `OpenTelemetrySdk`.
      *
      * This property retrieves the existing instance of the SDK if it has already been initialized. If the SDK has not
-     * been initialized, it initializes a new instance with the specified service name, service version, and optional
-     * service namespace. The initialized SDK instance is cached for future access.
+     * been initialized, it initializes a new instance with the specified service name and service version.
+     * The initialized SDK instance is cached for future access.
      *
      * The `initializeOpenTelemetry` function configures the SDK with the appropriate service attributes, trace
      * providers, span processors, and exporters. It also ensures proper shutdown of the SDK on application termination.
@@ -126,23 +123,15 @@ public class OpenTelemetryConfig : FeatureConfig() {
         get() = _serviceVersion
 
     /**
-     * Represents the optional namespace for the service in the OpenTelemetry configuration.
-     */
-    public val serviceNamespace: String?
-        get() = _serviceNamespace
-
-    /**
      * Sets the service information for the OpenTelemetry configuration.
      * This information is used to identify the service in telemetry data.
      *
      * @param serviceName The name of the service.
      * @param serviceVersion The version of the service.
-     * @param serviceNamespace An optional namespace for the service. Defaults to null if not provided.
      */
-    public fun setServiceInfo(serviceName: String, serviceVersion: String, serviceNamespace: String? = null) {
+    public fun setServiceInfo(serviceName: String, serviceVersion: String) {
         _serviceName = serviceName
         _serviceVersion = serviceVersion
-        _serviceNamespace = serviceNamespace
     }
 
     /**
@@ -240,7 +229,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
         val defaultResourceAttributes: Map<AttributeKey<*>, String> = buildMap {
             put(AttributeKey.stringKey("service.name"), _serviceName)
             put(AttributeKey.stringKey("service.version"), _serviceVersion)
-            put(AttributeKey.stringKey("service.namespace"), _serviceNamespace)
             put(AttributeKey.stringKey("service.instance.time"), DateTimeFormatter.ISO_INSTANT.format(Instant.now()))
 
             osName?.let { osName -> put(AttributeKey.stringKey("os.type"), osName) }
@@ -248,11 +236,12 @@ public class OpenTelemetryConfig : FeatureConfig() {
             osArch?.let { osArch -> put(AttributeKey.stringKey("os.arch"), osArch) }
         }
 
-        val resourceAttributesBuilder = Attributes.builder()
-        resourceAttributesBuilder.addAttributes(defaultResourceAttributes)
-        resourceAttributesBuilder.addAttributes(customResourceAttributes)
+        val resourceAttributes = Attributes.builder()
+            .addAttributes(defaultResourceAttributes)
+            .addAttributes(customResourceAttributes)
+            .build()
 
-        val resource = Resource.create(resourceAttributesBuilder.build())
+        val resource = Resource.create(resourceAttributes)
         return resource
     }
 

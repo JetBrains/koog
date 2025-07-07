@@ -72,7 +72,7 @@ val generateProductProperties = tasks.register("generateProductProperties") {
         propertiesFile.asFile.parentFile.mkdirs()
         propertiesFile.asFile.writeText("""
             version=$rootProjectVersion
-            serviceName=$rootProjectGroup
+            name=$rootProjectGroup
         """.trimIndent())
     }
 }
