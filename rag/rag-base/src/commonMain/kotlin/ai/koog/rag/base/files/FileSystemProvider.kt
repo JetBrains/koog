@@ -25,7 +25,7 @@ public object FileSystemProvider {
 
         /**
          * Creates a [Path] object from an absolute path string.
-         * If a relative path is provided, it will be resolved against the current working directory.
+         * If a relative path is provided, it will remain relative.
          *
          * @param path The absolute path string to convert. Can also accept a relative path.
          * @return A path object representing the absolute path.

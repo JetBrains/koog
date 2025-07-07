@@ -41,15 +41,8 @@ public object JVMFileSystemProvider {
          * @param path The absolute file path as a string.
          * @return The normalized Path representation of the given string.
          */
-        override fun fromAbsoluteString(path: String): Path {
-            val adjustedPath = toSystemDependentName(path)
-            val pathObj = Path.of(adjustedPath)
-            return if (pathObj.isAbsolute) {
-                pathObj.normalize()
-            } else {
-                Path.of("").toAbsolutePath().resolve(pathObj).normalize()
-            }
-        }
+        override fun fromAbsoluteString(path: String): Path = Path.of(toSystemDependentName(path)).normalize()
+
         /**
          * Converts a relative string representation of a path into a normalized Path object
          * based on the provided base Path.

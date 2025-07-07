@@ -57,10 +57,8 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     fun `test relative path from absolute string`() {
         val relativePathString = "relative/test/path"
         val resolvedPath = serialization.fromAbsoluteString(relativePathString)
-        val expectedPath = Path.of("").toAbsolutePath().resolve(relativePathString).normalize()
 
-        assertEquals(expectedPath, resolvedPath)
-        assertTrue(resolvedPath.isAbsolute)
+        assertEquals(relativePathString, resolvedPath.toString())
     }
 
     @Test
