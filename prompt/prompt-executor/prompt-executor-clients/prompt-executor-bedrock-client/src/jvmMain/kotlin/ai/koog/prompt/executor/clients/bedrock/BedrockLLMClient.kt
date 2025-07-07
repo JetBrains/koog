@@ -62,7 +62,7 @@ public class BedrockClientSettings(
  */
 public class BedrockLLMClient(
     private val bedrockClient: BedrockRuntimeClient,
-    private val clock: Clock
+    private val clock: Clock = Clock.System,
 ) : LLMClient {
 
     private val logger = KotlinLogging.logger {}
@@ -80,7 +80,7 @@ public class BedrockLLMClient(
         awsAccessKeyId: String,
         awsSecretAccessKey: String,
         settings: BedrockClientSettings = BedrockClientSettings(),
-        clock: Clock = Clock.System
+        clock: Clock = Clock.System,
     ) : this(
         bedrockClient = BedrockRuntimeClient {
             this.region = settings.region
