@@ -127,21 +127,19 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to userPrompt
+                                "content" to "\"${userPrompt}\""
                             )
                         ),
 
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to userPrompt
+                                "content" to "\"${userPrompt}\""
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to mapOf(
-                                    "content" to mockResponse,
-                                ),
-                                "index" to 0
+                                "message" to "{\"content\": \"${mockResponse}\"}",
+                                "index" to 0L
                             )
                         )
                     )
@@ -263,14 +261,12 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to userPrompt1
+                                "content" to "\"${userPrompt1}\""
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to mapOf(
-                                    "content" to mockResponse1,
-                                ),
-                                "index" to 0
+                                "message" to "{\"content\": \"${mockResponse1}\"}",
+                                "index" to 0L
                             )
                         )
                     )
@@ -322,14 +318,12 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to userPrompt0
+                                "content" to "\"${userPrompt0}\""
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to mapOf(
-                                    "content" to mockResponse0,
-                                ),
-                                "index" to 0
+                                "message" to "{\"content\": \"${mockResponse0}\"}",
+                                "index" to 0L
                             )
                         )
                     )
@@ -457,10 +451,8 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "message" to mapOf(
-                                    "content" to mockResponse,
-                                ),
-                                "index" to 0
+                                "message" to "{\"content\": \"${mockResponse}\"}",
+                                "index" to 0L
                             )
                         )
                     )
@@ -484,7 +476,7 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to "rainy, 57°F" // Mocked return result defined in the Tool
+                                "content" to "\"rainy, 57°F\"" // Mocked return result defined in the Tool
                             ),
                         )
                     )
@@ -511,7 +503,7 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "content" to userPrompt
+                                "content" to "\"${userPrompt}\""
                             ),
                         )
                     )
@@ -577,7 +569,6 @@ class OpenTelemetryTest {
             }
 
             assertEventsForSpan(spanName, expectedEvents, actualEvents)
-
         }
     }
 

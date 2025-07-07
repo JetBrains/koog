@@ -19,10 +19,7 @@ internal fun List<Attribute>.toSdkAttributes() : Attributes {
     return object : Attributes {
 
         @Suppress("UNCHECKED_CAST")
-        override fun <T : Any?> get(key: AttributeKey<T?>): T? {
-            return sdkAttributesMap[key] as T?
-
-        }
+        override fun <T : Any?> get(key: AttributeKey<T?>): T? = sdkAttributesMap[key] as T?
 
         override fun forEach(consumer: BiConsumer<in AttributeKey<*>, in Any>) {
             sdkAttributesMap.forEach { attribute ->
@@ -34,20 +31,9 @@ internal fun List<Attribute>.toSdkAttributes() : Attributes {
 
         override fun isEmpty(): Boolean = sdkAttributesMap.isEmpty()
 
-        override fun asMap(): Map<AttributeKey<*>, Any> {
-            return sdkAttributesMap
-        }
+        override fun asMap(): Map<AttributeKey<*>, Any> = sdkAttributesMap
 
-        override fun toBuilder(): AttributesBuilder? {
-            val builder = Attributes.builder()
-
-            sdkAttributesMap.forEach { (key, value) ->
-                @Suppress("UNCHECKED_CAST")
-                builder.put(key as AttributeKey<Any>, value)
-            }
-
-            return builder
-        }
+        override fun toBuilder(): AttributesBuilder = Attributes.builder().also { builder -> builder.addAttributes(sdkAttributesMap) }
     }
 }
 
@@ -57,19 +43,33 @@ private fun Attribute.toSdkAttribute(): Pair<AttributeKey<*>, Any> {
     val value = this.value
 
     return when (value) {
-        is String -> Pair(AttributeKey.stringKey(key), value)
-        is Boolean -> Pair(AttributeKey.booleanKey(key), value)
-        is Int -> Pair(AttributeKey.longKey(key), value.toLong())
-        is Long -> Pair(AttributeKey.longKey(key), value)
-        is Double -> Pair(AttributeKey.doubleKey(key), value)
+        is CharSequence,
+        is Char -> {
+            Pair(AttributeKey.stringKey(key), value)
+        }
+        is Boolean -> {
+            Pair(AttributeKey.booleanKey(key), value)
+        }
+        is Int -> {
+            Pair(AttributeKey.longKey(key), value.toLong())
+        }
+        is Long -> {
+            Pair(AttributeKey.longKey(key), value)
+        }
+        is Double -> {
+            Pair(AttributeKey.doubleKey(key), value)
+        }
+        is Float -> {
+            Pair(AttributeKey.doubleKey(key), value.toDouble())
+        }
         is List<*> -> {
-            if (value.all { it is String }) {
+            if (value.all { it is CharSequence || it is Char }) {
                 Pair(AttributeKey.stringArrayKey(key), value)
             }
             else if (value.all { it is Boolean }) {
                 Pair(AttributeKey.booleanArrayKey(key), value)
             }
-            else if (value.all { it is Int }) {
+            else if (value.all { it is Int}) {
                 Pair(AttributeKey.longArrayKey(key), value.map { (it as Int).toLong() })
             }
             else if (value.all { it is Long }) {
@@ -77,6 +77,9 @@ private fun Attribute.toSdkAttribute(): Pair<AttributeKey<*>, Any> {
             }
             else if (value.all { it is Double }) {
                 Pair(AttributeKey.doubleArrayKey(key), value)
+            }
+            else if (value.all { it is Float }) {
+                Pair(AttributeKey.doubleArrayKey(key), value.map { (it as Float).toDouble() })
             }
             else {
                 error("Attribute '$key' has unsupported type for List values: ${value.firstOrNull()?.let { it::class.simpleName} }")

@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.event
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
-import ai.koog.agents.features.opentelemetry.attribute.EventAttributes
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 
@@ -16,11 +15,14 @@ internal data class SystemMessageEvent(
 
     override val attributes: List<Attribute> = buildList {
         add(CommonAttributes.System(provider))
+    }
 
-        add(EventAttributes.Body.Content(content = message.content))
+    override val bodyFields: List<EventBodyField> = buildList {
+
+        add(EventBodyFields.Content(content = message.content))
 
         if (message.role != Message.Role.System) {
-            add(EventAttributes.Body.Role(role = message.role))
+            add(EventBodyFields.Role(role = message.role))
         }
     }
 }

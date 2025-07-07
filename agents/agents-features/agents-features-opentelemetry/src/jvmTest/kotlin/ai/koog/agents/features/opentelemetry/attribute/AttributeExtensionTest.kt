@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.attribute
 
+import ai.koog.agents.features.opentelemetry.mock.UnsupportedType
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.AttributeType
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl

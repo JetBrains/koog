@@ -13,6 +13,7 @@ class GenAIAgentEventTest {
         val event = object : GenAIAgentEvent {
             override val verbose: Boolean = false
             override val attributes: List<Attribute> = emptyList()
+            override val bodyFields: List<EventBodyField> = emptyList()
         }
         
         assertEquals("gen_ai", event.name)

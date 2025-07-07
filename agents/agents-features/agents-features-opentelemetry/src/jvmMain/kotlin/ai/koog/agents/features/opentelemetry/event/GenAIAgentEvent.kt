@@ -11,5 +11,14 @@ internal interface GenAIAgentEvent {
 
     val attributes: List<Attribute>
 
+    /**
+     * The body field for the event.
+     *
+     * Note: Currently, the OpenTelemetry SDK does not support event body fields.
+     *       This field is used to store the body fields.
+     *       Fields are merged with attributes when creating the event.
+     */
+    val bodyFields: List<EventBodyField>
+
     fun String.concatName(other: String): String = "$this.$other"
 }
