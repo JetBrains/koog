@@ -58,7 +58,8 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         val relativePathString = "relative/test/path"
         val resolvedPath = serialization.fromAbsoluteString(relativePathString)
 
-        assertEquals(relativePathString, resolvedPath.toString())
+        val normalizedPath = resolvedPath.toString().normalizeForAssertion()
+        assertEquals(relativePathString, normalizedPath)
     }
 
     @Test
