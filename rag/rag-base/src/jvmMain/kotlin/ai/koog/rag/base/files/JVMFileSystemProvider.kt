@@ -174,8 +174,8 @@ public object JVMFileSystemProvider {
          * @throws IllegalArgumentException if the specified path is not a regular file or does not exist.
          */
         override suspend fun read(path: Path): ByteArray {
-            require(path.isRegularFile()) { "Path must be a regular file" }
             require(path.exists()) { "Path must exist" }
+            require(path.isRegularFile()) { "Path must be a regular file" }
 
             return withContext(Dispatchers.IO) { path.readBytes() }
         }
@@ -196,8 +196,8 @@ public object JVMFileSystemProvider {
          * @throws IllegalArgumentException if the provided path does not exist.
          */
         override suspend fun size(path: Path): Long {
-            require(path.isRegularFile()) { "Path must be a regular file" }
             require(path.exists()) { "Path must exist" }
+            require(path.isRegularFile()) { "Path must be a regular file" }
             return withContext(Dispatchers.IO) { path.fileSize() }
         }
     }

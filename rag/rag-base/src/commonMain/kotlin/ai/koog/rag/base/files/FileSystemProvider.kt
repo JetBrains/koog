@@ -37,7 +37,7 @@ public object FileSystemProvider {
          *
          * @param base The base path for resolution.
          * @param path The path string to resolve.
-         * If this is an absolute path, the [base] path is ignored and the absolute path is returned directly.
+         *             If this is an absolute path, the [base] path is ignored and the absolute path is returned directly.
          * @return The resolved path object.
          */
         public fun fromRelativeString(base: Path, path: String): Path
@@ -74,11 +74,11 @@ public object FileSystemProvider {
         public suspend fun metadata(path: Path): FileMetadata?
 
         /**
-         * Lists contents of a directory using a [directory].
+         * Lists contents of a [directory].
          *
          * @param directory The directory path to list.
          * @return List of paths contained in the directory.
-         * @throws IllegalArgumentException if passed argument is not a directory, or it doesn't exist.
+         *         Returns an empty list if an error occurs or the directory is empty.
          */
         public suspend fun list(directory: Path): List<Path>
 
@@ -121,8 +121,7 @@ public object FileSystemProvider {
          *
          * @param path The path to read.
          * @return The file content as a byte array.
-         * @throws NoSuchFileException if the path doesn't exist.
-         * @throws IllegalArgumentException if the path isn't a regular file.
+         * @throws IllegalArgumentException if the path isn't a regular file, or it doesn't exist.
          */
         public suspend fun read(path: Path): ByteArray
 
@@ -131,7 +130,8 @@ public object FileSystemProvider {
          *
          * @param path The path to read from.
          * @return A Source object for reading.
-         * @throws IllegalArgumentException if the path isn't a regular file, or it doesn't exist.
+         * @throws NoSuchFileException if the path doesn't exist.
+         * @throws IllegalArgumentException if the path isn't a regular file.
          */
         public suspend fun source(path: Path): Source
 
@@ -140,8 +140,7 @@ public object FileSystemProvider {
          *
          * @param path The path to examine.
          * @return The file size in bytes.
-         * @throws NoSuchFileException if the path doesn't exist.
-         * @throws IllegalArgumentException if the path isn't a regular file.
+         * @throws IllegalArgumentException if the path isn't a regular file, or it doesn't exist.
          */
         public suspend fun size(path: Path): Long
     }
@@ -169,8 +168,10 @@ public object FileSystemProvider {
          * @param parent The parent directory path.
          * @param name The name of the new file or directory.
          * @param type The type (file or directory) to create.
-         * @throws IOException if the name is invalid (e.g., contains reserved characters) or an error occurs during creation.
-         * @throws AccessDeniedException if there are not enough permissions to perform operation.
+         * @throws FileAlreadyExistsException if the file with [name] already exists in [parent].
+         *         It can also be NoSuchFileException.
+         * @throws InvalidPathException if [name] is invalid (e.g., contains reserved characters).
+         *         Optional specific exception, some implementations may throw more general IllegalArgumentException or IOException.
          */
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
@@ -181,6 +182,7 @@ public object FileSystemProvider {
          *
          * @param source The source path to move from.
          * @param target The target path to move to.
+         * @throws FileAlreadyExistsException if [source] already exists in [target].
          * @throws IOException if the source path doesn't exist, isn't a file or directory, or any IO error occurs.
          */
         public suspend fun move(source: Path, target: Path)
@@ -192,8 +194,6 @@ public object FileSystemProvider {
          *
          * @param path The path to write to.
          * @param content The content to write as a byte array.
-         * @throws IOException if an IO error occurs during writing.
-         * @throws AccessDeniedException if there are not enough permissions to perform operation.
          */
         public suspend fun write(path: Path, content: ByteArray)
 
@@ -211,10 +211,11 @@ public object FileSystemProvider {
         /**
          * Deletes a file or directory from [parent] using [name].
          * If the item is a directory, it will be deleted recursively with all its contents.
-         * This operation is idempotent - it doesn't throw any errors if a file/directory doesn't exist.
          *
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
+         * @throws NoSuchFileException if a file or directory doesn't exist.
+         *         Optional specific exception, some implementations may throw more general IOException.
          */
         public suspend fun delete(parent: Path, name: String)
     }
