@@ -56,18 +56,15 @@ class ParallelNodesTest {
             val parallelNode by parallel(
                 node1, node2, node3,
                 name = "parallelNode",
-            )
-
-            // Create nodes to verify the context isolation during parallel execution
-            val verifyNode by merge<Unit, String>("verifyNode") {
+            ) {
                 val output = results.map {
                     // This node should only see the changes from node1
-                    val value1 = it.result.context.storage.get(testKey1)
-                    val value2 = it.result.context.storage.get(testKey2)
-                    val value3 = it.result.context.storage.get(testKey3)
+                    val value1 = it.nodeResult.context.storage.get(testKey1)
+                    val value2 = it.nodeResult.context.storage.get(testKey2)
+                    val value3 = it.nodeResult.context.storage.get(testKey3)
 
                     var promptModified = false
-                    it.result.context.llm.readSession {
+                    it.nodeResult.context.llm.readSession {
                         promptModified = prompt.toString().contains("Additional text from node2")
                     }
 
@@ -112,14 +109,11 @@ class ParallelNodesTest {
 
             // Connect the nodes
             edge(nodeStart forwardTo parallelNode transformed { })
-            edge(parallelNode forwardTo verifyNode)
-            edge(verifyNode forwardTo nodeFinish)
+            edge(parallelNode forwardTo nodeFinish)
         }
 
         val agentConfig = AIAgentConfig(
-            prompt = basePrompt,
-            model = OllamaModels.Meta.LLAMA_3_2,
-            maxAgentIterations = 10
+            prompt = basePrompt, model = OllamaModels.Meta.LLAMA_3_2, maxAgentIterations = 10
         )
 
         val testExecutor = getMockExecutor {
@@ -132,9 +126,7 @@ class ParallelNodesTest {
             agentConfig = agentConfig,
             toolRegistry = ToolRegistry.Companion {
                 tool(DummyTool())
-            }
-        ) {
-        }
+            })
 
         val result = runner.run("")
 

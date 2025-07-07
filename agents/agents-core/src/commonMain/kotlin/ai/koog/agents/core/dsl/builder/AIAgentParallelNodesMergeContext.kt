@@ -82,7 +82,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @throws NoSuchElementException if no result matches the predicate
      */
     public suspend fun selectBy(predicate: suspend (Output) -> Boolean): NodeExecutionResult<Output> {
-        return results.first(predicate = { predicate(it.result.output) }).result
+        return results.first(predicate = { predicate(it.nodeResult.output) }).nodeResult
     }
 
     /**
@@ -96,8 +96,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @throws NoSuchElementException if the results list is empty.
      */
     public suspend fun <T : Comparable<T>> selectByMax(function: suspend (Output) -> T): NodeExecutionResult<Output> {
-        return results.maxBy { function(it.result.output) }
-            .let { NodeExecutionResult(it.result.output, it.result.context) }
+        return results.maxBy { function(it.nodeResult.output) }
+            .let { NodeExecutionResult(it.nodeResult.output, it.nodeResult.context) }
     }
 
     /**
@@ -108,8 +108,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @throws IndexOutOfBoundsException if the index returned by the selectIndex function is out of bounds.
      */
     public suspend fun selectByIndex(selectIndex: suspend (List<Output>) -> Int): NodeExecutionResult<Output> {
-        val indexOfBest = selectIndex(results.map { it.result.output })
-        return NodeExecutionResult(results[indexOfBest].result.output, results[indexOfBest].result.context)
+        val indexOfBest = selectIndex(results.map { it.nodeResult.output })
+        return NodeExecutionResult(results[indexOfBest].nodeResult.output, results[indexOfBest].nodeResult.context)
     }
 
     /**
@@ -124,7 +124,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         initial: R,
         operation: suspend (acc: R, result: Output) -> R
     ): NodeExecutionResult<R> {
-        val folded = results.map { it.result.output }.fold(initial) { r, t -> operation(r, t) }
+        val folded = results.map { it.nodeResult.output }.fold(initial) { r, t -> operation(r, t) }
         return NodeExecutionResult(folded, underlyingContextBase)
     }
 }
