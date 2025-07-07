@@ -7,15 +7,19 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 object ToolParameterTypeTestEnabler : DirectToolCallsEnabler
 
+// Complex tool params = objects, lists of enums, nested lists.
 @OptIn(InternalAgentToolsApi::class)
-class ToolParameterTypeTest {
+class ToolComplexParameterTypesTest {
 
+    // Region: Object tool parameter cases
     @Test
-    fun testObjectToolParameter() = runTest {
+    fun testObjectParameter() = runTest {
         val result = ObjectTool.execute(
             ObjectTool.decodeArgs(
                 buildJsonObject {
@@ -32,11 +36,86 @@ class ToolParameterTypeTest {
             ToolParameterTypeTestEnabler
         )
 
-        assertEquals("Person: John, 30, Address: 123 Main St, Anytown", result.toStringDefault())
+        assertEquals("John", result.person.name)
+        assertEquals(30, result.person.age)
+        assertEquals("123 Main St", result.person.address.street)
+        assertEquals("Anytown", result.person.address.city)
     }
 
     @Test
-    fun testObjectWithAdditionalPropertiesToolParameter() = runTest {
+    fun testNullObjectParameter() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ObjectTool.decodeArgs(
+                buildJsonObject {
+                    putJsonObject("person") {
+                        put("name", JsonNull)
+                        put("age", 30)
+                        putJsonObject("address") {
+                            put("street", "123 Main St")
+                            put("city", "Anytown")
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testInvalidTypeInObjectParameter() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ObjectTool.decodeArgs(
+                buildJsonObject {
+                    putJsonObject("person") {
+                        put("name", "John")
+                        put("age", "thirty")
+                        putJsonObject("address") {
+                            put("street", "123 Main St")
+                            put("city", "Anytown")
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testMissingParameterInObject() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ObjectTool.decodeArgs(
+                buildJsonObject {
+                    putJsonObject("person") {
+                        // name is missing
+                        put("age", 30)
+                        putJsonObject("address") {
+                            put("street", "123 Main St")
+                            put("city", "Anytown")
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testMissingParameterInNestedObject() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ObjectTool.decodeArgs(
+                buildJsonObject {
+                    putJsonObject("person") {
+                        put("name", "John")
+                        put("age", 30)
+                        putJsonObject("address") {
+                            // street is missing
+                            put("city", "Anytown")
+                        }
+                    }
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testObjectWithAdditionalProperties() = runTest {
         val result = ObjectWithAdditionalPropertiesTool.execute(
             ObjectWithAdditionalPropertiesTool.decodeArgs(
                 buildJsonObject {
@@ -50,29 +129,30 @@ class ToolParameterTypeTest {
             ToolParameterTypeTestEnabler
         )
 
-        assertEquals("Config: MyConfig, Additional: {custom1=value1, custom2=value2}", result.toStringDefault())
+        assertEquals("MyConfig", result.config.name)
+        val additionalProperties = result.config.getAdditionalProperties()
+        assertEquals("value1", additionalProperties["custom1"])
+        assertEquals("value2", additionalProperties["custom2"])
+        assertEquals(2, additionalProperties.size)
     }
 
     @Test
-    fun testListOfEnumsToolParameter() = runTest {
-        val result = ListOfEnumsTool.execute(
-            ListOfEnumsTool.decodeArgs(
+    fun testNullObjectWithAdditionalProperties() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ObjectWithAdditionalPropertiesTool.decodeArgs(
                 buildJsonObject {
-                    putJsonArray("colors") {
-                        add("RED")
-                        add("GREEN")
-                        add("BLUE")
+                    putJsonObject("config") {
+                        put("name", JsonNull)
+                        put("custom1", "value1")
+                        put("custom2", "value2")
                     }
                 }
-            ),
-            ToolParameterTypeTestEnabler
-        )
-
-        assertEquals("Colors: [RED, GREEN, BLUE]", result.toStringDefault())
+            )
+        }
     }
 
     @Test
-    fun testListOfObjectsToolParameter() = runTest {
+    fun testListOfObjects() = runTest {
         val result = ListOfObjectsTool.execute(
             ListOfObjectsTool.decodeArgs(
                 buildJsonObject {
@@ -91,11 +171,207 @@ class ToolParameterTypeTest {
             ToolParameterTypeTestEnabler
         )
 
-        assertEquals("People: [John (30), Jane (25)]", result.toStringDefault())
+        assertEquals(2, result.people.size)
+        assertEquals("John", result.people[0].name)
+        assertEquals(30, result.people[0].age)
+        assertEquals("Jane", result.people[1].name)
+        assertEquals(25, result.people[1].age)
     }
 
     @Test
-    fun testNestedListsToolParameter() = runTest {
+    fun testEmptyListOfObjects() = runTest {
+        val result = ListOfObjectsTool.execute(
+            ListOfObjectsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("people") {}
+                }
+            ),
+            ToolParameterTypeTestEnabler
+        )
+
+        assertEquals(0, result.people.size)
+        assertTrue(result.people.isEmpty())
+    }
+
+    @Test
+    fun testNullListOfObjects() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ListOfObjectsTool.decodeArgs(
+                buildJsonObject {
+                    put("people", JsonNull)
+                }
+            )
+        }
+    }
+    // endregion
+
+    // Region: Lists of enums
+    @Test
+    fun testListOfEnumsParameter() = runTest {
+        val result = ListOfEnumsTool.execute(
+            ListOfEnumsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("colors") {
+                        add("RED")
+                        add("GREEN")
+                        add("BLUE")
+                    }
+                    putJsonArray("names") {
+                        add("JANE")
+                        add("JOHN")
+                    }
+                    putJsonArray("optional") {
+                        add("RED")
+                    }
+                }
+            ),
+            ToolParameterTypeTestEnabler
+        )
+
+        assertEquals(3, result.colors.size)
+        assertEquals(2, result.names.size)
+        assertEquals(1, result.optional!!.size)
+        assertEquals(ListOfEnumsTool.Color.RED, result.colors[0])
+        assertEquals(ListOfEnumsTool.Color.GREEN, result.colors[1])
+        assertEquals(ListOfEnumsTool.Color.BLUE, result.colors[2])
+        assertEquals(ListOfEnumsTool.Name.JANE, result.names[0])
+        assertEquals(ListOfEnumsTool.Name.JOHN, result.names[1])
+        assertEquals(ListOfEnumsTool.Color.RED, result.optional[0])
+    }
+
+    @Test
+    fun testListOfEnumsMissingOptionalParameter() = runTest {
+        val result = ListOfEnumsTool.execute(
+            ListOfEnumsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("colors") {
+                        add("RED")
+                        add("GREEN")
+                        add("BLUE")
+                    }
+                    putJsonArray("names") {
+                        add("JANE")
+                        add("JOHN")
+                    }
+                }
+            ),
+            ToolParameterTypeTestEnabler
+        )
+
+        assertEquals(3, result.colors.size)
+        assertEquals(2, result.names.size)
+        assertEquals(null, result.optional)
+        assertEquals(ListOfEnumsTool.Color.RED, result.colors[0])
+        assertEquals(ListOfEnumsTool.Color.GREEN, result.colors[1])
+        assertEquals(ListOfEnumsTool.Color.BLUE, result.colors[2])
+        assertEquals(ListOfEnumsTool.Name.JANE, result.names[0])
+        assertEquals(ListOfEnumsTool.Name.JOHN, result.names[1])
+    }
+
+    @Test
+    fun testListOfEnumsEmptyOptionalParameter() = runTest {
+        val result = ListOfEnumsTool.execute(
+            ListOfEnumsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("colors") {
+                        add("RED")
+                        add("GREEN")
+                        add("BLUE")
+                    }
+                    putJsonArray("names") {
+                        add("JANE")
+                        add("JOHN")
+                    }
+                    putJsonArray("optional") {}
+                }
+            ),
+            ToolParameterTypeTestEnabler
+        )
+
+        assertEquals(3, result.colors.size)
+        assertEquals(2, result.names.size)
+        assertEquals(0, result.optional?.size)
+        assertEquals(ListOfEnumsTool.Color.RED, result.colors[0])
+        assertEquals(ListOfEnumsTool.Color.GREEN, result.colors[1])
+        assertEquals(ListOfEnumsTool.Color.BLUE, result.colors[2])
+        assertEquals(ListOfEnumsTool.Name.JANE, result.names[0])
+        assertEquals(ListOfEnumsTool.Name.JOHN, result.names[1])
+    }
+
+    @Test
+    fun testListOfEnumsMissingRequiredParameter() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ListOfEnumsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("colors") {
+                        add("RED")
+                        add("GREEN")
+                        add("BLUE")
+                    }
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testListOfEnumsEmptyRequiredParameters() = runTest {
+        val result = ListOfEnumsTool.execute(
+            ListOfEnumsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("colors") {}
+                    putJsonArray("names") {}
+                }
+            ),
+            ToolParameterTypeTestEnabler
+        )
+
+        assertEquals(0, result.colors.size)
+        assertTrue(result.colors.isEmpty())
+        assertEquals(0, result.names.size)
+        assertTrue(result.names.isEmpty())
+        assertEquals(null, result.optional)
+    }
+
+    @Test
+    fun testListOfEnumsNullRequiredParameter() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ListOfEnumsTool.decodeArgs(
+                buildJsonObject {
+                    put("colors", JsonNull)
+                    putJsonArray("names") {
+                        add("JANE")
+                    }
+                }
+            )
+        }
+    }
+
+    @Test
+    fun testInvalidEnumValueInListOfEnumsParameter() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            ListOfEnumsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("colors") {
+                        add("RED")
+                        add("BLUE")
+                        add("INVALID_COLOR")
+                    }
+                    putJsonArray("names") {
+                        add("JANE")
+                        add("JOHN")
+                    }
+                    putJsonArray("optional") {
+                        add("RED")
+                    }
+                }
+            )
+        }
+    }
+    // endregion
+
+    // Region: Nested lists
+    @Test
+    fun testNestedListsParameter() = runTest {
         val result = NestedListsTool.execute(
             NestedListsTool.decodeArgs(
                 buildJsonObject {
@@ -114,9 +390,43 @@ class ToolParameterTypeTest {
             ToolParameterTypeTestEnabler
         )
 
-        assertEquals("Nested list: [[1, 2], [3, 4]]", result.toStringDefault())
+        assertEquals(2, result.nestedList.size)
+        assertEquals(2, result.nestedList[0].size)
+        assertEquals(2, result.nestedList[1].size)
+
+        assertEquals(1, result.nestedList[0][0])
+        assertEquals(2, result.nestedList[0][1])
+
+        assertEquals(3, result.nestedList[1][0])
+        assertEquals(4, result.nestedList[1][1])
     }
 
+    @Test
+    fun testEmptyNestedListsParameter() = runTest {
+        val result = NestedListsTool.execute(
+            NestedListsTool.decodeArgs(
+                buildJsonObject {
+                    putJsonArray("nestedList") {}
+                }
+            ),
+            ToolParameterTypeTestEnabler
+        )
+
+        assertEquals(0, result.nestedList.size)
+        assertTrue(result.nestedList.isEmpty())
+    }
+
+    @Test
+    fun testNullNestedListsParameter() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            NestedListsTool.decodeArgs(
+                buildJsonObject {
+                    put("nestedList", JsonNull)
+                }
+            )
+        }
+    }
+    // endregion
 
     private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>() {
         @Serializable
@@ -153,11 +463,14 @@ class ToolParameterTypeTest {
         enum class Color { RED, GREEN, BLUE }
 
         @Serializable
-        data class Args(val colors: List<Color>) : ToolArgs
+        enum class Name { JANE, JOHN }
 
         @Serializable
-        data class Result(val colors: List<Color>) : ToolResult {
-            override fun toStringDefault(): String = "Colors: $colors"
+        data class Args(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?) : ToolArgs
+
+        @Serializable
+        data class Result(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?) : ToolResult {
+            override fun toStringDefault(): String = "Colors: $colors, names: $names"
         }
 
         override val argsSerializer = Args.serializer()
@@ -172,11 +485,25 @@ class ToolParameterTypeTest {
                     type = ToolParameterType.List(
                         ToolParameterType.Enum(Color.entries)
                     )
+                ),
+                ToolParameterDescriptor(
+                    name = "names",
+                    description = "A list of names",
+                    type = ToolParameterType.List(
+                        ToolParameterType.Enum(Name.entries)
+                    )
+                )
+            ),
+            optionalParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "optional",
+                    description = "An optional color parameter",
+                    type = ToolParameterType.Enum(Color.entries)
                 )
             )
         )
 
-        override suspend fun execute(args: Args): Result = Result(args.colors)
+        override suspend fun execute(args: Args): Result = Result(args.colors, args.names, args.optional)
     }
 
     private object ObjectTool : Tool<ObjectTool.Args, ObjectTool.Result>() {
