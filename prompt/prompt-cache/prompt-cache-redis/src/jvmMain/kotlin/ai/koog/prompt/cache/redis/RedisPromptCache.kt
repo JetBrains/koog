@@ -1,7 +1,6 @@
 package ai.koog.prompt.cache.redis
 
 import ai.koog.prompt.cache.model.PromptCache
-import ai.koog.prompt.cache.model.Request
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
@@ -90,15 +89,15 @@ public class RedisPromptCache(
     }
 
     @Serializable
-    private data class CachedElement(val response: List<Message.Response>, val request: Request)
+    private data class CachedElement(val response: List<Message.Response>, val request: PromptCache.Request)
 
-    override suspend fun get(request: Request): List<Message.Response>? {
+    override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
         return getOrNull(request)
     }
 
-    override suspend fun put(request: Request, response: List<Message.Response>) {
+    override suspend fun put(request: PromptCache.Request, response: List<Message.Response>) {
         try {
-            val key = request.asCacheKey
+            val key = prefix + request.asCacheKey
             val value = prettyJson.encodeToString(CachedElement(response, request))
 
             // Store the value
@@ -110,9 +109,9 @@ public class RedisPromptCache(
         }
     }
 
-    private suspend fun getOrNull(request: Request): List<Message.Response>? {
+    private suspend fun getOrNull(request: PromptCache.Request): List<Message.Response>? {
         try {
-            val key = request.asCacheKey
+            val key = prefix + request.asCacheKey
             val value = commands.get(key) ?: run {
                 logger.info { "Get key '${key}' from Redis cache miss" }
                 return null

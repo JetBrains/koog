@@ -238,10 +238,9 @@ public data class RequestMetaInfo(
         public fun create(clock: Clock): RequestMetaInfo = RequestMetaInfo(clock.now())
 
         /**
-         * Creates an empty instance of [RequestMetaInfo] with the timestamp set to a distant past.
-         * @return A [RequestMetaInfo] instance initialized with an [Instant.DISTANT_PAST] timestamp.
+         * An empty instance of [RequestMetaInfo] with the timestamp set to a distant past.
          */
-        public fun empty(): RequestMetaInfo = RequestMetaInfo(Instant.DISTANT_PAST)
+        public val Empty: RequestMetaInfo = RequestMetaInfo(Instant.DISTANT_PAST)
     }
 }
 
@@ -296,9 +295,8 @@ public data class ResponseMetaInfo(
             ResponseMetaInfo(clock.now(), totalTokensCount, inputTokensCount, outputTokensCount, additionalInfo)
 
         /**
-         * Provides an empty instance of the [ResponseMetaInfo] class.
-         * @returns a [ResponseMetaInfo] object with its timestamp set to the distant past.
+         * An empty instance of the [ResponseMetaInfo] with the timestamp set to a distant past.
          */
-        public fun empty(): ResponseMetaInfo = ResponseMetaInfo(Instant.DISTANT_PAST)
+        public val Empty: ResponseMetaInfo = ResponseMetaInfo(Instant.DISTANT_PAST)
     }
 }

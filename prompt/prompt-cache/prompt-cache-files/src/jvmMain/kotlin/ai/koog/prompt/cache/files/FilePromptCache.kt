@@ -1,7 +1,6 @@
 package ai.koog.prompt.cache.files
 
 import ai.koog.prompt.cache.model.PromptCache
-import ai.koog.prompt.cache.model.Request
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -73,9 +72,9 @@ public class FilePromptCache(
     private val lock = Mutex()
 
     @Serializable
-    private data class CachedElement(val response: List<Message.Response>, val request: Request)
+    private data class CachedElement(val response: List<Message.Response>, val request: PromptCache.Request)
 
-    override suspend fun get(request: Request): List<Message.Response>? {
+    override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
         val response = getOrNull(request)
 
         if (response != null) {
@@ -85,7 +84,7 @@ public class FilePromptCache(
         return response
     }
 
-    override suspend fun put(request: Request, response: List<Message.Response>): Unit = lock.withLock {
+    override suspend fun put(request: PromptCache.Request, response: List<Message.Response>): Unit = lock.withLock {
         // Check if we need to remove old files before adding a new one
         enforceFileLimit()
 
@@ -100,9 +99,9 @@ public class FilePromptCache(
         access[request.asCacheKey] = now
     }
 
-    private fun file(request: Request): Path = requestsDir / request.asCacheKey
+    private fun file(request: PromptCache.Request): Path = requestsDir / request.asCacheKey
 
-    private fun getOrNull(request: Request): List<Message.Response>? {
+    private fun getOrNull(request: PromptCache.Request): List<Message.Response>? {
         val file = file(request)
         if (!file.exists()) return null
 

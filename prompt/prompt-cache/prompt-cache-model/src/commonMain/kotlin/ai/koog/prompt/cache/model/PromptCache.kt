@@ -13,68 +13,9 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlin.math.absoluteValue
 
-internal val defaultJson = Json {
+private val defaultJson = Json {
     ignoreUnknownKeys = true
     allowStructuredMapKeys = true
-}
-
-/**
- * Represents a request to be cached, consisting of a prompt and optional tools.
- * This class is used by PromptCache implementations to store and retrieve cached responses.
- *
- * @property prompt The prompt to be cached
- * @property toolJsons Json representations of the tools
- */
-@Serializable
-public class Request private constructor (
-    public val prompt: Prompt,
-    public val toolJsons: List<JsonObject> = emptyList()
-) {
-    /**
-     * A unique identifier for the cache entry derived from the request's prompt and tools.
-     * This value is used by caching mechanisms to store and retrieve cached responses.
-     */
-    public val asCacheKey: String
-        get() {
-            // Create a new prompt with timestamps removed from all messages
-            val messagesWithoutMetaInfo = prompt.messages.map { message ->
-                when (message) {
-                    is Message.User -> message.copy(metaInfo = RequestMetaInfo.empty())
-                    is Message.System -> message.copy(metaInfo = RequestMetaInfo.empty())
-                    is Message.Assistant -> message.copy(metaInfo = ResponseMetaInfo.empty())
-                    is Message.Tool.Call -> message.copy(metaInfo = ResponseMetaInfo.empty())
-                    is Message.Tool.Result -> message.copy(metaInfo = RequestMetaInfo.empty())
-                }
-            }
-
-            val requestWithoutMetaInfo = Request(Prompt(messagesWithoutMetaInfo, prompt.id, prompt.params), toolJsons)
-
-            return defaultJson.encodeToString(requestWithoutMetaInfo).hashCode().absoluteValue.toString(36)
-        }
-
-    /**
-     * Companion object for the Request class, providing factory functions and utility methods.
-     */
-    public companion object {
-        /**
-         * Creates a new [Request] instance with the provided prompt and a list of tools.
-         *
-         * @param prompt The [Prompt] object containing the messages, ID, and parameters to construct the request.
-         * @param tools A list of [ToolDescriptor] objects to be included in the request. Each tool is converted to a JSON representation.
-         * @return A new [Request] instance initialized with the given prompt and tool data.
-         */
-        public fun create(prompt: Prompt, tools: List<ToolDescriptor>): Request =
-            Request(prompt, tools.map { toolToJsonObject(it) })
-
-        /**
-         * Convert a ToolDescriptor to a JsonObject representation.
-         * This is a simplified version that just captures the tool name and description for caching purposes.
-         */
-        private fun toolToJsonObject(tool: ToolDescriptor): JsonObject = buildJsonObject {
-            put("name", JsonPrimitive(tool.name))
-            put("description", JsonPrimitive(tool.description))
-        }
-    }
 }
 
 /**
@@ -188,6 +129,65 @@ public interface PromptCache {
     }
 
     /**
+     * Represents a request to be cached, consisting of a prompt and optional tools.
+     * This class is used by PromptCache implementations to store and retrieve cached responses.
+     *
+     * @property prompt The prompt to be cached
+     * @property toolJsons Json representations of the tools
+     */
+    @Serializable
+    public class Request private constructor (
+        public val prompt: Prompt,
+        public val toolJsons: List<JsonObject> = emptyList()
+    ) {
+        /**
+         * A unique identifier for the cache entry derived from the request's prompt and tools.
+         * This value is used by caching mechanisms to store and retrieve cached responses.
+         */
+        public val asCacheKey: String
+            get() {
+                // Create a new prompt with timestamps removed from all messages
+                val messagesWithoutMetaInfo = prompt.messages.map { message ->
+                    when (message) {
+                        is Message.User -> message.copy(metaInfo = RequestMetaInfo.Empty)
+                        is Message.System -> message.copy(metaInfo = RequestMetaInfo.Empty)
+                        is Message.Assistant -> message.copy(metaInfo = ResponseMetaInfo.Empty)
+                        is Message.Tool.Call -> message.copy(metaInfo = ResponseMetaInfo.Empty)
+                        is Message.Tool.Result -> message.copy(metaInfo = RequestMetaInfo.Empty)
+                    }
+                }
+
+                val requestWithoutMetaInfo = Request(Prompt(messagesWithoutMetaInfo, prompt.id, prompt.params), toolJsons)
+
+                return defaultJson.encodeToString(requestWithoutMetaInfo).hashCode().absoluteValue.toString(36)
+            }
+
+        /**
+         * Companion object for the Request class, providing factory functions and utility methods.
+         */
+        public companion object {
+            /**
+             * Creates a new [Request] instance with the provided prompt and a list of tools.
+             *
+             * @param prompt The [Prompt] object containing the messages, ID, and parameters to construct the request.
+             * @param tools A list of [ToolDescriptor] objects to be included in the request. Each tool is converted to a JSON representation.
+             * @return A new [Request] instance initialized with the given prompt and tool data.
+             */
+            public fun create(prompt: Prompt, tools: List<ToolDescriptor>): Request =
+                Request(prompt, tools.map { toolToJsonObject(it) })
+
+            /**
+             * Convert a ToolDescriptor to a JsonObject representation.
+             * This is a simplified version that just captures the tool name and description for caching purposes.
+             */
+            private fun toolToJsonObject(tool: ToolDescriptor): JsonObject = buildJsonObject {
+                put("name", JsonPrimitive(tool.name))
+                put("description", JsonPrimitive(tool.description))
+            }
+        }
+    }
+
+    /**
      * Get a cached response for a request, or null if not cached.
      *
      * @param request The request to get the cached response for
@@ -212,7 +212,7 @@ public interface PromptCache {
  * @return The cached response, or null if not cached
  */
 public suspend fun PromptCache.get(prompt: Prompt, tools: List<ToolDescriptor>, clock: Clock = Clock.System): List<Message.Response>? {
-    return get(Request.create(prompt, tools))?.let { messages ->
+    return get(PromptCache.Request.create(prompt, tools))?.let { messages ->
         val metaInfo = prompt
             .messages
             .filterIsInstance<Message.Response>()
@@ -233,5 +233,5 @@ public suspend fun PromptCache.get(prompt: Prompt, tools: List<ToolDescriptor>, 
  * @param response The response to cache
  */
 public suspend fun PromptCache.put(prompt: Prompt, tools: List<ToolDescriptor>, response: List<Message.Response>) {
-    put(Request.create(prompt, tools), response)
+    put(PromptCache.Request.create(prompt, tools), response)
 }
