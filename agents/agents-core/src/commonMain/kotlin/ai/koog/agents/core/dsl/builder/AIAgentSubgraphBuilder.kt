@@ -176,8 +176,8 @@ public class AIAgentSubgraphBuilder<Input, Output>(
     private val llmParams: LLMParams?,
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
-    override val nodeStart: StartNode<Input> = StartNode()
-    override val nodeFinish: FinishNode<Output> = FinishNode()
+    override val nodeStart: StartNode<Input> = StartNode(name)
+    override val nodeFinish: FinishNode<Output> = FinishNode(name)
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
@@ -234,8 +234,8 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
 
             subgraph = AIAgentSubgraph<Input, Output>(
                 name = nameOfSubgraph,
-                start = nodeStart.apply { subgraphName = nameOfSubgraph },
-                finish = nodeFinish.apply { subgraphName = nameOfSubgraph },
+                start = nodeStart,
+                finish = nodeFinish,
                 toolSelectionStrategy = toolSelectionStrategy,
                 llmModel = llmModel,
                 llmParams = llmParams,

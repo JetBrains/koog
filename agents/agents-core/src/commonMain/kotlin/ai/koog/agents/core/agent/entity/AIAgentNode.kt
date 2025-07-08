@@ -123,9 +123,9 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
-internal class AIAgentNode<Input, Output> internal constructor(
+public open class AIAgentNode<Input, Output> internal constructor(
     override val name: String,
-    val execute: suspend AIAgentContextBase.(input: Input) -> Output
+    public val execute: suspend AIAgentContextBase.(input: Input) -> Output
 ) : AIAgentNodeBase<Input, Output>() {
 
     @InternalAgentsApi
@@ -151,25 +151,14 @@ internal class AIAgentNode<Input, Output> internal constructor(
  * execution flow in multi-subgraph setups.
  *
  * @param Input The type of input data this node processes and produces as output.
+ * @param subgraphName The name of the related subgraph
  */
-public class StartNode<Input> internal constructor() : AIAgentNodeBase<Input, Input>() {
-    /**
-     * The name of the subgraph associated with the AI agent's starting node.
-     *
-     * This property serves as an identifier or label for the subgraph, helping to distinguish
-     * and reference specific AI workflows or strategies. It can be null if no subgraph
-     * name has been assigned.
-     *
-     * Internal changes to this property are restricted to ensure controlled modification, as the setter
-     * is marked internal. Its value may influence how the AI agent node generates its unique name.
-     */
-    public var subgraphName: String? = null
-        internal set
-
-    override val name: String get() = subgraphName?.let { "__start__$it" } ?: "__start__"
-
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Input = input
-}
+public class StartNode<Input> internal constructor(
+    subgraphName: String? = null
+) : AIAgentNode<Input, Input>(
+    name = subgraphName?.let { "__start__$it" } ?: "__start__",
+    execute = { input -> input }
+)
 
 /**
  * Represents a specialized node within an AI agent strategy graph that marks the endpoint of a subgraph.
@@ -184,25 +173,15 @@ public class StartNode<Input> internal constructor() : AIAgentNodeBase<Input, In
  * execution flow in multi-subgraph setups.
  *
  * @param Output The type of data this node processes and produces.
+ * @param subgraphName The name of the related subgraph
  */
-public class FinishNode<Output> internal constructor() : AIAgentNodeBase<Output, Output>() {
-    /**
-     * Stores the name of the subgraph associated with the node.
-     *
-     * This variable is used to identify or tag subgraphs in AI agent strategies.
-     * If `subgraphName` is set, it will be integrated into the node's identity or behavior,
-     * such as forming a unique name for the node.
-     *
-     * This property is mutable within the internal scope, but read-only from external scopes.
-     */
-    public var subgraphName: String? = null
-        internal set
-
-    override val name: String = subgraphName?.let { "__finish__$it" } ?: "__finish__"
-
+public class FinishNode<Output> internal constructor(
+    subgraphName: String? = null
+) : AIAgentNode<Output, Output>(
+    name = subgraphName?.let { "__finish__$it" } ?: "__finish__",
+    execute = { input -> input }
+) {
     override fun addEdge(edge: AIAgentEdge<Output, *>) {
         throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
     }
-
-    override suspend fun execute(context: AIAgentContextBase, input: Output): Output = input
 }
