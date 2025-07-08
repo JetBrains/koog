@@ -715,6 +715,172 @@ class OpenTelemetryTest {
         }
     }
 
+    @Test
+    fun `test spans are created for agent with parallel nodes execution`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+
+            val userPrompt = "What's the best joke about programming?"
+            val agentId = "test-agent-id"
+            val promptId = "test-prompt-id"
+            val testClock = Clock.System
+            val model = OpenAIModels.Chat.GPT4o
+            val temperature = 0.4
+
+            val strategy = strategy("test-strategy") {
+                val nodeFirstJoke by node<String, String> { topic ->
+                    "First joke about $topic: Why do programmers prefer dark mode? Because light attracts bugs!"
+                }
+
+                val nodeSecondJoke by node<String, String> { topic ->
+                    "Second joke about $topic: Why do Java developers wear glasses? Because they don't C#!"
+                }
+
+                val nodeThirdJoke by node<String, String> { topic ->
+                    "Third joke about $topic: A SQL query walks into a bar, walks up to two tables and asks, 'Can I join you?'"
+                }
+
+                // Define a node to run joke generation in parallel
+                val nodeGenerateJokes by parallel(
+                    nodeFirstJoke, nodeSecondJoke, nodeThirdJoke
+                )
+
+                // Define a node to select the best joke
+                val nodeSelectBestJoke by merge<String, String> {
+                    selectByIndex { jokes ->
+                        // Always select the first joke for testing purposes
+                        0
+                    }
+                }
+
+                edge(nodeStart forwardTo nodeGenerateJokes)
+                edge(nodeGenerateJokes forwardTo nodeSelectBestJoke)
+                edge(nodeSelectBestJoke forwardTo nodeFinish)
+            }
+
+            val mockResponse = "Why do programmers prefer dark mode? Because light attracts bugs!"
+
+            val mockExecutor = getMockExecutor(clock = testClock) {
+                mockLLMAnswer(mockResponse) onRequestEquals userPrompt
+            }
+
+            val agent = createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                promptId = promptId,
+                promptExecutor = mockExecutor,
+                model = model,
+                clock = testClock,
+                temperature = temperature
+            ) {
+                install(OpenTelemetry) {
+                    addSpanExporter(mockExporter)
+                    setVerbose(true)
+                }
+            }
+
+            agent.run(userPrompt)
+
+            val collectedSpans = mockExporter.collectedSpans
+            assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
+
+            agent.close()
+
+            // Print all collected spans for debugging
+            logger.debug { "All collected spans: ${collectedSpans.map { it.name }}" }
+
+            // Check each span
+            // We expect spans for:
+            // 1. Agent creation
+            // 2. Agent run
+            // 3. Start node
+            // 4. Each parallel node (3 nodes)
+            // 5. Merge node
+            // 6. Finish node
+
+            // Verify that we have spans for all parallel nodes
+            val nodeSpanNames = collectedSpans.map { it.name }
+                .filter { it.startsWith("node.") }
+                .sorted()
+            
+            logger.debug { "Node span names: $nodeSpanNames" }
+            
+            // Print all node spans with their attributes for debugging
+            collectedSpans.filter { it.name.startsWith("node.") }.forEach { span ->
+                val attributes = span.attributes.asMap().asSequence().associate { it.key.key to it.value }
+                logger.debug { "Node span: ${span.name}, attributes: $attributes" }
+            }
+            
+            // Check if we have the expected number of node spans (5 nodes)
+            assertEquals(5, nodeSpanNames.size, "Expected 5 node spans but found ${nodeSpanNames.size}")
+            
+            // Check for each specific node span
+            assertTrue(nodeSpanNames.any { it.contains("nodeFirstJoke") }, "First joke node span should be created")
+            assertTrue(nodeSpanNames.any { it.contains("nodeSecondJoke") }, "Second joke node span should be created")
+            assertTrue(nodeSpanNames.any { it.contains("nodeThirdJoke") }, "Third joke node span should be created")
+            assertTrue(nodeSpanNames.any { it.contains("nodeSelectBestJoke") }, "Select best joke node span should be created")
+            assertTrue(nodeSpanNames.any { it.contains("nodeGenerateJokes") }, "Generate jokes node span should be created")
+            
+            // Create expected spans structure
+            val expectedSpans = listOf(
+                mapOf(
+                    "agent.$agentId" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to "create_agent",
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.request.model" to model.id
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+                
+                mapOf(
+                    "run.${mockExporter.lastRunId}" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to "invoke_agent",
+                            "koog.agent.strategy.name" to "test-strategy",
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.conversation.id" to mockExporter.lastRunId
+                        ),
+                        "events" to emptyMap()
+                    )
+                )
+            )
+            
+            // Span count already verified above
+            
+            // Verify run span attributes
+            val runSpan = collectedSpans.find { it.name == "run.${mockExporter.lastRunId}" }
+            assertNotNull(runSpan, "Run span should be created")
+            
+            val runSpanAttributes = runSpan.attributes.asMap().asSequence().associate {
+                it.key.key to it.value
+            }
+            
+            assertEquals("invoke_agent", runSpanAttributes["gen_ai.operation.name"], "Run span should have operation name 'invoke_agent'")
+            assertEquals("test-strategy", runSpanAttributes["koog.agent.strategy.name"], "Run span should have strategy name 'test-strategy'")
+            assertEquals(agentId, runSpanAttributes["gen_ai.agent.id"], "Run span should have agent ID '$agentId'")
+            
+            // Verify parallel node spans have the correct conversation ID
+            val parallelNodeSpans = collectedSpans.filter { 
+                it.name.startsWith("node.") && 
+                (it.name.contains("nodeFirstJoke") || it.name.contains("nodeSecondJoke") || it.name.contains("nodeThirdJoke")) 
+            }
+            
+            assertEquals(3, parallelNodeSpans.size, "Should have 3 parallel node spans")
+            
+            parallelNodeSpans.forEach { span ->
+                val spanAttributes = span.attributes.asMap().asSequence().associate {
+                    it.key.key to it.value
+                }
+                
+                assertEquals(mockExporter.lastRunId, spanAttributes["gen_ai.conversation.id"], 
+                    "Parallel node span ${span.name} should have conversation ID '${mockExporter.lastRunId}'")
+            }
+        }
+    }
+
     //region Private Methods
 
     /**

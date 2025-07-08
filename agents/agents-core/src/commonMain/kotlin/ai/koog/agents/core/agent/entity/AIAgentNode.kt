@@ -109,15 +109,8 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? {
-        return withContext(NodeInfoContextElement(nodeName = name)) {
-            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNodeBase, input = input)
-            val output = execute(context, input as Input)
-            context.pipeline.onAfterNode(context = context, node = this@AIAgentNodeBase, input = input, output = output)
-
-            return@withContext output
-        }
-    }
+    public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? =
+        execute(context, input as Input)
 }
 
 /**
@@ -134,7 +127,16 @@ internal class AIAgentNode<Input, Output> internal constructor(
     override val name: String,
     val execute: suspend AIAgentContextBase.(input: Input) -> Output
 ) : AIAgentNodeBase<Input, Output>() {
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output = context.execute(input)
+
+    @InternalAgentsApi
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
+        return withContext(NodeInfoContextElement(nodeName = name)) {
+            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNode, input = input)
+            val nodeOutput = context.execute(input)
+            context.pipeline.onAfterNode(context = context, node = this@AIAgentNode, input = input, output = nodeOutput)
+            return@withContext nodeOutput
+        }
+    }
 }
 
 /**
