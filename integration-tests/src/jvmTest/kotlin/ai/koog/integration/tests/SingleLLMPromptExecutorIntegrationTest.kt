@@ -1,27 +1,31 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.utils.MediaTestScenarios
-import ai.koog.integration.tests.utils.MediaTestUtils
-import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.utils.MediaTestScenarios
+import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
-import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
+import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
+import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -38,7 +42,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.io.files.Path as KtPath
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -55,6 +58,7 @@ import kotlin.io.path.writeBytes
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.io.files.Path as KtPath
 
 class SingleLLMPromptExecutorIntegrationTest {
     companion object {
@@ -73,16 +77,25 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
+            val bedrockClientInstance = BedrockLLMClient(
+                readAwsAccessKeyIdFromEnv(),
+                readAwsSecretAccessKeyFromEnv(),
+                BedrockClientSettings()
+            )
             val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
 
             return Stream.concat(
                 Stream.concat(
-                    Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
-                    Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
+                    Stream.concat(
+                        Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
+                        Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
+                    ),
+                    Stream.concat(
+                        Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
+                        Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
+                    ),
                 ),
-                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) }
-                // Will enable when there're models that support tool calls
-                /*Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }*/
+                Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
             )
         }
 

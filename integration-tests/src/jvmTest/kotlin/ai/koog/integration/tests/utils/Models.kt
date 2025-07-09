@@ -4,6 +4,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -68,6 +69,38 @@ object Models {
             GoogleModels.Gemini1_5Flash8B001,
             GoogleModels.Gemini1_5Flash8BLatest,
             GoogleModels.Gemini2_5FlashPreview0417,
+        )
+    }
+
+    @JvmStatic
+    fun bedrockModels(): Stream<LLModel> {
+        return Stream.of(
+            BedrockModels.AI21JambaMini,
+            BedrockModels.AI21JambaLarge,
+            BedrockModels.AmazonNovaPro,
+            BedrockModels.AmazonNovaLite,
+            BedrockModels.AmazonNovaMicro,
+            BedrockModels.AmazonNovaPremier,
+            BedrockModels.AnthropicClaude2,
+            BedrockModels.AnthropicClaude21,
+            BedrockModels.AnthropicClaude35Haiku,
+            BedrockModels.AnthropicClaude35SonnetV2,
+            BedrockModels.AnthropicClaude3Haiku,
+            BedrockModels.AnthropicClaude3Opus,
+            BedrockModels.AnthropicClaude3Sonnet,
+            BedrockModels.AnthropicClaude4Opus,
+            BedrockModels.AnthropicClaude4Sonnet,
+            BedrockModels.AnthropicClaudeInstant,
+            BedrockModels.MetaLlama3_0_70BInstruct,
+            BedrockModels.MetaLlama3_1_8BInstruct,
+            BedrockModels.MetaLlama3_1_70BInstruct,
+            BedrockModels.MetaLlama3_0_8BInstruct,
+            BedrockModels.MetaLlama3_1_405BInstruct,
+            BedrockModels.MetaLlama3_2_11BInstruct,
+            BedrockModels.MetaLlama3_2_1BInstruct,
+            BedrockModels.MetaLlama3_2_3BInstruct,
+            BedrockModels.MetaLlama3_2_90BInstruct,
+            BedrockModels.MetaLlama3_3_70BInstruct,
         )
     }
 
