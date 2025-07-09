@@ -2,8 +2,14 @@ package ai.koog.integration.tests
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.singleRunStrategy
-import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.tools.*
+import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.utils.Models
@@ -13,26 +19,24 @@ import ai.koog.integration.tests.utils.TestUtils.DelayTool
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
-import ai.koog.prompt.dsl.prompt
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -47,11 +51,74 @@ import kotlin.test.AfterTest
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
 
 class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
+
+    @Serializable
+    data class GetTransactionsArgs(
+        val startDate: String,
+        val endDate: String
+    ) : ToolArgs
+
+    object GetTransactionsTool : SimpleTool<GetTransactionsArgs>() {
+        override val argsSerializer = GetTransactionsArgs.serializer()
+
+        override val descriptor = ToolDescriptor(
+            name = "get_transactions",
+            description = "Get all transactions between two dates",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "startDate",
+                    description = "Start date in format YYYY-MM-DD",
+                    type = ToolParameterType.String
+                ),
+                ToolParameterDescriptor(
+                    name = "endDate",
+                    description = "End date in format YYYY-MM-DD",
+                    type = ToolParameterType.String
+                )
+            )
+        )
+
+        override suspend fun doExecute(args: GetTransactionsArgs): String {
+            // Simulate returning transactions
+            return """
+            [
+              {date: "${args.startDate}", amount: -100.00, description: "Grocery Store"},
+              {date: "${args.startDate}", amount: +1000.00, description: "Salary Deposit"},
+              {date: "${args.endDate}", amount: -500.00, description: "Rent Payment"},
+              {date: "${args.endDate}", amount: -200.00, description: "Utilities"}
+            ]
+            """.trimIndent()
+        }
+    }
+
+    @Serializable
+    data class CalculateSumArgs(
+        val amounts: List<Double>
+    ) : ToolArgs
+
+    object CalculateSumTool : SimpleTool<CalculateSumArgs>() {
+        override val argsSerializer = CalculateSumArgs.serializer()
+
+        override val descriptor = ToolDescriptor(
+            name = "calculate_sum",
+            description = "Calculate the sum of a list of amounts",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "amounts",
+                    description = "List of amounts to sum",
+                    type = ToolParameterType.List(ToolParameterType.Float)
+                )
+            )
+        )
+
+        override suspend fun doExecute(args: CalculateSumArgs): String {
+            val sum = args.amounts.sum()
+            return sum.toString()
+        }
+    }
 
     companion object {
         private lateinit var testResourcesDir: Path
@@ -61,6 +128,11 @@ class AIAgentIntegrationTest {
         fun setup() {
             testResourcesDir =
                 Paths.get(AIAgentIntegrationTest::class.java.getResource("/media")!!.toURI())
+        }
+
+        @JvmStatic
+        fun reasoningIntervals(): Stream<Int> {
+            return listOf(1, 2, 3).stream()
         }
 
         @JvmStatic
@@ -91,6 +163,11 @@ class AIAgentIntegrationTest {
         val twoToolsRegistry = ToolRegistry {
             tool(CalculatorTool)
             tool(DelayTool)
+        }
+
+        val bankingToolsRegistry = ToolRegistry {
+            tool(GetTransactionsTool)
+            tool(CalculateSumTool)
         }
 
         val twoToolsPrompt = """
@@ -133,32 +210,27 @@ class AIAgentIntegrationTest {
         )
     }
 
-    val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onBeforeAgentStarted { eventContext ->
-            println("Agent started: strategy=${eventContext.strategy.javaClass.simpleName}, agent=${eventContext.agent.javaClass.simpleName}")
-        }
+    private var reasoningCallsCount = 0
 
+    val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onAgentFinished { eventContext ->
-            println("Agent finished: agentId=${eventContext.agentId}, result=${eventContext.result}")
             results.add(eventContext.result)
         }
 
         onAgentRunError { eventContext ->
-            println("Agent error: agentId=${eventContext.agentId}, error=${eventContext.throwable.message}")
             errors.add(eventContext.throwable)
         }
 
-        onStrategyStarted { eventContext ->
-            println("Strategy started: ${eventContext.strategy.javaClass.simpleName}")
-        }
-
-        onStrategyFinished { eventContext ->
-            println("Strategy finished: strategy=${eventContext.strategy.name}, result=${eventContext.result}")
+        onBeforeLLMCall { eventContext ->
+            if (eventContext.tools.isEmpty() &&
+                eventContext.prompt.messages.any { it.content.contains("Please give your thoughts about the task and plan the next steps.") }
+            ) {
+                reasoningCallsCount++
+            }
         }
 
         onBeforeNode { eventContext ->
             val input = eventContext.input
-            println("Before node: node=${eventContext.node.javaClass.simpleName}, input=${input}")
 
             if (input is List<*>) {
                 input.filterIsInstance<Message.Tool.Call>().forEach { call ->
@@ -183,33 +255,9 @@ class AIAgentIntegrationTest {
             }
         }
 
-        onAfterNode { eventContext ->
-            println("After node: node=${eventContext.node.javaClass.simpleName}, input=${eventContext.input}, output=${eventContext.output}")
-        }
-
-        onBeforeLLMCall { eventContext ->
-            println("Before LLM call with tools: prompt=${eventContext.prompt}, tools=${eventContext.tools.map { it.name }}")
-        }
-
-        onAfterLLMCall { eventContext ->
-            println("After LLM call with tools: response=${eventContext.responses.map { it.content.take(50) }}")
-        }
-
         onToolCall { eventContext ->
-            println("Tool called: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}")
             actualToolCalls.add(eventContext.tool.name)
-        }
-
-        onToolValidationError { eventContext ->
-            println("Tool validation error: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, value=${eventContext.error}")
-        }
-
-        onToolCallFailure { eventContext ->
-            println("Tool call failure: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, error=${eventContext.throwable.message}")
-        }
-
-        onToolCallResult { eventContext ->
-            println("Tool call result: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, result=${eventContext.result}")
+            toolExecutionCounter.add(eventContext.tool.name)
         }
     }
 
@@ -226,14 +274,17 @@ class AIAgentIntegrationTest {
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
     val results = mutableListOf<Any?>()
+    val toolExecutionCounter = mutableListOf<String>()
 
     @AfterTest
     fun teardown() {
+        toolExecutionCounter.clear()
         actualToolCalls.clear()
         errors.clear()
         results.clear()
         parallelToolCalls.clear()
         singleToolCalls.clear()
+        reasoningCallsCount = 0
     }
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runBlocking {
@@ -341,7 +392,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_AIAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AIAgentWithImageCapabilityTest(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
         val imageFile = testResourcesDir.resolve("test.png")
@@ -395,7 +446,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testRequestLLMWithoutTools(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_testRequestLLMWithoutToolsTest(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val executor = when (model.provider) {
@@ -441,13 +492,13 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentSingleRunWithSequentialTools(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_AIAgentSingleRunWithSequentialToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         runMultipleToolsTest(model, ToolCalls.SEQUENTIAL)
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels4_0", "googleModels")
-    fun integration_AIAgentSingleRunWithParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.id != OpenAIModels.Reasoning.O1.id, "The model fails to call tools in parallel, see KG-115")
         assumeTrue(model.id != OpenAIModels.Reasoning.O3.id, "The model fails to call tools in parallel, see KG-115")
         assumeTrue(
@@ -464,7 +515,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentSingleRunNoParallelTools(model: LLModel) = runTest(timeout = 300.seconds) {
+    fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
 
@@ -487,6 +538,73 @@ class AIAgentIntegrationTest {
             assertTrue(
                 singleToolCalls.first().tool == CalculatorTool.name,
                 "First tool call should be ${CalculatorTool.name}"
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningIntervals")
+    fun integration_AIAgentWithReActStrategyTest(interval: Int) = runTest(timeout = 300.seconds) {
+        // As we're checking the strategy, we're not passing each model and use one "default" profile to build an agent
+        val model = OpenAIModels.Chat.GPT4o
+
+        withRetry {
+            val executor = getExecutor(model)
+            val agent = AIAgent(
+                promptExecutor = executor,
+                strategy = reActStrategy(reasoningInterval = interval),
+                agentConfig = AIAgentConfig(
+                    prompt = prompt(
+                        id = "react-agent-test",
+                        params = LLMParams(
+                            temperature = 0.0,
+                            toolChoice = ToolChoice.Auto,
+                        )
+                    ) {},
+                    model = model,
+                    maxAgentIterations = 10,
+                ),
+                toolRegistry = bankingToolsRegistry,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+            )
+
+            agent.run("How much did I spend last month?")
+
+            assertTrue(errors.isEmpty(), "There should be no errors")
+            assertTrue(results.isNotEmpty(), "There should be results")
+            assertTrue(
+                actualToolCalls.contains(GetTransactionsTool.descriptor.name),
+                "The ${GetTransactionsTool.descriptor.name} tool should be called"
+            )
+            assertTrue(
+                actualToolCalls.contains(CalculateSumTool.descriptor.name),
+                "The ${CalculateSumTool.descriptor.name} tool should be called"
+            )
+
+            val getTransactionsIndex = actualToolCalls.indexOf(GetTransactionsTool.descriptor.name)
+            val calculateSumIndex = actualToolCalls.indexOf(CalculateSumTool.descriptor.name)
+            assertTrue(
+                getTransactionsIndex < calculateSumIndex,
+                "The ${GetTransactionsTool.descriptor.name} tool should be called before the ${CalculateSumTool.descriptor.name} tool"
+            )
+
+            assertTrue(
+                reasoningCallsCount > 0,
+                "Should have at least one reasoning call for the ReAct strategy."
+            )
+
+            // Count how many times the reasoning step would trigger based on the interval
+            var expectedReasoningCalls = 1 // Start with 1 for the initial reasoning
+            for (i in 0 until toolExecutionCounter.size) {
+                if (i % interval == 0) {
+                    expectedReasoningCalls++
+                }
+            }
+
+            assertTrue(
+                reasoningCallsCount == expectedReasoningCalls,
+                "With reasoningInterval=$interval and ${toolExecutionCounter.size} tool calls, " +
+                        "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
             )
         }
     }
