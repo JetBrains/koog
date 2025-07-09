@@ -9,7 +9,8 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import kotlin.test.*
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -74,7 +75,7 @@ class InMemoryPromptCacheTest {
         assertNotNull(smallCache.get(testPrompts[4], testTools, testClock), "Fifth entry should still be in cache")
     }
 
-    @Disabled("Works on Ubuntu, but fails on Windows")
+    @DisabledOnOs(OS.WINDOWS, disabledReason = "Fails on Windows")
     @Test
     fun `test least recently used entries are removed`() = runTest {
         // Put all responses in the cache

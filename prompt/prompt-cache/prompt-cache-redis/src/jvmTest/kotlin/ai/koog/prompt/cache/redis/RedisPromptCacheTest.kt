@@ -19,7 +19,8 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
-import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -82,7 +83,7 @@ class RedisPromptCacheTest {
         assertNull(cachedResponse)
     }
 
-    @Disabled("Works on Ubuntu, but fails on Windows")
+    @DisabledOnOs(OS.WINDOWS, disabledReason = "Fails on Windows")
     @Test
     fun `test expiration update on access`() = runTest {
         val cache = createCache(2.seconds)
