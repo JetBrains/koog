@@ -58,11 +58,9 @@ import kotlin.uuid.Uuid
  *
  * @property baseUrl The base URL for the Google AI API.
  * @property timeoutConfig Timeout configuration for API requests.
- * @property includeThoughts Controls whether to include the model's thinking process in responses.
- *                          When enabled, the model will return its intermediate reasoning steps.
- * @property thinkingBudget Optional token limit for the model's thinking process.
- *                          Limits the amount of tokens that can be used for the thinking process.
- *                          See [Google documentation](https://ai.google.dev/gemini-api/docs/thinking#set-budget) for details.
+ * @property includeThoughts If `true`, requests Gemini to add reasoning blocks to the response.
+ *                          Defaults to `false` to keep responses short and fast.
+ * @property thinkingBudget Hard cap for reasoning tokens.Ignored by models that don't support budgets.
  */
 public class GoogleClientSettings(
     public val baseUrl: String = "https://generativelanguage.googleapis.com",

@@ -238,8 +238,8 @@ internal class GoogleFunctionDeclaration(
  * @property numberOfChoices The number of reply choices to generate.
  * @property topP The maximum cumulative probability of tokens to consider when sampling.
  * @property topK The maximum number of tokens to consider when sampling.
- * @property thinkingConfig Configuration for the model's thinking mode, which enables the model
- * to expose its reasoning process in the response.
+ * @property thinkingConfig Controls whether the model should expose its chain-of-thought
+ *                           and how many tokens it may spend on it (see [GoogleThinkingConfig]).
  */
 @Serializable
 internal class GoogleGenerationConfig(
@@ -268,10 +268,12 @@ internal class GoogleToolConfig(
 )
 
 /**
- * Controls Gemini “thinking” mode.
+ * Optional block that controls Gemini's "thinking" mode.
  *
- * See the official documentation on setting a thinking budget:
- * https://ai.google.dev/gemini-api/docs/thinking#set-budget
+ * @property includeThoughts When set to `true`, the model will return its intermediate reasoning.
+ * @property thinkingBudget Token limit for reasoning, `0` disables it (Flash 2.5).
+ *
+ * API reference: https://ai.google.dev/gemini-api/docs/thinking#set-budget
  */
 @Serializable
 internal data class GoogleThinkingConfig(
