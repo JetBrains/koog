@@ -90,7 +90,8 @@ subprojects {
                 "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
                 "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
                 "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
-                "OLLAMA_IMAGE_URL" to System.getenv("OLLAMA_IMAGE_URL"),
+                "AWS_SECRET_KEY" to System.getenv("AWS_SECRET_KEY"),
+                "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
             )
         )
     }

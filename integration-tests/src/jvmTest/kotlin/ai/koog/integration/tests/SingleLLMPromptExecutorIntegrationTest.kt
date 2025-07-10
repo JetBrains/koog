@@ -31,6 +31,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -45,6 +46,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -77,26 +79,35 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-            val bedrockClientInstance = BedrockLLMClient(
+            /*val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
                 BedrockClientSettings()
-            )
+            )*/
             val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
 
             return Stream.concat(
                 Stream.concat(
-                    Stream.concat(
-                        Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
-                        Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
-                    ),
-                    Stream.concat(
-                        Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
-                        Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
-                    ),
+                    Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
+                    Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
                 ),
-                Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
+                Stream.concat(
+                    Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
+                    Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
+                ),
             )
+            // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
+        }
+
+        @JvmStatic
+        fun bedrockCombinations(): Stream<Arguments> {
+            val bedrockClientInstance = BedrockLLMClient(
+                readAwsAccessKeyIdFromEnv(),
+                readAwsSecretAccessKeyFromEnv(),
+                BedrockClientSettings(),
+            )
+
+            return Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
         }
 
         @JvmStatic
@@ -1022,6 +1033,46 @@ class SingleLLMPromptExecutorIntegrationTest {
                         response.content.contains("logo", ignoreCase = true),
                 "Response should mention the image content"
             )
+        }
+    }
+
+    /**
+     * Tests the simpleBedrockExecutor function with different Bedrock models.
+     *
+     * Some models may require an inference profile instead of on-demand throughput.
+     * The test may fail if the AWS account doesn't have access to the specified models.
+     */
+    @Disabled("Until we get a list of supported Bedrock models")
+    @ParameterizedTest
+    @MethodSource("bedrockCombinations")
+    fun integration_testSimpleBedrockExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
+        val executor = simpleBedrockExecutor(
+            readAwsAccessKeyIdFromEnv(),
+            readAwsSecretAccessKeyFromEnv()
+        )
+
+        val prompt = Prompt.build("test-simple-bedrock-executor") {
+            system("You are a helpful assistant.")
+            user("What is the capital of France?")
+        }
+
+        withRetry(times = 3, testName = "integration_testSimpleBedrockExecutor[${model.id}]") {
+            val response = executor.execute(prompt, model, emptyList())
+
+            assertNotNull(response, "Response should not be null")
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
+
+            val message = response.first() as Message.Assistant
+
+            assertTrue(
+                message.content.contains("Paris", ignoreCase = true),
+                "Response should contain 'Paris'"
+            )
+
+            assertNotNull(message.metaInfo.inputTokensCount, "Input tokens count should not be null")
+            assertNotNull(message.metaInfo.outputTokensCount, "Output tokens count should not be null")
+            assertNotNull(message.metaInfo.totalTokensCount, "Total tokens count should not be null")
         }
     }
 }
