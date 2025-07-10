@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.test
 
 import ai.koog.agents.core.agent.AIAgent
@@ -19,7 +17,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertTrue
-import kotlin.uuid.ExperimentalUuidApi
 
 class SimpleAgentMockedTest {
     companion object {
@@ -67,28 +64,28 @@ class SimpleAgentMockedTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onToolCall { tool, args ->
-            println("Tool called: tool ${tool.name}, args $args")
-            actualToolCalls.add(tool.name)
+        onToolCall { eventContext ->
+            println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+            actualToolCalls.add(eventContext.tool.name)
             iterationCount++
         }
 
-        onAgentRunError { strategyName, sessionUuid, throwable ->
-            errors.add(throwable)
+        onAgentRunError { eventContext ->
+            errors.add(eventContext.throwable)
         }
 
-        onToolCall { tool, args ->
-            println("Tool called: tool ${tool.name}, args $args")
-            actualToolCalls.add(tool.name)
+        onToolCall { eventContext ->
+            println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+            actualToolCalls.add(eventContext.tool.name)
         }
 
-        onToolCallFailure { tool, args, throwable ->
-            println("Tool call failure: tool ${tool.name}, args $args, error=${throwable.message}")
-            errors.add(throwable)
+        onToolCallFailure { eventContext ->
+            println("Tool call failure: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}, error=${eventContext.throwable.message}")
+            errors.add(eventContext.throwable)
         }
 
-        onAgentFinished { strategyName, result ->
-            results.add(result)
+        onAgentFinished { eventContext ->
+            results.add(eventContext.result)
         }
     }
 

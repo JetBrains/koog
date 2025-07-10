@@ -54,6 +54,9 @@ kotlin {
     }
 
     explicitApi()
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=ai.koog.prompt.executor.clients.InternalLLMClientApi")
+    }
 }
 
 publishToMaven()

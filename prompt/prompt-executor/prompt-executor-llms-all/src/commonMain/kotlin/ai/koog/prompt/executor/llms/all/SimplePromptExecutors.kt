@@ -3,6 +3,8 @@ package ai.koog.prompt.executor.llms.all
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
+import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
@@ -17,6 +19,38 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
  * @return A new instance of `SingleLLMPromptExecutor` configured with the `OpenAILLMClient`.
  */
 public fun simpleOpenAIExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with an `OpenAILLMClient` configured for Azure OpenAI.
+ *
+ * @param resourceName The name of the Azure OpenAI resource.
+ * @param deploymentName The name of the deployment within the Azure OpenAI resource.
+ * @param version The version of the Azure OpenAI Service to use.
+ * @param apiToken The API token used for authentication with the Azure OpenAI service.
+ * @return A new instance of `SingleLLMPromptExecutor` configured with the `OpenAILLMClient` for Azure OpenAI.
+ */
+public fun simpleAzureOpenAIExecutor(
+    resourceName: String,
+    deploymentName: String,
+    version: AzureOpenAIServiceVersion,
+    apiToken: String,
+): SingleLLMPromptExecutor =
+    SingleLLMPromptExecutor(OpenAILLMClient(apiToken, AzureOpenAIClientSettings(resourceName, deploymentName, version)))
+
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with an `OpenAILLMClient` configured for Azure OpenAI.
+ *
+ * @param baseUrl The base URL for the Azure OpenAI service.
+ * @param version The version of the Azure OpenAI Service to use.
+ * @param apiToken The API token used for authentication with the Azure OpenAI service.
+ * @return A new instance of `SingleLLMPromptExecutor` configured with the `OpenAILLMClient` for Azure OpenAI.
+ */
+public fun simpleAzureOpenAIExecutor(
+    baseUrl: String,
+    version: AzureOpenAIServiceVersion,
+    apiToken: String,
+): SingleLLMPromptExecutor =
+    SingleLLMPromptExecutor(OpenAILLMClient(apiToken, AzureOpenAIClientSettings(baseUrl, version)))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `AnthropicLLMClient`.

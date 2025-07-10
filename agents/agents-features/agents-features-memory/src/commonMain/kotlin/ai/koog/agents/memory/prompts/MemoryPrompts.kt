@@ -4,16 +4,46 @@ import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.MemorySubject
 
 internal object MemoryPrompts {
+    internal val historyWrapperTag = "conversation_to_extract_facts"
+
     internal fun singleFactPrompt(concept: Concept) =
-        "Based on our previous conversation, what is the most important fact about concept \"${concept.keyword}\" (${concept.description}) ? " +
-                "Provide a single, concise fact or answer.\n" +
-                "ONLY reply with the fact. Don't write any explanations or any polite answers to my question!"
+        """You are a specialized information extractor for compressing agent conversation histories.
+
+        You will receive a conversation history enclosed in <$historyWrapperTag> tags. Your task is to extract THE SINGLE MOST IMPORTANT fact about "${concept.keyword}" (${concept.description}).
+        
+        Critical extraction rules:
+        1. Focus on THE MOST ESSENTIAL OUTCOME or ESTABLISHED INFORMATION
+        2. When you see tool calls/observations, extract only the most crucial discovered fact
+        3. The fact must be self-contained - assume it will be the only available context later
+        4. Choose the fact with the broadest impact on understanding this concept
+        
+        Output constraints:
+        - Exactly one fact
+        - No explanations, formatting, or preamble
+        - Must be a complete, self-contained statement
+        
+        Output only the fact.
+        """.trimIndent()
 
     internal fun multipleFactsPrompt(concept: Concept) =
-        "Based on our previous conversation, what are the key facts about concept \"${concept.keyword}\" (${concept.description}) ? " +
-                "List each fact separately on new lines.\n" +
-                "Each fact should fit into a single line!\n" +
-                "ONLY reply with the list of facts on separate lines. Don't write any explanations or any polite answers to my question!"
+        """You are a specialized information extractor for compressing agent conversation histories.
+        
+        You will receive a conversation history enclosed in <$historyWrapperTag> tags. Your task is to extract ONLY the essential facts about "${concept.keyword}" (${concept.description}).
+        
+        Critical extraction rules:
+        1. Focus on OUTCOMES and ESTABLISHED INFORMATION, not actions taken
+        2. When you see tool calls/observations, extract only the discovered facts, not the process
+        3. Each fact must be self-contained - assume it will be the only available context later
+        4. Combine related information into single, comprehensive facts when possible
+        
+        Output constraints:
+        - One fact per line
+        - No explanations, headers, numbering, or formatting
+        - Facts must be complete statements that stand alone
+        - Skip any fact that just describes what was attempted or checked
+        
+        Output only the facts, nothing else.
+        """.trimIndent()
 
     internal fun autoDetectFacts(subjects: List<MemorySubject>): String = """
         Analyze the conversation history and identify important facts about:

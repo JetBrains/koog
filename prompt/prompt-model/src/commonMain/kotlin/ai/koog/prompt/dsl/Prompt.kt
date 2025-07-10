@@ -135,12 +135,16 @@ public data class Prompt(
      *
      * @property toolChoice Defines the behavior of the LLM regarding tool usage, allowing choices such as
      * automatic tool invocations or restricted tool interactions. This property is mutable to enable reconfiguration.
+     *
+     * @property user An optional user identifier that can be used for tracking or personalization purposes. This property
+     * is mutable to allow updates to the user context.
      */
     public class LLMParamsUpdateContext internal constructor(
         public var temperature: Double?,
         public var speculation: String?,
         public var schema: Schema?,
         public var toolChoice: ToolChoice?,
+        public var user: String? = null,
     ) {
         /**
          * Secondary constructor for `LLMParamsUpdateContext` that initializes the context using an
@@ -153,7 +157,8 @@ public data class Prompt(
             params.temperature,
             params.speculation,
             params.schema,
-            params.toolChoice
+            params.toolChoice,
+            params.user
         )
 
         /**
@@ -166,7 +171,8 @@ public data class Prompt(
             temperature = temperature,
             speculation = speculation,
             schema = schema,
-            toolChoice = toolChoice
+            toolChoice = toolChoice,
+            user = user
         )
     }
 

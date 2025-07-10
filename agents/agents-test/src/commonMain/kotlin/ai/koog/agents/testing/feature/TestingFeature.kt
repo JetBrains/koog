@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -29,8 +27,6 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 
 /**
@@ -744,7 +740,7 @@ public class Testing {
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
-                    sessionUuid: Uuid?,
+                    runId: String?,
                     strategyId: String?,
                 ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
@@ -851,7 +847,7 @@ public class Testing {
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
-                    sessionUuid: Uuid?,
+                    runId: String?,
                     strategyId: String?,
                 ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
@@ -948,16 +944,15 @@ public class Testing {
             if (config.enableGraphTesting) {
                 feature.graphAssertions.add(config.getAssertions())
 
-                pipeline.interceptBeforeAgentStarted(interceptContext) {
-                    readStrategy { strategyGraph ->
-                        val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
-                        config.assert(
-                            strategyAssertions != null,
-                            "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
-                        )
-                        strategyAssertions!!
-                        verifyGraph(agent, strategyAssertions, strategyGraph, pipeline, config)
-                    }
+                pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
+                    val strategyGraph = eventContext.strategy
+                    val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
+                    config.assert(
+                        strategyAssertions != null,
+                        "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
+                    )
+                    strategyAssertions!!
+                    verifyGraph(eventContext.agent, strategyAssertions, strategyGraph, pipeline, config)
                 }
             }
         }
@@ -1010,7 +1005,7 @@ public class Testing {
                         promptExecutor = PromptExecutorProxy(
                             agent.promptExecutor,
                             pipeline,
-                            assertion.context.sessionUuid,
+                            assertion.context.runId,
                         ),
                         environment = environment,
                         config = agent.agentConfig,

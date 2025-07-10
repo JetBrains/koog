@@ -8,8 +8,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * A wrapper around [ai.koog.prompt.executor.model.PromptExecutor] that allows for adding internal functionality to the executor
@@ -18,11 +16,10 @@ import kotlin.uuid.Uuid
  * @property executor The [ai.koog.prompt.executor.model.PromptExecutor] to wrap.
  * @property pipeline The [AIAgentPipeline] associated with the executor.
  */
-@OptIn(ExperimentalUuidApi::class)
 public class PromptExecutorProxy(
     private val executor: PromptExecutor,
     private val pipeline: AIAgentPipeline,
-    private val sessionUuid: Uuid,
+    private val runId: String,
 ) : PromptExecutor {
 
     private companion object {
@@ -31,28 +28,42 @@ public class PromptExecutorProxy(
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing LLM call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        pipeline.onBeforeLLMCall(prompt, tools, model, sessionUuid)
+        pipeline.onBeforeLLMCall(runId, prompt, model, tools)
 
         val responses = executor.execute(prompt, model, tools)
 
         logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" } }]" }
-        pipeline.onAfterLLMCall(prompt, tools, model, responses, sessionUuid)
+        pipeline.onAfterLLMCall(runId, prompt, model, tools, responses)
 
         return responses
     }
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        return executor.executeStreaming(prompt, model)
+        logger.debug { "Executing LLM streaming call (prompt: $prompt)" }
+        val stream = executor.executeStreaming(prompt, model)
+
+        return stream
     }
 
     override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
         logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
-        // TODO: add on before/after LLMWithMultipleChoices to the pipeline
 
-        val response = executor.executeMultipleChoices(prompt, model, tools)
+        val responses = executor.executeMultipleChoices(prompt, model, tools)
 
-        logger.debug { "Finished LLM call with response: $response" }
+        logger.debug {
+            val messageBuilder = StringBuilder()
+                .appendLine("Finished LLM call with LLM Choice response:")
 
-        return response
+            responses.forEachIndexed { index, response ->
+                messageBuilder.appendLine("- Response #${index}")
+                response.forEach { message ->
+                    messageBuilder.appendLine("  -- [${message.role}] ${message.content}")
+                }
+            }
+
+            "Finished LLM call with responses: $messageBuilder"
+        }
+
+        return responses
     }
 }

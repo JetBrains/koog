@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.example.tone
 
 import ai.koog.agents.core.agent.AIAgent
@@ -22,8 +20,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 class ToneAgentTest {
 
@@ -51,18 +47,18 @@ class ToneAgentTest {
 
         // Create an event handler
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, args ->
-                println("[DEBUG_LOG] Tool called: tool ${tool.name}, args $args")
-                toolCalls.add(tool.name)
+            onToolCall { eventContext ->
+                println("[DEBUG_LOG] Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+                toolCalls.add(eventContext.tool.name)
             }
 
-            onAgentRunError { strategyName, sessionUuid: Uuid?, throwable ->
-                println("[DEBUG_LOG] An error occurred: ${throwable.message}\n${throwable.stackTraceToString()}")
+            onAgentRunError { eventContext ->
+                println("[DEBUG_LOG] An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}")
             }
 
-            onAgentFinished { strategyName, agentResult ->
-                println("[DEBUG_LOG] Result: $agentResult")
-                result = agentResult
+            onAgentFinished { eventContext ->
+                println("[DEBUG_LOG] Result: ${eventContext.result}")
+                result = eventContext.result
             }
         }
 

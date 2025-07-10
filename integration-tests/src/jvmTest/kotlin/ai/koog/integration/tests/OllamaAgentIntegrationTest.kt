@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.integration.tests
 
 import ai.koog.agents.core.agent.AIAgent
@@ -15,6 +13,7 @@ import ai.koog.integration.tests.tools.AnswerVerificationTool
 import ai.koog.integration.tests.tools.GenericParameterTool
 import ai.koog.integration.tests.tools.GeographyQueryTool
 import ai.koog.integration.tests.utils.annotations.Retry
+import ai.koog.integration.tests.utils.annotations.RetryExtension
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
@@ -26,9 +25,9 @@ import kotlin.test.assertContains
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
-import kotlin.uuid.ExperimentalUuidApi
 
 @ExtendWith(OllamaTestFixtureExtension::class)
+@ExtendWith(RetryExtension::class)
 class OllamaAgentIntegrationTest {
     companion object {
         @field:InjectOllamaTestFixture
@@ -147,28 +146,28 @@ class OllamaAgentIntegrationTest {
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { tool, arguments ->
+                onToolCall { eventContext ->
                     println(
-                        "Calling tool ${tool.name} with arguments ${
-                            arguments.toString().lines().first().take(100)
+                        "Calling tool ${eventContext.tool.name} with arguments ${
+                            eventContext.toolArgs.toString().lines().first().take(100)
                         }"
                     )
                 }
 
-                onBeforeLLMCall { prompt, tools, model, uuid ->
-                    val promptText = prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
-                    val toolsText = tools.joinToString { it.name }
+                onBeforeLLMCall { eventContext ->
+                    val promptText = eventContext.prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
+                    val toolsText = eventContext.tools.joinToString { it.name }
                     println("Prompt with tools:\n$promptText\nAvailable tools:\n$toolsText")
                     promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
                 }
 
-                onAfterLLMCall { prompt, tools, model, responses, uuid ->
-                    val responseText = "[${responses.joinToString { "${it.role.name}: ${it.content}" }}]"
+                onAfterLLMCall { eventContext ->
+                    val responseText = "[${eventContext.responses.joinToString { "${it.role.name}: ${it.content}" }}]"
                     println("LLM Call response: $responseText")
                     promptsAndResponses.add("RESPONSE: $responseText")
                 }
 
-                onAgentFinished { _, _ ->
+                onAgentFinished { eventContext ->
                     println("Agent execution finished")
                 }
             }

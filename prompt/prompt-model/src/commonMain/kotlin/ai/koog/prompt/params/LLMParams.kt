@@ -16,6 +16,8 @@ import kotlinx.serialization.json.JsonObject
  *
  * @property toolChoice Used to switch tool calling behavior of LLM.
  *
+ * @property user An optional identifier for the user making the request, which can be used for tracking purposes.
+ *
  * This class also includes a nested `Builder` class to facilitate constructing instances in a more
  * customizable and incremental way.
  */
@@ -26,6 +28,7 @@ public data class LLMParams(
     val speculation: String? = null,
     val schema: Schema? = null,
     val toolChoice: ToolChoice? = null,
+    val user: String? = null,
 ) {
     /**
      * Combines the parameters of the current `LLMParams` instance with the provided default `LLMParams`
@@ -39,7 +42,8 @@ public data class LLMParams(
         temperature = temperature ?: default.temperature,
         numberOfChoices = numberOfChoices ?: default.numberOfChoices,
         speculation = speculation ?: default.speculation,
-        schema = schema ?: default.schema
+        schema = schema ?: default.schema,
+        user = user ?: default.user,
     )
 
     /**

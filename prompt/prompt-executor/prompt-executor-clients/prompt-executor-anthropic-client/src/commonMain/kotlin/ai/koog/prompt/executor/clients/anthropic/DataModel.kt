@@ -1,13 +1,15 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicMessageRequest(
+public data class AnthropicMessageRequest(
     val model: String,
     val messages: List<AnthropicMessage>,
     val maxTokens: Int = 2048,
@@ -18,35 +20,38 @@ internal data class AnthropicMessageRequest(
     val toolChoice: AnthropicToolChoice? = null,
 )
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicMessage(
+public data class AnthropicMessage(
     val role: String,
     val content: List<AnthropicContent>
 )
 
+@InternalLLMClientApi
 @Serializable
-internal data class SystemAnthropicMessage(
+public data class SystemAnthropicMessage(
     val text: String,
     @EncodeDefault(ALWAYS) val type: String = "text"
 )
 
+@InternalLLMClientApi
 @Serializable
-internal sealed class AnthropicContent {
+public sealed class AnthropicContent {
     @Serializable
     @SerialName("text")
-    data class Text(val text: String) : AnthropicContent()
+    public data class Text(val text: String) : AnthropicContent()
 
     @Serializable
     @SerialName("image")
-    data class Image(val source: ImageSource) : AnthropicContent()
+    public data class Image(val source: ImageSource) : AnthropicContent()
 
     @Serializable
     @SerialName("document")
-    data class Document(val source: DocumentSource) : AnthropicContent()
+    public data class Document(val source: DocumentSource) : AnthropicContent()
 
     @Serializable
     @SerialName("tool_use")
-    data class ToolUse(
+    public data class ToolUse(
         val id: String,
         val name: String,
         val input: JsonObject
@@ -54,54 +59,59 @@ internal sealed class AnthropicContent {
 
     @Serializable
     @SerialName("tool_result")
-    data class ToolResult(
+    public data class ToolResult(
         val toolUseId: String,
         val content: String
     ) : AnthropicContent()
 }
 
+@InternalLLMClientApi
 @Serializable
-internal sealed interface ImageSource {
+public sealed interface ImageSource {
     @Serializable
     @SerialName("url")
-    data class Url(val url: String) : ImageSource
+    public data class Url(val url: String) : ImageSource
 
     @Serializable
     @SerialName("base64")
-    data class Base64(val data: String, val mediaType: String) : ImageSource
+    public data class Base64(val data: String, val mediaType: String) : ImageSource
 }
 
+@InternalLLMClientApi
 @Serializable
-internal sealed interface DocumentSource {
+public sealed interface DocumentSource {
     @Serializable
     @SerialName("url")
-    data class Url(val url: String) : DocumentSource
+    public data class Url(val url: String) : DocumentSource
 
     @Serializable
     @SerialName("base64")
-    data class Base64(val data: String, val mediaType: String) : DocumentSource
+    public data class Base64(val data: String, val mediaType: String) : DocumentSource
 
     @Serializable
     @SerialName("text")
-    data class PlainText(val data: String, val mediaType: String) : DocumentSource
+    public data class PlainText(val data: String, val mediaType: String) : DocumentSource
 }
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicTool(
+public data class AnthropicTool(
     val name: String,
     val description: String,
     val inputSchema: AnthropicToolSchema
 )
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicToolSchema(
+public data class AnthropicToolSchema(
     val type: String = "object",
     val properties: JsonObject,
     val required: List<String>
 )
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicResponse(
+public data class AnthropicResponse(
     val id: String,
     val type: String,
     val role: String,
@@ -111,57 +121,62 @@ internal data class AnthropicResponse(
     val usage: AnthropicUsage? = null
 )
 
+@InternalLLMClientApi
 @Serializable
-internal sealed class AnthropicResponseContent {
+public sealed class AnthropicResponseContent {
     @Serializable
     @SerialName("text")
-    data class Text(val text: String) : AnthropicResponseContent()
+    public data class Text(val text: String) : AnthropicResponseContent()
 
     @Serializable
     @SerialName("tool_use")
-    data class ToolUse(
+    public data class ToolUse(
         val id: String,
         val name: String,
         val input: JsonObject
     ) : AnthropicResponseContent()
 }
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicUsage(
+public data class AnthropicUsage(
     val inputTokens: Int,
     val outputTokens: Int
 )
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicStreamResponse(
+public data class AnthropicStreamResponse(
     val type: String,
     val delta: AnthropicStreamDelta? = null,
     val message: AnthropicResponse? = null
 )
 
+@InternalLLMClientApi
 @Serializable
-internal data class AnthropicStreamDelta(
+public data class AnthropicStreamDelta(
     val type: String,
     val text: String? = null,
     val toolUse: AnthropicResponseContent.ToolUse? = null
 )
 
 
+@InternalLLMClientApi
 @Serializable
-internal sealed interface AnthropicToolChoice {
+public sealed interface AnthropicToolChoice {
     @Serializable
     @SerialName("auto")
-    data object Auto : AnthropicToolChoice
+    public data object Auto : AnthropicToolChoice
 
     @Serializable
     @SerialName("any")
-    data object Any : AnthropicToolChoice
+    public data object Any : AnthropicToolChoice
 
     @Serializable
     @SerialName("none")
-    data object None : AnthropicToolChoice
+    public data object None : AnthropicToolChoice
 
     @Serializable
     @SerialName("tool")
-    data class Tool(val name: String) : AnthropicToolChoice
+    public data class Tool(val name: String) : AnthropicToolChoice
 }

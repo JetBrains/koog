@@ -391,7 +391,9 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return A [Message.Response] object containing the response from the LLM.
      */
     override suspend fun requestLLM(): Message.Response {
-        return super.requestLLM().also { response -> updatePrompt { message(response) } }
+        return super.requestLLM().also { response ->
+            updatePrompt { message(response) }
+        }
     }
 
     /**

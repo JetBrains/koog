@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * @param name Optional node name, defaults to delegate's property name.
  */
+@AIAgentBuilderDslMarker
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = null): AIAgentNodeDelegate<T, T> =
     node(name) { input -> input }
 
@@ -37,6 +39,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(name: String? = nu
  * @param name Optional node name, defaults to delegate's property name.
  * @param body Lambda to modify the prompt using PromptBuilder.
  */
+@AIAgentBuilderDslMarker
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
     name: String? = null,
     body: PromptBuilder.() -> Unit
@@ -56,6 +59,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
  *
  * @param name Optional name for the node.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
@@ -73,6 +77,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageOnlyCallingTools(n
  * @param name Optional node name.
  * @param tool Tool descriptor the LLM is required to use.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: ToolDescriptor
@@ -93,6 +98,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
  * @param name Optional node name.
  * @param tool Tool the LLM is required to use.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
     name: String? = null,
     tool: Tool<*, *>
@@ -105,6 +111,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
  * @param name Optional node name.
  * @param allowToolCalls Controls whether LLM can use tools (default: true).
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     name: String? = null,
     allowToolCalls: Boolean = true
@@ -128,6 +135,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
  * @param retries Number of retry attempts for failed generations.
  * @param fixingModel LLM used for error correction.
  */
+@AIAgentBuilderDslMarker
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     name: String? = null,
     structure: StructuredData<T>,
@@ -155,6 +163,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
  * @param structureDefinition Optional structure to guide the LLM response.
  * @param transformStreamData Function to process the streamed data.
  */
+@AIAgentBuilderDslMarker
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
@@ -178,6 +187,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
  * @param name Optional node name.
  * @param structureDefinition Optional structure to guide the LLM response.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
@@ -188,6 +198,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
  *
  * @param name Optional node name.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String? = null): AIAgentNodeDelegate<String, List<Message.Response>> =
     node(name) { message ->
         llm.writeSession {
@@ -206,6 +217,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String?
  * @param strategy Determines which messages to include in compression.
  * @param preserveMemory Specifies whether to retain message memory after compression.
  */
+@AIAgentBuilderDslMarker
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
     strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
@@ -227,6 +239,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
  *
  * @param name Optional node name.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
     name: String? = null
 ): AIAgentNodeDelegate<Message.Tool.Call, ReceivedToolResult> =
@@ -239,6 +252,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteTool(
  *
  * @param name Optional node name.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
     name: String? = null
 ): AIAgentNodeDelegate<ReceivedToolResult, Message.Response> =
@@ -260,6 +274,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
  * @param name Optional node name.
  * @param parallelTools Specifies whether tools should be executed in parallel, defaults to false.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     name: String? = null,
     parallelTools: Boolean = false,
@@ -277,6 +292,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
  *
  * @param name Optional node name.
  */
+@AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
     name: String? = null
 ): AIAgentNodeDelegate<List<ReceivedToolResult>, List<Message.Response>> =
@@ -299,6 +315,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
  * @param tool The tool to execute.
  * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
  */
+@AIAgentBuilderDslMarker
 public inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
     name: String? = null,
     tool: Tool<ToolArg, TResult>,

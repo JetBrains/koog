@@ -6,6 +6,14 @@ import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 
 /**
+ * Marks a function as a transformation specific to edges within the AI agent's DSL
+ * to ensure its proper highlighting.
+ */
+@DslMarker
+@Target(AnnotationTarget.FUNCTION)
+public annotation class EdgeTransformationDslMarker
+
+/**
  * A builder class for constructing an `AIAgentEdge` instance, which represents a directed edge
  * connecting two nodes in a graph of an AI agent's processing pipeline. This edge defines
  * the flow of data from a source node to a target node, enabling transformation or filtering
@@ -59,6 +67,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
      * @return A new instance of `AIAgentEdgeBuilderIntermediate` that includes only the filtered intermediate outputs
      *         satisfying the specified condition.
      */
+    @EdgeTransformationDslMarker
     public infix fun onCondition(
         block: suspend AIAgentContextBase.(output: IntermediateOutput) -> Boolean
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
@@ -79,6 +88,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
      *              It takes the AI agent's context and the intermediate output as parameters and returns a new intermediate output.
      * @return A new instance of `AIAgentEdgeBuilderIntermediate` with the transformed intermediate output type.
      */
+    @EdgeTransformationDslMarker
     public infix fun <NewIntermediateOutput> transformed(
         block: suspend AIAgentContextBase.(IntermediateOutput) -> NewIntermediateOutput
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {

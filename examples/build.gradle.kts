@@ -23,16 +23,22 @@ dependencies {
     api(project(":agents:agents-mcp"))
     api(project(":agents:agents-features:agents-features-event-handler"))
     api(project(":agents:agents-features:agents-features-memory"))
+    api(project(":agents:agents-features:agents-features-opentelemetry"))
 
     api(project(":prompt:prompt-markdown"))
     api(project(":prompt:prompt-structure"))
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+    api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
     api(libs.kotlinx.datetime)
+
     implementation(libs.logback.classic)
+    implementation(libs.opentelemetry.exporter.logging)
+    implementation(libs.opentelemetry.exporter.otlp)
+    implementation(project.dependencies.platform(libs.opentelemetry.bom))
 
     testImplementation(kotlin("test"))
     testImplementation(project(":agents:agents-test"))
@@ -71,9 +77,11 @@ registerRunExampleTask("runExampleMarkdownStreamingWithTool", "ai.koog.agents.ex
 registerRunExampleTask("runExampleRiderProjectTemplate", "ai.koog.agents.example.rider.project.template.RiderProjectTemplateKt")
 registerRunExampleTask("runExampleExecSandbox", "ai.koog.agents.example.execsandbox.ExecSandboxKt")
 registerRunExampleTask("runExampleLoopComponent", "ai.koog.agents.example.components.loop.ProjectGeneratorKt")
-registerRunExampleTask("runExampleInstagramPostDescriber", "ai.koog.agents.example.media.InstagramPostDescriberKt")
+registerRunExampleTask("runExampleInstagramPostDescriber", "ai.koog.agents.example.attachments.InstagramPostDescriberKt")
 registerRunExampleTask("runExampleRoutingViaGraph", "ai.koog.agents.example.banking.routing.RoutingViaGraphKt")
 registerRunExampleTask("runExampleRoutingViaAgentsAsTools", "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt")
+registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example.feature.OpenTelemetryKt")
+registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 
 dokka {
     dokkaSourceSets.named("main") {

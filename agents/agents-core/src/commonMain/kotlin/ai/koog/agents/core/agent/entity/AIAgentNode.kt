@@ -1,7 +1,9 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import kotlinx.coroutines.withContext
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -97,16 +99,24 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output
 
     /**
-     * @suppress
+     * Executes the node operation using the provided execution context and input, bypassing type safety checks.
+     * This method internally calls the type-safe `execute` method after casting the input.
+     * The lifecycle hooks `onBeforeNode` and `onAfterNode` are invoked before and after the execution respectively.
+     *
+     * @param context The execution context that provides runtime information and functionality.
+     * @param input The input data to be processed by the node, which may be of any type.
+     * @return The result of the execution, which may be of any type depending on the implementation.
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
     public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? {
-        context.pipeline.onBeforeNode(this, context, input)
-        val output = execute(context, input as Input)
-        context.pipeline.onAfterNode(this, context, input, output)
+        return withContext(NodeInfoContextElement(nodeName = name)) {
+            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNodeBase, input = input)
+            val output = execute(context, input as Input)
+            context.pipeline.onAfterNode(context = context, node = this@AIAgentNodeBase, input = input, output = output)
 
-        return output
+            return@withContext output
+        }
     }
 }
 

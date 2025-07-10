@@ -18,7 +18,11 @@ public data class RetrySubgraphResult<Output>(
     val output: Output,
     val success: Boolean,
     val retryCount: Int,
-)
+) {
+    init {
+        require(retryCount > 0) { "retryCount must be greater than 0" }
+    }
+}
 
 /**
  * Creates a subgraph with retry mechanism, allowing a specified action subgraph to be retried multiple

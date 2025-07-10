@@ -1,6 +1,7 @@
 package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.dsl.builder.AIAgentEdgeBuilderIntermediate
+import ai.koog.agents.core.dsl.builder.EdgeTransformationDslMarker
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.toSafeResult
@@ -16,6 +17,7 @@ import kotlin.reflect.KClass
  *
  * @param klass The class to check instance against (not actually used, see implementation comment)
  */
+@EdgeTransformationDslMarker
 public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified T : Any>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onIsInstance(
     /*
@@ -44,6 +46,7 @@ public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reif
  *         that satisfy the specified condition, with output type adjusted to [SafeTool.Result.Success].
  */
 @Suppress("UNCHECKED_CAST")
+@EdgeTransformationDslMarker
 public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onSuccessful(
     crossinline condition: suspend (TResult) -> Boolean
@@ -64,6 +67,7 @@ public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolRe
  *         to `SafeTool.Result.Failure` containing the specified `TResult` for failure results that match the condition.
  */
 @Suppress("UNCHECKED_CAST")
+@EdgeTransformationDslMarker
 public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onFailure(
     crossinline condition: suspend (error: String) -> Boolean
@@ -78,6 +82,7 @@ public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolRe
  *
  * @param block A function that evaluates whether to accept a tool call message
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     block: suspend (Message.Tool.Call) -> Boolean
@@ -92,6 +97,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param tool The tool to match against
  * @param block A function that evaluates the tool arguments to determine if the edge should accept the message
  */
+@EdgeTransformationDslMarker
 public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : ToolArgs>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<Args, *>,
@@ -110,6 +116,7 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Ar
  *
  * @param tool The tool to match against
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<*, *>,
@@ -125,6 +132,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  *
  * @param tool The tool to match against
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolNotCalled(
     tool: Tool<*, *>,
@@ -141,6 +149,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param tool The tool to match against
  * @param block A function that evaluates the tool result to determine if the edge should accept the message
  */
+@EdgeTransformationDslMarker
 public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result : ToolResult>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolResult(
     tool: Tool<*, Result>,
@@ -157,6 +166,7 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Re
  *
  * @param block A function that evaluates whether to accept a list of tool call messages
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleToolCalls(
     block: suspend (List<Message.Tool.Call>) -> Boolean
@@ -175,6 +185,7 @@ public infix fun <IncomingOutput, OutgoingInput>
  * @param block A function that evaluates whether to accept a list of tool result messages
  */
 @Suppress("unused")
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleToolResults(
     block: suspend (List<ReceivedToolResult>) -> Boolean
@@ -191,6 +202,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  *
  * @param block A function that evaluates whether to accept an assistant message
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessage(
     block: suspend (Message.Assistant) -> Boolean
@@ -206,6 +218,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  *
  * @param block A function that evaluates whether to accept an assistant message
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleAssistantMessages(
     block: suspend (List<Message.Assistant>) -> Boolean
@@ -223,6 +236,7 @@ public infix fun <IncomingOutput, OutgoingInput>
  *
  * @param block A function that evaluates whether to accept an assistant message with media
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessageWithMedia(
     block: suspend (Message.Assistant) -> Boolean

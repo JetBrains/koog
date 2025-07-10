@@ -23,12 +23,6 @@ kotlin {
                 api(libs.ktor.serialization.kotlinx.json)
                 api(libs.ktor.server.sse)
                 api(libs.oshai.kotlin.logging)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                api(libs.ktor.client.cio)
                 api(libs.ktor.server.cio)
             }
         }
@@ -36,13 +30,32 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(project(":agents:agents-test"))
                 implementation(libs.kotlinx.coroutines.test)
+            }
+        }
+
+        jvmMain {
+            dependencies {
+                api(libs.ktor.client.cio)
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+            }
+        }
+
+        jsMain {
+            dependencies {
+                api(libs.ktor.client.js)
+            }
+        }
+
+        wasmJsMain {
+            dependencies {
+                api(libs.ktor.client.js)
             }
         }
     }

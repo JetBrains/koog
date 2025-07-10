@@ -61,7 +61,7 @@ public abstract class HistoryCompressionStrategy {
      */
     protected fun composePromptWithRequiredMessages(
         llmSession: AIAgentLLMWriteSession,
-        tldrMessages: List<Message.Response>,
+        tldrMessages: List<Message>,
         preserveMemory: Boolean,
         memoryMessages: List<Message>
     ) {

@@ -1,0 +1,41 @@
+package ai.koog.agents.features.opentelemetry.span
+
+import ai.koog.agents.features.opentelemetry.attribute.Attribute
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import io.opentelemetry.api.trace.SpanKind
+
+/**
+ * Node Execute Span
+ *
+ * Note: This span is out of scope of Open Telemetry Semantic Convention for GenAI.
+ */
+internal class NodeExecuteSpan(
+    parent: InvokeAgentSpan,
+    private val runId: String,
+    private val nodeName: String,
+) : GenAIAgentSpan(parent) {
+
+    companion object {
+        fun createId(agentId: String, runId: String, nodeName: String): String =
+            createIdFromParent(parentId = InvokeAgentSpan.createId(agentId, runId), nodeName = nodeName)
+
+        private fun createIdFromParent(parentId: String, nodeName: String): String =
+            "$parentId.node.$nodeName"
+    }
+
+    override val spanId: String = createIdFromParent(parent.spanId, nodeName)
+
+    override val kind: SpanKind = SpanKind.INTERNAL
+
+    /**
+     * Add the necessary attributes for the Node Execute Span:
+     *
+     * Note: Node Execute Span is not defined in the Open Telemetry Semantic Convention.
+     *       It is a custom span used to show a structure of Koog events
+     */
+    override val attributes: List<Attribute> = buildList {
+        add(SpanAttributes.Conversation.Id(runId))
+        add(CustomAttribute("koog.node.name", nodeName))
+    }
+}

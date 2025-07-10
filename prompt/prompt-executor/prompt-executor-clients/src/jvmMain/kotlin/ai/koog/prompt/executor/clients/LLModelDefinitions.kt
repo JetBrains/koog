@@ -6,17 +6,25 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.memberProperties
 
 /**
- * Retrieves all public properties of the specified object that are of type `LLModel` and returns them as a list.
+ * Retrieves all public properties of the specified object and nested objects that are of type `LLModel` and
+ * returns them as a list.
  *
  * @param obj The object to inspect for properties of type `LLModel`.
- * @return A list of `LLModel` instances extracted from the public properties of the provided object.
+ * @return A list of `LLModel` instances extracted from the public properties of the provided object
+ *   and its nested objects.
  */
 public fun allModelsIn(obj: Any): List<LLModel> {
-        return obj::class.memberProperties
-            .filter { it.visibility == KVisibility.PUBLIC }
-            .filter { it.returnType == LLModel::class.createType() }
-            .map { it.getter.call(obj) as LLModel }
-    }
+    val immediateModels = obj::class.memberProperties
+        .filter { it.visibility == KVisibility.PUBLIC }
+        .filter { it.returnType == LLModel::class.createType() }
+        .map { it.getter.call(obj) as LLModel }
+
+    val nestedModels = obj::class.nestedClasses
+        .mapNotNull { it.objectInstance }
+        .flatMap { allModelsIn(it) }
+
+    return immediateModels + nestedModels
+}
 
 /**
  * Retrieves a list of all `LLModel` instances defined within the current `LLModelDefinitions`.
@@ -30,4 +38,3 @@ public fun allModelsIn(obj: Any): List<LLModel> {
 public fun LLModelDefinitions.list(): List<LLModel> {
     return allModelsIn(this)
 }
-

@@ -51,6 +51,7 @@ public open class AIAgentNodeBuilder<Input, Output> internal constructor(
  * @return An `AIAgentEdgeBuilderIntermediate` that allows further customization
  * of the edge's data transformation and conditions between the nodes.
  */
+@EdgeTransformationDslMarker
 public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutput>.forwardTo(
     otherNode: AIAgentNodeBase<OutgoingInput, *>
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IncomingOutput, OutgoingInput> {

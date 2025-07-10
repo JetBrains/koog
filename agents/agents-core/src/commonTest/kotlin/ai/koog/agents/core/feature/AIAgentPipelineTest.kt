@@ -169,7 +169,6 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
-            "Agent: before agent started",
             "Agent: before agent started (strategy name: test-interceptors-strategy)",
         )
 
@@ -267,9 +266,7 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
-            "Agent: before agent started",
             "Agent: before agent started (strategy name: test-interceptors-strategy-1)",
-            "Agent: before agent started",
             "Agent: before agent started (strategy name: test-interceptors-strategy-2)",
         )
 

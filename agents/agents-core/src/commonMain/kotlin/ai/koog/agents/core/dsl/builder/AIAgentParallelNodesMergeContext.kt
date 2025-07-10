@@ -10,8 +10,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Context for merging parallel node execution results.
@@ -24,7 +22,7 @@ import kotlin.uuid.Uuid
  * @property underlyingContextBase The underlying context to delegate to
  * @property results The results of the parallel node executions
  */
-@OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
+@OptIn(InternalAgentsApi::class)
 public class AIAgentParallelNodesMergeContext<Input, Output>(
     private val underlyingContextBase: AIAgentContextBase,
     public val results: List<ParallelResult<Input, Output>>
@@ -36,8 +34,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val llm: AIAgentLLMContext get() = underlyingContextBase.llm
     override val stateManager: AIAgentStateManager get() = underlyingContextBase.stateManager
     override val storage: AIAgentStorage get() = underlyingContextBase.storage
-    override val sessionUuid: Uuid get() = underlyingContextBase.sessionUuid
-    override val strategyId: String get() = underlyingContextBase.strategyId
+    override val runId: String get() = underlyingContextBase.runId
+    override val strategyName: String get() = underlyingContextBase.strategyName
     override val pipeline: AIAgentPipeline get() = underlyingContextBase.pipeline
 
     // Delegate all methods to the underlying context
@@ -57,7 +55,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
-        sessionUuid: Uuid,
+        runId: String,
         strategyId: String,
         pipeline: AIAgentPipeline
     ): AIAgentContextBase = underlyingContextBase.copy(
@@ -67,7 +65,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         llm = llm,
         stateManager = stateManager,
         storage = storage,
-        sessionUuid = sessionUuid,
+        runId = runId,
         strategyId = strategyId,
         pipeline = pipeline
     )
@@ -84,7 +82,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @throws NoSuchElementException if no result matches the predicate
      */
     public suspend fun selectBy(predicate: suspend (Output) -> Boolean): NodeExecutionResult<Output> {
-        return results.first(predicate = { predicate(it.result.output) }).result
+        return results.first(predicate = { predicate(it.nodeResult.output) }).nodeResult
     }
 
     /**
@@ -98,8 +96,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @throws NoSuchElementException if the results list is empty.
      */
     public suspend fun <T : Comparable<T>> selectByMax(function: suspend (Output) -> T): NodeExecutionResult<Output> {
-        return results.maxBy { function(it.result.output) }
-            .let { NodeExecutionResult(it.result.output, it.result.context) }
+        return results.maxBy { function(it.nodeResult.output) }
+            .let { NodeExecutionResult(it.nodeResult.output, it.nodeResult.context) }
     }
 
     /**
@@ -110,8 +108,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      * @throws IndexOutOfBoundsException if the index returned by the selectIndex function is out of bounds.
      */
     public suspend fun selectByIndex(selectIndex: suspend (List<Output>) -> Int): NodeExecutionResult<Output> {
-        val indexOfBest = results.map { it.result.output }.let { selectIndex(it) }
-        return NodeExecutionResult(results[indexOfBest].result.output, results[indexOfBest].result.context)
+        val indexOfBest = selectIndex(results.map { it.nodeResult.output })
+        return NodeExecutionResult(results[indexOfBest].nodeResult.output, results[indexOfBest].nodeResult.context)
     }
 
     /**
@@ -126,7 +124,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         initial: R,
         operation: suspend (acc: R, result: Output) -> R
     ): NodeExecutionResult<R> {
-        val folded = results.map { it.result.output }.fold(initial) { r, t -> operation(r, t) }
+        val folded = results.map { it.nodeResult.output }.fold(initial) { r, t -> operation(r, t) }
         return NodeExecutionResult(folded, underlyingContextBase)
     }
 }

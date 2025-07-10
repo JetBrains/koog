@@ -2,7 +2,6 @@ package ai.koog.agents.example.mcp
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -107,16 +106,16 @@ fun main() {
                     install(Tracing)
 
                     install(EventHandler) {
-                        onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
+                        onBeforeAgentStarted { eventContext ->
                             println("OnBeforeAgentStarted first (strategy: ${strategy.name})")
                         }
 
-                        onBeforeAgentStarted { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> ->
+                        onBeforeAgentStarted { eventContext ->
                             println("OnBeforeAgentStarted second (strategy: ${strategy.name})")
                         }
 
-                        onAgentFinished { strategyName: String, result: Any? ->
-                            println("OnAgentFinished (strategy: $strategyName, result: $result)")
+                        onAgentFinished { eventContext ->
+                            println("OnAgentFinished (agent id: ${eventContext.agentId}, result: ${eventContext.result})")
                         }
                     }
                 }

@@ -149,6 +149,7 @@ class PromptTest {
             speculation = speculationMessage
             schema = LLMParams.Schema.JSON.Simple(simpleSchemaName, simpleSchema)
             toolChoice = LLMParams.ToolChoice.Auto
+            user = "test_user"
         }
 
         val encodedPrompt = Json.encodeToString(prompt)
@@ -161,6 +162,7 @@ class PromptTest {
         assertTrue(decodedPrompt.params.schema is LLMParams.Schema.JSON.Simple)
         assertEquals(simpleSchemaName, decodedPrompt.params.schema?.name)
         assertTrue(decodedPrompt.params.toolChoice is LLMParams.ToolChoice.Auto)
+        assertEquals("test_user", decodedPrompt.params.user)
 
         decodedPrompt.messages.forEachIndexed { index, decodedMessage ->
             assertTrue(decodedMessage.role == prompt.messages[index].role)
@@ -264,7 +266,8 @@ class PromptTest {
                 schemaName,
                 buildJsonObject { put("type", "string") }
             ),
-            toolChoice = LLMParams.ToolChoice.Auto
+            toolChoice = LLMParams.ToolChoice.Auto,
+            user = "test_user"
         )
 
         val updatedPrompt = basicPrompt.withParams(newParams)
@@ -274,6 +277,7 @@ class PromptTest {
         assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON.Simple)
         assertEquals(schemaName, updatedPrompt.params.schema?.name)
         assertTrue(updatedPrompt.params.toolChoice is LLMParams.ToolChoice.Auto)
+        assertEquals("test_user", updatedPrompt.params.user)
     }
 
     @Test
@@ -291,6 +295,7 @@ class PromptTest {
                 }
             )
             toolChoice = LLMParams.ToolChoice.Required
+            user = "updated_user"
         }
 
         assertEquals(0.8, updatedPrompt.params.temperature)
@@ -298,6 +303,7 @@ class PromptTest {
         assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON.Full)
         assertEquals(schemaName, updatedPrompt.params.schema?.name)
         assertTrue(updatedPrompt.params.toolChoice is LLMParams.ToolChoice.Required)
+        assertEquals("updated_user", updatedPrompt.params.user)
     }
 
     @Test
@@ -430,7 +436,8 @@ class PromptTest {
             temperature = null,
             speculation = null,
             schema = null,
-            toolChoice = null
+            toolChoice = null,
+            user = null
         )
 
         val prompt = Prompt(emptyList(), promptId, params)
@@ -439,6 +446,7 @@ class PromptTest {
         assertNull(prompt.params.speculation)
         assertNull(prompt.params.schema)
         assertNull(prompt.params.toolChoice)
+        assertNull(prompt.params.user)
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
@@ -448,6 +456,7 @@ class PromptTest {
         assertNull(decoded.params.speculation)
         assertNull(decoded.params.schema)
         assertNull(decoded.params.toolChoice)
+        assertNull(decoded.params.user)
     }
 
     @Test
@@ -606,7 +615,8 @@ class PromptTest {
 
         val newParams = LLMParams(
             temperature = 0.7,
-            speculation = "test speculation"
+            speculation = "test speculation",
+            user = "test_user",
         )
 
         val updatedPrompt = originalPrompt.withParams(newParams)
@@ -615,6 +625,7 @@ class PromptTest {
         assertEquals(newParams, updatedPrompt.params)
         assertEquals(0.7, updatedPrompt.params.temperature)
         assertEquals("test speculation", updatedPrompt.params.speculation)
+        assertEquals("test_user", updatedPrompt.params.user)
     }
 
     @Test
@@ -636,10 +647,12 @@ class PromptTest {
             temperature = 0.5
             speculation = "new speculation"
             toolChoice = LLMParams.ToolChoice.Auto
+            user = "new_user"
         }
 
         assertEquals(0.5, multiUpdatedPrompt.params.temperature)
         assertEquals("new speculation", multiUpdatedPrompt.params.speculation)
         assertEquals(LLMParams.ToolChoice.Auto, multiUpdatedPrompt.params.toolChoice)
+        assertEquals("new_user", multiUpdatedPrompt.params.user)
     }
 }

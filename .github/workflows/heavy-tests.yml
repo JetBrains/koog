@@ -22,7 +22,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
 
     steps:
       - name: Configure Git

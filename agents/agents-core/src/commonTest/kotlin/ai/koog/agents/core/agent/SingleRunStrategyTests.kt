@@ -31,7 +31,7 @@ class SingleRunStrategyTests {
             OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -61,7 +61,7 @@ class SingleRunStrategyTests {
             OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -90,7 +90,7 @@ class SingleRunStrategyTests {
             strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -119,7 +119,7 @@ class SingleRunStrategyTests {
             strategy = singleRunStrategy(ToolCalls.PARALLEL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -157,7 +157,7 @@ class SingleRunStrategyTests {
             strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -195,7 +195,7 @@ class SingleRunStrategyTests {
             strategy = singleRunStrategy(ToolCalls.PARALLEL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -234,7 +234,7 @@ class SingleRunStrategyTests {
             strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -273,7 +273,7 @@ class SingleRunStrategyTests {
             strategy = singleRunStrategy(ToolCalls.PARALLEL),
             toolRegistry = testToolRegistry) {
             install(EventHandler) {
-                onToolCall { _, args -> actualToolCalls += args.toString() }
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 

@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.integration.tests
 
 import ai.koog.integration.tests.ReportingLLMLLMClient.Event
@@ -37,6 +35,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
@@ -50,10 +49,8 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.util.stream.Stream
-import kotlin.coroutines.coroutineContext
 import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
-import kotlin.uuid.ExperimentalUuidApi
 
 internal class ReportingLLMLLMClient(
     private val eventsChannel: Channel<Event>,
@@ -77,7 +74,7 @@ internal class ReportingLLMLLMClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        CoroutineScope(coroutineContext).launch {
+        CoroutineScope(currentCoroutineContext()).launch {
             eventsChannel.send(
                 Event.Message(
                     llmClient = underlyingClient::class.simpleName ?: "null",
@@ -594,15 +591,15 @@ class AIAgentMultipleLLMIntegrationTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
+            onToolCall { eventContext ->
                 println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
+                    "Calling tool ${eventContext.tool.name} with arguments ${
+                        eventContext.toolArgs.toString().lines().first().take(100)
                     }"
                 )
             }
 
-            onAgentFinished { _, _ ->
+            onAgentFinished { eventContext ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -661,15 +658,15 @@ class AIAgentMultipleLLMIntegrationTest {
         val fs = MockFileSystem()
         var errorMessage: String? = null
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
+            onToolCall { eventContext ->
                 println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
+                    "Calling tool ${eventContext.tool.name} with arguments ${
+                        eventContext.toolArgs.toString().lines().first().take(100)
                     }"
                 )
             }
 
-            onAgentFinished { _, _ ->
+            onAgentFinished { eventContext ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -701,15 +698,15 @@ class AIAgentMultipleLLMIntegrationTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
+            onToolCall { eventContext ->
                 println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
+                    "Calling tool ${eventContext.tool.name} with arguments ${
+                        eventContext.toolArgs.toString().lines().first().take(100)
                     }"
                 )
             }
 
-            onAgentFinished { _, _ ->
+            onAgentFinished { eventContext ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -730,10 +727,10 @@ class AIAgentMultipleLLMIntegrationTest {
     fun integration_testOpenAIAnthropicAgentWithTools() = runTest(timeout = 300.seconds) {
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
+            onToolCall { eventContext ->
                 println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
+                    "Calling tool ${eventContext.tool.name} with arguments ${
+                        eventContext.toolArgs.toString().lines().first().take(100)
                     }"
                 )
             }
@@ -759,14 +756,14 @@ class AIAgentMultipleLLMIntegrationTest {
                 },
                 installFeatures = {
                     install(EventHandler) {
-                        onAgentRunError { _, _, e ->
-                            println("error: ${e.javaClass.simpleName}(${e.message})\n${e.stackTraceToString()}")
+                        onAgentRunError { eventContext ->
+                            println("error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}")
                             true
                         }
-                        onToolCall { tool, arguments ->
+                        onToolCall { eventContext ->
                             println(
-                                "Calling tool ${tool.name} with arguments ${
-                                    arguments.toString().lines().first().take(100)
+                                "Calling tool ${eventContext.tool.name} with arguments ${
+                                    eventContext.toolArgs.toString().lines().first().take(100)
                                 }"
                             )
                         }
@@ -787,10 +784,10 @@ class AIAgentMultipleLLMIntegrationTest {
     fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
+            onToolCall { eventContext ->
                 println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
+                    "Calling tool ${eventContext.tool.name} with arguments ${
+                        eventContext.toolArgs.toString().lines().first().take(100)
                     }"
                 )
             }
@@ -849,10 +846,10 @@ class AIAgentMultipleLLMIntegrationTest {
     fun integration_testAgentWithImageCapabilityPrompt(model: LLModel) = runTest(timeout = 120.seconds) {
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { tool, arguments ->
+            onToolCall { eventContext ->
                 println(
-                    "Calling tool ${tool.name} with arguments ${
-                        arguments.toString().lines().first().take(100)
+                    "Calling tool ${eventContext.tool.name} with arguments ${
+                        eventContext.toolArgs.toString().lines().first().take(100)
                     }"
                 )
             }

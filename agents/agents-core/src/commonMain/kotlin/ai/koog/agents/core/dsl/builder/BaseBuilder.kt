@@ -12,7 +12,7 @@ package ai.koog.agents.core.dsl.builder
  * in the correct context.
  */
 @DslMarker
-public annotation class AIAgentBuilderMarker
+public annotation class AIAgentBuilderDslMarker
 
 /**
  * A generic base interface for builders that enables the construction of an object of type `T`.
@@ -21,7 +21,7 @@ public annotation class AIAgentBuilderMarker
  *
  * @param T The type of object that the builder produces.
  */
-@AIAgentBuilderMarker
+@AIAgentBuilderDslMarker
 public interface BaseBuilder<T> {
     /**
      * Builds and returns the instance of type `T` that has been configured using the builder.

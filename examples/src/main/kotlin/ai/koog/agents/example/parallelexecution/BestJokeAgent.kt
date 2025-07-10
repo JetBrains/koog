@@ -21,10 +21,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 @LLMDescription("The result of the best joke selection")
 data class JokeWinner(
-    @LLMDescription("Index of the winning joke from 0 to 2")
-    val index: Int,
-    @LLMDescription("The winning joke text")
-    val jokeText: String
+    @LLMDescription("Index of the winning joke from 0 to 2") val index: Int,
+    @LLMDescription("The winning joke text") val jokeText: String
 )
 
 
@@ -72,15 +70,9 @@ fun main(args: Array<String>) = runBlocking {
         }
 
         // Define a node to select the best joke
-        val nodeGenerateJokes by parallel(
+        val nodeGenerateBestJoke by parallel(
             nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
-        )
-
-        val nodeTransformJoke by transform<String, String, String> { joke ->
-            "My favorite joke: $joke"
-        }
-
-        val nodeSelectBestJoke by merge<String, String> {
+        ) {
             selectByIndex { jokes ->
                 // Another LLM (ex: GPT4o) would find the funniest joke:
                 llm.writeSession {
@@ -108,31 +100,35 @@ fun main(args: Array<String>) = runBlocking {
         }
 
         // unused
-        val concatenateJokes by merge<String, String> {
+        val nodeGenerateJokes by parallel(
+            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
+        ) {
             fold("Jokes:\n") { result, joke -> "$result\n$joke" }
         }
 
         // unused
-        val longestJoke by merge<String, String> {
+        val nodeGenerateLongestJoke by parallel(
+            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
+        ) {
             selectByMax { it.length }
         }
 
         // unused
-        val jokeContainingJetBrains by merge<String, String> {
+        val nodeGenerateJetbrainsJoke by parallel(
+            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
+        ) {
             selectBy { it.contains("jetbrains") }
         }
 
-        // Feel free to use `concatenateJokes` or `longestJoke` or `jokeContainingJetBrains` here:
-        nodeStart then nodeGenerateJokes then nodeTransformJoke then nodeSelectBestJoke then nodeFinish
+        // Feel free to use `nodeGenerateJokes` or `nodeGenerateLongestJoke` or `nodeGenerateJetbrainsJoke` here:
+        nodeStart then nodeGenerateBestJoke then nodeFinish
     }
 
     // Create agent config
     val agentConfig = AIAgentConfig(
         prompt = prompt("best-joke-agent") {
             system("You are a joke generator that creates the best jokes about given topics.")
-        },
-        model = OpenAIModels.Chat.GPT4o,
-        maxAgentIterations = 10
+        }, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10
     )
 
     // Create the agent
@@ -140,10 +136,7 @@ fun main(args: Array<String>) = runBlocking {
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
             LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-        ),
-        strategy = strategy,
-        agentConfig = agentConfig,
-        toolRegistry = ToolRegistry.EMPTY
+        ), strategy = strategy, agentConfig = agentConfig, toolRegistry = ToolRegistry.EMPTY
     ) {
 
     }

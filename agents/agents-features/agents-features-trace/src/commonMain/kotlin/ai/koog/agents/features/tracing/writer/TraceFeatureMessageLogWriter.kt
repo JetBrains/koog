@@ -1,9 +1,6 @@
 package ai.koog.agents.features.tracing.writer
 
-import ai.koog.agents.core.feature.model.*
-import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.common.writer.FeatureMessageLogWriter
 import io.github.oshai.kotlinlogging.KLogger
 
@@ -55,78 +52,11 @@ public class TraceFeatureMessageLogWriter(
     private val format: ((FeatureMessage) -> String)? = null,
 ) : FeatureMessageLogWriter(targetLogger, logLevel) {
 
-    internal companion object {
-        val FeatureMessage.featureMessage
-            get() = "Feature message"
-
-        val FeatureEvent.featureEvent
-            get() = "Feature event"
-
-        val FeatureStringMessage.featureStringMessage
-            get() = "Feature string message (message: ${this.message})"
-
-        val AIAgentStartedEvent.agentStartedEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName})"
-
-        val AIAgentFinishedEvent.agentFinishedEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
-
-        val AIAgentRunErrorEvent.agentRunErrorEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName}, error: ${this.error.message})"
-
-        val AIAgentStrategyStartEvent.strategyStartEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName})"
-
-        val AIAgentStrategyFinishedEvent.strategyFinishedEventFormat
-            get() = "${this.eventId} (strategy name: ${this.strategyName}, result: ${this.result})"
-
-        val LLMCallStartEvent.llmCallStartEventFormat
-            get() = "${this.eventId} (prompt: ${this.prompt}, tools: [${this.tools.joinToString(", ")}])"
-
-        val LLMCallEndEvent.llmCallEndEventFormat
-            get() = "${this.eventId} (responses: ${this.responses})"
-
-        val ToolCallEvent.toolCallEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs})"
-
-        val ToolValidationErrorEvent.toolValidationErrorEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, validation error: ${this.errorMessage})"
-
-        val ToolCallFailureEvent.toolCallFailureEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, error: ${this.error.message})"
-
-        val ToolCallResultEvent.toolCallResultEventFormat
-            get() = "${this.eventId} (tool: ${this.toolName}, tool args: ${this.toolArgs}, result: ${this.result})"
-
-        val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
-            get() = "${this.eventId} (node: ${this.nodeName}, input: ${this.input})"
-
-        val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
-            get() = "${this.eventId} (node: ${this.nodeName}, input: ${this.input}, output: ${this.output})"
-    }
-
     override fun FeatureMessage.toLoggerMessage(): String {
         if (format != null) {
             return format.invoke(this)
         }
 
-        return when (this) {
-            is AIAgentStartedEvent            -> { this.agentStartedEventFormat }
-            is AIAgentFinishedEvent           -> { this.agentFinishedEventFormat }
-            is AIAgentRunErrorEvent           -> { this.agentRunErrorEventFormat}
-            is AIAgentStrategyStartEvent      -> { this.strategyStartEventFormat }
-            is AIAgentStrategyFinishedEvent   -> { this.strategyFinishedEventFormat }
-            is LLMCallStartEvent              -> { this.llmCallStartEventFormat}
-            is LLMCallEndEvent                -> { this.llmCallEndEventFormat}
-            is ToolCallEvent                  -> { this.toolCallEventFormat }
-            is ToolValidationErrorEvent       -> { this.toolValidationErrorEventFormat }
-            is ToolCallFailureEvent           -> { this.toolCallFailureEventFormat }
-            is ToolCallResultEvent            -> { this.toolCallResultEventFormat }
-            is AIAgentNodeExecutionStartEvent -> { this.nodeExecutionStartEventFormat }
-            is AIAgentNodeExecutionEndEvent   -> { this.nodeExecutionEndEventFormat }
-            is FeatureStringMessage           -> { this.featureStringMessage }
-            is FeatureEvent                   -> { this.featureEvent }
-            else                              -> { this.featureMessage }
-        }
+        return this.traceMessage
     }
 }
