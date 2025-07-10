@@ -17,6 +17,13 @@ import kotlinx.serialization.json.JsonObject
  * @property toolChoice Used to switch tool calling behavior of LLM.
  *
  * @property user An optional identifier for the user making the request, which can be used for tracking purposes.
+ * 
+ * @property includeThoughts If `true`, requests the model to add reasoning blocks to the response. Defaults to `null`.
+ * When set to `true`, responses may include detailed reasoning steps.
+ * When `false` or `null`, responses are typically shorter and faster.
+ * 
+ * @property thinkingBudget Hard cap for reasoning tokens. Ignored by models that don't support budgets.
+ * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
  *
  * This class also includes a nested `Builder` class to facilitate constructing instances in a more
  * customizable and incremental way.
@@ -29,6 +36,8 @@ public data class LLMParams(
     val schema: Schema? = null,
     val toolChoice: ToolChoice? = null,
     val user: String? = null,
+    val includeThoughts: Boolean? = null,
+    val thinkingBudget: Int? = null,
 ) {
     init {
         temperature?.let { temp ->
@@ -64,6 +73,8 @@ public data class LLMParams(
         speculation = speculation ?: default.speculation,
         schema = schema ?: default.schema,
         user = user ?: default.user,
+        includeThoughts = includeThoughts ?: default.includeThoughts,
+        thinkingBudget = thinkingBudget ?: default.thinkingBudget,
     )
 
     /**
