@@ -223,7 +223,7 @@ class AIAgentIntegrationTest {
 
         onBeforeLLMCall { eventContext ->
             if (eventContext.tools.isEmpty() &&
-                eventContext.prompt.messages.any { it.content.contains("Please give your thoughts about the task and plan the next steps.") }
+                eventContext.prompt.params.toolChoice == null
             ) {
                 reasoningCallsCount++
             }
