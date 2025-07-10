@@ -238,6 +238,8 @@ internal class GoogleFunctionDeclaration(
  * @property numberOfChoices The number of reply choices to generate.
  * @property topP The maximum cumulative probability of tokens to consider when sampling.
  * @property topK The maximum number of tokens to consider when sampling.
+ * @property thinkingConfig Configuration for the model's thinking mode, which enables the model
+ * to expose its reasoning process in the response.
  */
 @Serializable
 internal class GoogleGenerationConfig(
@@ -249,6 +251,8 @@ internal class GoogleGenerationConfig(
     val numberOfChoices: Int? = null,
     val topP: Double? = null,
     val topK: Int? = null,
+    @SerialName("thinkingConfig")
+    val thinkingConfig: GoogleThinkingConfig? = null
 )
 
 /**
@@ -261,6 +265,18 @@ internal class GoogleGenerationConfig(
 @Serializable
 internal class GoogleToolConfig(
     val functionCallingConfig: GoogleFunctionCallingConfig? = null,
+)
+
+/**
+ * Controls Gemini “thinking” mode.
+ *
+ * See the official documentation on setting a thinking budget:
+ * https://ai.google.dev/gemini-api/docs/thinking#set-budget
+ */
+@Serializable
+internal data class GoogleThinkingConfig(
+    @SerialName("includeThoughts") val includeThoughts: Boolean? = null,
+    @SerialName("thinkingBudget") val thinkingBudget: Int? = null
 )
 
 /**

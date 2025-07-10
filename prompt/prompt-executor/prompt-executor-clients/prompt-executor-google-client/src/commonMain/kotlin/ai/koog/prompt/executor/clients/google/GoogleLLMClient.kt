@@ -58,10 +58,17 @@ import kotlin.uuid.Uuid
  *
  * @property baseUrl The base URL for the Google AI API.
  * @property timeoutConfig Timeout configuration for API requests.
+ * @property includeThoughts Controls whether to include the model's thinking process in responses.
+ *                          When enabled, the model will return its intermediate reasoning steps.
+ * @property thinkingBudget Optional token limit for the model's thinking process.
+ *                          Limits the amount of tokens that can be used for the thinking process.
+ *                          See [Google documentation](https://ai.google.dev/gemini-api/docs/thinking#set-budget) for details.
  */
 public class GoogleClientSettings(
     public val baseUrl: String = "https://generativelanguage.googleapis.com",
-    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val includeThoughts: Boolean = false,
+    public val thinkingBudget: Int? = null
 )
 
 /**
@@ -335,6 +342,10 @@ public open class GoogleLLMClient(
                 null
             },
             maxOutputTokens = 2048,
+            thinkingConfig = GoogleThinkingConfig(
+                includeThoughts = settings.includeThoughts.takeIf { it },
+                thinkingBudget = settings.thinkingBudget
+            ).takeIf { it.includeThoughts != null || it.thinkingBudget != null }
         )
 
         val functionCallingConfig = when (val toolChoice = prompt.params.toolChoice) {
