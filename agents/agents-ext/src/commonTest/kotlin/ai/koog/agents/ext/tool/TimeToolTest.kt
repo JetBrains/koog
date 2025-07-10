@@ -48,15 +48,17 @@ internal class TimeToolTest {
 
     @Test
     fun testCreateTimeToolWithoutParams() = runTest {
+        // given
         val subject = TimeTool()
+        // when
         val result = subject.doExecute(TimeTool.Args())
-
-            assertSoftly(result) {
-                withClue("💔😉Response should contain current time") {
-                    it shouldContain "Current ⏰ time: "
-                }
-                withClue("💔😉Response should contain system timezone") {
-                it shouldContain " (🌍Timezone: ${TimeZone.currentSystemDefault()})"
+        // then
+        assertSoftly(result) {
+            withClue("Response should contain current time") {
+                it shouldContain "Current time: "
+            }
+            withClue("Response should contain system timezone") {
+                it shouldContain " (Timezone: ${TimeZone.currentSystemDefault()})"
             }
         }
     }
