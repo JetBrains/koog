@@ -1,5 +1,6 @@
 package ai.koog.agents.ext.tool
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
@@ -49,9 +50,14 @@ internal class TimeToolTest {
     fun testCreateTimeToolWithoutParams() = runTest {
         val subject = TimeTool()
         val result = subject.doExecute(TimeTool.Args())
-        withClue("Unexpected response for empty arguments") {
-            result shouldContain "Current time: "
-            result shouldContain " (Timezone: ${TimeZone.currentSystemDefault()})"
+
+            assertSoftly(result) {
+                withClue("💔😉Response should contain current time") {
+                    it shouldContain "Current ⏰ time: "
+                }
+                withClue("💔😉Response should contain system timezone") {
+                it shouldContain " (🌍Timezone: ${TimeZone.currentSystemDefault()})"
+            }
         }
     }
 
