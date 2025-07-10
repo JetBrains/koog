@@ -38,7 +38,8 @@ public open class AIAgentSubgraph<Input, Output>(
     private val llmParams: LLMParams? = null,
 ) : AIAgentNodeBase<Input, Output>() {
     private companion object {
-        private val logger = KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
+        private val logger =
+            KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
     }
 
     @Serializable
@@ -46,6 +47,35 @@ public open class AIAgentSubgraph<Input, Output>(
         @property:LLMDescription("List of selected tools for the given subtask")
         val tools: List<String>
     )
+
+    private suspend fun selectTools(context: AIAgentContextBase) = when (toolSelectionStrategy) {
+        is ToolSelectionStrategy.ALL -> context.llm.tools
+        is ToolSelectionStrategy.NONE -> emptyList()
+        is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
+        is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
+            val initialPrompt = prompt
+
+            replaceHistoryWithTLDR()
+
+            updatePrompt {
+                user {
+                    selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                }
+            }
+
+            val selectedTools = this.requestLLMStructured(
+                structure = JsonStructuredData.createJsonStructure<SelectedTools>(
+                    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                    examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                ),
+                retries = toolSelectionStrategy.maxRetries,
+            ).getOrThrow()
+
+            prompt = initialPrompt
+
+            tools.filter { it.name in selectedTools.structure.tools.toSet() }
+        }
+    }
 
     /**
      * Executes the desired operation based on the input and the provided context.
@@ -57,39 +87,9 @@ public open class AIAgentSubgraph<Input, Output>(
      */
     @OptIn(InternalAgentsApi::class)
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
-        val newTools = when (toolSelectionStrategy) {
-            ToolSelectionStrategy.ALL -> context.llm.tools
+        val newTools = selectTools(context)
 
-            ToolSelectionStrategy.NONE -> emptyList()
-
-            is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
-
-            is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
-                val initialPrompt = prompt
-
-                replaceHistoryWithTLDR()
-
-                updatePrompt {
-                    user {
-                        selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
-                    }
-                }
-
-                val selectedTools = this.requestLLMStructured(
-                    structure = JsonStructuredData.createJsonStructure<SelectedTools>(
-                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                        examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
-                    ),
-                    retries = toolSelectionStrategy.maxRetries,
-                ).getOrThrow()
-
-                prompt = initialPrompt
-
-                tools.filter { it.name in selectedTools.structure.tools.toSet() }
-            }
-        }
-
-        // Copy inner context with new tools, model and LLM params
+        // Copy inner context with new tools, model and LLM params.
         val innerContext = with(context) {
             copy(
                 llm = llm.copy(
@@ -100,21 +100,20 @@ public open class AIAgentSubgraph<Input, Output>(
             )
         }
 
-        /*
-         Execute subgraph with inner context and get result and updated prompt.
-         Restore original LLM params on the new prompt.
-        */
-        val result = doExecute(innerContext, input)
-        val newPrompt = innerContext.llm.readSession { prompt.copy(params = context.llm.prompt.params) }
+        // Execute the subgraph with inner context and get the result and updated prompt.
+        val result = executeWithInnerContext(innerContext, input)
 
-        // Update outer context with new prompt
+        // Restore original LLM params on the new prompt.
+        val newPrompt = innerContext.llm.readSession {
+            prompt.copy(params = context.llm.prompt.params)
+        }
         context.llm.writeSession { prompt = newPrompt }
 
         return result
     }
 
     @OptIn(InternalAgentsApi::class)
-    protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
+    private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output {
         logger.info { formatLog(context, "Executing subgraph $name") }
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
