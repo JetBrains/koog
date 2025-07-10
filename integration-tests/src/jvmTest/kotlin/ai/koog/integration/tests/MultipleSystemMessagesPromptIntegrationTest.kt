@@ -1,5 +1,6 @@
 package ai.koog.integration.tests
 
+import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
@@ -29,6 +30,10 @@ class MultipleSystemMessagesPromptIntegrationTest {
     @Retry
     @Test
     fun integration_testMultipleSystemMessages() = runBlocking {
+        Models.assumeAvailable(LLMProvider.OpenAI)
+        Models.assumeAvailable(LLMProvider.Anthropic)
+        Models.assumeAvailable(LLMProvider.Google)
+
         val openAIClient = OpenAILLMClient(openAIApiKey)
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
         val googleClient = GoogleLLMClient(googleApiKey)

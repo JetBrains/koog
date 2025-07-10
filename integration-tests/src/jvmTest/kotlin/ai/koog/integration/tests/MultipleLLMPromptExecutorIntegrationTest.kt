@@ -154,6 +154,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
 
 
         val prompt = Prompt.build("test-prompt") {
@@ -177,6 +178,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "There is no text response for audio models.")
         }
@@ -208,6 +210,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools))
 
         val prompt = Prompt.build("test-code") {
@@ -239,6 +242,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -286,6 +290,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -339,6 +344,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -390,6 +396,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -426,6 +433,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -464,6 +472,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -499,6 +508,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
+        Models.assumeAvailable(model.provider)
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "There is no text response for audio models.")
         }
@@ -538,6 +548,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "There is no text response for audio models.")
         }
@@ -577,6 +588,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -607,6 +619,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -639,6 +652,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNamed(model: LLModel) = runTest(timeout = 300.seconds) {
         // ToDo remove after fix
+        Models.assumeAvailable(model.provider)
         assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -681,6 +695,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         model: LLModel
     ) =
         runTest(timeout = 300.seconds) {
+            Models.assumeAvailable(model.provider)
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
             val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
                 prompt("markdown-test-${scenario.name.lowercase()}") {
@@ -749,6 +764,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("imageScenarioModelCombinations")
     fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
+            Models.assumeAvailable(model.provider)
             assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
             val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
             val prompt = prompt("image-test-${scenario.name.lowercase()}") {
@@ -827,6 +843,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("textScenarioModelCombinations")
     fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
+            Models.assumeAvailable(model.provider)
             assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
@@ -905,6 +922,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("audioScenarioModelCombinations")
     fun integration_testAudioProcessingBasic(scenario: AudioTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
+            Models.assumeAvailable(model.provider)
             assumeTrue(
                 model.capabilities.contains(LLMCapability.Audio),
                 "Model must support audio capability"
@@ -960,6 +978,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testBase64EncodedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(
             model.capabilities.contains(LLMCapability.Vision.Image),
             "Model must support vision capability"
@@ -1008,6 +1027,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels")
     fun integration_testUrlBasedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(
             model.capabilities.contains(LLMCapability.Vision.Image),
             "Model must support vision capability"

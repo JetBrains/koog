@@ -45,6 +45,11 @@ tasks.withType<Test> {
     doFirst {
         environment(envs.get())
     }
+    
+    // Forward system properties to the test JVM
+    System.getProperties().forEach { key, value ->
+        systemProperty(key.toString(), value)
+    }
 }
 
 dokka {

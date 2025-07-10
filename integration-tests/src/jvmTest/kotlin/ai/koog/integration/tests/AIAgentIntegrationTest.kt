@@ -288,6 +288,7 @@ class AIAgentIntegrationTest {
     }
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runBlocking {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         /* Some models are not calling tools in parallel:
@@ -329,6 +330,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+        Models.assumeAvailable(model.provider)
         withRetry {
             val executor = when (model.provider) {
                 is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
@@ -353,6 +355,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {
+        Models.assumeAvailable(model.provider)
         val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         // ToDo remove after fixes
@@ -393,6 +396,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
     fun integration_AIAgentWithImageCapabilityTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
         val imageFile = testResourcesDir.resolve("test.png")
@@ -447,6 +451,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRequestLLMWithoutToolsTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val executor = when (model.provider) {
@@ -516,6 +521,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
 

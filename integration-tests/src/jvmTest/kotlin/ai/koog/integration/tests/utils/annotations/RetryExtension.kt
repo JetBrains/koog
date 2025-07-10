@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.InvocationInterceptor
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext
+import org.opentest4j.TestAbortedException
 import java.lang.reflect.Method
 
 class RetryExtension : InvocationInterceptor {
@@ -53,6 +54,11 @@ class RetryExtension : InvocationInterceptor {
                 return
             } catch (throwable: Throwable) {
                 lastException = throwable
+
+                if (throwable is TestAbortedException) {
+                    println("[DEBUG_LOG] Test skipped due to assumption failure: ${throwable.message}")
+                    throw throwable
+                }
 
                 if (isThirdPartyError(throwable)) {
                     println("[DEBUG_LOG] Third-party service error detected: ${throwable.message}")

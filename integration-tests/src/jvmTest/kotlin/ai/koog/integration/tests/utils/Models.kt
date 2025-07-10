@@ -9,7 +9,9 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.provider.Arguments
 import java.util.stream.Stream
 
@@ -95,5 +97,25 @@ object Models {
                 }
                 .map { model -> Arguments.of(model, anthropicClient) }
         )
+    }
+
+    /**
+     * Checks if a model's provider should be skipped based on the system property "skip.llm.providers".
+     * This property is meant to be provided when running the tests
+     * to signal one does not have an API key for this or that provider
+     *
+     * @param provider The LLM provider to check
+     * @param skipProvidersOverride Optional override for the skip providers list, used for testing
+     */
+    @JvmStatic
+    fun assumeAvailable(provider: LLMProvider) {
+        val skipProvidersRaw = System.getProperty("skip.llm.providers", "")
+        val skipProviders = skipProvidersRaw
+            .split(",")
+            .map { it.trim().lowercase() }
+            .filter { it.isNotEmpty() }
+        
+        val shouldSkip = skipProviders.contains(provider.id.lowercase())
+        assumeTrue(!shouldSkip, "Test skipped because provider ${provider.display} is in the skip list (${skipProvidersRaw})")
     }
 }

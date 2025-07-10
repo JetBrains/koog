@@ -70,6 +70,7 @@ class ToolSchemaExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("anthropicModels", "googleModels", "openAIModels")
     fun integration_testToolSchemaExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val client = when (model.provider) {
