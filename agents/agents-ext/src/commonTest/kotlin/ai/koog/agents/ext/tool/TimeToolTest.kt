@@ -1,5 +1,6 @@
 package ai.koog.agents.ext.tool
 
+import io.kotest.assertions.withClue
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
@@ -33,23 +34,25 @@ internal class TimeToolTest {
         timezone: TimeZone,
         truncateToSeconds: Boolean
     ) {
-
         val expectedTime = if (truncateToSeconds) {
             Instant.fromEpochSeconds(currentTime.epochSeconds)
         } else {
             currentTime
         }.toLocalDateTime(timezone)
 
-        println(toolResponse)
-        toolResponse shouldBe "Current time: $expectedTime (Timezone: $timezone)"
+        withClue("Unexpected tool response") {
+            toolResponse shouldBe "Current time: $expectedTime (Timezone: $timezone)"
+        }
     }
 
     @Test
     fun testCreateTimeToolWithoutParams() = runTest {
         val subject = TimeTool()
         val result = subject.doExecute(TimeTool.Args())
-        result shouldContain "Current time: "
-        result shouldContain " (Timezone: ${TimeZone.currentSystemDefault()})"
+        withClue("Unexpected response for empty arguments") {
+            result shouldContain "Current time: "
+            result shouldContain " (Timezone: ${TimeZone.currentSystemDefault()})"
+        }
     }
 
     @Test
@@ -80,10 +83,9 @@ internal class TimeToolTest {
         verifyTimeAtTimezone(result, defaultTimezone, false)
     }
 
-
     @Test
     fun testTimeToolWithSpecificTimezone() = runTest {
-        for (timezone in listOf("UTC", "Europe/Paris", "+01:00")) {
+        listOf("UTC", "Europe/Paris", "+01:00").forEach { timezone ->
             val resultText = subject.doExecute(TimeTool.Args(timezone))
 
             val timeZone = TimeZone.of(timezone)
@@ -97,7 +99,9 @@ internal class TimeToolTest {
         val invalidTimezone = "InvalidTimezone"
         val resultText = subject.doExecute(TimeTool.Args(invalidTimezone))
 
-        resultText shouldBe "Invalid timezone: $invalidTimezone. Please provide a valid timezone like 'Europe/Paris' or an offset like '+01:00'."
+        withClue("Unexpected error response") {
+            resultText shouldBe "Invalid timezone: $invalidTimezone. Please provide a valid timezone like 'Europe/Paris' or an offset like '+01:00'."
+        }
     }
 }
 
