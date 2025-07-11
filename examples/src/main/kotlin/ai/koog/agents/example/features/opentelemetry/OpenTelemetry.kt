@@ -3,6 +3,7 @@ package ai.koog.agents.example.features.opentelemetry
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
@@ -39,7 +40,7 @@ fun main() = runBlocking {
         install(OpenTelemetry) {
             // Add a console logger for local debugging
             addSpanExporter(LoggingSpanExporter.create())
-            
+
             // Send traces to OpenTelemetry collector
             addSpanExporter(
                 OtlpGrpcSpanExporter.builder()
@@ -49,11 +50,13 @@ fun main() = runBlocking {
         }
     }
 
-    println("Running agent with OpenTelemetry tracing...")
+    agent.use { agent ->
+        println("Running agent with OpenTelemetry tracing...")
 
-    val result = agent.run("Tell me a joke about programming")
+        val result = agent.run("Tell me a joke about programming")
 
-    println("Agent run completed with result: '$result'." +
+        println("Agent run completed with result: '$result'." +
             "\nCheck Jaeger UI at http://localhost:16686 to view traces")
+    }
 }
 
