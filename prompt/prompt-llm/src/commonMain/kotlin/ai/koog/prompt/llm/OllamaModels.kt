@@ -251,24 +251,25 @@ public object OllamaModels {
     }
 
     /**
-     * The `Google` object represents the configuration for Google's large language models (LLMs).
-     * It contains the predefined model specifications for Google's LLMs, including their identifiers
+     * The `Mistral` object represents the configuration for Mistral's large language models (LLMs).
+     * It contains the predefined model specifications for Mistral's LLMs, including their identifiers
      * and supported capabilities.
      */
-    public object Google {
+    public object Mistral {
         /**
-         * Represents the Gemma version 3 model with 4 billion parameters.
+         * Represents the Mistral Small 3.2 model.
          *
-         * This predefined instance of `LLModel` is provided by Google and supports the following capabilities:
+         * This predefined instance of `LLModel` is provided by Mistral and supports the following capabilities:
          * - `Temperature`: Allows adjustment of the temperature setting for controlling the randomness in responses.
          * - `Schema.JSON.Simple`: Supports tasks requiring JSON schema validation and handling in a simplified manner.
          * - `Tools`: Enables interaction with external tools or functionalities within the model's ecosystem.
          *
-         * The model is identified by the unique ID "gemma3:4b" and categorized under the Ollama provider.
+         * The model is identified by the unique ID "mistral-small3.2" and categorized under the Ollama provider.
+         * It is designed to be a lightweight, cost-effective model for various text-based tasks.
          */
-        public val GEMMA_3_4B: LLModel = LLModel(
+        public val MISTRAL_SMALL_3_2: LLModel = LLModel(
             provider = LLMProvider.Ollama,
-            id = "gemma3:4b",
+            id = "mistral-small3.2",
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Simple,

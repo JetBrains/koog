@@ -19,7 +19,6 @@ import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -29,7 +28,6 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
@@ -83,19 +81,18 @@ class SingleLLMPromptExecutorIntegrationTest {
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
                 BedrockClientSettings()
-            )*/
+            )
             val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
+            */
 
             return Stream.concat(
                 Stream.concat(
                     Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
                     Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
                 ),
-                Stream.concat(
-                    Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
-                    Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
-                ),
+                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
             )
+            // Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
             // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
         }
 

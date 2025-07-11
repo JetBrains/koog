@@ -20,7 +20,7 @@ class OllamaTestFixture {
 
     lateinit var client: OllamaClient
     lateinit var executor: SingleLLMPromptExecutor
-    val model = OllamaModels.Google.GEMMA_3_4B
+    val model = OllamaModels.Mistral.MISTRAL_SMALL_3_2
 
     fun setUp() {
         ollamaContainer = GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
