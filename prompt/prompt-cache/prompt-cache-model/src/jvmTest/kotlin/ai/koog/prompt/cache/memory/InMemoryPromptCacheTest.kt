@@ -9,8 +9,6 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
-import org.junit.jupiter.api.condition.DisabledOnOs
-import org.junit.jupiter.api.condition.OS
 import kotlin.test.*
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -75,12 +73,12 @@ class InMemoryPromptCacheTest {
         assertNotNull(smallCache.get(testPrompts[4], testTools, testClock), "Fifth entry should still be in cache")
     }
 
-    @DisabledOnOs(OS.WINDOWS, disabledReason = "Fails on Windows")
     @Test
     fun `test least recently used entries are removed`() = runTest {
         // Put all responses in the cache
         testPrompts.dropLast(2).zip(testResponses).forEach { (prompt, response) ->
             smallCache.put(prompt, testTools, response)
+            Thread.sleep(10)
         }
 
         // Access entries in a specific order to change their "last accessed" time
