@@ -25,6 +25,17 @@ dependencies {
     compileOnly(libs.bundles.spring.boot.security)
     compileOnly(libs.spring.boot.actuator)
     compileOnly(libs.spring.boot.processor)
+
+    testImplementation("org.springframework.boot:spring-boot-starter-test") {
+        exclude(group = "org.junit.jupiter")
+        exclude(group = "org.junit.platform")
+    }
+    testImplementation(platform("org.junit:junit-bom:${libs.versions.junit.get()}"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testImplementation("org.junit.platform:junit-platform-launcher")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testImplementation(kotlin("test"))
 }
 
 publishToMaven()
