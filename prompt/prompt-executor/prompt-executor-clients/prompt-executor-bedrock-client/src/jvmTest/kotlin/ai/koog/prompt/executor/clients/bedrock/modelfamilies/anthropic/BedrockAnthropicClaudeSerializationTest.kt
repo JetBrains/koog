@@ -31,7 +31,7 @@ class BedrockAnthropicClaudeSerializationTest {
     private val toolId = "toolu_01234567"
 
     @Test
-    fun `test createAnthropicRequest with basic prompt`() {
+    fun `createAnthropicRequest with basic prompt`() {
         val temperature = 0.7
 
         val prompt = Prompt.build("test", params = LLMParams(temperature = temperature)) {
@@ -58,7 +58,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test createAnthropicRequest with conversation history`() {
+    fun `createAnthropicRequest with conversation history`() {
         val prompt = Prompt.build("test") {
             system(systemMessage)
             user(userNewMessage)
@@ -86,7 +86,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test createAnthropicRequest with tools`() {
+    fun `createAnthropicRequest with tools`() {
         val tools = listOf(
             ToolDescriptor(
                 name = toolName,
@@ -126,7 +126,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test createAnthropicRequest with different tool choices`() {
+    fun `createAnthropicRequest with different tool choices`() {
         val tools = listOf(
             ToolDescriptor(
                 name = toolName,
@@ -164,7 +164,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test parseAnthropicResponse with text content`() {
+    fun `parseAnthropicResponse with text content`() {
         val stopReason = "end_turn"
         val responseJson = """
             {
@@ -204,7 +204,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test parseAnthropicResponse with tool use content`() {
+    fun `parseAnthropicResponse with tool use content`() {
         val responseJson = """
             {
                 "id": "msg_01234567",
@@ -248,7 +248,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test parseAnthropicResponse with multiple content blocks`() {
+    fun `parseAnthropicResponse with multiple content blocks`() {
         val message = "I'll check the weather for you."
 
         val responseJson = """
@@ -295,7 +295,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test parseAnthropicStreamChunk with content_block_delta`() {
+    fun `parseAnthropicStreamChunk with content_block_delta`() {
         val chunkJson = """
             {
                 "type": "content_block_delta",
@@ -312,7 +312,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test parseAnthropicStreamChunk with message_delta`() {
+    fun `parseAnthropicStreamChunk with message_delta`() {
         val chunkJson = """
             {
                 "type": "message_delta",
@@ -340,7 +340,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test parseAnthropicStreamChunk with message_start`() {
+    fun `parseAnthropicStreamChunk with message_start`() {
         val chunkJson = """
             {
                 "type": "message_start",
@@ -363,7 +363,7 @@ class BedrockAnthropicClaudeSerializationTest {
     }
 
     @Test
-    fun `test parseAnthropicStreamChunk with message_stop`() {
+    fun `parseAnthropicStreamChunk with message_stop`() {
         val chunkJson = """
             {
                 "type": "message_stop",

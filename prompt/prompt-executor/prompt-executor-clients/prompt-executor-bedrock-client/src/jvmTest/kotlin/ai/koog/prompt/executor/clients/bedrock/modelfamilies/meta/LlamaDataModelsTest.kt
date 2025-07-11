@@ -15,7 +15,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaRequest serialization`() {
+    fun `LlamaRequest serialization`() {
         val request = LlamaRequest(
             prompt = "Tell me about Paris",
             maxGenLen = 1000, // Non-default value
@@ -34,7 +34,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaRequest serialization with null temperature`() {
+    fun `LlamaRequest serialization with null temperature`() {
         val request = LlamaRequest(
             prompt = "Tell me about Paris",
             maxGenLen = 1000, // Non-default value
@@ -52,7 +52,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaRequest deserialization`() {
+    fun `LlamaRequest deserialization`() {
         val jsonString = """
             {
                 "prompt": "Tell me about Paris",
@@ -69,7 +69,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaRequest deserialization with missing fields`() {
+    fun `LlamaRequest deserialization with missing fields`() {
         val jsonString = """
             {
                 "prompt": "Tell me about Paris"
@@ -84,7 +84,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaResponse serialization`() {
+    fun `LlamaResponse serialization`() {
         val response = LlamaResponse(
             generation = "Paris is the capital of France.",
             promptTokenCount = 10,
@@ -102,7 +102,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaResponse serialization with null fields`() {
+    fun `LlamaResponse serialization with null fields`() {
         val response = LlamaResponse(
             generation = "Paris is the capital of France.",
             promptTokenCount = null,
@@ -120,7 +120,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaResponse deserialization`() {
+    fun `LlamaResponse deserialization`() {
         val jsonString = """
             {
                 "generation": "Paris is the capital of France.",
@@ -139,7 +139,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaResponse deserialization with missing fields`() {
+    fun `LlamaResponse deserialization with missing fields`() {
         val jsonString = """
             {
                 "generation": "Paris is the capital of France."
@@ -155,7 +155,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaStreamChunk serialization`() {
+    fun `LlamaStreamChunk serialization`() {
         val chunk = LlamaStreamChunk(
             generation = "Hello, "
         )
@@ -167,7 +167,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaStreamChunk serialization with null generation`() {
+    fun `LlamaStreamChunk serialization with null generation`() {
         val chunk = LlamaStreamChunk(
             generation = null
         )
@@ -179,7 +179,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaStreamChunk deserialization`() {
+    fun `LlamaStreamChunk deserialization`() {
         val jsonString = """
             {
                 "generation": "Hello, "
@@ -192,7 +192,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaStreamChunk deserialization with null generation`() {
+    fun `LlamaStreamChunk deserialization with null generation`() {
         val jsonString = """
             {
                 "generation": null
@@ -205,7 +205,7 @@ class LlamaDataModelsTest {
     }
 
     @Test
-    fun `test LlamaStreamChunk deserialization with missing generation`() {
+    fun `LlamaStreamChunk deserialization with missing generation`() {
         val jsonString = """
             {
             }

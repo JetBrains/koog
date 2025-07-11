@@ -24,7 +24,7 @@ class BedrockMetaLlamaSerializationTest {
     private val assistantMessage = "I'm an AI assistant based on the Llama model. How can I help you today?"
 
     @Test
-    fun `test createLlamaRequest with system and user messages`() {
+    fun `createLlamaRequest with system and user messages`() {
         val temperature = 0.7
 
         val prompt = Prompt.build("test", params = LLMParams(temperature = temperature)) {
@@ -50,7 +50,7 @@ class BedrockMetaLlamaSerializationTest {
     }
 
     @Test
-    fun `test createLlamaRequest with conversation history`() {
+    fun `createLlamaRequest with conversation history`() {
         val prompt = Prompt.build("test") {
             system(systemMessage)
             user(userNewMessage)
@@ -69,7 +69,7 @@ class BedrockMetaLlamaSerializationTest {
     }
 
     @Test
-    fun `test createLlamaRequest respects model temperature capability`() {
+    fun `createLlamaRequest respects model temperature capability`() {
         val temperature = 0.3
         val promptWithTemperature = Prompt.build("test", params = LLMParams(temperature = temperature)) {
             user("Tell me a story.")
@@ -90,7 +90,7 @@ class BedrockMetaLlamaSerializationTest {
     }
 
     @Test
-    fun `test parseLlamaResponse`() {
+    fun testParseLlamaResponse() {
         val responseJson = """
             {
                 "generation": "Machine learning is a subset of artificial intelligence that focuses on developing systems that learn from data.",
@@ -116,7 +116,7 @@ class BedrockMetaLlamaSerializationTest {
     }
 
     @Test
-    fun `test parseLlamaResponse with missing token counts`() {
+    fun `parseLlamaResponse with missing token counts`() {
         val responseJson = """
             {
                 "generation": "This is a test response.",
@@ -140,7 +140,7 @@ class BedrockMetaLlamaSerializationTest {
     }
 
     @Test
-    fun `test parseLlamaStreamChunk`() {
+    fun testParseLlamaStreamChunk() {
         val chunkJson = """
             {
                 "generation": "Hello, "
@@ -152,7 +152,7 @@ class BedrockMetaLlamaSerializationTest {
     }
 
     @Test
-    fun `test parseLlamaStreamChunk with empty generation`() {
+    fun `parseLlamaStreamChunk with empty generation`() {
         val chunkJson = """
             {
                 "generation": ""
@@ -164,7 +164,7 @@ class BedrockMetaLlamaSerializationTest {
     }
 
     @Test
-    fun `test parseLlamaStreamChunk with null generation`() {
+    fun `parseLlamaStreamChunk with null generation`() {
         val chunkJson = """
             {
                 "generation": null

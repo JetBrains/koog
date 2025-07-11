@@ -15,7 +15,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaRequest serialization`() {
+    fun `NovaRequest serialization`() {
         val request = NovaRequest(
             messages = listOf(
                 NovaMessage(
@@ -51,7 +51,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaRequest serialization with null fields`() {
+    fun `NovaRequest serialization with null fields`() {
         val request = NovaRequest(
             messages = listOf(
                 NovaMessage(
@@ -72,7 +72,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaRequest deserialization`() {
+    fun `NovaRequest deserialization`() {
         val jsonString = """
             {
                 "messages": [
@@ -112,7 +112,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaRequest deserialization with missing fields`() {
+    fun `NovaRequest deserialization with missing fields`() {
         val jsonString = """
             {
                 "messages": [
@@ -139,7 +139,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaMessage serialization`() {
+    fun `NovaMessage serialization`() {
         val message = NovaMessage(
             role = "user",
             content = listOf(NovaContent(text = "Tell me about Paris"))
@@ -154,7 +154,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaMessage deserialization`() {
+    fun `NovaMessage deserialization`() {
         val jsonString = """
             {
                 "role": "user",
@@ -174,7 +174,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaInferenceConfig serialization`() {
+    fun `NovaInferenceConfig serialization`() {
         val config = NovaInferenceConfig(
             temperature = 0.7,
             topP = 0.9,
@@ -192,7 +192,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaInferenceConfig serialization with null fields`() {
+    fun `NovaInferenceConfig serialization with null fields`() {
         val config = NovaInferenceConfig(
             temperature = null,
             topP = null,
@@ -210,7 +210,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaInferenceConfig deserialization`() {
+    fun `NovaInferenceConfig deserialization`() {
         val jsonString = """
             {
                 "temperature": 0.7,
@@ -229,7 +229,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaResponse serialization`() {
+    fun `NovaResponse serialization`() {
         val response = NovaResponse(
             output = NovaOutput(
                 message = NovaMessage(
@@ -261,7 +261,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaResponse deserialization`() {
+    fun `NovaResponse deserialization`() {
         val jsonString = """
             {
                 "output": {
@@ -296,7 +296,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaStreamChunk serialization`() {
+    fun `NovaStreamChunk serialization`() {
         val chunk = NovaStreamChunk(
             contentBlockDelta = NovaContentBlockDelta(
                 delta = NovaContentDelta(text = "Paris is ")
@@ -312,7 +312,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaStreamChunk serialization with message stop`() {
+    fun `NovaStreamChunk serialization with message stop`() {
         val chunk = NovaStreamChunk(
             messageStop = NovaMessageStop(stopReason = "stop"),
             metadata = NovaStreamMetadata(
@@ -331,7 +331,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaStreamChunk deserialization`() {
+    fun `NovaStreamChunk deserialization`() {
         val jsonString = """
             {
                 "contentBlockDelta": {
@@ -351,7 +351,7 @@ class NovaDataModelsTest {
     }
 
     @Test
-    fun `test NovaStreamChunk deserialization with message stop`() {
+    fun `NovaStreamChunk deserialization with message stop`() {
         val jsonString = """
             {
                 "messageStop": {

@@ -24,7 +24,7 @@ class BedrockAmazonNovaSerializationTest {
     private val assistantMessage = "I'm an AI assistant. How can I help you today?"
 
     @Test
-    fun `test createNovaRequest with system and user messages`() {
+    fun `createNovaRequest with system and user messages`() {
         val temperature = 0.7
 
         val prompt = Prompt.build("test", params = LLMParams(temperature = temperature)) {
@@ -51,7 +51,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test createNovaRequest with conversation history`() {
+    fun `createNovaRequest with conversation history`() {
         val prompt = Prompt.build("test") {
             system(systemMessage)
             user(userNewMessage)
@@ -80,7 +80,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test createNovaRequest respects model temperature capability`() {
+    fun `createNovaRequest respects model temperature capability`() {
         val temperature = 0.3
 
         val promptWithTemperature = Prompt.build("test", params = LLMParams(temperature = temperature)) {
@@ -104,7 +104,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test parseNovaResponse`() {
+    fun testParseNovaResponse() {
         val responseContent = "Paris is the capital of France and one of the most visited cities in the world."
         val responseJson = """
             {
@@ -143,7 +143,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test parseNovaResponse with missing usage`() {
+    fun `parseNovaResponse with missing usage`() {
         val responseContent = "Paris is the capital of France."
         val responseJson = """
             {
@@ -176,7 +176,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test parseNovaStreamChunk`() {
+    fun testParseNovaStreamChunk() {
         val chunkContent = "Paris is "
         val chunkJson = """
             {
@@ -193,7 +193,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test parseNovaStreamChunk with empty text`() {
+    fun `parseNovaStreamChunk with empty text`() {
         val chunkJson = """
             {
                 "contentBlockDelta": {
@@ -209,7 +209,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test parseNovaStreamChunk with null text`() {
+    fun `parseNovaStreamChunk with null text`() {
         val chunkJson = """
             {
                 "contentBlockDelta": {
@@ -225,7 +225,7 @@ class BedrockAmazonNovaSerializationTest {
     }
 
     @Test
-    fun `test parseNovaStreamChunk with message stop`() {
+    fun `parseNovaStreamChunk with message stop`() {
         val chunkJson = """
             {
                 "messageStop": {

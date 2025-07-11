@@ -5,251 +5,221 @@ import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import kotlin.test.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class BedrockToolSerializationTest {
-    private val namePropertyName = "name"
-    private val namePropertyDesc = "User name"
-    private val objectParamName = "user"
-    private val objectParamDesc = "User information"
+    companion object {
+        @JvmStatic
+        fun toolParameterTestCases(): Stream<Arguments> {
+            val stringParamDesc = "Search query"
+            val intParamDesc = "Number of results"
+            val floatParamDesc = "Temperature value"
+            val boolParamDesc = "Feature toggle"
+            val enumValues = listOf("json", "xml", "text")
+            val listParamDesc = "List of users"
+            val listIntParamDesc = "List of IDs"
+            val objectParamDesc = "User information"
+            val namePropertyName = "name"
+            val namePropertyDesc = "User name"
+            val agePropertyName = "age"
+            val agePropertyDesc = "User age"
+            val streetPropertyName = "street"
+            val streetPropertyDesc = "Street address"
+            val cityPropertyName = "city"
+            val cityPropertyDesc = "City name"
+            val addressPropertyName = "address"
+            val addressPropertyDesc = "User address"
 
-    @Test
-    fun `test buildToolParameterSchema with String parameter`() {
-        val stringParamDesc = "Search query"
+            return Stream.of(
+                // String 
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "query",
+                        description = stringParamDesc,
+                        type = ToolParameterType.String
+                    ),
+                    mapOf(
+                        "description" to stringParamDesc,
+                        "type" to "string"
+                    )
+                ),
 
-        val param = ToolParameterDescriptor(
-            name = "query",
-            description = stringParamDesc,
-            type = ToolParameterType.String
-        )
+                // Integer 
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "count",
+                        description = intParamDesc,
+                        type = ToolParameterType.Integer
+                    ),
+                    mapOf(
+                        "description" to intParamDesc,
+                        "type" to "integer"
+                    )
+                ),
 
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
+                // Float 
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "temperature",
+                        description = floatParamDesc,
+                        type = ToolParameterType.Float
+                    ),
+                    mapOf(
+                        "description" to floatParamDesc,
+                        "type" to "number"
+                    )
+                ),
 
-        assertNotNull(schema)
-        assertEquals(stringParamDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("string", schema["type"]?.jsonPrimitive?.content)
-    }
+                // Boolean 
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "enabled",
+                        description = boolParamDesc,
+                        type = ToolParameterType.Boolean
+                    ),
+                    mapOf(
+                        "description" to boolParamDesc,
+                        "type" to "boolean"
+                    )
+                ),
 
-    @Test
-    fun `test buildToolParameterSchema with Integer parameter`() {
-        val paramDesc = "Number of results"
+                // Enum 
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "format",
+                        description = "Output format",
+                        type = ToolParameterType.Enum(enumValues.toTypedArray())
+                    ),
+                    mapOf(
+                        "description" to "Output format",
+                        "type" to "string",
+                        "enum" to enumValues
+                    )
+                ),
 
-        val param = ToolParameterDescriptor(
-            name = "count",
-            description = paramDesc,
-            type = ToolParameterType.Integer
-        )
+                // List of String
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "user",
+                        description = listParamDesc,
+                        type = ToolParameterType.List(ToolParameterType.String)
+                    ),
+                    mapOf(
+                        "description" to listParamDesc,
+                        "type" to "array",
+                        "items" to mapOf("type" to "string")
+                    )
+                ),
 
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
+                // List of Integer 
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "List",
+                        description = listIntParamDesc,
+                        type = ToolParameterType.List(ToolParameterType.Integer)
+                    ),
+                    mapOf(
+                        "description" to listIntParamDesc,
+                        "type" to "array",
+                        "items" to mapOf("type" to "integer")
+                    )
+                ),
 
-        assertNotNull(schema)
-        assertEquals(paramDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("integer", schema["type"]?.jsonPrimitive?.content)
-    }
+                // Object
+                Arguments.of(
+                    {
+                        val objectType = ToolParameterType.Object(
+                            properties = listOf(
+                                ToolParameterDescriptor(namePropertyName, namePropertyDesc, ToolParameterType.String),
+                                ToolParameterDescriptor(agePropertyName, agePropertyDesc, ToolParameterType.Integer)
+                            )
+                        )
 
-    @Test
-    fun `test buildToolParameterSchema with Float parameter`() {
-        val paramDesc = "Temperature value"
+                        ToolParameterDescriptor(
+                            name = "user",
+                            description = objectParamDesc,
+                            type = objectType
+                        )
+                    }(),
+                    mapOf(
+                        "description" to objectParamDesc,
+                        "type" to "object"
+                    )
+                ),
 
-        val param = ToolParameterDescriptor(
-            name = "temperature",
-            description = paramDesc,
-            type = ToolParameterType.Float
-        )
+                // Nested Object
+                Arguments.of(
+                    {
+                        val addressType = ToolParameterType.Object(
+                            properties = listOf(
+                                ToolParameterDescriptor(
+                                    streetPropertyName,
+                                    streetPropertyDesc,
+                                    ToolParameterType.String
+                                ),
+                                ToolParameterDescriptor(cityPropertyName, cityPropertyDesc, ToolParameterType.String)
+                            )
+                        )
 
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
+                        val userType = ToolParameterType.Object(
+                            properties = listOf(
+                                ToolParameterDescriptor(namePropertyName, namePropertyDesc, ToolParameterType.String),
+                                ToolParameterDescriptor(addressPropertyName, addressPropertyDesc, addressType)
+                            )
+                        )
 
-        assertNotNull(schema)
-        assertEquals(paramDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("number", schema["type"]?.jsonPrimitive?.content)
-    }
-
-    @Test
-    fun `test buildToolParameterSchema with Boolean parameter`() {
-        val paramDesc = "Feature toggle"
-
-        val param = ToolParameterDescriptor(
-            name = "enabled",
-            description = paramDesc,
-            type = ToolParameterType.Boolean
-        )
-
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
-
-        assertNotNull(schema)
-        assertEquals(paramDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("boolean", schema["type"]?.jsonPrimitive?.content)
-    }
-
-    @Test
-    fun `test buildToolParameterSchema with Enum parameter`() {
-        val paramDesc = "Output format"
-
-        val param = ToolParameterDescriptor(
-            name = "format",
-            description = paramDesc,
-            type = ToolParameterType.Enum(arrayOf("json", "xml", "text"))
-        )
-
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
-
-        assertNotNull(schema)
-        assertEquals(paramDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("string", schema["type"]?.jsonPrimitive?.content)
-
-        val enumValues = schema["enum"]?.jsonArray
-        assertNotNull(enumValues)
-        assertEquals(3, enumValues.size)
-
-        assertTrue(enumValues.any { it.toString().contains("json") })
-        assertTrue(enumValues.any { it.toString().contains("xml") })
-        assertTrue(enumValues.any { it.toString().contains("text") })
-    }
-
-    @Test
-    fun `test buildToolParameterSchema with List parameter`() {
-        val paramDesc = "List of users"
-
-        val param = ToolParameterDescriptor(
-            name = "user",
-            description = paramDesc,
-            type = ToolParameterType.List(ToolParameterType.String)
-        )
-
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
-
-        assertNotNull(schema)
-        assertEquals(paramDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("array", schema["type"]?.jsonPrimitive?.content)
-
-        val items = schema["items"]?.jsonObject
-        assertNotNull(items)
-        assertEquals("string", items["type"]?.jsonPrimitive?.content)
-    }
-
-    @Test
-    fun `test buildToolParameterSchema with List of Integer parameter`() {
-        val paramDesc = "List of IDs"
-
-        val param = ToolParameterDescriptor(
-            name = "List",
-            description = paramDesc,
-            type = ToolParameterType.List(ToolParameterType.Integer)
-        )
-
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
-
-        assertNotNull(schema)
-        assertEquals(paramDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("array", schema["type"]?.jsonPrimitive?.content)
-
-        val items = schema["items"]?.jsonObject
-        assertNotNull(items)
-        assertEquals("integer", items["type"]?.jsonPrimitive?.content)
-    }
-
-    @Test
-    fun `test buildToolParameterSchema with Object parameter`() {
-        val namePropertyName = "name"
-        val namePropertyDesc = "User name"
-        val agePropertyName = "age"
-        val agePropertyDesc = "User age"
-
-        val objectType = ToolParameterType.Object(
-            properties = listOf(
-                ToolParameterDescriptor(namePropertyName, namePropertyDesc, ToolParameterType.String),
-                ToolParameterDescriptor(agePropertyName, agePropertyDesc, ToolParameterType.Integer)
+                        ToolParameterDescriptor(
+                            name = "user",
+                            description = objectParamDesc,
+                            type = userType
+                        )
+                    }(),
+                    mapOf(
+                        "description" to objectParamDesc,
+                        "type" to "object"
+                    )
+                )
             )
-        )
-
-        val param = ToolParameterDescriptor(
-            name = objectParamName,
-            description = objectParamDesc,
-            type = objectType
-        )
-
-        val schema = BedrockToolSerialization.buildToolParameterSchema(param)
-
-        assertNotNull(schema)
-        assertEquals(objectParamDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("object", schema["type"]?.jsonPrimitive?.content)
-
-        val properties = schema["properties"]?.jsonObject
-        assertNotNull(properties)
-
-        val nameProperty = properties[namePropertyName]?.jsonObject
-        assertNotNull(nameProperty)
-        assertEquals(namePropertyDesc, nameProperty["description"]?.jsonPrimitive?.content)
-        assertEquals("string", nameProperty["type"]?.jsonPrimitive?.content)
-
-        val ageProperty = properties[agePropertyName]?.jsonObject
-        assertNotNull(ageProperty)
-        assertEquals(agePropertyDesc, ageProperty["description"]?.jsonPrimitive?.content)
-        assertEquals("integer", ageProperty["type"]?.jsonPrimitive?.content)
+        }
     }
 
-    @Test
-    fun `test buildToolParameterSchema with nested Object parameter`() {
-        val streetPropertyName = "street"
-        val streetPropertyDesc = "Street address"
-        val cityPropertyName = "city"
-        val cityPropertyDesc = "City name"
-        val addressPropertyName = "address"
-        val addressPropertyDesc = "User address"
-
-        val addressType = ToolParameterType.Object(
-            properties = listOf(
-                ToolParameterDescriptor(streetPropertyName, streetPropertyDesc, ToolParameterType.String),
-                ToolParameterDescriptor(cityPropertyName, cityPropertyDesc, ToolParameterType.String)
-            )
-        )
-
-        val userType = ToolParameterType.Object(
-            properties = listOf(
-                ToolParameterDescriptor(namePropertyName, namePropertyDesc, ToolParameterType.String),
-                ToolParameterDescriptor(addressPropertyName, addressPropertyDesc, addressType)
-            )
-        )
-
-        val param = ToolParameterDescriptor(
-            name = objectParamName,
-            description = objectParamDesc,
-            type = userType
-        )
-
+    @ParameterizedTest
+    @MethodSource("toolParameterTestCases")
+    fun testBuildToolParameterSchema(
+        param: ToolParameterDescriptor,
+        expectedValues: Map<String, Any>
+    ) {
         val schema = BedrockToolSerialization.buildToolParameterSchema(param)
 
         assertNotNull(schema)
-        assertEquals(objectParamDesc, schema["description"]?.jsonPrimitive?.content)
-        assertEquals("object", schema["type"]?.jsonPrimitive?.content)
 
-        val properties = schema["properties"]?.jsonObject
-        assertNotNull(properties)
+        expectedValues.forEach { (key, value) ->
+            when (key) {
+                "description" -> assertEquals(value as String, schema["description"]?.jsonPrimitive?.content)
+                "type" -> assertEquals(value as String, schema["type"]?.jsonPrimitive?.content)
+                "enum" -> {
+                    val enumValues = schema["enum"]?.jsonArray
+                    assertNotNull(enumValues)
+                    assertEquals((value as List<*>).size, enumValues.size)
+                    value.forEach { enumValue ->
+                        assertTrue(enumValues.any { it.toString().contains(enumValue.toString()) })
+                    }
+                }
 
-        val nameProperty = properties[namePropertyName]?.jsonObject
-        assertNotNull(nameProperty)
-        assertEquals(namePropertyDesc, nameProperty["description"]?.jsonPrimitive?.content)
-        assertEquals("string", nameProperty["type"]?.jsonPrimitive?.content)
-
-        val addressProperty = properties[addressPropertyName]?.jsonObject
-        assertNotNull(addressProperty)
-        assertEquals(addressPropertyDesc, addressProperty["description"]?.jsonPrimitive?.content)
-        assertEquals("object", addressProperty["type"]?.jsonPrimitive?.content)
-
-        val addressProperties = addressProperty["properties"]?.jsonObject
-        assertNotNull(addressProperties)
-
-        val streetProperty = addressProperties[streetPropertyName]?.jsonObject
-        assertNotNull(streetProperty)
-        assertEquals(streetPropertyDesc, streetProperty["description"]?.jsonPrimitive?.content)
-        assertEquals("string", streetProperty["type"]?.jsonPrimitive?.content)
-
-        val cityProperty = addressProperties[cityPropertyName]?.jsonObject
-        assertNotNull(cityProperty)
-        assertEquals(cityPropertyDesc, cityProperty["description"]?.jsonPrimitive?.content)
-        assertEquals("string", cityProperty["type"]?.jsonPrimitive?.content)
+                "items" -> {
+                    val items = schema["items"]?.jsonObject
+                    assertNotNull(items)
+                    (value as Map<*, *>).forEach { (itemKey, itemValue) ->
+                        assertEquals(itemValue, items[itemKey.toString()]?.jsonPrimitive?.content)
+                    }
+                }
+            }
+        }
     }
 }

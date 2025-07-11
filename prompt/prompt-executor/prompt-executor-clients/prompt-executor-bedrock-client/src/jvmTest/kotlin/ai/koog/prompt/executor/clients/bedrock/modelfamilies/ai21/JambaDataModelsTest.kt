@@ -17,7 +17,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaRequest serialization`() {
+    fun `JambaRequest serialization`() {
         val request = JambaRequest(
             model = "ai21.jamba-1-5-large-v1:0",
             messages = listOf(
@@ -44,7 +44,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaRequest serialization with null fields`() {
+    fun `JambaRequest serialization with null fields`() {
         val request = JambaRequest(
             model = "ai21.jamba-1-5-large-v1:0",
             messages = listOf(
@@ -64,7 +64,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaRequest deserialization`() {
+    fun `JambaRequest deserialization`() {
         val jsonString = """
             {
                 "model": "ai21.jamba-1-5-large-v1:0",
@@ -90,7 +90,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaRequest deserialization with missing fields`() {
+    fun `JambaRequest deserialization with missing fields`() {
         val jsonString = """
             {
                 "model": "ai21.jamba-1-5-large-v1:0",
@@ -114,7 +114,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaMessage serialization`() {
+    fun `JambaMessage serialization`() {
         val message = JambaMessage(
             role = "user",
             content = "Tell me about Paris"
@@ -128,7 +128,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaMessage serialization with tool calls`() {
+    fun `JambaMessage serialization with tool calls`() {
         val message = JambaMessage(
             role = "assistant",
             content = null,
@@ -155,7 +155,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaMessage deserialization`() {
+    fun `JambaMessage deserialization`() {
         val jsonString = """
             {
                 "role": "user",
@@ -202,7 +202,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaTool serialization`() {
+    fun `JambaTool serialization`() {
         val tool = JambaTool(
             function = JambaFunction(
                 name = "get_weather",
@@ -236,7 +236,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaResponse serialization`() {
+    fun `JambaResponse serialization`() {
         val response = JambaResponse(
             id = "resp_01234567",
             model = "ai21.jamba-1-5-large-v1:0",
@@ -275,7 +275,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaResponse deserialization`() {
+    fun `JambaResponse deserialization`() {
         val jsonString = """
             {
                 "id": "resp_01234567",
@@ -314,7 +314,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaStreamResponse serialization`() {
+    fun `JambaStreamResponse serialization`() {
         val streamResponse = JambaStreamResponse(
             id = "resp_01234567",
             choices = listOf(
@@ -338,7 +338,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaStreamResponse deserialization`() {
+    fun `JambaStreamResponse deserialization`() {
         val jsonString = """
             {
                 "id": "resp_01234567",

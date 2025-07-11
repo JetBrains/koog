@@ -27,7 +27,7 @@ class BedrockAI21JambaSerializationTest {
     private val toolName = "get_weather"
 
     @Test
-    fun `test createJambaRequest with basic prompt`() {
+    fun `createJambaRequest with basic prompt`() {
         val temperature = 0.7
 
         val prompt = Prompt.build("test", params = LLMParams(temperature = temperature)) {
@@ -52,7 +52,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test createJambaRequest with conversation history`() {
+    fun `createJambaRequest with conversation history`() {
         val userNewMessage = "Hello, who are you?"
         val assistantMessage = "I'm an AI assistant. How can I help you today?"
 
@@ -83,7 +83,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test createJambaRequest with tools`() {
+    fun `createJambaRequest with tools`() {
         val description = "Get current weather for a city"
 
         val tools = listOf(
@@ -121,7 +121,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test createJambaRequest default temperature`() {
+    fun `createJambaRequest default temperature`() {
         val prompt = Prompt.build("test") {
             user("Tell me a story.")
         }
@@ -131,7 +131,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test createJambaRequest respects model temperature capability`() {
+    fun `createJambaRequest respects model temperature capability`() {
         val temperature = 0.3
 
         val promptWithTemperature = Prompt.build("test", params = LLMParams(temperature = temperature)) {
@@ -156,7 +156,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test parseJambaResponse with text content`() {
+    fun `parseJambaResponse with text content`() {
         val responseContent = "Paris is the capital of France"
         val responseJson = """
             {
@@ -196,7 +196,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test parseJambaResponse with tool call content`() {
+    fun `parseJambaResponse with tool call content`() {
         val callId = "call_01234567"
         // language=json
         val responseJson = """
@@ -246,7 +246,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test parseJambaResponse with both text and tool calls`() {
+    fun `parseJambaResponse with both text and tool calls`() {
         val message = "I'll check the weather for you."
         val callId = "call_01234567"
 
@@ -299,7 +299,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test parseJambaStreamChunk`() {
+    fun testParseJambaStreamChunk() {
         val chunkJson = """
             {
                 "id": "resp_01234567",
@@ -319,7 +319,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test parseJambaStreamChunk with empty content`() {
+    fun `parseJambaStreamChunk with empty content`() {
         val chunkJson = """
             {
                 "id": "resp_01234567",
@@ -339,7 +339,7 @@ class BedrockAI21JambaSerializationTest {
     }
 
     @Test
-    fun `test parseJambaStreamChunk with null content`() {
+    fun `parseJambaStreamChunk with null content`() {
         val chunkJson = """
             {
                 "id": "resp_01234567",
