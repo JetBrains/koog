@@ -3,7 +3,6 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -84,7 +83,6 @@ public open class AIAgentSubgraph<Input, Output>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
-    @OptIn(InternalAgentsApi::class)
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
         val newTools = selectTools(context)
 
@@ -99,7 +97,7 @@ public open class AIAgentSubgraph<Input, Output>(
             )
         }
 
-        // Execute the subgraph with inner context and get the result and updated prompt.
+        // Execute the subgraph with an inner context and get the result and updated prompt.
         val result = executeWithInnerContext(innerContext, input)
 
         // Restore original LLM params on the new prompt.
@@ -111,7 +109,6 @@ public open class AIAgentSubgraph<Input, Output>(
         return result
     }
 
-    @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output {
         logger.info { formatLog(context, "Executing subgraph $name") }
         var currentNode: AIAgentNodeBase<*, *> = start

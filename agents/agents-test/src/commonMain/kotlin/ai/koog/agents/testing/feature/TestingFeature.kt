@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.*
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentFeature
@@ -1013,7 +1012,6 @@ public class Testing {
                     )
                 }
 
-                @OptIn(InternalAgentsApi::class)
                 config.assertEquals(
                     assertion.expectedOutput,
                     fromNode.executeUnsafe(
@@ -1025,7 +1023,6 @@ public class Testing {
                 )
             }
 
-            @OptIn(InternalAgentsApi::class)
             // Verify edges using DFS
             for (assertion in graphAssertions.edgeAssertions) {
                 val fromNode = assertion.node.resolve(graph)
@@ -1045,7 +1042,6 @@ public class Testing {
                 )
             }
 
-            @OptIn(InternalAgentsApi::class)
             // Verify edges using DFS
             for (assertion in graphAssertions.unconditionalEdgeAssertions) {
                 val fromNode = assertion.node.resolve(graph)
