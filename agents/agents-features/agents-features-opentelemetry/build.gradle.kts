@@ -25,9 +25,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                // Resolve versions from Open Telemetry BOM before (!) adding other dependencies
-                implementation(project.dependencies.platform(libs.opentelemetry.bom))
-
+                api(project.dependencies.platform(libs.opentelemetry.bom))
                 api(libs.opentelemetry.sdk)
                 implementation(libs.opentelemetry.exporter.otlp)
                 implementation(libs.opentelemetry.exporter.logging)
@@ -48,14 +46,6 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
             }
-        }
-    }
-
-    // Configure JVM application executable
-    jvm {
-        @OptIn(org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi::class)
-        mainRun {
-            mainClass.set("ai.koog.agents.features.opentelemetry.server.OpenTelemetryServerAppKt")
         }
     }
 
