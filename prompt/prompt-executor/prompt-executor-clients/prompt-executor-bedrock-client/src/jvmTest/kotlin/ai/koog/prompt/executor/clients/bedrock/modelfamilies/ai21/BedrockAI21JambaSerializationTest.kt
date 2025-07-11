@@ -198,6 +198,7 @@ class BedrockAI21JambaSerializationTest {
     @Test
     fun `test parseJambaResponse with tool call content`() {
         val callId = "call_01234567"
+        // language=json
         val responseJson = """
             {
                 "id": "resp_01234567",
