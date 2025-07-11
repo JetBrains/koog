@@ -38,8 +38,7 @@ public open class AIAgentSubgraph<Input, Output>(
     private val llmParams: LLMParams? = null,
 ) : AIAgentNodeBase<Input, Output>() {
     private companion object {
-        private val logger =
-            KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
+        private val logger = KotlinLogging.logger { }
     }
 
     @Serializable

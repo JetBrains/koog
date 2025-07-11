@@ -85,7 +85,6 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @suppress
      */
     @Suppress("UNCHECKED_CAST")
-    @InternalAgentsApi
     public suspend fun resolveEdgeUnsafe(context: AIAgentContextBase, nodeOutput: Any?): ResolvedEdge? =
         resolveEdge(context, nodeOutput as Output)
 
@@ -108,7 +107,6 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @return The result of the execution, which may be of any type depending on the implementation.
      */
     @Suppress("UNCHECKED_CAST")
-    @InternalAgentsApi
     public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? =
         execute(context, input as Input)
 }

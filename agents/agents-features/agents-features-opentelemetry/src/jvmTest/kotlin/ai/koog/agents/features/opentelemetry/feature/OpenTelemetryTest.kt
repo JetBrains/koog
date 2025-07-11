@@ -742,10 +742,7 @@ class OpenTelemetryTest {
                 // Define a node to run joke generation in parallel
                 val nodeGenerateJokes by parallel(
                     nodeFirstJoke, nodeSecondJoke, nodeThirdJoke
-                )
-
-                // Define a node to select the best joke
-                val nodeSelectBestJoke by merge<String, String> {
+                ) {
                     selectByIndex { jokes ->
                         // Always select the first joke for testing purposes
                         0
@@ -753,8 +750,7 @@ class OpenTelemetryTest {
                 }
 
                 edge(nodeStart forwardTo nodeGenerateJokes)
-                edge(nodeGenerateJokes forwardTo nodeSelectBestJoke)
-                edge(nodeSelectBestJoke forwardTo nodeFinish)
+                edge(nodeGenerateJokes forwardTo nodeFinish)
             }
 
             val mockResponse = "Why do programmers prefer dark mode? Because light attracts bugs!"
@@ -807,16 +803,12 @@ class OpenTelemetryTest {
             }
 
             // Check if we have the expected number of node spans (5 nodes)
-            assertEquals(6, nodeSpanNames.size, "Expected 6 node spans but found ${nodeSpanNames.size}")
+            assertEquals(5, nodeSpanNames.size, "Expected 6 node spans but found ${nodeSpanNames.size}")
 
             // Check for each specific node span
             assertTrue(nodeSpanNames.any { it.contains("nodeFirstJoke") }, "First joke node span should be created")
             assertTrue(nodeSpanNames.any { it.contains("nodeSecondJoke") }, "Second joke node span should be created")
             assertTrue(nodeSpanNames.any { it.contains("nodeThirdJoke") }, "Third joke node span should be created")
-            assertTrue(
-                nodeSpanNames.any { it.contains("nodeSelectBestJoke") },
-                "Select best joke node span should be created"
-            )
             assertTrue(
                 nodeSpanNames.any { it.contains("nodeGenerateJokes") },
                 "Generate jokes node span should be created"
