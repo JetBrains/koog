@@ -250,4 +250,32 @@ public object OllamaModels {
         )
     }
 
+    /**
+     * The `Google` object represents the configuration for Google's large language models (LLMs).
+     * It contains the predefined model specifications for Google's LLMs, including their identifiers
+     * and supported capabilities.
+     */
+    public object Google {
+        /**
+         * Represents the Gemma version 3 model with 4 billion parameters.
+         *
+         * This predefined instance of `LLModel` is provided by Google and supports the following capabilities:
+         * - `Temperature`: Allows adjustment of the temperature setting for controlling the randomness in responses.
+         * - `Schema.JSON.Simple`: Supports tasks requiring JSON schema validation and handling in a simplified manner.
+         * - `Tools`: Enables interaction with external tools or functionalities within the model's ecosystem.
+         *
+         * The model is identified by the unique ID "gemma3:4b" and categorized under the Ollama provider.
+         */
+        public val GEMMA_3_4B: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "gemma3:4b",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Tools,
+                LLMCapability.Vision.Image
+            )
+        )
+    }
+
 }

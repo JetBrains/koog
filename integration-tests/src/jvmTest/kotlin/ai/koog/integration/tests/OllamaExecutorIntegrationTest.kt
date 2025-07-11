@@ -4,30 +4,63 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
+import ai.koog.integration.tests.utils.MediaTestUtils
+import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
+import ai.koog.prompt.executor.ollama.client.findByNameOrNull
+import ai.koog.prompt.llm.LLMCapability.*
+import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.stream.Stream
+import kotlin.io.path.pathString
+import kotlin.test.*
 import java.util.Base64
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.io.files.Path as KtPath
 
 @ExtendWith(OllamaTestFixtureExtension::class)
-class OllamaClientIntegrationTest {
+class OllamaExecutorIntegrationTest {
     companion object {
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture
         private val executor get() = fixture.executor
         private val model get() = fixture.model
+        private val client get() = fixture.client
+
+        private lateinit var testResourcesDir: Path
+
+        @JvmStatic
+        @BeforeAll
+        fun setupTestResources() {
+            testResourcesDir =
+                Paths.get(OllamaExecutorIntegrationTest::class.java.getResource("/media")!!.toURI())
+        }
+
+        @JvmStatic
+        fun imageScenarios(): Stream<ImageTestScenario> {
+            return ImageTestScenario.entries.stream()
+        }
     }
 
     @Test
@@ -578,7 +611,7 @@ class OllamaClientIntegrationTest {
     }
 
 
-    @Disabled("JBAI-14221")
+    @Disabled("KG-46")
     @Test
     fun `ollama_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
         val countries = mutableListOf<Country>()
@@ -675,4 +708,110 @@ class OllamaClientIntegrationTest {
             )
         ) { "Violence must be detected!" }
     }
+
+    @Test
+    fun `ollama_test load models`() = runTest(timeout = 600.seconds) {
+        val modelCards = client.getModels()
+
+        val modelCard = modelCards.findByNameOrNull(OllamaModels.Meta.LLAMA_3_2.id)
+        assertNotNull(modelCard)
+    }
+
+    @Test
+    fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
+        val modelCard = client.getModelOrNull(OllamaModels.Meta.LLAMA_3_2.id)
+        assertNotNull(modelCard)
+
+        assertEquals("llama3.2:latest", modelCard.name)
+        assertEquals("llama", modelCard.family)
+        assertEquals(listOf("llama"), modelCard.families)
+        assertEquals(2019393189, modelCard.size)
+        assertEquals(3212749888, modelCard.parameterCount)
+        assertEquals(131072, modelCard.contextLength)
+        assertEquals(3072, modelCard.embeddingLength)
+        assertEquals("Q4_K_M", modelCard.quantizationLevel)
+        assertEquals(
+            listOf(Completion, Tools, Temperature, Schema.JSON.Simple, Schema.JSON.Full),
+            modelCard.capabilities
+        )
+    }
+
+    @Test
+    fun `ollama_test pull model`() = runTest(timeout = 600.seconds) {
+        val beforePull = client.getModelOrNull("tinyllama")
+        assertNull(beforePull)
+
+        val afterPull =
+            client.getModelOrNull("tinyllama", pullIfMissing = true)
+        assertNotNull(afterPull)
+    }
+
+    @ParameterizedTest
+    @MethodSource("imageScenarios")
+    fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
+        val ollamaExceptionEOF =
+            "Ollama API error: Failed to create new sequence: failed to process inputs: unexpected EOF"
+        val ollamaExceptionDimension =
+            "Ollama API error: Failed to create new sequence: failed to process inputs: png: invalid format: non-positive dimension"
+        assumeTrue(model.capabilities.contains(Vision.Image), "Model must support vision capability")
+
+        val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
+
+        val prompt = prompt("image-test-${scenario.name.lowercase()}") {
+            system("You are a helpful assistant that can analyze images.")
+
+            user {
+                markdown {
+                    +"I'm sending you an image. Please analyze it and identify the image format if possible."
+                }
+
+                attachments {
+                    image(KtPath(imageFile.pathString))
+                }
+            }
+        }
+
+        try {
+            val response = executor.execute(prompt, model)
+
+            when (scenario) {
+                ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG, ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                    checkExecutorMediaResponse(response)
+                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                    println("Ollama image processing response for ${scenario.name}: ${response.content}")
+                }
+
+                ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                    println("Ollama handled corrupted/empty image without error: ${response.content}")
+                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                }
+
+                ImageTestScenario.LARGE_IMAGE -> {
+                    println("Ollama handled large image without error: ${response.content}")
+                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                }
+            }
+        } catch (e: Exception) {
+            when (scenario) {
+                ImageTestScenario.CORRUPTED_IMAGE -> {
+                    assertTrue(
+                        e.message?.contains(ollamaExceptionEOF) == true,
+                        "Expected exception for a corrupted image was not found, got [${e.message}] instead"
+                    )
+                }
+
+                ImageTestScenario.EMPTY_IMAGE -> {
+                    assertTrue(
+                        e.message?.contains(ollamaExceptionDimension) == true,
+                        "Expected exception for an empty image was not found, got [${e.message}] instead"
+                    )
+                }
+
+                else -> {
+                    throw e
+                }
+            }
+        }
+    }
+
 }
