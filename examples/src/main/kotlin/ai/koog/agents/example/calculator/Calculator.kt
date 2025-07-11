@@ -12,6 +12,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import io.ktor.client.HttpClient
 import kotlinx.coroutines.runBlocking
 
 fun main(): Unit = runBlocking {
