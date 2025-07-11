@@ -172,7 +172,7 @@ class JambaDataModelsTest {
     }
 
     @Test
-    fun `test JambaMessage deserialization with tool calls`() {
+    fun `JambaMessage deserialization with tool calls`() {
         val jsonString = """
             {
                 "role": "assistant",
