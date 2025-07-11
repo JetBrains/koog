@@ -25,10 +25,12 @@ kotlin {
 
         jvmMain {
             dependencies {
+                // Resolve versions from Open Telemetry BOM before (!) adding other dependencies
+                implementation(project.dependencies.platform(libs.opentelemetry.bom))
+
                 api(libs.opentelemetry.sdk)
                 implementation(libs.opentelemetry.exporter.otlp)
                 implementation(libs.opentelemetry.exporter.logging)
-                implementation(project.dependencies.platform(libs.opentelemetry.bom))
             }
 
             resources.srcDir(layout.buildDirectory.dir("generated/resources"))
