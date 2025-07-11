@@ -94,4 +94,3 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
