@@ -18,6 +18,37 @@ class KoogAutoConfigTest {
     private val contextRunner = ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
 
+    companion object {
+        @JvmStatic
+        fun providerTestData(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of("anthropicExecutor", "ai.koog.anthropic.api-key=test-key"),
+                Arguments.of("googleExecutor", "ai.koog.google.api-key=test-key"),
+                Arguments.of("ollamaExecutor", "ai.koog.ollama=true"),
+                Arguments.of("openAIExecutor", "ai.koog.openai.api-key=test-key"),
+                Arguments.of("openRouterExecutor", "ai.koog.openrouter.api-key=test-key")
+            )
+        }
+
+        @JvmStatic
+        fun urlTestData(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of("anthropic", "https://api.anthropic.com", "https://custom-api.anthropic.com"),
+                Arguments.of("google", "https://generativelanguage.googleapis.com", "https://custom-api.google.com"),
+                Arguments.of("openai", "https://api.openai.com", "https://custom-api.openai.com"),
+                Arguments.of("openrouter", "https://openrouter.ai", "https://custom-api.openrouter.com")
+            )
+        }
+
+        fun getBaseUrl(providerName: String, properties: KoogProperties): String = when (providerName) {
+            "anthropic" -> properties.anthropicClientProperties.baseUrl
+            "google" -> properties.googleClientProperties.baseUrl
+            "openai" -> properties.openAIClientProperties.baseUrl
+            "openrouter" -> properties.openRouterClientProperties.baseUrl
+            else -> throw IllegalArgumentException("Unknown provider: $providerName")
+        }
+    }
+
     @Test
     fun `should create all executor beans when all properties are set`() {
         contextRunner
@@ -50,43 +81,11 @@ class KoogAutoConfigTest {
     @MethodSource("providerTestData")
     fun `should not create executor bean when no properties are set`(
         beanName: String,
-        property: String
     ) {
         contextRunner.run { context ->
             assertThrows(NoSuchBeanDefinitionException::class.java) {
                 context.getBean(beanName, SingleLLMPromptExecutor::class.java)
             }
-        }
-    }
-
-    companion object {
-        @JvmStatic
-        fun providerTestData(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of("anthropicExecutor", "ai.koog.anthropic.api-key=test-key"),
-                Arguments.of("googleExecutor", "ai.koog.google.api-key=test-key"),
-                Arguments.of("ollamaExecutor", "ai.koog.ollama=true"),
-                Arguments.of("openAIExecutor", "ai.koog.openai.api-key=test-key"),
-                Arguments.of("openRouterExecutor", "ai.koog.openrouter.api-key=test-key")
-            )
-        }
-
-        @JvmStatic
-        fun urlTestData(): Stream<Arguments> {
-            return Stream.of(
-                Arguments.of("anthropic", "https://api.anthropic.com", "https://custom-api.anthropic.com"),
-                Arguments.of("google", "https://generativelanguage.googleapis.com", "https://custom-api.google.com"),
-                Arguments.of("openai", "https://api.openai.com", "https://custom-api.openai.com"),
-                Arguments.of("openrouter", "https://openrouter.ai", "https://custom-api.openrouter.com")
-            )
-        }
-
-        fun getBaseUrl(providerName: String, properties: KoogProperties): String = when (providerName) {
-            "anthropic" -> properties.anthropicClientProperties.baseUrl
-            "google" -> properties.googleClientProperties.baseUrl
-            "openai" -> properties.openAIClientProperties.baseUrl
-            "openrouter" -> properties.openRouterClientProperties.baseUrl
-            else -> throw IllegalArgumentException("Unknown provider: $providerName")
         }
     }
 
@@ -138,7 +137,6 @@ class KoogAutoConfigTest {
     fun `should use default base URL when not specified`(
         providerName: String,
         defaultUrl: String,
-        customUrl: String
     ) {
         contextRunner
             .withPropertyValues(
