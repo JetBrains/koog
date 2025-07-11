@@ -250,6 +250,7 @@ class BedrockAI21JambaSerializationTest {
         val message = "I'll check the weather for you."
         val callId = "call_01234567"
 
+        // language=json
         val responseJson = """
             {
                 "id": "resp_01234567",
