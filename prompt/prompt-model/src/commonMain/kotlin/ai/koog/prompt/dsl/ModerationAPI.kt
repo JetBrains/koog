@@ -205,6 +205,13 @@ public data class ModerationResult(
 ) {
 
     /**
+     * A list of moderation categories that have been flagged as detected in the moderation result.
+     *
+     * Used to identify the specific types of violations found in the moderated content.
+     */
+    public val violatedCategories: List<ModerationCategory> = categories.filter { it.value.detected }.keys.toList()
+
+    /**
      * Checks if the specified moderation category is flagged as detected in the moderation result.
      *
      * @param category The moderation category to verify within the current moderation result.

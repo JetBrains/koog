@@ -136,8 +136,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Creates an edge between nodes.
      * @param edgeIntermediate Intermediate edge builder
      */
-    public fun <IncomingOutput, OutgoingInput> edge(
-        edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>
+    public fun <IncomingOutput, OutgoingInput, CompatibleOutput: OutgoingInput> edge(
+        edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>
     ) {
         val edge = AIAgentEdgeBuilder(edgeIntermediate).build()
         edgeIntermediate.fromNode.addEdge(edge)
