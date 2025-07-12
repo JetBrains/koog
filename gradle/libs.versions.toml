@@ -17,6 +17,7 @@ mcp = "0.5.0"
 dokka = "2.0.0"
 jetsign = "45.47"
 testcontainers = "1.19.7"
+kotest = "5.9.1"
 kover = "0.9.1"
 spring-boot = "3.5.3"
 spring-management = "1.1.7"
@@ -52,6 +53,8 @@ mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
