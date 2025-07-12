@@ -407,7 +407,7 @@ class PromptTest {
     @Test
     fun testAssistantMessageWithNullFinishReason() {
         val prompt = Prompt.build(promptId) {
-            message(Message.Assistant(assistantMessage, testRespMetaInfo, null))
+            message(Message.Assistant(assistantMessage, testRespMetaInfo))
         }
 
         assertEquals(1, prompt.messages.size)

@@ -1,6 +1,7 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -9,6 +10,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
+import kotlin.UnsupportedOperationException
 
 class TestLLMExecutor(val clock: Clock) : PromptExecutor {
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
@@ -31,5 +33,12 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor {
         }
 
         return Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(clock))
+    }
+
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        throw UnsupportedOperationException("Moderation is not needed here")
     }
 }
