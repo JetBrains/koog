@@ -17,6 +17,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructuredData
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredResponse
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -215,16 +216,26 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestMultiple(name: String?
  *
  * @param name Optional node name.
  * @param strategy Determines which messages to include in compression.
+ * @param retrievalModel An optional [LLModel] that will be used for retrieval of the facts from memory.
+ *                       By default, the same model will be used as the current one in the agent's strategy.
  * @param preserveMemory Specifies whether to retain message memory after compression.
  */
 @AIAgentBuilderDslMarker
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHistory(
     name: String? = null,
     strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
+    retrievalModel: LLModel? = null,
     preserveMemory: Boolean = true
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
+        val initialModel = model
+        if (retrievalModel != null) {
+            model = retrievalModel
+        }
+
         replaceHistoryWithTLDR(strategy, preserveMemory)
+
+        model = initialModel
     }
 
     input
