@@ -621,9 +621,10 @@ class BedrockLLMClientTest {
 
         val moderationResult = client.moderate(prompt, model)
         assertEquals(true, moderationResult.isHarmful)
-        assertEquals(true, moderationResult.categories[ModerationCategory.Hate])
-        assertEquals(true, moderationResult.categories[ModerationCategory.Sexual])
-        assertEquals(true, moderationResult.categories[ModerationCategory.Misconduct])
+        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Hate))
+        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Sexual))
+        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Misconduct))
+        assertEquals(false, moderationResult.violatesCategory(ModerationCategory.Illicit))
         assertEquals(null, moderationResult.categories[ModerationCategory.Illicit])
     }
 
