@@ -223,6 +223,14 @@ kover {
                 file = file(".qodana/code-coverage/kover.ic")
             }
         }
+
+        verify {
+            rule {
+                bound {
+                    minValue = 60
+                }
+            }
+        }
     }
 
 }

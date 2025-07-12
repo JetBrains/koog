@@ -41,6 +41,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.kotlinx.coroutines.test)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
     }
