@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.cached
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.cache.model.put
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -61,6 +62,13 @@ class CachedPromptExecutorTest {
         override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             executeStreamingCalled = true
             return flowOf("Streaming response from executor")
+        }
+
+        override suspend fun moderate(
+            prompt: Prompt,
+            model: LLModel
+        ): ModerationResult {
+            throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
         }
     }
 
