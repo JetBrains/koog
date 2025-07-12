@@ -157,6 +157,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
         val initialModel = model
+        val initialPrompt = prompt.copy()
         if (retrievalModel != null) {
             model = retrievalModel
         }
@@ -176,7 +177,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryAutoDetectFacts(
             }
         }
 
-        dropLastNMessages(2) // remove the prompt and LLM response
+        rewritePrompt { initialPrompt } // Revert the prompt to the original one
         if (retrievalModel != null) {
             model = initialModel
         }
