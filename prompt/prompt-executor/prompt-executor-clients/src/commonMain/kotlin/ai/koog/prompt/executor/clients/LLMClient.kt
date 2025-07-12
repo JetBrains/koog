@@ -6,7 +6,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.Message.MessageWithAttachments
 import kotlinx.coroutines.flow.Flow
 
 /**

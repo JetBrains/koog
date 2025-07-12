@@ -12,7 +12,7 @@ import kotlinx.serialization.Serializable
  */
 @ConsistentCopyVisibility
 @Serializable
-public data class OpenAIModerationInput private constructor(
+internal data class OpenAIModerationInput private constructor(
     val type: String,
     val text: String? = null,
     @SerialName("image_url") val imageUrl: String? = null,

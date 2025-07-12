@@ -10,6 +10,17 @@ import kotlinx.serialization.Serializable
 public open class ModerationCategory(
     public val name: String
 ) {
+
+    /**
+     * Compares this object with another for equality. Two instances of [ModerationCategory] are equal if their [name] is equal.
+     *
+     * @param other The object to compare with this instance.
+     * @return `true` if the specified object is a `ModerationCategory` and has the same `name`; `false` otherwise.
+     */
+    override fun equals(other: Any?): Boolean {
+        return other is ModerationCategory && other.name == name
+    }
+
     /**
      * Represents the "Harassment" moderation category.
      *
@@ -149,25 +160,86 @@ public open class ModerationCategory(
      * Responses that contain factually incorrect information about electoral systems and processes, including in the time, place, or manner of voting in civic elections
      * */
     public object ElectionsMisinformation : ModerationCategory("elections")
+
+    /**
+     * Represents a predefined moderation category for cases associated with misconduct.
+     *
+     * Note: Used in AWS Bedrock filters
+     */
+    public object Misconduct : ModerationCategory("misconduct")
+
+    /**
+     * Represents a specific moderation category for identifying and handling potential prompt attacks.
+     *
+     * Note: Used in AWS Bedrock filters
+     */
+    public object PromptAttack : ModerationCategory("prompt-attack")
 }
+
+/**
+ * Represents the detailed result of moderating a specific category of content.
+ *
+ * @property detected Indicates whether the category was flagged in the moderation process.
+ * @property confidenceScore The confidence score of the detected category, where higher values indicate stronger confidence.
+ * @property appliedInputTypes A list of input types (e.g., text, image) to which the moderation result applies.
+ */
+@Serializable
+public data class ModerationCategoryResult(
+    val detected: Boolean,
+    val confidenceScore: Double? = null,
+    val appliedInputTypes: List<ModerationResult.InputType> = emptyList()
+)
 
 /**
  * Represents the result of a content moderation request.
  *
  * @property model The model used to generate the moderation results.
  * @property isHarmful Whether the content is classified as harmful (i.e. any of the categories are flagged).
- * @property categories A map of ModerationCategory objects to boolean values indicating whether each category is flagged.
- * @property categoryScores A map of ModerationCategory objects to scores as predicted by the model.
- * @property categoryAppliedInputTypes A map of ModerationCategory objects to lists of input types that the score applies to.
- *                                    This is only populated for multi-modal inputs (e.g., text and images).
+ * @property categories A map of ModerationCategory objects to [ModerationCategoryResult] values indicating whether
+ *  each category is flagged with metainformation about assessment.
  */
 @Serializable
 public data class ModerationResult(
     val isHarmful: Boolean,
-    val categories: Map<ModerationCategory, Boolean>,
-    val categoryScores: Map<ModerationCategory, Double> = emptyMap(),
-    val categoryAppliedInputTypes: Map<ModerationCategory, List<InputType>> = emptyMap()
+    val categories: Map<ModerationCategory, ModerationCategoryResult>
 ) {
+
+    /**
+     * Checks if the specified moderation category is flagged as detected in the moderation result.
+     *
+     * @param category The moderation category to verify within the current moderation result.
+     * @return `true` if the specified category is flagged as detected; `false` otherwise.
+     */
+    public fun violatesCategory(category: ModerationCategory): Boolean {
+        return categories[category]?.detected == true
+    }
+
+    /**
+     * Evaluates whether the content violates any of the specified moderation categories.
+     *
+     * @param checkedCategories A variable number of [ModerationCategory] objects to check
+     *        if the content is flagged in any of these categories.
+     * @return `true` if any of the specified categories are flagged as detected,
+     *         `false` otherwise.
+     */
+    public fun violatesOneOf(vararg checkedCategories: ModerationCategory): Boolean {
+        return checkedCategories.any { categories[it]?.detected == true }
+    }
+
+    /**
+     * Checks if all the provided moderation categories are violated in this moderation result.
+     *
+     * This method evaluates whether all specified categories have been flagged as "detected"
+     * within the current moderation result's category map.
+     *
+     * @param checkedCategories A variable number of [ModerationCategory] objects representing
+     * the categories to check for violations.
+     * @return `true` if all provided categories are flagged as detected; `false` otherwise.
+     */
+    public fun violatesAll(vararg checkedCategories: ModerationCategory): Boolean {
+        return checkedCategories.all { categories[it]?.detected == true }
+    }
+
     /**
      * Represents the type of input provided for content moderation.
      *

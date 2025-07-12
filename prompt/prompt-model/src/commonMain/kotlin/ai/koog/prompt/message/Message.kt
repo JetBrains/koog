@@ -90,7 +90,7 @@ public sealed interface Message {
      * Each attachment contains specific content and metadata.
      */
     @Serializable
-    public sealed interface MessageWithAttachments : Message {
+    public sealed interface WithAttachments : Message {
         /**
          * A list of attachments associated with a message.
          * Each attachment represents additional content that can be included,
@@ -112,7 +112,7 @@ public sealed interface Message {
         override val content: String,
         override val metaInfo: RequestMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
-    ) : Request, MessageWithAttachments {
+    ) : Request, WithAttachments {
         override val role: Role = Role.User
     }
 
@@ -133,7 +133,7 @@ public sealed interface Message {
         override val metaInfo: ResponseMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
         val finishReason: String? = null
-    ) : Response, MessageWithAttachments {
+    ) : Response, WithAttachments {
         override val role: Role = Role.Assistant
 
         override fun copy(updatedMetaInfo: ResponseMetaInfo): Assistant = this.copy(metaInfo = updatedMetaInfo)

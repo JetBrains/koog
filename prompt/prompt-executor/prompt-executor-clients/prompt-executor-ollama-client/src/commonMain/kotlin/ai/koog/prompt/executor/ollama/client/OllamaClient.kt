@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -130,12 +131,12 @@ public class OllamaClient(
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
-                    messages = prompt.toOllamaChatMessages(model),
-                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
-                    format = prompt.extractOllamaJsonFormat(),
-                    options = prompt.extractOllamaOptions(),
-                    stream = false,
-                ))
+                messages = prompt.toOllamaChatMessages(model),
+                tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
+                format = prompt.extractOllamaJsonFormat(),
+                options = prompt.extractOllamaOptions(),
+                stream = false,
+            ))
         }
 
         if (response.status.isSuccess()) {
@@ -187,8 +188,7 @@ public class OllamaClient(
             else -> {
                 val toolCallMessages = messages.getToolCalls(responseMetadata)
                 val assistantMessage = Message.Assistant(
-                    content = content,
-                    metaInfo = responseMetadata
+                    content = content, metaInfo = responseMetadata
                 )
                 listOf(assistantMessage) + toolCallMessages
             }
@@ -262,8 +262,7 @@ public class OllamaClient(
             val listModelsResponse = listModels()
 
             val modelCards = listModelsResponse.models.map { model ->
-                showModel(model.name)
-                    .toOllamaModelCard(model.name, model.size)
+                showModel(model.name).toOllamaModelCard(model.name, model.size)
             }
 
             logger.info { "Loaded ${modelCards.size} Ollama model cards" }
@@ -301,8 +300,7 @@ public class OllamaClient(
         check(responses.size == 1) { "Moderation model from Ollama must return a single response" }
         val singleResponse = responses.single()
         check(singleResponse is Message.Assistant) {
-            "Moderation model from Ollama must return an assistant message" +
-                    " (actual response: ${singleResponse::class.simpleName})"
+            "Moderation model from Ollama must return an assistant message" + " (actual response: ${singleResponse::class.simpleName})"
         }
         val contentLines = singleResponse.content.lines()
         val moderationResult = contentLines.first()
@@ -322,19 +320,19 @@ public class OllamaClient(
         }
     }
 
-    private fun parseHazardCategories(commentWithHazardCodes: String): Map<ModerationCategory, Boolean> {
+    private fun parseHazardCategories(commentWithHazardCodes: String): Map<ModerationCategory, ModerationCategoryResult> {
         return buildMap {
             commentWithHazardCodes.split(",", "\n", ";", ".", "-", "+", " ").forEach { hazardCode ->
                 moderationCategoriesMapping[hazardCode]?.let { categories ->
                     categories.forEach { category ->
-                        put(category, true)
+                        put(category, ModerationCategoryResult(true))
                     }
                 }
             }
 
             possibleModerationCategories.forEach { category ->
                 if (category !in this) {
-                    put(category, false)
+                    put(category, ModerationCategoryResult(false))
                 }
             }
         }
@@ -344,11 +342,9 @@ public class OllamaClient(
         return try {
             val listModelsResponse = listModels()
 
-            val modelInfo = listModelsResponse.models.firstOrNull { it.name.isSameModelAs(name) }
-                ?: return null
+            val modelInfo = listModelsResponse.models.firstOrNull { it.name.isSameModelAs(name) } ?: return null
 
-            val modelCard = showModel(modelInfo.name)
-                .toOllamaModelCard(modelInfo.name, modelInfo.size)
+            val modelCard = showModel(modelInfo.name).toOllamaModelCard(modelInfo.name, modelInfo.size)
 
             logger.info { "Loaded Ollama model card for $name" }
             modelCard
@@ -359,8 +355,7 @@ public class OllamaClient(
     }
 
     private suspend fun listModels(): OllamaModelsListResponseDTO {
-        return client.get(DEFAULT_LIST_MODELS_PATH)
-            .body<OllamaModelsListResponseDTO>()
+        return client.get(DEFAULT_LIST_MODELS_PATH).body<OllamaModelsListResponseDTO>()
     }
 
     private suspend fun showModel(name: String): OllamaShowModelResponseDTO {

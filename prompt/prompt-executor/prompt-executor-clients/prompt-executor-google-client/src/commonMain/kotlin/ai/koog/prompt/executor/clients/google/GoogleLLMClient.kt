@@ -14,7 +14,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.Message.MessageWithAttachments
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -523,6 +522,6 @@ public open class GoogleLLMClient(
      */
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by Google API" }
-        throw UnsupportedOperationException("Moderation is not supported by Google API. Please use OpenAI or Ollama for content moderation.")
+        throw UnsupportedOperationException("Moderation is not supported by Google API.")
     }
 }

@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.utils.SuitableForIO
 import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -17,7 +18,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.Message.MessageWithAttachments
+import ai.koog.prompt.message.Message.WithAttachments
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -211,7 +212,7 @@ public open class OpenAILLMClient(
             prompt.messages.forEach { message ->
                 add(OpenAIModerationInput.text(message.content))
 
-                if (message is MessageWithAttachments) {
+                if (message is WithAttachments) {
                     message.attachments
                         .map(OpenAIModerationInput::fromImageContent)
                         .forEach(::add)
@@ -302,9 +303,13 @@ public open class OpenAILLMClient(
 
                     ModerationResult(
                         isHarmful = result.flagged,
-                        categories = categories,
-                        categoryScores = categoryScores,
-                        categoryAppliedInputTypes = categoryAppliedInputTypes
+                        categories = categories.mapValues { (category, detected) ->
+                            ModerationCategoryResult(
+                                detected,
+                                categoryScores[category],
+                                categoryAppliedInputTypes[category] ?: emptyList()
+                            )
+                        }
                     )
                 } else {
                     logger.error { "Empty results in OpenAI moderation response" }
@@ -461,7 +466,7 @@ public open class OpenAILLMClient(
         return withContext(Dispatchers.SuitableForIO) {
             val response = httpClient.post(settings.chatCompletionsPath) {
                 setBody(request)
-           }
+            }
 
             if (response.status.isSuccess()) {
                 response.body<OpenAIResponse>()

@@ -5,7 +5,6 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.Message.MessageWithAttachments
 import kotlinx.coroutines.flow.Flow
 
 public typealias LLMChoice = List<Message.Response>
@@ -57,7 +56,6 @@ public interface PromptExecutor {
      * if it complies with content guidelines. The moderation is performed using the provided
      * language model, which analyzes the content and returns a detailed moderation result.
      *
-     * @param message The message, including its attachments, that needs to be moderated.
      * @param model The language model that will be used to perform the moderation.
      * @return A `ModerationResult` containing information about the moderation outcome,
      *         including flagged categories, scores, and whether the content is classified

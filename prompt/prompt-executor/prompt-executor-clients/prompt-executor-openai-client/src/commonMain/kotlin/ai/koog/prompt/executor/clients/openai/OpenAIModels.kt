@@ -31,6 +31,8 @@ import ai.koog.prompt.llm.LLModel
  * | [Embeddings.TextEmbedding3Small]    | Medium    | $0.02              | Text               | Text               |
  * | [Embeddings.TextEmbedding3Large]    | Slow      | $0.13              | Text               | Text               |
  * | [Embeddings.TextEmbeddingAda002]    | Slow      | $0.1               | Text               | Text               |
+ * | [Moderation.Text]                   | Medium    | -                  | Text               | Moderation Result  |
+ * | [Moderation.Omni]                   | Medium    | $4.40              | Text               | Moderation Result  |
  */
 public object OpenAIModels : LLModelDefinitions {
     // TODO: support thinking tokens
