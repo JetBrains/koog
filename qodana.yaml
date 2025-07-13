@@ -70,5 +70,8 @@ exclude:
       - docs
       - examples
       - integration-tests
+  - name: CheckDependencyLicenses
+    paths:
+      - koog-spring-boot-starter
 # Enable quick fixes for found issues
 fixesStrategy: apply
