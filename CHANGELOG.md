@@ -1,3 +1,66 @@
+# 0.3.0
+
+> Published 14 Jul 2025
+
+## Major Features
+
+- **Agent Persistency and Checkpoints**: Save and restore agent state to local disk, cloud storage, or databases. Agents can now roll back to any prior state on demand or automatically restore from the latest checkpoint (#305)
+- **Vector Document Storage**: Store embeddings and documents in persistent storage for retrieval-augmented generation (RAG), with in-memory and local file implementations (#272)
+- **OpenTelemetry Support**: Native integration with OpenTelemetry for unified tracing, metrics, and logs across AI agents (#401, #423, #426)
+- **Content Moderation**: Built-in support for moderating models, enabling AI agents to automatically review and filter outputs for safety and compliance (#395)
+- **Parallel Node Execution**: Parallelize different branches of your agent graph with a MapReduce-style API, significantly speeding up agent execution (#220, #404)
+- **Spring Integration**: Ready-to-use Spring Boot starter with auto-configured LLM clients and beans (#334)
+- **AWS Bedrock Support**: Native support for Amazon Bedrock models and services (#285, #419)
+- **WebAssembly Support**: Full support for compiling AI agents to WebAssembly (WASM) for browser deployment (#349)
+- **Customizable LLM in fact search**: Support providing custom LLM for fact retrieval in the history (#289)
+
+## Improvements
+
+- **Multimodal Data Support**: Seamlessly integrate and reason over diverse data types such as text, images, and audio (#277)
+- **Arbitrary Input/Output Types**: More flexibility over how agents receive data and produce responses (#326)
+- **Improved History Compression**: Enhanced fact-retrieval history compression for better context management (#394, #261)
+- **ReAct Strategy**: Built-in support for ReAct (Reasoning and Acting) agent strategy, enabling step-by-step reasoning and dynamic action taking (#370)
+- **Retry Component**: Robust retry mechanism to enhance agent resilience (#371)
+- **Multiple Choice LLM Requests**: Generate or evaluate responses using structured multiple-choice formats (#260)
+- **Azure OpenAI Integration**: Support for Azure OpenAI services (#352)
+- **Ollama Enhancements**: Native image input support for agents running with Ollama-backed models (#250)
+- **Tool Execution Improvements**: Better support for complex parameters in tool execution (#299, #310)
+- **Enhanced Tracing**: Native support for third-party tracing tools, including LangFuse and W&B Weave (#404, #414)
+- **Agent Pipeline enhancements**: More handlers and context available in `AIAgentPipeline` (#263)
+- **Default support of tools and messages mixture**: Simple single run strategies variants for multiple message and parallel tool calls (#344)
+- **ResponseMetaInfo Enhancement**: Add `additionalInfo` field to `ResponseMetaInfo` (#367)
+- **Subgraph Customization**: Support custom `LLModel` and `LLMParams` in subgraphs, make `nodeUpdatePrompt` a pass-through node (#354)
+- **Attachments API simplification**: Remove additional `content` builder from `MessageContentBuilder`, introduce `TextContentBuilderBase` (#331)
+- **Nullable MCP parameters**: Added support for nullable MCP tool parameters (#252)
+- **ToolSet API enhancement**: Add missing `tools(ToolSet)` convenience method for `ToolRegistry` builder (#294)
+- **Thinking support in Ollama**: Add THINKING capability and it's serialization for Ollama API 0.9 (#248)
+- **kotlinx.serialization version update**: Update kotlinx-serialization version to 1.8.1
+- **Host settings in FeatureMessageRemoteServer**: Allow configuring custom host in `FeatureMessageRemoteServer`  (#256) Victor Sima* 6/10/25, 20:32
+
+## Bug Fixes
+
+- Make `CachedPromptExecutor` and `PromptCache` timestamp-insensitive to enable correct caching (#402)
+- Fix `requestLLMWithoutTools` generating tool calls (#325)
+- Fix Ollama function schema generation from `ToolDescriptor` (#313)
+- Fix OpenAI and OpenRouter clients to produce simple text user message when no attachments are present (#392)
+- Fix intput/output token counts for OpenAILLMClient (#370)
+- Using correct `Ollama` LLM provider for ollama llama4 model (#314)
+- Fixed an issue where structured data examples were prompted incorrectly (#325)
+- Correct mistaken model IDs in DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP (#327)
+- Fix `requestLLMWithoutTools` generating tool calls
+- Added support for nullable MCP tool parameters (#252)
+- Fixes: structured LLM request, `subgraphWithTask`. Undeprecate `PromptBuilder` methods (#304)
+- Removed suspend modifier from LLMClient.executeStreaming (#240)
+- Fix `requestLLMWithoutTools` to work properly across all providers (#268)
+
+## Examples
+
+- W&B Weave tracing example
+- Langfuse tracing example
+- Moderation example
+- Parallel Execution example
+- Snapshot and Persistency example
+
 # 0.2.1
 
 > Published 6 Jun 2025
