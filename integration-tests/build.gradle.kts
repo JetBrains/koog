@@ -32,6 +32,9 @@ kotlin {
                 implementation(libs.kotlinx.serialization.json)
                 implementation(libs.ktor.client.content.negotiation)
                 runtimeOnly(libs.slf4j.simple)
+                implementation(libs.aimocks.core.jvm)
+                implementation(libs.aimocks.openai.jvm)
+                implementation(libs.aimocks.anthropic.jvm)
             }
         }
     }
