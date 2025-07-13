@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
@@ -131,23 +132,6 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     }
 
 /**
- * A node that moderates the current prompt using a specified language model.
- *
- * @param name Optional node name, defaults to delegate's property name.
- * @param moderatingModel The optional language model to use for moderation. If not provided, a default model will be used.
- */
-@AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModeratePrompt(
-    name: String? = null,
-    moderatingModel: LLModel? = null
-): AIAgentNodeDelegate<Unit, ModerationResult> =
-    node(name) { _ ->
-        llm.readSession {
-            requestModeration()
-        }
-    }
-
-/**
  * Represents a message that has undergone moderation and the result of the moderation.
  *
  * @property message The original message being moderated.
@@ -162,15 +146,18 @@ public data class ModeratedMessage(val message: Message, val moderationResult: M
  * @param moderatingModel The optional language model to be used for moderation.
  * If null, a default or previously defined model will be applied.
  */
+@OptIn(InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
     name: String? = null,
-    moderatingModel: LLModel? = null
+    moderatingModel: LLModel? = null,
+    includePreviousPrompt: Boolean = false,
 ): AIAgentNodeDelegate<Message, ModeratedMessage> =
     node(name) { message ->
-        val moderationPrompt = prompt("single-message-moderation") {
-            message(message)
-        }
+        val moderationPrompt = if (includePreviousPrompt)
+            llm.prompt
+        else
+            prompt("single-message-moderation") { message(message) }
 
         val moderationResult = llm.promptExecutor.moderate(moderationPrompt, moderatingModel ?: llm.model)
 

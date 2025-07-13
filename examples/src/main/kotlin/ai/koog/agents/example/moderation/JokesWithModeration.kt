@@ -1,10 +1,8 @@
 package ai.koog.agents.example.moderation
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.ModeratedMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMModerateMessage
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.example.ApiKeyService
@@ -26,7 +24,7 @@ fun main() = runBlocking {
     val moderatingStrategy = strategy<String, String>("sage-joke-gen") {
         val callLLM by nodeLLMRequest()
         val moderateInput by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni)
-        val moderateJoke by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni)
+        val moderateJoke by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni, includePreviousPrompt = true)
 
         // Moderate user input
         edge(nodeStart forwardTo moderateInput transformed { Message.User(it, metaInfo = RequestMetaInfo.Empty) })
