@@ -21,7 +21,7 @@ import kotlinx.datetime.Clock
  * @property toolRegistry A registry that contains metadata about available tools.
  * @property prompt The current LLM prompt being used or updated in write sessions.
  * @property model The current LLM model being used or updated in write sessions.
- * @property promptExecutor The executor responsible for performing operations based on the current prompt.
+ * @property promptExecutor The [PromptExecutor] responsible for performing operations on the current prompt.
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  * @property clock The clock used for timestamps of messages
  */
@@ -30,7 +30,7 @@ public class AIAgentLLMContext(
     public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
     prompt: Prompt,
     model: LLModel,
-    internal val promptExecutor: PromptExecutor,
+    public val promptExecutor: PromptExecutor,
     private val environment: AIAgentEnvironment,
     private val config: AIAgentConfigBase,
     private val clock: Clock

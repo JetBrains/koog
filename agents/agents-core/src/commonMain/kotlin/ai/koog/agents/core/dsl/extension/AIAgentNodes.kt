@@ -13,6 +13,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.PromptBuilder
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructuredData
@@ -130,17 +131,16 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     }
 
 /**
- * Configures a node in the AI agent graph that performs prompt moderation using a specified language model.
+ * A node that moderates the current prompt using a specified language model.
  *
- * @param name The optional name of the moderation node. If not provided, an automatic one will be generated from the node variable name.
+ * @param name Optional node name, defaults to delegate's property name.
  * @param moderatingModel The optional language model to use for moderation. If not provided, a default model will be used.
- * @return A delegate representing the result of the moderation operation. It provides the moderation result for further processing.
  */
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModeratePrompt(
     name: String? = null,
     moderatingModel: LLModel? = null
-): AIAgentNodeDelegate<Any?, ModerationResult> =
+): AIAgentNodeDelegate<Unit, ModerationResult> =
     node(name) { _ ->
         llm.readSession {
             requestModeration()
@@ -150,19 +150,17 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModeratePrompt(
 /**
  * Represents a message that has undergone moderation and the result of the moderation.
  *
- * @property message The original message being moderated. This can include both the content and its metadata.
- * @property moderationResult The result of the moderation process applied to the message, indicating its*/
+ * @property message The original message being moderated.
+ * @property moderationResult The result of the moderation.
+ * */
 public data class ModeratedMessage(val message: Message, val moderationResult: ModerationResult)
 
 /**
- * Adds a node to the AI agent subgraph for moderating messages using a specified language model.
- * This function creates a node that takes an input message and transforms it into a moderated message.
+ * A node that moderates only a single input message using a specified language model.
  *
- * @param name The optional name for the node.
- *             If not provided, an automatic one will be generated from the node variable name.
+ * @param name Optional node name, defaults to delegate's property name.
  * @param moderatingModel The optional language model to be used for moderation.
- *                        If null, a default or previously defined model will be applied.
- * @return A delegate for a node that processes a message into a moderated message.
+ * If null, a default or previously defined model will be applied.
  */
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
@@ -170,9 +168,13 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
     moderatingModel: LLModel? = null
 ): AIAgentNodeDelegate<Message, ModeratedMessage> =
     node(name) { message ->
-        llm.readSession {
-            ModeratedMessage(message, requestModeration())
+        val moderationPrompt = prompt("single-message-moderation") {
+            message(message)
         }
+
+        val moderationResult = llm.promptExecutor.moderate(moderationPrompt, moderatingModel ?: llm.model)
+
+        ModeratedMessage(message, moderationResult)
     }
 
 /**
