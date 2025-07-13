@@ -42,9 +42,9 @@ public class KoogProperties {
      * for interacting with the Anthropic service.
      *
      * It is represented as a nested configuration property and uses
-     * the `ProviderKoogProperties` class to encapsulate the settings.
+     * the [ProviderKoogProperties] class to encapsulate the settings.
      *
-     * Default value for `baseUrl` is set to `https://api.anthropic.com`.
+     * Default value for [ProviderKoogProperties.baseUrl] is set to `https://api.anthropic.com`.
      */
     @NestedConfigurationProperty
     public var anthropicClientProperties: ProviderKoogProperties =
@@ -53,11 +53,11 @@ public class KoogProperties {
     /**
      * Configuration properties representing settings required for integration with Google's Generative Language API.
      *
-     * This nested property is part of the `KoogProperties` configuration class. It provides
-     * customization options such as the `apiKey` and `baseUrl` that are necessary
+     * This nested property is part of the [KoogProperties] configuration class. It provides
+     * customization options such as the [ProviderKoogProperties.apiKey] and [ProviderKoogProperties.baseUrl] that are necessary
      * for interacting with Google's machine learning services.
      *
-     * The `baseUrl` is pre-configured to the default API endpoint for Google's Generative Language service.
+     * The [ProviderKoogProperties.baseUrl] is pre-configured to the default API endpoint for Google's Generative Language service.
      */
     @NestedConfigurationProperty
     public var googleClientProperties: ProviderKoogProperties =
@@ -70,7 +70,7 @@ public class KoogProperties {
      *
      * The default base URL is set to `http://localhost:11434`.
      *
-     * This property is nested under the main configuration class `KoogProperties`
+     * This property is nested under the main configuration class [KoogProperties]
      * and can be customized via application properties files using the `ai.koog.ollama` prefix.
      */
     @NestedConfigurationProperty
@@ -79,15 +79,15 @@ public class KoogProperties {
     /**
      * Configuration properties for the OpenAI client.
      *
-     * This property is part of the `KoogProperties` configuration class and is used to define
+     * This property is part of the [KoogProperties] configuration class and is used to define
      * settings for connecting to the OpenAI API. It supports the specification of an API key
      * and a base URL for the OpenAI client.
      *
-     * By default, the `baseUrl` is set to `https://api.openai.com`. The `apiKey` must be provided
+     * By default, the [ProviderKoogProperties.baseUrl] is set to `https://api.openai.com`. The [ProviderKoogProperties.apiKey] must be provided
      * in the application's configuration for the OpenAI integration to be active.
      *
-     * This property is marked as a `@NestedConfigurationProperty`, indicating that it is a
-     * nested configuration element within `KoogProperties`.
+     * This property is marked as a [NestedConfigurationProperty], indicating that it is a
+     * nested configuration element within [KoogProperties].
      */
     @NestedConfigurationProperty
     public var openAIClientProperties: ProviderKoogProperties =
