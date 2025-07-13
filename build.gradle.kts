@@ -204,6 +204,7 @@ dependencies {
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":koog-spring-boot-starter"))
+    dokka(project(":koog-ktor-plugin"))
     dokka(project(":rag:rag-base"))
     dokka(project(":rag:vector-storage"))
 }

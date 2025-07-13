@@ -34,6 +34,8 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
+    api(project(":koog-ktor-plugin"))
+
     api(libs.kotlinx.datetime)
 
     implementation(libs.logback.classic)
