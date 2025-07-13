@@ -1,4 +1,4 @@
-@file:OptIn(InternalAgentsApi::class)
+@file:OptIn(DetachedPromptExecutorAPI::class)
 
 package ai.koog.agents.core.agent.context
 
@@ -14,6 +14,24 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import kotlinx.datetime.Clock
+
+/**
+ * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.
+ *
+ * Using APIs annotated with this requires opting in, as calls to `PromptExecutor` will be disconnected
+ * from the agent logic. This means these calls will not affect the agent's state or adhere to the
+ * `ToolsConversionStrategy`.
+ *
+ * This API should be used with caution, as it provides functionality that operates outside the
+ * standard agent lifecycle and processing logic.
+ */
+@RequiresOptIn(
+    message = "Calls to PromptExecutor used from `AIAgentLLMContext` will not be connected to the agent logic, " +
+            "and will not impact the agent's state. " +
+            "Other than that, `ToolsConversionStrategy` will not be applied. " +
+            "Please be cautious when using this API."
+)
+public annotation class DetachedPromptExecutorAPI
 
 /**
  * Represents the context for an AI agent LLM, managing tools, prompt handling, and interaction with the
@@ -33,7 +51,7 @@ public class AIAgentLLMContext(
     public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
     prompt: Prompt,
     model: LLModel,
-    @property:InternalAgentsApi
+    @property:DetachedPromptExecutorAPI
     public val promptExecutor: PromptExecutor,
     private val environment: AIAgentEnvironment,
     private val config: AIAgentConfigBase,

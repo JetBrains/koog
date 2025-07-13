@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
@@ -146,7 +147,7 @@ public data class ModeratedMessage(val message: Message, val moderationResult: M
  * @param moderatingModel The optional language model to be used for moderation.
  * If null, a default or previously defined model will be applied.
  */
-@OptIn(InternalAgentsApi::class)
+@OptIn(DetachedPromptExecutorAPI::class)
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
     name: String? = null,
