@@ -29,7 +29,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-public object BedrockAnthropicClaudeSerialization {
+internal object BedrockAnthropicClaudeSerialization {
 
     private val logger = KotlinLogging.logger {}
 
