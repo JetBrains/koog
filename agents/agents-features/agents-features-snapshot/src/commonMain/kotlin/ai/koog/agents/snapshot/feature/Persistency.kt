@@ -113,7 +113,6 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * and stores it as a checkpoint using the configured storage provider.
      *
      * @param T The type of the input data
-     * @param agentId The ID of the agent to create a checkpoint for
      * @param agentContext The context of the agent containing the state to checkpoint
      * @param nodeId The ID of the node where the checkpoint is created
      * @param lastInput The input data to include in the checkpoint
@@ -152,7 +151,6 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
     /**
      * Retrieves the latest checkpoint for the specified agent.
      *
-     * @param agentId The ID of the agent to get the latest checkpoint for
      * @return The latest checkpoint data, or null if no checkpoint exists
      */
     public suspend fun getLatestCheckpoint(): AgentCheckpointData? =

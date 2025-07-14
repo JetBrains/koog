@@ -35,7 +35,6 @@ class FileAgentCheckpointStorageProviderTest {
     @Test
     fun testSaveAndRetrieveCheckpoint() = runTest {
         // Create a test checkpoint
-        val agentId = "test-agent"
         val checkpointId = "test-checkpoint"
         val createdAt = Clock.System.now()
         val nodeId = "test-node"
