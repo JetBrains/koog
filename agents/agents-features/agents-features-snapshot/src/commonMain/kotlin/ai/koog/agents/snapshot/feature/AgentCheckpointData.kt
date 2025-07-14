@@ -19,7 +19,6 @@ import kotlinx.datetime.Instant
 @Serializable
 public data class AgentCheckpointData(
     val checkpointId: String,
-    val agentId: String,
     val createdAt: Instant,
     val nodeId: String,
     val lastInput: String?,

@@ -39,7 +39,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider()
+                storage = InMemoryPersistencyStorageProvider("testAgentId")
             }
         }
 
@@ -62,7 +62,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider()
+                storage = InMemoryPersistencyStorageProvider("testAgentId")
             }
         }
 
@@ -76,13 +76,12 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time,
             nodeId = "Node2",
             lastInput = "Test input",
@@ -118,13 +117,12 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time,
             nodeId = "Node2",
             lastInput = "Test input",
@@ -136,7 +134,6 @@ class CheckpointsTests {
 
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time - 10.seconds,
             nodeId = "Node1",
             lastInput = "Test input",
