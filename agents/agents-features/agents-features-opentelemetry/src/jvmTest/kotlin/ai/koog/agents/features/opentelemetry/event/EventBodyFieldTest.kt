@@ -193,7 +193,7 @@ class EventBodyFieldTest {
     
     @Test
     fun `test toAttribute throws exception when bodyFields is empty`() {
-        val field = MockGenAIAgentEvent(bodyFields = emptyList(), verbose = true)
+        val field = MockGenAIAgentEvent(fields = emptyList(), verbose = true)
 
         val exception = assertFailsWith<IllegalStateException> {
             field.bodyFieldsAsAttribute()
@@ -206,18 +206,27 @@ class EventBodyFieldTest {
     }
     
     @Test
-    fun `test toAttribute throws exception when verbose is false`() {
+    fun `test toAttribute filter body fields when verbose is false`() {
         val bodyField = MockEventBodyField("testKey", "testValue")
-        val field = MockGenAIAgentEvent(bodyFields = listOf(bodyField), verbose = false)
+        val bodyFieldContent = MockEventBodyField("testContent", "testContentValue")
+        val field = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent), verbose = false)
 
-        val exception = assertFailsWith<IllegalStateException> {
-            field.bodyFieldsAsAttribute()
-        }
+        val actualAttribute = field.bodyFieldsAsAttribute()
 
-        assertEquals(
-            "Unable to convert Event Body Fields into Attribute because 'verbose' is set to 'false'",
-            exception.message
-        )
+        assertEquals("body", actualAttribute.key)
+        assertEquals("{\"testKey\":\"testValue\"}", actualAttribute.value)
+    }
+
+    @Test
+    fun `test toAttribute does not filter body fields when verbose is true`() {
+        val bodyField = MockEventBodyField("testKey", "testValue")
+        val bodyFieldContent = MockEventBodyField("testContent", "testContentValue")
+        val field = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent), verbose = true)
+
+        val actualAttribute = field.bodyFieldsAsAttribute()
+
+        assertEquals("body", actualAttribute.key)
+        assertEquals("{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}", actualAttribute.value)
     }
 
     //region Private Methods
@@ -231,7 +240,7 @@ class EventBodyFieldTest {
         expectedVerbose: Boolean
     ) {
         val bodyField = MockEventBodyField(key, value)
-        val field = MockGenAIAgentEvent(bodyFields = listOf(bodyField), verbose = verbose)
+        val field = MockGenAIAgentEvent(fields = listOf(bodyField), verbose = verbose)
         val actualAttribute = field.bodyFieldsAsAttribute()
 
         assertEquals(expectedKey, actualAttribute.key)

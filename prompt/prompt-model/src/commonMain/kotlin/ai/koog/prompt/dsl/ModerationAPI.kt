@@ -193,7 +193,6 @@ public data class ModerationCategoryResult(
 /**
  * Represents the result of a content moderation request.
  *
- * @property model The model used to generate the moderation results.
  * @property isHarmful Whether the content is classified as harmful (i.e. any of the categories are flagged).
  * @property categories A map of ModerationCategory objects to [ModerationCategoryResult] values indicating whether
  *  each category is flagged with metainformation about assessment.
