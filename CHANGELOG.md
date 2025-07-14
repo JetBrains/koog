@@ -4,13 +4,13 @@
 
 ## Major Features
 
-- **Agent Persistency and Checkpoints**: Save and restore agent state to local disk, cloud storage, or databases. Agents can now roll back to any prior state on demand or automatically restore from the latest checkpoint (#305)
+- **Agent Persistency and Checkpoints**: Save and restore agent state to local disk, memory, or easily integrate with any cloud storages or databases. Agents can now roll back to any prior state on demand or automatically restore from the latest checkpoint (#305)
 - **Vector Document Storage**: Store embeddings and documents in persistent storage for retrieval-augmented generation (RAG), with in-memory and local file implementations (#272)
 - **OpenTelemetry Support**: Native integration with OpenTelemetry for unified tracing, metrics, and logs across AI agents (#401, #423, #426)
 - **Content Moderation**: Built-in support for moderating models, enabling AI agents to automatically review and filter outputs for safety and compliance (#395)
-- **Parallel Node Execution**: Parallelize different branches of your agent graph with a MapReduce-style API, significantly speeding up agent execution (#220, #404)
+- **Parallel Node Execution**: Parallelize different branches of your agent graph with a MapReduce-style API to speed up agent execution or to choose the best of the parallel attempts (#220, #404)
 - **Spring Integration**: Ready-to-use Spring Boot starter with auto-configured LLM clients and beans (#334)
-- **AWS Bedrock Support**: Native support for Amazon Bedrock models and services (#285, #419)
+- **AWS Bedrock Support**: Native support for Amazon Bedrock provider covering several crucial models and services (#285, #419)
 - **WebAssembly Support**: Full support for compiling AI agents to WebAssembly (WASM) for browser deployment (#349)
 - **Customizable LLM in fact search**: Support providing custom LLM for fact retrieval in the history (#289)
 
@@ -25,7 +25,6 @@
 - **Azure OpenAI Integration**: Support for Azure OpenAI services (#352)
 - **Ollama Enhancements**: Native image input support for agents running with Ollama-backed models (#250)
 - **Tool Execution Improvements**: Better support for complex parameters in tool execution (#299, #310)
-- **Enhanced Tracing**: Native support for third-party tracing tools, including LangFuse and W&B Weave (#404, #414)
 - **Agent Pipeline enhancements**: More handlers and context available in `AIAgentPipeline` (#263)
 - **Default support of tools and messages mixture**: Simple single run strategies variants for multiple message and parallel tool calls (#344)
 - **ResponseMetaInfo Enhancement**: Add `additionalInfo` field to `ResponseMetaInfo` (#367)
@@ -55,8 +54,8 @@
 
 ## Examples
 
-- W&B Weave tracing example
-- Langfuse tracing example
+- W&B Weave Tracing example
+- LangFuse Tracing example
 - Moderation example
 - Parallel Execution example
 - Snapshot and Persistency example
