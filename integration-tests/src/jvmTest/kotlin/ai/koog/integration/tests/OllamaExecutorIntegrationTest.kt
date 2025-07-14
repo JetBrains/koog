@@ -489,7 +489,7 @@ class OllamaExecutorIntegrationTest {
         private var bulletHandler: ((String) -> Unit)? = null
         private var finishHandler: (() -> Unit)? = null
 
-        fun onHeader(level: Int, handler: (String) -> Unit) {
+        fun onHeader(handler: (String) -> Unit) {
             headerHandler = handler
         }
 
@@ -571,7 +571,7 @@ class OllamaExecutorIntegrationTest {
             val bulletPoints = mutableListOf<String>()
 
             val parser = markdownStreamingParser {
-                onHeader(1) { headerText ->
+                onHeader { headerText ->
                     if (currentCountryName.isNotEmpty() && bulletPoints.size >= 3) {
                         val capital = bulletPoints.getOrNull(0)?.substringAfter("Capital: ")?.trim() ?: ""
                         val population = bulletPoints.getOrNull(1)?.substringAfter("Population: ")?.trim() ?: ""
@@ -768,7 +768,8 @@ class OllamaExecutorIntegrationTest {
     fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
         val ollamaException =
             "Ollama API error: Failed to create new sequence: failed to process inputs"
-        assumeTrue(model.capabilities.contains(Vision.Image), "Model must support vision capability")
+        val visionModel = fixture.visionModel
+        assumeTrue(visionModel.capabilities.contains(Vision.Image), "Model must support vision capability")
 
         val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
 
@@ -787,7 +788,7 @@ class OllamaExecutorIntegrationTest {
         }
 
         try {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, visionModel)
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG, ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {

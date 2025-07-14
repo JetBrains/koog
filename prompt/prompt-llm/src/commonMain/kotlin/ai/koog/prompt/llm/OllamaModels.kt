@@ -251,35 +251,6 @@ public object OllamaModels {
     }
 
     /**
-     * The `Mistral` object represents the configuration for Mistral's large language models (LLMs).
-     * It contains the predefined model specifications for Mistral's LLMs, including their identifiers
-     * and supported capabilities.
-     */
-    public object Mistral {
-        /**
-         * Represents the Mistral Small 3.2 model.
-         *
-         * This predefined instance of `LLModel` is provided by Mistral and supports the following capabilities:
-         * - `Temperature`: Allows adjustment of the temperature setting for controlling the randomness in responses.
-         * - `Schema.JSON.Simple`: Supports tasks requiring JSON schema validation and handling in a simplified manner.
-         * - `Tools`: Enables interaction with external tools or functionalities within the model's ecosystem.
-         *
-         * The model is identified by the unique ID "mistral-small3.2" and categorized under the Ollama provider.
-         * It is designed to be a lightweight, cost-effective model for various text-based tasks.
-         */
-        public val MISTRAL_SMALL_3_2: LLModel = LLModel(
-            provider = LLMProvider.Ollama,
-            id = "mistral-small3.2",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
-                LLMCapability.Tools,
-                LLMCapability.Vision.Image
-            )
-        )
-    }
-
-    /**
      * The `Granite` object represents the configuration for Granite large language models (LLMs).
      * It contains the predefined model specifications for Granite LLMs, including their identifiers
      * and supported capabilities.
