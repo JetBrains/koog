@@ -870,7 +870,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test ReadWrite write to non-existing directory`() = runBlocking {
+    fun `ReadWrite should create missing directory when needed`() = runBlocking {
         val dirPath = dirEmpty
         val nonExistingDir = dirPath.resolve("non-existing-dir")
         val fileName = "newFile.txt"
