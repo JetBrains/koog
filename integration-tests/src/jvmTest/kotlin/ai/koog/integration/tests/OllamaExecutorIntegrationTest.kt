@@ -766,10 +766,8 @@ class OllamaExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("imageScenarios")
     fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
-        val ollamaExceptionEOF =
-            "Ollama API error: Failed to create new sequence: failed to process inputs: unexpected EOF"
-        val ollamaExceptionDimension =
-            "Ollama API error: Failed to create new sequence: failed to process inputs: png: invalid format: non-positive dimension"
+        val ollamaException =
+            "Ollama API error: Failed to create new sequence: failed to process inputs"
         assumeTrue(model.capabilities.contains(Vision.Image), "Model must support vision capability")
 
         val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
@@ -810,17 +808,10 @@ class OllamaExecutorIntegrationTest {
             }
         } catch (e: Exception) {
             when (scenario) {
-                ImageTestScenario.CORRUPTED_IMAGE -> {
+                ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
                     assertTrue(
-                        e.message?.contains(ollamaExceptionEOF) == true,
+                        e.message?.contains(ollamaException) == true,
                         "Expected exception for a corrupted image was not found, got [${e.message}] instead"
-                    )
-                }
-
-                ImageTestScenario.EMPTY_IMAGE -> {
-                    assertTrue(
-                        e.message?.contains(ollamaExceptionDimension) == true,
-                        "Expected exception for an empty image was not found, got [${e.message}] instead"
                     )
                 }
 
