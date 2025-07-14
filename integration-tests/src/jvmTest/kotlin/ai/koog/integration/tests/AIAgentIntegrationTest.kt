@@ -12,6 +12,10 @@ import ai.koog.agents.core.tools.*
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.feature.withPersistency
+import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.file.JVMFilePersistencyStorageProvider
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
@@ -37,6 +41,7 @@ import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -607,5 +612,354 @@ class AIAgentIntegrationTest {
                         "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
             )
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val sayHello = "Hello World!"
+        val hello = "Hello"
+        val savedMessage = "Saved the state – the agent is ready to work!"
+        val save = "Save"
+        val sayBye = "Bye Bye World!"
+        val bye = "Bye"
+
+        val checkpointStrategy = strategy("checkpoint-strategy") {
+            val nodeHello by node<String, String>(hello) { input ->
+                sayHello
+            }
+
+            val nodeSave by node<String, String>(save) { input ->
+                // Create a checkpoint
+                withPersistency(this) { agentContext ->
+                    createCheckpoint(
+                        agentId = agentContext.id,
+                        agentContext = agentContext,
+                        nodeId = save,
+                        lastInput = input
+                    )
+                }
+                savedMessage
+            }
+
+            val nodeBye by node<String, String>(bye) { input ->
+                sayBye
+            }
+
+            edge(nodeStart forwardTo nodeHello)
+            edge(nodeHello forwardTo nodeSave)
+            edge(nodeSave forwardTo nodeBye)
+            edge(nodeBye forwardTo nodeFinish)
+        }
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = checkpointStrategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("checkpoint-test") {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry {},
+            installFeatures = {
+                install(Persistency) {
+                    storage = checkpointStorageProvider
+                }
+            }
+        )
+
+        agent.run("Start the test")
+
+        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
+        assertTrue(checkpoints.isNotEmpty(), "No checkpoints were created")
+        assertEquals(save, checkpoints.first().nodeId, "Checkpoint has incorrect node ID")
+
+        val restoredAgent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = checkpointStrategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("checkpoint-test") {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry {},
+            id = agent.id, // Use the same ID to access the checkpoints
+            installFeatures = {
+                install(Persistency) {
+                    storage = checkpointStorageProvider
+                }
+            }
+        )
+
+        val restoredResult = restoredAgent.run("Continue the test")
+
+        // Verify that the agent continued from the checkpoint
+        assertTrue(restoredResult.contains(sayBye), "Agent did not continue from the checkpoint")
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+
+        val hello = "Hello"
+        val save = "Save"
+        val bye = "Bye-bye"
+        val rollback = "Rollback"
+
+        val sayHello = "Hello World!"
+        val saySave = "Saved the day"
+        val sayBye = "Bye World!"
+
+        val sayHelloLog = "sayHello executed\n"
+        val saySaveLog = "saySave executed\n"
+        val sayByeLog = "sayBye executed\n"
+        val rollbackPerformingLog = "Rollback executed - performing rollback\n"
+        val rollbackAlreadyLog = "Rollback executed - already rolled back\n"
+
+        val rolledBackMessage = "Rolled back to the latest checkpoint"
+        val alreadyRolledBackMessage = "Already rolled back, continuing to finish"
+
+        var hasRolledBack = false
+
+        // Shared result string to track node executions across rollbacks
+        val executionLog = StringBuilder()
+
+        val rollbackStrategy = strategy("rollback-strategy") {
+            val nodeHello by node<String, String>(hello) { input ->
+                executionLog.append(sayHelloLog)
+                sayHello
+            }
+
+            val nodeSave by node<String, String>(save) { input ->
+                withPersistency(this) { agentContext ->
+                    createCheckpoint(
+                        agentId = agentContext.id,
+                        agentContext = agentContext,
+                        nodeId = save,
+                        lastInput = input
+                    )
+                }
+                executionLog.append(saySaveLog)
+                saySave
+            }
+
+            val nodeBye by node<String, String>(bye) { input ->
+                executionLog.append(sayByeLog)
+                sayBye
+            }
+
+            val rollbackNode by node<String, String>(rollback) { input ->
+                // Use a shared variable to prevent infinite rollbacks
+                // Only roll back once, then continue
+                if (!hasRolledBack) {
+                    hasRolledBack = true
+                    executionLog.append(rollbackPerformingLog)
+                    withPersistency(this) { agentContext ->
+                        rollbackToLatestCheckpoint(agentContext)
+                    }
+                    rolledBackMessage
+                } else {
+                    executionLog.append(rollbackAlreadyLog)
+                    alreadyRolledBackMessage
+                }
+            }
+
+            edge(nodeStart forwardTo nodeHello)
+            edge(nodeHello forwardTo nodeSave)
+            edge(nodeSave forwardTo nodeBye)
+            edge(nodeBye forwardTo rollbackNode)
+            edge(rollbackNode forwardTo nodeFinish)
+        }
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = rollbackStrategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("rollback-test") {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 50
+            ),
+            toolRegistry = ToolRegistry {},
+            installFeatures = {
+                install(Persistency) {
+                    storage = checkpointStorageProvider
+                }
+            }
+        )
+
+        val result = agent.run("Start the test")
+
+        val executionLogStr = executionLog.toString()
+        assertTrue(executionLogStr.contains(sayHelloLog.trim()), "$hello was not executed")
+        assertTrue(executionLogStr.contains(saySaveLog.trim()), "$save was not executed")
+        assertTrue(executionLogStr.contains(sayByeLog.trim()), "$bye was not executed")
+        assertTrue(
+            executionLogStr.contains(rollbackPerformingLog.trim()),
+            "Rollback was not performed"
+        )
+
+        val savesCount = saySaveLog.trim().toRegex().findAll(executionLogStr).count()
+        val byesCount = sayByeLog.trim().toRegex().findAll(executionLogStr).count()
+        assertEquals(2, savesCount, "$save should be executed twice (before and after rollback)")
+        assertEquals(2, byesCount, "$bye should be executed twice (before and after rollback)")
+
+        assertTrue(
+            result.contains(alreadyRolledBackMessage),
+            "Final result should contain output from the second execution of $rollback"
+        )
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+
+        val strategyName = "continuous-persistence-strategy"
+
+        val hello = "Hello"
+        val world = "Save"
+        val bye = "Bye-bye"
+
+        val sayHello = "Hello World!"
+        val sayWorld = "World, hello!"
+        val sayBye = "Bye World!"
+
+
+        val promptName = "continuous-persistence-test"
+        val systemMessage = "You are a helpful assistant."
+        val testInput = "Start the test"
+
+        val notEnoughCheckpointsError = "Not enough checkpoints were created"
+        val noCheckpointHelloError = "No checkpoint for Node Hello"
+        val noCheckpointSaveError = "No checkpoint for Node Save"
+        val noCheckpointByeError = "No checkpoint for Node Bye"
+
+        val simpleStrategy = strategy(strategyName) {
+            val nodeHello by node<String, String>(hello) { input ->
+                sayHello
+            }
+
+            val nodeWorld by node<String, String>(world) { input ->
+                sayWorld
+            }
+
+            val node3 by node<String, String>(bye) { input ->
+                sayBye
+            }
+
+            edge(nodeStart forwardTo nodeHello)
+            edge(nodeHello forwardTo nodeWorld)
+            edge(nodeWorld forwardTo node3)
+            edge(node3 forwardTo nodeFinish)
+        }
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = simpleStrategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt(promptName) {
+                    system(systemMessage)
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry {},
+            installFeatures = {
+                install(Persistency) {
+                    storage = checkpointStorageProvider
+                    enableAutomaticPersistency = true // Enable continuous persistence
+                }
+            }
+        )
+
+        agent.run(testInput)
+
+        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
+        assertTrue(checkpoints.size >= 3, notEnoughCheckpointsError)
+
+        val nodeIds = checkpoints.map { it.nodeId }.toSet()
+        assertTrue(nodeIds.contains(hello), noCheckpointHelloError)
+        assertTrue(nodeIds.contains(world), noCheckpointSaveError)
+        assertTrue(nodeIds.contains(bye), noCheckpointByeError)
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_AgentCheckpointStorageProvidersTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        val tempDirName = "checkpoint-test"
+        val strategyName = "storage-providers-strategy"
+
+        val hello = "Hello"
+        val bye = "Bye-bye"
+
+        val sayHello = "Hello World!"
+        val sayBye = "Bye World!"
+
+        val promptName = "storage-providers-test"
+        val systemMessage = "You are a helpful assistant."
+        val testInput = "Start the test"
+
+        val noCheckpointsError = "No checkpoints were created"
+        val incorrectNodeIdError = "Checkpoint has incorrect node ID"
+
+        val tempDir = java.nio.file.Files.createTempDirectory(tempDirName)
+        val fileStorageProvider = JVMFilePersistencyStorageProvider(tempDir)
+
+        val simpleStrategy = strategy(strategyName) {
+            val nodeHello by node<String, String>(hello) { input ->
+                sayHello
+            }
+
+            val nodeBye by node<String, String>(bye) { input ->
+                withPersistency(this) { agentContext ->
+                    createCheckpoint(
+                        agentId = agentContext.id,
+                        agentContext = agentContext,
+                        nodeId = bye,
+                        lastInput = input
+                    )
+                }
+                sayBye
+            }
+
+            edge(nodeStart forwardTo nodeHello)
+            edge(nodeHello forwardTo nodeBye)
+            edge(nodeBye forwardTo nodeFinish)
+        }
+
+        val agent = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = simpleStrategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt(promptName) {
+                    system(systemMessage)
+                },
+                model = model,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry {},
+            installFeatures = {
+                install(Persistency) {
+                    storage = fileStorageProvider
+                }
+            }
+        )
+
+        agent.run(testInput)
+
+        // Verify that a checkpoint was created and saved to the file system
+        val checkpoints = fileStorageProvider.getCheckpoints(agent.id)
+        assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
+        assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
+
+        tempDir.toFile().deleteRecursively()
     }
 }
