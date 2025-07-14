@@ -54,7 +54,7 @@ class OllamaExecutorIntegrationTest {
 
         @JvmStatic
         fun imageScenarios(): Stream<ImageTestScenario> {
-            return ImageTestScenario.entries.stream()
+            return ImageTestScenario.entries.minus(ImageTestScenario.LARGE_IMAGE_ANTHROPIC).stream()
         }
     }
 
