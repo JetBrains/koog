@@ -5,7 +5,6 @@ package ai.koog.agents.core.agent.context
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.session.AIAgentLLMReadSession
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
@@ -25,7 +24,10 @@ import kotlinx.datetime.Clock
  * This API should be used with caution, as it provides functionality that operates outside the
  * standard agent lifecycle and processing logic.
  */
+@MustBeDocumented
+@Retention(AnnotationRetention.BINARY)
 @RequiresOptIn(
+    level = RequiresOptIn.Level.ERROR,
     message = "Calls to PromptExecutor used from `AIAgentLLMContext` will not be connected to the agent logic, " +
             "and will not impact the agent's state. " +
             "Other than that, `ToolsConversionStrategy` will not be applied. " +

@@ -24,7 +24,7 @@ fun main() = runBlocking {
     val moderatingStrategy = strategy<String, String>("sage-joke-gen") {
         val callLLM by nodeLLMRequest()
         val moderateInput by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni)
-        val moderateJoke by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni, includePreviousPrompt = true)
+        val moderateJoke by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni, includeCurrentPrompt = true)
 
         // Moderate user input
         edge(nodeStart forwardTo moderateInput transformed { Message.User(it, metaInfo = RequestMetaInfo.Empty) })

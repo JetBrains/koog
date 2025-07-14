@@ -1,7 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
@@ -21,7 +20,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructuredData
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredResponse
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -146,19 +144,22 @@ public data class ModeratedMessage(val message: Message, val moderationResult: M
  * @param name Optional node name, defaults to delegate's property name.
  * @param moderatingModel The optional language model to be used for moderation.
  * If null, a default or previously defined model will be applied.
+ * @param includeCurrentPrompt Should current prompt be included in the moderation requests or only the input message.
  */
 @OptIn(DetachedPromptExecutorAPI::class)
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
     name: String? = null,
     moderatingModel: LLModel? = null,
-    includePreviousPrompt: Boolean = false,
+    includeCurrentPrompt: Boolean = false,
 ): AIAgentNodeDelegate<Message, ModeratedMessage> =
     node(name) { message ->
-        val moderationPrompt = if (includePreviousPrompt)
-            llm.prompt
-        else
+        val moderationPrompt = if (includeCurrentPrompt) {
+            prompt(llm.prompt) { message(message) }
+        }
+        else {
             prompt("single-message-moderation") { message(message) }
+        }
 
         val moderationResult = llm.promptExecutor.moderate(moderationPrompt, moderatingModel ?: llm.model)
 
