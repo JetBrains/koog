@@ -9,5 +9,5 @@ import ai.koog.prompt.message.Message
 public class AgentContextData(
     internal val messageHistory: List<Message>,
     internal val nodeId: String,
-    internal val lastInput: Any?
+    internal val lastInput: String?
 )

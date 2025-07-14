@@ -3,8 +3,9 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.coroutines.withContext
+import kotlin.reflect.KType
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -21,6 +22,17 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * and is used to distinguish and reference nodes in the graph structure.
      */
     public abstract val name: String
+
+
+    /**
+     * The [KType] of the [Input]
+     */
+    public abstract val inputType: KType
+
+    /**
+     * The [KType] of the [Output]
+     */
+    public abstract val outputType: KType
 
     /**
      * Represents the unique identifier of the AI agent node.
@@ -130,15 +142,18 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
  */
 public open class AIAgentNode<Input, Output> internal constructor(
     override val name: String,
-    public val execute: suspend AIAgentContextBase.(input: Input) -> Output
+    override val inputType: KType,
+    override val outputType: KType,
+    public val execute: suspend AIAgentContextBase.(input: Input) -> Output,
+
 ) : AIAgentNodeBase<Input, Output>() {
 
     @InternalAgentsApi
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
         return withContext(NodeInfoContextElement(nodeName = name)) {
-            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNode, input = input)
+            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNode, input = input, inputType = inputType)
             val nodeOutput = context.execute(input)
-            context.pipeline.onAfterNode(context = context, node = this@AIAgentNode, input = input, output = nodeOutput)
+            context.pipeline.onAfterNode(context = context, node = this@AIAgentNode, input = input, output = nodeOutput, inputType = inputType, outputType = outputType)
             return@withContext nodeOutput
         }
     }
@@ -157,11 +172,15 @@ public open class AIAgentNode<Input, Output> internal constructor(
  *
  * @param Input The type of input data this node processes and produces as output.
  * @param subgraphName The name of the related subgraph
+ * @param type [KType] representing [Input]
  */
 public class StartNode<Input> internal constructor(
-    subgraphName: String? = null
+    subgraphName: String? = null,
+    type: KType,
 ) : AIAgentNode<Input, Input>(
     name = subgraphName?.let { "__start__$it" } ?: "__start__",
+    inputType = type,
+    outputType = type,
     execute = { input -> input }
 )
 
@@ -179,14 +198,18 @@ public class StartNode<Input> internal constructor(
  *
  * @param Output The type of data this node processes and produces.
  * @param subgraphName The name of the related subgraph
+ * @param type [KType] representing [Output]
  */
 public class FinishNode<Output> internal constructor(
-    subgraphName: String? = null
+    subgraphName: String? = null,
+    type: KType,
 ) : AIAgentNode<Output, Output>(
     name = subgraphName?.let { "__finish__$it" } ?: "__finish__",
+    inputType = type,
+    outputType = type,
     execute = { input -> input }
 ) {
     override fun addEdge(edge: AIAgentEdge<Output, *>) {
-        throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
+        throw IllegalStateException("${this::class.simpleName} cannot have outgoing edges")
     }
 }

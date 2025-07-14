@@ -3,6 +3,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.withPersistency
+import kotlin.reflect.typeOf
 
 /**
  * Creates a simple node that appends the output to the input.
@@ -95,7 +96,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? 
     node<String, String>(name) {
         val input = it
         withPersistency(this) { ctx ->
-            createCheckpoint(ctx, name!!, input, checkpointId)
+            createCheckpoint(ctx, name!!, input, typeOf<String>(), checkpointId)
             llm.writeSession {
                 updatePrompt {
                     user {
@@ -139,7 +140,9 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
             ctx,
             currentNodeId ?: error("currentNodeId not set"),
             input,
-            "snapshot-id")
+            typeOf<String>(),
+            "snapshot-id"
+        )
 
         saveCheckpoint(checkpoint)
 

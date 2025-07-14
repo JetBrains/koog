@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -16,6 +17,7 @@ import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
+import kotlin.reflect.KType
 
 /**
  * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
@@ -39,6 +41,9 @@ public open class AIAgentSubgraph<Input, Output>(
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
 ) : AIAgentNodeBase<Input, Output>(), ExecutionPointNode {
+    override val inputType: KType = start.inputType
+    override val outputType: KType = finish.outputType
+
     private companion object {
         private val logger = KotlinLogging.logger { }
     }
@@ -77,6 +82,7 @@ public open class AIAgentSubgraph<Input, Output>(
         val tools: List<String>
     )
 
+    @OptIn(DetachedPromptExecutorAPI::class)
     private suspend fun selectTools(context: AIAgentContextBase) = when (toolSelectionStrategy) {
         is ToolSelectionStrategy.ALL -> context.llm.tools
         is ToolSelectionStrategy.NONE -> emptyList()
@@ -114,7 +120,7 @@ public open class AIAgentSubgraph<Input, Output>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
-    @OptIn(InternalAgentsApi::class)
+    @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output? {
         val newTools = selectTools(context)
 
@@ -150,7 +156,6 @@ public open class AIAgentSubgraph<Input, Output>(
     @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output? {
         logger.info { formatLog(context, "Executing subgraph $name") }
-
 
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput

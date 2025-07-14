@@ -15,6 +15,7 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
+import kotlin.reflect.KType
 
 /**
  * A mock implementation of the [AIAgentContextBase] interface, used for testing purposes.
@@ -48,6 +49,7 @@ public class DummyAIAgentContext(
 
     private var _environment: AIAgentEnvironment? = builder.environment
     private var _agentInput: Any? = builder.agentInput
+    private var _agentInputType: KType? = builder.agentInputType
     private var _config: AIAgentConfigBase? = builder.config
     private var _llm: AIAgentLLMContext? = builder.llm
     private var _stateManager: AIAgentStateManager? = builder.stateManager
@@ -63,6 +65,9 @@ public class DummyAIAgentContext(
 
     override val agentInput: Any?
         get() = _agentInput ?: throw NotImplementedError("Agent input is not mocked")
+
+    override val agentInputType: KType
+        get() = _agentInputType ?: throw NotImplementedError("Agent input type is not mocked")
 
     override val config: AIAgentConfigBase
         get() = _config ?: throw NotImplementedError("Config is not mocked")
@@ -109,6 +114,7 @@ public class DummyAIAgentContext(
     override fun copy(
         environment: AIAgentEnvironment,
         agentInput: Any?,
+        agentInputType: KType,
         config: AIAgentConfigBase,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
@@ -120,6 +126,7 @@ public class DummyAIAgentContext(
         builder.copy(
             environment = environment,
             agentInput = agentInput,
+            agentInputType = agentInputType,
             config = config,
             llm = llm,
             stateManager = stateManager,
@@ -171,6 +178,12 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * It is nullable, indicating that the agent may operate without an explicitly defined input.
      */
     public var agentInput: Any?
+
+    /**
+     * Represents the [KType] of the [agentInput].
+     */
+    public var agentInputType: KType?
+
     /**
      * Specifies the configuration for the AI agent.
      *
@@ -239,6 +252,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
     public fun copy(
         environment: AIAgentEnvironment? = this.environment,
         agentInput: Any? = this.agentInput,
+        agentInputType: KType? = this.agentInputType,
         config: AIAgentConfigBase? = this.config,
         llm: AIAgentLLMContext? = this.llm,
         stateManager: AIAgentStateManager? = this.stateManager,
@@ -284,6 +298,12 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * It is utilized during the construction or copying of an agent's context to define the data the agent operates on.
      */
     override var agentInput: Any? = null
+
+    /**
+     * Represents the [KType] of the [agentInput].
+     */
+    override var agentInputType: KType? = null
+
     /**
      * Represents the AI agent configuration used in the mock builder.
      *
@@ -360,6 +380,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override fun copy(
         environment: AIAgentEnvironment?,
         agentInput: Any?,
+        agentInputType: KType?,
         config: AIAgentConfigBase?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
@@ -370,6 +391,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
         return AIAgentContextMockBuilder().also {
             it.environment = environment
             it.agentInput = agentInput
+            it.agentInputType = agentInputType
             it.config = config
             it.llm = llm
             it.stateManager = stateManager

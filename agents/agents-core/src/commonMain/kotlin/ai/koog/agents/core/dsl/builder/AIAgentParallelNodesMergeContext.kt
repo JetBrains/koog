@@ -3,7 +3,6 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
-import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -12,6 +11,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.prompt.message.Message
+import kotlin.reflect.KType
 
 /**
  * Context for merging parallel node execution results.
@@ -33,6 +33,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
     override val id: String get() = underlyingContextBase.id
     override val agentInput: Any? get() = underlyingContextBase.agentInput
+    override val agentInputType: KType get() = underlyingContextBase.agentInputType
     override val config: AIAgentConfigBase get() = underlyingContextBase.config
     override val llm: AIAgentLLMContext get() = underlyingContextBase.llm
     override val stateManager: AIAgentStateManager get() = underlyingContextBase.stateManager
@@ -69,6 +70,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override fun copy(
         environment: AIAgentEnvironment,
         agentInput: Any?,
+        agentInputType: KType,
         config: AIAgentConfigBase,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
@@ -79,6 +81,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     ): AIAgentContextBase = underlyingContextBase.copy(
         environment = environment,
         agentInput = agentInput,
+        agentInputType = agentInputType,
         config = config,
         llm = llm,
         stateManager = stateManager,

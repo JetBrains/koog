@@ -11,6 +11,9 @@ import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import kotlin.reflect.KType
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -50,6 +53,11 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * Feature companion object that implements [AIAgentFeature] for the checkpoint functionality.
      */
     public companion object Feature : AIAgentFeature<PersistencyFeatureConfig, Persistency> {
+
+        private val json = Json {
+            prettyPrint = true
+        }
+
         /**
          * The storage key used to identify this feature in the agent's feature registry.
          */
@@ -93,9 +101,10 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             pipeline.interceptAfterNode(interceptContext) { eventCtx ->
                 if (config.enableAutomaticPersistency) {
                     createCheckpoint(
-                        eventCtx.context,
-                        eventCtx.node.id,
-                        eventCtx.input
+                        agentContext = eventCtx.context,
+                        nodeId = eventCtx.node.id,
+                        lastInput = eventCtx.input,
+                        lastInputType = eventCtx.inputType,
                     )
                 }
             }
@@ -119,10 +128,11 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * @param checkpointId Optional ID for the checkpoint; a random UUID is generated if not provided
      * @return The created checkpoint data
      */
-    public suspend inline fun <T> createCheckpoint(
+    public suspend fun createCheckpoint(
         agentContext: AIAgentContextBase,
         nodeId: String,
-        lastInput: T,
+        lastInput: Any?,
+        lastInputType: KType,
         checkpointId: String? = null
     ): AgentCheckpointData {
         val checkpoint = agentContext.llm.readSession {
@@ -130,7 +140,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
-                lastInput = serializeInput(lastInput),
+                lastInput = json.encodeToString(json.serializersModule.serializer(lastInputType), lastInput),
                 createdAt = Clock.System.now()
             )
         }
@@ -180,7 +190,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         agentContext: AIAgentContextBase,
         nodeId: String,
         messageHistory: List<Message>,
-        input: Any?
+        input: String?
     ) {
         agentContext.store(AgentContextData(messageHistory, nodeId, input))
     }
@@ -215,7 +225,9 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * @param agentContext The context of the agent to roll back
      * @return The checkpoint data that was restored or null if no checkpoint was found
      */
-    public suspend fun rollbackToLatestCheckpoint(agentContext: AIAgentContextBase): AgentCheckpointData? {
+    public suspend fun rollbackToLatestCheckpoint(
+        agentContext: AIAgentContextBase
+    ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
         if (checkpoint != null) {
             agentContext.store(checkpoint.toAgentContextData())

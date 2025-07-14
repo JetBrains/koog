@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
@@ -85,10 +86,14 @@ import kotlinx.serialization.Serializable
  * @see AgentMemoryProvider
  * @see MemoryScopesProfile
  */
+@OptIn(InternalAgentsApi::class)
 public class AgentMemory(
-    internal val agentMemory: AgentMemoryProvider,
-    internal val llm: AIAgentLLMContext,
-    internal val scopesProfile: MemoryScopesProfile
+    @property:InternalAgentsApi
+    public val agentMemory: AgentMemoryProvider,
+    @property:InternalAgentsApi
+    public val llm: AIAgentLLMContext,
+    @property:InternalAgentsApi
+    public val scopesProfile: MemoryScopesProfile
 ) {
     private val logger = KotlinLogging.logger { }
 
@@ -331,6 +336,7 @@ public class AgentMemory(
      * @param scopes List of memory scopes to search in (Agent, Feature, etc.). By default all scopes are used.
      * @param subjects List of subjects to search in (User, Project, etc.). By default all registered subjects are used.
      */
+    @OptIn(InternalAgentsApi::class)
     public suspend fun loadFactsToAgent(
         concept: Concept,
         scopes: List<MemoryScopeType> = MemoryScopeType.entries,
@@ -474,6 +480,7 @@ public class AgentMemory(
  * @param concept The concept to extract facts about
  * @return A Fact object (either SingleFact or MultipleFacts) containing the extracted information
  */
+@OptIn(InternalAgentsApi::class)
 internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     concept: Concept
 ): Fact {

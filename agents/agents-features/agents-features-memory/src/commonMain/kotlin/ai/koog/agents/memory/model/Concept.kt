@@ -1,5 +1,6 @@
 package ai.koog.agents.memory.model
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -143,11 +144,19 @@ public abstract class MemorySubject() {
      */
     public abstract val priorityLevel: Int
 
-    internal companion object {
-        val registeredSubjects: MutableList<MemorySubject> = mutableListOf()
+    /**
+     * Companion object
+     */
+    @InternalAgentsApi
+    public companion object {
+        /**
+         * A mutable collection of all registered subjects.
+         */
+        public val registeredSubjects: MutableList<MemorySubject> = mutableListOf()
     }
 
     init {
+        @OptIn(InternalAgentsApi::class)
         registeredSubjects.add(this)
     }
 
@@ -158,6 +167,7 @@ public abstract class MemorySubject() {
             encoder.encodeString(value.name)
         }
 
+        @OptIn(InternalAgentsApi::class)
         override fun deserialize(decoder: Decoder): MemorySubject {
             val name = decoder.decodeString()
             return registeredSubjects.find { it.name == name }

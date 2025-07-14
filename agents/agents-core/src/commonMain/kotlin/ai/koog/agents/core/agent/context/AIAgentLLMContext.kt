@@ -59,10 +59,18 @@ public class AIAgentLLMContext(
     private val config: AIAgentConfigBase,
     private val clock: Clock
 ) {
-    internal var tools: List<ToolDescriptor> = tools
+    /**
+     * List of current tools associated with this agent context.
+     */
+    @DetachedPromptExecutorAPI
+    public var tools: List<ToolDescriptor> = tools
         private set
 
-    internal var model: LLModel = model
+    /**
+     * LLM currently associated with this context.
+     */
+    @DetachedPromptExecutorAPI
+    public var model: LLModel = model
         private set
 
     /**

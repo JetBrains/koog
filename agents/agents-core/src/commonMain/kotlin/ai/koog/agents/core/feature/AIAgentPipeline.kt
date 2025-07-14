@@ -21,6 +21,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.reflect.KType
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -166,12 +167,13 @@ public class AIAgentPipeline {
      * @param runId The unique identifier of the agent run
      * @param result The result produced by the agent, or null if no result was produced
      */
-    public suspend fun <TResult> onAgentFinished(
+    public suspend fun onAgentFinished(
         agentId: String,
         runId: String,
-        result: TResult
+        result: Any?,
+        resultType: KType,
     ) {
-        val eventContext = AgentFinishedContext(agentId = agentId, runId = runId, result = result)
+        val eventContext = AgentFinishedContext(agentId = agentId, runId = runId, result = result, resultType = resultType)
         agentHandlers.values.forEach { handler -> handler.agentFinishedHandler.handle(eventContext) }
     }
 
@@ -268,17 +270,19 @@ public class AIAgentPipeline {
      * @param result The result produced by the strategy execution
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun <TResult> onStrategyFinished(
+    public suspend fun onStrategyFinished(
         strategy: AIAgentStrategy<*, *>,
         context: AIAgentContextBase,
-        result: TResult
+        result: Any?,
+        resultType: KType,
     ) {
         strategyHandlers.values.forEach { handler ->
             val eventContext = StrategyFinishContext(
                 runId = context.runId,
                 strategy = strategy,
                 feature = handler.feature,
-                result = result
+                result = result,
+                resultType = resultType
             )
             handler.handleStrategyFinishedUnsafe(eventContext)
         }
@@ -295,8 +299,13 @@ public class AIAgentPipeline {
      * @param context The agent context in which the node is being executed
      * @param input The input data for the node execution
      */
-    public suspend fun onBeforeNode(node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) {
-        val eventContext = NodeBeforeExecuteContext(context, node, input)
+    public suspend fun onBeforeNode(
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentContextBase,
+        input: Any?,
+        inputType: KType
+    ) {
+        val eventContext = NodeBeforeExecuteContext(context, node, input, inputType)
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(eventContext) }
     }
 
@@ -312,9 +321,11 @@ public class AIAgentPipeline {
         node: AIAgentNodeBase<*, *>,
         context: AIAgentContextBase,
         input: Any?,
-        output: Any?
+        output: Any?,
+        inputType: KType,
+        outputType: KType,
     ) {
-        val eventContext = NodeAfterExecuteContext(context, node, input, output)
+        val eventContext = NodeAfterExecuteContext(context, node, input, output, inputType, outputType)
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(eventContext) }
     }
 
