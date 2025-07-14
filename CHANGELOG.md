@@ -12,7 +12,6 @@
 - **Spring Integration**: Ready-to-use Spring Boot starter with auto-configured LLM clients and beans (#334)
 - **AWS Bedrock Support**: Native support for Amazon Bedrock provider covering several crucial models and services (#285, #419)
 - **WebAssembly Support**: Full support for compiling AI agents to WebAssembly (WASM) for browser deployment (#349)
-- **Customizable LLM in fact search**: Support providing custom LLM for fact retrieval in the history (#289)
 
 ## Improvements
 
@@ -24,6 +23,7 @@
 - **Multiple Choice LLM Requests**: Generate or evaluate responses using structured multiple-choice formats (#260)
 - **Azure OpenAI Integration**: Support for Azure OpenAI services (#352)
 - **Ollama Enhancements**: Native image input support for agents running with Ollama-backed models (#250)
+- **Customizable LLM in fact search**: Support providing custom LLM for fact retrieval in the history (#289)
 - **Tool Execution Improvements**: Better support for complex parameters in tool execution (#299, #310)
 - **Agent Pipeline enhancements**: More handlers and context available in `AIAgentPipeline` (#263)
 - **Default support of tools and messages mixture**: Simple single run strategies variants for multiple message and parallel tool calls (#344)
