@@ -46,7 +46,9 @@ public object AnthropicModels: LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
-        )
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
     )
 
     /**
@@ -68,7 +70,9 @@ public object AnthropicModels: LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
-        )
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
     )
 
     /**
@@ -90,7 +94,9 @@ public object AnthropicModels: LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
-        )
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 8_192,
     )
 
     /**
@@ -112,7 +118,9 @@ public object AnthropicModels: LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
-        )
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 8_192,
     )
 
     /**
@@ -134,7 +142,9 @@ public object AnthropicModels: LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
-        )
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 64_000,
     )
 
     /**
@@ -155,7 +165,9 @@ public object AnthropicModels: LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
-        )
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 64_000,
     )
 
     /**
@@ -177,7 +189,9 @@ public object AnthropicModels: LLModelDefinitions {
             LLMCapability.Vision.Image,
             LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
-        )
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 32_000,
     )
 }
 

@@ -54,4 +54,5 @@ public fun OllamaModelCard.toLLModel(): LLModel = LLModel(
     provider = LLMProvider.Ollama,
     id = name,
     capabilities = capabilities,
+    contextLength = contextLength,
 )
