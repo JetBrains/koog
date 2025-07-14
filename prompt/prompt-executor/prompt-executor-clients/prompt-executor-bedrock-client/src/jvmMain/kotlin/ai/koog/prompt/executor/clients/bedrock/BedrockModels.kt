@@ -193,6 +193,7 @@ public object BedrockModels : LLModelDefinitions {
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-instant-v1",
         capabilities = standardCapabilities,
+        contextLength = 100_000,
     )
 
     /**
