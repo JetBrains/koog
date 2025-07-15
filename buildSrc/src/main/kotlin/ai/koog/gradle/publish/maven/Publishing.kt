@@ -11,7 +11,7 @@ import java.net.URL
 object Publishing {
     fun Project.publishToMaven() {
         publishTo({
-//            it.graziePublic(project)
+            it.graziePublic(project)
             it.artifactsMaven(project)
         }) {
             it.publications(
