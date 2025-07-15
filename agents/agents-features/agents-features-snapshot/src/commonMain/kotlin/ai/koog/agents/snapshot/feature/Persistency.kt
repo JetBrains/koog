@@ -10,7 +10,9 @@ import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
@@ -54,6 +56,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * Feature companion object that implements [AIAgentFeature] for the checkpoint functionality.
      */
     public companion object Feature : AIAgentFeature<PersistencyFeatureConfig, Persistency> {
+        private val logger = KotlinLogging.logger {  }
 
         private val json = Json {
             prettyPrint = true
@@ -96,7 +99,13 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
 
             pipeline.interceptBeforeAgentStarted(interceptContext) { ctx ->
                 require(ctx.strategy.metadata.uniqueNames) { "Checkpoint feature requires unique node names in the strategy metadata" }
-                ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+                val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+
+                if (checkpoint != null) {
+                    logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
+                } else {
+                    logger.info { "No checkpoint found, starting from the beginning" }
+                }
             }
 
             pipeline.interceptAfterNode(interceptContext) { eventCtx ->
@@ -134,19 +143,34 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         lastInput: Any?,
         lastInputType: KType,
         checkpointId: String? = null
-    ): AgentCheckpointData {
+    ): AgentCheckpointData? {
+        val inputJson = trySerializeInput(lastInput, lastInputType)
+
+        if (inputJson == null) {
+            logger.warn { "Failed to serialize input of type $lastInputType for checkpoint creation for $nodeId, skipping..." }
+            return null
+        }
+
         val checkpoint = agentContext.llm.readSession {
             return@readSession AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
-                lastInput = json.encodeToJsonElement(json.serializersModule.serializer(lastInputType), lastInput),
+                lastInput = inputJson,
                 createdAt = Clock.System.now()
             )
         }
 
         saveCheckpoint(checkpoint)
         return checkpoint
+    }
+
+    private fun trySerializeInput(input: Any?, inputType: KType): JsonElement? {
+        return try {
+            json.encodeToJsonElement(json.serializersModule.serializer(inputType), input)
+        } catch (_: SerializationException) {
+            return null
+        }
     }
 
     /**
