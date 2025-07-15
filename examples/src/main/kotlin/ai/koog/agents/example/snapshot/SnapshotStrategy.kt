@@ -5,6 +5,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.withPersistency
+import kotlinx.serialization.json.JsonPrimitive
 
 private fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     name: String? = null,
@@ -17,7 +18,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     withPersistency(this) {
-        setExecutionPoint(it, "Node1", listOf(), "Teleported!!!")
+        setExecutionPoint(it, "Node1", listOf(), JsonPrimitive("Teleported!!!"))
         return@withPersistency "Teleported"
     }
 }

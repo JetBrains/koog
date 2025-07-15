@@ -13,6 +13,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
@@ -84,7 +85,7 @@ class CheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodeId = "Node2",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -125,7 +126,7 @@ class CheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time,
             nodeId = "Node2",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -136,7 +137,7 @@ class CheckpointsTests {
             checkpointId = "testCheckpointId",
             createdAt = time - 10.seconds,
             nodeId = "Node1",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))

@@ -6,6 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -38,7 +39,7 @@ class FileAgentCheckpointStorageProviderTest {
         val checkpointId = "test-checkpoint"
         val createdAt = Clock.System.now()
         val nodeId = "test-node"
-        val lastInput = "test-input"
+        val lastInput = JsonPrimitive("test-input")
         val time = Clock.System.now()
         val messageHistory = listOf(
             Message.User("Hello", metaInfo = RequestMetaInfo(time)),

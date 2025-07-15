@@ -2,9 +2,9 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.utils.runCatchingCancellable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 
 /**
@@ -52,7 +52,7 @@ public class AIAgentStrategy<Input, Output>(
     /**
      * Finds and sets the node for the strategy based on the provided context.
      */
-    public fun setExecutionPoint(nodeId: String, input: String) {
+    public fun setExecutionPoint(nodeId: String, input: JsonElement) {
         val fullPath = metadata.nodesMap.keys.firstOrNull {
             val segments = it.split(":")
             segments.last() == nodeId
@@ -85,7 +85,7 @@ public class AIAgentStrategy<Input, Output>(
         val leaf = metadata.nodesMap[fullPath] ?: throw IllegalStateException("Node ${segments.last()} not found")
         val inputType = leaf.inputType
 
-        val actualInput = serializer.decodeFromString(serializer.serializersModule.serializer(inputType), input)
+        val actualInput = serializer.decodeFromJsonElement(serializer.serializersModule.serializer(inputType), input)
         leaf.let {
             currentNode as? ExecutionPointNode ?: throw IllegalStateException("Node ${currentNode?.name} does not have subnodes")
             currentNode.enforceExecutionPoint(it, actualInput)

@@ -12,6 +12,7 @@ import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 import kotlin.time.ExperimentalTime
@@ -121,7 +122,6 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * This method captures the agent's message history, current node, and input data
      * and stores it as a checkpoint using the configured storage provider.
      *
-     * @param T The type of the input data
      * @param agentContext The context of the agent containing the state to checkpoint
      * @param nodeId The ID of the node where the checkpoint is created
      * @param lastInput The input data to include in the checkpoint
@@ -140,7 +140,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
-                lastInput = json.encodeToString(json.serializersModule.serializer(lastInputType), lastInput),
+                lastInput = json.encodeToJsonElement(json.serializersModule.serializer(lastInputType), lastInput),
                 createdAt = Clock.System.now()
             )
         }
@@ -190,7 +190,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         agentContext: AIAgentContextBase,
         nodeId: String,
         messageHistory: List<Message>,
-        input: String?
+        input: JsonElement
     ) {
         agentContext.store(AgentContextData(messageHistory, nodeId, input))
     }
