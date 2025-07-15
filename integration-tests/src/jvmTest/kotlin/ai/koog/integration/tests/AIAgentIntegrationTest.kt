@@ -52,6 +52,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
+import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -636,7 +637,8 @@ class AIAgentIntegrationTest {
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = save,
-                        lastInput = input
+                        lastInput = input,
+                        lastInputType = typeOf<String>(),
                     )
                 }
                 savedMessage
@@ -740,7 +742,8 @@ class AIAgentIntegrationTest {
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = save,
-                        lastInput = input
+                        lastInput = input,
+                        lastInputType = typeOf<String>(),
                     )
                 }
                 executionLog.append(saySaveLog)
@@ -923,7 +926,8 @@ class AIAgentIntegrationTest {
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = bye,
-                        lastInput = input
+                        lastInput = input,
+                        lastInputType = typeOf<String>(),
                     )
                 }
                 sayBye
