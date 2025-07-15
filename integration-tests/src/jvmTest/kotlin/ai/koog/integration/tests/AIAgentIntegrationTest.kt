@@ -617,7 +617,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 120.seconds) {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("integration_AgentCreateAndRestoreTest")
         val sayHello = "Hello World!"
         val hello = "Hello"
         val savedMessage = "Saved the state – the agent is ready to work!"
@@ -634,7 +634,6 @@ class AIAgentIntegrationTest {
                 // Create a checkpoint
                 withPersistency(this) { agentContext ->
                     createCheckpoint(
-                        agentId = agentContext.id,
                         agentContext = agentContext,
                         nodeId = save,
                         lastInput = input
@@ -673,7 +672,7 @@ class AIAgentIntegrationTest {
 
         agent.run("Start the test")
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
+        val checkpoints = checkpointStorageProvider.getCheckpoints()
         assertTrue(checkpoints.isNotEmpty(), "No checkpoints were created")
         assertEquals(save, checkpoints.first().nodeId, "Checkpoint has incorrect node ID")
 
@@ -705,7 +704,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 120.seconds) {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("integration_AgentCheckpointRollbackTest")
 
         val hello = "Hello"
         val save = "Save"
@@ -739,7 +738,6 @@ class AIAgentIntegrationTest {
             val nodeSave by node<String, String>(save) { input ->
                 withPersistency(this) { agentContext ->
                     createCheckpoint(
-                        agentId = agentContext.id,
                         agentContext = agentContext,
                         nodeId = save,
                         lastInput = input
@@ -820,7 +818,8 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 120.seconds) {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val checkpointStorageProvider =
+            InMemoryPersistencyStorageProvider("integration_AgentCheckpointContinuousPersistenceTest")
 
         val strategyName = "continuous-persistence-strategy"
 
@@ -882,7 +881,7 @@ class AIAgentIntegrationTest {
 
         agent.run(testInput)
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
+        val checkpoints = checkpointStorageProvider.getCheckpoints()
         assertTrue(checkpoints.size >= 3, notEnoughCheckpointsError)
 
         val nodeIds = checkpoints.map { it.nodeId }.toSet()
@@ -911,7 +910,8 @@ class AIAgentIntegrationTest {
         val incorrectNodeIdError = "Checkpoint has incorrect node ID"
 
         val tempDir = java.nio.file.Files.createTempDirectory(tempDirName)
-        val fileStorageProvider = JVMFilePersistencyStorageProvider(tempDir)
+        val fileStorageProvider =
+            JVMFilePersistencyStorageProvider(tempDir, "integration_AgentCheckpointStorageProvidersTest")
 
         val simpleStrategy = strategy(strategyName) {
             val nodeHello by node<String, String>(hello) { input ->
@@ -921,7 +921,6 @@ class AIAgentIntegrationTest {
             val nodeBye by node<String, String>(bye) { input ->
                 withPersistency(this) { agentContext ->
                     createCheckpoint(
-                        agentId = agentContext.id,
                         agentContext = agentContext,
                         nodeId = bye,
                         lastInput = input
@@ -956,7 +955,7 @@ class AIAgentIntegrationTest {
         agent.run(testInput)
 
         // Verify that a checkpoint was created and saved to the file system
-        val checkpoints = fileStorageProvider.getCheckpoints(agent.id)
+        val checkpoints = fileStorageProvider.getCheckpoints()
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
 
