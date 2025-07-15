@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -888,10 +889,12 @@ class AIAgentIntegrationTest {
         assertTrue(nodeIds.contains(bye), noCheckpointByeError)
     }
 
+    @TempDir
+    lateinit var tempDir: Path
+
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCheckpointStorageProvidersTest(model: LLModel) = runTest(timeout = 120.seconds) {
-        val tempDirName = "checkpoint-test"
         val strategyName = "storage-providers-strategy"
 
         val hello = "Hello"
@@ -907,7 +910,6 @@ class AIAgentIntegrationTest {
         val noCheckpointsError = "No checkpoints were created"
         val incorrectNodeIdError = "Checkpoint has incorrect node ID"
 
-        val tempDir = java.nio.file.Files.createTempDirectory(tempDirName)
         val fileStorageProvider =
             JVMFilePersistencyStorageProvider(tempDir, "integration_AgentCheckpointStorageProvidersTest")
 
@@ -957,7 +959,5 @@ class AIAgentIntegrationTest {
         val checkpoints = fileStorageProvider.getCheckpoints()
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
-
-        tempDir.toFile().deleteRecursively()
     }
 }
