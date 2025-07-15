@@ -708,6 +708,8 @@ class OllamaExecutorIntegrationTest {
 
         assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
 
+        println(multiMessageReply.violatedCategories)
+
         assert(
             multiMessageReply.violatesOneOf(
                 ModerationCategory.Illicit,
