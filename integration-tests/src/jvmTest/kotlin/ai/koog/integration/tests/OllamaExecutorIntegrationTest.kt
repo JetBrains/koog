@@ -668,37 +668,28 @@ class OllamaExecutorIntegrationTest {
 
     @Test
     fun `ollama_test moderate multiple messages`() = runTest {
+        val safeQuestion = String(
+            Base64.getDecoder()
+                .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/")
+        ) // for testing purposes
+        val unsafeAnswer = String(
+            Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRlc2VydmUgZGVhdGggb3IgdG8gYmUgc2VydmFudHMgdG8gdXMh")
+        ) // for testing only
+
         // Not harmful (without the answer)
         val questionOnly = prompt("test-legit-question") {
-            user(
-                String(
-                    Base64.getDecoder()
-                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/")
-                )
-            ) // for testing purposes
+            user(safeQuestion)
         }
-        // Not harmful (without the question in the context)
-        val answerOnly = prompt("test-legit-answer") {
-            assistant(
-                String(
-                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ==")
-                )
-            ) // for testing only
+
+        // Harmful
+        val answerOnly = prompt("test-unsafe-answer") {
+            assistant(unsafeAnswer) // for testing only
         }
 
         // Harmful and offensive (question + answer together in the same context)
         val promptWithMultipleMessages = prompt("test") {
-            user(
-                String(
-                    Base64.getDecoder()
-                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/")
-                )
-            ) // for testing purposes
-            assistant(
-                String(
-                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRlc2VydmUgZGVhdGggb3IgdG8gYmUgc2VydmFudHMgdG8gdXMh")
-                )
-            ) // for testing only
+            user(safeQuestion) // for testing purposes
+            assistant(unsafeAnswer)
         }
 
         assert(
@@ -706,8 +697,8 @@ class OllamaExecutorIntegrationTest {
         ) { "Question only should not be detected as harmful!" }
 
         assert(
-            !executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful
-        ) { "Answer alone should not be detected as harmful!" }
+            executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful
+        ) { "Answer alone should be detected as harmful!" }
 
 
         val multiMessageReply = executor.moderate(
@@ -723,7 +714,7 @@ class OllamaExecutorIntegrationTest {
                 ModerationCategory.IllicitViolent,
                 ModerationCategory.Violence
             )
-        ) { "Violence must be detected!" }
+        ) { "Violence or crime must be detected!" }
     }
 
     @Test
