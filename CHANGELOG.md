@@ -1,6 +1,6 @@
 # 0.3.0
 
-> Published 14 Jul 2025
+> Published 15 Jul 2025
 
 ## Major Features
 
