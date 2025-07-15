@@ -9,7 +9,7 @@
   the latest checkpoint (#305)
 - **Vector Document Storage**: Store embeddings and documents in persistent storage for retrieval-augmented generation (
   RAG), with in-memory and local file implementations (#272)
-- **OpenTelemetry Support**: Native integration with OpenTelemetry for unified tracing logs across AI agents (#401,
+- **OpenTelemetry Support**: Native integration with OpenTelemetry for unified tracing logs across AI agents (#369, #401,
   #423, #426)
 - **Content Moderation**: Built-in support for moderating models, enabling AI agents to automatically review and filter
   outputs for safety and compliance (#395)
