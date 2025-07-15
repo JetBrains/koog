@@ -82,7 +82,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 readAwsSecretAccessKeyFromEnv(),
                 BedrockClientSettings()
             )
-            val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
+            // val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
             */
 
             return Stream.concat(
