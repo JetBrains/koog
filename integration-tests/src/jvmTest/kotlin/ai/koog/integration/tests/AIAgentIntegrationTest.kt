@@ -25,7 +25,6 @@ import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -361,10 +360,6 @@ class AIAgentIntegrationTest {
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {
         val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        // ToDo remove after fixes
-        assumeTrue(model != OpenAIModels.Reasoning.O1, "JBAI-13980")
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
-        assumeTrue(!model.id.contains("flash"), "JBAI-14094")
 
         val toolRegistry = ToolRegistry {
             tool(CalculatorTool)

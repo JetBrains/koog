@@ -21,7 +21,6 @@ import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -44,7 +43,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Base64
+import java.util.*
 import java.util.stream.Stream
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
@@ -240,8 +239,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -287,8 +284,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -340,8 +335,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -391,8 +384,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -427,8 +418,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val colorPickerTool = ToolDescriptor(
@@ -465,8 +454,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val lotteryPickerTool = ToolDescriptor(
@@ -578,8 +565,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
@@ -608,8 +593,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
@@ -640,8 +623,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNamed(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
@@ -1069,17 +1050,35 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testOpenAIMultipleMessagesModeration() = runTest {
         // Not harmful (without the answer)
         val questionOnly = prompt("test-legit-question") {
-            user(String(Base64.getDecoder().decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw=="))) // for testing purposes
+            user(
+                String(
+                    Base64.getDecoder()
+                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw==")
+                )
+            ) // for testing purposes
         }
         // Not harmful (without the question in the context)
         val answerOnly = prompt("test-legit-answer") {
-            assistant(String(Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ=="))) // for testing only
+            assistant(
+                String(
+                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ==")
+                )
+            ) // for testing only
         }
 
         // Harmful and offensive (question + answer together in the same context)
         val promptWithMultipleMessages = prompt("test") {
-            user(String(Base64.getDecoder().decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw=="))) // for testing purposes
-            assistant(String(Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ=="))) // for testing only
+            user(
+                String(
+                    Base64.getDecoder()
+                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw==")
+                )
+            ) // for testing purposes
+            assistant(
+                String(
+                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ==")
+                )
+            ) // for testing only
         }
 
         assert(
