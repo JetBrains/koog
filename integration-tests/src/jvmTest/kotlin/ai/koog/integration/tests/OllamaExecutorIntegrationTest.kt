@@ -9,11 +9,9 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.ollama.client.findByNameOrNull
 import ai.koog.prompt.llm.LLMCapability.*
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.markdown.markdown
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -41,6 +39,8 @@ class OllamaExecutorIntegrationTest {
         private lateinit var fixture: OllamaTestFixture
         private val executor get() = fixture.executor
         private val model get() = fixture.model
+        private val visionModel get() = fixture.visionModel
+        private val moderationModel get() = fixture.moderationModel
         private val client get() = fixture.client
 
         private lateinit var testResourcesDir: Path
@@ -652,7 +652,7 @@ class OllamaExecutorIntegrationTest {
             ) // For testing purposes
         }
 
-        val result = executor.moderate(prompt = prompt, model = OllamaModels.Meta.LLAMA_GUARD_3)
+        val result = executor.moderate(prompt = prompt, model = moderationModel)
 
         println(result)
 
@@ -702,17 +702,17 @@ class OllamaExecutorIntegrationTest {
         }
 
         assert(
-            !executor.moderate(prompt = questionOnly, model = OpenAIModels.Moderation.Omni).isHarmful
+            !executor.moderate(prompt = questionOnly, model = moderationModel).isHarmful
         ) { "Question only should not be detected as harmful!" }
 
         assert(
-            !executor.moderate(prompt = answerOnly, model = OpenAIModels.Moderation.Omni).isHarmful
+            !executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful
         ) { "Answer alone should not be detected as harmful!" }
 
 
         val multiMessageReply = executor.moderate(
             prompt = promptWithMultipleMessages,
-            model = OpenAIModels.Moderation.Omni
+            model = moderationModel,
         )
 
         assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
@@ -730,13 +730,13 @@ class OllamaExecutorIntegrationTest {
     fun `ollama_test load models`() = runTest(timeout = 600.seconds) {
         val modelCards = client.getModels()
 
-        val modelCard = modelCards.findByNameOrNull(OllamaModels.Meta.LLAMA_3_2.id)
+        val modelCard = modelCards.findByNameOrNull(model.id)
         assertNotNull(modelCard)
     }
 
     @Test
     fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
-        val modelCard = client.getModelOrNull(OllamaModels.Meta.LLAMA_3_2.id)
+        val modelCard = client.getModelOrNull(model.id)
         assertNotNull(modelCard)
 
         assertEquals("llama3.2:latest", modelCard.name)
@@ -768,7 +768,6 @@ class OllamaExecutorIntegrationTest {
     fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
         val ollamaException =
             "Ollama API error: Failed to create new sequence: failed to process inputs"
-        val visionModel = fixture.visionModel
         assumeTrue(visionModel.capabilities.contains(Vision.Image), "Model must support vision capability")
 
         val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)

@@ -22,6 +22,7 @@ class OllamaTestFixture {
     lateinit var executor: SingleLLMPromptExecutor
     val model = OllamaModels.Meta.LLAMA_3_2
     val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
+    val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
 
     fun setUp() {
         ollamaContainer = GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
@@ -41,6 +42,7 @@ class OllamaTestFixture {
         runBlocking {
             client.getModelOrNull(model.id, pullIfMissing = true)
             client.getModelOrNull(visionModel.id, pullIfMissing = true)
+            client.getModelOrNull(moderationModel.id, pullIfMissing = true)
         }
 
         executor = SingleLLMPromptExecutor(client)
