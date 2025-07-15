@@ -12,10 +12,16 @@ java {
     withJavadocJar()
 }
 
+val javadocJar by tasks.registering(Jar::class) {
+    archiveClassifier.set("javadoc")
+    from(tasks.javadoc)
+}
+
 publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
+            artifact(javadocJar)
         }
     }
 }
