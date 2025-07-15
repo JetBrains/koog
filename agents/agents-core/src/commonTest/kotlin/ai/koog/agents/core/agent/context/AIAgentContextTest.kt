@@ -19,10 +19,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNotSame
+import kotlin.test.*
 
 class AIAgentContextTest {
 
@@ -74,46 +71,30 @@ class AIAgentContextTest {
         assertEquals(featureValue, retrievedFromStorage)
     }
 
-    /**
-     * Test for the edge case when a feature is not found in storage.
-     * This test verifies that storage.get() returns null when a key is not found.
-     */
     @Test
     fun testFeatureRetrievalNotFound() = runTest {
         val featureKey = AIAgentStorageKey<String>("non-existent-feature")
-
-        // Create a context
         val context = createTestContext()
 
-        // Verify that getting a non-existent feature returns null
         val retrievedFromStorage = context.storage.get(featureKey)
-        assertEquals(null, retrievedFromStorage)
+        assertNull(retrievedFromStorage)
     }
 
-    /**
-     * Test for the edge case when a feature is overwritten in storage.
-     * This test verifies that storage.set() overwrites an existing value.
-     */
     @Test
     fun testFeatureOverwrite() = runTest {
         val featureKey = AIAgentStorageKey<String>("test-feature")
         val initialValue = "initial-value"
         val updatedValue = "updated-value"
 
-        // Create a context
         val context = createTestContext()
 
-        // Add the initial feature value
+        // initial feature value
         context.storage.set(featureKey, initialValue)
-
-        // Verify the initial value
         val initialRetrieved = context.storage.get(featureKey)
         assertEquals(initialValue, initialRetrieved)
 
-        // Overwrite the feature value
+        // overwritten feature value
         context.storage.set(featureKey, updatedValue)
-
-        // Verify the updated value
         val updatedRetrieved = context.storage.get(featureKey)
         assertEquals(updatedValue, updatedRetrieved)
     }

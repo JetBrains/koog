@@ -35,36 +35,6 @@ class NodeInfoContextElementTest {
     }
 
     @Test
-    fun testGetElementFromContext() = runTest {
-        val element = NodeInfoContextElement(nodeName = "test-node")
-
-        // Create a coroutine context with the element
-        val context = withContext(element) {
-            // Get the element from the current coroutine context
-            val retrievedElement = coroutineContext[NodeInfoContextElement.Key]
-
-            assertNotNull(retrievedElement)
-            assertEquals(element, retrievedElement)
-
-            coroutineContext
-        }
-
-        // Verify the element is in the returned context
-        val retrievedElement = context[NodeInfoContextElement.Key]
-        assertNotNull(retrievedElement)
-        assertEquals(element, retrievedElement)
-    }
-
-    @Test
-    fun testGetElementFromEmptyContext() = runTest {
-        // Try to get the element from an empty coroutine context
-        val retrievedElement = coroutineContext[NodeInfoContextElement.Key]
-
-        // Verify the element is not found
-        assertNull(retrievedElement)
-    }
-
-    @Test
     fun testGetNodeInfoElement() = runTest {
         val element = NodeInfoContextElement(nodeName = "test-node")
 
@@ -99,13 +69,10 @@ class NodeInfoContextElementTest {
             strategyName = "test-strategy"
         )
 
-        // Create a coroutine context with both elements
         withContext(nodeElement + agentElement) {
-            // Get both elements from the context
             val retrievedNodeElement = coroutineContext.getNodeInfoElement()
             val retrievedAgentElement = coroutineContext[AgentRunInfoContextElement.Key]
 
-            // Verify both elements are found
             assertNotNull(retrievedNodeElement)
             assertNotNull(retrievedAgentElement)
             assertEquals(nodeElement, retrievedNodeElement)

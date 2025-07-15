@@ -59,7 +59,7 @@ class AgentRunInfoContextElementTest {
 
         assertEquals(element1, element2)
         assertEquals(element1.hashCode(), element2.hashCode())
-        kotlin.test.assertNotEquals(element1, element3)
+        assertNotEquals(element1, element3)
     }
 
     @Test
@@ -71,9 +71,7 @@ class AgentRunInfoContextElementTest {
             strategyName = "test-strategy"
         )
 
-        // Create a coroutine context with the element
         val context = withContext(element) {
-            // Get the element from the current coroutine context
             val retrievedElement = coroutineContext[AgentRunInfoContextElement.Key]
 
             assertNotNull(retrievedElement)
@@ -89,15 +87,6 @@ class AgentRunInfoContextElementTest {
     }
 
     @Test
-    fun testGetElementFromEmptyContext() = runTest {
-        // Try to get the element from an empty coroutine context
-        val retrievedElement = coroutineContext[AgentRunInfoContextElement.Key]
-
-        // Verify the element is not found
-        assertNull(retrievedElement)
-    }
-
-    @Test
     fun testGetElementOrThrow() = runTest {
         val element = AgentRunInfoContextElement(
             agentId = "test-agent",
@@ -106,19 +95,16 @@ class AgentRunInfoContextElementTest {
             strategyName = "test-strategy"
         )
 
-        // Test with element in context
         withContext(element) {
             val retrievedElement = coroutineContext.getAgentRunInfoElementOrThrow()
             assertEquals(element, retrievedElement)
         }
 
-        // Test with no element in context
         assertFailsWith<IllegalStateException> {
             coroutineContext.getAgentRunInfoElementOrThrow()
         }
     }
 
-    // Helper methods
 
     private fun createTestConfig(): AIAgentConfigBase {
         return AIAgentConfig(
@@ -130,7 +116,6 @@ class AgentRunInfoContextElementTest {
     }
 
     private fun createTestPrompt(): Prompt {
-        // Create an empty prompt for testing
         return prompt("test-prompt") {}
     }
 }
