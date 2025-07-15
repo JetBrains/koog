@@ -35,6 +35,9 @@ import kotlinx.io.files.Path as KtPath
 @ExtendWith(OllamaTestFixtureExtension::class)
 class OllamaExecutorIntegrationTest {
     companion object {
+        /*
+        * Comment on this part if you want to run tests against a local Ollama client.
+        * */
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture
         private val executor get() = fixture.executor
@@ -42,6 +45,15 @@ class OllamaExecutorIntegrationTest {
         private val visionModel get() = fixture.visionModel
         private val moderationModel get() = fixture.moderationModel
         private val client get() = fixture.client
+
+        /*
+        * Uncomment this part and add required imports if you want to run tests against a local Ollama client.
+        val client = OllamaClient()
+        val executor = SingleLLMPromptExecutor(client)
+        val model = OllamaModels.Meta.LLAMA_3_2
+        val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
+        val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
+        * */
 
         private lateinit var testResourcesDir: Path
 
@@ -708,15 +720,12 @@ class OllamaExecutorIntegrationTest {
 
         assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
 
-        println(multiMessageReply.violatedCategories)
-
         assert(
             multiMessageReply.violatesOneOf(
-                ModerationCategory.Illicit,
-                ModerationCategory.IllicitViolent,
-                ModerationCategory.Violence
+                ModerationCategory.Hate,
+                ModerationCategory.HateThreatening,
             )
-        ) { "Violence or crime must be detected!" }
+        ) { "Hate must be detected!" }
     }
 
     @Test
