@@ -696,7 +696,7 @@ class OllamaExecutorIntegrationTest {
             ) // for testing purposes
             assistant(
                 String(
-                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ==")
+                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRlc2VydmUgZGVhdGggb3IgdG8gYmUgc2VydmFudHMgdG8gdXMh")
                 )
             ) // for testing only
         }
