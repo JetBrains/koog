@@ -1,32 +1,35 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.utils.MediaTestScenarios
-import ai.koog.integration.tests.utils.MediaTestUtils
-import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.utils.MediaTestScenarios
+import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
-import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
+import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
+import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -38,10 +41,10 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.io.files.Path as KtPath
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -55,6 +58,7 @@ import kotlin.io.path.writeBytes
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.io.files.Path as KtPath
 
 class SingleLLMPromptExecutorIntegrationTest {
     companion object {
@@ -73,17 +77,34 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-            val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
+            /*val bedrockClientInstance = BedrockLLMClient(
+                readAwsAccessKeyIdFromEnv(),
+                readAwsSecretAccessKeyFromEnv(),
+                BedrockClientSettings()
+            )
+            // val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
+            */
 
             return Stream.concat(
                 Stream.concat(
                     Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
                     Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
                 ),
-                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) }
-                // Will enable when there're models that support tool calls
-                /*Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }*/
+                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
             )
+            // Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
+            // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
+        }
+
+        @JvmStatic
+        fun bedrockCombinations(): Stream<Arguments> {
+            val bedrockClientInstance = BedrockLLMClient(
+                readAwsAccessKeyIdFromEnv(),
+                readAwsSecretAccessKeyFromEnv(),
+                BedrockClientSettings(),
+            )
+
+            return Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
         }
 
         @JvmStatic
@@ -1009,6 +1030,46 @@ class SingleLLMPromptExecutorIntegrationTest {
                         response.content.contains("logo", ignoreCase = true),
                 "Response should mention the image content"
             )
+        }
+    }
+
+    /**
+     * Tests the simpleBedrockExecutor function with different Bedrock models.
+     *
+     * Some models may require an inference profile instead of on-demand throughput.
+     * The test may fail if the AWS account doesn't have access to the specified models.
+     */
+    @Disabled("Until we get a list of supported Bedrock models")
+    @ParameterizedTest
+    @MethodSource("bedrockCombinations")
+    fun integration_testSimpleBedrockExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
+        val executor = simpleBedrockExecutor(
+            readAwsAccessKeyIdFromEnv(),
+            readAwsSecretAccessKeyFromEnv()
+        )
+
+        val prompt = Prompt.build("test-simple-bedrock-executor") {
+            system("You are a helpful assistant.")
+            user("What is the capital of France?")
+        }
+
+        withRetry(times = 3, testName = "integration_testSimpleBedrockExecutor[${model.id}]") {
+            val response = executor.execute(prompt, model, emptyList())
+
+            assertNotNull(response, "Response should not be null")
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
+
+            val message = response.first() as Message.Assistant
+
+            assertTrue(
+                message.content.contains("Paris", ignoreCase = true),
+                "Response should contain 'Paris'"
+            )
+
+            assertNotNull(message.metaInfo.inputTokensCount, "Input tokens count should not be null")
+            assertNotNull(message.metaInfo.outputTokensCount, "Output tokens count should not be null")
+            assertNotNull(message.metaInfo.totalTokensCount, "Total tokens count should not be null")
         }
     }
 }

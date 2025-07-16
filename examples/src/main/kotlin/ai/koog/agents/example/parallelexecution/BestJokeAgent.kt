@@ -6,6 +6,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -14,6 +15,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.structure.json.JsonStructuredData
+import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
@@ -138,7 +140,10 @@ fun main(args: Array<String>) = runBlocking {
             LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
         ), strategy = strategy, agentConfig = agentConfig, toolRegistry = ToolRegistry.EMPTY
     ) {
-
+        install(OpenTelemetry) {
+            // Add a console logger for local debugging
+            addSpanExporter(LoggingSpanExporter.create())
+        }
     }
 
     val topic = "programming"

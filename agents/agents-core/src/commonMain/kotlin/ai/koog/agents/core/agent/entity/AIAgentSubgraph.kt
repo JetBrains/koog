@@ -3,6 +3,9 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
+import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
@@ -14,6 +17,7 @@ import ai.koog.prompt.structure.json.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
+import kotlin.reflect.KType
 
 /**
  * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
@@ -36,9 +40,40 @@ public open class AIAgentSubgraph<Input, Output>(
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
-) : AIAgentNodeBase<Input, Output>() {
+) : AIAgentNodeBase<Input, Output>(), ExecutionPointNode {
+    override val inputType: KType = start.inputType
+    override val outputType: KType = finish.outputType
+
     private companion object {
-        private val logger = KotlinLogging.logger("ai.koog.agents.core.agent.entity.${AIAgentSubgraph::class.simpleName}")
+        private val logger = KotlinLogging.logger { }
+    }
+
+    private var forcedNode: AIAgentNodeBase<*, *>? = null
+    private var forcedInput: Any? = null
+
+    override fun getExecutionPoint(): ExecutionPoint? {
+        val forcedNode = this.forcedNode
+        return if (forcedNode != null) {
+            ExecutionPoint(forcedNode, forcedInput)
+        } else {
+            null
+        }
+    }
+
+    override fun resetExecutionPoint() {
+        forcedNode = null
+        forcedInput = null
+    }
+
+    override fun enforceExecutionPoint(
+        node: AIAgentNodeBase<*, *>,
+        input: Any?
+    ) {
+        if (forcedNode != null || forcedInput != null) {
+            throw IllegalStateException("Forced node is already set to ${forcedNode!!.name}")
+        }
+        forcedNode = node
+        forcedInput = input
     }
 
     @Serializable
@@ -46,6 +81,36 @@ public open class AIAgentSubgraph<Input, Output>(
         @property:LLMDescription("List of selected tools for the given subtask")
         val tools: List<String>
     )
+
+    @OptIn(DetachedPromptExecutorAPI::class)
+    private suspend fun selectTools(context: AIAgentContextBase) = when (toolSelectionStrategy) {
+        is ToolSelectionStrategy.ALL -> context.llm.tools
+        is ToolSelectionStrategy.NONE -> emptyList()
+        is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
+        is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
+            val initialPrompt = prompt
+
+            replaceHistoryWithTLDR()
+
+            updatePrompt {
+                user {
+                    selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                }
+            }
+
+            val selectedTools = this.requestLLMStructured(
+                structure = JsonStructuredData.createJsonStructure<SelectedTools>(
+                    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                    examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                ),
+                retries = toolSelectionStrategy.maxRetries,
+            ).getOrThrow()
+
+            prompt = initialPrompt
+
+            tools.filter { it.name in selectedTools.structure.tools.toSet() }
+        }
+    }
 
     /**
      * Executes the desired operation based on the input and the provided context.
@@ -55,41 +120,11 @@ public open class AIAgentSubgraph<Input, Output>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
-    @OptIn(InternalAgentsApi::class)
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
-        val newTools = when (toolSelectionStrategy) {
-            ToolSelectionStrategy.ALL -> context.llm.tools
+    @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output? {
+        val newTools = selectTools(context)
 
-            ToolSelectionStrategy.NONE -> emptyList()
-
-            is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
-
-            is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
-                val initialPrompt = prompt
-
-                replaceHistoryWithTLDR()
-
-                updatePrompt {
-                    user {
-                        selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
-                    }
-                }
-
-                val selectedTools = this.requestLLMStructured(
-                    structure = JsonStructuredData.createJsonStructure<SelectedTools>(
-                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                        examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
-                    ),
-                    retries = toolSelectionStrategy.maxRetries,
-                ).getOrThrow()
-
-                prompt = initialPrompt
-
-                tools.filter { it.name in selectedTools.structure.tools.toSet() }
-            }
-        }
-
-        // Copy inner context with new tools, model and LLM params
+        // Copy inner context with new tools, model and LLM params.
         val innerContext = with(context) {
             copy(
                 llm = llm.copy(
@@ -100,24 +135,42 @@ public open class AIAgentSubgraph<Input, Output>(
             )
         }
 
-        /*
-         Execute subgraph with inner context and get result and updated prompt.
-         Restore original LLM params on the new prompt.
-        */
-        val result = doExecute(innerContext, input)
-        val newPrompt = innerContext.llm.readSession { prompt.copy(params = context.llm.prompt.params) }
+        // Execute the subgraph with an inner context and get the result and updated prompt.
+        val result = executeWithInnerContext(innerContext, input)
 
-        // Update outer context with new prompt
+        // Restore original LLM params on the new prompt.
+        val newPrompt = innerContext.llm.readSession {
+            prompt.copy(params = context.llm.prompt.params)
+        }
         context.llm.writeSession { prompt = newPrompt }
+
+        val innerForcedData = innerContext.getAgentContextData()
+
+        if (innerForcedData != null) {
+            context.store(innerForcedData)
+        }
 
         return result
     }
 
     @OptIn(InternalAgentsApi::class)
-    protected suspend fun doExecute(context: AIAgentContextBase, initialInput: Input): Output {
+    private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output? {
         logger.info { formatLog(context, "Executing subgraph $name") }
+
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
+
+        val executionPoint = getExecutionPoint()
+        if (executionPoint != null) {
+            currentNode = executionPoint.node
+            currentInput = executionPoint.input
+
+            logger.info { formatLog(context, "Enforcing execution point: ${currentNode.name}") }
+
+            resetExecutionPoint()
+        } else {
+            logger.info { formatLog(context, "No enforced execution point, starting from ${currentNode.name}") }
+        }
 
         while (currentNode != finish) {
             context.stateManager.withStateLock { state ->
@@ -134,8 +187,13 @@ public open class AIAgentSubgraph<Input, Output>(
 
             // run the current node and get its output
             logger.info { formatLog(context, "Executing node ${currentNode.name}") }
-            val nodeOutput = currentNode.executeUnsafe(context, currentInput)
+            val nodeOutput: Any? = currentNode.executeUnsafe(context, currentInput)
             logger.info { formatLog(context, "Completed node ${currentNode.name}") }
+
+            // forced context data means that we've requested interruption due to jump to other node / rolling back to checkpoint
+            if (context.getAgentContextData() != null) {
+                return null
+            }
 
             // find the suitable edge to move to the next node, get the transformed output
             val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput)
@@ -151,7 +209,7 @@ public open class AIAgentSubgraph<Input, Output>(
 
         logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
-        return (currentInput as? Output) ?: run {
+        val result = (currentInput as? Output) ?: run {
             logger.error {
                 formatLog(
                     context,
@@ -160,6 +218,7 @@ public open class AIAgentSubgraph<Input, Output>(
             }
             throw IllegalStateException("${FinishNode::class.simpleName} should always return String")
         }
+        return result
     }
 
     private fun formatLog(context: AIAgentContextBase, message: String): String =

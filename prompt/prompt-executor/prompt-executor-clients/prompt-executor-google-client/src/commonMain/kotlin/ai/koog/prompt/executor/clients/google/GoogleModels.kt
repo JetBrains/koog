@@ -1,6 +1,19 @@
 package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5Flash
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5Flash002
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5Flash8B
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5Flash8BLatest
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5FlashLatest
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5Pro
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5Pro002
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini1_5ProLatest
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash001
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0FlashLite
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Flash
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Pro
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -22,10 +35,10 @@ import ai.koog.prompt.llm.LLModel
  * | [Gemini1_5Flash002]         | Fast      | $0.075-$0.15 / $0.30-$0.60   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Flash8B]          | Very fast | $0.0375-$0.075 / $0.15-$0.30 | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini1_5Flash8BLatest]    | Very fast | $0.0375-$0.075 / $0.15-$0.30 | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5ProPreview0506]   | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5FlashPreview0417] | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
  */
-public object GoogleModels: LLModelDefinitions {
+public object GoogleModels : LLModelDefinitions {
     /**
      * Basic capabilities shared across all Gemini models
      */
@@ -187,22 +200,20 @@ public object GoogleModels: LLModelDefinitions {
     )
 
     /**
-     * Gemini 2.5 Pro Preview 05-06 is one of the Gemini 2.5 Pro preview versions.
-     * It offers advanced capabilities for complex tasks.
+     * Gemini 2.5 Pro offers advanced capabilities for complex tasks.
      */
-    public val Gemini2_5ProPreview0506: LLModel = LLModel(
+    public val Gemini2_5Pro: LLModel = LLModel(
         provider = LLMProvider.Google,
-        id = "gemini-2.5-pro-preview-05-06",
-        capabilities = fullCapabilities // 2.5 Pro Preview has tool support
+        id = "gemini-2.5-pro",
+        capabilities = fullCapabilities
     )
 
     /**
-     * Gemini 2.5 Flash Preview 04-17 is one of the Gemini 2.5 Flash preview versions.
-     * It offers a balance of speed and capability.
+     * Gemini 2.5 Flash offers a balance of speed and capability.
      */
-    public val Gemini2_5FlashPreview0417: LLModel = LLModel(
+    public val Gemini2_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
-        id = "gemini-2.5-flash-preview-04-17",
+        id = "gemini-2.5-flash",
         capabilities = multimodalCapabilities
     )
 }

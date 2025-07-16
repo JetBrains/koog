@@ -18,11 +18,13 @@ kotlin {
                 api(libs.kotlinx.serialization.json)
             }
         }
-        
+
         jvmTest {
             dependencies {
+                implementation(kotlin("test-junit5"))
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.mockk)
             }
         }
     }

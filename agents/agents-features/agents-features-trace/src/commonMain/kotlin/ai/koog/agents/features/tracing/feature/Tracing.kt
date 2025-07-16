@@ -197,7 +197,8 @@ public class Tracing {
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.eventString,
-                    responses = eventContext.responses
+                    responses = eventContext.responses,
+                    moderationResponse = eventContext.moderationResponse
                 )
                 processMessage(config, event)
             }

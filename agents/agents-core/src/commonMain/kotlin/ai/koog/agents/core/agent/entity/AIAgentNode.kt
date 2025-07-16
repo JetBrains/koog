@@ -4,6 +4,8 @@ import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import kotlinx.coroutines.withContext
+import kotlin.reflect.KType
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
@@ -12,6 +14,7 @@ import kotlinx.coroutines.withContext
  * @param Input The type of input data this node processes.
  * @param Output The type of output data this node produces.
  */
+@OptIn(ExperimentalUuidApi::class)
 public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     /**
      * The name of the AI agent node.
@@ -19,6 +22,22 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * and is used to distinguish and reference nodes in the graph structure.
      */
     public abstract val name: String
+
+
+    /**
+     * The [KType] of the [Input]
+     */
+    public abstract val inputType: KType
+
+    /**
+     * The [KType] of the [Output]
+     */
+    public abstract val outputType: KType
+
+    /**
+     * Represents the unique identifier of the AI agent node.
+     */
+    public val id: String get() = name
 
     /**
      * Represents the directed edges connecting the current node in the AI agent strategy graph
@@ -85,7 +104,6 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @suppress
      */
     @Suppress("UNCHECKED_CAST")
-    @InternalAgentsApi
     public suspend fun resolveEdgeUnsafe(context: AIAgentContextBase, nodeOutput: Any?): ResolvedEdge? =
         resolveEdge(context, nodeOutput as Output)
 
@@ -96,7 +114,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @param input The input data required to perform the execution.
      * @return The result of the execution as an Output object.
      */
-    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output
+    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output?
 
     /**
      * Executes the node operation using the provided execution context and input, bypassing type safety checks.
@@ -108,16 +126,8 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @return The result of the execution, which may be of any type depending on the implementation.
      */
     @Suppress("UNCHECKED_CAST")
-    @InternalAgentsApi
-    public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? {
-        return withContext(NodeInfoContextElement(nodeName = name)) {
-            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNodeBase, input = input)
-            val output = execute(context, input as Input)
-            context.pipeline.onAfterNode(context = context, node = this@AIAgentNodeBase, input = input, output = output)
-
-            return@withContext output
-        }
-    }
+    public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? =
+        execute(context, input as Input)
 }
 
 /**
@@ -130,11 +140,23 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
-internal class AIAgentNode<Input, Output> internal constructor(
+public open class AIAgentNode<Input, Output> internal constructor(
     override val name: String,
-    val execute: suspend AIAgentContextBase.(input: Input) -> Output
+    override val inputType: KType,
+    override val outputType: KType,
+    public val execute: suspend AIAgentContextBase.(input: Input) -> Output,
+
 ) : AIAgentNodeBase<Input, Output>() {
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output = context.execute(input)
+
+    @InternalAgentsApi
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
+        return withContext(NodeInfoContextElement(nodeName = name)) {
+            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNode, input = input, inputType = inputType)
+            val nodeOutput = context.execute(input)
+            context.pipeline.onAfterNode(context = context, node = this@AIAgentNode, input = input, output = nodeOutput, inputType = inputType, outputType = outputType)
+            return@withContext nodeOutput
+        }
+    }
 }
 
 /**
@@ -149,25 +171,18 @@ internal class AIAgentNode<Input, Output> internal constructor(
  * execution flow in multi-subgraph setups.
  *
  * @param Input The type of input data this node processes and produces as output.
+ * @param subgraphName The name of the related subgraph
+ * @param type [KType] representing [Input]
  */
-public class StartNode<Input> internal constructor() : AIAgentNodeBase<Input, Input>() {
-    /**
-     * The name of the subgraph associated with the AI agent's starting node.
-     *
-     * This property serves as an identifier or label for the subgraph, helping to distinguish
-     * and reference specific AI workflows or strategies. It can be null if no subgraph
-     * name has been assigned.
-     *
-     * Internal changes to this property are restricted to ensure controlled modification, as the setter
-     * is marked internal. Its value may influence how the AI agent node generates its unique name.
-     */
-    public var subgraphName: String? = null
-        internal set
-
-    override val name: String get() = subgraphName?.let { "__start__$it" } ?: "__start__"
-
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Input = input
-}
+public class StartNode<Input> internal constructor(
+    subgraphName: String? = null,
+    type: KType,
+) : AIAgentNode<Input, Input>(
+    name = subgraphName?.let { "__start__$it" } ?: "__start__",
+    inputType = type,
+    outputType = type,
+    execute = { input -> input }
+)
 
 /**
  * Represents a specialized node within an AI agent strategy graph that marks the endpoint of a subgraph.
@@ -182,25 +197,19 @@ public class StartNode<Input> internal constructor() : AIAgentNodeBase<Input, In
  * execution flow in multi-subgraph setups.
  *
  * @param Output The type of data this node processes and produces.
+ * @param subgraphName The name of the related subgraph
+ * @param type [KType] representing [Output]
  */
-public class FinishNode<Output> internal constructor() : AIAgentNodeBase<Output, Output>() {
-    /**
-     * Stores the name of the subgraph associated with the node.
-     *
-     * This variable is used to identify or tag subgraphs in AI agent strategies.
-     * If `subgraphName` is set, it will be integrated into the node's identity or behavior,
-     * such as forming a unique name for the node.
-     *
-     * This property is mutable within the internal scope, but read-only from external scopes.
-     */
-    public var subgraphName: String? = null
-        internal set
-
-    override val name: String = subgraphName?.let { "__finish__$it" } ?: "__finish__"
-
+public class FinishNode<Output> internal constructor(
+    subgraphName: String? = null,
+    type: KType,
+) : AIAgentNode<Output, Output>(
+    name = subgraphName?.let { "__finish__$it" } ?: "__finish__",
+    inputType = type,
+    outputType = type,
+    execute = { input -> input }
+) {
     override fun addEdge(edge: AIAgentEdge<Output, *>) {
-        throw IllegalStateException("FinishSubgraphNode cannot have outgoing edges")
+        throw IllegalStateException("${this::class.simpleName} cannot have outgoing edges")
     }
-
-    override suspend fun execute(context: AIAgentContextBase, input: Output): Output = input
 }

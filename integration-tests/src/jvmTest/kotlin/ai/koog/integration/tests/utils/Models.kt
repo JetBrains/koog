@@ -4,6 +4,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -55,7 +56,7 @@ object Models {
         return Stream.of(
             GoogleModels.Gemini1_5Pro,
             GoogleModels.Gemini1_5ProLatest,
-            GoogleModels.Gemini2_5ProPreview0506,
+            GoogleModels.Gemini2_5Pro,
 
             GoogleModels.Gemini2_0Flash,
             GoogleModels.Gemini2_0Flash001,
@@ -67,7 +68,18 @@ object Models {
             GoogleModels.Gemini1_5Flash8B,
             GoogleModels.Gemini1_5Flash8B001,
             GoogleModels.Gemini1_5Flash8BLatest,
-            GoogleModels.Gemini2_5FlashPreview0417,
+            GoogleModels.Gemini2_5Flash,
+        )
+    }
+
+    // listing not all profiles but one from each LLM provider
+    @JvmStatic
+    fun bedrockModels(): Stream<LLModel> {
+        return Stream.of(
+            BedrockModels.AI21JambaMini,
+            BedrockModels.AmazonNovaLite,
+            BedrockModels.AnthropicClaude35Haiku,
+            BedrockModels.MetaLlama3_1_8BInstruct,
         )
     }
 

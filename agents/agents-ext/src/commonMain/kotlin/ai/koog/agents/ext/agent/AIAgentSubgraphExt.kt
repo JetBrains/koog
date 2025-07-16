@@ -188,12 +188,12 @@ public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraph
  * but may also alter agent context, prompt, storage, etc.
  */
 @AIAgentBuilderDslMarker
-public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    defineTask: suspend AIAgentContextBase.(input: Input) -> String
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, ProvidedResult> = subgraph(
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
@@ -272,12 +272,12 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    defineTask: suspend AIAgentContextBase.(input: Input) -> String
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, ProvidedResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     finishTool = finishTool,
@@ -291,11 +291,11 @@ public fun <Input, ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    defineTask: suspend AIAgentContextBase.(input: Input) -> String
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = toolSelectionStrategy,
     finishTool = ProvideStringSubgraphResult,
@@ -319,11 +319,11 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    defineTask: suspend AIAgentContextBase.(input: Input) -> String
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, StringSubgraphResult> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     llmModel = llmModel,
@@ -337,11 +337,11 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    defineTask: suspend AIAgentContextBase.(input: Input) -> String
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithTask(
     finishTool = ProvideVerifiedSubgraphResult,
     toolSelectionStrategy = toolSelectionStrategy,
@@ -368,11 +368,11 @@ public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public fun <Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    defineTask: suspend AIAgentContextBase.(input: Input) -> String
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithVerification(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     llmModel = llmModel,

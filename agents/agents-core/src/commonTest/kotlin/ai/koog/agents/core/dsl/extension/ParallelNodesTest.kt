@@ -3,7 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.dsl.builder.NodeExecutionResult
+import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -104,7 +104,7 @@ class ParallelNodesTest {
                     "Correct: Node ${it.nodeName} sees no changes from other nodes"
                 }.joinToString("\n")
 
-                NodeExecutionResult(output, this)
+                ParallelNodeExecutionResult(output, this)
             }
 
             // Connect the nodes

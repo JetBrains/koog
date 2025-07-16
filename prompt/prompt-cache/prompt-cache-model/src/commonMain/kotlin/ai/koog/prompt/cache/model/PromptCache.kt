@@ -3,6 +3,20 @@ package ai.koog.prompt.cache.model
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.datetime.Clock
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlin.math.absoluteValue
+
+private val defaultJson = Json {
+    ignoreUnknownKeys = true
+    allowStructuredMapKeys = true
+}
 
 /**
  * Interface for caching prompt execution results.
@@ -115,20 +129,109 @@ public interface PromptCache {
     }
 
     /**
-     * Get a cached response for a prompt with tools, or null if not cached.
+     * Represents a request to be cached, consisting of a prompt and optional tools.
+     * This class is used by PromptCache implementations to store and retrieve cached responses.
      *
-     * @param prompt The prompt to get the cached response for
-     * @param tools The tools used with the prompt
-     * @return The cached response, or null if not cached
+     * @property prompt The prompt to be cached
+     * @property toolJsons Json representations of the tools
      */
-    public suspend fun get(prompt: Prompt, tools: List<ToolDescriptor> = emptyList()): List<Message.Response>?
+    @Serializable
+    public class Request private constructor (
+        public val prompt: Prompt,
+        public val toolJsons: List<JsonObject> = emptyList()
+    ) {
+        /**
+         * A unique identifier for the cache entry derived from the request's prompt and tools.
+         * This value is used by caching mechanisms to store and retrieve cached responses.
+         */
+        public val asCacheKey: String
+            get() {
+                // Create a new prompt with timestamps removed from all messages
+                val messagesWithoutMetaInfo = prompt.messages.map { message ->
+                    when (message) {
+                        is Message.User -> message.copy(metaInfo = RequestMetaInfo.Empty)
+                        is Message.System -> message.copy(metaInfo = RequestMetaInfo.Empty)
+                        is Message.Assistant -> message.copy(metaInfo = ResponseMetaInfo.Empty)
+                        is Message.Tool.Call -> message.copy(metaInfo = ResponseMetaInfo.Empty)
+                        is Message.Tool.Result -> message.copy(metaInfo = RequestMetaInfo.Empty)
+                    }
+                }
+
+                val requestWithoutMetaInfo = Request(Prompt(messagesWithoutMetaInfo, prompt.id, prompt.params), toolJsons)
+
+                return defaultJson.encodeToString(requestWithoutMetaInfo).hashCode().absoluteValue.toString(36)
+            }
+
+        /**
+         * Companion object for the Request class, providing factory functions and utility methods.
+         */
+        public companion object {
+            /**
+             * Creates a new [Request] instance with the provided prompt and a list of tools.
+             *
+             * @param prompt The [Prompt] object containing the messages, ID, and parameters to construct the request.
+             * @param tools A list of [ToolDescriptor] objects to be included in the request. Each tool is converted to a JSON representation.
+             * @return A new [Request] instance initialized with the given prompt and tool data.
+             */
+            public fun create(prompt: Prompt, tools: List<ToolDescriptor>): Request =
+                Request(prompt, tools.map { toolToJsonObject(it) })
+
+            /**
+             * Convert a ToolDescriptor to a JsonObject representation.
+             * This is a simplified version that just captures the tool name and description for caching purposes.
+             */
+            private fun toolToJsonObject(tool: ToolDescriptor): JsonObject = buildJsonObject {
+                put("name", JsonPrimitive(tool.name))
+                put("description", JsonPrimitive(tool.description))
+            }
+        }
+    }
 
     /**
-     * Put a response in the cache for a prompt with tools.
+     * Get a cached response for a request, or null if not cached.
      *
-     * @param prompt The prompt to cache the response for
-     * @param tools The tools used with the prompt
+     * @param request The request to get the cached response for
+     * @return The cached response, or null if not cached
+     */
+    public suspend fun get(request: Request): List<Message.Response>?
+
+    /**
+     * Put a response in the cache for a request.
+     *
+     * @param request The request to cache the response for
      * @param response The response to cache
      */
-    public suspend fun put(prompt: Prompt, tools: List<ToolDescriptor> = emptyList(), response: List<Message.Response>)
+    public suspend fun put(request: Request, response: List<Message.Response>)
+}
+
+/**
+ * Get a cached response for a prompt with tools, or null if not cached.
+ *
+ * @param prompt The prompt to get the cached response for
+ * @param tools The tools used with the prompt
+ * @return The cached response, or null if not cached
+ */
+public suspend fun PromptCache.get(prompt: Prompt, tools: List<ToolDescriptor>, clock: Clock = Clock.System): List<Message.Response>? {
+    return get(PromptCache.Request.create(prompt, tools))?.let { messages ->
+        val metaInfo = prompt
+            .messages
+            .filterIsInstance<Message.Response>()
+            .lastOrNull()
+            ?.metaInfo
+            ?.copy(timestamp = clock.now())
+            ?: ResponseMetaInfo.create(clock)
+
+        messages.map{ message -> message.copy(metaInfo) }
+    }
+}
+
+/**
+ * Put a response in the cache for a prompt with tools.
+ *
+ * @param prompt The prompt to cache the response for
+ * @param tools The tools used with the prompt
+ * @param response The response to cache
+ */
+public suspend fun PromptCache.put(prompt: Prompt, tools: List<ToolDescriptor>, response: List<Message.Response>) {
+    put(PromptCache.Request.create(prompt, tools), response)
 }

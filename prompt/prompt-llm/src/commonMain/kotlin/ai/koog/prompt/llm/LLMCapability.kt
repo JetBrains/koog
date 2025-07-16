@@ -142,6 +142,16 @@ public sealed class LLMCapability(public val id: String) {
     public data object PromptCaching: LLMCapability("promptCaching")
 
     /**
+     * Represents a capability in the Large Language Model (LLM) for content moderation.
+     *
+     * This capability allows the model to analyze text for potentially harmful content
+     * and classify it according to various categories such as harassment, hate speech,
+     * self-harm, sexual content, violence, etc.
+     */
+    @Serializable
+    public data object Moderation: LLMCapability("moderation")
+
+    /**
      * Represents a structured schema capability for a language model. The schema defines certain characteristics or
      * functionalities related to data interaction and encoding using specific formats.
      *

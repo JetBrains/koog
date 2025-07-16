@@ -4,6 +4,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.utils.SuitableForIO
+import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -44,12 +47,14 @@ import kotlin.uuid.Uuid
  * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
  * @property chatCompletionsPath The path of the OpenAI Chat Completions API. Defaults to "v1/chat/completions".
  * @property embeddingsPath The path of the OpenAI Embeddings API. Defaults to "v1/embeddings".
+ * @property moderationsPath The path of the OpenAI Moderations API. Defaults to "v1/moderations".
  */
 public class OpenAIClientSettings(
     public val baseUrl: String = "https://api.openai.com",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     public val chatCompletionsPath: String = "v1/chat/completions",
     public val embeddingsPath: String = "v1/embeddings",
+    public val moderationsPath: String = "v1/moderations",
 )
 
 /**
@@ -141,7 +146,11 @@ public open class OpenAILLMClient(
         }
     }
 
-    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> =
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> =
         processOpenAIResponse(getOpenAIResponse(prompt, model, tools))
 
     /**
@@ -184,6 +193,161 @@ public open class OpenAILLMClient(
         }
     }
 
+    /**
+     * Moderates text and image content based on the provided model's capabilities.
+     *
+     * @param prompt The prompt containing text messages and optional attachments to be moderated.
+     * @param model The language model to use for moderation. Must have the `Moderation` capability.
+     * @return The moderation result, including flagged content, categories, scores, and associated metadata.
+     * @throws IllegalArgumentException If the specified model does not support moderation.
+     */
+    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        logger.debug { "Moderating text and image content with model: $model" }
+
+        if (!model.capabilities.contains(LLMCapability.Moderation)) {
+            throw IllegalArgumentException("Model ${model.id} does not support moderation")
+        }
+
+        require(prompt.messages.isNotEmpty()) {
+            "Can't moderate an empty prompt"
+        }
+
+        val input = prompt.messages
+            .map { message ->
+                if (message is Message.WithAttachments) {
+                    require(message.attachments.all { it is Attachment.Image }) {
+                        "Only image attachments are supported for moderation"
+                    }
+                }
+
+                message.toOpenAIMessageContent(model)
+            }
+            .let { contents ->
+                /*
+                 If all messages contain only text, merge it all in a single text input,
+                 to support OpenAI-compatible providers that do not support attachments.
+
+                 Otherwise create a single content instance with all the parts
+                */
+                if (contents.all { it is Content.Text }) {
+                    val text = contents.joinToString(separator = "\n\n") { (it as Content.Text).value }
+
+                    Content.Text(text)
+                } else {
+                    val parts = contents.flatMap { content ->
+                        when (content) {
+                            is Content.Parts -> content.value
+                            is Content.Text -> listOf(ContentPart.Text(content.value))
+                        }
+                    }
+
+                    Content.Parts(parts)
+                }
+            }
+
+        val request = OpenAIModerationRequest(
+            input = input,
+            model = model.id
+        )
+
+        return withContext(Dispatchers.SuitableForIO) {
+            val response = httpClient.post(settings.moderationsPath) {
+                setBody(request)
+            }
+
+            if (response.status.isSuccess()) {
+                val openAIResponse = response.body<OpenAIModerationResponse>()
+                if (openAIResponse.results.isNotEmpty()) {
+                    val result = openAIResponse.results.first()
+
+                    // Convert OpenAI categories to a map
+                    val categories = mapOf(
+                        ModerationCategory.Harassment to result.categories.harassment,
+                        ModerationCategory.HarassmentThreatening to result.categories.harassmentThreatening,
+                        ModerationCategory.Hate to result.categories.hate,
+                        ModerationCategory.HateThreatening to result.categories.hateThreatening,
+                        ModerationCategory.Sexual to result.categories.sexual,
+                        ModerationCategory.SexualMinors to result.categories.sexualMinors,
+                        ModerationCategory.Violence to result.categories.violence,
+                        ModerationCategory.ViolenceGraphic to result.categories.violenceGraphic,
+                        ModerationCategory.SelfHarm to result.categories.selfHarm,
+                        ModerationCategory.SelfHarmIntent to result.categories.selfHarmIntent,
+                        ModerationCategory.SelfHarmInstructions to result.categories.selfHarmInstructions,
+                        ModerationCategory.Illicit to (result.categories.illicit ?: false),
+                        ModerationCategory.IllicitViolent to (result.categories.illicitViolent ?: false)
+                    )
+
+                    // Convert OpenAI category scores to a map
+                    val categoryScores = mapOf(
+                        ModerationCategory.Harassment to result.categoryScores.harassment,
+                        ModerationCategory.HarassmentThreatening to result.categoryScores.harassmentThreatening,
+                        ModerationCategory.Hate to result.categoryScores.hate,
+                        ModerationCategory.HateThreatening to result.categoryScores.hateThreatening,
+                        ModerationCategory.Sexual to result.categoryScores.sexual,
+                        ModerationCategory.SexualMinors to result.categoryScores.sexualMinors,
+                        ModerationCategory.Violence to result.categoryScores.violence,
+                        ModerationCategory.ViolenceGraphic to result.categoryScores.violenceGraphic,
+                        ModerationCategory.SelfHarm to result.categoryScores.selfHarm,
+                        ModerationCategory.SelfHarmIntent to result.categoryScores.selfHarmIntent,
+                        ModerationCategory.SelfHarmInstructions to result.categoryScores.selfHarmInstructions,
+                        ModerationCategory.Illicit to (result.categoryScores.illicit ?: 0.0),
+                        ModerationCategory.IllicitViolent to (result.categoryScores.illicitViolent ?: 0.0)
+                    )
+
+                    // Convert category applied input types if available
+                    val categoryAppliedInputTypes = result.categoryAppliedInputTypes?.let { appliedTypes ->
+                        buildMap {
+                            appliedTypes.harassment?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.Harassment, it) }
+                            appliedTypes.harassmentThreatening?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.HarassmentThreatening, it) }
+                            appliedTypes.hate?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.Hate, it) }
+                            appliedTypes.hateThreatening?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.HateThreatening, it) }
+                            appliedTypes.sexual?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.Sexual, it) }
+                            appliedTypes.sexualMinors?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.SexualMinors, it) }
+                            appliedTypes.violence?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.Violence, it) }
+                            appliedTypes.violenceGraphic?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.ViolenceGraphic, it) }
+                            appliedTypes.selfHarm?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.SelfHarm, it) }
+                            appliedTypes.selfHarmIntent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.SelfHarmIntent, it) }
+                            appliedTypes.selfHarmInstructions?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.SelfHarmInstructions, it) }
+                            appliedTypes.illicit?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.Illicit, it) }
+                            appliedTypes.illicitViolent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                                ?.let { put(ModerationCategory.IllicitViolent, it) }
+                        }
+                    } ?: emptyMap()
+
+                    ModerationResult(
+                        isHarmful = result.flagged,
+                        categories = categories.mapValues { (category, detected) ->
+                            ModerationCategoryResult(
+                                detected,
+                                categoryScores[category],
+                                categoryAppliedInputTypes[category] ?: emptyList()
+                            )
+                        }
+                    )
+                } else {
+                    logger.error { "Empty results in OpenAI moderation response" }
+                    error("Empty results in OpenAI moderation response")
+                }
+            } else {
+                val errorBody = response.bodyAsText()
+                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
+                error("Error from OpenAI API: ${response.status}: $errorBody")
+            }
+        }
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     private fun createOpenAIRequest(
         prompt: Prompt,
@@ -215,7 +379,12 @@ public open class OpenAILLMClient(
 
                 is Message.User -> {
                     flushCalls()
-                    messages.add(message.toOpenAIMessage(model))
+                    messages.add(
+                        OpenAIMessage(
+                            role = "user",
+                            content = message.toOpenAIMessageContent(model)
+                        )
+                    )
                 }
 
                 is Message.Assistant -> {
@@ -327,7 +496,7 @@ public open class OpenAILLMClient(
         return withContext(Dispatchers.SuitableForIO) {
             val response = httpClient.post(settings.chatCompletionsPath) {
                 setBody(request)
-           }
+            }
 
             if (response.status.isSuccess()) {
                 response.body<OpenAIResponse>()
@@ -339,8 +508,8 @@ public open class OpenAILLMClient(
         }
     }
 
-    private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
-        val messageContent: Content = if (attachments.isEmpty()) {
+    private fun Message.toOpenAIMessageContent(model: LLModel): Content {
+        return if (this !is Message.WithAttachments || attachments.isEmpty()) {
             Content.Text(content)
         } else {
             val parts = buildList {
@@ -401,8 +570,6 @@ public open class OpenAILLMClient(
 
             Content.Parts(parts)
         }
-
-        return OpenAIMessage(role = "user", content = messageContent)
     }
 
     private fun buildOpenAIParam(param: ToolParameterDescriptor): JsonObject = buildJsonObject {
@@ -499,10 +666,12 @@ public open class OpenAILLMClient(
                 listOf(
                     Message.Assistant(
                         content = message.audio.transcript ?: "",
-                        attachment = Attachment.Audio(
-                            content = AttachmentContent.Binary.Base64(message.audio.data),
-                            // FIXME not a proper solution. Seems like there is no data in response about format, need to clarify
-                            format = "unknown",
+                        attachments = listOf(
+                            Attachment.Audio(
+                                content = AttachmentContent.Binary.Base64(message.audio.data),
+                                // FIXME not a proper solution. Seems like there is no data in response about format, need to clarify
+                                format = "unknown",
+                            )
                         ),
                         finishReason = choice.finishReason,
                         metaInfo = metaInfo

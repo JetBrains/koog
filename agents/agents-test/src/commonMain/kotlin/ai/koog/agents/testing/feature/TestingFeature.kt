@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
+
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -27,6 +29,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
+import kotlin.reflect.KType
+import kotlin.uuid.ExperimentalUuidApi
 
 
 /**
@@ -736,6 +740,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
+                    agentInputType: KType?,
                     config: AIAgentConfigBase?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
@@ -843,6 +848,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
+                    agentInputType: KType?,
                     config: AIAgentConfigBase?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
@@ -1013,7 +1019,6 @@ public class Testing {
                     )
                 }
 
-                @OptIn(InternalAgentsApi::class)
                 config.assertEquals(
                     assertion.expectedOutput,
                     fromNode.executeUnsafe(
@@ -1025,7 +1030,6 @@ public class Testing {
                 )
             }
 
-            @OptIn(InternalAgentsApi::class)
             // Verify edges using DFS
             for (assertion in graphAssertions.edgeAssertions) {
                 val fromNode = assertion.node.resolve(graph)
@@ -1045,7 +1049,6 @@ public class Testing {
                 )
             }
 
-            @OptIn(InternalAgentsApi::class)
             // Verify edges using DFS
             for (assertion in graphAssertions.unconditionalEdgeAssertions) {
                 val fromNode = assertion.node.resolve(graph)

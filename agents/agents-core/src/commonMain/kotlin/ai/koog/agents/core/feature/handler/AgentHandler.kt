@@ -1,6 +1,8 @@
 package ai.koog.agents.core.feature.handler
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 
@@ -182,6 +184,30 @@ public fun interface AgentRunErrorHandler {
      * Handles an error that occurs during the execution of an agent's strategy.
      */
     public suspend fun handle(eventContext: AgentRunErrorContext)
+}
+
+/**
+ * Functional interface for handling logic that needs to be executed
+ * before an agent is closed.
+ *
+ * @param FeatureT The type of the feature associated with the context.
+ * @property strategy The AI agent strategy that defines the workflow and execution logic for the AI agent.
+ * @property agent The AI agent being managed or operated upon in the context.
+ * @property feature An additional feature or configuration associated with the context.
+ */
+public class AgentCreateContext<FeatureT>(
+    public val strategy: AIAgentStrategy<*, *>,
+    public val agent: AIAgent<*, *>,
+    public val feature: FeatureT
+) {
+    /**
+     * Executes a given block of code with the `AIAgentStrategy` instance of this context.
+     *
+     * @param block A suspending lambda function that receives the `AIAgentStrategy` instance.
+     */
+    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
+        block(strategy)
+    }
 }
 
 /**

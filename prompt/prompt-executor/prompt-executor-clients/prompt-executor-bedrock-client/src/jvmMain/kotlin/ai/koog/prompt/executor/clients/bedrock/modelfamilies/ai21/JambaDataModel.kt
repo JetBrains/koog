@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
 @Serializable
-public data class JambaRequest(
+internal data class JambaRequest(
     public val model: String,
     public val messages: List<JambaMessage>,
     @SerialName("max_tokens")
@@ -22,7 +22,7 @@ public data class JambaRequest(
 )
 
 @Serializable
-public data class JambaMessage(
+internal data class JambaMessage(
     public val role: String,
     public val content: String? = null,
     @SerialName("tool_calls")
@@ -32,38 +32,38 @@ public data class JambaMessage(
 )
 
 @Serializable
-public data class JambaTool(
+internal data class JambaTool(
     public val type: String = "function",
     public val function: JambaFunction
 )
 
 @Serializable
-public data class JambaFunction(
+internal data class JambaFunction(
     public val name: String,
     public val description: String,
     public val parameters: JsonObject
 )
 
 @Serializable
-public data class JambaToolCall(
+internal data class JambaToolCall(
     public val id: String,
     public val type: String = "function",
     public val function: JambaFunctionCall
 )
 
 @Serializable
-public data class JambaFunctionCall(
+internal data class JambaFunctionCall(
     public val name: String,
     public val arguments: String
 )
 
 @Serializable
-public data class JambaResponseFormat(
+internal data class JambaResponseFormat(
     public val type: String
 )
 
 @Serializable
-public data class JambaResponse(
+internal data class JambaResponse(
     public val id: String,
     public val model: String,
     public val choices: List<JambaChoice>,
@@ -71,7 +71,7 @@ public data class JambaResponse(
 )
 
 @Serializable
-public data class JambaChoice(
+internal data class JambaChoice(
     public val index: Int,
     public val message: JambaMessage,
     @SerialName("finish_reason")
@@ -79,7 +79,7 @@ public data class JambaChoice(
 )
 
 @Serializable
-public data class JambaUsage(
+internal data class JambaUsage(
     @SerialName("prompt_tokens")
     public val promptTokens: Int,
     @SerialName("completion_tokens")
@@ -89,14 +89,14 @@ public data class JambaUsage(
 )
 
 @Serializable
-public data class JambaStreamResponse(
+internal data class JambaStreamResponse(
     public val id: String,
     public val choices: List<JambaStreamChoice>,
     public val usage: JambaUsage? = null
 )
 
 @Serializable
-public data class JambaStreamChoice(
+internal data class JambaStreamChoice(
     public val index: Int,
     public val delta: JambaStreamDelta,
     @SerialName("finish_reason")
@@ -104,7 +104,7 @@ public data class JambaStreamChoice(
 )
 
 @Serializable
-public data class JambaStreamDelta(
+internal data class JambaStreamDelta(
     public val role: String? = null,
     public val content: String? = null,
     @SerialName("tool_calls")
