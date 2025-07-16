@@ -56,6 +56,7 @@ public object OpenAIModels : LLModelDefinitions {
             capabilities = listOf(
                 LLMCapability.Moderation, LLMCapability.Vision.Image
             ),
+            contextLength = 32_768,
         )
 
         /**
@@ -76,6 +77,7 @@ public object OpenAIModels : LLModelDefinitions {
             capabilities = listOf(
                 LLMCapability.Moderation
             ),
+            contextLength = 32_768,
         )
     }
 
@@ -429,6 +431,7 @@ public object OpenAIModels : LLModelDefinitions {
             capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             ),
+            contextLength = 8_191,
         )
 
         /**
@@ -456,6 +459,7 @@ public object OpenAIModels : LLModelDefinitions {
             capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             ),
+            contextLength = 8_191,
         )
 
         /**
@@ -481,6 +485,7 @@ public object OpenAIModels : LLModelDefinitions {
             capabilities = listOf(
                 LLMCapability.Schema.JSON.Full, LLMCapability.Embed
             ),
+            contextLength = 8_191,
         )
     }
 }
