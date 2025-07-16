@@ -101,7 +101,7 @@ val result = agent.run("Tell me about OpenTelemetry")
 println(result)
 
 // Wait for telemetry data to be exported
-TimeUnit.SECONDS.sleep(5)
+delay(5.seconds)
 ```
 
 This example demonstrates configuring an agent with OpenTelemetry, running it, and ensuring that telemetry data is exported before the application terminates.
