@@ -16,7 +16,7 @@ Key features include:
 - Automatic span creation for agent events (agent execution, node execution, LLM calls, tool calls)
 - Support for various exporters (OTLP, Logging)
 - Customizable sampling strategies
-- Resource attributes following OpenTelemetry Semantic Convention for GenAI
+- Resource attributes following [OpenTelemetry Semantic Convention for GenAI](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
 - Integration with observability systems like Jaeger
 
 ### Using in your project
