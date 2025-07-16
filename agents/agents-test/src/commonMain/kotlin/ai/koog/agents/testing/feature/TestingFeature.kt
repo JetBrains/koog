@@ -29,6 +29,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
+import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
 
@@ -739,6 +740,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
+                    agentInputType: KType?,
                     config: AIAgentConfigBase?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
@@ -846,6 +848,7 @@ public class Testing {
                 override fun copy(
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
+                    agentInputType: KType?,
                     config: AIAgentConfigBase?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,

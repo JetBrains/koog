@@ -77,7 +77,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
 
     ```
     dependencies {
-        implementation("ai.koog:koog-agents:0.2.1")
+        implementation("ai.koog:koog-agents:0.3.0")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -87,7 +87,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
 
     ```
     dependencies {
-        implementation 'ai.koog:koog-agents:0.2.1'
+        implementation 'ai.koog:koog-agents:0.3.0'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -99,7 +99,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents</artifactId>
-        <version>0.2.1</version>
+        <version>0.3.0</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.

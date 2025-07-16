@@ -15,7 +15,7 @@ import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-public object BedrockAI21JambaSerialization {
+internal object BedrockAI21JambaSerialization {
 
     private val logger = KotlinLogging.logger {}
 

@@ -17,11 +17,10 @@ import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -37,7 +36,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.io.files.Path as KtPath
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.ParameterizedTest
@@ -45,15 +43,18 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.*
 import java.util.stream.Stream
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
 import kotlin.io.path.writeBytes
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.io.files.Path as KtPath
 
 class MultipleLLMPromptExecutorIntegrationTest {
 
@@ -145,7 +146,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         else -> openAIClient
     }
 
-    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
+    private fun createCalculatorPrompt() = prompt("test-tools") {
         system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
         user("What is 123 + 456?")
     }
@@ -156,7 +157,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
 
 
-        val prompt = Prompt.build("test-prompt") {
+        val prompt = prompt("test-prompt") {
             system("You are a helpful assistant.")
             user("What is the capital of France?")
         }
@@ -181,7 +182,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             assumeTrue(false, "There is no text response for audio models.")
         }
 
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = prompt("test-streaming") {
             system("You are a helpful assistant.")
             user("Count from 1 to 5.")
         }
@@ -210,7 +211,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools))
 
-        val prompt = Prompt.build("test-code") {
+        val prompt = prompt("test-code") {
             system("You are a helpful coding assistant.")
             user(
                 "Write a simple Kotlin function to calculate the factorial of a number. " +
@@ -238,8 +239,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -264,7 +263,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
@@ -285,8 +284,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -318,7 +315,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST.")
             user("What is 123 + 456?")
         }
@@ -338,8 +335,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -369,7 +364,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a calculator tool.")
             user("What is 123 + 456?")
         }
@@ -389,8 +384,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = ToolDescriptor(
@@ -405,7 +398,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             optionalParameters = emptyList()
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to calculator tools. Use the best one.")
             user("What is 123 + 456?")
         }
@@ -425,8 +418,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val colorPickerTool = ToolDescriptor(
@@ -442,7 +433,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
             user("Pick me a color!")
         }
@@ -463,8 +454,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val lotteryPickerTool = ToolDescriptor(
@@ -479,7 +468,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
+        val prompt = prompt("test-tools") {
             system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
             user("Pick me lottery winners and losers! 5 of each")
         }
@@ -502,7 +491,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "There is no text response for audio models.")
         }
-        val prompt = Prompt.build("test-streaming") {
+        val prompt = prompt("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
             user("Count from 1 to 5.")
         }
@@ -544,7 +533,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val countries = mutableListOf<TestUtils.Country>()
         val countryDefinition = TestUtils.markdownCountryDefinition()
 
-        val prompt = Prompt.build("test-structured-streaming") {
+        val prompt = prompt("test-structured-streaming") {
             system("You are a helpful assistant.")
             user(
                 """
@@ -576,8 +565,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
@@ -606,8 +593,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
@@ -617,7 +602,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
             val response =
                 client.execute(
-                    Prompt.build("test-tools") {
+                    prompt("test-tools") {
                         system("You are a helpful assistant. Do not use calculator tool, it's broken!")
                         user("What is 123 + 456?")
                     }.withParams(
@@ -638,8 +623,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNamed(model: LLModel) = runTest(timeout = 300.seconds) {
-        // ToDo remove after fix
-        assumeTrue(model != GoogleModels.Gemini2_5ProPreview0506, "JBAI-14481")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
@@ -1041,5 +1024,85 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 "Response should mention the image content"
             )
         }
+    }
+
+    @Test
+    fun integration_testOpenAISingleMessageModeration() = runTest {
+        val prompt = prompt("test-harmful-content") {
+            user(String(Base64.getDecoder().decode("SG93IGNhbiBJIGhhcm0gc29tZW9uZT8="))) // For testing purposes
+        }
+
+        val result = executor.moderate(prompt = prompt, model = OpenAIModels.Moderation.Omni)
+
+        println(result)
+
+        assertTrue(result.isHarmful, "Harmful content should be detected!")
+        assert(
+            result.violatesOneOf(
+                ModerationCategory.Illicit,
+                ModerationCategory.IllicitViolent,
+                ModerationCategory.Violence
+            )
+        ) { "Violence or crime must be detected!" }
+    }
+
+    @Test
+    fun integration_testOpenAIMultipleMessagesModeration() = runTest {
+        // Not harmful (without the answer)
+        val questionOnly = prompt("test-legit-question") {
+            user(
+                String(
+                    Base64.getDecoder()
+                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw==")
+                )
+            ) // for testing purposes
+        }
+        // Not harmful (without the question in the context)
+        val answerOnly = prompt("test-legit-answer") {
+            assistant(
+                String(
+                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ==")
+                )
+            ) // for testing only
+        }
+
+        // Harmful and offensive (question + answer together in the same context)
+        val promptWithMultipleMessages = prompt("test") {
+            user(
+                String(
+                    Base64.getDecoder()
+                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw==")
+                )
+            ) // for testing purposes
+            assistant(
+                String(
+                    Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ==")
+                )
+            ) // for testing only
+        }
+
+        assert(
+            !executor.moderate(prompt = questionOnly, model = OpenAIModels.Moderation.Omni).isHarmful
+        ) { "Question only should not be detected as harmful!" }
+
+        assert(
+            !executor.moderate(prompt = answerOnly, model = OpenAIModels.Moderation.Omni).isHarmful
+        ) { "Answer alone should not be detected as harmful!" }
+
+
+        val multiMessageReply = executor.moderate(
+            prompt = promptWithMultipleMessages,
+            model = OpenAIModels.Moderation.Omni
+        )
+
+        assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
+
+        assert(
+            multiMessageReply.violatesOneOf(
+                ModerationCategory.Illicit,
+                ModerationCategory.IllicitViolent,
+                ModerationCategory.Violence
+            )
+        ) { "Violence must be detected!" }
     }
 }

@@ -22,5 +22,5 @@ interface AgentProvider {
         onToolCallEvent: suspend (String) -> Unit,
         onErrorEvent: suspend (String) -> Unit,
         onAssistantMessage: suspend (String) -> String
-    ): AIAgent
+    ): AIAgent<String, String>
 }

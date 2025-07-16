@@ -1,7 +1,10 @@
 package ai.koog.prompt.executor.cached
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.prompt.cache.model.*
+import ai.koog.prompt.cache.model.PromptCache
+import ai.koog.prompt.cache.model.get
+import ai.koog.prompt.cache.model.put
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -45,4 +48,6 @@ public class CachedPromptExecutor(
     private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): List<Message.Response> {
         return cache.get(prompt, tools, clock) ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
     }
+
+    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = nested.moderate(prompt, model)
 }

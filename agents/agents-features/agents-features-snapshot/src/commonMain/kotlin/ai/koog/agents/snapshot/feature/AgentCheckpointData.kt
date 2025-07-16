@@ -7,6 +7,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.Serializable
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents the checkpoint data for an agent's state during a session.
@@ -19,10 +20,9 @@ import kotlinx.datetime.Instant
 @Serializable
 public data class AgentCheckpointData(
     val checkpointId: String,
-    val agentId: String,
     val createdAt: Instant,
     val nodeId: String,
-    val lastInput: String?,
+    val lastInput: JsonElement,
     val messageHistory: List<Message>,
 )
 

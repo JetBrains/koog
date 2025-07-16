@@ -18,20 +18,26 @@ internal class ChoiceEvent(
     }
 
     override val bodyFields: List<EventBodyField> = buildList {
+        add(EventBodyFields.Index(0))
+
         when (message) {
             is Message.Assistant -> {
-                add(EventBodyFields.Index(0))
                 message.finishReason?.let { reason ->
                     add(EventBodyFields.FinishReason(reason))
                 }
-                add(EventBodyFields.Message(
-                    role = message.role.takeIf { role -> role != Message.Role.Assistant },
-                    content = message.content
-                ))
+
+                if (verbose) {
+                    add(EventBodyFields.Message(
+                        role = message.role.takeIf { role -> role != Message.Role.Assistant },
+                        content = message.content
+                    ))
+                }
             }
+
             is Message.Tool.Call -> {
-                add(EventBodyFields.Index(0))
-                add(EventBodyFields.ToolCalls(tools = listOf(message)))
+                if (verbose) {
+                    add(EventBodyFields.ToolCalls(tools = listOf(message)))
+                }
             }
         }
     }

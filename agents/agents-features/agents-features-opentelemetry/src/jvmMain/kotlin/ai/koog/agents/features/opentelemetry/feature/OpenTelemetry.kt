@@ -38,7 +38,7 @@ public class OpenTelemetry {
      */
     public companion object Feature : AIAgentFeature<OpenTelemetryConfig, OpenTelemetry> {
 
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         override val key: AIAgentStorageKey<OpenTelemetry> = AIAgentStorageKey("agents-features-opentelemetry")
 
@@ -233,7 +233,14 @@ public class OpenTelemetry {
                         when (message) {
                             is Message.User -> add(UserMessageEvent(provider, message, verbose = config.isVerbose))
                             is Message.System -> add(SystemMessageEvent(provider, message, verbose = config.isVerbose))
-                            is Message.Assistant -> add(AssistantMessageEvent(provider, message, verbose = config.isVerbose))
+                            is Message.Assistant -> add(
+                                AssistantMessageEvent(
+                                    provider,
+                                    message,
+                                    verbose = config.isVerbose
+                                )
+                            )
+
                             else -> {}
                         }
                     }
@@ -265,6 +272,8 @@ public class OpenTelemetry {
                 // Add events to the InferenceSpan before finishing the span
                 val lastMessage = eventContext.responses.lastOrNull()
 
+                val moderationResult = eventContext.moderationResponse
+
                 val events: List<GenAIAgentEvent> = lastMessage?.let { message ->
                     buildList {
                         when (message) {
@@ -272,6 +281,8 @@ public class OpenTelemetry {
                             else -> {}
                         }
                     }
+                } ?: moderationResult?.let {
+                    buildList { add(ModerationResponseEvent(provider, it, config.isVerbose)) }
                 } ?: emptyList()
 
                 inferenceSpan.addEvents(events)
@@ -337,7 +348,14 @@ public class OpenTelemetry {
                     logger.debug { "Last tool result message from prompt: $toolResult" }
 
                     if (toolResult != null) {
-                        add(ToolMessageEvent(provider = provider, toolCallId = eventContext.toolCallId, toolResult = toolResult, verbose = config.isVerbose))
+                        add(
+                            ToolMessageEvent(
+                                provider = provider,
+                                toolCallId = eventContext.toolCallId,
+                                toolResult = toolResult,
+                                verbose = config.isVerbose
+                            )
+                        )
                     }
                 }
 
@@ -371,7 +389,11 @@ public class OpenTelemetry {
                 // End the ExecuteToolSpan span
                 spanProcessor.endSpan(
                     spanId = executeToolSpanId,
-                    attributes = listOf(CommonAttributes.Error.Type(eventContext.throwable.message ?: "Unknown tool call error")),
+                    attributes = listOf(
+                        CommonAttributes.Error.Type(
+                            eventContext.throwable.message ?: "Unknown tool call error"
+                        )
+                    ),
                     spanEndStatus = SpanEndStatus(code = StatusCode.ERROR, description = eventContext.throwable.message)
                 )
             }

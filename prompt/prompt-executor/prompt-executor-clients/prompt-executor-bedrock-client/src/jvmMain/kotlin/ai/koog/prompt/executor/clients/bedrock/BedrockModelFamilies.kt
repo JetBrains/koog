@@ -2,6 +2,16 @@ package ai.koog.prompt.executor.clients.bedrock
 
 import kotlinx.serialization.Serializable
 
+/**
+ * Represents a sealed class for AWS Bedrock model families.
+ *
+ * This class serves as a hierarchy for different sub-providers under the AWS Bedrock ecosystem.
+ * Each sub-provider is represented as a specific sealed `data object` with an associated
+ * unique identifier and display name.
+ *
+ * @property id The unique identifier of the Bedrock model family.
+ * @property display The human-readable display name of the Bedrock model family.
+ */
 @Serializable
 public sealed class BedrockModelFamilies(
     public val id: String,

@@ -5,7 +5,7 @@ package ai.koog.agents.snapshot.providers
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 
 public interface PersistencyStorageProvider {
-    public suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData>
+    public suspend fun getCheckpoints(): List<AgentCheckpointData>
     public suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData)
-    public suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData?
+    public suspend fun getLatestCheckpoint(): AgentCheckpointData?
 }

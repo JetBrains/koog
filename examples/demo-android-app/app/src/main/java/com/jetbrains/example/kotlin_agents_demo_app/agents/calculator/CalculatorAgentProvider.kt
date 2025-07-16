@@ -6,7 +6,6 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
@@ -15,8 +14,6 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import com.jetbrains.example.kotlin_agents_demo_app.agents.common.AgentProvider
 import com.jetbrains.example.kotlin_agents_demo_app.agents.common.ExitTool
 import com.jetbrains.example.kotlin_agents_demo_app.settings.AppSettings
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Factory for creating calculator agents
@@ -30,7 +27,7 @@ object CalculatorAgentProvider : AgentProvider {
         onToolCallEvent: suspend (String) -> Unit,
         onErrorEvent: suspend (String) -> Unit,
         onAssistantMessage: suspend (String) -> String,
-    ): AIAgent {
+    ): AIAgent<String, String> {
         val openAiToken = appSettings.getCurrentSettings().openAiToken
         require(openAiToken.isNotEmpty()) { "OpenAI token is not configured." }
 
@@ -46,6 +43,7 @@ object CalculatorAgentProvider : AgentProvider {
             tool(ExitTool)
         }
 
+        @Suppress("DuplicatedCode")
         val strategy = strategy(title) {
             val nodeRequestLLM by nodeLLMRequestMultiple()
             val nodeAssistantMessage by node<String, String> { message -> onAssistantMessage(message) }
@@ -116,7 +114,7 @@ object CalculatorAgentProvider : AgentProvider {
             maxAgentIterations = 50
         )
 
-        // Create the runner
+        // Return the agent
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
@@ -124,16 +122,15 @@ object CalculatorAgentProvider : AgentProvider {
             toolRegistry = toolRegistry,
         ) {
             handleEvents {
-                onToolCall { tool: Tool<*, *>, toolArgs: Tool.Args ->
-                    onToolCallEvent("Tool ${tool.name}, args $toolArgs")
+                onToolCall { ctx ->
+                    onToolCallEvent("Tool ${ctx.tool.name}, args ${ctx.toolArgs}")
                 }
 
-                @OptIn(ExperimentalUuidApi::class)
-                onAgentRunError { strategyName: String, sessionUuid: Uuid?, throwable: Throwable ->
-                    onErrorEvent("${throwable.message}")
+                onAgentRunError { ctx ->
+                    onErrorEvent("${ctx.throwable.message}")
                 }
 
-                onAgentFinished { strategyName: String, result: String? ->
+                onAgentFinished { ctx ->
                     // Skip finish event handling
                 }
             }

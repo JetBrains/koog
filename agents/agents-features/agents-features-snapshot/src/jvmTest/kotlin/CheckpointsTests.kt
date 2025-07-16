@@ -13,6 +13,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
@@ -39,7 +40,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider()
+                storage = InMemoryPersistencyStorageProvider("testAgentId")
             }
         }
 
@@ -62,7 +63,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider()
+                storage = InMemoryPersistencyStorageProvider("testAgentId")
             }
         }
 
@@ -76,16 +77,15 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time,
             nodeId = "Node2",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -118,16 +118,15 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time,
             nodeId = "Node2",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -136,10 +135,9 @@ class CheckpointsTests {
 
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time - 10.seconds,
             nodeId = "Node1",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))

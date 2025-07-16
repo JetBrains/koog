@@ -20,7 +20,9 @@ internal class ToolMessageEvent(
 
     override val bodyFields: List<EventBodyField> = buildList {
         // Content
-        add(EventBodyFields.Content(content = toolResult.toStringDefault()))
+        if (verbose) {
+            add(EventBodyFields.Content(content = toolResult.toStringDefault()))
+        }
 
         // Id
         toolCallId?.let { id ->

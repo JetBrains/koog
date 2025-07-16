@@ -3,6 +3,7 @@ package ai.koog.agents.memory
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
@@ -27,6 +28,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 
+@OptIn(InternalAgentsApi::class)
 class AIAgentMemoryTest {
     object MemorySubjects {
         /**

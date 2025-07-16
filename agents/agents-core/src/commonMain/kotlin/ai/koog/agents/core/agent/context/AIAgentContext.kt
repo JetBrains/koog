@@ -11,6 +11,7 @@ import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.utils.RWLock
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.Message
+import kotlin.reflect.KType
 
 /**
  * Implements the [AIAgentContext] interface, providing the context required for an AI agent's execution.
@@ -31,6 +32,7 @@ import ai.koog.prompt.message.Message
  */
 public class AIAgentContext(
     override val environment: AIAgentEnvironment,
+    override val agentInputType: KType,
     override val agentInput: Any?,
     override val config: AIAgentConfigBase,
     llm: AIAgentLLMContext,
@@ -169,6 +171,7 @@ public class AIAgentContext(
     override fun copy(
         environment: AIAgentEnvironment,
         agentInput: Any?,
+        agentInputType: KType,
         config: AIAgentConfigBase,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
@@ -179,6 +182,7 @@ public class AIAgentContext(
     ): AIAgentContextBase = AIAgentContext(
         environment = environment,
         agentInput = agentInput,
+        agentInputType = agentInputType,
         config = config,
         llm = llm,
         stateManager = stateManager,

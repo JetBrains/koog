@@ -79,6 +79,27 @@ public sealed interface Message {
     }
 
     /**
+     * Represents a message that includes one or more attachments.
+     *
+     * This interface extends the [Message] interface, adding support for managing
+     * additional content in the form of attachments. Attachments can be of various
+     * types such as images, videos, audio files, or other file formats. Implementing
+     * classes should define specific details of the message alongside its attachments.
+     *
+     * @property attachments A list of attachments associated with the message.
+     * Each attachment contains specific content and metadata.
+     */
+    @Serializable
+    public sealed interface WithAttachments : Message {
+        /**
+         * A list of attachments associated with a message.
+         * Each attachment represents additional content that can be included,
+         * such as images, videos, audio files, or other documents.
+         */
+        public val attachments: List<Attachment>
+    }
+
+    /**
      * Represents a message sent by the user as a request.
      *
      * @property content The main content of the user's message.
@@ -90,8 +111,8 @@ public sealed interface Message {
     public data class User(
         override val content: String,
         override val metaInfo: RequestMetaInfo,
-        val attachments: List<Attachment> = emptyList(),
-    ) : Request {
+        override val attachments: List<Attachment> = emptyList(),
+    ) : Request, WithAttachments {
         override val role: Role = Role.User
     }
 
@@ -101,7 +122,7 @@ public sealed interface Message {
      *
      * @property content The textual content of the assistant's response.
      * @property metaInfo Metadata related to the response, including token counts and timestamp.
-     * @property attachment Optional media content attached to the message.
+     * @property attachments Optional media content attached to the message.
      * @property finishReason An optional explanation for why the assistant's response was finalized.
      * Defaults to null if not provided.
      * @property role The role associated with the response, which is fixed as `Role.Assistant`.
@@ -110,9 +131,9 @@ public sealed interface Message {
     public data class Assistant(
         override val content: String,
         override val metaInfo: ResponseMetaInfo,
-        val attachment: Attachment? = null,
+        override val attachments: List<Attachment> = emptyList(),
         val finishReason: String? = null
-    ) : Response {
+    ) : Response, WithAttachments {
         override val role: Role = Role.Assistant
 
         override fun copy(updatedMetaInfo: ResponseMetaInfo): Assistant = this.copy(metaInfo = updatedMetaInfo)

@@ -2,6 +2,7 @@ package ai.koog.agents.core.feature.choice
 
 import ai.koog.agents.core.feature.PromptExecutorWithChoiceSelection
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.LLMChoice
@@ -61,6 +62,13 @@ class ChoiceSelectionStrategyTest {
                 val choice1 = listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
                 val choice2 = listOf(Message.Assistant("Choice 2", metaInfo = ResponseMetaInfo.create(testClock)))
                 return listOf(choice1, choice2)
+            }
+
+            override suspend fun moderate(
+                prompt: Prompt,
+                model: LLModel
+            ): ModerationResult {
+                throw UnsupportedOperationException("Moderation is not needed here")
             }
         }
 
