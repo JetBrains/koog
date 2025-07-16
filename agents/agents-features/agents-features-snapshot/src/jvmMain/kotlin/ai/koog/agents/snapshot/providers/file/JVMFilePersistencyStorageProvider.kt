@@ -18,8 +18,10 @@ import java.nio.file.Path
  * @param root The root directory where all agent checkpoints will be stored.
  */
 public class JVMFilePersistencyStorageProvider(
-    root: Path
+    root: Path,
+    persistenceId: String
 ) : FilePersistencyStorageProvider<Path>(
     fs = JVMFileSystemProvider.ReadWrite,
-    root = root
+    root = root,
+    persistenceId = persistenceId
 )

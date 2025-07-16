@@ -1,6 +1,7 @@
 package ai.koog.agents.core
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
@@ -63,5 +64,12 @@ object CalculatorChatExecutor : PromptExecutor {
         catch (t: Throwable) {
             println("[DEBUG_LOG] Error while emitting response: ${t::class.simpleName}(${t.message})")
         }
+    }
+
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        throw UnsupportedOperationException("Moderation is not needed for CalculatorExecutor")
     }
 }

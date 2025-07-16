@@ -10,6 +10,7 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.message.Message
+import kotlin.reflect.KType
 
 /**
  * The [AIAgentContextBase] interface represents the context of an AI agent in the lifecycle.
@@ -42,6 +43,11 @@ public interface AIAgentContextBase {
      * determine the agent's intent, context, or other relevant information at any stage of agents execution.
      */
     public val agentInput: Any?
+
+    /**
+     * [KType] representing the type of the [agentInput]
+     */
+    public val agentInputType: KType
 
     /**
      * Represents the configuration for an AI agent.
@@ -200,6 +206,7 @@ public interface AIAgentContextBase {
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
         agentInput: Any? = this.agentInput,
+        agentInputType: KType = this.agentInputType,
         config: AIAgentConfigBase = this.config,
         llm: AIAgentLLMContext = this.llm,
         stateManager: AIAgentStateManager = this.stateManager,

@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.utils.Some
 import kotlin.reflect.KProperty
+import kotlin.reflect.KType
 
 /**
  * A builder class for constructing instances of [AIAgentNodeBase] with specific behavior and attributes.
@@ -15,12 +16,16 @@ import kotlin.reflect.KProperty
  *
  * @param Input The type of input data the node will process.
  * @param Output The type of output data the node will produce.
+ * @param inputType [KType] of the [Input]
+ * @param outputType [KType] of the [Output]
  * @constructor Used internally to create a new builder with the provided execution logic.
  * @param execute A suspending function to define the execution logic of the node. This function will be called
  * in the scope of [AIAgentContextBase], where it has access to the AI agent's context and tools relevant
  * to its operation.
  */
-public open class AIAgentNodeBuilder<Input, Output> internal constructor(
+public open class AIAgentNodeBuilder<Input, Output>(
+    private val inputType: KType,
+    private val outputType: KType,
     private val execute: suspend AIAgentContextBase.(Input) -> Output
 ) : BaseBuilder<AIAgentNodeBase<Input, Output>> {
     /**
@@ -38,6 +43,8 @@ public open class AIAgentNodeBuilder<Input, Output> internal constructor(
     override fun build(): AIAgentNodeBase<Input, Output> {
         return AIAgentNode(
             name = name,
+            inputType = inputType,
+            outputType = outputType,
             execute = execute
         )
     }
@@ -76,7 +83,7 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  * property to which the delegate is applied.
  * @param nodeBuilder The builder used to construct the [AIAgentNodeBase] instance for this delegate.
  */
-public open class AIAgentNodeDelegate<Input, Output> internal constructor(
+public open class AIAgentNodeDelegate<Input, Output>(
     private val name: String?,
     private val nodeBuilder: AIAgentNodeBuilder<Input, Output>,
 ) {

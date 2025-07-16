@@ -1,3 +1,5 @@
+@file:OptIn(DetachedPromptExecutorAPI::class)
+
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
@@ -13,6 +15,27 @@ import ai.koog.prompt.llm.LLModel
 import kotlinx.datetime.Clock
 
 /**
+ * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.
+ *
+ * Using APIs annotated with this requires opting in, as calls to `PromptExecutor` will be disconnected
+ * from the agent logic. This means these calls will not affect the agent's state or adhere to the
+ * `ToolsConversionStrategy`.
+ *
+ * This API should be used with caution, as it provides functionality that operates outside the
+ * standard agent lifecycle and processing logic.
+ */
+@MustBeDocumented
+@Retention(AnnotationRetention.BINARY)
+@RequiresOptIn(
+    level = RequiresOptIn.Level.ERROR,
+    message = "Calls to PromptExecutor used from `AIAgentLLMContext` will not be connected to the agent logic, " +
+            "and will not impact the agent's state. " +
+            "Other than that, `ToolsConversionStrategy` will not be applied. " +
+            "Please be cautious when using this API."
+)
+public annotation class DetachedPromptExecutorAPI
+
+/**
  * Represents the context for an AI agent LLM, managing tools, prompt handling, and interaction with the
  * environment and execution layers. It provides mechanisms for concurrent read and write operations
  * through sessions, ensuring thread safety.
@@ -21,7 +44,7 @@ import kotlinx.datetime.Clock
  * @property toolRegistry A registry that contains metadata about available tools.
  * @property prompt The current LLM prompt being used or updated in write sessions.
  * @property model The current LLM model being used or updated in write sessions.
- * @property promptExecutor The executor responsible for performing operations based on the current prompt.
+ * @property promptExecutor The [PromptExecutor] responsible for performing operations on the current prompt.
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  * @property clock The clock used for timestamps of messages
  */
@@ -30,15 +53,24 @@ public class AIAgentLLMContext(
     public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
     prompt: Prompt,
     model: LLModel,
-    internal val promptExecutor: PromptExecutor,
+    @property:DetachedPromptExecutorAPI
+    public val promptExecutor: PromptExecutor,
     private val environment: AIAgentEnvironment,
     private val config: AIAgentConfigBase,
     private val clock: Clock
 ) {
-    internal var tools: List<ToolDescriptor> = tools
+    /**
+     * List of current tools associated with this agent context.
+     */
+    @DetachedPromptExecutorAPI
+    public var tools: List<ToolDescriptor> = tools
         private set
 
-    internal var model: LLModel = model
+    /**
+     * LLM currently associated with this context.
+     */
+    @DetachedPromptExecutorAPI
+    public var model: LLModel = model
         private set
 
     /**

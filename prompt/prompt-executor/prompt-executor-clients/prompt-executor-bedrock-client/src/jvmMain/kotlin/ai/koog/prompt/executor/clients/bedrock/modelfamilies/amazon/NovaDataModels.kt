@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * Request data classes for Amazon Nova models
  */
 @Serializable
-public data class NovaRequest(
+internal data class NovaRequest(
     @SerialName("messages")
     val messages: List<NovaMessage>,
     @SerialName("inferenceConfig")
@@ -17,7 +17,7 @@ public data class NovaRequest(
 )
 
 @Serializable
-public data class NovaMessage(
+internal data class NovaMessage(
     @SerialName("role")
     val role: String,
     @SerialName("content")
@@ -25,19 +25,19 @@ public data class NovaMessage(
 )
 
 @Serializable
-public data class NovaContent(
+internal data class NovaContent(
     @SerialName("text")
     val text: String
 )
 
 @Serializable
-public data class NovaSystemMessage(
+internal data class NovaSystemMessage(
     @SerialName("text")
     val text: String
 )
 
 @Serializable
-public data class NovaInferenceConfig(
+internal data class NovaInferenceConfig(
     @SerialName("temperature")
     val temperature: Double? = null,
     @SerialName("topP")
@@ -52,7 +52,7 @@ public data class NovaInferenceConfig(
  * Response data classes for Amazon Nova models
  */
 @Serializable
-public data class NovaResponse(
+internal data class NovaResponse(
     @SerialName("output")
     val output: NovaOutput,
     @SerialName("usage")
@@ -62,13 +62,13 @@ public data class NovaResponse(
 )
 
 @Serializable
-public data class NovaOutput(
+internal data class NovaOutput(
     @SerialName("message")
     val message: NovaMessage
 )
 
 @Serializable
-public data class NovaUsage(
+internal data class NovaUsage(
     @SerialName("inputTokens")
     val inputTokens: Int? = null,
     @SerialName("outputTokens")
@@ -81,7 +81,7 @@ public data class NovaUsage(
  * Streaming response data classes for Amazon Nova models
  */
 @Serializable
-public data class NovaStreamChunk(
+internal data class NovaStreamChunk(
     @SerialName("contentBlockDelta")
     val contentBlockDelta: NovaContentBlockDelta? = null,
     @SerialName("messageStop")
@@ -91,25 +91,25 @@ public data class NovaStreamChunk(
 )
 
 @Serializable
-public data class NovaContentBlockDelta(
+internal data class NovaContentBlockDelta(
     @SerialName("delta")
     val delta: NovaContentDelta
 )
 
 @Serializable
-public data class NovaContentDelta(
+internal data class NovaContentDelta(
     @SerialName("text")
     val text: String? = null
 )
 
 @Serializable
-public data class NovaMessageStop(
+internal data class NovaMessageStop(
     @SerialName("stopReason")
     val stopReason: String
 )
 
 @Serializable
-public data class NovaStreamMetadata(
+internal data class NovaStreamMetadata(
     @SerialName("usage")
     val usage: NovaUsage? = null
 )

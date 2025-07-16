@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.LLMChoice
@@ -178,5 +179,22 @@ public open class MultiLLMPromptExecutor(
         logger.debug { "Choices: $choices" }
 
         return choices
+    }
+
+    /**
+     * Moderates the provided multi-modal content using the specified model.
+     *
+     * @param prompt The `Prompt` containing the content to be moderated.
+     * @param model The `LLModel` to use for moderation, including its ID and provider information.
+     * @return A `ModerationResult` representing the result of the moderation process.
+     * @throws IllegalArgumentException If no client is found for the model's provider.
+     */
+    override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        logger.debug { "Moderating multi-modal content with model: ${model.id}" }
+
+        val provider = model.provider
+        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+
+        return client.moderate(prompt, model)
     }
 }

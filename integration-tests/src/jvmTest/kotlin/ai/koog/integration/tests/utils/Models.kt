@@ -56,7 +56,7 @@ object Models {
         return Stream.of(
             GoogleModels.Gemini1_5Pro,
             GoogleModels.Gemini1_5ProLatest,
-            GoogleModels.Gemini2_5ProPreview0506,
+            GoogleModels.Gemini2_5Pro,
 
             GoogleModels.Gemini2_0Flash,
             GoogleModels.Gemini2_0Flash001,
@@ -68,7 +68,7 @@ object Models {
             GoogleModels.Gemini1_5Flash8B,
             GoogleModels.Gemini1_5Flash8B001,
             GoogleModels.Gemini1_5Flash8BLatest,
-            GoogleModels.Gemini2_5FlashPreview0417,
+            GoogleModels.Gemini2_5Flash,
         )
     }
 

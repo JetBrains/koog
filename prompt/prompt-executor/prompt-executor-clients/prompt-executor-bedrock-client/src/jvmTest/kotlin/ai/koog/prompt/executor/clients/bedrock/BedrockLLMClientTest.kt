@@ -6,10 +6,38 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
+import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
+import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.ConverseRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.ConverseResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.ConverseStreamResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.GetAsyncInvokeRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.GetAsyncInvokeResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailAction
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailAssessment
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilter
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterConfidence
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterType
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentPolicyAction
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentPolicyAssessment
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailTopicPolicyAction
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithBidirectionalStreamRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithBidirectionalStreamResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
@@ -27,6 +55,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertContains
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 
 class BedrockLLMClientTest {
     @Test
@@ -485,6 +514,138 @@ class BedrockLLMClientTest {
         // Verify Nova models don't support tools
         val novaMicro = BedrockModels.AmazonNovaMicro
         assertTrue(!novaMicro.capabilities.contains(LLMCapability.Tools))
+    }
 
+    @Test
+    fun `can create BedrockLLMClient with moderation guardrails settings`() = runTest {
+        val guardrailsSettings = BedrockGuardrailsSettings(
+            guardrailIdentifier = "test-guardrail",
+            guardrailVersion = "1.0"
+        )
+
+        val clientSettings = BedrockClientSettings(
+            region = "us-east-1",
+            moderationGuardrailsSettings = guardrailsSettings
+        )
+
+        val mockClient = object : BedrockRuntimeClient {
+            override suspend fun applyGuardrail(input: ApplyGuardrailRequest): ApplyGuardrailResponse {
+                return ApplyGuardrailResponse {
+                    action = GuardrailAction.GuardrailIntervened
+                    assessments = listOf(
+                        GuardrailAssessment {
+                            contentPolicy = GuardrailContentPolicyAssessment {
+                                filters = listOf(
+                                    GuardrailContentFilter {
+                                        type = GuardrailContentFilterType.Hate
+                                        action = GuardrailContentPolicyAction.None
+                                        detected = true
+                                        confidence = GuardrailContentFilterConfidence.High
+                                    },
+                                    GuardrailContentFilter {
+                                        type = GuardrailContentFilterType.Sexual
+                                        action = GuardrailContentPolicyAction.Blocked
+                                        detected = true
+                                        confidence = GuardrailContentFilterConfidence.Low
+                                    },
+                                    GuardrailContentFilter {
+                                        type = GuardrailContentFilterType.Misconduct
+                                        action = GuardrailContentPolicyAction.None
+                                        confidence = GuardrailContentFilterConfidence.Medium
+                                        detected = true
+                                    }
+                                )
+                            }
+                        }
+                    )
+                    outputs = emptyList()
+                }
+            }
+
+            override val config: BedrockRuntimeClient.Config get() = TODO("Not yet implemented")
+            override suspend fun converse(input: ConverseRequest): ConverseResponse {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun <T> converseStream(
+                input: ConverseStreamRequest,
+                block: suspend (ConverseStreamResponse) -> T
+            ): T {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun <T> invokeModelWithBidirectionalStream(
+                input: InvokeModelWithBidirectionalStreamRequest,
+                block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T
+            ): T {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun <T> invokeModelWithResponseStream(
+                input: InvokeModelWithResponseStreamRequest,
+                block: suspend (InvokeModelWithResponseStreamResponse) -> T
+            ): T {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse {
+                TODO("Not yet implemented")
+            }
+
+            override fun close() {
+                TODO("Not yet implemented")
+            }
+        }
+
+        val client = BedrockLLMClient(
+            mockClient,
+            moderationGuardrailsSettings = guardrailsSettings
+        )
+
+        val prompt = Prompt.build("test") {
+            user("This is a test prompt")
+        }
+        val model = BedrockModels.AnthropicClaude3Sonnet
+
+        val moderationResult = client.moderate(prompt, model)
+        assertEquals(true, moderationResult.isHarmful)
+        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Hate))
+        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Sexual))
+        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Misconduct))
+        assertEquals(false, moderationResult.violatesCategory(ModerationCategory.Illicit))
+        assertEquals(null, moderationResult.categories[ModerationCategory.Illicit])
+    }
+
+    @Test
+    fun `moderate method throws exception when moderation guardrails settings are not provided`() = runTest {
+        // Create client without moderation guardrails settings
+        val client = BedrockLLMClient(
+            awsAccessKeyId = "test-key",
+            awsSecretAccessKey = "test-secret",
+            settings = BedrockClientSettings(region = "us-east-1"),
+            clock = Clock.System
+        )
+
+        val prompt = Prompt.build("test") {
+            user("This is a test prompt")
+        }
+        val model = BedrockModels.AnthropicClaude3Sonnet
+
+        // Verify that moderate method throws an exception because moderationGuardrailsSettings wasn't provided
+        assertFailsWith<IllegalArgumentException> {
+            client.moderate(prompt, model)
+        }
     }
 }

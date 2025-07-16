@@ -31,9 +31,50 @@ import ai.koog.prompt.llm.LLModel
  * | [Embeddings.TextEmbedding3Small]    | Medium    | $0.02              | Text               | Text               |
  * | [Embeddings.TextEmbedding3Large]    | Slow      | $0.13              | Text               | Text               |
  * | [Embeddings.TextEmbeddingAda002]    | Slow      | $0.1               | Text               | Text               |
+ * | [Moderation.Text]                   | Medium    | -                  | Text               | Moderation Result  |
+ * | [Moderation.Omni]                   | Medium    | $4.40              | Text               | Moderation Result  |
  */
-public object OpenAIModels: LLModelDefinitions {
+public object OpenAIModels : LLModelDefinitions {
     // TODO: support thinking tokens
+    /**
+     * Object containing moderation models designed to detect harmful content in text and images.
+     * These models are free to use and can identify various categories of potentially harmful content.
+     */
+    public object Moderation {
+        /**
+         * Omni-moderation is the most capable moderation model, accepting both text and images as input.
+         * It can identify potentially harmful content across multiple categories.
+         *
+         * Performance: High
+         * Speed: Medium
+         * Input: Text, image
+         * Output: Text
+         */
+        public val Omni: LLModel = LLModel(
+            provider = LLMProvider.OpenAI, id = "omni-moderation-latest", capabilities = listOf(
+                LLMCapability.Moderation, LLMCapability.Vision.Image
+            )
+        )
+
+        /**
+         * Text-moderation is a previous generation text-only moderation model.
+         * It can identify potentially harmful content in text across multiple categories.
+         *
+         * Performance: Average
+         * Speed: Medium
+         * Input: Text
+         * Output: Text
+         *
+         * 32,768 max output tokens
+         * Sep 01, 2021 knowledge cutoff
+         */
+        public val Text: LLModel = LLModel(
+            provider = LLMProvider.OpenAI, id = "text-moderation-latest", capabilities = listOf(
+                LLMCapability.Moderation
+            )
+        )
+    }
+
     /**
      * Object containing a set of pre-configured reasoning models with various capabilities and constraints.
      * These models are designed for tasks ranging from general reasoning to domain-specific applications,

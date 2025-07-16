@@ -10,7 +10,13 @@ import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.serializer
+import kotlin.reflect.KType
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -50,6 +56,12 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * Feature companion object that implements [AIAgentFeature] for the checkpoint functionality.
      */
     public companion object Feature : AIAgentFeature<PersistencyFeatureConfig, Persistency> {
+        private val logger = KotlinLogging.logger {  }
+
+        private val json = Json {
+            prettyPrint = true
+        }
+
         /**
          * The storage key used to identify this feature in the agent's feature registry.
          */
@@ -87,16 +99,22 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
 
             pipeline.interceptBeforeAgentStarted(interceptContext) { ctx ->
                 require(ctx.strategy.metadata.uniqueNames) { "Checkpoint feature requires unique node names in the strategy metadata" }
-                ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+                val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+
+                if (checkpoint != null) {
+                    logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
+                } else {
+                    logger.info { "No checkpoint found, starting from the beginning" }
+                }
             }
 
             pipeline.interceptAfterNode(interceptContext) { eventCtx ->
                 if (config.enableAutomaticPersistency) {
                     createCheckpoint(
-                        eventCtx.context.id,
-                        eventCtx.context,
-                        eventCtx.node.id,
-                        eventCtx.input
+                        agentContext = eventCtx.context,
+                        nodeId = eventCtx.node.id,
+                        lastInput = eventCtx.input,
+                        lastInputType = eventCtx.inputType,
                     )
                 }
             }
@@ -113,34 +131,46 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * This method captures the agent's message history, current node, and input data
      * and stores it as a checkpoint using the configured storage provider.
      *
-     * @param T The type of the input data
-     * @param agentId The ID of the agent to create a checkpoint for
      * @param agentContext The context of the agent containing the state to checkpoint
      * @param nodeId The ID of the node where the checkpoint is created
      * @param lastInput The input data to include in the checkpoint
      * @param checkpointId Optional ID for the checkpoint; a random UUID is generated if not provided
      * @return The created checkpoint data
      */
-    public suspend inline fun <T> createCheckpoint(
-        agentId: String,
+    public suspend fun createCheckpoint(
         agentContext: AIAgentContextBase,
         nodeId: String,
-        lastInput: T,
+        lastInput: Any?,
+        lastInputType: KType,
         checkpointId: String? = null
-    ): AgentCheckpointData {
+    ): AgentCheckpointData? {
+        val inputJson = trySerializeInput(lastInput, lastInputType)
+
+        if (inputJson == null) {
+            logger.warn { "Failed to serialize input of type $lastInputType for checkpoint creation for $nodeId, skipping..." }
+            return null
+        }
+
         val checkpoint = agentContext.llm.readSession {
             return@readSession AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
-                lastInput = serializeInput(lastInput),
-                agentId = agentId,
+                lastInput = inputJson,
                 createdAt = Clock.System.now()
             )
         }
 
         saveCheckpoint(checkpoint)
         return checkpoint
+    }
+
+    private fun trySerializeInput(input: Any?, inputType: KType): JsonElement? {
+        return try {
+            json.encodeToJsonElement(json.serializersModule.serializer(inputType), input)
+        } catch (_: SerializationException) {
+            return null
+        }
     }
 
     /**
@@ -155,21 +185,19 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
     /**
      * Retrieves the latest checkpoint for the specified agent.
      *
-     * @param agentId The ID of the agent to get the latest checkpoint for
      * @return The latest checkpoint data, or null if no checkpoint exists
      */
-    public suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? =
-        persistencyStorageProvider.getLatestCheckpoint(agentId)
+    public suspend fun getLatestCheckpoint(): AgentCheckpointData? =
+        persistencyStorageProvider.getLatestCheckpoint()
 
     /**
      * Retrieves a specific checkpoint by ID for the specified agent.
      *
-     * @param agentId The ID of the agent to get the checkpoint for
      * @param checkpointId The ID of the checkpoint to retrieve
      * @return The checkpoint data with the specified ID, or null if not found
      */
-    public suspend fun getCheckpointById(agentId: String, checkpointId: String): AgentCheckpointData? =
-        persistencyStorageProvider.getCheckpoints(agentId).firstOrNull { it.checkpointId == checkpointId }
+    public suspend fun getCheckpointById(checkpointId: String): AgentCheckpointData? =
+        persistencyStorageProvider.getCheckpoints().firstOrNull { it.checkpointId == checkpointId }
 
     /**
      * Sets the execution point of an agent to a specific state.
@@ -186,7 +214,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         agentContext: AIAgentContextBase,
         nodeId: String,
         messageHistory: List<Message>,
-        input: Any?
+        input: JsonElement
     ) {
         agentContext.store(AgentContextData(messageHistory, nodeId, input))
     }
@@ -205,7 +233,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         checkpointId: String,
         agentContext: AIAgentContextBase
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getCheckpointById(agentContext.id, checkpointId)
+        val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
             agentContext.store(checkpoint.toAgentContextData())
         }
@@ -221,8 +249,10 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * @param agentContext The context of the agent to roll back
      * @return The checkpoint data that was restored or null if no checkpoint was found
      */
-    public suspend fun rollbackToLatestCheckpoint(agentContext: AIAgentContextBase): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getLatestCheckpoint(agentContext.id)
+    public suspend fun rollbackToLatestCheckpoint(
+        agentContext: AIAgentContextBase
+    ): AgentCheckpointData? {
+        val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
         if (checkpoint != null) {
             agentContext.store(checkpoint.toAgentContextData())
         }

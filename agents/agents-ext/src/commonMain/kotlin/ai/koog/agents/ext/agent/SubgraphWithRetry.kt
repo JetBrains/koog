@@ -34,12 +34,12 @@ public data class RetrySubgraphResult<Output>(
  * @param name The optional name of the subgraph.
  * @param defineAction A lambda defining the action subgraph to perform within the retry subgraph.
  */
-public fun <Input : Any, Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetry(
-    condition: suspend (Output) -> Boolean,
+public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetry(
+    noinline condition: suspend (Output) -> Boolean,
     maxRetries: Int,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     name: String? = null,
-    defineAction: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit,
+    noinline defineAction: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit,
 ): AIAgentSubgraphDelegate<Input, RetrySubgraphResult<Output>> {
     require(maxRetries > 0) { "maxRetries must be greater than 0" }
 
@@ -138,13 +138,13 @@ public fun <Input : Any, Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRe
  * edge(subgraphRetryCallLLM forwardTo nodeExecuteTool onToolCall { true })
  * ```
  */
-public fun <Input : Any, Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
-    condition: suspend (Output) -> Boolean,
+public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
+    noinline condition: suspend (Output) -> Boolean,
     maxRetries: Int,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     strict: Boolean = true,
     name: String? = null,
-    defineAction: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit,
+    noinline defineAction: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit,
 ): AIAgentSubgraphDelegate<Input, Output> {
     return subgraph(name = name) {
         val retrySubgraph by subgraphWithRetry(

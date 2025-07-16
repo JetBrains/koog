@@ -1,6 +1,7 @@
 package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -35,6 +36,12 @@ class TestLLMExecutor : PromptExecutor {
     }
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow { emit(handlePrompt(prompt).content) }
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
+    }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         prompt.messages.forEach { println("[DEBUG_LOG] Message: ${it.content}") }

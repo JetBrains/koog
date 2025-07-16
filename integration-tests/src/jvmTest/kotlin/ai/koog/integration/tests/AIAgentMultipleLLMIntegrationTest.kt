@@ -17,6 +17,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -102,6 +103,13 @@ internal class ReportingLLMLLMClient(
         }
         underlyingClient.executeStreaming(prompt, model)
             .collect(this)
+    }
+
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        throw NotImplementedError("Moderation not needed for this test")
     }
 }
 

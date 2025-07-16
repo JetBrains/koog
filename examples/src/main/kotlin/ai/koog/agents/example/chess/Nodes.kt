@@ -7,7 +7,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
  * Chess position is (almost) completely defined by the board state,
  * So we can trim the history of the LLM to only contain the system prompt and the last move.
  */
-fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeTrimHistory(
+inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeTrimHistory(
     name: String? = null
 ): AIAgentNodeDelegate<T, T> =
     node(name) { result ->

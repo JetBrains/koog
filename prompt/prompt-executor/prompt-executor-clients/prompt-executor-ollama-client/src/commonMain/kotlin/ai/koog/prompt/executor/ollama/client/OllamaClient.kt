@@ -1,6 +1,9 @@
 package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -10,8 +13,8 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import io.github.oshai.kotlinlogging.KotlinLogging
 import ai.koog.prompt.message.ResponseMetaInfo
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -53,6 +56,50 @@ public class OllamaClient(
         private const val DEFAULT_LIST_MODELS_PATH = "api/tags"
         private const val DEFAULT_SHOW_MODEL_PATH = "api/show"
         private const val DEFAULT_PULL_MODEL_PATH = "api/pull"
+
+        private val moderationCategoriesMapping: Map<String, List<ModerationCategory>> = mapOf(
+            // Violent crimes: unlawful violence towards people and animals
+            "S1" to listOf(ModerationCategory.IllicitViolent, ModerationCategory.Violence),
+
+            // Non-violent crimes: fraud, drugs, weapons, hacking, etc.
+            "S2" to listOf(ModerationCategory.Illicit),
+
+            // Sex-related crimes: trafficking, harassment, prostitution
+            "S3" to listOf(ModerationCategory.IllicitViolent, ModerationCategory.Sexual),
+
+            // Child sexual exploitation
+            "S4" to listOf(ModerationCategory.SexualMinors),
+
+            // Defamation (unique)
+            "S5" to listOf(ModerationCategory.Defamation),
+
+            // Specialized advice (unique)
+            "S6" to listOf(ModerationCategory.SpecializedAdvice),
+
+            // Privacy violations (unique)
+            "S7" to listOf(ModerationCategory.Privacy),
+
+            // Intellectual property violations (unique)
+            "S8" to listOf(ModerationCategory.IntellectualProperty),
+
+            // Indiscriminate weapons (e.g., nukes, bioweapons)
+            "S9" to listOf(ModerationCategory.IllicitViolent),
+
+            // Hate speech (demeaning protected groups)
+            "S10" to listOf(ModerationCategory.Hate),
+
+            // Suicide and self-harm
+            "S11" to listOf(ModerationCategory.SelfHarm),
+
+            // Sexual content (adult erotica)
+            "S12" to listOf(ModerationCategory.Sexual),
+
+            // Election misinformation (unique)
+            "S13" to listOf(ModerationCategory.ElectionsMisinformation)
+        )
+
+        private val possibleModerationCategories = moderationCategoriesMapping.values.flatten().distinct()
+
     }
 
     private val ollamaJson = Json {
@@ -84,12 +131,12 @@ public class OllamaClient(
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
-                    messages = prompt.toOllamaChatMessages(model),
-                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
-                    format = prompt.extractOllamaJsonFormat(),
-                    options = prompt.extractOllamaOptions(),
-                    stream = false,
-                ))
+                messages = prompt.toOllamaChatMessages(model),
+                tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
+                format = prompt.extractOllamaJsonFormat(),
+                options = prompt.extractOllamaOptions(),
+                stream = false,
+            ))
         }
 
         if (response.status.isSuccess()) {
@@ -141,8 +188,7 @@ public class OllamaClient(
             else -> {
                 val toolCallMessages = messages.getToolCalls(responseMetadata)
                 val assistantMessage = Message.Assistant(
-                    content = content,
-                    metaInfo = responseMetadata
+                    content = content, metaInfo = responseMetadata
                 )
                 listOf(assistantMessage) + toolCallMessages
             }
@@ -216,8 +262,7 @@ public class OllamaClient(
             val listModelsResponse = listModels()
 
             val modelCards = listModelsResponse.models.map { model ->
-                showModel(model.name)
-                    .toOllamaModelCard(model.name, model.size)
+                showModel(model.name).toOllamaModelCard(model.name, model.size)
             }
 
             logger.info { "Loaded ${modelCards.size} Ollama model cards" }
@@ -244,15 +289,66 @@ public class OllamaClient(
         return modelCard
     }
 
+
+    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        if (!model.capabilities.contains(LLMCapability.Moderation)) {
+            throw IllegalArgumentException("Model ${model.id} does not support moderation")
+        }
+
+        require(prompt.messages.isNotEmpty()) {
+            "Can't moderate an empty prompt"
+        }
+
+        val responses = execute(prompt, model)
+
+        check(responses.size == 1) { "Moderation model from Ollama must return a single response" }
+        val singleResponse = responses.single()
+        check(singleResponse is Message.Assistant) {
+            "Moderation model from Ollama must return an assistant message" + " (actual response: ${singleResponse::class.simpleName})"
+        }
+        val contentLines = singleResponse.content.lines()
+        val moderationResult = contentLines.first()
+        val hazardCategories = singleResponse.content.removePrefix(moderationResult)
+
+        return ModerationResult(
+            isHarmful = parseModerationResult(moderationResult),
+            categories = parseHazardCategories(hazardCategories),
+        )
+    }
+
+    private fun parseModerationResult(result: String): Boolean {
+        return when (result) {
+            "safe" -> false
+            "unsafe" -> true
+            else -> throw IllegalStateException("Unknown moderation result: $result")
+        }
+    }
+
+    private fun parseHazardCategories(commentWithHazardCodes: String): Map<ModerationCategory, ModerationCategoryResult> {
+        return buildMap {
+            commentWithHazardCodes.split(",", "\n", ";", ".", "-", "+", " ").forEach { hazardCode ->
+                moderationCategoriesMapping[hazardCode]?.let { categories ->
+                    categories.forEach { category ->
+                        put(category, ModerationCategoryResult(true))
+                    }
+                }
+            }
+
+            possibleModerationCategories.forEach { category ->
+                if (category !in this) {
+                    put(category, ModerationCategoryResult(false))
+                }
+            }
+        }
+    }
+
     private suspend fun loadModelCardOrNull(name: String): OllamaModelCard? {
         return try {
             val listModelsResponse = listModels()
 
-            val modelInfo = listModelsResponse.models.firstOrNull { it.name.isSameModelAs(name) }
-                ?: return null
+            val modelInfo = listModelsResponse.models.firstOrNull { it.name.isSameModelAs(name) } ?: return null
 
-            val modelCard = showModel(modelInfo.name)
-                .toOllamaModelCard(modelInfo.name, modelInfo.size)
+            val modelCard = showModel(modelInfo.name).toOllamaModelCard(modelInfo.name, modelInfo.size)
 
             logger.info { "Loaded Ollama model card for $name" }
             modelCard
@@ -263,8 +359,7 @@ public class OllamaClient(
     }
 
     private suspend fun listModels(): OllamaModelsListResponseDTO {
-        return client.get(DEFAULT_LIST_MODELS_PATH)
-            .body<OllamaModelsListResponseDTO>()
+        return client.get(DEFAULT_LIST_MODELS_PATH).body<OllamaModelsListResponseDTO>()
     }
 
     private suspend fun showModel(name: String): OllamaShowModelResponseDTO {

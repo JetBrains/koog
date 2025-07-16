@@ -9,7 +9,7 @@ object CalculatorTools {
         description: String,
     ) : Tool<CalculatorTool.Args, CalculatorTool.Result>() {
         @Serializable
-        data class Args(val a: Float, val b: Float) : Tool.Args
+        data class Args(val a: Float, val b: Float) : ToolArgs
 
         @Serializable
         @JvmInline

@@ -40,7 +40,7 @@ object WeatherTools {
         @Serializable
         data class Args(
             val timezone: String = "UTC"
-        ) : Tool.Args
+        ) : ToolArgs
 
         @Serializable
         data class Result(
@@ -71,7 +71,7 @@ object WeatherTools {
         override suspend fun execute(args: Args): Result {
             val zoneId = try {
                 ZoneId.of(args.timezone)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 UTC_ZONE
             }
 
@@ -96,7 +96,7 @@ object WeatherTools {
             val days: Int,
             val hours: Int,
             val minutes: Int
-        ) : Tool.Args
+        ) : ToolArgs
 
         @Serializable
         data class Result(
@@ -169,7 +169,7 @@ object WeatherTools {
             val baseDate = if (args.date.isNotBlank()) {
                 try {
                     LocalDate.parse(args.date, ISO_DATE_FORMAT)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Use current date if parsing fails
                     LocalDate.now(UTC_ZONE)
                 }
@@ -206,7 +206,7 @@ object WeatherTools {
             val date: String = "",
             val days: Int = 1,
             val granularity: Granularity = Granularity.DAILY
-        ) : Tool.Args
+        ) : ToolArgs
 
         @Serializable
         data class Result(

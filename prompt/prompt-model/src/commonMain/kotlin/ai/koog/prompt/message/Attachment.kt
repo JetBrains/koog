@@ -158,6 +158,14 @@ public sealed interface AttachmentContent {
             override fun toString(): String {
                 return "Base64(length=${base64.length})"
             }
+
+            /**
+             * Decodes the Base64 encoded string to its corresponding byte array.
+             *
+             * @return a ByteArray representation of the decoded Base64 string.
+             */
+            @OptIn(ExperimentalEncodingApi::class)
+            public fun toBytes(): ByteArray = kotlin.io.encoding.Base64.decode(base64)
         }
     }
 }

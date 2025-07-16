@@ -10,7 +10,7 @@ group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.2.1"
+    val main = "0.3.0"
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
@@ -193,6 +193,7 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))
@@ -203,6 +204,8 @@ dependencies {
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":koog-spring-boot-starter"))
+    dokka(project(":rag:rag-base"))
+    dokka(project(":rag:vector-storage"))
 }
 
 kover {

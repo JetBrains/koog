@@ -1,8 +1,8 @@
 package ai.koog.agents.core.feature.handler
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 
@@ -38,5 +38,6 @@ public data class AfterLLMCallContext(
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
-    val responses: List<Message.Response>
+    val responses: List<Message.Response>,
+    val moderationResponse: ModerationResult?
 ) : LLMEventHandlerContext

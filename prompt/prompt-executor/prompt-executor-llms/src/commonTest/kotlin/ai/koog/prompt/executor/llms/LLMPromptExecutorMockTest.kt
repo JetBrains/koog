@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.LLMClient
@@ -36,6 +37,10 @@ class LLMPromptExecutorMockTest {
         override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             return flowOf("OpenAI", " streaming", " response")
         }
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+            throw UnsupportedOperationException("Moderation is not supported by mock client.")
+        }
     }
 
     // Mock client for Anthropic
@@ -51,6 +56,10 @@ class LLMPromptExecutorMockTest {
         override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             return flowOf("Anthropic", " streaming", " response")
         }
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+            throw UnsupportedOperationException("Moderation is not supported by mock client.")
+        }
     }
 
     // Mock client for Gemini
@@ -65,6 +74,10 @@ class LLMPromptExecutorMockTest {
 
         override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             return flowOf("Gemini", " streaming", " response")
+        }
+
+        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+            throw UnsupportedOperationException("Moderation is not supported by mock client.")
         }
     }
 
