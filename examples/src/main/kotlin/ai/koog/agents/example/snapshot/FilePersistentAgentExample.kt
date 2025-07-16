@@ -38,7 +38,7 @@ fun main() = runBlocking {
     println("Checkpoint directory: $checkpointDir")
     
     // Create the file-based checkpoint provider
-    val provider = JVMFilePersistencyStorageProvider(checkpointDir)
+    val provider = JVMFilePersistencyStorageProvider(checkpointDir, "persistent-agent-example")
     
     // Create a unique agent ID to identify this agent's checkpoints
     val agentId = "persistent-agent-example"
@@ -79,7 +79,7 @@ fun main() = runBlocking {
     println("Agent result: $result")
 
     // Retrieve all checkpoints created during the agent's execution
-    val checkpoints = provider.getCheckpoints(agentId)
+    val checkpoints = provider.getCheckpoints()
     println("\nRetrieved ${checkpoints.size} checkpoints for agent $agentId")
 
     // Print checkpoint details
@@ -120,7 +120,7 @@ fun main() = runBlocking {
     println("Restored agent result: $restoredResult")
     
     // Get the latest checkpoint after the second run
-    val latestCheckpoint = provider.getLatestCheckpoint(agentId)
+    val latestCheckpoint = provider.getLatestCheckpoint()
     println("\nLatest checkpoint after restoration:")
     println("  ID: ${latestCheckpoint?.checkpointId}")
     println("  Created at: ${latestCheckpoint?.createdAt}")

@@ -250,4 +250,34 @@ public object OllamaModels {
         )
     }
 
+    /**
+     * The `Granite` object represents the configuration for Granite large language models (LLMs).
+     * It contains the predefined model specifications for Granite LLMs, including their identifiers
+     * and supported capabilities.
+     */
+    public object Granite {
+        /**
+         * Represents the Granite 3.2 Vision model.
+         *
+         * This predefined instance of `LLModel` is provided by Granite and supports the following capabilities:
+         * - `Temperature`: Allows adjustment of the temperature setting for controlling the randomness in responses.
+         * - `Schema.JSON.Simple`: Supports tasks requiring JSON schema validation and handling in a simplified manner.
+         * - `Tools`: Enables interaction with external tools or functionalities within the model's ecosystem.
+         * - `Vision.Image`: Enables processing and understanding of image inputs alongside text.
+         *
+         * The model is identified by the unique ID "granite3.2-vision" and categorized under the Ollama provider.
+         * It is designed to handle both text and visual inputs for multimodal tasks.
+         */
+        public val GRANITE_3_2_VISION: LLModel = LLModel(
+            provider = LLMProvider.Ollama,
+            id = "granite3.2-vision",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Tools,
+                LLMCapability.Vision.Image
+            )
+        )
+    }
+
 }

@@ -295,6 +295,10 @@ public class OllamaClient(
             throw IllegalArgumentException("Model ${model.id} does not support moderation")
         }
 
+        require(prompt.messages.isNotEmpty()) {
+            "Can't moderate an empty prompt"
+        }
+
         val responses = execute(prompt, model)
 
         check(responses.size == 1) { "Moderation model from Ollama must return a single response" }

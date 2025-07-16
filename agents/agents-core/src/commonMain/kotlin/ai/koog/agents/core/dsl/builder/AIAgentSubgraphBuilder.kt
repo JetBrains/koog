@@ -11,6 +11,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.*
 import kotlin.reflect.KProperty
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /**
  * Abstract base class for building AI agent subgraphs.
@@ -57,14 +59,18 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
      * @param execute A suspendable function that defines the node's execution logic.
      */
-    public fun <Input, Output> node(
+    public inline fun <reified Input, reified Output> node(
         name: String? = null,
-        execute: suspend AIAgentContextBase.(input: Input) -> Output
+        noinline execute: suspend AIAgentContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegate<Input, Output> {
-        return AIAgentNodeDelegate(name, AIAgentNodeBuilder {
-            val res = execute(this, it)
-            return@AIAgentNodeBuilder res
-        })
+        return AIAgentNodeDelegate(
+            name = name,
+            AIAgentNodeBuilder(
+                inputType = typeOf<Input>(),
+                outputType = typeOf<Output>(),
+                execute = execute
+            )
+        )
     }
 
     /**
@@ -73,7 +79,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param toolSelectionStrategy Strategy for tool selection
      * @param define Subgraph definition function
      */
-    public fun <Input, Output> subgraph(
+    public inline fun <reified Input, reified Output> subgraph(
         name: String? = null,
         toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
         llmModel: LLModel? = null,
@@ -82,9 +88,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     ): AIAgentSubgraphDelegate<Input, Output> {
         return AIAgentSubgraphBuilder<Input, Output>(
             name,
-            toolSelectionStrategy,
-            llmModel,
-            llmParams
+            inputType = typeOf<Input>(),
+            outputType = typeOf<Output>(),
+            toolSelectionStrategy = toolSelectionStrategy,
+            llmModel = llmModel,
+            llmParams = llmParams
         ).also { it.define() }.build()
     }
 
@@ -94,7 +102,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * @param tools List of tools available to the subgraph
      * @param define Subgraph definition function
      */
-    public fun <Input, Output> subgraph(
+    public inline fun <reified Input, reified Output> subgraph(
         name: String? = null,
         tools: List<Tool<*, *>>,
         llmModel: LLModel? = null,
@@ -226,13 +234,15 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
  */
 public class AIAgentSubgraphBuilder<Input, Output>(
     public val name: String? = null,
+    inputType: KType,
+    outputType: KType,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel?,
     private val llmParams: LLMParams?,
 ) : AIAgentSubgraphBuilderBase<Input, Output>(),
     BaseBuilder<AIAgentSubgraphDelegate<Input, Output>> {
-    override val nodeStart: StartNode<Input> = StartNode(name)
-    override val nodeFinish: FinishNode<Output> = FinishNode(name)
+    override val nodeStart: StartNode<Input> = StartNode(subgraphName = name, type = inputType)
+    override val nodeFinish: FinishNode<Output> = FinishNode(subgraphName = name, type = outputType)
 
     override fun build(): AIAgentSubgraphDelegate<Input, Output> {
         require(isFinishReachable(nodeStart)) {
@@ -345,6 +355,8 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
     private val merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
     private val dispatcher: CoroutineDispatcher
 ) : AIAgentNodeBuilder<Input, Output>(
+    inputType = nodes.first().inputType,
+    outputType = nodes.first().outputType,
     execute = { input ->
         val initialContext: AIAgentContextBase = this
 

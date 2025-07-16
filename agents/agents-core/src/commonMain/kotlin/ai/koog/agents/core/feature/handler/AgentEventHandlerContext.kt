@@ -3,6 +3,7 @@ package ai.koog.agents.core.feature.handler
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import kotlin.reflect.KType
 
 /**
  * Provides the context for handling events specific to AI agents.
@@ -50,11 +51,13 @@ public data class AgentStartContext<TFeature>(
  * @property agentId The unique identifier of the agent that completed its execution.
  * @property runId The identifier of the session in which the agent was executed.
  * @property result The optional result of the agent's execution, if available.
+ * @property resultType [KType] of the [result].
  */
 public data class AgentFinishedContext(
     public val agentId: String,
     public val runId: String,
-    public val result: Any?
+    public val result: Any?,
+    public val resultType: KType,
 ) : AgentEventHandlerContext
 
 /**

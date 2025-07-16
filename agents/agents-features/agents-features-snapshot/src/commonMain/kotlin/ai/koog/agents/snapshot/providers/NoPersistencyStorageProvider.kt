@@ -9,7 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 public class NoPersistencyStorageProvider: PersistencyStorageProvider {
     private val logger = KotlinLogging.logger {  }
 
-    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
         return emptyList()
     }
 
@@ -19,7 +19,7 @@ public class NoPersistencyStorageProvider: PersistencyStorageProvider {
         logger.info { "Snapshot feature is not enabled in the agent. Snapshot will not be saved: $agentCheckpointData" }
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
         return null
     }
 }

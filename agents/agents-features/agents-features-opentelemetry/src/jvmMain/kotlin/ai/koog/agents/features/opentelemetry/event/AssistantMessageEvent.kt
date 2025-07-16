@@ -7,7 +7,7 @@ import ai.koog.prompt.message.Message
 
 internal data class AssistantMessageEvent(
     private val provider: LLMProvider,
-    private val message: Message,
+    private val message: Message.Response,
     override val verbose: Boolean = false
 ) : GenAIAgentEvent {
 
@@ -22,23 +22,20 @@ internal data class AssistantMessageEvent(
             add(EventBodyFields.Role(role = message.role))
         }
 
+
         when (message) {
             is Message.Assistant -> {
-                add(EventBodyFields.Content(content = message.content))
+                if (verbose) {
+                    add(EventBodyFields.Content(content = message.content))
+                }
             }
 
             is Message.Tool.Call -> {
-                add(EventBodyFields.ToolCalls(tools = listOf(message)))
+                if (verbose) {
+                    add(EventBodyFields.ToolCalls(tools = listOf(message)))
+                }
             }
-
-            is Message.Tool.Result -> {
-                add(EventBodyFields.ToolCalls(tools = listOf(message)))
-            }
-
-            else -> error(
-                "Expected message types: ${Message.Tool.Call::class.simpleName}, " +
-                    "${Message.Tool.Result::class.simpleName}, but received: ${message::class.simpleName}"
-            )
         }
     }
+
 }

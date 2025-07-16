@@ -13,6 +13,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.*
@@ -43,7 +44,7 @@ class FileCheckpointsTests {
     @BeforeTest
     fun setup() {
         tempDir = Files.createTempDirectory("agent-checkpoint-test")
-        provider = JVMFilePersistencyStorageProvider(tempDir)
+        provider = JVMFilePersistencyStorageProvider(tempDir, "testAgentId")
     }
 
     @AfterTest
@@ -80,7 +81,7 @@ class FileCheckpointsTests {
             output)
         
         // Verify that the checkpoint was saved to the file system
-        val checkpoints = provider.getCheckpoints(agentId)
+        val checkpoints = provider.getCheckpoints()
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
         assertEquals("checkpointId", checkpoints.first().checkpointId)
     }
@@ -114,10 +115,9 @@ class FileCheckpointsTests {
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time,
             nodeId = "Node2",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -156,10 +156,9 @@ class FileCheckpointsTests {
 
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
-            agentId = agentId,
             createdAt = time,
             nodeId = "Node2",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
@@ -168,10 +167,9 @@ class FileCheckpointsTests {
 
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId2",
-            agentId = agentId,
             createdAt = time - 10.seconds,
             nodeId = "Node1",
-            lastInput = "Test input",
+            lastInput = JsonPrimitive("Test input"),
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
@@ -224,7 +222,7 @@ class FileCheckpointsTests {
         agent.run("Start the test")
         
         // Verify that checkpoints were automatically created
-        val checkpoints = provider.getCheckpoints(agentId)
+        val checkpoints = provider.getCheckpoints()
         assertTrue(checkpoints.isNotEmpty(), "Should have automatically created checkpoints")
     }
 }

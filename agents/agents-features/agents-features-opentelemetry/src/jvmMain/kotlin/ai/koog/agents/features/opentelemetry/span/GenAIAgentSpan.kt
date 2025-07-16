@@ -52,7 +52,7 @@ internal abstract class GenAIAgentSpan(
             // Pass body fields as attributes until an API is updated.
             val attributes = buildList {
                 addAll(event.attributes)
-                if (event.bodyFields.isNotEmpty() && event.verbose) {
+                if (event.bodyFields.isNotEmpty()) {
                     add(event.bodyFieldsAsAttribute())
                 }
             }

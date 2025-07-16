@@ -18,7 +18,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.Message.WithAttachments
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -208,17 +207,43 @@ public open class OpenAILLMClient(
         if (!model.capabilities.contains(LLMCapability.Moderation)) {
             throw IllegalArgumentException("Model ${model.id} does not support moderation")
         }
-        val input = buildList {
-            prompt.messages.forEach { message ->
-                add(OpenAIModerationInput.text(message.content))
 
-                if (message is WithAttachments) {
-                    message.attachments
-                        .map(OpenAIModerationInput::fromImageContent)
-                        .forEach(::add)
+        require(prompt.messages.isNotEmpty()) {
+            "Can't moderate an empty prompt"
+        }
+
+        val input = prompt.messages
+            .map { message ->
+                if (message is Message.WithAttachments) {
+                    require(message.attachments.all { it is Attachment.Image }) {
+                        "Only image attachments are supported for moderation"
+                    }
+                }
+
+                message.toOpenAIMessageContent(model)
+            }
+            .let { contents ->
+                /*
+                 If all messages contain only text, merge it all in a single text input,
+                 to support OpenAI-compatible providers that do not support attachments.
+
+                 Otherwise create a single content instance with all the parts
+                */
+                if (contents.all { it is Content.Text }) {
+                    val text = contents.joinToString(separator = "\n\n") { (it as Content.Text).value }
+
+                    Content.Text(text)
+                } else {
+                    val parts = contents.flatMap { content ->
+                        when (content) {
+                            is Content.Parts -> content.value
+                            is Content.Text -> listOf(ContentPart.Text(content.value))
+                        }
+                    }
+
+                    Content.Parts(parts)
                 }
             }
-        }
 
         val request = OpenAIModerationRequest(
             input = input,
@@ -354,7 +379,12 @@ public open class OpenAILLMClient(
 
                 is Message.User -> {
                     flushCalls()
-                    messages.add(message.toOpenAIMessage(model))
+                    messages.add(
+                        OpenAIMessage(
+                            role = "user",
+                            content = message.toOpenAIMessageContent(model)
+                        )
+                    )
                 }
 
                 is Message.Assistant -> {
@@ -478,8 +508,8 @@ public open class OpenAILLMClient(
         }
     }
 
-    private fun Message.User.toOpenAIMessage(model: LLModel): OpenAIMessage {
-        val messageContent: Content = if (attachments.isEmpty()) {
+    private fun Message.toOpenAIMessageContent(model: LLModel): Content {
+        return if (this !is Message.WithAttachments || attachments.isEmpty()) {
             Content.Text(content)
         } else {
             val parts = buildList {
@@ -540,8 +570,6 @@ public open class OpenAILLMClient(
 
             Content.Parts(parts)
         }
-
-        return OpenAIMessage(role = "user", content = messageContent)
     }
 
     private fun buildOpenAIParam(param: ToolParameterDescriptor): JsonObject = buildJsonObject {

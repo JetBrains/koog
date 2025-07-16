@@ -28,10 +28,6 @@ internal interface GenAIAgentEvent {
             "Unable to convert Event Body Fields into Attribute because no body fields found"
         }
 
-        check(verbose) {
-            "Unable to convert Event Body Fields into Attribute because 'verbose' is set to 'false'"
-        }
-
         val value = bodyFields.joinToString(separator = ",", prefix = "{", postfix = "}") { bodyField ->
             "\"${bodyField.key}\":${bodyField.valueString}"
         }

@@ -11,7 +11,8 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 internal data class OpenAIModerationRequest(
-    val input: List<OpenAIModerationInput>,
+    @Serializable(with = ContentSerializer::class)
+    val input: Content?,
     val model: String? = null
 )
 

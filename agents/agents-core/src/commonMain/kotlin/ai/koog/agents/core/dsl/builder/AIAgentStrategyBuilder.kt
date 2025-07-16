@@ -4,6 +4,8 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /**
  * A builder class responsible for constructing an instance of `AIAgentStrategy`.
@@ -15,10 +17,12 @@ import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
  */
 public class AIAgentStrategyBuilder<Input, Output>(
     private val name: String,
+    inputType: KType,
+    outputType: KType,
     private val toolSelectionStrategy: ToolSelectionStrategy,
 ) : AIAgentSubgraphBuilderBase<Input, Output>(), BaseBuilder<AIAgentStrategy<Input, Output>> {
-    public override val nodeStart: StartNode<Input> = StartNode()
-    public override val nodeFinish: FinishNode<Output> = FinishNode()
+    public override val nodeStart: StartNode<Input> = StartNode(type = inputType)
+    public override val nodeFinish: FinishNode<Output> = FinishNode(type = outputType)
 
     override fun build(): AIAgentStrategy<Input, Output> {
 
@@ -43,12 +47,15 @@ public class AIAgentStrategyBuilder<Input, Output>(
  * @property name The unique identifier for this agent.
  * @param init Lambda that defines stages and nodes of this agent
  */
-public fun <Input, Output> strategy(
+public inline fun <reified Input, reified Output> strategy(
     name: String,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     init: AIAgentStrategyBuilder<Input, Output>.() -> Unit,
 ): AIAgentStrategy<Input, Output> {
-    return AIAgentStrategyBuilder<Input, Output>(name, toolSelectionStrategy)
-        .apply(init)
-        .build()
+    return AIAgentStrategyBuilder<Input, Output>(
+        name = name,
+        inputType = typeOf<Input>(),
+        outputType = typeOf<Output>(),
+        toolSelectionStrategy = toolSelectionStrategy
+    ).apply(init).build()
 }

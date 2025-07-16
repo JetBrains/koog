@@ -18,6 +18,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // For Koog development only, skip this if you don't need to load any local dependencies.
+        mavenLocal()
     }
 }
 

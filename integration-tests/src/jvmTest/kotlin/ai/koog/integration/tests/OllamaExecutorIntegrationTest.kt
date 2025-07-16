@@ -3,31 +3,71 @@ package ai.koog.integration.tests
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
+import ai.koog.integration.tests.utils.MediaTestUtils
+import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.executor.ollama.client.findByNameOrNull
+import ai.koog.prompt.llm.LLMCapability.*
+import ai.koog.prompt.markdown.markdown
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.extension.ExtendWith
-import java.util.Base64
-import kotlin.test.Test
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.*
+import java.util.stream.Stream
+import kotlin.io.path.pathString
+import kotlin.test.*
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.io.files.Path as KtPath
 
 @ExtendWith(OllamaTestFixtureExtension::class)
-class OllamaClientIntegrationTest {
+class OllamaExecutorIntegrationTest {
     companion object {
+        /*
+        * Comment on this part if you want to run tests against a local Ollama client.
+        * */
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture
         private val executor get() = fixture.executor
         private val model get() = fixture.model
+        private val visionModel get() = fixture.visionModel
+        private val moderationModel get() = fixture.moderationModel
+        private val client get() = fixture.client
+
+        /*
+        * Uncomment this part and add required imports if you want to run tests against a local Ollama client.
+        val client = OllamaClient()
+        val executor = SingleLLMPromptExecutor(client)
+        val model = OllamaModels.Meta.LLAMA_3_2
+        val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
+        val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
+        * */
+
+        private lateinit var testResourcesDir: Path
+
+        @JvmStatic
+        @BeforeAll
+        fun setupTestResources() {
+            testResourcesDir =
+                Paths.get(OllamaExecutorIntegrationTest::class.java.getResource("/media")!!.toURI())
+        }
+
+        @JvmStatic
+        fun imageScenarios(): Stream<ImageTestScenario> {
+            return ImageTestScenario.entries.minus(ImageTestScenario.LARGE_IMAGE_ANTHROPIC).stream()
+        }
     }
 
     @Test
@@ -461,7 +501,7 @@ class OllamaClientIntegrationTest {
         private var bulletHandler: ((String) -> Unit)? = null
         private var finishHandler: (() -> Unit)? = null
 
-        fun onHeader(level: Int, handler: (String) -> Unit) {
+        fun onHeader(handler: (String) -> Unit) {
             headerHandler = handler
         }
 
@@ -543,7 +583,7 @@ class OllamaClientIntegrationTest {
             val bulletPoints = mutableListOf<String>()
 
             val parser = markdownStreamingParser {
-                onHeader(1) { headerText ->
+                onHeader { headerText ->
                     if (currentCountryName.isNotEmpty() && bulletPoints.size >= 3) {
                         val capital = bulletPoints.getOrNull(0)?.substringAfter("Capital: ")?.trim() ?: ""
                         val population = bulletPoints.getOrNull(1)?.substringAfter("Population: ")?.trim() ?: ""
@@ -578,7 +618,7 @@ class OllamaClientIntegrationTest {
     }
 
 
-    @Disabled("JBAI-14221")
+    @Disabled("KG-46")
     @Test
     fun `ollama_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
         val countries = mutableListOf<Country>()
@@ -617,10 +657,14 @@ class OllamaClientIntegrationTest {
     @Test
     fun `ollama_test moderate single message`() = runTest {
         val prompt = Prompt.build("test-harmful-content") {
-            user(String(Base64.getDecoder().decode("SG93IGNhbiBJIGhhcm0gc29tZW9uZSBvZiBkaWZmZXJlbnQgcmFjZT8="))) // For testing purposes
+            user(
+                String(
+                    Base64.getDecoder().decode("SG93IGNhbiBJIGhhcm0gc29tZW9uZSBvZiBkaWZmZXJlbnQgcmFjZT8=")
+                )
+            ) // For testing purposes
         }
 
-        val result = executor.moderate(prompt = prompt, model = OllamaModels.Meta.LLAMA_GUARD_3)
+        val result = executor.moderate(prompt = prompt, model = moderationModel)
 
         println(result)
 
@@ -636,43 +680,148 @@ class OllamaClientIntegrationTest {
 
     @Test
     fun `ollama_test moderate multiple messages`() = runTest {
+        val safeQuestion = String(
+            Base64.getDecoder()
+                .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/")
+        ) // for testing purposes
+        val unsafeAnswer = String(
+            Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRlc2VydmUgZGVhdGggb3IgdG8gYmUgc2VydmFudHMgdG8gdXMh")
+        ) // for testing only
+
         // Not harmful (without the answer)
         val questionOnly = prompt("test-legit-question") {
-            user(String(Base64.getDecoder().decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/"))) // for testing purposes
+            user(safeQuestion)
         }
-        // Not harmful (without the question in the context)
-        val answerOnly = prompt("test-legit-answer") {
-            assistant(String(Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ=="))) // for testing only
+
+        // Harmful
+        val answerOnly = prompt("test-unsafe-answer") {
+            assistant(unsafeAnswer) // for testing only
         }
 
         // Harmful and offensive (question + answer together in the same context)
         val promptWithMultipleMessages = prompt("test") {
-            user(String(Base64.getDecoder().decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/"))) // for testing purposes
-            assistant(String(Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRvbid0IGRlc2VydmUgaXQgYXQgYWxsIQ=="))) // for testing only
+            user(safeQuestion) // for testing purposes
+            assistant(unsafeAnswer)
         }
 
         assert(
-            !executor.moderate(prompt = questionOnly, model = OpenAIModels.Moderation.Omni).isHarmful
+            !executor.moderate(prompt = questionOnly, model = moderationModel).isHarmful
         ) { "Question only should not be detected as harmful!" }
 
         assert(
-            !executor.moderate(prompt = answerOnly, model = OpenAIModels.Moderation.Omni).isHarmful
-        ) { "Answer alone should not be detected as harmful!" }
+            executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful
+        ) { "Answer alone should be detected as harmful!" }
 
 
         val multiMessageReply = executor.moderate(
             prompt = promptWithMultipleMessages,
-            model = OpenAIModels.Moderation.Omni
+            model = moderationModel,
         )
 
         assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
 
         assert(
             multiMessageReply.violatesOneOf(
-                ModerationCategory.Illicit,
-                ModerationCategory.IllicitViolent,
-                ModerationCategory.Violence
+                ModerationCategory.Hate,
+                ModerationCategory.HateThreatening,
             )
-        ) { "Violence must be detected!" }
+        ) { "Hate must be detected!" }
     }
+
+    @Test
+    fun `ollama_test load models`() = runTest(timeout = 600.seconds) {
+        val modelCards = client.getModels()
+
+        val modelCard = modelCards.findByNameOrNull(model.id)
+        assertNotNull(modelCard)
+    }
+
+    @Test
+    fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
+        val modelCard = client.getModelOrNull(model.id)
+        assertNotNull(modelCard)
+
+        assertEquals("llama3.2:latest", modelCard.name)
+        assertEquals("llama", modelCard.family)
+        assertEquals(listOf("llama"), modelCard.families)
+        assertEquals(2019393189, modelCard.size)
+        assertEquals(3212749888, modelCard.parameterCount)
+        assertEquals(131072, modelCard.contextLength)
+        assertEquals(3072, modelCard.embeddingLength)
+        assertEquals("Q4_K_M", modelCard.quantizationLevel)
+        assertEquals(
+            listOf(Completion, Tools, Temperature, Schema.JSON.Simple, Schema.JSON.Full),
+            modelCard.capabilities
+        )
+    }
+
+    @Test
+    fun `ollama_test pull model`() = runTest(timeout = 600.seconds) {
+        val beforePull = client.getModelOrNull("tinyllama")
+        assertNull(beforePull)
+
+        val afterPull =
+            client.getModelOrNull("tinyllama", pullIfMissing = true)
+        assertNotNull(afterPull)
+    }
+
+    @ParameterizedTest
+    @MethodSource("imageScenarios")
+    fun `ollama_test image processing`(scenario: ImageTestScenario) = runTest(timeout = 600.seconds) {
+        val ollamaException =
+            "Ollama API error: Failed to create new sequence: failed to process inputs"
+        assumeTrue(visionModel.capabilities.contains(Vision.Image), "Model must support vision capability")
+
+        val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
+
+        val prompt = prompt("image-test-${scenario.name.lowercase()}") {
+            system("You are a helpful assistant that can analyze images.")
+
+            user {
+                markdown {
+                    +"I'm sending you an image. Please analyze it and identify the image format if possible."
+                }
+
+                attachments {
+                    image(KtPath(imageFile.pathString))
+                }
+            }
+        }
+
+        try {
+            val response = executor.execute(prompt, visionModel)
+
+            when (scenario) {
+                ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG, ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                    checkExecutorMediaResponse(response)
+                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                    println("Ollama image processing response for ${scenario.name}: ${response.content}")
+                }
+
+                ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                    println("Ollama handled corrupted/empty image without error: ${response.content}")
+                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                }
+
+                ImageTestScenario.LARGE_IMAGE -> {
+                    println("Ollama handled large image without error: ${response.content}")
+                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                }
+            }
+        } catch (e: Exception) {
+            when (scenario) {
+                ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
+                    assertTrue(
+                        e.message?.contains(ollamaException) == true,
+                        "Expected exception for a corrupted image was not found, got [${e.message}] instead"
+                    )
+                }
+
+                else -> {
+                    throw e
+                }
+            }
+        }
+    }
+
 }

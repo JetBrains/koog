@@ -2,8 +2,10 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.utils.runCatchingCancellable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.serializer
 
 /**
  * Represents a strategy for managing and executing AI agent workflows built as subgraphs of interconnected nodes.
@@ -18,7 +20,8 @@ public class AIAgentStrategy<Input, Output>(
     override val name: String,
     public val nodeStart: StartNode<Input>,
     public val nodeFinish: FinishNode<Output>,
-    toolSelectionStrategy: ToolSelectionStrategy
+    toolSelectionStrategy: ToolSelectionStrategy,
+    private val serializer: Json = Json { prettyPrint = true }
 ) : AIAgentSubgraph<Input, Output>(
     name, nodeStart, nodeFinish, toolSelectionStrategy
 ) {
@@ -39,7 +42,7 @@ public class AIAgentStrategy<Input, Output>(
         return runCatchingCancellable {
             context.pipeline.onStrategyStarted(this, context)
             val result = super.execute(context = context, input = input)
-            context.pipeline.onStrategyFinished(this, context, result)
+            context.pipeline.onStrategyFinished(this, context, result, outputType)
             result
         }.onFailure {
             context.environment.reportProblem(it)
@@ -49,7 +52,7 @@ public class AIAgentStrategy<Input, Output>(
     /**
      * Finds and sets the node for the strategy based on the provided context.
      */
-    public fun setExecutionPoint(nodeId: String, input: Any?) {
+    public fun setExecutionPoint(nodeId: String, input: JsonElement) {
         val fullPath = metadata.nodesMap.keys.firstOrNull {
             val segments = it.split(":")
             segments.last() == nodeId
@@ -80,9 +83,12 @@ public class AIAgentStrategy<Input, Output>(
 
         // forcing the very last segment to the latest pre-leaf node to complete the chain
         val leaf = metadata.nodesMap[fullPath] ?: throw IllegalStateException("Node ${segments.last()} not found")
+        val inputType = leaf.inputType
+
+        val actualInput = serializer.decodeFromJsonElement(serializer.serializersModule.serializer(inputType), input)
         leaf.let {
             currentNode as? ExecutionPointNode ?: throw IllegalStateException("Node ${currentNode?.name} does not have subnodes")
-            currentNode.enforceExecutionPoint(it, input)
+            currentNode.enforceExecutionPoint(it, actualInput)
         }
     }
 }

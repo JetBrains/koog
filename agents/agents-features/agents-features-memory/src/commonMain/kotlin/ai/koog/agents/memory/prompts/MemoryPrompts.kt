@@ -1,12 +1,24 @@
 package ai.koog.agents.memory.prompts
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.MemorySubject
 
-internal object MemoryPrompts {
-    internal val historyWrapperTag = "conversation_to_extract_facts"
+/**
+ * Collection of prompt for agent memory feature.
+ */
+@InternalAgentsApi
+public object MemoryPrompts {
+    /**
+     * Tag to wrap history.
+     */
+    @Suppress("ConstPropertyName")
+    public const val historyWrapperTag: String = "conversation_to_extract_facts"
 
-    internal fun singleFactPrompt(concept: Concept) =
+    /**
+     * Single fact prompt.
+     */
+    public fun singleFactPrompt(concept: Concept): String =
         """You are a specialized information extractor for compressing agent conversation histories.
 
         You will receive a conversation history enclosed in <$historyWrapperTag> tags. Your task is to extract THE SINGLE MOST IMPORTANT fact about "${concept.keyword}" (${concept.description}).
@@ -25,7 +37,10 @@ internal object MemoryPrompts {
         Output only the fact.
         """.trimIndent()
 
-    internal fun multipleFactsPrompt(concept: Concept) =
+    /**
+     * Multiple facts prompt.
+     */
+    public fun multipleFactsPrompt(concept: Concept): String =
         """You are a specialized information extractor for compressing agent conversation histories.
         
         You will receive a conversation history enclosed in <$historyWrapperTag> tags. Your task is to extract ONLY the essential facts about "${concept.keyword}" (${concept.description}).
@@ -45,7 +60,10 @@ internal object MemoryPrompts {
         Output only the facts, nothing else.
         """.trimIndent()
 
-    internal fun autoDetectFacts(subjects: List<MemorySubject>): String = """
+    /**
+     * Auto detect facts prompt.
+     */
+    public fun autoDetectFacts(subjects: List<MemorySubject>): String = """
         Analyze the conversation history and identify important facts about:
         ${
         subjects.joinToString("\n") { subject ->

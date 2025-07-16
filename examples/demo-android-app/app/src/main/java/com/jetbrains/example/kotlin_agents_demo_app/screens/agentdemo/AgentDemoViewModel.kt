@@ -145,13 +145,13 @@ class AgentDemoViewModel(
                 )
 
                 // Run the agent
-                val result = agent.runAndGetResult(userInput)
+                val result = agent.run(userInput)
 
                 // Update UI with final state and mark chat as ended
                 _uiState.update {
                     it.copy(
                         messages = it.messages +
-                            Message.ResultMessage(result.orEmpty()) +
+                            Message.ResultMessage(result) +
                             Message.SystemMessage("The agent has stopped."),
                         isInputEnabled = false,
                         isLoading = false,

@@ -335,6 +335,10 @@ public class BedrockLLMClient(
             )
         }
 
+        require(prompt.messages.isNotEmpty()) {
+            "Can't moderate an empty prompt"
+        }
+
         val inputGuardrailResponse = requestGuardrails<Message.Request>(
             moderationGuardrailsSettings,
             prompt,

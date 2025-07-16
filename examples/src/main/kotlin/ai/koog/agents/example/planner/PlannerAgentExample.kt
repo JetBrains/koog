@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -83,6 +84,16 @@ class FailedToPlanSequentialNode(problemDescription: String) : FailureMessage(pr
 
 fun parse(message: String): ParsedMessage = ParsingErrorMessage("TODO: parsing is not implemented")
 
+inline fun <reified T : FailureMessage> AIAgentSubgraphBuilderBase<*, *>.retryPlanning(
+    nextNode: AIAgentNodeBase<String, Message.Response>
+): AIAgentNodeBase<T, Message.Response> {
+    val result by node<T, Message.Response> { parsedMessage ->
+        nextNode.execute(this, parsedMessage.problemDescription)
+            ?: throw UnsupportedOperationException("Node interruption is not supported here")
+    }
+    return result
+}
+
 /**
  * The planner builds a plan in the form of a tree with parallel and sequential subtasks.
  * */
@@ -147,16 +158,6 @@ suspend fun planWork(
 
         val parseLLMResponse by node<Message.Assistant, ParsedMessage> { message ->
             parse(message.content)
-        }
-
-        fun <T : FailureMessage> retryPlanning(
-            nextNode: AIAgentNodeBase<String, Message.Response>
-        ): AIAgentNodeBase<T, Message.Response> {
-            val result by node<T, Message.Response> { parsedMessage ->
-                nextNode.execute(this, parsedMessage.problemDescription)
-                    ?: throw UnsupportedOperationException("Node interruption is not supported here")
-            }
-            return result
         }
 
         val saveNodesToState by node<ParsedSubNodesMessage, Unit> {
