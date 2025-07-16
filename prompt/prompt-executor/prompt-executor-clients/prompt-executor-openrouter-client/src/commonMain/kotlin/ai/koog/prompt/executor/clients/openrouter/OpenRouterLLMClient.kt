@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.utils.SuitableForIO
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -435,5 +436,19 @@ public class OpenRouterLLMClient(
                 error("Unexpected response from OpenRouter: no tool calls and no content")
             }
         }
+    }
+
+    /**
+     * Executes a moderation action on the given prompt using the specified language model.
+     * This method is not supported by the OpenRouter API and will always throw an `UnsupportedOperationException`.
+     *
+     * @param prompt The [Prompt] object to be moderated, containing the messages and respective context.
+     * @param model The [LLModel] to be used for the moderation process.
+     * @return This method does not return a valid result as it always throws an exception.
+     * @throws UnsupportedOperationException Always thrown because moderation is not supported by the OpenRouter API.
+     */
+    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        logger.warn { "Moderation is not supported by OpenRouter API" }
+        throw UnsupportedOperationException("Moderation is not supported by OpenRouter API.")
     }
 }

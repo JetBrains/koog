@@ -10,7 +10,7 @@ group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.2.1"
+    val main = "0.3.0"
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
@@ -90,7 +90,8 @@ subprojects {
                 "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
                 "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
                 "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
-                "OLLAMA_IMAGE_URL" to System.getenv("OLLAMA_IMAGE_URL"),
+                "AWS_SECRET_KEY" to System.getenv("AWS_SECRET_KEY"),
+                "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
             )
         )
     }
@@ -174,6 +175,7 @@ dependencies {
     dokka(project(":agents:agents-features:agents-features-trace"))
     dokka(project(":agents:agents-features:agents-features-tokenizer"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
+    dokka(project(":agents:agents-features:agents-features-snapshot"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))
@@ -191,6 +193,7 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))
@@ -201,6 +204,8 @@ dependencies {
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":koog-spring-boot-starter"))
+    dokka(project(":rag:rag-base"))
+    dokka(project(":rag:vector-storage"))
 }
 
 kover {

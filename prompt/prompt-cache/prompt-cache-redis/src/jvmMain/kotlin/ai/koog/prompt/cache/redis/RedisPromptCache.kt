@@ -1,8 +1,6 @@
 package ai.koog.prompt.cache.redis
 
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.cache.model.PromptCache
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.lettuce.core.ExperimentalLettuceCoroutinesApi
@@ -12,10 +10,6 @@ import io.lettuce.core.api.coroutines
 import io.lettuce.core.api.coroutines.RedisCoroutinesCommands
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlin.math.absoluteValue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
@@ -95,43 +89,29 @@ public class RedisPromptCache(
     }
 
     @Serializable
-    private data class CachedElement(val response: List<Message.Response>, val request: Request)
+    private data class CachedElement(val response: List<Message.Response>, val request: PromptCache.Request)
 
-    @Serializable
-    private data class Request(val prompt: Prompt, val tools: List<JsonObject> = emptyList()) {
-        val id: String
-            get() = prettyJson.encodeToString(this).hashCode().absoluteValue.toString(36)
-    }
-
-    /**
-     * Generate a cache key for a prompt with tools.
-     */
-    private fun cacheKey(request: Request): String {
-        return this@RedisPromptCache.prefix + request.id
-    }
-
-    override suspend fun get(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response>? {
-        val request = Request(prompt, tools.map { toolToJsonObject(it) })
+    override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
         return getOrNull(request)
     }
 
-    override suspend fun put(prompt: Prompt, tools: List<ToolDescriptor>, response: List<Message.Response>) {
-        val request = Request(prompt, tools.map { toolToJsonObject(it) })
-        put(request, response)
-    }
-
-    /**
-     * Convert a ToolDescriptor to a JsonObject representation.
-     * This is a simplified version that just captures the tool name and description for caching purposes.
-     */
-    private fun toolToJsonObject(tool: ToolDescriptor): JsonObject = buildJsonObject {
-        put("name", JsonPrimitive(tool.name))
-        put("description", JsonPrimitive(tool.description))
-    }
-
-    private suspend fun getOrNull(request: Request): List<Message.Response>? {
+    override suspend fun put(request: PromptCache.Request, response: List<Message.Response>) {
         try {
-            val key = cacheKey(request)
+            val key = prefix + request.asCacheKey
+            val value = prettyJson.encodeToString(CachedElement(response, request))
+
+            // Store the value
+            commands.setex(key, seconds = ttl.inWholeSeconds, value)
+
+            logger.info { "Set key '${key}' to Redis cache" }
+        } catch (e: Exception) {
+            throw RedisCacheException("Error storing in Redis cache", e)
+        }
+    }
+
+    private suspend fun getOrNull(request: PromptCache.Request): List<Message.Response>? {
+        try {
+            val key = prefix + request.asCacheKey
             val value = commands.get(key) ?: run {
                 logger.info { "Get key '${key}' from Redis cache miss" }
                 return null
@@ -146,20 +126,6 @@ public class RedisPromptCache(
             // Log the error but don't fail the operation
             println("Error retrieving from Redis cache: ${e.message}")
             return null
-        }
-    }
-
-    private suspend fun put(request: Request, response: List<Message.Response>) {
-        try {
-            val key = cacheKey(request)
-            val value = prettyJson.encodeToString(CachedElement(response, request))
-
-            // Store the value
-            commands.setex(key, seconds = ttl.inWholeSeconds, value)
-
-            logger.info { "Set key '${key}' to Redis cache" }
-        } catch (e: Exception) {
-            throw RedisCacheException("Error storing in Redis cache", e)
         }
     }
 

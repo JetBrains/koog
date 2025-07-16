@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.ActiveProperty
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.LLMChoice
@@ -204,6 +205,24 @@ public sealed class AIAgentLLMSession(
     public open suspend fun requestLLM(): Message.Response {
         validateSession()
         return executeSingle(prompt, tools)
+    }
+
+    /**
+     * Sends a moderation request to the specified or default large language model (LLM) for content moderation.
+     *
+     * This method validates the session state before processing the request. It prepares the prompt
+     * and uses the executor to perform the moderation check. A specific moderating model can be provided;
+     * if not, the default session model will be used.
+     *
+     * @param moderatingModel An optional [LLModel] instance representing the model to be used for moderation.
+     *                        If null, the default model configured for the session will be used.
+     * @return A [ModerationResult] instance containing the details of the moderation analysis, including
+     *         content classification and flagged categories.
+     */
+    public open suspend fun requestModeration(moderatingModel: LLModel? = null): ModerationResult {
+        validateSession()
+        val preparedPrompt = preparePrompt(prompt, emptyList())
+        return executor.moderate(preparedPrompt, moderatingModel ?: model)
     }
 
     /**

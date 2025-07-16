@@ -25,6 +25,15 @@ kotlin {
                 api(libs.lettuce.core)
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.slf4j.simple)
+                implementation(libs.mockk)
+            }
+        }
     }
 
     explicitApi()

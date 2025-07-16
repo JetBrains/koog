@@ -1,21 +1,15 @@
 package ai.koog.prompt.cache.files
 
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.cache.model.PromptCache
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
 import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.io.path.*
-import kotlin.math.absoluteValue
 
 internal val defaultJson = Json {
     ignoreUnknownKeys = true
@@ -78,42 +72,19 @@ public class FilePromptCache(
     private val lock = Mutex()
 
     @Serializable
-    private data class CachedElement(val response: List<Message.Response>, val request: Request)
+    private data class CachedElement(val response: List<Message.Response>, val request: PromptCache.Request)
 
-    @Serializable
-    private data class Request(val prompt: Prompt, val tools: List<JsonObject> = emptyList()) {
-        val id: String
-            get() = defaultJson.encodeToString(this).hashCode().absoluteValue.toString(36)
-    }
-
-    override suspend fun get(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response>? {
-        val request = Request(prompt, tools.map { toolToJsonObject(it) })
+    override suspend fun get(request: PromptCache.Request): List<Message.Response>? {
         val response = getOrNull(request)
 
         if (response != null) {
-            access[request.id] = Instant.now()
+            access[request.asCacheKey] = Instant.now()
         }
 
         return response
     }
 
-    override suspend fun put(prompt: Prompt, tools: List<ToolDescriptor>, response: List<Message.Response>) {
-        val request = Request(prompt, tools.map { toolToJsonObject(it) })
-        put(request, response)
-    }
-    
-    /**
-     * Convert a ToolDescriptor to a JsonObject representation.
-     * This is a simplified version that just captures the tool name for caching purposes.
-     */
-    private fun toolToJsonObject(tool: ToolDescriptor): JsonObject = buildJsonObject {
-        put("name", JsonPrimitive(tool.name))
-        put("description", JsonPrimitive(tool.description))
-    }
-
-    private fun file(request: Request): Path = requestsDir / request.id
-
-    private suspend fun put(request: Request, response: List<Message.Response>) = lock.withLock {
+    override suspend fun put(request: PromptCache.Request, response: List<Message.Response>): Unit = lock.withLock {
         // Check if we need to remove old files before adding a new one
         enforceFileLimit()
 
@@ -125,10 +96,12 @@ public class FilePromptCache(
 
         // Update timestamps
         val now = Instant.now()
-        access[request.id] = now
+        access[request.asCacheKey] = now
     }
 
-    private fun getOrNull(request: Request): List<Message.Response>? {
+    private fun file(request: PromptCache.Request): Path = requestsDir / request.asCacheKey
+
+    private fun getOrNull(request: PromptCache.Request): List<Message.Response>? {
         val file = file(request)
         if (!file.exists()) return null
 

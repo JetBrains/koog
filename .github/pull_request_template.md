@@ -9,6 +9,7 @@ Also, please tick the appropriate points in the checklist below.
 - [ ] New feature
 - [ ] Bug fix
 - [ ] Documentation fix
+- [ ] Tests improvement
 
 #### Checklist for all pull requests
 - [ ] The pull request has a description of the proposed change

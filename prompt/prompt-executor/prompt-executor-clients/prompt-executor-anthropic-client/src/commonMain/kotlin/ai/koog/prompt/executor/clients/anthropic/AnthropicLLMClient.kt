@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.anthropic
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.utils.SuitableForIO
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -298,9 +299,12 @@ public open class AnthropicLLMClient(
                         }
 
                         val documentSource: DocumentSource = when (val content = attachment.content) {
-                            is AttachmentContent.URL-> DocumentSource.Url(content.url)
+                            is AttachmentContent.URL -> DocumentSource.Url(content.url)
                             is AttachmentContent.Binary -> DocumentSource.Base64(content.base64, attachment.mimeType)
-                            is AttachmentContent.PlainText -> DocumentSource.PlainText(content.text, attachment.mimeType)
+                            is AttachmentContent.PlainText -> DocumentSource.PlainText(
+                                content.text,
+                                attachment.mimeType
+                            )
                         }
 
                         add(AnthropicContent.Document(documentSource))
@@ -409,5 +413,19 @@ public open class AnthropicLLMClient(
                 )
             )
         }
+    }
+
+    /**
+     * Attempts to moderate the content of a given prompt using a specific language model.
+     * This method is not supported by the Anthropic API and will always throw an exception.
+     *
+     * @param prompt The prompt to be moderated, containing messages and optional configuration parameters.
+     * @param model The language model to use for moderation.
+     * @return This method does not return a value as it always throws an exception.
+     * @throws UnsupportedOperationException Always thrown, as moderation is not supported by the Anthropic API.
+     */
+    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        logger.warn { "Moderation is not supported by Anthropic API" }
+        throw UnsupportedOperationException("Moderation is not supported by Anthropic API.")
     }
 }

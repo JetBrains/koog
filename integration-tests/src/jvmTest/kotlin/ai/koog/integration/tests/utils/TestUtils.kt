@@ -26,6 +26,16 @@ object TestUtils {
             ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` is not set")
     }
 
+    fun readAwsAccessKeyIdFromEnv(): String {
+        return System.getenv("AWS_ACCESS_KEY_ID")
+            ?: error("ERROR: environment variable `AWS_ACCESS_KEY_ID` is not set")
+    }
+
+    fun readAwsSecretAccessKeyFromEnv(): String {
+        return System.getenv("AWS_SECRET_KEY")
+            ?: error("ERROR: environment variable `AWS_SECRET_KEY` is not set")
+    }
+
     @Serializable
     enum class CalculatorOperation {
         ADD, SUBTRACT, MULTIPLY, DIVIDE

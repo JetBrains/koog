@@ -9,7 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 
-public object BedrockAmazonNovaSerialization {
+internal object BedrockAmazonNovaSerialization {
 
     private val logger = KotlinLogging.logger {}
 

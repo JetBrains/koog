@@ -2,18 +2,34 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Clock
+
+/**
+ * A utility class for matching strings to associated responses based on different matching strategies.
+ *
+ * @param TResponse The type of the response associated with the matches.
+ * @property partialMatches A map of strings to responses where the key partially matches an input string.
+ * @property exactMatches A map of strings to responses where the key must match an input string exactly.
+ * @property conditional A map of predicate functions to responses, where the response is determined by the first predicate that returns true for the input string.
+ * @property defaultResponse The default response returned when no other match is found.
+ */
+internal class ResponseMatcher<TResponse>(
+    val partialMatches: Map<String, TResponse>? = null,
+    val exactMatches: Map<String, TResponse>? = null,
+    val conditional: Map<(String) -> Boolean, TResponse>? = null,
+    val defaultResponse: TResponse
+)
 
 /**
  * A mock implementation of [PromptExecutor] used for testing.
@@ -39,10 +55,8 @@ import kotlinx.datetime.Clock
  */
 internal class MockLLMExecutor(
     private val handleLastAssistantMessage: Boolean,
-    private val partialMatches: Map<String, List<Message.Response>>? = null,
-    private val exactMatches: Map<String, List<Message.Response>>? = null,
-    private val conditional: Map<(String) -> Boolean, String>? = null,
-    private val defaultResponse: String = "",
+    private val responseMatcher: ResponseMatcher<List<Message.Response>>,
+    private val moderationResponseMatcher: ResponseMatcher<ModerationResult>,
     private val toolRegistry: ToolRegistry? = null,
     private val logger: KLogger = KotlinLogging.logger(MockLLMExecutor::class.simpleName!!),
     val toolActions: List<ToolCondition<*, *>> = emptyList(),
@@ -78,6 +92,27 @@ internal class MockLLMExecutor(
         return flowOf(response.content)
     }
 
+    /**
+     * Processes a given prompt to determine if it adheres to moderation rules and returns a moderation result.
+     *
+     * The method evaluates the last message in the prompt for exact and partial matches against predefined moderation rules.
+     * If no matches are found, it returns a default moderation response.
+     *
+     * @param prompt The prompt containing the message to be moderated.
+     * @param model The LLM model used for processing (ignored in this implementation).
+     * @return The result of the moderation, based on matches or default rules.
+     */
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        val lastMessage = getLastMessage(prompt) ?: return moderationResponseMatcher.defaultResponse
+
+        return findExactResponse(lastMessage, moderationResponseMatcher.exactMatches)
+            ?: findPartialResponse(lastMessage, moderationResponseMatcher.exactMatches)
+            ?: moderationResponseMatcher.defaultResponse
+    }
+
     private fun getLastMessage(prompt: Prompt): Message? {
         return if (handleLastAssistantMessage && prompt.messages.any { it is Message.Assistant })
             prompt.messages.lastOrNull { it is Message.Assistant }
@@ -103,24 +138,18 @@ internal class MockLLMExecutor(
 
         val inputTokensCount = tokenizer?.let { prompt.messages.map { it.content }.sumOf(it::countTokens) }
 
-        val lastMessage = getLastMessage(prompt) ?: return listOf(Message.Assistant(
-            defaultResponse,
-            metaInfo = ResponseMetaInfo.create(
-                clock,
-                totalTokensCount = tokenizer?.countTokens(defaultResponse)?.let { it + inputTokensCount!! },
-                inputTokensCount = inputTokensCount,
-                outputTokensCount = tokenizer?.countTokens(defaultResponse),
-            )
-        ))
+        val lastMessage = getLastMessage(prompt) ?: return responseMatcher.defaultResponse
 
         // Check the exact response match
-        val exactMatchedResponse = findExactResponse(lastMessage, exactMatches)
+        val exactMatchedResponse = findExactResponse(lastMessage, responseMatcher.exactMatches)
         if (exactMatchedResponse != null) {
             logger.debug { "Returning response for exact prompt match: $exactMatchedResponse" }
         }
 
         // Check partial response match
-        val partiallyMatchedResponse = if (exactMatchedResponse == null) findPartialResponse(lastMessage, partialMatches) ?: listOf() else listOf()
+        val partiallyMatchedResponse =
+            if (exactMatchedResponse == null) findPartialResponse(lastMessage, responseMatcher.partialMatches)
+                ?: listOf() else listOf()
         if (partiallyMatchedResponse.any()) {
             logger.debug { "Returning response for partial prompt match: $partiallyMatchedResponse" }
         }
@@ -134,34 +163,16 @@ internal class MockLLMExecutor(
         }
 
         // Process the default LLM response
-        return listOf(Message.Assistant(
-            defaultResponse,
-            metaInfo = ResponseMetaInfo.create(
-                clock,
-                totalTokensCount = tokenizer?.countTokens(defaultResponse)?.let { it + inputTokensCount!! },
-                inputTokensCount = inputTokensCount,
-                outputTokensCount = tokenizer?.countTokens(defaultResponse),
-            )
-        ))
+        return responseMatcher.defaultResponse
     }
 
     private fun getConditionalResponse(
         lastMessage: Message,
         inputTokensCount: Int?
-    ): List<Message.Response>? = if (!conditional.isNullOrEmpty()) {
-        conditional.entries.firstOrNull { it.key(lastMessage.content) }?.let { (_, response) ->
+    ): List<Message.Response>? = if (!responseMatcher.conditional.isNullOrEmpty()) {
+        responseMatcher.conditional.entries.firstOrNull { it.key(lastMessage.content) }?.let { (_, response) ->
             logger.debug { "Returning response for conditional match: $response" }
-            listOf(
-                Message.Assistant(
-                    response,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = tokenizer?.countTokens(response)?.let { it + inputTokensCount!! },
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = tokenizer?.countTokens(response)
-                    )
-                )
-            )
+            response
         }
     } else emptyList()
 
@@ -177,10 +188,10 @@ internal class MockLLMExecutor(
      * @param partialMatches Map of patterns to responses for partial matching
      * @return The matching response, or null if no match is found
      */
-    private fun findPartialResponse(
+    private fun <TResponse> findPartialResponse(
         message: Message,
-        partialMatches: Map<String, List<Message.Response>>?
-    ): List<Message.Response>? {
+        partialMatches: Map<String, TResponse>?
+    ): TResponse? {
         return partialMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
             if (message.content.contains(pattern)) {
                 response
@@ -195,7 +206,10 @@ internal class MockLLMExecutor(
      * @param exactMatches Map of patterns to responses for exact matching
      * @return The matching response, or null if no match is found
      */
-    private fun findExactResponse(message: Message, exactMatches: Map<String, List<Message.Response>>?): List<Message.Response>? {
+    private fun <TResponse> findExactResponse(
+        message: Message,
+        exactMatches: Map<String, TResponse>?
+    ): TResponse? {
         return exactMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
             if (message.content == pattern) {
                 response

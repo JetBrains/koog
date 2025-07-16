@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.utils.SuitableForIO
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -508,5 +509,19 @@ public open class GoogleLLMClient(
         return response.candidates.map { candidate ->
             processGoogleCandidate(candidate, metaInfo)
         }
+    }
+
+    /**
+     * Moderates the given prompt using the specified language model.
+     * This method is not supported by the Google API and will throw an exception when invoked.
+     *
+     * @param prompt The prompt to be evaluated for moderation.
+     * @param model The language model to use for moderation.
+     * @return This method does not return a result as moderation is not supported by the Google API.
+     * @throws UnsupportedOperationException Always thrown since moderation is not supported.
+     */
+    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        logger.warn { "Moderation is not supported by Google API" }
+        throw UnsupportedOperationException("Moderation is not supported by Google API.")
     }
 }

@@ -19,6 +19,7 @@ import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.listDirectoryEntries
 import kotlin.time.Duration.Companion.milliseconds
+import ai.koog.prompt.cache.model.*
 
 class FilePromptCacheTest {
     @TempDir

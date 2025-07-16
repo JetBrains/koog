@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
@@ -260,6 +261,7 @@ public data class AfterLLMCallEvent(
     val prompt: Prompt,
     val model: String,
     val responses: List<Message.Response>,
+    val moderationResponse: ModerationResult? = null,
     override val eventId: String = AfterLLMCallEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 

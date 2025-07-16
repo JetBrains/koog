@@ -17,6 +17,13 @@ kotlin {
                 api(libs.kotlinx.datetime)
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
     }
 
     explicitApi()

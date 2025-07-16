@@ -1,6 +1,7 @@
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -23,7 +24,7 @@ public class PromptExecutorProxy(
 ) : PromptExecutor {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
@@ -32,7 +33,7 @@ public class PromptExecutorProxy(
 
         val responses = executor.execute(prompt, model, tools)
 
-        logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" } }]" }
+        logger.debug { "Finished LLM call with responses: [${responses.joinToString { "${it.role}: ${it.content}" }}]" }
         pipeline.onAfterLLMCall(runId, prompt, model, tools, responses)
 
         return responses
@@ -45,7 +46,11 @@ public class PromptExecutorProxy(
         return stream
     }
 
-    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> {
         logger.debug { "Executing LLM call prompt: $prompt with tools: [${tools.joinToString { it.name }}]" }
 
         val responses = executor.executeMultipleChoices(prompt, model, tools)
@@ -65,5 +70,17 @@ public class PromptExecutorProxy(
         }
 
         return responses
+    }
+
+    override suspend fun moderate(
+        prompt: Prompt,
+        model: LLModel
+    ): ModerationResult {
+        logger.debug { "Executing moderation LLM request (prompt: $prompt)" }
+        pipeline.onBeforeLLMCall(runId, prompt, model, emptyList())
+        val result = executor.moderate(prompt, model)
+        logger.debug { "Finished moderation LLM request with response: $result" }
+        pipeline.onAfterLLMCall(runId, prompt, model, emptyList(), responses = emptyList(), moderationResponse = result)
+        return result
     }
 }

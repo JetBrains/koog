@@ -26,8 +26,8 @@ public annotation class EdgeTransformationDslMarker
  * @property edgeIntermediateBuilder The intermediate configuration used for building the edge. It includes
  * the source and target nodes, as well as the functionality for processing the output of the source node.
  */
-public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput> internal constructor(
-    private val edgeIntermediateBuilder: AIAgentEdgeBuilderIntermediate<IncomingOutput, OutgoingInput, OutgoingInput>,
+public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput, CompatibleOutput: OutgoingInput> internal constructor(
+    private val edgeIntermediateBuilder: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>,
 ) : BaseBuilder<AIAgentEdge<IncomingOutput, OutgoingInput>> {
     override fun build(): AIAgentEdge<IncomingOutput, OutgoingInput> {
         return AIAgentEdge(
