@@ -85,7 +85,6 @@ class AIAgentContextTest {
         val featureKey = AIAgentStorageKey<String>("test-feature")
         val initialValue = "initial-value"
         val updatedValue = "updated-value"
-
         val context = createTestContext()
 
         // initial feature value
