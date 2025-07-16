@@ -1,8 +1,7 @@
-package ai.koog.integration.tests.llm
+package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.agents.testing.llm.AbstractLLMClientErrorsTest
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
-import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels.CostOptimized.GPT4_1Nano
 import me.kpavlov.aimocks.core.AbstractBuildingStep
 import me.kpavlov.aimocks.openai.MockOpenai
@@ -30,8 +29,7 @@ internal class OpenAiLLMClientErrorsTest : AbstractLLMClientErrorsTest<OpenAILLM
         )
     )
 
-
-    override fun whenMockMatched(question: String, temperature: Double): AbstractBuildingStep<*, *> = mock.completion {
+    override fun prepareMock(question: String, temperature: Double): AbstractBuildingStep<*, *> = mock.completion {
         userMessageContains(question)
         temperature(temperature)
     }

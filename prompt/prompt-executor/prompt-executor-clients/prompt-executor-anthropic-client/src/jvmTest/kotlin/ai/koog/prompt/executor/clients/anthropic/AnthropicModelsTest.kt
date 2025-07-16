@@ -5,7 +5,7 @@ import ai.koog.prompt.llm.LLMProvider
 import kotlin.test.Test
 import kotlin.test.assertSame
 
-class AnthropicModelsTest {
+internal class AnthropicModelsTest {
 
     @Test
     fun `Anthropic models should have Anthropic provider`() {

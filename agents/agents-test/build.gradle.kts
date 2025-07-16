@@ -28,6 +28,15 @@ kotlin {
             }
         }
 
+        jvmMain {
+            dependencies {
+                implementation(kotlin("test-junit5"))
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.junit.jupiter.params)
+                implementation(libs.aimocks.core)
+            }
+        }
+
         commonTest {
             dependencies {
                 implementation(libs.kotlinx.coroutines.test)

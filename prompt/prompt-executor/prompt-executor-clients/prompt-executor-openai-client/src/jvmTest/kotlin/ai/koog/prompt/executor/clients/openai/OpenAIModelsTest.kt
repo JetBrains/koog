@@ -5,7 +5,7 @@ import ai.koog.prompt.llm.LLMProvider
 import kotlin.test.Test
 import kotlin.test.assertSame
 
-class OpenAIModelsTest {
+internal class OpenAIModelsTest {
 
     @Test
     fun `OpenAI models should have OpenAI provider`() {

@@ -1,8 +1,7 @@
-package ai.koog.integration.tests.llm
+package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.agents.testing.llm.AbstractLLMClientErrorsTest
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
-import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_7
 import me.kpavlov.aimocks.anthropic.MockAnthropic
 import me.kpavlov.aimocks.core.AbstractBuildingStep
@@ -41,7 +40,7 @@ internal class AnthropicLLMClientErrorsTest : AbstractLLMClientErrorsTest<Anthro
         )
     )
 
-    override fun whenMockMatched(question: String, temperature: Double): AbstractBuildingStep<*, *> = mock.messages {
+    override fun prepareMock(question: String, temperature: Double): AbstractBuildingStep<*, *> = mock.messages {
         userMessageContains(question)
         temperature(temperature)
     }

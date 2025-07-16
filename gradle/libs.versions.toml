@@ -11,7 +11,7 @@ lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
 oshai-logging = "7.0.7"
 mockk = "1.13.8"
-mokksy = "0.4.4"
+mokksy = "0.4.6"
 shadow = "8.1.1"
 slf4j = "2.0.17"
 mcp = "0.5.0"
@@ -25,9 +25,10 @@ opentelemetry = "1.51.0"
 aws-sdk-kotlin = "1.4.119"
 
 [libraries]
-aimocks-anthropic-jvm = { module = "me.kpavlov.aimocks:ai-mocks-anthropic-jvm", version.ref = "mokksy" }
-aimocks-core-jvm = { module = "me.kpavlov.aimocks:ai-mocks-core-jvm", version.ref = "mokksy" }
-aimocks-openai-jvm = { module = "me.kpavlov.aimocks:ai-mocks-openai-jvm", version.ref = "mokksy" }
+aimocks-anthropic = { module = "me.kpavlov.aimocks:ai-mocks-anthropic", version.ref = "mokksy" }
+aimocks-core = { module = "me.kpavlov.aimocks:ai-mocks-core", version.ref = "mokksy" }
+aimocks-openai = { module = "me.kpavlov.aimocks:ai-mocks-openai", version.ref = "mokksy" }
+aimocks-gemini = { module = "me.kpavlov.aimocks:ai-mocks-gemini", version.ref = "mokksy" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
