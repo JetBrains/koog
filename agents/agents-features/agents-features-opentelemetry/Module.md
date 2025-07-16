@@ -1,6 +1,6 @@
 # Module agents-features-opentelemetry
 
-Provides OpenTelemetry integration for monitoring and tracing AI agents in the Koog framework.
+Provides [OpenTelemetry](https://opentelemetry.io) integration for monitoring and tracing AI agents in the Koog framework.
 
 ### Overview
 
