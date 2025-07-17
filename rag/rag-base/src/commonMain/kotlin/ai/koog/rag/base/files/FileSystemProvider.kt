@@ -128,7 +128,7 @@ public object FileSystemProvider {
          *
          * @param path The path to read.
          * @return The file content as a byte array.
-         * @throws IllegalArgumentException if the path isn't a regular file, or it doesn't exist.
+         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
          */
         public suspend fun read(path: Path): ByteArray
 
@@ -149,7 +149,7 @@ public object FileSystemProvider {
          *
          * @param path The path to examine.
          * @return The file size in bytes.
-         * @throws IllegalArgumentException if the path isn't a regular file, or it doesn't exist.
+         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
          */
         public suspend fun size(path: Path): Long
     }
@@ -179,11 +179,10 @@ public object FileSystemProvider {
          *        On Windows platforms, reserved names like "CON",
          *        "PRN", "AUX", "NUL", "COM1"-"COM9", "LPT1"-"LPT9" are not allowed.
          * @param type The type (file or directory) to create.
-         * @throws FileAlreadyExistsException if the file with [name] already exists in [parent].
-         *         It can also be NoSuchFileException.
+         * @throws FileAlreadyExistsException if a file or directory with [name] already exists in [parent].
          * @throws InvalidPathException if [name] is invalid (e.g., contains reserved characters).
-         *         Optional specific exception, some implementations may throw more general IllegalArgumentException or IOException.
-         * @throws IOException if the name is a reserved name on Windows platforms.
+         *         Some implementations may throw a more general IllegalArgumentException or IOException instead.
+         * @throws IOException if the name is a reserved name on Windows platforms or any other I/O error occurs.
          */
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
@@ -206,7 +205,7 @@ public object FileSystemProvider {
          *
          * @param path The path to write to.
          * @param content The content to write as a byte array.
-         * @throws IOException if an I/O error occurs during writing.
+         * @throws IOException if the path is a directory or any other I/O error occurs during writing.
          */
         public suspend fun write(path: Path, content: ByteArray)
 
@@ -219,7 +218,7 @@ public object FileSystemProvider {
          * @param path The path where Sink will be created.
          * @param append Append to existing content (true) or overwrite (false). Default is false (overwrite).
          * @return A buffered Sink object for writing.
-         * @throws IOException if an I/O error occurs during sink creation.
+         * @throws IOException if the path is a directory or any other I/O error occurs during sink creation.
          */
         public suspend fun sink(path: Path, append: Boolean = false): Sink
 
@@ -229,9 +228,8 @@ public object FileSystemProvider {
          *
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
-         * @throws IOException if a file or directory can't be deleted for any reason.
-         *         More specific exceptions can be used to handle each specific case separately
-         *         (e.g., NoSuchFileException when the file / directory doesn't exist).
+         * @throws NoSuchFileException if the file or directory doesn't exist.
+         * @throws IOException if a file or directory can't be deleted for any other reason.
          */
         public suspend fun delete(parent: Path, name: String)
     }
