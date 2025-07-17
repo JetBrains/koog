@@ -98,32 +98,24 @@ class AIAgentContextTest {
         assertEquals(updatedValue, updatedRetrieved)
     }
 
-    /**
-     * Note: There's a potential naming inconsistency in the API.
-     *
-     * The copy method takes a parameter named 'strategyId', but the property in the context is named 'strategyName'.
-     * This could be confusing for developers. The test passes because the implementation correctly maps
-     * strategyId parameter to strategyName property.
-     */
     @Test
     fun testContextCopy() = runTest {
         val originalContext = createTestContext()
 
-        // Create a modified environment for testing
         val newEnvironment = createTestEnvironment("new-environment")
 
-        // Test copy with specific overrides
         val copiedContext = originalContext.copy(
             environment = newEnvironment,
             runId = "new-run-id",
-            strategyId = "new-strategy"  // Note: parameter name is strategyId but property is strategyName
+            strategyName = "new-strategy"
         )
 
+        // check overriden properties
         assertEquals("new-run-id", copiedContext.runId)
-        assertEquals("new-strategy", copiedContext.strategyName)  // Property is named strategyName
+        assertEquals("new-strategy", copiedContext.strategyName)
         assertEquals(newEnvironment, copiedContext.environment)
 
-        // Verify that non-overridden properties remain the same
+        // check that other properties remain the same
         assertEquals(originalContext.config, copiedContext.config)
         assertEquals(originalContext.llm, copiedContext.llm)
         assertEquals(originalContext.stateManager, copiedContext.stateManager)
@@ -133,17 +125,13 @@ class AIAgentContextTest {
     @Test
     fun testContextFork() = runTest {
         val originalContext = createTestContext()
-
-        // Fork the context
         val forkedContext = originalContext.fork()
 
-        // Verify that the forked context has the same properties
         assertEquals(originalContext.runId, forkedContext.runId)
         assertEquals(originalContext.strategyName, forkedContext.strategyName)
         assertEquals(originalContext.environment, forkedContext.environment)
         assertEquals(originalContext.config, forkedContext.config)
 
-        // Verify that mutable properties are deep copied
         assertNotSame(originalContext.llm, forkedContext.llm)
         assertNotSame(originalContext.stateManager, forkedContext.stateManager)
         assertNotSame(originalContext.storage, forkedContext.storage)
@@ -153,7 +141,6 @@ class AIAgentContextTest {
     fun testContextReplace() = runTest {
         val originalContext = createTestContext()
 
-        // Create a new context with different mutable properties
         val newLlm = createTestLLMContext("new-llm")
         val newStateManager = createTestStateManager()
         val newStorage = createTestStorage()
@@ -164,16 +151,12 @@ class AIAgentContextTest {
             storage = newStorage
         )
 
-        // Replace the context
         originalContext.replace(newContext)
 
-        // Verify that mutable properties are replaced
         assertEquals(newLlm, originalContext.llm)
         assertEquals(newStateManager, originalContext.stateManager)
         assertEquals(newStorage, originalContext.storage)
     }
-
-    // Helper methods
 
     private fun createTestEnvironment(id: String = "test-environment"): AIAgentEnvironment {
         return object : AIAgentEnvironment {
@@ -182,7 +165,7 @@ class AIAgentContextTest {
             }
 
             override suspend fun reportProblem(exception: Throwable) {
-                // Do nothing in test
+                // Do nothing
             }
 
             override fun toString(): String = "TestEnvironment($id)"
@@ -199,7 +182,6 @@ class AIAgentContextTest {
     }
 
     private fun createTestPrompt(): Prompt {
-        // Create an empty prompt for testing
         return prompt("test-prompt") {}
     }
 
@@ -220,12 +202,10 @@ class AIAgentContextTest {
     }
 
     private fun createTestStateManager(): AIAgentStateManager {
-        // Create a real AIAgentStateManager instance
         return AIAgentStateManager()
     }
 
     private fun createTestStorage(): AIAgentStorage {
-        // Create a real AIAgentStorage instance
         return AIAgentStorage()
     }
 

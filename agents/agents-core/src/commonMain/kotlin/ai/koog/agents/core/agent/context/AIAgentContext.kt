@@ -165,7 +165,7 @@ public class AIAgentContext(
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
      * @param runId The run Id, or `null` to retain the current run ID.
-     * @param strategyId The strategy identifier, or `null` to retain the current identifier.
+     * @param strategyName The strategy identifier, or `null` to retain the current identifier.
      * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
      */
     override fun copy(
@@ -177,7 +177,7 @@ public class AIAgentContext(
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
         runId: String,
-        strategyId: String,
+        strategyName: String,
         pipeline: AIAgentPipeline,
     ): AIAgentContextBase = AIAgentContext(
         environment = environment,
@@ -188,7 +188,7 @@ public class AIAgentContext(
         stateManager = stateManager,
         storage = storage,
         runId = runId,
-        strategyName = strategyId,
+        strategyName = strategyName,
         pipeline = pipeline,
         id = this.id,
     )
