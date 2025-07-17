@@ -14,6 +14,7 @@ import java.nio.charset.Charset
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.NoSuchFileException
 import kotlin.io.path.*
 import kotlin.use
 
@@ -447,6 +448,7 @@ public object JVMFileSystemProvider {
          *
          * @param parent The parent path in which the file or directory resides.
          * @param name The name of the file or directory to be deleted.
+         * @throws NoSuchFileException if a file or directory doesn't exist.
          */
         @OptIn(ExperimentalPathApi::class)
         override suspend fun delete(parent: Path, name: String) {
