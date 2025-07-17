@@ -130,6 +130,7 @@ public object FileSystemProvider {
      *
      * @param Path The type representing file paths in the implementation.
      */
+    @Deprecated("For internal use only.")
     public interface Read<Path> : Serialization<Path> {
         /**
          * Reads the content of a file at the specified [path].
@@ -146,8 +147,7 @@ public object FileSystemProvider {
          *
          * @param path The path to read from.
          * @return A buffered Source object for reading.
-         * @throws NoSuchFileException if the path doesn't exist.
-         * @throws IllegalArgumentException if the path isn't a regular file.
+         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs during source creation.
          */
         public suspend fun source(path: Path): Source
@@ -202,7 +202,7 @@ public object FileSystemProvider {
          * @param source The source path to move from.
          * @param target The target path to move to.
          * @throws FileAlreadyExistsException if [source] already exists in [target].
-         * @throws IOException if the source path doesn't exist, isn't a file or directory, or any IO error occurs.
+         * @throws IOException if the source path doesn't exist, isn't a file or directory, or any I/O error occurs.
          */
         public suspend fun move(source: Path, target: Path)
 
