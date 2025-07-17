@@ -36,7 +36,7 @@ class LocalFileMemoryProviderTest {
     fun testDifferentMemoryScopes(@TempDir tempDir: Path) = runTest {
         val fs = JVMFileSystemProvider.ReadWrite
         val storage = createTestStorage(fs)
-        val config = LocalMemoryConfig(tempDir.toString())
+        val config = LocalMemoryConfig("memory-storage")
         val provider = LocalFileMemoryProvider(config, storage, fs, tempDir)
 
         val subject = UserSubject
@@ -90,7 +90,7 @@ class LocalFileMemoryProviderTest {
     fun testFactOperations(@TempDir tempDir: Path) = runTest {
         val fs = JVMFileSystemProvider.ReadWrite
         val storage = createTestStorage(fs)
-        val config = LocalMemoryConfig(tempDir.toString())
+        val config = LocalMemoryConfig("memory-storage")
         val provider = LocalFileMemoryProvider(config, storage, fs, tempDir)
 
         val subject = UserSubject
