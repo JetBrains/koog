@@ -690,6 +690,12 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test ReadOnly fromRelativeString to root`() {
+        val rootPath = readOnly.fromRelativeString(file3, FileSystems.getDefault().separator)
+        assertEquals(getRoot(file3), rootPath)
+    }
+
+    @Test
     fun `test ReadOnly name`() = runBlocking {
         val testName = readOnly.name(file1)
         assertEquals("TestGenerator.kt", testName)
@@ -778,6 +784,12 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     fun `test ReadWrite fromRelativeString`() {
         val fileFullPath = readWrite.fromRelativeString(src1, file1.name)
         assertEquals(file1, fileFullPath)
+    }
+
+    @Test
+    fun `test ReadWrite fromRelativeString to root`() {
+        val rootPath = readWrite.fromRelativeString(file3, FileSystems.getDefault().separator)
+        assertEquals(getRoot(file3), rootPath)
     }
 
     @Test

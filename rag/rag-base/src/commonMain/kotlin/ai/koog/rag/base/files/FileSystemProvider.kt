@@ -17,7 +17,6 @@ public object FileSystemProvider {
 
         /**
          * Converts a [path] to its absolute path string representation.
-         * The path is normalized before being converted.
          *
          * @param path The path to convert.
          * @return Absolute path as a string.
@@ -35,12 +34,11 @@ public object FileSystemProvider {
 
         /**
          * Resolves a [path] string against a [base] path.
-         * The resulting path is normalized.
-         * If [path] is the root path (system separator), returns the root of [base].
+         * If [path] is the root path, it's resolved with [fromAbsoluteString].
          *
          * @param base The base path for resolution.
          * @param path The path string to resolve.
-         * @return The normalized resolved path object.
+         * @return The resolved path object.
          * @throws IllegalArgumentException if [path] is an absolute path, except for the root path.
          */
         public fun fromRelativeString(base: Path, path: String): Path
@@ -86,8 +84,9 @@ public object FileSystemProvider {
          *
          * @param directory The directory path to list.
          * @return List of paths contained in the directory, sorted by name.
-         *         Returns an empty list if an error occurs or the directory is empty.
+         *         Returns an empty list if the directory is empty.
          * @throws IllegalArgumentException if [directory] is not a directory or doesn't exist.
+         * @throws IOException if an I/O error occurs during listing.
          */
         public suspend fun list(directory: Path): List<Path>
 
@@ -103,11 +102,10 @@ public object FileSystemProvider {
         /**
          * Computes the relative path from a [root] to a target [path].
          * It doesn't check if the paths actually exist in the filesystem.
-         * The returned path is normalized.
          *
          * @param root The root path.
          * @param path The target path.
-         * @return The normalized relative path as a string, or null if the paths cannot be relativized (e.g., they have no common prefix).
+         * @return The relative path as a string, or null if the paths cannot be relativized (e.g., they have no common prefix).
          */
         public fun relativize(root: Path, path: Path): String?
 

@@ -61,7 +61,8 @@ public object JVMFileSystemProvider {
          */
         override fun fromRelativeString(base: Path, path: String): Path {
             if (path == FileSystems.getDefault().separator) {
-                return base.root ?: base.absolute().root
+                val rootPath = (base.root ?: base.absolute().root).toString()
+                return fromAbsoluteString(rootPath)
             }
 
             val resolvedPath = Path.of(path)
