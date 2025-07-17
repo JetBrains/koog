@@ -399,19 +399,40 @@ public open class AnthropicLLMClient(
                 )
             )
 
-            is ToolParameterType.Object -> JsonObject(
-                mapOf(
-                    "type" to JsonPrimitive("object"),
-                    "properties" to JsonObject(type.properties.associate {
-                        it.name to JsonObject(
-                            mapOf(
-                                "type" to getTypeMapForParameter(it.type),
-                                "description" to JsonPrimitive(it.description)
-                            )
-                        )
-                    })
-                )
-            )
+            is ToolParameterType.Object -> {
+                // Create properties map with proper type information
+                val propertiesMap = mutableMapOf<String, JsonElement>()
+                
+                for (prop in type.properties) {
+                    // Get type information for the property
+                    val typeInfo = getTypeMapForParameter(prop.type)
+                    
+                    // Create a map with all type properties and description
+                    val propMap = mutableMapOf<String, JsonElement>()
+                    for (entry in typeInfo.entries) {
+                        propMap[entry.key] = entry.value
+                    }
+                    propMap["description"] = JsonPrimitive(prop.description)
+                    
+                    // Add to properties map
+                    propertiesMap[prop.name] = JsonObject(propMap)
+                }
+                
+                // Create the final object schema
+                val objectMap = mutableMapOf<String, JsonElement>()
+                objectMap["type"] = JsonPrimitive("object")
+                objectMap["properties"] = JsonObject(propertiesMap)
+                
+                // Add required field if requiredProperties is not empty
+                if (type.requiredProperties.isNotEmpty()) {
+                    objectMap["required"] = JsonArray(type.requiredProperties.map { JsonPrimitive(it) })
+                }
+                
+                // Add additionalProperties for strict validation
+                objectMap["additionalProperties"] = JsonPrimitive(type.additionalProperties ?: false)
+                
+                JsonObject(objectMap)
+            }
         }
     }
 
