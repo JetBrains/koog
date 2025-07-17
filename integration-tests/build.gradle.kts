@@ -31,6 +31,9 @@ kotlin {
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.kotlinx.serialization.json)
+                implementation(libs.aws.sdk.kotlin.sts)
+                implementation(libs.aws.sdk.kotlin.bedrock)
+                implementation(libs.aws.sdk.kotlin.bedrockruntime)
                 implementation(libs.ktor.client.content.negotiation)
                 runtimeOnly(libs.slf4j.simple)
             }

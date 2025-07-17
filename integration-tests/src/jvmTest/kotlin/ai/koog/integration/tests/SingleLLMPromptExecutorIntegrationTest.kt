@@ -16,6 +16,7 @@ import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
@@ -44,6 +45,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -79,6 +81,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
+                readAwsSessionTokenFromEnv(),
                 BedrockClientSettings()
             )
             // val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
@@ -101,6 +104,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
+                readAwsSessionTokenFromEnv(),
                 BedrockClientSettings(),
             )
 
@@ -1064,7 +1068,8 @@ class SingleLLMPromptExecutorIntegrationTest {
     fun integration_testSimpleBedrockExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
         val executor = simpleBedrockExecutor(
             readAwsAccessKeyIdFromEnv(),
-            readAwsSecretAccessKeyFromEnv()
+            readAwsSecretAccessKeyFromEnv(),
+            readAwsSessionTokenFromEnv() ?: "",
         )
 
         val prompt = Prompt.build("test-simple-bedrock-executor") {

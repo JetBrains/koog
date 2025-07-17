@@ -10,10 +10,11 @@ name: Heavy Tests
 on:
   workflow_dispatch:  # Manual trigger
   push:
-    branches: [ "main", "develop" ]
+    branches: [ main, develop ]
 
 env:
   AWS_REGION: us-west-2
+  KOOG_HEAVY_TESTS: true
 
 jobs:
   integration-tests:
@@ -52,6 +53,7 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME_KOOG }}
           aws-region: ${{ env.AWS_REGION }}
           role-session-name: GitHub-Actions-Koog-Integration-Tests
+          role-duration-seconds: 10800  # 3 hours (3 * 60 * 60)
 
       - name: Verify AWS Identity and Bedrock access
         run: |
@@ -65,6 +67,12 @@ jobs:
             exit 1
           }
           echo "Bedrock access verified!"
+
+      - name: Run Bedrock Credentials Smoke Test
+        run: |
+          echo "Running Bedrock credentials smoke test..."
+          ./gradlew :integration-tests:cleanJvmTest :integration-tests:jvmTest --tests "ai.koog.integration.tests.BedrockCredentialsSmokeTest"
+          echo "Bedrock credentials smoke test passed!"
 
       - name: JvmIntegrationTest with Gradle Wrapper
         env:

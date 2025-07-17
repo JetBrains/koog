@@ -93,6 +93,7 @@ public class BedrockLLMClient(
      *
      * @param awsAccessKeyId The AWS access key ID for authentication
      * @param awsSecretAccessKey The AWS secret access key for authentication
+     * @param awsSessionToken Optional session token for temporary credentials
      * @param settings Configuration settings for the Bedrock client, such as region and endpoint
      * @param clock A clock used for time-based operations
      * @return A configured [LLMClient] instance for Bedrock
@@ -100,6 +101,7 @@ public class BedrockLLMClient(
     public constructor(
         awsAccessKeyId: String,
         awsSecretAccessKey: String,
+        awsSessionToken: String? = null,
         settings: BedrockClientSettings = BedrockClientSettings(),
         clock: Clock = Clock.System,
     ) : this(
@@ -108,6 +110,7 @@ public class BedrockLLMClient(
             this.credentialsProvider = StaticCredentialsProvider {
                 this.accessKeyId = awsAccessKeyId
                 this.secretAccessKey = awsSecretAccessKey
+                awsSessionToken?.let { this.sessionToken = it }
             }
 
             // Configure custom endpoint if provided
