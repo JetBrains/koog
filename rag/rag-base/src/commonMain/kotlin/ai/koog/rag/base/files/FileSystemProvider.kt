@@ -190,7 +190,7 @@ public object FileSystemProvider {
          * @throws FileAlreadyExistsException if a file or directory with [name] already exists in [parent].
          * @throws InvalidPathException if [name] is invalid (e.g., contains reserved characters).
          *         Some implementations may throw a more general IllegalArgumentException or IOException instead.
-         * @throws IOException if the name is a reserved name on Windows platforms or any other I/O error occurs.
+         * @throws IOException if any other I/O error occurs.
          */
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
