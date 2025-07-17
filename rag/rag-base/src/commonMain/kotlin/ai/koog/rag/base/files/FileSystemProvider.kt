@@ -17,6 +17,8 @@ public object FileSystemProvider {
 
         /**
          * Converts a [path] to its absolute path string representation.
+         * This method works with the path structure
+         * and doesn't check if the path actually exists in the filesystem.
          *
          * @param path The path to convert.
          * @return Absolute path as a string.
@@ -25,15 +27,19 @@ public object FileSystemProvider {
 
         /**
          * Creates a [Path] object from an absolute path string.
+         * This method works with the path structure
+         * and doesn't check if the path actually exists in the filesystem.
          *
          * @param path The absolute path string to convert.
          * @return A path object representing the absolute path.
-         * @throws IllegalArgumentException if the resolved path is not absolute.
+         * @throws IllegalArgumentException if [path] is not absolute.
          */
         public fun fromAbsoluteString(path: String): Path
 
         /**
          * Resolves a [path] string against a [base] path.
+         * This method works with the path structure
+         * and doesn't check if the path actually exists in the filesystem.
          *
          * @param base The base path for resolution.
          * @param path The path string to resolve.
@@ -44,7 +50,8 @@ public object FileSystemProvider {
 
         /**
          * Gets the name component of a [path].
-         * This method works with the path structure and doesn't check if the path actually exists in the filesystem.
+         * This method works with the path structure
+         * and doesn't check if the path actually exists in the filesystem.
          *
          * @param path The path to examine.
          * @return The name of the file or directory, or an empty string if the path has no name component.
@@ -53,7 +60,8 @@ public object FileSystemProvider {
 
         /**
          * Gets the extension of a [path].
-         * This method works with the path structure and doesn't check if the path actually exists in the filesystem.
+         * This method works with the path structure
+         * and doesn't check if the path actually exists in the filesystem.
          *
          * @param path The path to examine.
          * @return The extension of [path] or empty string if [path] doesn't have an extension.
