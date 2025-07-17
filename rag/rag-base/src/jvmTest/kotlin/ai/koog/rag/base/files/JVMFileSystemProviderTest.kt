@@ -84,7 +84,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test from relative string to root`() {
+    fun `test from relative string with absolute path`() {
         val absolutePath = file1.absolute().pathString
         assertThrows(IllegalArgumentException::class.java) {
             serialization.fromRelativeString(file3, absolutePath)
@@ -692,7 +692,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test ReadOnly fromRelativeString to root`() {
+    fun `test ReadOnly fromRelativeString with absolute path`() {
         val absolutePath = file1.absolute().pathString
         assertThrows(IllegalArgumentException::class.java) {
             readOnly.fromRelativeString(file3, absolutePath)
@@ -791,7 +791,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test ReadWrite fromRelativeString to root`() {
+    fun `test ReadWrite fromRelativeString with absolute path`() {
         val absolutePath = file1.absolute().pathString
         assertThrows(IllegalArgumentException::class.java) {
             readWrite.fromRelativeString(file3, absolutePath)
