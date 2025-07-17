@@ -48,9 +48,17 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test fake path from absolute string`() {
-        val filePathString = file1.absolute().pathString + "fake"
-        assertNotNull(serialization.fromAbsoluteString(filePathString))
+    fun `test fromAbsoluteString with non-existent path`() {
+        val nonExistentPath = file1.absolute().pathString + "non_existent"
+        val result = serialization.fromAbsoluteString(nonExistentPath).toString()
+        assertEquals(nonExistentPath, result)
+    }
+
+    @Test
+    fun `test toAbsolutePathString with non-existent path`() {
+        val nonExistentPath = Path.of(file1.absolute().pathString + "non_existent")
+        val result = serialization.toAbsolutePathString(nonExistentPath)
+        assertEquals(nonExistentPath.toString(), result)
     }
 
     @Test
@@ -99,6 +107,15 @@ class JVMFileSystemProviderTest : KoogTestBase() {
             serialization.fromRelativeString(src3, absolutePath)
         }
     }
+
+    @Test
+    fun `test fromRelativeString with non-existent path`() {
+        val nonExistentRelativePath = "non_existent_folder/non_existent_file.txt"
+        val result = serialization.fromRelativeString(src1, nonExistentRelativePath)
+        assertTrue(result.pathString.contains("non_existent_folder"))
+        assertTrue(result.pathString.contains("non_existent_file.txt"))
+    }
+
     //endregion
 
     //region JVMFileSystemProvider.Select
