@@ -60,7 +60,7 @@ jobs:
           echo "AWS region: $AWS_REGION"
           
           echo "Testing Bedrock access..."
-          aws bedrock list-foundation-models --region $AWS_REGION --max-items 5 || {
+          aws bedrock list-foundation-models --query 'modelSummaries[*].[modelId,providerName]' --output table || {
             echo "Bedrock access test failed"
             exit 1
           }
