@@ -234,7 +234,7 @@ public object FileSystemProvider {
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
          * @throws NoSuchFileException if a file or directory doesn't exist.
-         *         Optional specific exception, some implementations may throw more general IOException.
+         * @throws IOException if a file or directory can't be deleted for any reason.
          */
         public suspend fun delete(parent: Path, name: String)
     }
