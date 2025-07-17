@@ -54,12 +54,11 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test relative path from absolute string`() {
+    fun `test fromAbsoluteString throws exception when resolved path is not absolute`() {
         val relativePathString = "relative/test/path"
-        val resolvedPath = serialization.fromAbsoluteString(relativePathString)
-
-        val normalizedPath = resolvedPath.toString().replace("\\", "/")
-        assertEquals(relativePathString, normalizedPath)
+        assertThrows(IllegalArgumentException::class.java) {
+            serialization.fromAbsoluteString(relativePathString)
+        }
     }
 
     @Test
@@ -91,13 +90,12 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test from relative string with absolute path`() {
+    fun `test from relative string with absolute path throws exception`() {
         val absolutePath = file1.absolute().pathString
-        val fileFromPath = serialization.fromRelativeString(src3, absolutePath)
 
-        // If the path is absolute, the base path should be ignored
-        val expectedPath = serialization.fromAbsoluteString(absolutePath)
-        assertEquals(expectedPath, fileFromPath)
+        assertThrows(IllegalArgumentException::class.java) {
+            serialization.fromRelativeString(src3, absolutePath)
+        }
     }
     //endregion
 
@@ -117,21 +115,38 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test list fake dir`() = runBlocking {
-        val testList = select.list(Path.of(dir1.pathString + "fake"))
-        assertEquals(emptyList<Path>(), testList)
+    fun `test list is not recursive`() = runBlocking {
+        // dir1 contains src1, which contains resources and file1
+        // We should only get src1 when listing dir1, not the nested contents
+        val testList = select.list(dir1)
+        assertEquals(listOf(src1), testList)
     }
 
     @Test
-    fun `test list text file`() = runBlocking {
-        val testList = select.list(file1.absolute())
-        assertEquals(emptyList<Path>(), testList)
+    fun `test list fake dir`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                select.list(Path.of(dir1.pathString + "fake"))
+            }
+        }
     }
 
     @Test
-    fun `test list zip`() = runBlocking {
-        val testList = select.list(zip1.absolute())
-        assertEquals(emptyList<Path>(), testList)
+    fun `test list text file`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                select.list(file1.absolute())
+            }
+        }
+    }
+
+    @Test
+    fun `test list zip`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                select.list(zip1.absolute())
+            }
+        }
     }
 
     @Test

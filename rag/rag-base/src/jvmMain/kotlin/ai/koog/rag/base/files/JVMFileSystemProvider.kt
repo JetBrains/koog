@@ -35,13 +35,19 @@ public object JVMFileSystemProvider {
          * @return the absolute path string representation of the given [path]
          */
         override fun toAbsolutePathString(path: Path): String = path.normalize().absolutePathString()
+
         /**
          * Converts the given absolute file path string to a normalized Path object.
          *
          * @param path The absolute file path as a string.
          * @return The normalized Path representation of the given string.
+         * @throws IllegalArgumentException if the resolved path is not absolute.
          */
-        override fun fromAbsoluteString(path: String): Path = Path.of(toSystemDependentName(path)).normalize()
+        override fun fromAbsoluteString(path: String): Path {
+            val resolvedPath = Path.of(toSystemDependentName(path)).normalize()
+            require(resolvedPath.isAbsolute) { "Resolved path must be absolute" }
+            return resolvedPath
+        }
 
         /**
          * Converts a relative string representation of a path into a normalized Path object
@@ -50,8 +56,17 @@ public object JVMFileSystemProvider {
          * @param base The base path against which the relative path will be resolved.
          * @param path The relative path as a string to be resolved.
          * @return A normalized Path object representing the resolved path.
+         * @throws IllegalArgumentException if the path is absolute, except for the root path.
          */
-        override fun fromRelativeString(base: Path, path: String): Path = base.resolve(path).normalize()
+        override fun fromRelativeString(base: Path, path: String): Path {
+            if (path == FileSystems.getDefault().separator) {
+                return base.root ?: base.absolute().root
+            }
+
+            val resolvedPath = Path.of(path)
+            require(!resolvedPath.isAbsolute) { "Path must be relative, but was absolute: $path" }
+            return base.resolve(path).normalize()
+        }
 
         /**
          * Retrieves the name of the given file path.
@@ -60,11 +75,12 @@ public object JVMFileSystemProvider {
          * @return the name of the file or directory represented by the provided path
          */
         override fun name(path: Path): String = path.name
+
         /**
-         * Retrieves the file extension of the specified path.
+         * Retrieves the extension of the specified path.
          *
-         * @param path the path from which to extract the file extension.
-         * @return the file extension as a string.
+         * @param path the path from which to extract the extension.
+         * @return the extension of [path] as a string.
          */
         override fun extension(path: Path): String = path.extension
 
@@ -116,15 +132,21 @@ public object JVMFileSystemProvider {
 
         /**
          * Retrieves a sorted list of paths within the specified directory.
+         * The listing is not recursive.
          *
          * @param directory The directory path whose contents are to be listed.
          * @return A list of paths within the specified directory, sorted by name.
          *         Returns an empty list if an error occurs or the directory is empty.
+         * @throws IllegalArgumentException if [directory] is not a directory or doesn't exist.
          */
-        override suspend fun list(directory: Path): List<Path> = runCatching {
-            Files.list(directory).use {
-            it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
-        }}.getOrElse { emptyList() }
+        override suspend fun list(directory: Path): List<Path> {
+            require(directory.exists()) { "Path must exist" }
+            require(directory.isDirectory()) { "Path must be a directory" }
+
+            return Files.list(directory).use {
+                it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
+            }
+        }
 
         /**
          * Retrieves the parent directory of the specified path, if it exists.
@@ -172,13 +194,17 @@ public object JVMFileSystemProvider {
 
             return withContext(Dispatchers.IO) { path.readBytes() }
         }
+
         /**
          * Opens a source to read from the specified file path.
          *
          * @param path The file path from which the source will be opened.
          * @return A buffered source for reading from the file.
          */
-        override suspend fun source(path: Path): Source = withContext(Dispatchers.IO) { SystemFileSystem.source(path = kotlinx.io.files.Path(path.pathString)).buffered() }
+        override suspend fun source(path: Path): Source = withContext(Dispatchers.IO) {
+            SystemFileSystem.source(path = kotlinx.io.files.Path(path.pathString)).buffered()
+        }
+
         /**
          * Returns the size of the regular file at the specified path.
          *
@@ -204,7 +230,7 @@ public object JVMFileSystemProvider {
      * It provides operations for path serialization, structure navigation, and
      * content reading in a read-only manner.
      */
-    public object ReadOnly: FileSystemProvider.ReadOnly<Path>,
+    public object ReadOnly : FileSystemProvider.ReadOnly<Path>,
         FileSystemProvider.Select<Path> by Select,
         FileSystemProvider.Read<Path> by Read {
 
@@ -223,6 +249,7 @@ public object JVMFileSystemProvider {
          * @return A normalized Path object corresponding to the given absolute string.
          */
         override fun fromAbsoluteString(path: String): Path = Serialization.fromAbsoluteString(path)
+
         /**
          * Resolves a given relative path string against a base path and returns the normalized path.
          *
@@ -239,6 +266,7 @@ public object JVMFileSystemProvider {
          * @return the name of the provided path as a String.
          */
         override fun name(path: Path): String = Serialization.name(path)
+
         /**
          * Retrieves the file extension from the specified path using the serialization logic.
          *
@@ -256,7 +284,7 @@ public object JVMFileSystemProvider {
      * read-only and write capabilities. By delegating to `ReadOnly` and `Write` objects, it provides
      * comprehensive file system operations including reading, writing, serialization, and path manipulation.
      */
-    public object ReadWrite: FileSystemProvider.ReadWrite<Path>,
+    public object ReadWrite : FileSystemProvider.ReadWrite<Path>,
         FileSystemProvider.ReadOnly<Path> by ReadOnly,
         FileSystemProvider.Write<Path> by Write {
 
@@ -267,6 +295,7 @@ public object JVMFileSystemProvider {
          * @return the absolute path as a string
          */
         override fun toAbsolutePathString(path: Path): String = Serialization.toAbsolutePathString(path)
+
         /**
          * Converts an absolute string path into a normalized Path object suitable for the current file system.
          *
@@ -274,6 +303,7 @@ public object JVMFileSystemProvider {
          * @return A Path object representing the input absolute string, normalized for the current file system.
          */
         override fun fromAbsoluteString(path: String): Path = Serialization.fromAbsoluteString(path)
+
         /**
          * Resolves a relative path string against a given base path and normalizes the resulting path.
          *
@@ -282,6 +312,7 @@ public object JVMFileSystemProvider {
          * @return The resolved and normalized path as a `Path` object.
          */
         override fun fromRelativeString(base: Path, path: String): Path = Serialization.fromRelativeString(base, path)
+
         /**
          * Retrieves the name of the file or directory represented by the specified path.
          *
@@ -289,6 +320,7 @@ public object JVMFileSystemProvider {
          * @return the name of the file or directory as a string
          */
         override fun name(path: Path): String = Serialization.name(path)
+
         /**
          * Gets the extension of the file represented by the given path.
          *

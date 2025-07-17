@@ -29,6 +29,7 @@ public object FileSystemProvider {
          *
          * @param path The absolute path string to convert. Can also accept a relative path.
          * @return A path object representing the absolute path.
+         * @throws IllegalArgumentException if the resolved path is not absolute.
          */
         public fun fromAbsoluteString(path: String): Path
 
@@ -37,8 +38,8 @@ public object FileSystemProvider {
          *
          * @param base The base path for resolution.
          * @param path The path string to resolve.
-         *             If this is an absolute path, the [base] path is ignored and the absolute path is returned directly.
          * @return The resolved path object.
+         * @throws IllegalArgumentException if [path] is an absolute path, except for the root path.
          */
         public fun fromRelativeString(base: Path, path: String): Path
 
@@ -51,10 +52,10 @@ public object FileSystemProvider {
         public fun name(path: Path): String
 
         /**
-         * Gets the file extension from a [path].
+         * Gets the extension of a [path].
          *
          * @param path The path to examine.
-         * @return The file extension or empty string if none exists.
+         * @return The extension of [path] or empty string if [path] doesn't exist.
          */
         public fun extension(path: Path): String
     }
@@ -64,6 +65,7 @@ public object FileSystemProvider {
      *
      * @param Path The type representing file paths in the implementation.
      */
+    @Deprecated("For internal use only.")
     public interface Select<Path> : Serialization<Path> {
         /**
          * Retrieves metadata for a file or directory using a [path].
@@ -75,10 +77,13 @@ public object FileSystemProvider {
 
         /**
          * Lists contents of a [directory].
+         * Children are sorted by name.
+         * The listing is not recursive.
          *
          * @param directory The directory path to list.
-         * @return List of paths contained in the directory.
+         * @return List of paths contained in the directory, sorted by name.
          *         Returns an empty list if an error occurs or the directory is empty.
+         * @throws IllegalArgumentException if [directory] is not a directory or doesn't exist.
          */
         public suspend fun list(directory: Path): List<Path>
 
