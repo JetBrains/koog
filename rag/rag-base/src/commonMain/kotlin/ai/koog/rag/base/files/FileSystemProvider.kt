@@ -26,9 +26,8 @@ public object FileSystemProvider {
 
         /**
          * Creates a [Path] object from an absolute path string.
-         * If a relative path is provided, it will remain relative.
          *
-         * @param path The absolute path string to convert. Can also accept a relative path.
+         * @param path The absolute path string to convert.
          * @return A path object representing the absolute path.
          * @throws IllegalArgumentException if the resolved path is not absolute.
          */
@@ -233,8 +232,9 @@ public object FileSystemProvider {
          *
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
-         * @throws NoSuchFileException if a file or directory doesn't exist.
          * @throws IOException if a file or directory can't be deleted for any reason.
+         *         More specific exceptions can be used to handle each specific case separately
+         *         (e.g., NoSuchFileException when the file / directory doesn't exist).
          */
         public suspend fun delete(parent: Path, name: String)
     }
