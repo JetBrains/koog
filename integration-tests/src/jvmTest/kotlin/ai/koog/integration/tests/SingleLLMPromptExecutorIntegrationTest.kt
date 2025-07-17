@@ -44,7 +44,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -77,23 +76,24 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-            /*val bedrockClientInstance = BedrockLLMClient(
+            val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
                 BedrockClientSettings()
             )
             // val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
-            */
 
             return Stream.concat(
                 Stream.concat(
                     Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
                     Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
                 ),
-                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
+                Stream.concat(
+                    Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
+                    Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
+                )
             )
             // Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
-            // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
         }
 
         @JvmStatic
@@ -1059,7 +1059,6 @@ class SingleLLMPromptExecutorIntegrationTest {
      * Some models may require an inference profile instead of on-demand throughput.
      * The test may fail if the AWS account doesn't have access to the specified models.
      */
-    @Disabled("Until we get a list of supported Bedrock models")
     @ParameterizedTest
     @MethodSource("bedrockCombinations")
     fun integration_testSimpleBedrockExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
