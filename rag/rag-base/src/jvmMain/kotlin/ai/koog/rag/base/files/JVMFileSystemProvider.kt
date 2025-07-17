@@ -57,14 +57,9 @@ public object JVMFileSystemProvider {
          * @param base The base path against which the relative path will be resolved.
          * @param path The relative path as a string to be resolved.
          * @return A normalized Path object representing the resolved path.
-         * @throws IllegalArgumentException if the path is absolute, except for the root path.
+         * @throws IllegalArgumentException if [path] is absolute.
          */
         override fun fromRelativeString(base: Path, path: String): Path {
-            if (path == FileSystems.getDefault().separator) {
-                val rootPath = (base.root ?: base.absolute().root).toString()
-                return fromAbsoluteString(rootPath)
-            }
-
             val resolvedPath = Path.of(path)
             require(!resolvedPath.isAbsolute) { "Path must be relative, but was absolute: $path" }
             return base.resolve(path).normalize()

@@ -34,12 +34,11 @@ public object FileSystemProvider {
 
         /**
          * Resolves a [path] string against a [base] path.
-         * If [path] is the root path, it's resolved with [fromAbsoluteString].
          *
          * @param base The base path for resolution.
          * @param path The path string to resolve.
          * @return The resolved path object.
-         * @throws IllegalArgumentException if [path] is an absolute path, except for the root path.
+         * @throws IllegalArgumentException if [path] is an absolute path.
          */
         public fun fromRelativeString(base: Path, path: String): Path
 

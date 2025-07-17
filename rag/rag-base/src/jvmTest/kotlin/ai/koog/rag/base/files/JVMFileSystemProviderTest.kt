@@ -85,8 +85,9 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test from relative string to root`() {
-        val rootPath = serialization.fromRelativeString(file3, FileSystems.getDefault().separator)
-        assertEquals(getRoot(file3), rootPath)
+        assertThrows(IllegalArgumentException::class.java) {
+            serialization.fromRelativeString(file3, FileSystems.getDefault().separator)
+        }
     }
 
     @Test
@@ -691,8 +692,9 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadOnly fromRelativeString to root`() {
-        val rootPath = readOnly.fromRelativeString(file3, FileSystems.getDefault().separator)
-        assertEquals(getRoot(file3), rootPath)
+        assertThrows(IllegalArgumentException::class.java) {
+            readOnly.fromRelativeString(file3, FileSystems.getDefault().separator)
+        }
     }
 
     @Test
@@ -788,8 +790,9 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadWrite fromRelativeString to root`() {
-        val rootPath = readWrite.fromRelativeString(file3, FileSystems.getDefault().separator)
-        assertEquals(getRoot(file3), rootPath)
+        assertThrows(IllegalArgumentException::class.java) {
+            readWrite.fromRelativeString(file3, FileSystems.getDefault().separator)
+        }
     }
 
     @Test
