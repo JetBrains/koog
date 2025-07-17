@@ -965,11 +965,16 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     fun `test ReadWrite delete with non-existing file`() {
         val dirPath = dirEmpty
         val fileName = dirPath.resolve("non-existing.txt").fileName.toString()
-        assertThrows(NoSuchFileException::class.java) {
+        val exception = assertThrows(NoSuchFileException::class.java) {
             runBlocking {
                 readWrite.delete(dirPath, fileName)
             }
         }
+        val expectedPath = dirPath.resolve(fileName).toString()
+        assertTrue(
+            exception.message?.contains(expectedPath) == true,
+            "Exception message should contain the file path: $expectedPath, but was: ${exception.message}"
+        )
     }
 
     //endregion
