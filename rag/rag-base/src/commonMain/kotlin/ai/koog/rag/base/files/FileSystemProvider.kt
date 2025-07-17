@@ -209,6 +209,7 @@ public object FileSystemProvider {
         /**
          * Writes content to a file.
          * If the file doesn't exist, it will be created.
+         * If the file exists, its content will be overwritten.
          * Parent directories will be created if they don't exist.
          *
          * @param path The path to write to.

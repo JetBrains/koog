@@ -360,6 +360,24 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     //region JVMFileSystemProvider.Write
     @Test
+    fun `test write method overwrites existing file content`() = runBlocking {
+        val dirPath = dirEmpty
+        val fileName = "fileToOverwrite.txt"
+        val filePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
+
+        val initialContent = "Initial content"
+        filePath.writeText(initialContent)
+        assertEquals(initialContent, filePath.readText())
+
+        val newContent = "New content"
+        write.write(filePath, newContent.toByteArray())
+
+        val actualContent = filePath.readText()
+        assertEquals(newContent, actualContent)
+        assertFalse(actualContent.contains(initialContent), "File contents should be overwritten")
+    }
+
+    @Test
     fun `test move throws IOException when source file doesn't exist`() {
         val sourcePath = dirEmpty.resolve("non-existing-file.txt")
         val targetPath = dirEmpty.resolve("target-path")
@@ -900,7 +918,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test ReadWrite write`() = runBlocking {
+    fun `ReadWrite should create missing file when needed`() = runBlocking {
         val dirPath = dirEmpty
         val fileName = "newFileReadWrite.txt"
         val tempFilePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
