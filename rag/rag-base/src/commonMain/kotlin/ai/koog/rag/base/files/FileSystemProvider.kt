@@ -17,6 +17,7 @@ public object FileSystemProvider {
 
         /**
          * Converts a [path] to its absolute path string representation.
+         * The path is normalized before being converted.
          *
          * @param path The path to convert.
          * @return Absolute path as a string.
@@ -35,27 +36,31 @@ public object FileSystemProvider {
 
         /**
          * Resolves a [path] string against a [base] path.
+         * The resulting path is normalized.
+         * If [path] is the root path (system separator), returns the root of [base].
          *
          * @param base The base path for resolution.
          * @param path The path string to resolve.
-         * @return The resolved path object.
+         * @return The normalized resolved path object.
          * @throws IllegalArgumentException if [path] is an absolute path, except for the root path.
          */
         public fun fromRelativeString(base: Path, path: String): Path
 
         /**
          * Gets the name component of a [path].
+         * This method works with the path structure and doesn't check if the path actually exists in the filesystem.
          *
          * @param path The path to examine.
-         * @return The name of the file or directory.
+         * @return The name of the file or directory, or an empty string if the path has no name component.
          */
         public fun name(path: Path): String
 
         /**
          * Gets the extension of a [path].
+         * This method works with the path structure and doesn't check if the path actually exists in the filesystem.
          *
          * @param path The path to examine.
-         * @return The extension of [path] or empty string if [path] doesn't exist.
+         * @return The extension of [path] or empty string if [path] doesn't have an extension.
          */
         public fun extension(path: Path): String
     }
@@ -99,10 +104,11 @@ public object FileSystemProvider {
         /**
          * Computes the relative path from a [root] to a target [path].
          * It doesn't check if the paths actually exist in the filesystem.
+         * The returned path is normalized.
          *
          * @param root The root path.
          * @param path The target path.
-         * @return The relative path as a string, or null if the paths cannot be relativized (e.g., they have no common prefix).
+         * @return The normalized relative path as a string, or null if the paths cannot be relativized (e.g., they have no common prefix).
          */
         public fun relativize(root: Path, path: Path): String?
 
@@ -132,11 +138,13 @@ public object FileSystemProvider {
 
         /**
          * Creates a Source for reading from a file at the specified [path].
+         * The returned Source is buffered.
          *
          * @param path The path to read from.
-         * @return A Source object for reading.
+         * @return A buffered Source object for reading.
          * @throws NoSuchFileException if the path doesn't exist.
          * @throws IllegalArgumentException if the path isn't a regular file.
+         * @throws IOException if an I/O error occurs during source creation.
          */
         public suspend fun source(path: Path): Source
 
@@ -172,11 +180,14 @@ public object FileSystemProvider {
          *
          * @param parent The parent directory path.
          * @param name The name of the new file or directory.
+         *        On Windows platforms, reserved names like "CON",
+         *        "PRN", "AUX", "NUL", "COM1"-"COM9", "LPT1"-"LPT9" are not allowed.
          * @param type The type (file or directory) to create.
          * @throws FileAlreadyExistsException if the file with [name] already exists in [parent].
          *         It can also be NoSuchFileException.
          * @throws InvalidPathException if [name] is invalid (e.g., contains reserved characters).
          *         Optional specific exception, some implementations may throw more general IllegalArgumentException or IOException.
+         * @throws IOException if the name is a reserved name on Windows platforms.
          */
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
@@ -199,6 +210,7 @@ public object FileSystemProvider {
          *
          * @param path The path to write to.
          * @param content The content to write as a byte array.
+         * @throws IOException if an I/O error occurs during writing.
          */
         public suspend fun write(path: Path, content: ByteArray)
 
@@ -206,10 +218,12 @@ public object FileSystemProvider {
          * Creates a Sink for writing to a file.
          * If the file doesn't exist, it will be created.
          * If the parent directories don't exist, they will be created.
+         * The returned Sink is buffered.
          *
          * @param path The path where Sink will be created.
          * @param append Append to existing content (true) or overwrite (false). Default is false (overwrite).
-         * @return A Sink object for writing.
+         * @return A buffered Sink object for writing.
+         * @throws IOException if an I/O error occurs during sink creation.
          */
         public suspend fun sink(path: Path, append: Boolean = false): Sink
 
