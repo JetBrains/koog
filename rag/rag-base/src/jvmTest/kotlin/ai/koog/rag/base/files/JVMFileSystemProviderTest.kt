@@ -643,56 +643,78 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test write to a file with sink with not-append mode`() = runBlocking {
-        val dirPath = dirEmpty
-
+    fun `test write to a file with sink with overwrite mode`() = runBlocking {
         val fileName = "newFile.txt"
-        val tempFilePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
-        tempFilePath.writeText("Hello")
+        val tempFilePath = Path.of(dirEmpty.pathString + FileSystems.getDefault().separator + fileName)
+        val initialContent = "Hello"
+        tempFilePath.writeText(initialContent)
 
         assertTrue(tempFilePath.exists())
-        assertEquals("Hello", tempFilePath.readText())
+        assertEquals(initialContent, tempFilePath.readText())
 
-        val testMessage = " world"
+        val newContent = " world"
         write.sink(tempFilePath, false).use { sink ->
-            sink.writeString(testMessage)
+            sink.writeString(newContent)
             sink.flush()
         }
 
-        val actualLines = tempFilePath.readLines()
-        val expectedLines = listOf(testMessage)
-
+        val actualContent = tempFilePath.readText()
+        
         assertAll(
-            { assertEquals(1, actualLines.size) { "Expected 1 line, but was ${actualLines.size}" } },
-            { assertContentEquals(expectedLines, actualLines) }
+            {
+                assertEquals(
+                    newContent,
+                    actualContent
+                ) { "Expected content to be overwritten with '$newContent', but was '$actualContent'" }
+            },
+            {
+                assertFalse(
+                    actualContent.contains(initialContent),
+                    "File should not contain the initial content when in overwrite mode"
+                )
+            }
         )
     }
 
     @Test
     fun `test write to a file with sink with append mode`() = runBlocking {
-        val dirPath = dirEmpty
-
         val fileName = "newFile.txt"
-        val tempFilePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
+        val tempFilePath = Path.of(dirEmpty.pathString + FileSystems.getDefault().separator + fileName)
 
-        val testMessageHello = "Hello"
-        tempFilePath.writeText(testMessageHello)
+        val initialContent = "Hello"
+        tempFilePath.writeText(initialContent)
 
         assertTrue(tempFilePath.exists())
-        assertEquals(testMessageHello, tempFilePath.readText())
+        assertEquals(initialContent, tempFilePath.readText())
 
-        val testMessageWorld = " world"
+        val additionalContent = " world"
         write.sink(tempFilePath, true).use { sink ->
-            sink.writeString(testMessageWorld)
+            sink.writeString(additionalContent)
             sink.flush()
         }
 
-        val actualLines = tempFilePath.readLines()
-        val expectedLines = listOf(testMessageHello + testMessageWorld)
+        val expectedCombinedContent = initialContent + additionalContent
+        val actualContent = tempFilePath.readText()
 
         assertAll(
-            { assertEquals(1, actualLines.size) { "Expected 1 line, but was ${actualLines.size}" } },
-            { assertContentEquals(expectedLines, actualLines) }
+            {
+                assertEquals(
+                    expectedCombinedContent,
+                    actualContent
+                ) { "Expected content to be '$expectedCombinedContent', but was '$actualContent'" }
+            },
+            {
+                assertTrue(
+                    actualContent.startsWith(initialContent),
+                    "File should start with the initial content when in append mode"
+                )
+            },
+            {
+                assertTrue(
+                    actualContent.endsWith(additionalContent),
+                    "File should end with the additional content when in append mode"
+                )
+            }
         )
     }
 
