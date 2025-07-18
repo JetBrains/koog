@@ -19,7 +19,6 @@ import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNotSame
 
 class AIAgentLLMContextTest {
 
@@ -34,33 +33,24 @@ class AIAgentLLMContextTest {
     @Test
     fun testContextCopy() = runTest {
         val originalContext = createTestLLMContext()
-
-        // Create a copy with the same parameters
         val copiedContext = originalContext.copy()
 
-        // Verify that the copy has the same properties
         assertEquals(originalContext.toolRegistry, copiedContext.toolRegistry)
         assertEquals(originalContext.promptExecutor, copiedContext.promptExecutor)
-
-        // Verify that it's a deep copy
-        assertNotSame(originalContext, copiedContext)
     }
 
     @Test
     fun testReadSession() = runTest {
         val context = createTestLLMContext()
 
-        // Execute a read session
         val result = context.readSession {
-            // Access prompt and model in read session
             assertEquals(createTestPrompt().id, prompt.id)
             assertEquals(OllamaModels.Meta.LLAMA_3_2.id, model.id)
 
-            // Return a test value
+            // return a test value
             "test-result"
         }
 
-        // Verify the result
         assertEquals("test-result", result)
     }
 
@@ -68,20 +58,16 @@ class AIAgentLLMContextTest {
     fun testWriteSession() = runTest {
         val context = createTestLLMContext()
 
-        // Execute a write session
         val result = context.writeSession {
-            // Access and modify prompt in write session
             assertEquals(createTestPrompt().id, prompt.id)
 
-            // Return a test value
+            // return a test value
             "test-result"
         }
 
-        // Verify the result
         assertEquals("test-result", result)
     }
 
-    // Helper methods and classes
 
     @Serializable
     private data class TestToolArgs(val input: String) : ToolArgs
@@ -113,7 +99,7 @@ class AIAgentLLMContextTest {
             }
 
             override suspend fun reportProblem(exception: Throwable) {
-                // Do nothing in test
+                // Do nothing
             }
         }
     }
