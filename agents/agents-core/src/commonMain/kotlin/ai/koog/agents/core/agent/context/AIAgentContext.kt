@@ -121,7 +121,7 @@ public class AIAgentContext(
     }
 
     /**
-     * Retrieves a feature associated with the given key from the AI agent storage.
+     * Retrieves a feature associated with the given key from the current context.
      *
      * @param key The key of the feature to retrieve.
      * @return The feature associated with the specified key, or null if no such feature exists.
@@ -130,7 +130,7 @@ public class AIAgentContext(
     override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? = features[key] as Feature?
 
     /**
-     * Retrieves an instance of the specified feature from the AI agent's storage.
+     * Retrieves an instance of the specified feature from the current context.
      *
      * @param feature The feature representation, including its key and configuration details,
      *                for identifying and accessing the associated implementation.

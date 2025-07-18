@@ -141,7 +141,7 @@ public interface AIAgentContextBase {
     public fun remove(key: AIAgentStorageKey<*>): Boolean
 
     /**
-     * Retrieves a feature from the agent's storage using the specified key.
+     * Retrieves a feature from the current context using the specified key.
      *
      * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding feature.
      * @return The feature associated with the provided key, or null if no matching feature is found.
