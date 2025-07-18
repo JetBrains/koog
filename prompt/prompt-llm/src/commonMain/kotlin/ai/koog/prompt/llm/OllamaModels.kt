@@ -288,6 +288,8 @@ public object OllamaModels {
          *
          * The model is identified by the unique ID "granite3.2-vision" and categorized under the Ollama provider.
          * It is designed to handle both text and visual inputs for multimodal tasks.
+         *
+         * @see <a href="https://ollama.com/library/granite3.2-vision">
          */
         public val GRANITE_3_2_VISION: LLModel = LLModel(
             provider = LLMProvider.Ollama,
@@ -297,7 +299,8 @@ public object OllamaModels {
                 LLMCapability.Schema.JSON.Simple,
                 LLMCapability.Tools,
                 LLMCapability.Vision.Image
-            )
+            ),
+            contextLength = 16_384,
         )
     }
 
