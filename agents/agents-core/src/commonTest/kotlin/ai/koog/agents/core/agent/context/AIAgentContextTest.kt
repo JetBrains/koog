@@ -136,6 +136,75 @@ class AIAgentContextTest {
         assertEquals(newStorage, originalContext.storage)
     }
 
+    @Test
+    fun testCopyWithAllParameters() = runTest {
+        val originalContext = createTestContext()
+
+        val newEnvironment = createTestEnvironment("new-environment")
+        val newConfig = createTestConfig("new-config")
+        val newLlm = createTestLLMContext("new-llm")
+        val newStateManager = createTestStateManager()
+        val newStorage = createTestStorage()
+        val newRunId = "new-run-id"
+        val newStrategyName = "new-strategy"
+        val newInput = "new-input"
+
+        val copiedContext = originalContext.copy(
+            environment = newEnvironment,
+            agentInput = newInput,
+            config = newConfig,
+            llm = newLlm,
+            stateManager = newStateManager,
+            storage = newStorage,
+            runId = newRunId,
+            strategyName = newStrategyName,
+        )
+
+        assertEquals(newEnvironment, copiedContext.environment)
+        assertEquals(newInput, copiedContext.agentInput)
+        assertEquals(newConfig, copiedContext.config)
+        assertEquals(newLlm, copiedContext.llm)
+        assertEquals(newStateManager, copiedContext.stateManager)
+        assertEquals(newStorage, copiedContext.storage)
+        assertEquals(newRunId, copiedContext.runId)
+        assertEquals(newStrategyName, copiedContext.strategyName)
+    }
+
+    @Test
+    fun testCopyWithNullAgentInput() = runTest {
+        val originalContext = createTestContext()
+
+        val copiedContext = originalContext.copy(
+            agentInput = null
+        )
+
+        assertNull(copiedContext.agentInput)
+        assertEquals("test-input", originalContext.agentInput)
+    }
+
+    @Test
+    fun testContextForkWithIsolatedStorage() = runTest {
+        val storageKey = AIAgentStorageKey<String>("test-key")
+
+        val originalContext = createTestContext()
+        originalContext.storage.set(storageKey, "original-value")
+
+        val forkedContext = originalContext.fork()
+        forkedContext.storage.set(storageKey, "forked-value")
+
+        assertEquals("original-value", originalContext.storage.get(storageKey))
+        assertEquals("forked-value", forkedContext.storage.get(storageKey))
+    }
+
+    @Test
+    fun testContextForkWithIsolatedStateManager() = runTest {
+        val originalContext = createTestContext()
+        val forkedContext = originalContext.fork()
+
+        assertNotSame(originalContext.stateManager, forkedContext.stateManager)
+        assertNotSame(originalContext.llm, forkedContext.llm)
+    }
+
     private fun createTestEnvironment(id: String = "test-environment"): AIAgentEnvironment {
         return object : AIAgentEnvironment {
             override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
