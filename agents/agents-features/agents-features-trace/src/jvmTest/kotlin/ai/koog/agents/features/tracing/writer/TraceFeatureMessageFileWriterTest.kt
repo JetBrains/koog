@@ -63,7 +63,8 @@ class TraceFeatureMessageFileWriterTest {
             val testModel = LLModel(
                 provider = TestLLMProvider(),
                 id = "test-llm-id",
-                capabilities = emptyList()
+                capabilities = emptyList(),
+                contextLength = 1_000,
             )
 
             var runId = ""
@@ -310,7 +311,8 @@ class TraceFeatureMessageFileWriterTest {
             val testModel = LLModel(
                 provider = TestLLMProvider(),
                 id = "test-llm-id",
-                capabilities = emptyList()
+                capabilities = emptyList(),
+                contextLength = 1_000,
             )
 
             var runId = ""
