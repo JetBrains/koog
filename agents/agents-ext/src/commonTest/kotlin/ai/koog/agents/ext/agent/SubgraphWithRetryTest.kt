@@ -2,6 +2,7 @@ package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -19,6 +20,7 @@ import kotlin.test.assertTrue
 
 private const val MAX_AGENT_ITERATIONS = 20
 private const val SUCCESS = "success"
+private val TEST_CONDITION: AIAgentContextBase.(String) -> ConditionResult = { (it == SUCCESS).asConditionResult}
 private fun getBasicResult(
     output: String? = "test output",
     success: Boolean = true,
@@ -95,7 +97,7 @@ class SubgraphWithRetryTest {
 
         val testStrategy = strategy("test-strategy") {
             val retrySubgraph by subgraphWithRetry(
-                condition = { it == SUCCESS },
+                condition = TEST_CONDITION,
                 maxRetries = 3,
                 name = "test-retry",
             ) {
@@ -145,7 +147,7 @@ class SubgraphWithRetryTest {
 
         val testStrategy = strategy("test-strategy") {
             val retrySubgraph by subgraphWithRetry(
-                condition = { it == SUCCESS },
+                condition = TEST_CONDITION,
                 maxRetries = maxAttempts,
                 name = "test-retry",
             ) {
@@ -203,7 +205,7 @@ class SubgraphWithRetryTest {
 
         val testStrategy = strategy("test-strategy") {
             val retrySubgraph by subgraphWithRetry(
-                condition = { it == SUCCESS },
+                condition = TEST_CONDITION,
                 maxRetries = maxAttempts,
                 name = "test-retry",
             ) {
@@ -252,7 +254,7 @@ class SubgraphWithRetryTest {
         assertFailsWith<IllegalArgumentException> {
             strategy<String, String>("test-strategy") {
                 subgraphWithRetry(
-                    condition = { it == SUCCESS },
+                    condition = TEST_CONDITION,
                     maxRetries = 0,
                     name = "test-retry",
                 ) {
@@ -269,7 +271,7 @@ class SubgraphWithRetryTest {
 
         val testStrategy = strategy("test-strategy") {
             val retrySubgraph by subgraphWithRetrySimple(
-                condition = { it == SUCCESS },
+                condition = TEST_CONDITION,
                 maxRetries = 3,
                 name = "test-retry-simple",
             ) {
@@ -316,7 +318,7 @@ class SubgraphWithRetryTest {
 
         val testStrategy = strategy("test-strategy") {
             val retrySubgraph by subgraphWithRetrySimple(
-                condition = { it == SUCCESS },
+                condition = TEST_CONDITION,
                 maxRetries = maxAttempts,
                 strict = true,
                 name = "test-retry-simple",
@@ -367,7 +369,7 @@ class SubgraphWithRetryTest {
 
         val testStrategy = strategy("test-strategy") {
             val retrySubgraph by subgraphWithRetrySimple(
-                condition = { it == SUCCESS },
+                condition = TEST_CONDITION,
                 maxRetries = maxAttempts,
                 strict = false,
                 name = "test-retry-simple",
@@ -415,7 +417,7 @@ class SubgraphWithRetryTest {
         assertFailsWith<IllegalArgumentException> {
             strategy<String, String>("test-strategy") {
                 subgraphWithRetrySimple(
-                    condition = { it == SUCCESS },
+                    condition = TEST_CONDITION,
                     maxRetries = 0,
                     strict = false,
                     name = "test-retry-simple",

@@ -25,6 +25,66 @@ public data class RetrySubgraphResult<Output>(
 }
 
 /**
+ * Represents the result of evaluating a specific condition in a system or workflow.
+ * This sealed interface allows for expressing various outcomes of a condition check.
+ *
+ * Implementations:
+ * - [Approve]: Indicates that the condition was approved.
+ * - [Reject]: Indicates that the condition was rejected without further feedback.
+ * - [RejectWithFeedback]: Indicates that the condition was rejected with additional feedback.
+ */
+public sealed interface ConditionResult {
+    /**
+     * Indicates whether the current instance of `ConditionResult` represents a successful state.
+     * Returns `true` if the instance is of type `Approve`, signifying success.
+     * Otherwise, returns `false`.
+     */
+    public val isSuccess: Boolean get() = this is Approve
+
+    /**
+     * Object representing an approved condition result.
+     *
+     * This implementation of the ConditionResult sealed interface signifies that a specific condition
+     * has been evaluated and approved within a given system or workflow, enabling further progression
+     * or execution of associated processes.
+     */
+    public object Approve: ConditionResult
+
+    /**
+     * Represents a condition result indicating rejection without additional feedback.
+     *
+     * This implementation of the `ConditionResult` sealed interface signifies that a specific condition
+     * has been evaluated and rejected within a system or workflow. Unlike other implementations,
+     * this result does not include any accompanying feedback or explanation for the rejection.
+     *
+     * Typically used in scenarios where a condition fails to meet predefined requirements or constraints.
+     */
+    public object Reject: ConditionResult
+
+    /**
+     * Represents a condition result that indicates rejection combined with specific feedback.
+     *
+     * This implementation of the `ConditionResult` sealed interface signifies that a condition
+     * has been evaluated and rejected within a system or workflow. Unlike a standard rejection,
+     * this result includes accompanying feedback to provide additional context or guidance
+     * regarding the rejection.
+     *
+     * @property feedback A descriptive message or information explaining the reason for the rejection.
+     */
+    public class RejectWithFeedback(public val feedback: String): ConditionResult
+}
+
+/**
+ * Extension property that converts a Boolean to a ConditionResult.
+ * - true is converted to ConditionResult.Approve
+ * - false is converted to ConditionResult.Reject
+ *
+ * This allows for explicit conversion from Boolean to ConditionResult.
+ */
+public val Boolean.asConditionResult: ConditionResult
+    get() = if (this) ConditionResult.Approve else ConditionResult.Reject
+
+/**
  * Creates a subgraph with retry mechanism, allowing a specified action subgraph to be retried multiple
  * times until a given condition is met or the maximum number of retries is reached.
  *
@@ -34,9 +94,42 @@ public data class RetrySubgraphResult<Output>(
  * @param name The optional name of the subgraph.
  * @param defineAction A lambda defining the action subgraph to perform within the retry subgraph.
  */
+@Deprecated("Use `condition: suspend AIAgentContextBase.(Output) -> ConditionResult` instead")
 public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetry(
     noinline condition: suspend (Output) -> Boolean,
     maxRetries: Int,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+    name: String? = null,
+    noinline defineAction: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit,
+): AIAgentSubgraphDelegate<Input, RetrySubgraphResult<Output>> {
+    val updatedCondition: suspend AIAgentContextBase.(Output) -> ConditionResult = { output ->
+        condition(output).asConditionResult
+    }
+
+    return subgraphWithRetry(
+        condition = updatedCondition,
+        maxRetries = maxRetries,
+        toolSelectionStrategy = toolSelectionStrategy,
+        name = name,
+        defineAction = defineAction,
+    )
+}
+
+/**
+ * Creates a subgraph with retry mechanism, allowing a specified action subgraph to be retried multiple
+ * times until a given condition is met or the maximum number of retries is reached.
+ *
+ * @param condition A function that evaluates whether the output meets the desired condition.
+ * @param maxRetries The maximum number of allowed retries. Must be greater than 0.
+ * @param conditionDescription A message which explains the condition constraints to the model
+ * @param toolSelectionStrategy The strategy used to select a tool for executing the action.
+ * @param name The optional name of the subgraph.
+ * @param defineAction A lambda defining the action subgraph to perform within the retry subgraph.
+ */
+public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetry(
+    noinline condition: suspend AIAgentContextBase.(Output) -> ConditionResult,
+    maxRetries: Int,
+    conditionDescription: String? = null,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     name: String? = null,
     noinline defineAction: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit,
@@ -47,13 +140,15 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
         val retriesKey = createStorageKey<Int>("${name}_retires")
         val initialInputKey = createStorageKey<Any>("${name}_initial_input")
         val initialContextKey = createStorageKey<AIAgentContextBase>("${name}_initial_context")
+        val clarificationMessagesKey = createStorageKey<List<String>>("${name}_clarification_messages")
 
         val beforeAction by node<Input, Input> { input ->
             val retries = storage.get(retriesKey) ?: 0
 
-            // Store initial input on the first run
+            // Store initial input and clarification message on the first run
             if (retries == 0) {
                 storage.set(initialInputKey, input)
+                storage.set(clarificationMessagesKey, listOfNotNull(conditionDescription))
             } else {
                 // return the initial context
                 this.replace(storage.getValue(initialContextKey))
@@ -63,6 +158,16 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
 
             // Increment retries
             storage.set(retriesKey, retries + 1)
+
+            // Add clarification messages to the prompt
+            val clarificationMessages = storage.getValue(clarificationMessagesKey)
+            llm.writeSession {
+                updatePrompt {
+                    clarificationMessages.forEach { message ->
+                        assistant { message }
+                    }
+                }
+            }
 
             input
         }
@@ -75,11 +180,18 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
 
         val decide by node<Output, RetrySubgraphResult<Output>> { output ->
             val retries = storage.getValue(retriesKey)
-            val success = condition(output)
+
+            // fork the context before applying the condition
+            // so that user can update prompt and call llm
+            // to determine if the condition is satisfied
+            val conditionResult = fork().condition(output)
+            if (conditionResult is ConditionResult.RejectWithFeedback) {
+                storage.set(clarificationMessagesKey, storage.getValue(clarificationMessagesKey) + conditionResult.feedback)
+            }
 
             RetrySubgraphResult(
                 output = output,
-                success = success,
+                success = conditionResult.isSuccess,
                 retryCount = retries
             )
         }
@@ -88,6 +200,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
             storage.remove(retriesKey)
             storage.remove(initialInputKey)
             storage.remove(initialContextKey)
+            storage.remove(clarificationMessagesKey)
             result
         }
 
@@ -124,6 +237,42 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
  * @param strict If true, an exception is thrown if the condition is not met after the maximum retries.
  * @param name An optional name for the subgraph.
  * @param defineAction A lambda defining the actions within the subgraph.
+ */
+@Deprecated("Use `condition: suspend AIAgentContextBase.(Output) -> ConditionResult` instead")
+public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
+    noinline condition: suspend (Output) -> Boolean,
+    maxRetries: Int,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
+    strict: Boolean = true,
+    name: String? = null,
+    noinline defineAction: AIAgentSubgraphBuilderBase<Input, Output>.() -> Unit,
+): AIAgentSubgraphDelegate<Input, Output> {
+    val updatedCondition: suspend AIAgentContextBase.(Output) -> ConditionResult = { output ->
+        condition(output).asConditionResult
+    }
+
+    return subgraphWithRetrySimple(
+        condition = updatedCondition,
+        maxRetries = maxRetries,
+        toolSelectionStrategy = toolSelectionStrategy,
+        strict = strict,
+        name = name,
+        defineAction = defineAction,
+    )
+}
+
+/**
+ * Creates a subgraph that includes retry functionality based on a given condition and a maximum number of retries.
+ * If the condition is not met after the specified retries and strict mode is enabled, an exception is thrown.
+ * Unlike [subgraphWithRetry], this function directly returns the output value instead of a [RetrySubgraphResult].
+ *
+ * @param condition A suspendable function that determines whether the condition is met, based on the output.
+ * @param maxRetries The maximum number of retries allowed if the condition is not met.
+ * @param conditionDescription A message which explains the condition constraints to the model
+ * @param toolSelectionStrategy The strategy used to select tools for this subgraph.
+ * @param strict If true, an exception is thrown if the condition is not met after the maximum retries.
+ * @param name An optional name for the subgraph.
+ * @param defineAction A lambda defining the actions within the subgraph.
  *
  * Example usage:
  * ```
@@ -139,8 +288,9 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
  * ```
  */
 public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
-    noinline condition: suspend (Output) -> Boolean,
+    noinline condition: suspend AIAgentContextBase.(Output) -> ConditionResult,
     maxRetries: Int,
+    conditionDescription: String? = null,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     strict: Boolean = true,
     name: String? = null,
@@ -148,9 +298,10 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
 ): AIAgentSubgraphDelegate<Input, Output> {
     return subgraph(name = name) {
         val retrySubgraph by subgraphWithRetry(
-            toolSelectionStrategy = toolSelectionStrategy,
             condition = condition,
             maxRetries = maxRetries,
+            conditionDescription = conditionDescription,
+            toolSelectionStrategy = toolSelectionStrategy,
             name = name,
             defineAction = defineAction
         )
