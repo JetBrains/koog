@@ -19,6 +19,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
+import kotlin.reflect.typeOf
 import kotlin.test.*
 
 class AIAgentContextTest {
@@ -269,6 +270,7 @@ class AIAgentContextTest {
     ): AIAgentContext {
         return AIAgentContext(
             environment = environment,
+            agentInputType = typeOf<String>(),
             agentInput = "test-input",
             config = config,
             llm = llmContext,
@@ -276,7 +278,8 @@ class AIAgentContextTest {
             storage = storage,
             runId = runId,
             strategyName = strategyName,
-            pipeline = pipeline
+            pipeline = pipeline,
+            id = "test-context-id",
         )
     }
 }

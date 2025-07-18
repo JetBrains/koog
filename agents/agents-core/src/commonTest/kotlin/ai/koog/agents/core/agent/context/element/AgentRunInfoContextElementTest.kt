@@ -36,17 +36,19 @@ class AgentRunInfoContextElementTest {
 
     @Test
     fun testContextElementEquality() {
+        val sharedConfig = createTestConfig()
+        
         val element1 = AgentRunInfoContextElement(
             agentId = "agent1",
             runId = "run1",
-            agentConfig = createTestConfig(),
+            agentConfig = sharedConfig,
             strategyName = "strategy1"
         )
 
         val element2 = AgentRunInfoContextElement(
             agentId = "agent1",
             runId = "run1",
-            agentConfig = createTestConfig(),
+            agentConfig = sharedConfig,
             strategyName = "strategy1"
         )
 

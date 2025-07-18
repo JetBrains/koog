@@ -23,6 +23,7 @@ import kotlin.test.*
 
 class AIAgentLLMContextTest {
 
+    @OptIn(DetachedPromptExecutorAPI::class)
     @Test
     fun testContextCreation() = runTest {
         val context = createTestLLMContext()
@@ -31,6 +32,7 @@ class AIAgentLLMContextTest {
         assertNotNull(context.promptExecutor)
     }
 
+    @OptIn(DetachedPromptExecutorAPI::class)
     @Test
     fun testContextCopy() = runTest {
         val originalContext = createTestLLMContext()
