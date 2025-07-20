@@ -20,9 +20,9 @@ kotlin {
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
                 api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
-                api(libs.ktor.client.logging)
+                api(ktorLibs.client.contentNegotiation)
+                api(ktorLibs.serialization.kotlinx.json)
+                api(ktorLibs.client.logging)
                 api(libs.kotlinx.datetime)
                 implementation(libs.oshai.kotlin.logging)
             }
@@ -30,13 +30,13 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
+                api(ktorLibs.client.cio)
             }
         }
 
         jsMain {
             dependencies {
-                api(libs.ktor.client.js)
+                api(ktorLibs.client.js)
             }
         }
 

@@ -18,8 +18,8 @@ kotlin {
                 api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
+                api(ktorLibs.client.contentNegotiation)
+                api(ktorLibs.serialization.kotlinx.json)
             }
         }
 
@@ -32,7 +32,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
+                api(ktorLibs.client.cio)
             }
         }
 

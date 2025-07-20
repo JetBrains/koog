@@ -24,9 +24,9 @@ kotlin {
 
                 api(libs.kotlinx.datetime)
                 api(libs.kotlinx.serialization.json)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.client.logging)
-                api(libs.ktor.serialization.kotlinx.json)
+                api(ktorLibs.client.contentNegotiation)
+                api(ktorLibs.client.logging)
+                api(ktorLibs.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
             }
         }

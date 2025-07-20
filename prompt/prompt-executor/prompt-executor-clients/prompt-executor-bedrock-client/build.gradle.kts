@@ -20,15 +20,15 @@ kotlin {
                 api(project(":prompt:prompt-model"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.datetime)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
+                api(ktorLibs.client.contentNegotiation)
+                api(ktorLibs.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
             }
         }
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
+                api(ktorLibs.client.cio)
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
             }

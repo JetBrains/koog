@@ -17,17 +17,17 @@ kotlin {
 
                 api(libs.kotlinx.serialization.json)
 
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
-                api(libs.ktor.server.sse)
+                api(ktorLibs.client.contentNegotiation)
+                api(ktorLibs.serialization.kotlinx.json)
+                api(ktorLibs.server.sse)
             }
         }
 
         jvmMain {
             dependencies {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-                api(libs.ktor.client.cio)
-                api(libs.ktor.server.cio)
+                api(ktorLibs.client.cio)
+                api(ktorLibs.server.cio)
             }
         }
 

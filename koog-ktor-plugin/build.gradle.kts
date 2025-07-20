@@ -16,7 +16,7 @@ kotlin {
                 api(project(":koog-agents"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(libs.ktor.server.core)
+                api(ktorLibs.server.core)
             }
         }
 
@@ -31,7 +31,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.ktor.server.core)
+                implementation(ktorLibs.server.core)
             }
         }
 

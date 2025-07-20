@@ -33,7 +33,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
 
-                implementation(libs.ktor.client.cio)
+                implementation(ktorLibs.client.cio)
             }
         }
     }
