@@ -1,6 +1,6 @@
 package ai.koog.ktor
 
-import ai.koog.ktor.utils.config.getModelFromIdentifier
+import ai.koog.ktor.utils.getModelFromIdentifier
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels

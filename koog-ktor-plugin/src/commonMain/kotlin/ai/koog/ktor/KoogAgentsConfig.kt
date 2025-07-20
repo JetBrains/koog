@@ -1,20 +1,12 @@
 package ai.koog.ktor
 
-import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
-import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.common.config.FeatureConfig
-import ai.koog.ktor.utils.config.getModelFromIdentifier
-import ai.koog.ktor.utils.config.loadEnvironmentConfig
-import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
@@ -31,32 +23,16 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import io.ktor.client.*
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.config.ApplicationConfig
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.util.*
-
-/**
- * Represents the default prompt configuration for the agent.
- *
- * This property initializes a `Prompt` instance with the ID "agent" and includes a system
- * message that provides context to the language model by describing its role as a helpful assistant.
- *
- * This default configuration can be used to standardize the behavior of the language model
- * and offer consistent instructions when interacting with the agent.
- */
-internal val DEFAULT_PROMPT = prompt("agent") {
-    system("You are a helpful assistant")
-}
+import io.ktor.client.HttpClient
+import kotlinx.serialization.Serializable
+import kotlin.collections.set
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Configuration class for setting up a Koog agents server.
@@ -70,10 +46,10 @@ public class KoogAgentsConfig {
      * enabling interactions with specific LLM services through their associated client interfaces.
      *
      * Keys:
-     * - `LLMProvider`: Represents the provider of the large language model (e.g., OpenAI, Google, Anthropic, etc.).
+     * - [LLMProvider]: Represents the provider of the large language model (e.g., OpenAI, Google, Anthropic, etc.).
      *
      * Values:
-     * - `LLMClient`: Represents the client responsible for communicating with the respective LLM provider.
+     * - [LLMClient]: Represents the client responsible for communicating with the respective LLM provider.
      *
      * The map is intended to facilitate dynamic management of LLM connections within the system by adding,
      * retrieving, or removing `LLMClient` instances corresponding to each registered `LLMProvider`.
@@ -87,8 +63,8 @@ public class KoogAgentsConfig {
      * LLM connection is successful or applicable for processing a request. It is an optional configuration
      * and may be null if no fallback mechanism is set up.
      *
-     * The fallback settings are encapsulated in the `FallbackPromptExecutorSettings` class within
-     * the `MultiLLMPromptExecutor`.
+     * The fallback settings are encapsulated in the [MultiLLMPromptExecutor.FallbackPromptExecutorSettings] class within
+     * the [MultiLLMPromptExecutor].
      *
      * It is internally mutable and primarily used within the `KoogAgentsServerConfig` class.
      */
@@ -110,9 +86,9 @@ public class KoogAgentsConfig {
     /**
      * The registry used to manage and provide a collection of tools for agents.
      *
-     * The `agentTools` variable holds a `ToolRegistry`, which serves as a central repository
+     * The `agentTools` variable holds a [ToolRegistry], which serves as a central repository
      * for all tools available to an agent. By default, it is initialized to an empty registry
-     * (`ToolRegistry.EMPTY`), but it can be populated and updated as part of the agent configuration process.
+     * ([ToolRegistry.EMPTY]), but it can be populated and updated as part of the agent configuration process.
      *
      * The available tools within this registry are utilized by agents during their operations to perform
      * various actions and tasks. The tools are configured through the agent setup process and are accessible
@@ -145,35 +121,35 @@ public class KoogAgentsConfig {
      * and utilized by agents, enabling the extension of agent capabilities via the installation
      * of specific `AgentFeature` implementations.
      */
-    internal val agentFeatures: MutableList<AgentFeature> = mutableListOf()
+    internal val agentFeatures: MutableList<FeatureContext.() -> Unit> = mutableListOf()
 
     /**
      * Configuration class for defining timeout durations in network requests.
      * Used to set and customize the request, connection, and socket timeouts.
      */
-    public class TimeoutConfiguration {
+    @Serializable
+    public data class TimeoutConfiguration(
         /**
-         * Specifies the maximum duration, in milliseconds, allowed for a network request to complete
+         * Specifies the maximum duration allowed for a network request to complete
          * before timing out. It acts as a safeguard to prevent indefinite waiting for responses.
          *
-         * The default value is 900000 milliseconds (15 minutes).
+         * The default value is 15.minutes.
          *
          * This is particularly useful for configuring timeout behavior in network-related
          * operations across various integrations.
          */
-        public var requestTimeoutMillis: Long = DEFAULT_TIMEOUT_MS
-
+        public var requestTimeout: Duration = DEFAULT_TIMEOUT,
         /**
-         * Specifies the connection timeout duration in milliseconds for establishing a network connection.
+         * Specifies the connection timeout duration for establishing a network connection.
          * This value determines the maximum time allowed for a connection to be established before the
          * operation is terminated.
          *
-         * Default value is 60,000 milliseconds (60 seconds).
+         * Default value is 60 seconds.
          */
-        public var connectTimeoutMillis: Long = DEFAULT_CONNECT_TIMEOUT_MS
+        public var connectTimeout: Duration = DEFAULT_CONNECT_TIMEOUT,
 
         /**
-         * Specifies the maximum amount of time, in milliseconds, to wait for data over an established
+         * Specifies the maximum amount of time to wait for data over an established
          * socket connection before timing out.
          *
          * This property is used to configure the timeout duration for socket operations, such as reading
@@ -181,27 +157,28 @@ public class KoogAgentsConfig {
          * the application does not hang indefinitely when waiting for data to be transmitted or received
          * over the socket.
          *
-         * The default value is defined by `DEFAULT_TIMEOUT_MS`, which represents 900 seconds.
+         * The default value is defined by [DEFAULT_TIMEOUT], which represents 15.minutes.
          */
-        public var socketTimeoutMillis: Long = DEFAULT_TIMEOUT_MS
+        public var socketTimeout: Duration = DEFAULT_TIMEOUT
+    ) {
 
         /**
          * Companion object holding default timeout constants for the TimeoutConfiguration class.
          */
         private companion object {
             /**
-             * Default timeout duration in milliseconds.
+             * Default timeout duration
              * This value is used for configuring various timeout settings,
              * such as request or socket timeouts, in cases where no custom value is specified.
-             * The default duration is set to 900,000 milliseconds, equivalent to 900 seconds or 15 minutes.
+             * The default duration is set to 15 minutes.
              */
-            private const val DEFAULT_TIMEOUT_MS: Long = 900000 // 900 seconds
+            private val DEFAULT_TIMEOUT: Duration = 15.minutes
 
             /**
-             * Default timeout value in milliseconds for establishing a connection.
+             * Default timeout value for establishing a connection.
              * This value represents the duration to wait before timing out a connection attempt.
              */
-            private const val DEFAULT_CONNECT_TIMEOUT_MS: Long = 60_000
+            private val DEFAULT_CONNECT_TIMEOUT: Duration = 60.seconds
         }
     }
 
@@ -364,8 +341,13 @@ public class KoogAgentsConfig {
         /**
          * Represents the prompt configuration for the Agent.
          * This variable defines the initial prompt structure used by the Agent for generating responses or actions.
+         *
+         * By default, it uses a [Prompt] instance with the ID "agent" and includes a system
+         * message that provides context to the language model by describing its role as a helpful assistant.
          */
-        public var prompt: Prompt = DEFAULT_PROMPT
+        public var prompt: Prompt = prompt("agent") {
+            system("You are a helpful assistant")
+        }
 
         /**
          * Specifies the Large Language Model (LLM) to be used by the agent.
@@ -428,7 +410,7 @@ public class KoogAgentsConfig {
          * @param buildPrompt A lambda function that is used to construct the prompt using a `PromptBuilder`.
          */
         public fun prompt(llmParams: LLMParams = LLMParams(), buildPrompt: PromptBuilder.() -> Unit) {
-            prompt = prompt("agent", llmParams, build = buildPrompt)
+            prompt = ai.koog.prompt.dsl.prompt("agent", llmParams, build = buildPrompt)
         }
 
         /**
@@ -482,6 +464,7 @@ public class KoogAgentsConfig {
     public class OpenAIConfig(
         private val apiKey: String,
     ) {
+
         /**
          * The base URL for the OpenAI API. This property defines the endpoint that the client
          * connects to for making API requests. It is used to construct the full URL for various
@@ -495,13 +478,13 @@ public class KoogAgentsConfig {
         /**
          * A configuration property that defines timeout settings for network interactions with the OpenAI API.
          * It specifies limits for request execution time, connection establishment time, and socket operation time.
-         * These timeout values are represented in milliseconds and provide control over handling delayed or
+         * These timeout values are represented in [Duration] and provide control over handling delayed or
          * unresponsive network operations.
          *
-         * The default values for these timeouts are derived from the `ConnectionTimeoutConfig` class, but can
-         * be customized through the `timeouts` function in `OpenAIConfig`.
+         * The default values for these timeouts are derived from the [ConnectionTimeoutConfig] class, but can
+         * be customized through the `timeouts` function in [OpenAIConfig].
          *
-         * Used primarily when configuring an `OpenAILLMClient` for making API requests.
+         * Used primarily when configuring an [OpenAILLMClient] for making API requests.
          */
         public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 
@@ -535,7 +518,7 @@ public class KoogAgentsConfig {
          * Represents the HTTP client used for making network requests to the OpenAI API.
          * This client is configurable and can be replaced or customized to meet specific requirements,
          * such as adjusting timeouts, adding interceptors, or modifying base client behavior.
-         * The default implementation initializes with a standard `HttpClient` instance.
+         * The default implementation initializes with a standard [HttpClient] instance.
          */
         public var httpClient: HttpClient = HttpClient()
 
@@ -547,13 +530,17 @@ public class KoogAgentsConfig {
          * will then be used for API requests, including request timeout, connection
          * timeout, and socket timeout.
          *
-         * @param configure A lambda with the `TimeoutConfiguration` receiver to define
+         * @param configure A lambda with the [TimeoutConfiguration] receiver to define
          *                  custom timeout values for request, connection, and socket operations.
          */
         public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
             timeoutConfig = with(TimeoutConfiguration()) {
                 configure()
-                ConnectionTimeoutConfig(requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis)
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
             }
         }
     }
@@ -585,7 +572,7 @@ public class KoogAgentsConfig {
          * used to associate particular model identifiers with their appropriate versions, allowing the
          * system to select or adjust model behaviors based on these mappings.
          *
-         * By default, this property is initialized with a predefined map (`DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP`),
+         * By default, this property is initialized with a predefined map ([DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP]),
          * but can be customized to support other mappings depending on the requirements.
          *
          * This property is typically utilized in the configuration of interaction with Anthropic LLM clients
@@ -635,7 +622,11 @@ public class KoogAgentsConfig {
         public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
             timeoutConfig = with(TimeoutConfiguration()) {
                 configure()
-                ConnectionTimeoutConfig(requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis)
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
             }
         }
     }
@@ -668,7 +659,7 @@ public class KoogAgentsConfig {
          * connection establishment, and socket communication.
          *
          * The default values for the configuration are inherited from the defaults specified
-         * in the `ConnectionTimeoutConfig` class.
+         * in the [ConnectionTimeoutConfig] class.
          */
         public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 
@@ -695,7 +686,11 @@ public class KoogAgentsConfig {
         public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
             timeoutConfig = with(TimeoutConfiguration()) {
                 configure()
-                ConnectionTimeoutConfig(requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis)
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
             }
         }
     }
@@ -726,8 +721,8 @@ public class KoogAgentsConfig {
          *
          * By default, it is initialized with the default timeout values provided by the
          * `ConnectionTimeoutConfig` class. It can be modified using the `timeouts` function
-         * in the containing `OpenRouterConfig` class, or directly assigned with a new instance
-         * of `ConnectionTimeoutConfig`.
+         * in the containing [OpenRouterConfig] class, or directly assigned with a new instance
+         * of [ConnectionTimeoutConfig].
          */
         public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 
@@ -748,7 +743,11 @@ public class KoogAgentsConfig {
         public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
             timeoutConfig = with(TimeoutConfiguration()) {
                 configure()
-                ConnectionTimeoutConfig(requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis)
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
             }
         }
     }
@@ -791,13 +790,17 @@ public class KoogAgentsConfig {
         /**
          * Configures timeout settings for network connections by applying the provided configuration block.
          *
-         * @param configure A lambda function with `TimeoutConfiguration` as the receiver,
+         * @param configure A lambda function with [TimeoutConfiguration] as the receiver,
          *                  allowing customization of request, connection, and socket timeouts.
          */
         public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
             timeoutConfig = with(TimeoutConfiguration()) {
                 configure()
-                ConnectionTimeoutConfig(requestTimeoutMillis, connectTimeoutMillis, socketTimeoutMillis)
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
             }
         }
     }
@@ -917,259 +920,4 @@ public class KoogAgentsConfig {
     internal fun addLLMClient(provider: LLMProvider, client: LLMClient) {
         llmConnections[provider] = client
     }
-
-}
-
-/**
- * Attribute key used to store and retrieve the `KoogInstance` from the application's attributes.
- *
- * The `KoogInstance` holds a reference to the `PromptExecutor`, the default language model (`LLModel`),
- * and other necessary configurations and tools required for executing prompts and performing AI-driven operations.
- *
- * This key is utilized within the application to access the `KoogInstance` for tasks such as processing
- * language model queries, moderating content, and employing available AI tools in a routing context.
- */
-private val KoogPluginKey = AttributeKey<KoogInstance>("koog.prompt.executor")
-
-/**
- * Represents an instance of Koog with configuration for prompt execution, language model,
- * tool management, agent setup, and features.
- *
- * @property promptExecutor The executor responsible for handling language model prompts and interaction.
- * @property defaultLLM The default language model to be used if no specific model is provided.
- * @property tools The registry containing available tools for agent operations.
- * @property agentConfig The configuration settings for the AI agent.
- * @property agentFeatures A list of features enabled for the agent.
- */
-public class KoogInstance(
-    public val promptExecutor: PromptExecutor,
-    public val defaultLLM: LLModel?,
-    public val tools: ToolRegistry,
-    public val agentConfig: AIAgentConfig?,
-    public val agentFeatures: List<AgentFeature>
-)
-
-
-/**
- * A scoped plugin named "KoogAgents" for managing the Koog instance lifecycle in the application context.
- *
- * The plugin initializes the necessary components such as the `MultiLLMPromptExecutor` and `KoogInstance`
- * using configuration parameters provided via `pluginConfig`. The `KoogInstance` carries the core functionality
- * for language model communication, agent tools, configurations, and features.
- *
- * The initialized `KoogInstance` is then stored in the application's attributes to be accessible across the application.
- */
-public val Koog: RouteScopedPlugin<KoogAgentsConfig> = createRouteScopedPlugin(
-    name = "KoogAgents",
-    createConfiguration = ::KoogAgentsConfig
-) {
-    // Read LLM configurations from the application configuration
-    val configFromEnvironment = try {
-        loadEnvironmentConfig(application.environment.config)
-    } catch (e: Exception) {
-        application.log.error("Failed to read Koog configuration from application config", e)
-
-        KoogAgentsConfig()
-    }
-
-    val executor = MultiLLMPromptExecutor(
-        llmClients = configFromEnvironment.llmConnections + pluginConfig.llmConnections,
-        fallback = pluginConfig.fallbackLLMSettings
-    )
-
-    val koogInstance = KoogInstance(
-        executor,
-        pluginConfig.defaultLLM,
-        pluginConfig.agentTools,
-        pluginConfig.agentConfig,
-        pluginConfig.agentFeatures
-    )
-
-    application.attributes.put(KoogPluginKey, koogInstance)
-}
-
-/**
- * Represents a type alias for a lambda function that extends the [FeatureContext] receiver,
- * allowing the configuration or addition of specific features to a Kotlin AI Agent instance.
- *
- * This type is intended to encapsulate feature-specific logic that operates within the
- * [FeatureContext], abstracting the internal mechanisms for installing or customizing features
- * as part of the agent's functionality.
- */
-internal typealias AgentFeature = FeatureContext.() -> Unit
-
-/**
- * Provides access to the `KoogInstance` associated with the current `Route`.
- *
- * The `koog` property retrieves the `KoogInstance` stored as an attribute
- * in the current `Route`. This instance serves as the central configuration
- * and runtime context, encapsulating various components required for
- * executing language model interactions and agent functionalities.
- *
- * The `KoogInstance` includes:
- * - `PromptExecutor`: Facilitates executing prompts in language models.
- * - `defaultLLM`: Specifies the default language model to use if none is explicitly provided.
- * - `tools`: Maintains a registry of tools available for agent use.
- * - `agentConfig`: Optional configuration for an AI-based agent.
- * - `agentFeatures`: Defines features/capabilities enabled for the agent.
- *
- * @return The `KoogInstance` associated with the current `Route`.
- * @throws IllegalStateException if the `KoogInstance` is not yet configured for the `Route`.
- */
-public val Route.koog: KoogInstance get() = attributes[KoogPluginKey]
-
-/**
- * A property associated with the `Route` that provides access to an instance of `PromptExecutor`.
- *
- * This property is used to execute language model prompts with or without tool assistance,
- * stream responses, moderate content, or handle multiple language model choices.
- * The `PromptExecutor` serves as a core component when integrating language model capabilities
- * into `Route`-based AI workflows.
- *
- * Typical usages include creating AI agents or facilitating prompt execution within the context
- * of a `Route`.
- */
-public val Route.promptExecutor: PromptExecutor get() = koog.promptExecutor
-
-/**
- * Provides access to the `ToolRegistry` associated with this route.
- *
- * `agentTools` is a property that retrieves the tools available for agents within the context of the current route.
- * This property delegates to the `koog.tools` property for obtaining the `ToolRegistry`.
- *
- * Typically, this registry serves as a centralized resource, allowing agents to retrieve tools by name or type,
- * facilitating their operational tasks. It is utilized in configurations and executions where tools are required.
- *
- * @receiver The current `Route` context to which the tool registry is associated.
- * @return The `ToolRegistry` instance containing the collection of tools available for the route.
- */
-internal val Route.agentTools: ToolRegistry get() = koog.tools
-
-/**
- * Provides access to the AI agent configuration associated with the current route.
- *
- * This property retrieves an `AIAgentConfig` instance, which defines the configuration
- * needed for an AI agent to operate, including the prompt, model, iteration limits,
- * and strategies for managing missing tools. If no configuration is set, the value will be `null`.
- *
- * The configuration retrieved by this property is used to initialize AI agents in the
- * route through relevant functions.
- */
-internal val Route.agentConfig: AIAgentConfig? get() = koog.agentConfig
-
-/**
- * Retrieves a list of agent-specific features associated with the given route.
- *
- * The `agentFeatures` property provides access to a list of `AgentFeature` objects,
- * which represent the features or attributes tied to an agent within the specified route.
- */
-internal val Route.agentFeatures: List<AgentFeature> get() = koog.agentFeatures
-
-/**
- * Creates an AI agent using the provided AI agent strategy within the specified route.
- *
- * @param Input The type of input data for the AI agent.
- * @param Output The type of output data for the AI agent.
- * @param strategy The AI agent strategy defining the workflow and execution logic of the agent.
- * @return An instance of `AIAgent` configured with the specified strategy and the route's resources.
- * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
- */
-public fun <Input, Output> Route.aiAgent(strategy: AIAgentStrategy<Input, Output>): AIAgent<Input, Output> = AIAgent(
-    promptExecutor = promptExecutor,
-    strategy = strategy,
-    agentConfig = agentConfig ?: throw IllegalArgumentException("agentConfig is not set"),
-    toolRegistry = agentTools,
-)
-
-/**
- * Creates and configures an AI Agent with the specified execution mode.
- *
- * @param runMode The execution mode for the AI Agent as defined by the `ToolCalls` enum.
- *                Defaults to `ToolCalls.SINGLE_RUN_SEQUENTIAL`, which allows multiple
- *                tool calls executed in a sequential manner.
- * @return A configured instance of `AIAgent` with the given execution strategy and tools.
- */
-public fun Route.aiAgent(runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL): AIAgent<String, String> = AIAgent(
-    promptExecutor = promptExecutor,
-    strategy = singleRunStrategy(),
-    agentConfig = agentConfig ?: throw IllegalArgumentException("agentConfig is not set"),
-    toolRegistry = agentTools,
-)
-
-/**
- * Executes a prompt using a specified large language model (LLM) and optional tools, returning a list of responses.
- *
- * @param model The LLM to be used for processing the prompt. If null, a default LLM is used.
- * @param tools A list of tools that the LLM may utilize during execution. Defaults to an empty list.
- * @param buildPrompt A lambda to construct the prompt using a [PromptBuilder].
- * @return A list of [Message.Response] objects generated by the LLM after processing the prompt.
- * @throws IllegalArgumentException If no LLM is specified and no default LLM is configured.
- */
-public suspend fun RoutingContext.askLLM(
-    model: LLModel?,
-    tools: List<ToolDescriptor> = emptyList(),
-    buildPrompt: PromptBuilder.() -> Unit
-): List<Message.Response> {
-    val prompt = Prompt.build("id", init = buildPrompt)
-
-    val koog = call.application.attributes[KoogPluginKey]
-
-    return koog.promptExecutor.execute(
-        prompt = prompt,
-        model = model ?: koog.defaultLLM ?: throw IllegalArgumentException("LLM not specified"),
-        tools = tools
-    )
-}
-
-/**
- * Executes a moderation task using a specified Large Language Model (LLM) and a dynamically built prompt.
- *
- * @param model An optional [LLModel] to be used for moderation. If not provided, a default LLM will be used if available.
- * @param buildPrompt A lambda to construct the moderation prompt using a [PromptBuilder].
- * @return A [ModerationResult] containing the result of the moderation process.
- */
-public suspend fun RoutingContext.moderateWithLLM(
-    model: LLModel?,
-    buildPrompt: PromptBuilder.() -> Unit
-): ModerationResult {
-    val prompt = Prompt.build("id", init = buildPrompt)
-
-    val koog = call.application.attributes[KoogPluginKey]
-
-    return koog.promptExecutor.moderate(
-        prompt = prompt,
-        model = model ?: koog.defaultLLM ?: throw IllegalArgumentException("LLM not specified")
-    )
-}
-
-
-/**
- * Executes the AI agent strategy with the provided input and responds with the result.
- *
- * This method invokes a specified `AIAgentStrategy` to process the input data through a
- * defined AI agent workflow and then responds with the processed output data. The response
- * is returned with an HTTP status code of 200 (OK).
- *
- * @param Input The type of the input data to be processed.
- * @param Output The type of the output data generated by processing the input.
- * @param input The input data to be processed by the AI agent strategy.
- * @param strategy The AI agent strategy that defines how the input is transformed into the output
- * by executing a subgraph of interconnected workflow nodes.
- */
-public suspend inline fun <Input, reified Output : Any> RoutingCall.agentRespond(
-    input: Input,
-    strategy: AIAgentStrategy<Input, Output>
-) {
-    val agentOutput = route.aiAgent(strategy).run(input)
-    respond(HttpStatusCode.OK, agentOutput)
-}
-
-/**
- * Executes an AI agent's logic based on the provided input string and responds with the result.
- *
- * @param input The input string to be processed by the AI agent.
- */
-public suspend fun RoutingCall.agentRespond(input: String) {
-    val agentOutput = route.aiAgent().run(input)
-    respond(HttpStatusCode.OK, agentOutput)
 }

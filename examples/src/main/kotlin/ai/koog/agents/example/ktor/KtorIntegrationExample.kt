@@ -6,9 +6,10 @@ import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.ktor.*
+import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.message.Message
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.cio.*
@@ -16,9 +17,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
-import io.opentelemetry.sdk.common.CompletableResultCode
-import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.sdk.trace.export.SpanExporter
 
 @Tool
 @LLMDescription("Searches in Google and returns the most relevant page URLs")
@@ -67,7 +65,7 @@ fun Application.configureKoog() {
 
             defaultLLM = OpenAIModels.Chat.GPT4_1
 
-            fallback {  }
+            fallback { }
         }
 
         agent {
@@ -108,29 +106,29 @@ private fun Route.agenticRoutes() {
     get("user") {
         val userRequest = call.receive<String>()
 
-        val isHarmful = moderateWithLLM(OpenAIModels.Moderation.Omni) {
+        val isHarmful = llm().moderate(prompt("id") {
             user(userRequest)
-        }.isHarmful
+        }, OpenAIModels.Moderation.Omni).isHarmful
 
         if (isHarmful) {
             call.respond(HttpStatusCode.BadRequest, "Harmful content detected")
         }
 
-        val updatedRequest = askLLM(OllamaModels.Meta.LLAMA_3_2) {
+        val updatedRequest = llm().execute(prompt("id") {
             system(
                 "You are a helpful assistant that can correct user answers. " +
                         "You will get a user's question and your task is to make it more clear for the further processing."
             )
             user(userRequest)
-        }.single() as Message.Assistant
+        }, OllamaModels.Meta.LLAMA_3_2)
 
-        call.agentRespond(updatedRequest.content)
+        val output = singleRunAgent(updatedRequest.content)
+        call.respond(HttpStatusCode.OK, output)
     }
     get("organization") {
         val orgName = call.parameters["name"]!!
-
-        // custom strategy (and even custom Input/Output are also allowed for each agent in each route)
-        call.agentRespond("What's new in $orgName organization", strategy = reActStrategy())
+        val output = aiAgent(reActStrategy(), "What's new in $orgName organization")
+        call.respond(HttpStatusCode.OK, output)
     }
 }
 
