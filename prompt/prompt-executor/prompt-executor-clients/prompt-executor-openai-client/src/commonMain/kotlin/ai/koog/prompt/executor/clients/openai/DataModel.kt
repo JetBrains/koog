@@ -139,7 +139,7 @@ internal data class OpenAIChoice(
 internal data class OpenAIUsage(
     val promptTokens: Int? = null,
     val completionTokens: Int? = null,
-    val totalTokens: Int
+    val totalTokens: Int? = promptTokens?.let { prompt -> completionTokens?.let { prompt + it } }
 )
 
 @Serializable
