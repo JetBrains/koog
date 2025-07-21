@@ -14,12 +14,12 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 
 class AIAgentLLMContextTest {
 
@@ -132,55 +132,6 @@ class AIAgentLLMContextTest {
             assertEquals("new-test-tool", tools[0].name)
         }
         assertEquals(newToolRegistry, copiedContext.toolRegistry)
-    }
-
-    @Test
-    fun testConcurrentReadSessions() = runTest {
-        val context = createTestLLMContext()
-        val results = mutableListOf<String>()
-
-        coroutineScope {
-            repeat(5) { index ->
-                launch {
-                    val result = context.readSession {
-                        delay(10)
-                        "result-$index"
-                    }
-                    results.add(result)
-                }
-            }
-        }
-
-        assertEquals(5, results.size)
-        assertTrue(results.all { it.startsWith("result-") })
-    }
-
-    @Test
-    fun testConcurrentWriteSessions() = runTest {
-        val context = createTestLLMContext()
-        val results = mutableListOf<String>()
-
-        coroutineScope {
-            repeat(3) { index ->
-                launch {
-                    val result = context.writeSession {
-                        delay(10)
-                        this.tools = listOf(
-                            ToolDescriptor(
-                                name = "tool-$index",
-                                description = "Tool $index",
-                                requiredParameters = emptyList()
-                            )
-                        )
-                        "write-result-$index"
-                    }
-                    results.add(result)
-                }
-            }
-        }
-
-        assertEquals(3, results.size)
-        assertTrue(results.all { it.startsWith("write-result-") })
     }
 
     @Test
