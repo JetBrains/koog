@@ -1,28 +1,10 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.CalculatorChatExecutor.testClock
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
-import ai.koog.agents.core.agent.config.ToolCallDescriber
-import ai.koog.agents.core.agent.entity.AIAgentStateManager
-import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
-import kotlin.reflect.typeOf
 import kotlin.test.*
 
-class AIAgentContextTest {
+class AIAgentContextTestBase : AgentTestBase() {
 
     @Test
     fun testContextCreation() = runTest {
@@ -204,82 +186,5 @@ class AIAgentContextTest {
 
         assertNotSame(originalContext.stateManager, forkedContext.stateManager)
         assertNotSame(originalContext.llm, forkedContext.llm)
-    }
-
-    private fun createTestEnvironment(id: String = "test-environment"): AIAgentEnvironment {
-        return object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return emptyList()
-            }
-
-            override suspend fun reportProblem(exception: Throwable) {
-                // Do nothing
-            }
-
-            override fun toString(): String = "TestEnvironment($id)"
-        }
-    }
-
-    private fun createTestConfig(id: String = "test-config"): AIAgentConfigBase {
-        return AIAgentConfig(
-            prompt = createTestPrompt(),
-            model = OllamaModels.Meta.LLAMA_3_2,
-            maxAgentIterations = 10,
-            missingToolsConversionStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        )
-    }
-
-    private fun createTestPrompt(): Prompt {
-        return prompt("test-prompt") {}
-    }
-
-    private fun createTestLLMContext(id: String = "test-llm"): AIAgentLLMContext {
-        val mockExecutor = getMockExecutor(clock = testClock) {
-            mockLLMAnswer("Test response").asDefaultResponse
-        }
-
-        return AIAgentLLMContext(
-            tools = emptyList(),
-            prompt = createTestPrompt(),
-            model = OllamaModels.Meta.LLAMA_3_2,
-            promptExecutor = mockExecutor,
-            environment = createTestEnvironment(),
-            config = createTestConfig(),
-            clock = testClock
-        )
-    }
-
-    private fun createTestStateManager(): AIAgentStateManager {
-        return AIAgentStateManager()
-    }
-
-    private fun createTestStorage(): AIAgentStorage {
-        return AIAgentStorage()
-    }
-
-    @OptIn(InternalAgentsApi::class)
-    private fun createTestContext(
-        environment: AIAgentEnvironment = createTestEnvironment(),
-        config: AIAgentConfigBase = createTestConfig(),
-        llmContext: AIAgentLLMContext = createTestLLMContext(),
-        stateManager: AIAgentStateManager = createTestStateManager(),
-        storage: AIAgentStorage = createTestStorage(),
-        runId: String = "test-run-id",
-        strategyName: String = "test-strategy",
-        pipeline: AIAgentPipeline = AIAgentPipeline()
-    ): AIAgentContext {
-        return AIAgentContext(
-            environment = environment,
-            agentInputType = typeOf<String>(),
-            agentInput = "test-input",
-            config = config,
-            llm = llmContext,
-            stateManager = stateManager,
-            storage = storage,
-            runId = runId,
-            strategyName = strategyName,
-            pipeline = pipeline,
-            id = "test-context-id",
-        )
     }
 }

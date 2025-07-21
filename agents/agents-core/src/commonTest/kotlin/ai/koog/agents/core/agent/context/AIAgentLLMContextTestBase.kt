@@ -1,19 +1,11 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
-import ai.koog.agents.core.agent.config.ToolCallDescriber
-import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.*
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -21,7 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class AIAgentLLMContextTest {
+class AIAgentLLMContextTestBase : AgentTestBase() {
 
     @OptIn(DetachedPromptExecutorAPI::class)
     @Test
@@ -195,32 +187,6 @@ class AIAgentLLMContextTest {
         override suspend fun doExecute(args: TestToolArgs): String {
             return "Processed: ${args.input}"
         }
-    }
-
-    private fun createTestEnvironment(): AIAgentEnvironment {
-        return object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return emptyList()
-            }
-
-            override suspend fun reportProblem(exception: Throwable) {
-                // Do nothing
-            }
-        }
-    }
-
-    private fun createTestConfig(): AIAgentConfigBase {
-        return AIAgentConfig(
-            prompt = createTestPrompt(),
-            model = OllamaModels.Meta.LLAMA_3_2,
-            maxAgentIterations = 10,
-            missingToolsConversionStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        )
-    }
-
-    private fun createTestPrompt(): Prompt {
-        // Create an empty prompt for testing
-        return prompt("test-prompt") {}
     }
 
     private fun createTestLLMContext(): AIAgentLLMContext {

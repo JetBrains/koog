@@ -1,36 +1,25 @@
 package ai.koog.agents.core.agent.context.element
 
-import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
-import ai.koog.agents.core.agent.config.ToolCallDescriber
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.llm.OllamaModels
+import ai.koog.agents.core.agent.context.AgentTestBase
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlin.test.*
 
-class AgentRunInfoContextElementTest {
-    private val agentId = "test-agent"
-    private val runId = "test-run"
+class AgentRunInfoContextElementTestBase : AgentTestBase() {
 
     @Test
     fun testContextElementCreation() {
-        val agentId = agentId
-        val runId = runId
         val config = createTestConfig()
-        val strategyName = "test-strategy"
 
         val element = AgentRunInfoContextElement(
-            agentId = agentId,
-            runId = runId,
+            agentId = testAgentId,
+            runId = testRunId,
             agentConfig = config,
             strategyName = strategyName
         )
 
-        assertEquals(agentId, element.agentId)
-        assertEquals(runId, element.runId)
+        assertEquals(testAgentId, element.agentId)
+        assertEquals(testRunId, element.runId)
         assertEquals(config, element.agentConfig)
         assertEquals(strategyName, element.strategyName)
         assertEquals(AgentRunInfoContextElement.Key, element.key)
@@ -69,10 +58,10 @@ class AgentRunInfoContextElementTest {
     @Test
     fun testGetElementFromContext() = runTest {
         val element = AgentRunInfoContextElement(
-            agentId = agentId,
-            runId = runId,
+            agentId = testAgentId,
+            runId = testRunId,
             agentConfig = createTestConfig(),
-            strategyName = "test-strategy"
+            strategyName = strategyName
         )
 
         val context = withContext(element) {
@@ -93,10 +82,10 @@ class AgentRunInfoContextElementTest {
     @Test
     fun testGetElementOrThrow() = runTest {
         val element = AgentRunInfoContextElement(
-            agentId = agentId,
-            runId = runId,
+            agentId = testAgentId,
+            runId = testRunId,
             agentConfig = createTestConfig(),
-            strategyName = "test-strategy"
+            strategyName = strategyName,
         )
 
         withContext(element) {
@@ -107,19 +96,5 @@ class AgentRunInfoContextElementTest {
         assertFailsWith<IllegalStateException> {
             coroutineContext.getAgentRunInfoElementOrThrow()
         }
-    }
-
-
-    private fun createTestConfig(): AIAgentConfigBase {
-        return AIAgentConfig(
-            prompt = createTestPrompt(),
-            model = OllamaModels.Meta.LLAMA_3_2,
-            maxAgentIterations = 10,
-            missingToolsConversionStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
-        )
-    }
-
-    private fun createTestPrompt(): Prompt {
-        return prompt("test-prompt") {}
     }
 }
