@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 
-class AIAgentLLMContextTestBase : AgentTestBase() {
+class AIAgentLLMContextTest : AgentTestBase() {
 
     @OptIn(DetachedPromptExecutorAPI::class)
     @Test

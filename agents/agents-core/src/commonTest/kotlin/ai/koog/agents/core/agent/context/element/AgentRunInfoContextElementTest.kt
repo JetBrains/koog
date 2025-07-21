@@ -5,7 +5,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlin.test.*
 
-class AgentRunInfoContextElementTestBase : AgentTestBase() {
+class AgentRunInfoContextElementTest : AgentTestBase() {
 
     @Test
     fun testContextElementCreation() {

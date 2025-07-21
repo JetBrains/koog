@@ -4,7 +4,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import kotlinx.coroutines.test.runTest
 import kotlin.test.*
 
-class AIAgentContextTestBase : AgentTestBase() {
+class AIAgentContextTest : AgentTestBase() {
 
     @Test
     fun testContextCreation() = runTest {
@@ -166,6 +166,37 @@ class AIAgentContextTestBase : AgentTestBase() {
     }
 
     @Test
+    fun testCopyWithDifferentAgentInputTypes() = runTest {
+        val testInputs = listOf(
+            "",
+            "regular string",
+            ComplexJsonInput("test-id", listOf(1, 2, 3), NestedObject("test-name", true)),
+            TestEnum.FIRST,
+            TestEnum.SECOND,
+            1,
+            3.14,
+            true,
+            false,
+            listOf("item1", "item2", "item3"),
+            emptyList<String>(),
+            mapOf("key1" to "value1", "key2" to "value2"),
+            emptyMap<String, String>(),
+            listOf(listOf("nested1"), listOf("nested2")),
+            mapOf("nestedMap" to mapOf("key" to "value")),
+            mapOf("nestedList" to listOf(1, 2, 3))
+        )
+
+        val originalContext = createTestContext()
+
+        testInputs.forEach { input ->
+            val copiedContext = originalContext.copy(agentInput = input)
+
+            assertEquals(input, copiedContext.agentInput)
+            assertEquals("test-input", originalContext.agentInput)
+        }
+    }
+
+    @Test
     fun testContextForkWithIsolatedStorage() = runTest {
         val storageKey = AIAgentStorageKey<String>("test-key")
 
@@ -186,5 +217,20 @@ class AIAgentContextTestBase : AgentTestBase() {
 
         assertNotSame(originalContext.stateManager, forkedContext.stateManager)
         assertNotSame(originalContext.llm, forkedContext.llm)
+    }
+
+    data class ComplexJsonInput(
+        val id: String,
+        val values: List<Int>,
+        val nested: NestedObject
+    )
+
+    data class NestedObject(
+        val name: String,
+        val active: Boolean
+    )
+
+    enum class TestEnum {
+        FIRST, SECOND
     }
 }
