@@ -74,8 +74,6 @@ class NodeInfoContextElementTest {
             val retrievedNodeElement = coroutineContext.getNodeInfoElement()
             val retrievedAgentElement = coroutineContext[AgentRunInfoContextElement.Key]
 
-            assertNotNull(retrievedNodeElement)
-            assertNotNull(retrievedAgentElement)
             assertEquals(nodeElement, retrievedNodeElement)
             assertEquals(agentElement, retrievedAgentElement)
         }
