@@ -12,10 +12,11 @@ import kotlinx.coroutines.withContext
 import kotlin.test.*
 
 class NodeInfoContextElementTest {
+    private val nodeName = "test-node"
 
     @Test
     fun testContextElementCreation() {
-        val nodeName = "test-node"
+        val nodeName = nodeName
 
         val element = NodeInfoContextElement(nodeName = nodeName)
 
@@ -36,7 +37,7 @@ class NodeInfoContextElementTest {
 
     @Test
     fun testGetNodeInfoElement() = runTest {
-        val element = NodeInfoContextElement(nodeName = "test-node")
+        val element = NodeInfoContextElement(nodeName = nodeName)
 
         // Test with element in context
         withContext(element) {
@@ -52,7 +53,7 @@ class NodeInfoContextElementTest {
 
     @Test
     fun testMultipleElementsInContext() = runTest {
-        val nodeElement = NodeInfoContextElement(nodeName = "test-node")
+        val nodeElement = NodeInfoContextElement(nodeName = nodeName)
         val testPrompt = prompt("test-prompt") {}
         val testModel = OllamaModels.Meta.LLAMA_3_2
         val testStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
