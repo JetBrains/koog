@@ -12,11 +12,13 @@ import kotlinx.coroutines.withContext
 import kotlin.test.*
 
 class AgentRunInfoContextElementTest {
+    private val agentId = "test-agent"
+    private val runId = "test-run"
 
     @Test
     fun testContextElementCreation() {
-        val agentId = "test-agent"
-        val runId = "test-run"
+        val agentId = agentId
+        val runId = runId
         val config = createTestConfig()
         val strategyName = "test-strategy"
 
@@ -37,7 +39,7 @@ class AgentRunInfoContextElementTest {
     @Test
     fun testContextElementEquality() {
         val sharedConfig = createTestConfig()
-        
+
         val element1 = AgentRunInfoContextElement(
             agentId = "agent1",
             runId = "run1",
@@ -67,8 +69,8 @@ class AgentRunInfoContextElementTest {
     @Test
     fun testGetElementFromContext() = runTest {
         val element = AgentRunInfoContextElement(
-            agentId = "test-agent",
-            runId = "test-run",
+            agentId = agentId,
+            runId = runId,
             agentConfig = createTestConfig(),
             strategyName = "test-strategy"
         )
@@ -91,8 +93,8 @@ class AgentRunInfoContextElementTest {
     @Test
     fun testGetElementOrThrow() = runTest {
         val element = AgentRunInfoContextElement(
-            agentId = "test-agent",
-            runId = "test-run",
+            agentId = agentId,
+            runId = runId,
             agentConfig = createTestConfig(),
             strategyName = "test-strategy"
         )
