@@ -78,8 +78,6 @@ object Models {
     @JvmStatic
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
-            // BedrockModels.AI21JambaMini, // Disabled: Only available in us-east-2, workflow uses us-west-2
-            BedrockModels.AmazonNovaLite,
             BedrockModels.AnthropicClaude35Haiku,
             BedrockModels.MetaLlama3_1_8BInstruct,
         )
