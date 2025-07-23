@@ -62,17 +62,16 @@ class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     @Serializable
-    object NoArgsToolArgs : ToolArgs
 
-    object CalculatorToolNoArgs : SimpleTool<NoArgsToolArgs>() {
-        override val argsSerializer = NoArgsToolArgs.serializer()
+    private object CalculatorToolNoArgs : SimpleTool<ToolArgs.Empty>() {
+        override val argsSerializer = ToolArgs.Empty.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "calculator",
             description = "A simple calculator that performs basic calculations. No parameters needed.",
         )
 
-        override suspend fun doExecute(args: NoArgsToolArgs): String {
+        override suspend fun doExecute(args: ToolArgs.Empty): String {
             return "The result of 123 + 456 is 579"
         }
     }
