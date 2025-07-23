@@ -79,7 +79,7 @@ object Models {
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
             BedrockModels.AnthropicClaude35Haiku,
-            BedrockModels.MetaLlama3_1_8BInstruct,
+            BedrockModels.MetaLlama3_1_70BInstruct,
         )
     }
 
