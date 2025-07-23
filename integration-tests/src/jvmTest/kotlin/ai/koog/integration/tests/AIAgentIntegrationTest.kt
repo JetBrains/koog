@@ -1009,6 +1009,8 @@ class AIAgentIntegrationTest {
                 actualToolCalls,
                 "Only the ${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model"
             )
+
+            assertTrue(errors.isEmpty(), "There should be no errors")
         }
     }
 }
