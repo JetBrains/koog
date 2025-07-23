@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
@@ -1010,6 +1011,130 @@ class AIAgentIntegrationTest {
             )
 
             assertTrue(errors.isEmpty(), "There should be no errors")
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val parallelStrategy = strategy<String, String>("parallel-nodes-strategy") {
+            // Create three nodes that process different computations
+            val mathNode by node<Unit, String>("math") {
+                "Math result: ${7 * 8}"
+            }
+
+            val textNode by node<Unit, String>("text") {
+                "Text result: Hello World"
+            }
+
+            val countNode by node<Unit, String>("count") {
+                "Count result: ${(1..5).sum()}"
+            }
+
+            val parallelNode by parallel(
+                mathNode, textNode, countNode,
+                name = "parallelProcessor"
+            ) {
+                val combinedResult = fold("") { acc, result ->
+                    if (acc.isEmpty()) result else "$acc | $result"
+                }
+                ParallelNodeExecutionResult("Combined: ${combinedResult.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        withRetry {
+            val agent = AIAgent<String, String>(
+                promptExecutor = getExecutor(model),
+                strategy = parallelStrategy,
+                agentConfig = AIAgentConfig(
+                    prompt = prompt("parallel-test") {
+                        system("You are a helpful assistant.")
+                    },
+                    model = model,
+                    maxAgentIterations = 10
+                ),
+                toolRegistry = ToolRegistry {},
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
+
+            agent.run("Hi")
+
+            assertTrue(errors.isEmpty(), "There should be no errors during parallel execution")
+            assertTrue(results.isNotEmpty(), "There should be results from parallel execution")
+
+            val finalResult = results.first() as String
+            assertTrue(
+                finalResult.contains("Math result: 56"),
+                "Result should contain math computation (7*8=56)"
+            )
+            assertTrue(
+                finalResult.contains("Text result: Hello World"),
+                "Result should contain text processing result"
+            )
+            assertTrue(
+                finalResult.contains("Count result: 15"),
+                "Result should contain count computation (1+2+3+4+5=15)"
+            )
+            assertTrue(
+                finalResult.contains("Combined:"),
+                "Result should show that parallel results were combined"
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val selectionStrategy = strategy<String, String>("parallel-selection-strategy") {
+            val smallNode by node<Unit, String>("small") { "10" }
+            val mediumNode by node<Unit, String>("medium") { "50" }
+            val largeNode by node<Unit, String>("large") { "100" }
+
+            val parallelNode by parallel(
+                smallNode, mediumNode, largeNode,
+                name = "maxSelector"
+            ) {
+                val maxResult = selectByMax { output -> output.toInt() }
+                ParallelNodeExecutionResult("Maximum value: ${maxResult.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        withRetry {
+            val agent = AIAgent<String, String>(
+                promptExecutor = getExecutor(model),
+                strategy = selectionStrategy,
+                agentConfig = AIAgentConfig(
+                    prompt = prompt("parallel-selection-test") {
+                        system("You are a helpful assistant.")
+                    },
+                    model = model,
+                    maxAgentIterations = 10
+                ),
+                toolRegistry = ToolRegistry {},
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
+
+            agent.run("Find the maximum value")
+
+            assertTrue(errors.isEmpty(), "There should be no errors during parallel selection")
+            assertTrue(results.isNotEmpty(), "There should be results from parallel selection")
+
+            val finalResult = results.first() as String
+
+            assertTrue(
+                finalResult.contains("Maximum value: 100"),
+                "Result should contain the maximum value (100) from parallel execution"
+            )
         }
     }
 }
