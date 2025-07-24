@@ -11,7 +11,10 @@ import kotlinx.io.files.SystemFileSystem
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import java.nio.file.*
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
 import kotlin.io.path.*
 import kotlin.use
 
@@ -139,12 +142,8 @@ public object JVMFileSystemProvider {
             require(directory.exists()) { "Path must exist" }
             require(directory.isDirectory()) { "Path must be a directory" }
 
-            return try {
-                Files.list(directory).use {
-                    it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
-                }
-            } catch (e: IOException) {
-                throw IOException("Failed to list directory: $directory", e)
+            return Files.list(directory).use {
+                it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
             }
         }
 
@@ -425,16 +424,17 @@ public object JVMFileSystemProvider {
          *
          * @param source The source path of the file or directory to be moved.
          * @param target The target path where the file or directory should be moved.
-         * @throws IOException f the source path is neither a file nor a directory, or if any IO error occurs.
-         * @throws FileAlreadyExistsException if [target] already exists.
-         * @throws IllegalArgumentException if [source] doesn't exist.
+         * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
+         *   [target] already exists, or any I/O error occurs.
          */
         override suspend fun move(source: Path, target: Path) {
             withContext(Dispatchers.IO) {
                 if (target.exists()) {
-                    throw FileAlreadyExistsException("Target path already exists: $target")
+                    throw IOException("Target path already exists: $target")
                 }
-                require(source.exists()) { "Source path does not exist" }
+                if (source.notExists()) {
+                    throw IOException("Source path doesn't exist: $source")
+                }
 
                 if (source.isDirectory()) {
                     target.createDirectories()

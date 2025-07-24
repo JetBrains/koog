@@ -145,7 +145,7 @@ public object FileSystemProvider {
         public suspend fun read(path: Path): ByteArray
 
         /**
-         * Creates a Source for reading from a file at the specified [path].
+         * Creates a [Source] for reading from a file at the specified [path].
          * The returned Source is buffered.
          *
          * @param path The path to read from.
@@ -202,8 +202,8 @@ public object FileSystemProvider {
          *
          * @param source The source path to move from.
          * @param target The target path to move to.
-         * @throws IOException or its inheritor if the source path doesn't exist, isn't a file or directory,
-         *   or [target] already exists, or any I/O error occurs.
+         * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
+         *   [target] already exists, or any I/O error occurs.
          */
         public suspend fun move(source: Path, target: Path)
 
