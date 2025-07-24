@@ -81,6 +81,7 @@ public object FileSystemProvider {
          *
          * @param path The path to examine.
          * @return [FileMetadata] object or null if the path doesn't exist or isn't a regular file or directory.
+         * @throws IOException if an I/O error occurs while retrieving metadata.
          */
         public suspend fun metadata(path: Path): FileMetadata?
 
@@ -121,6 +122,7 @@ public object FileSystemProvider {
          *
          * @param path The path to check.
          * @return true if the path exists, false otherwise.
+         * @throws IOException if an I/O error occurs while checking [path] existence.
          */
         public suspend fun exists(path: Path): Boolean
     }
