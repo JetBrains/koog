@@ -148,7 +148,7 @@ public object FileSystemProvider {
          *
          * @param path The path to read from.
          * @return A buffered Source object for reading.
-         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
+         * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs during source creation.
          */
         public suspend fun source(path: Path): Source
