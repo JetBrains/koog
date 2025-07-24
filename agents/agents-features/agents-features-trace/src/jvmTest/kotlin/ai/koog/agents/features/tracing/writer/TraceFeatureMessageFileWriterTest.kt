@@ -150,8 +150,8 @@ class TraceFeatureMessageFileWriterTest {
                 }, model: ${testModel.eventString}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-llm-call, input: ${userPrompt}, output: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")})",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")})",
-                "${ToolCallEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: Args(dummy=test))",
-                "${ToolCallResultEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: Args(dummy=test), result: Text(text=${dummyTool.result}))",
+                "${ToolCallEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"})",
+                "${ToolCallResultEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"}, result: ${dummyTool.result})",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")}, output: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-node-llm-send-tool-result, input: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
                 "${BeforeLLMCallEvent::class.simpleName} (run id: ${runId}, prompt: ${
@@ -286,7 +286,7 @@ class TraceFeatureMessageFileWriterTest {
     fun `test file stream feature provider is not set`(@TempDir tempDir: Path) = runTest {
 
         val logFile = createTempLogFile(tempDir)
-        TraceFeatureMessageFileWriter(logFile, TraceFeatureMessageFileWriterTest::sinkOpener).use { writer ->
+        TraceFeatureMessageFileWriter(logFile, TraceFeatureMessageFileWriterTest::sinkOpener).use {
 
             val strategyName = "tracing-test-strategy"
 

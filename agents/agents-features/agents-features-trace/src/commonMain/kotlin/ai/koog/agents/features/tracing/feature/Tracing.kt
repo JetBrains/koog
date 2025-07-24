@@ -5,6 +5,9 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.model.*
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
 import ai.koog.agents.features.tracing.eventString
@@ -208,44 +211,60 @@ public class Tracing {
             //region Intercept Tool Call Events
 
             pipeline.interceptToolCall(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolCallEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs)
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolValidationError(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolValidationErrorEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs,
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs),
                     error = eventContext.error
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolCallFailure(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolCallFailureEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs,
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs),
                     error = eventContext.throwable.toAgentError()
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolCallResult(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolCallResultEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs,
-                    result = eventContext.result
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs),
+                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) }
                 )
                 processMessage(config, event)
             }

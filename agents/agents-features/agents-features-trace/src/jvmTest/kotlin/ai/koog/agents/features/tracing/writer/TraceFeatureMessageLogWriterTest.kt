@@ -139,8 +139,8 @@ class TraceFeatureMessageLogWriterTest {
                 }, model: ${testModel.eventString}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-llm-call, input: $userPrompt, output: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")})",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")})",
-                "[INFO] Received feature message [event]: ${ToolCallEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: Args(dummy=test))",
-                "[INFO] Received feature message [event]: ${ToolCallResultEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: Args(dummy=test), result: Text(text=${dummyTool.result}))",
+                "[INFO] Received feature message [event]: ${ToolCallEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"})",
+                "[INFO] Received feature message [event]: ${ToolCallResultEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"}, result: ${dummyTool.result})",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")}, output: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-node-llm-send-tool-result, input: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
                 "[INFO] Received feature message [event]: ${BeforeLLMCallEvent::class.simpleName} (run id: ${runId}, prompt: ${
@@ -262,7 +262,7 @@ class TraceFeatureMessageLogWriterTest {
 
     @Test
     fun `test feature message log writer is not set`() = runTest {
-        TraceFeatureMessageLogWriter(targetLogger).use { writer ->
+        TraceFeatureMessageLogWriter(targetLogger).use {
 
             val strategyName = "tracing-test-strategy"
 

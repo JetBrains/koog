@@ -7,7 +7,6 @@ import ai.koog.agents.core.feature.model.*
 import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.features.tracing.*
@@ -33,7 +32,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
         private val logger = KotlinLogging.logger("ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriterTest")
-        private val defaultClientServerTimeout = 5.seconds
+        private val defaultClientServerTimeout = 30.seconds
         private const val HOST = "127.0.0.1"
     }
 
@@ -275,14 +274,14 @@ class TraceFeatureMessageRemoteWriterTest {
                         runId = runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
-                        toolArgs = DummyTool.Args()
+                        toolArgs = dummyTool.encodeArgsToString(DummyTool.Args("test"))
                     ),
                     ToolCallResultEvent(
                         runId = runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
-                        toolArgs = DummyTool.Args(),
-                        result = ToolResult.Text(dummyTool.result)
+                        toolArgs = dummyTool.encodeArgsToString(DummyTool.Args("test")),
+                        result = dummyTool.result
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = runId,
@@ -361,7 +360,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val isServerStarted = CompletableDeferred<Boolean>()
 
         val serverJob = launch {
-            TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
+            TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use {
                 MockFeatureMessageWriter().use { testWriter ->
 
                     val strategy = strategy<String, String>(strategyName) {

@@ -1,13 +1,9 @@
 package ai.koog.agents.core.feature.model
 
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.common.message.FeatureEvent
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.LLMChoice
-import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -286,7 +282,7 @@ public data class ToolCallEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: ToolArgs,
+    val toolArgs: String,
     override val eventId: String = ToolCallEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
@@ -306,7 +302,7 @@ public data class ToolValidationErrorEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: ToolArgs,
+    val toolArgs: String,
     val error: String,
     override val eventId: String = ToolValidationErrorEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -328,7 +324,7 @@ public data class ToolCallFailureEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: ToolArgs,
+    val toolArgs: String,
     val error: AIAgentError,
     override val eventId: String = ToolCallFailureEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -350,8 +346,8 @@ public data class ToolCallResultEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: ToolArgs,
-    val result: ToolResult?,
+    val toolArgs: String,
+    val result: String?,
     override val eventId: String = ToolCallResultEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 

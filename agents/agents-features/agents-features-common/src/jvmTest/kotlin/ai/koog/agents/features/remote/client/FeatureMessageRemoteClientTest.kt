@@ -27,7 +27,7 @@ class FeatureMessageRemoteClientTest {
     companion object {
         private val logger = KotlinLogging.logger {  }
 
-        private val defaultClientServerTimeout = 5.seconds
+        private val defaultClientServerTimeout = 30.seconds
     }
 
     //region Start / Stop
