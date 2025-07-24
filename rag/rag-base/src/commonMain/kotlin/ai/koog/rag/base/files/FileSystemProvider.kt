@@ -138,6 +138,7 @@ public object FileSystemProvider {
          * @param path The path to read.
          * @return The file content as a byte array.
          * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
+         * @throws IOException if an I/O error occurs during reading.
          */
         public suspend fun read(path: Path): ByteArray
 
@@ -158,6 +159,7 @@ public object FileSystemProvider {
          * @param path The path to examine.
          * @return The file size in bytes.
          * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
+         * @throws IOException if an I/O error occurs while determining the file size.
          */
         public suspend fun size(path: Path): Long
     }
@@ -177,6 +179,7 @@ public object FileSystemProvider {
      * This interface focuses on write operations and complements the read operations
      * provided by other interfaces.
      */
+    @Deprecated("For internal use only.")
     public interface Write<Path> : Serialization<Path> {
         /**
          * Creates a new file or directory inside [parent] with specified [name] and [type].
@@ -184,13 +187,9 @@ public object FileSystemProvider {
          *
          * @param parent The parent directory path.
          * @param name The name of the new file or directory.
-         *        On Windows platforms, reserved names like "CON",
-         *        "PRN", "AUX", "NUL", "COM1"-"COM9", "LPT1"-"LPT9" are not allowed.
          * @param type The type (file or directory) to create.
-         * @throws FileAlreadyExistsException if a file or directory with [name] already exists in [parent].
-         * @throws InvalidPathException if [name] is invalid (e.g., contains reserved characters).
-         *         Some implementations may throw a more general IllegalArgumentException or IOException instead.
-         * @throws IOException if any other I/O error occurs.
+         * @throws IOException or its inheritor if a file or directory with [name] already exists in [parent],
+         *         or [name] is invalid (e.g., contains reserved characters), or if any other I/O error occurs.
          */
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
@@ -201,8 +200,8 @@ public object FileSystemProvider {
          *
          * @param source The source path to move from.
          * @param target The target path to move to.
-         * @throws FileAlreadyExistsException if [source] already exists in [target].
-         * @throws IOException if the source path doesn't exist, isn't a file or directory, or any I/O error occurs.
+         * @throws IOException or its inheritor if the source path doesn't exist, isn't a file or directory,
+         *         or [target] already exists, or any I/O error occurs.
          */
         public suspend fun move(source: Path, target: Path)
 
@@ -219,10 +218,10 @@ public object FileSystemProvider {
         public suspend fun write(path: Path, content: ByteArray)
 
         /**
-         * Creates a Sink for writing to a file.
+         * Creates a [Sink] for writing to a file.
          * If the file doesn't exist, it will be created.
          * If the parent directories don't exist, they will be created.
-         * The returned Sink is buffered.
+         * The returned [Sink] is buffered.
          *
          * @param path The path where Sink will be created.
          * @param append Append to existing content (true) or overwrite (false). Default is false (overwrite).
@@ -237,8 +236,7 @@ public object FileSystemProvider {
          *
          * @param parent The parent directory containing the item to delete.
          * @param name The name of the item to delete.
-         * @throws NoSuchFileException if the file or directory doesn't exist.
-         * @throws IOException if a file or directory can't be deleted for any other reason.
+         * @throws IOException or its inheritor if the file or directory doesn't exist or can't be deleted for any other reason.
          */
         public suspend fun delete(parent: Path, name: String)
     }
