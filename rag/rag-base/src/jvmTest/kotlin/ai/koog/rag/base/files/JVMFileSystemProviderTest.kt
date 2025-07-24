@@ -400,7 +400,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test move throws IOException when target file already exists`() {
+    fun `test move throws FileAlreadyExistsException when target file already exists`() {
         val sourcePath = dirEmpty.resolve("source-file.txt").apply {
             createFile()
             writeText("source content")
@@ -413,7 +413,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         assertTrue(sourcePath.exists())
         assertTrue(targetPath.exists())
 
-        assertThrows(IOException::class.java) {
+        assertThrows(FileAlreadyExistsException::class.java) {
             runBlocking {
                 write.move(sourcePath, targetPath)
             }

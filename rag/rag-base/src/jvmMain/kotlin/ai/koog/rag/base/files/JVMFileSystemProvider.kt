@@ -11,10 +11,7 @@ import kotlinx.io.files.SystemFileSystem
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.NoSuchFileException
-import java.nio.file.Path
+import java.nio.file.*
 import kotlin.io.path.*
 import kotlin.use
 
@@ -430,7 +427,7 @@ public object JVMFileSystemProvider {
         override suspend fun move(source: Path, target: Path) {
             withContext(Dispatchers.IO) {
                 if (target.exists()) {
-                    throw IOException("Target path already exists: $target")
+                    throw FileAlreadyExistsException("Target path already exists: $target")
                 }
                 if (source.notExists()) {
                     throw IOException("Source path doesn't exist: $source")
