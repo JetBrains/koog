@@ -115,7 +115,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val testModel = LLModel(
             provider = TestLLMProvider(),
             id = "test-llm-id",
-            capabilities = emptyList()
+            capabilities = emptyList(),
+            contextLength = 1_000,
         )
 
         val expectedLLMCallWithToolsPrompt = expectedPrompt.copy(
@@ -379,7 +380,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val testModel = LLModel(
             provider = TestLLMProvider(),
             id = "test-llm-id",
-            capabilities = emptyList()
+            capabilities = emptyList(),
+            contextLength = 1_000,
         )
 
         val expectedPrompt = Prompt(

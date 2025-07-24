@@ -6,7 +6,7 @@ One can contribute to the project by reporting issues or submitting changes via 
 
 ## Reporting issues
 
-Please use [Koog official YouTrack project](https://youtrack.jetbrains.com/agiles/153-5635/current) for filing feature
+Please use [Koog official YouTrack project](https://youtrack.jetbrains.com/issues/KG) for filing feature
 requests and bug reports.
 
 Questions about usage and general inquiries are better suited for StackOverflow or the [#koog-agentic-framework](https://kotlinlang.slack.com/messages/koog-agentic-framework/) channel in KotlinLang Slack.

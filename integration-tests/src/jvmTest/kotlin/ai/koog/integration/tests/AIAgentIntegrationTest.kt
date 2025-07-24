@@ -62,6 +62,21 @@ class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     @Serializable
+
+    private object CalculatorToolNoArgs : SimpleTool<ToolArgs.Empty>() {
+        override val argsSerializer = ToolArgs.Empty.serializer()
+
+        override val descriptor = ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that performs basic calculations. No parameters needed.",
+        )
+
+        override suspend fun doExecute(args: ToolArgs.Empty): String {
+            return "The result of 123 + 456 is 579"
+        }
+    }
+
+    @Serializable
     data class GetTransactionsArgs(
         val startDate: String,
         val endDate: String
@@ -338,11 +353,7 @@ class AIAgentIntegrationTest {
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
         Models.assumeAvailable(model.provider)
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-            }
+            val executor = getExecutor(model)
 
             val agent = AIAgent(
                 executor = executor,
@@ -370,11 +381,7 @@ class AIAgentIntegrationTest {
         }
 
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-            }
+            val executor = getExecutor(model)
 
             val agent = AIAgent(
                 executor = executor,
@@ -415,11 +422,7 @@ class AIAgentIntegrationTest {
         """.trimIndent()
 
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-            }
+            val executor = getExecutor(model)
 
             val agent = AIAgent(
                 executor = executor,
@@ -456,11 +459,7 @@ class AIAgentIntegrationTest {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
+        val executor = getExecutor(model)
 
         val toolRegistry = ToolRegistry {
             tool(CalculatorTool)
@@ -965,5 +964,52 @@ class AIAgentIntegrationTest {
         val checkpoints = fileStorageProvider.getCheckpoints()
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val registry = ToolRegistry {
+            tool(CalculatorToolNoArgs)
+        }
+
+        withRetry {
+            val executor = getExecutor(model)
+
+            val agent = AIAgent(
+                promptExecutor = executor,
+                strategy = singleRunStrategy(),
+                agentConfig = AIAgentConfig(
+                    prompt = prompt(
+                        id = "calculator-agent-test",
+                        params = LLMParams(
+                            temperature = 0.1,
+                            toolChoice = ToolChoice.Auto, // KG-163
+                        )
+                    ) {
+                        system(
+                            systemPrompt
+                                    + "YOU'RE OBLIGED TO USE TOOLS. THIS IS MANDATORY."
+                                    + "I'M CHARGING YOU IF YOU AREN'T CALLING TOOLS!!!"
+                        )
+                    },
+                    model = model,
+                    maxAgentIterations = 10
+                ),
+                toolRegistry = registry,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+            )
+            agent.run("What is 123 + 456?")
+
+            assertEquals(
+                listOf(CalculatorToolNoArgs.descriptor.name),
+                actualToolCalls,
+                "Only the ${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model"
+            )
+
+            assertTrue(errors.isEmpty(), "There should be no errors")
+        }
     }
 }

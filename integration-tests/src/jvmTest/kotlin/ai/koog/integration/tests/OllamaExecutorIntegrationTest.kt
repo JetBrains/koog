@@ -741,7 +741,7 @@ class OllamaExecutorIntegrationTest {
         val modelCard = client.getModelOrNull(model.id)
         assertNotNull(modelCard)
 
-        assertEquals("llama3.2:latest", modelCard.name)
+        assertEquals(model.id, modelCard.name)
         assertEquals("llama", modelCard.family)
         assertEquals(listOf("llama"), modelCard.families)
         assertEquals(2019393189, modelCard.size)

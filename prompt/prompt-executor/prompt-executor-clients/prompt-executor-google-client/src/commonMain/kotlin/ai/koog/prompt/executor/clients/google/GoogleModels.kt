@@ -37,6 +37,8 @@ import ai.koog.prompt.llm.LLModel
  * | [Gemini1_5Flash8BLatest]    | Very fast | $0.0375-$0.075 / $0.15-$0.30 | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
+ *
+ * @see <a href="modelcards.withgoogle.com/model-cards">
  */
 public object GoogleModels : LLModelDefinitions {
     /**
@@ -74,20 +76,22 @@ public object GoogleModels : LLModelDefinitions {
      *
      * Context window: 1 million tokens
      * Knowledge cutoff: July 2024
+     *
+     * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash.pdf">
      */
     public val Gemini2_0Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash",
-        capabilities = fullCapabilities
+        capabilities = fullCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
     )
 
     /**
      * Specific version of Gemini 2.0 Flash
      */
-    public val Gemini2_0Flash001: LLModel = LLModel(
-        provider = LLMProvider.Google,
+    public val Gemini2_0Flash001: LLModel = Gemini2_0Flash.copy(
         id = "gemini-2.0-flash-001",
-        capabilities = fullCapabilities
     )
 
     /**
@@ -96,20 +100,22 @@ public object GoogleModels : LLModelDefinitions {
      *
      * Context window: 1 million tokens
      * Knowledge cutoff: July 2024
+     *
+     * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2-flash-lite.pdf">
      */
     public val Gemini2_0FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite",
-        capabilities = fullCapabilities // Flash Lite has robust tool support
+        capabilities = fullCapabilities, // Flash Lite has robust tool support
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
     )
 
     /**
      * Specific version of Gemini 2.0 Flash-Lite
      */
-    public val Gemini2_0FlashLite001: LLModel = LLModel(
-        provider = LLMProvider.Google,
+    public val Gemini2_0FlashLite001: LLModel = Gemini2_0FlashLite.copy(
         id = "gemini-2.0-flash-lite-001",
-        capabilities = fullCapabilities // Flash Lite has robust tool support
     )
 
     /**
@@ -117,29 +123,29 @@ public object GoogleModels : LLModelDefinitions {
      *
      * Context window: 1 million tokens
      * Knowledge cutoff: February 2024
+     *
+     * @see <a href="storage.googleapis.com/deepmind-media/gemini/gemini_v1_5_report.pdf#page=105">
      */
     public val Gemini1_5Pro: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-pro",
-        capabilities = fullCapabilities // 1.5 Pro has robust tool support
+        capabilities = fullCapabilities, // 1.5 Pro has robust tool support
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
     )
 
     /**
      * Latest version of Gemini 1.5 Pro
      */
-    public val Gemini1_5ProLatest: LLModel = LLModel(
-        provider = LLMProvider.Google,
+    public val Gemini1_5ProLatest: LLModel = Gemini1_5Pro.copy(
         id = "gemini-1.5-pro-latest",
-        capabilities = fullCapabilities // 1.5 Pro has robust tool support
     )
 
     /**
      * Specific version of Gemini 1.5 Pro
      */
-    public val Gemini1_5Pro002: LLModel = LLModel(
-        provider = LLMProvider.Google,
+    public val Gemini1_5Pro002: LLModel = Gemini1_5Pro.copy(
         id = "gemini-1.5-pro-002",
-        capabilities = fullCapabilities // 1.5 Pro has robust tool support
     )
 
     /**
@@ -147,29 +153,31 @@ public object GoogleModels : LLModelDefinitions {
      *
      * Context window: 1 million tokens
      * Knowledge cutoff: February 2024
+     *
+     * @see <a href="storage.googleapis.com/deepmind-media/gemini/gemini_v1_5_report.pdf#page=105">
      */
     public val Gemini1_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash",
-        capabilities = fullCapabilities // 1.5 Flash has tool support
+        capabilities = fullCapabilities, // 1.5 Flash has tool support
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
     )
 
     /**
      * Latest version of Gemini 1.5 Flash
      */
-    public val Gemini1_5FlashLatest: LLModel = LLModel(
-        provider = LLMProvider.Google,
+    public val Gemini1_5FlashLatest: LLModel = Gemini1_5Flash.copy(
         id = "gemini-1.5-flash-latest",
-        capabilities = multimodalCapabilities
+        capabilities = multimodalCapabilities,
     )
 
     /**
      * Specific version of Gemini 1.5 Flash
      */
-    public val Gemini1_5Flash002: LLModel = LLModel(
-        provider = LLMProvider.Google,
-        id = "gemini-1.5-flash-002",
-        capabilities = multimodalCapabilities
+    public val Gemini1_5Flash002: LLModel = Gemini1_5Flash.copy(
+        id = "gemini-1.5-flash-latest",
+        capabilities = multimodalCapabilities,
     )
 
     /**
@@ -178,42 +186,48 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini1_5Flash8B: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-1.5-flash-8b",
-        capabilities = multimodalCapabilities
+        capabilities = multimodalCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
     )
 
     /**
      * Specific version of Gemini 1.5 Flash 8B
      */
-    public val Gemini1_5Flash8B001: LLModel = LLModel(
-        provider = LLMProvider.Google,
+    public val Gemini1_5Flash8B001: LLModel = Gemini1_5Flash8B.copy(
         id = "gemini-1.5-flash-8b-001",
-        capabilities = multimodalCapabilities
     )
 
     /**
      * Latest version of Gemini 1.5 Flash 8B
      */
-    public val Gemini1_5Flash8BLatest: LLModel = LLModel(
-        provider = LLMProvider.Google,
+    public val Gemini1_5Flash8BLatest: LLModel = Gemini1_5Flash8B.copy(
         id = "gemini-1.5-flash-8b-latest",
-        capabilities = multimodalCapabilities
     )
 
     /**
      * Gemini 2.5 Pro offers advanced capabilities for complex tasks.
+     *
+     * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2.5-pro.pdf">
      */
     public val Gemini2_5Pro: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-pro",
-        capabilities = fullCapabilities
+        capabilities = fullCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
     )
 
     /**
      * Gemini 2.5 Flash offers a balance of speed and capability.
+     *
+     * @see <a href="storage.googleapis.com/model-cards/documents/gemini-2.5-flash.pdf">
      */
     public val Gemini2_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash",
-        capabilities = multimodalCapabilities
+        capabilities = multimodalCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
     )
 }

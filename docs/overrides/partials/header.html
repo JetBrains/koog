@@ -125,6 +125,25 @@
         </div>
         <!-- end custom slack icon-link-->
 
+        <!-- custom YT icon-link-->
+        <div class="md_header__social">
+            <a
+                    href="https://youtrack.jetbrains.com/issues/KG/"
+                    target="_blank"
+                    title="Koog's Issues on YouTrack"
+                    class="md_social-custom"
+            >
+                <div class="md_social-custom__icon md-icon">
+                    {% set ytIcon = "fontawesome/solid/clipboard-list" %}
+                    {% include ".icons/" ~ ytIcon ~ ".svg" %}
+                </div>
+                <div>
+                    Issue Tracker
+                </div>
+            </a>
+        </div>
+        <!-- end custom YT icon-link-->
+
         <!-- Repository information -->
         {% if config.repo_url %}
         <div class="md-header__source">

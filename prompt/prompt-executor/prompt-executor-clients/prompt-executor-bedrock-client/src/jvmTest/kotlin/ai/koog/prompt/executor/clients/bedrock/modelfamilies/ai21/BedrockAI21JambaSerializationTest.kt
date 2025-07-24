@@ -144,7 +144,8 @@ class BedrockAI21JambaSerializationTest {
         val modelWithoutTemperature = LLModel(
             provider = LLMProvider.Bedrock,
             id = "test-model",
-            capabilities = listOf(LLMCapability.Completion) // No temperature capability
+            capabilities = listOf(LLMCapability.Completion), // No temperature capability
+            contextLength = 1_000L,
         )
 
         val requestWithoutTemp = BedrockAI21JambaSerialization.createJambaRequest(

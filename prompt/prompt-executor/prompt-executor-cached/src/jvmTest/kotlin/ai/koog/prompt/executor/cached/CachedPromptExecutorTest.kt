@@ -25,7 +25,12 @@ class CachedPromptExecutorTest {
         private val testClock = object : Clock {
             override fun now() = testResponse.first().metaInfo.timestamp
         }
-        private val testModel = LLModel(object : LLMProvider("", "") {}, "", emptyList())
+        private val testModel = LLModel(
+            provider = object : LLMProvider("", "") {},
+            id = "",
+            capabilities = emptyList(),
+            contextLength = 1_000L,
+        )
     }
 
     // Mock implementation of PromptCache

@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.bedrock
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -41,10 +42,9 @@ public object BedrockModels : LLModelDefinitions {
      * - Multimodal understanding (text and images)
      * - Tool/function calling
      */
-    public val AnthropicClaude3Opus: LLModel = LLModel(
+    public val AnthropicClaude3Opus: LLModel = AnthropicModels.Opus_3.copy(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-3-opus-20240229-v1:0",
-        capabilities = fullCapabilities
     )
 
     /**
@@ -59,10 +59,9 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling with parallel execution
      * - Memory capabilities for maintaining continuity
      */
-    public val AnthropicClaude4Opus: LLModel = LLModel(
+    public val AnthropicClaude4Opus: LLModel = AnthropicModels.Opus_4.copy(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-opus-4-20250514-v1:0",
-        capabilities = fullCapabilities
     )
 
     /**
@@ -77,10 +76,9 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling with parallel execution
      * - Precise instruction following
      */
-    public val AnthropicClaude4Sonnet: LLModel = LLModel(
+    public val AnthropicClaude4Sonnet: LLModel = AnthropicModels.Sonnet_4.copy(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-sonnet-4-20250514-v1:0",
-        capabilities = fullCapabilities
     )
 
     /**
@@ -96,7 +94,9 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude3Sonnet: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-3-sonnet-20240229-v1:0",
-        capabilities = fullCapabilities
+        capabilities = fullCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
     )
 
     /**
@@ -110,10 +110,9 @@ public object BedrockModels : LLModelDefinitions {
      * - Better software development lifecycle support
      * - Multimodal understanding with vision
      */
-    public val AnthropicClaude35SonnetV2: LLModel = LLModel(
+    public val AnthropicClaude35SonnetV2: LLModel = AnthropicModels.Sonnet_3_5.copy(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-3-5-sonnet-20241022-v2:0",
-        capabilities = fullCapabilities
     )
 
     /**
@@ -128,10 +127,9 @@ public object BedrockModels : LLModelDefinitions {
      * - Specialized sub-agent tasks
      * - Processing large volumes of data
      */
-    public val AnthropicClaude35Haiku: LLModel = LLModel(
+    public val AnthropicClaude35Haiku: LLModel = AnthropicModels.Haiku_3_5.copy(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-3-5-haiku-20241022-v1:0",
-        capabilities = fullCapabilities
     )
 
     /**
@@ -144,10 +142,9 @@ public object BedrockModels : LLModelDefinitions {
      * - Multimodal understanding
      * - Tool/function calling
      */
-    public val AnthropicClaude3Haiku: LLModel = LLModel(
+    public val AnthropicClaude3Haiku: LLModel = AnthropicModels.Haiku_3.copy(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-3-haiku-20240307-v1:0",
-        capabilities = fullCapabilities
     )
 
     /**
@@ -163,7 +160,8 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude21: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-v2:1",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 200_000,
     )
 
     /**
@@ -178,7 +176,8 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude2: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-v2",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 100_000,
     )
 
     /**
@@ -193,7 +192,8 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaudeInstant: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "anthropic.claude-instant-v1",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 100_000,
     )
 
     /**
@@ -204,11 +204,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Basic Q&A tasks
      * - High-volume applications
      * - Quick responses
+     *
+     * @see <a href="assets.amazon.science/96/7d/0d3e59514abf8fdcfafcdc574300/nova-tech-report-20250317-0810.pdf">
      */
     public val AmazonNovaMicro: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "amazon.nova-micro-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -219,11 +222,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Moderate complexity reasoning
      * - Cost-sensitive applications
      * - Good balance of speed and quality
+     *
+     * @see <a href="assets.amazon.science/96/7d/0d3e59514abf8fdcfafcdc574300/nova-tech-report-20250317-0810.pdf">
      */
     public val AmazonNovaLite: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "amazon.nova-lite-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 300_000,
     )
 
     /**
@@ -234,11 +240,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Long-form content generation
      * - Advanced text understanding
      * - Professional use cases
+     *
+     * @see <a href="assets.amazon.science/96/7d/0d3e59514abf8fdcfafcdc574300/nova-tech-report-20250317-0810.pdf">
      */
     public val AmazonNovaPro: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "amazon.nova-pro-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 300_000,
     )
 
     /**
@@ -249,11 +258,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Highest quality outputs
      * - Enterprise applications
      * - Mission-critical use cases
+     *
+     * @see <a href="assets.amazon.science/e5/e6/ccc5378c42dca467d1abe1628ec9/amazon-nova-premier-technical-report-and-model-card.pdf">
      */
     public val AmazonNovaPremier: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "amazon.nova-premier-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 1_000_000,
     )
 
     /**
@@ -266,11 +278,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Following complex instructions
      * - Tool/function calling
      * - Large context windows (up to 256K tokens)
+     *
+     * @see <a href="huggingface.co/ai21labs/AI21-Jamba-Large-1.5">
      */
     public val AI21JambaLarge: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "ai21.jamba-1-5-large-v1:0",
-        capabilities = toolCapabilities
+        capabilities = toolCapabilities,
+        contextLength = 256_000,
     )
 
     /**
@@ -282,11 +297,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Cost-effective production use
      * - Tool/function calling
      * - Faster inference speeds
+     *
+     * @see <a href="huggingface.co/ai21labs/AI21-Jamba-Mini-1.5">
      */
     public val AI21JambaMini: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "ai21.jamba-1-5-mini-v1:0",
-        capabilities = toolCapabilities
+        capabilities = toolCapabilities,
+        contextLength = 256_000,
     )
 
     /**
@@ -297,11 +315,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3 architecture
      * - Strong instruction following
      * - Efficient performance
+     *
+     * @see <a href="huggingface.co/meta-llama/Meta-Llama-3-8B-Instruct">
      */
     public val MetaLlama3_0_8BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-8b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 8_000,
     )
 
     /**
@@ -312,11 +333,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3 architecture
      * - Superior instruction following
      * - Advanced reasoning
+     *
+     * @see <a href="huggingface.co/meta-llama/Meta-Llama-3-70B-Instruct">
      */
     public val MetaLlama3_0_70BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-70b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 8_000,
     )
 
     /**
@@ -327,11 +351,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.1 architecture
      * - Strong instruction following
      * - Efficient performance
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.1-8B-Instruct">
      */
     public val MetaLlama3_1_8BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-1-8b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -342,11 +369,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.1 architecture
      * - Superior instruction following
      * - Advanced reasoning
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.1-70B-Instruct">
      */
     public val MetaLlama3_1_70BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-1-70b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -357,11 +387,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.1 architecture
      * - Superior instruction following
      * - Advanced reasoning
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.1-405B-Instruct">
      */
     public val MetaLlama3_1_405BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-1-405b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -372,11 +405,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.2 architecture
      * - Strong instruction following
      * - Efficient performance
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.2-1B-Instruct">
      */
     public val MetaLlama3_2_1BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-2-1b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -387,11 +423,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.2 architecture
      * - Strong instruction following
      * - Efficient performance
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.2-3B-Instruct">
      */
     public val MetaLlama3_2_3BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-2-3b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -402,11 +441,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.2 architecture
      * - Strong instruction following
      * - Efficient performance
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.2-11B-Vision-Instruct">
      */
     public val MetaLlama3_2_11BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-2-11b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = fullCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -417,11 +459,14 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.2 architecture
      * - Superior instruction following
      * - Advanced reasoning
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.2-90B-Vision-Instruct">
      */
     public val MetaLlama3_2_90BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-2-90b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = fullCapabilities,
+        contextLength = 128_000,
     )
 
     /**
@@ -432,10 +477,13 @@ public object BedrockModels : LLModelDefinitions {
      * - Llama 3.3 architecture
      * - Superior instruction following
      * - Advanced reasoning
+     *
+     * @see <a href="huggingface.co/meta-llama/Llama-3.3-70B-Instruct">
      */
     public val MetaLlama3_3_70BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
         id = "meta.llama3-3-70b-instruct-v1:0",
-        capabilities = standardCapabilities
+        capabilities = standardCapabilities,
+        contextLength = 128_000,
     )
 }
