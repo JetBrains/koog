@@ -11,10 +11,7 @@ import kotlinx.io.files.SystemFileSystem
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import java.nio.file.FileSystems
-import java.nio.file.Files
-import java.nio.file.NoSuchFileException
-import java.nio.file.Path
+import java.nio.file.*
 import kotlin.io.path.*
 import kotlin.use
 
@@ -135,13 +132,18 @@ public object JVMFileSystemProvider {
          * @return A list of paths within the specified directory, sorted by name.
          *         Returns an empty list if an error occurs or the directory is empty.
          * @throws IllegalArgumentException if [directory] is not a directory or doesn't exist.
+         * @throws IOException if an I/O error occurs during listing.
          */
         override suspend fun list(directory: Path): List<Path> {
             require(directory.exists()) { "Path must exist" }
             require(directory.isDirectory()) { "Path must be a directory" }
 
-            return Files.list(directory).use {
-                it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
+            return try {
+                Files.list(directory).use {
+                    it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
+                }
+            } catch (e: IOException) {
+                throw IOException("Failed to list directory: $directory", e)
             }
         }
 
@@ -184,6 +186,7 @@ public object JVMFileSystemProvider {
          * @param path the path of the file to read, which must be a regular file and must exist.
          * @return a ByteArray containing the contents of the file.
          * @throws IllegalArgumentException if the specified path is not a regular file or does not exist.
+         * @throws IOException if an I/O error occurs during reading.
          */
         override suspend fun read(path: Path): ByteArray {
             require(path.exists()) { "Path must exist" }
@@ -197,8 +200,12 @@ public object JVMFileSystemProvider {
          *
          * @param path The file path from which the source will be opened.
          * @return A buffered source for reading from the file.
+         * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
+         * @throws IOException if an I/O error occurs during source creation.
          */
         override suspend fun source(path: Path): Source = withContext(Dispatchers.IO) {
+            require(path.exists()) { "Path must exist" }
+            require(path.isRegularFile()) { "Path must be a regular file" }
             SystemFileSystem.source(path = kotlinx.io.files.Path(path.pathString)).buffered()
         }
 
@@ -208,8 +215,8 @@ public object JVMFileSystemProvider {
          * @param path the path to the file whose size is to be obtained.
          * Must be a regular file and exist.
          * @return the size of the file in bytes.
-         * @throws IllegalArgumentException if the provided path is not a regular file.
-         * @throws IllegalArgumentException if the provided path does not exist.
+         * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
+         * @throws IOException if an I/O error occurs while determining the file size.
          */
         override suspend fun size(path: Path): Long {
             require(path.exists()) { "Path must exist" }
@@ -417,10 +424,17 @@ public object JVMFileSystemProvider {
          *
          * @param source The source path of the file or directory to be moved.
          * @param target The target path where the file or directory should be moved.
-         * @throws IOException If the source path is neither a file nor a directory, or if any IO error occurs.
+         * @throws IOException f the source path is neither a file nor a directory, or if any IO error occurs.
+         * @throws FileAlreadyExistsException if [target] already exists.
+         * @throws IllegalArgumentException if [source] doesn't exist.
          */
         override suspend fun move(source: Path, target: Path) {
             withContext(Dispatchers.IO) {
+                if (target.exists()) {
+                    throw FileAlreadyExistsException("Target path already exists: $target")
+                }
+                require(source.exists()) { "Source path does not exist" }
+
                 if (source.isDirectory()) {
                     target.createDirectories()
                     Files.list(source).use { stream ->
@@ -431,6 +445,7 @@ public object JVMFileSystemProvider {
                     }
                     source.deleteExisting()
                 } else if (source.isRegularFile()) {
+                    target.createParentDirectories()
                     source.moveTo(target)
                 } else {
                     throw IOException("Source path is neither a file nor a directory: $source")
