@@ -120,7 +120,7 @@ internal data class OpenAIToolFunction(
 
 @Serializable
 internal data class OpenAIResponse(
-    val id: String,
+    val id: String? = null,
     @SerialName("object") val objectType: String,
     val created: Long,
     val model: String,
