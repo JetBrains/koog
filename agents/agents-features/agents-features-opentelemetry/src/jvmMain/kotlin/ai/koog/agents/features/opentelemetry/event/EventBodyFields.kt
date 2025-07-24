@@ -56,4 +56,13 @@ internal object EventBodyFields {
         override val key: String = "id"
         override val value: String = id
     }
+
+    data class ToolParams(private val varArgs : ai.koog.agents.core.tools.reflect.ToolFromCallable.VarArgs) : EventBodyField() {
+        override val key: String = "tool_params"
+        override val value: Map<String,String> = buildMap {
+            varArgs.asNamedValues().forEach { (name, value) ->
+                put(name, value.toString())
+            }
+        }
+    }
 }
