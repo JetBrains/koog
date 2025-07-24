@@ -159,11 +159,11 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, tool: Tool<Args, *>, args: Args, toolCallId: String?) {
         toolCallExactMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
             listOf(
                 Message.Tool.Call(
-                    id = null,
+                    id = toolCallId,
                     tool = tool.name,
                     content = toolContent,
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
@@ -332,8 +332,8 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param args The arguments to pass to the tool
      * @return A [ToolCallReceiver] for further configuration
      */
-    public fun <Args : ToolArgs> mockLLMToolCall(tool: Tool<Args, *>, args: Args): ToolCallReceiver<Args> =
-        ToolCallReceiver(tool, args, this)
+    public fun <Args : ToolArgs> mockLLMToolCall(tool: Tool<Args, *>, args: Args, toolCallId: String? = null): ToolCallReceiver<Args> =
+        ToolCallReceiver(tool, args, toolCallId,  this)
 
     /**
      * Creates a mock for a list of LLM tool calls.
@@ -425,6 +425,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     public class ToolCallReceiver<Args : ToolArgs>(
         private val tool: Tool<Args, *>,
         private val args: Args,
+        private val toolCallId: String?,
         private val builder: MockLLMBuilder
     ) {
         /**
@@ -435,7 +436,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
          */
         public infix fun onRequestEquals(pattern: String): String {
             // Using the llmAnswer directly as the response, which should contain the tool call JSON
-            builder.addLLMAnswerExactPattern(pattern, tool, args)
+            builder.addLLMAnswerExactPattern(pattern, tool = tool, args = args, toolCallId = toolCallId)
 
             // Return the llmAnswer as is, which should be a valid tool call JSON
             return pattern

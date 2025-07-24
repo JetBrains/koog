@@ -16,7 +16,8 @@ import kotlin.reflect.KFunction
  */
 public fun MockLLMBuilder.mockLLMToolCall(
     tool: KFunction<*>,
-    vararg args: Any?
+    vararg args: Any?,
+    toolCallId: String? = null
 ): ToolCallReceiver<ToolFromCallable.VarArgs> {
     val params = tool.parameters
 
@@ -24,7 +25,7 @@ public fun MockLLMBuilder.mockLLMToolCall(
         param to arg
     }
 
-    return ToolCallReceiver(tool.asTool(), ToolFromCallable.VarArgs(argsMap), this)
+    return ToolCallReceiver(tool = tool.asTool(), args = ToolFromCallable.VarArgs(argsMap), toolCallId = toolCallId, builder = this)
 }
 
 /**
