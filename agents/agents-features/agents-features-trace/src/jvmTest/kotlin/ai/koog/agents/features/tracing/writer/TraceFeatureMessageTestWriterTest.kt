@@ -8,20 +8,16 @@ import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
 import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
-import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.features.tracing.TestLLMExecutor
 import ai.koog.agents.features.tracing.createAgent
 import ai.koog.agents.features.tracing.feature.Tracing
+import ai.koog.agents.features.tracing.mock.MockFeatureMessageWriter
+import ai.koog.agents.features.tracing.mock.MockLogger
+import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.testing.tools.DummyTool
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Serializable
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -29,7 +25,7 @@ import kotlin.test.assertFails
 
 class TraceFeatureMessageTestWriterTest {
 
-    private val targetLogger = TestLogger("test-logger")
+    private val targetLogger = MockLogger("test-logger")
 
     @AfterTest
     fun resetLogger() {
@@ -37,7 +33,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test subsequent LLM calls`() = runTest {
+    fun `test subsequent LLM calls`() = runBlocking {
 
         val strategy = strategy("tracing-test-strategy") {
 
@@ -62,7 +58,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(llmRequest1 forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = TestFeatureMessageWriter()
+        val messageProcessor = MockFeatureMessageWriter()
 
         val agent = createAgent(
             userPrompt = "User 0",
@@ -88,7 +84,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test nonexistent tool call`() = runTest {
+    fun `test nonexistent tool call`() = runBlocking {
 
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
@@ -103,7 +99,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = TestFeatureMessageWriter()
+        val messageProcessor = MockFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy
@@ -121,7 +117,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test existing tool call`() = runTest {
+    fun `test existing tool call`() = runBlocking {
 
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
@@ -136,7 +132,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = TestFeatureMessageWriter()
+        val messageProcessor = MockFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy
@@ -156,7 +152,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test recursive tool call`() = runTest {
+    fun `test recursive tool call`() = runBlocking {
 
         val strategy = strategy<String, String>("recursive-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
@@ -171,7 +167,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = TestFeatureMessageWriter()
+        val messageProcessor = MockFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy,
@@ -190,14 +186,16 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test llm tool call`() = runTest {
+    fun `test llm tool call`() = runBlocking {
+
+        val dummyTool = DummyTool()
 
         val strategy = strategy<String, String>("llm-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(nodeStart forwardTo callTool transformed { _ ->
                 Message.Tool.Call(
                     id = "0",
-                    tool = LLMCallTool().name,
+                    tool = dummyTool.name,
                     content = "{}",
                     metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
                 )
@@ -205,7 +203,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = TestFeatureMessageWriter()
+        val messageProcessor = MockFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy,
@@ -214,7 +212,7 @@ class TraceFeatureMessageTestWriterTest {
                 addMessageProcessor(messageProcessor)
             }
         }.apply {
-            toolRegistry.add(LLMCallTool())
+            toolRegistry.add(dummyTool)
         }
 
         agent.run("")
@@ -224,48 +222,5 @@ class TraceFeatureMessageTestWriterTest {
 
         val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolCallResultEvent>().toList()
         assertEquals(1, toolCallsEndEvent.size, "Tool call end event for existing tool")
-    }
-
-    private class RecursiveTool : SimpleTool<RecursiveTool.Args>() {
-        @Serializable
-        data class Args(val dummy: String = "") : ToolArgs
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor = ToolDescriptor(
-            name = "recursive",
-            description = "Recursive tool for testing",
-            requiredParameters = emptyList()
-        )
-
-        override suspend fun doExecute(args: Args): String {
-            return "Dummy tool result: ${DummyTool().doExecute(DummyTool.Args())}"
-        }
-    }
-
-    private class LLMCallTool : SimpleTool<LLMCallTool.Args>() {
-
-        @Serializable
-        data class Args(val dummy: String = "") : ToolArgs
-
-        val executor = TestLLMExecutor()
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor = ToolDescriptor(
-            name = "recursive",
-            description = "Recursive tool for testing",
-            requiredParameters = emptyList()
-        )
-
-        override suspend fun doExecute(args: Args): String {
-            val prompt = Prompt.build("test") {
-                system("You are a helpful assistant that uses tools.")
-                user("Set the color to blue")
-            }
-            return executor.execute(
-                prompt, OllamaModels.Meta.LLAMA_3_2, emptyList()
-            ).first().content
-        }
     }
 }

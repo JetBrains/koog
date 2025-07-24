@@ -4,7 +4,13 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.testing.tools.DummyTool
+import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.utils.use
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Disabled
@@ -27,7 +33,6 @@ class EventHandlerTest {
 
         val agent = createAgent(
             strategy = strategy,
-            configureTools = { },
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
@@ -71,7 +76,6 @@ class EventHandlerTest {
         val agent = createAgent(
             agentId = agentId,
             strategy = strategy,
-            configureTools = { },
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
@@ -106,44 +110,72 @@ class EventHandlerTest {
     fun `test event handler single node with tools`() = runBlocking {
 
         val eventsCollector = TestEventsCollector()
-        val strategyName = "tracing-test-strategy"
-        val agentResult = "Done"
+        val strategyName = "test-strategy"
 
-        val strategy = strategy<String, String>(strategyName) {
-            val llmCallNode by nodeLLMRequest("test LLM call")
+        val userPrompt = "Call the dummy tool with argument: test"
+        val mockResponse = "Return test result"
 
-            edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
-            edge(llmCallNode forwardTo nodeFinish transformed { agentResult })
+        val agentId = "test-agent-id"
+        val model = OpenAIModels.Chat.GPT4o
+
+        val strategy = strategy(strategyName) {
+            val nodeSendInput by nodeLLMRequest("test-llm-call")
+            val nodeExecuteTool by nodeExecuteTool("test-tool-call")
+            val nodeSendToolResult by nodeLLMSendToolResult("test-node-llm-send-tool-result")
+
+            edge(nodeStart forwardTo nodeSendInput)
+            edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
+            edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeExecuteTool forwardTo nodeSendToolResult)
+            edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
+            edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
         }
 
-        val agent = createAgent(
-            strategy = strategy,
-            configureTools = {
-                tool(DummyTool())
-            },
-            installFeatures = {
-                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
-            }
-        )
+        val dummyTool = DummyTool()
 
-        val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
-        agent.close()
+        val toolRegistry = ToolRegistry {
+            tool(dummyTool)
+        }
+
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            mockLLMToolCall(dummyTool, DummyTool.Args("test")) onRequestEquals userPrompt
+            mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
+        }
+
+        createAgent(
+            agentId = agentId,
+            strategy = strategy,
+            toolRegistry = toolRegistry,
+            promptExecutor = mockExecutor,
+            model = model,
+        ) {
+            install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+        }.use { agent ->
+            agent.run(userPrompt)
+        }
 
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId, strategy: $strategyName)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: ${agentInput})",
-            "OnAfterNode (run id: $runId, node: __start__, input: ${agentInput}, output: ${agentInput})",
-            "OnBeforeNode (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
-            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
-            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
-            "OnAgentBeforeClose (agent id: test-agent-id)",
+            "OnBeforeNode (run id: $runId, node: __start__, input: ${userPrompt})",
+            "OnAfterNode (run id: $runId, node: __start__, input: ${userPrompt}, output: ${userPrompt})",
+            "OnBeforeNode (run id: $runId, node: test-llm-call, input: ${userPrompt})",
+            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, tools: [dummy])",
+            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: Tool, message: {\"dummy\":\"test\"}])",
+            "OnAfterNode (run id: $runId, node: test-llm-call, input: ${userPrompt}, output: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
+            "OnBeforeNode (run id: $runId, node: test-tool-call, input: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
+            "OnToolCall (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test))",
+            "OnToolCallResult (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test), result: Text(text=${dummyTool.result}))",
+            "OnAfterNode (run id: $runId, node: test-tool-call, input: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})), output: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=Text(text=${dummyTool.result})))",
+            "OnBeforeNode (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=Text(text=${dummyTool.result})))",
+            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt, role: Tool, message: {\"dummy\":\"test\"}, role: Tool, message: ${dummyTool.result}}], temperature: null, tools: [${dummyTool.name}])",
+            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt, role: Tool, message: {\"dummy\":\"test\"}, role: Tool, message: ${dummyTool.result}}], temperature: null, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: Assistant, message: Return test result])",
+            "OnAfterNode (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=Text(text=${dummyTool.result})), output: Assistant(content=Return test result, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: Return test result)",
+            "OnAgentFinished (agent id: $agentId, run id: $runId, result: Return test result)",
+            "OnAgentBeforeClose (agent id: $agentId)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -168,9 +200,7 @@ class EventHandlerTest {
 
         val agent = createAgent(
             strategy = strategy,
-            configureTools = {
-                tool(DummyTool())
-            },
+            toolRegistry = ToolRegistry{ tool(DummyTool()) },
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
@@ -218,7 +248,6 @@ class EventHandlerTest {
 
         val agent = createAgent(
             strategy = strategy,
-            configureTools = { },
             installFeatures = {
                 install(EventHandler) {
                     onBeforeAgentStarted { eventContext ->
@@ -267,9 +296,7 @@ class EventHandlerTest {
 
         val agent = createAgent(
             strategy = strategy,
-            configureTools = {
-                tool(DummyTool())
-            },
+            toolRegistry = ToolRegistry { tool(DummyTool()) },
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
@@ -280,5 +307,5 @@ class EventHandlerTest {
     }
 
     fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
-        node(name) { message -> throw IllegalStateException("Test exception") }
+        node(name) { throw IllegalStateException("Test exception") }
 }

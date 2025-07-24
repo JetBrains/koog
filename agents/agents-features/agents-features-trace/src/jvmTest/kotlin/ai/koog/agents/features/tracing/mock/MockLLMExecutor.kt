@@ -1,4 +1,4 @@
-package ai.koog.agents.features.tracing
+package ai.koog.agents.features.tracing.mock
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
@@ -12,9 +12,10 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
-class TestLLMExecutor : PromptExecutor {
+class MockLLMExecutor : PromptExecutor {
+
     private val clock: Clock = object : Clock {
-        override fun now(): Instant = Instant.Companion.parse("2023-01-01T00:00:00Z")
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
@@ -28,15 +29,18 @@ class TestLLMExecutor : PromptExecutor {
     }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
-        // For a compression test, return a summary
-        if (prompt.messages.any { it.content.contains("Summarize all the main achievements") }) {
-            return Message.Assistant(
-                "Here's a summary of the conversation: Test user asked questions and received responses.",
-                ResponseMetaInfo.Companion.create(clock)
+
+        val lastMessage = prompt.messages.last()
+        if (lastMessage.content.contains("tool")) {
+            return Message.Tool.Call(
+                id = "0",
+                tool = "Tool call",
+                content = "{}",
+                metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
             )
         }
 
-        return Message.Assistant("Default test response", ResponseMetaInfo.Companion.create(clock))
+        return Message.Assistant(content = "Default test response", ResponseMetaInfo.create(clock))
     }
 
     override suspend fun moderate(

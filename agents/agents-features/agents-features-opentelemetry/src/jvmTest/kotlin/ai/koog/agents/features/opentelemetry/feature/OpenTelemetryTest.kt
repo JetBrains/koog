@@ -448,7 +448,7 @@ class OpenTelemetryTest {
 
             val mockExecutor = getMockExecutor(clock = testClock) {
                 mockLLMToolCall(TestGetWeatherTool, TestGetWeatherTool.Args("Paris")) onRequestEquals userPrompt
-                mockLLMAnswer(mockResponse) onRequestContains "57°F"
+                mockLLMAnswer(mockResponse) onRequestContains "rainy, 57°F"
             }
 
             val agent = createAgent(
@@ -790,7 +790,7 @@ class OpenTelemetryTest {
                 val nodeGenerateJokes by parallel(
                     nodeFirstJoke, nodeSecondJoke, nodeThirdJoke
                 ) {
-                    selectByIndex { jokes ->
+                    selectByIndex {
                         // Always select the first joke for testing purposes
                         0
                     }
@@ -852,7 +852,7 @@ class OpenTelemetryTest {
             // Check if we have the expected number of node spans (5 nodes)
             assertEquals(5, nodeSpanNames.size, "Expected 6 node spans but found ${nodeSpanNames.size}")
 
-            // Check for each specific node span
+            // Check for each node span
             assertTrue(nodeSpanNames.any { it.contains("nodeFirstJoke") }, "First joke node span should be created")
             assertTrue(nodeSpanNames.any { it.contains("nodeSecondJoke") }, "Second joke node span should be created")
             assertTrue(nodeSpanNames.any { it.contains("nodeThirdJoke") }, "Third joke node span should be created")

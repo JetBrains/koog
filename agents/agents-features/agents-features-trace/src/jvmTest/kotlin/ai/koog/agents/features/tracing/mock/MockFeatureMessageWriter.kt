@@ -1,10 +1,10 @@
-package ai.koog.agents.features.tracing.writer
+package ai.koog.agents.features.tracing.mock
 
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessor
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-class TestFeatureMessageWriter : FeatureMessageProcessor() {
+class MockFeatureMessageWriter : FeatureMessageProcessor() {
 
     private val _messages = mutableListOf<FeatureMessage>()
 
