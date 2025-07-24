@@ -113,6 +113,7 @@ public object JVMFileSystemProvider {
          * @param path The path for which the metadata is to be retrieved.
          * @return A [FileMetadata] instance containing information about the file or directory,
          * or null if the path does not represent a valid file or directory.
+         * @throws IOException if an I/O error occurs while retrieving metadata.
          */
         override suspend fun metadata(path: Path): FileMetadata? {
             return if (path.isRegularFile()) {

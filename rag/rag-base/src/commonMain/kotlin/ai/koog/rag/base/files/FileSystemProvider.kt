@@ -191,7 +191,7 @@ public object FileSystemProvider {
          * @param name The name of the new file or directory.
          * @param type The type (file or directory) to create.
          * @throws IOException or its inheritor if a file or directory with [name] already exists in [parent],
-         *         or [name] is invalid (e.g., contains reserved characters), or if any other I/O error occurs.
+         *   or [name] is invalid (e.g., contains reserved characters), or if any other I/O error occurs.
          */
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
@@ -203,7 +203,7 @@ public object FileSystemProvider {
          * @param source The source path to move from.
          * @param target The target path to move to.
          * @throws IOException or its inheritor if the source path doesn't exist, isn't a file or directory,
-         *         or [target] already exists, or any I/O error occurs.
+         *   or [target] already exists, or any I/O error occurs.
          */
         public suspend fun move(source: Path, target: Path)
 
