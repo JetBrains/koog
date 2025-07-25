@@ -199,4 +199,40 @@ class PersistencyStrategyTest {
             strategyProvider.getCheckpoints()
         }
     }
+    
+    @Test
+    fun testAutoSelectForTaskStrategy() = runTest {
+        // Note: Testing AutoSelectForTask requires LLM interaction which is tested via integration tests
+        // This test verifies the basic structure and provider mapping
+        
+        // Given
+        val redisProvider = InMemoryPersistencyStorageProvider("redis-$testPersistenceId")
+        val postgresProvider = InMemoryPersistencyStorageProvider("postgres-$testPersistenceId")
+        
+        val providers = mapOf(
+            "redis" to PersistencyStrategy.AutoSelectForTask.ProviderInfo(
+                provider = redisProvider,
+                description = "Fast in-memory cache with TTL support",
+                capabilities = listOf("fast", "ephemeral", "distributed")
+            ),
+            "postgres" to PersistencyStrategy.AutoSelectForTask.ProviderInfo(
+                provider = postgresProvider,
+                description = "Durable SQL database with full query capabilities",
+                capabilities = listOf("durable", "queryable", "transactional")
+            )
+        )
+        
+        val strategy = PersistencyStrategy.AutoSelectForTask(
+            providers = providers,
+            taskDescription = "High-frequency trading agent requiring fast checkpoint saves",
+            maxRetries = 3
+        )
+        
+        // Then - verify structure
+        assertEquals(2, strategy.providers.size)
+        assertTrue(strategy.providers.containsKey("redis"))
+        assertTrue(strategy.providers.containsKey("postgres"))
+        assertEquals("High-frequency trading agent requiring fast checkpoint saves", strategy.taskDescription)
+        assertEquals(3, strategy.maxRetries)
+    }
 }

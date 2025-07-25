@@ -1,10 +1,15 @@
 package ai.koog.agents.snapshot.strategy
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
+import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.prompt.structure.json.JsonSchemaGenerator
+import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.Serializable
 
 /**
  * A persistence provider that delegates operations to different providers based on a strategy.
@@ -70,6 +75,8 @@ public class PersistencyStrategyProvider(
             }
             
             is PersistencyStrategy.Hybrid -> selectHybridProvider(strategy, operation, checkpoint)
+            
+            is PersistencyStrategy.AutoSelectForTask -> selectWithLLM(strategy, operation, checkpoint)
         }
     }
     
@@ -188,5 +195,100 @@ public class PersistencyStrategyProvider(
         
         // Default to false, allowing users to override with custom selector
         return false
+    }
+    
+    /**
+     * Data class for LLM provider selection response.
+     */
+    @Serializable
+    private data class SelectedProvider(
+        val providerName: String,
+        val reasoning: String? = null
+    )
+    
+    /**
+     * Selects a provider using LLM based on the context and provider descriptions.
+     */
+    @OptIn(DetachedPromptExecutorAPI::class)
+    private suspend fun selectWithLLM(
+        strategy: PersistencyStrategy.AutoSelectForTask,
+        operation: PersistencyStrategy.Dynamic.Operation,
+        checkpoint: AgentCheckpointData?
+    ): PersistencyStorageProvider {
+        // Build provider descriptions for LLM
+        val providerDescriptions = strategy.providers.entries.joinToString("\n") { (name, info) ->
+            "- $name: ${info.description}" + 
+            if (info.capabilities.isNotEmpty()) " (capabilities: ${info.capabilities.joinToString(", ")})" else ""
+        }
+        
+        // Build operation context
+        val operationDescription = when (operation) {
+            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> 
+                "Saving a checkpoint (nodeId: ${checkpoint?.nodeId}, messageCount: ${checkpoint?.messageHistory?.size})"
+            is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint -> 
+                "Retrieving the latest checkpoint"
+            is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> 
+                "Retrieving all checkpoints"
+            is PersistencyStrategy.Dynamic.Operation.GetCheckpointById -> 
+                "Retrieving checkpoint by ID: ${operation.id}"
+            is PersistencyStrategy.Dynamic.Operation.DeleteCheckpoint -> 
+                "Deleting checkpoint: ${operation.id}"
+            is PersistencyStrategy.Dynamic.Operation.DeleteAllCheckpoints -> 
+                "Deleting all checkpoints"
+            is PersistencyStrategy.Dynamic.Operation.GetCheckpointCount -> 
+                "Getting checkpoint count"
+        }
+        
+        val selected = context.llm.writeSession {
+            val initialPrompt = prompt
+            
+            replaceHistoryWithTLDR()
+            
+            updatePrompt {
+                user {
+                    """
+                    Select the most appropriate persistence provider for the following operation.
+                    
+                    Task context: ${strategy.taskDescription}
+                    
+                    Current operation: $operationDescription
+                    
+                    Available providers:
+                    $providerDescriptions
+                    
+                    Consider factors like:
+                    - Speed requirements (ephemeral vs durable)
+                    - Data criticality
+                    - Query needs
+                    - Cost implications
+                    
+                    Return the name of the most suitable provider.
+                    """.trimIndent()
+                }
+            }
+            
+            val selectedProvider = this.requestLLMStructured(
+                structure = JsonStructuredData.createJsonStructure<SelectedProvider>(
+                    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                    examples = listOf(
+                        SelectedProvider("redis", "Fast ephemeral storage for mid-execution checkpoints"),
+                        SelectedProvider("postgres", "Durable storage for session persistence")
+                    )
+                ),
+                retries = strategy.maxRetries,
+            ).getOrThrow()
+            
+            prompt = initialPrompt
+            
+            selectedProvider.structure
+        }
+        
+        logger.debug { 
+            "LLM selected provider '${selected.providerName}' for operation $operation" + 
+            selected.reasoning?.let { " (reasoning: $it)" }.orEmpty()
+        }
+        
+        return strategy.providers[selected.providerName]?.provider
+            ?: throw IllegalStateException("LLM selected unknown provider: ${selected.providerName}")
     }
 }

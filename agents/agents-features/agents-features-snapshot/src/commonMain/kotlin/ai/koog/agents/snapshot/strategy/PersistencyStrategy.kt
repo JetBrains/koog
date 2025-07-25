@@ -123,4 +123,37 @@ public sealed interface PersistencyStrategy {
             CRITICAL
         }
     }
+    
+    /**
+     * LLM-driven strategy for intelligent provider selection.
+     *
+     * Similar to [ToolSelectionStrategy.AutoSelectForTask], this strategy uses the LLM
+     * to determine the most appropriate persistence provider based on:
+     * - The current operation context
+     * - Checkpoint characteristics
+     * - Provider capabilities
+     * - Task description
+     *
+     * @property providers Map of provider names to their instances with descriptions
+     * @property taskDescription Description of the current task/context for the LLM
+     * @property maxRetries Maximum number of retries for LLM selection (default: 3)
+     */
+    public data class AutoSelectForTask(
+        val providers: Map<String, ProviderInfo>,
+        val taskDescription: String,
+        val maxRetries: Int = 3
+    ) : PersistencyStrategy {
+        /**
+         * Information about a persistence provider for LLM decision-making.
+         *
+         * @property provider The actual persistence provider instance
+         * @property description Human-readable description of the provider's characteristics
+         * @property capabilities List of capabilities (e.g., "fast", "durable", "queryable")
+         */
+        public data class ProviderInfo(
+            val provider: PersistencyStorageProvider,
+            val description: String,
+            val capabilities: List<String> = emptyList()
+        )
+    }
 }
