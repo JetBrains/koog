@@ -18,7 +18,7 @@ public fun AzureOpenAIClientSettings(
     version: AzureOpenAIServiceVersion,
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
 ): OpenAIClientSettings = AzureOpenAIClientSettings(
-    baseUrl = "https://$resourceName.openai.azure.com/openai/deployments/$deploymentName",
+    baseUrl = "https://$resourceName.openai.azure.com/openai/deployments/$deploymentName/",
     version = version,
     timeoutConfig = timeoutConfig,
 )
@@ -41,6 +41,6 @@ public fun AzureOpenAIClientSettings(
 ): OpenAIClientSettings = OpenAIClientSettings(
     baseUrl = baseUrl,
     timeoutConfig = timeoutConfig,
-    chatCompletionsPath = "/chat/completions?api-version=${version.value}",
-    embeddingsPath = "/embeddings?api-version=${version.value}",
+    chatCompletionsPath = "chat/completions?api-version=${version.value}",
+    embeddingsPath = "embeddings?api-version=${version.value}",
 )
