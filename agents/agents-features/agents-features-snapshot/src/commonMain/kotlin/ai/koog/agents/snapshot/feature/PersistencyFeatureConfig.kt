@@ -3,6 +3,7 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.agents.snapshot.strategy.PersistencyStrategy
 
 
 /**
@@ -19,8 +20,44 @@ public class PersistencyFeatureConfig: FeatureConfig() {
      * implementation that does not persist any data. To enable actual state
      * persistence, assign a custom implementation of [PersistencyStorageProvider]
      * to this property.
+     * 
+     * @deprecated Use [strategy] instead for more flexible persistence configurations
      */
+    @Deprecated(
+        message = "Use strategy property instead for more flexible persistence configurations",
+        replaceWith = ReplaceWith("strategy = PersistencyStrategy.Single(storage)")
+    )
     public var storage: PersistencyStorageProvider = NoPersistencyStorageProvider()
+        set(value) {
+            field = value
+            // Update strategy when storage is set directly
+            _strategy = PersistencyStrategy.Single(value)
+        }
+
+    private var _strategy: PersistencyStrategy? = null
+    
+    /**
+     * Defines the strategy for selecting persistence providers.
+     * 
+     * This property supports various strategies:
+     * - [PersistencyStrategy.Single]: Use a single provider for all operations
+     * - [PersistencyStrategy.None]: Disable persistence
+     * - [PersistencyStrategy.Failover]: Use multiple providers with failover
+     * - [PersistencyStrategy.Dynamic]: Select providers based on context
+     * - [PersistencyStrategy.Hybrid]: Pre-configured strategy for common patterns
+     * 
+     * When not explicitly set, defaults to [PersistencyStrategy.Single] with the
+     * provider from the [storage] property.
+     */
+    public var strategy: PersistencyStrategy
+        get() = _strategy ?: PersistencyStrategy.Single(storage)
+        set(value) {
+            _strategy = value
+            // Update storage for backward compatibility when using Single strategy
+            if (value is PersistencyStrategy.Single) {
+                storage = value.provider
+            }
+        }
 
     /**
      * Controls whether the feature's state should be automatically persisted.

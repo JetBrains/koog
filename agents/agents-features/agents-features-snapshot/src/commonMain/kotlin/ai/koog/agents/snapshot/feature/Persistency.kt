@@ -8,7 +8,10 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.agents.snapshot.strategy.PersistencyStrategy
+import ai.koog.agents.snapshot.strategy.PersistencyStrategyProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
@@ -90,16 +93,25 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             config: PersistencyFeatureConfig,
             pipeline: AIAgentPipeline
         ) {
-            val featureImpl = Persistency(config.storage)
-            val interceptContext = InterceptContext(this, featureImpl)
-
+            // For all strategies, we need to set up context-aware feature creation
             pipeline.interceptContextAgentFeature(this) { ctx ->
-                return@interceptContextAgentFeature featureImpl
+                val provider = when (val strategy = config.strategy) {
+                    is PersistencyStrategy.Single -> strategy.provider
+                    is PersistencyStrategy.None -> NoPersistencyStorageProvider()
+                    else -> PersistencyStrategyProvider(config.strategy, ctx)
+                }
+                return@interceptContextAgentFeature Persistency(provider)
             }
 
+            // Set up interceptors that will work with the context-created feature
+            // Create a dummy InterceptContext with a placeholder feature for the interceptors
+            val placeholderFeature = Persistency(NoPersistencyStorageProvider())
+            val interceptContext = InterceptContext(this, placeholderFeature)
+            
             pipeline.interceptBeforeAgentStarted(interceptContext) { ctx ->
                 require(ctx.strategy.metadata.uniqueNames) { "Checkpoint feature requires unique node names in the strategy metadata" }
-                val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+                val actualFeature = ctx.context.featureOrThrow(Feature)
+                val checkpoint = actualFeature.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
                     logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
@@ -110,7 +122,8 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
 
             pipeline.interceptAfterNode(interceptContext) { eventCtx ->
                 if (config.enableAutomaticPersistency) {
-                    createCheckpoint(
+                    val actualFeature = eventCtx.context.featureOrThrow(Feature)
+                    actualFeature.createCheckpoint(
                         agentContext = eventCtx.context,
                         nodeId = eventCtx.node.id,
                         lastInput = eventCtx.input,
@@ -120,7 +133,8 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             }
 
             pipeline.interceptBeforeNode(interceptContext) { eventCtx ->
-                featureImpl.currentNodeId = eventCtx.node.id
+                val actualFeature = eventCtx.context.featureOrThrow(Feature)
+                actualFeature.currentNodeId = eventCtx.node.id
             }
         }
     }
