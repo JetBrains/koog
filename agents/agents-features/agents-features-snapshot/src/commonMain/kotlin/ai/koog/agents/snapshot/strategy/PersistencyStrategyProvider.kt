@@ -2,8 +2,10 @@ package ai.koog.agents.snapshot.strategy
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.prompts.SnapshotPrompts
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.structure.json.JsonSchemaGenerator
@@ -20,6 +22,7 @@ import kotlinx.serialization.Serializable
  * @property strategy The strategy that determines provider selection
  * @property context The agent context used for strategy decisions
  */
+@OptIn(InternalAgentsApi::class)
 public class PersistencyStrategyProvider(
     private val strategy: PersistencyStrategy,
     private val context: AIAgentContextBase
@@ -312,31 +315,13 @@ public class PersistencyStrategyProvider(
 
                     updatePrompt {
                         user {
-                            """
-                            Analyze this agent checkpoint and determine the most appropriate storage type.
-                            
-                            Task Context: ${strategy.taskDescription}
-                            
-                            Checkpoint Details:
-                            - Node ID: ${checkpoint.nodeId}
-                            - Message History Length: ${checkpoint.messageHistory.size}
-                            - Created At: ${checkpoint.createdAt}
-                            
-                            Available Storage Types:
-                            - "ephemeral": Fast, temporary storage for mid-execution checkpoints that don't need long-term persistence
-                            - "durable": Reliable, long-term storage for important checkpoints and session state
-                            - "critical": Most reliable storage for final results or critical decision points${if (strategy.criticalProvider == null) " (not available)" else ""}
-                            
-                            Consider:
-                            - Is this a mid-execution checkpoint or an important milestone/result?
-                            - Does the node ID suggest temporary processing or final state?
-                            - Does the message history indicate significant progress worth preserving?
-                            
-                            Choose the most appropriate storage type: ${
-                                listOfNotNull("ephemeral", "durable", if (strategy.criticalProvider != null) "critical" else null)
-                                    .joinToString(", ")
-                            }
-                            """.trimIndent()
+                            SnapshotPrompts.analyzePersistencyCheckpoint(
+                                taskDescription = strategy.taskDescription,
+                                nodeId = checkpoint.nodeId,
+                                messageHistoryLength = checkpoint.messageHistory.size,
+                                createdAt = checkpoint.createdAt.toString(),
+                                hasCriticalProvider = strategy.criticalProvider != null
+                            )
                         }
                     }
 
@@ -456,26 +441,12 @@ public class PersistencyStrategyProvider(
 
                     updatePrompt {
                         user {
-                            """
-                            Select the most appropriate persistence provider for the following operation.
-
-                            Task context: ${strategy.taskDescription}
-
-                            Current operation: $operationDescription
-
-                            Available providers:
-                            $providerDescriptions
-
-                            Consider factors like:
-                            - Speed requirements (ephemeral vs durable)
-                            - Data criticality
-                            - Query needs
-                            - Cost implications
-
-                            You must select one of these exact provider names: ${strategy.providers.keys.joinToString(", ")}
-
-                            Return the name of the most suitable provider.
-                            """.trimIndent()
+                            SnapshotPrompts.selectPersistencyProvider(
+                                taskDescription = strategy.taskDescription,
+                                operationDescription = operationDescription,
+                                providerDescriptions = providerDescriptions,
+                                availableProviderNames = strategy.providers.keys.joinToString(", ")
+                            )
                         }
                     }
 
