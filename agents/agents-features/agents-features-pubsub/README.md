@@ -206,306 +206,126 @@ val config = PubSubFeatureConfig().apply {
 }
 ```
 
-## Planning Agent Integration
+## Advanced Usage Examples
 
-The PubSub feature is designed to work seamlessly with planning agents:
+### Planning Agent Coordination
 
 ```kotlin
-import ai.koog.agents.planners.SimplePlannerWithCritic
-
 // Configure planning coordination
 val planningConfig = PubSubFeatureConfig().apply {
-    provider = redisProvider
-    
-    // Subscribe to planning-specific topics
-    autoSubscribeTopics = listOf(
-        "plan-coordination",     // Cross-agent plan coordination
-        "plan-feedback",         // Plan evaluation feedback  
-        "resource-updates"       // Resource availability
-    )
-    
-    // Publish planning lifecycle events
+    provider = RedisPubSubProvider("localhost", 6379)
+    autoSubscribeTopics = listOf("plan-coordination", "plan-feedback", "resource-updates")
     publishAgentEvents = true
     agentEventTopic = "planning-events"
-    
-    // Filter planning messages
-    publishFilter = { message ->
-        message.topic.contains("plan") || 
-        message.attributes.containsKey("planning-context")
+}
+
+// Create planning agent with PubSub
+val planningAgent = AIAgent(
+    promptExecutor = executor,
+    strategy = SimplePlannerWithCritic("CoordinatedPlanner", AllToolsStrategy(), executor)
+) {
+    install(PubSub) {
+        provider = RedisPubSubProvider("localhost", 6379)
+        autoSubscribeTopics = listOf("plan-coordination", "resource-updates")
+        publishAgentEvents = true
     }
 }
 
-// Create planning agent
-val planningAgent = AIAgent(
-    promptExecutor = executor,
-    strategy = SimplePlannerWithCritic("CoordinatedPlanner", AllToolsStrategy(), executor),
-    features = listOf(PubSub.Feature to planningConfig)
-)
-```
-
-### Planning Coordination Patterns
-
-```kotlin
-// Coordinate plan execution across agents
+// Coordinate plan execution
 suspend fun coordinatedPlanning() {
-    // Publish plan start
-    provider.publish(
-        "plan-coordination",
-        "plan_started", 
-        mapOf(
-            "plan-id" to "plan-123",
-            "agent-id" to "planner-1",
-            "estimated-steps" to "5"
-        )
-    )
+    planningAgent.publish("plan-coordination", "plan_started", 
+        mapOf("plan-id" to "plan-123", "agent-id" to "planner-1"))
     
-    // Listen for coordination signals
-    provider.subscribe("plan-coordination").collect { message ->
+    planningAgent.subscribe("plan-coordination").collect { message ->
         when (message.attributes["message-type"]) {
             "step-completed" -> updatePlanProgress(message)
             "resource-conflict" -> handleResourceConflict(message)
-            "plan-evaluation" -> processPlanFeedback(message)
         }
     }
 }
 ```
 
-## Persistence Coordination
-
-Integrate PubSub with the PersistencyStrategy system for coordinated checkpointing:
+### Persistence Coordination Integration
 
 ```kotlin
+// Agent with coordinated PubSub + Persistence
 val agent = AIAgent(
     promptExecutor = executor,
-    strategy = planningStrategy,
-    features = listOf(PubSub.Feature to pubsubConfig),
-    persistencyStrategy = PersistencyStrategy.Dynamic { context, registry ->
-        // Publish checkpoint notifications
-        provider.publish(
-            "checkpoint-coordination",
-            "checkpoint_saved",
-            mapOf(
-                "type" to context.checkpointType,
-                "agent-id" to context.agentId,
-                "persistence-provider" to "redis"
-            )
-        )
-        
-        // Select coordination based on checkpoint type
-        when (context.checkpointType) {
-            "plan_step_progress" -> CoordinationStrategies.Single(redisId)
-            "plan_completed" -> CoordinationStrategies.WriteToAll(listOf(redisId, postgresId))
-            else -> CoordinationStrategies.Single(redisId)
-        }
+    strategy = SimplePlannerWithCritic("TaskPlanner", AllToolsStrategy(), executor)
+) {
+    install(PubSub) {
+        provider = RedisPubSubProvider("localhost", 6379)
+        autoSubscribeTopics = listOf("checkpoint-coordination")
+        publishAgentEvents = true
     }
-)
-```
-
-## Multi-Tenant Support
-
-Configure tenant-aware messaging:
-
-```kotlin
-class TenantPubSubConfig(private val tenantId: String) {
-    fun createConfig(): PubSubFeatureConfig {
-        return PubSubFeatureConfig().apply {
-            // Tenant-specific topics
-            autoSubscribeTopics = listOf(
-                "tenant-$tenantId-commands",
-                "tenant-$tenantId-notifications"
-            )
-            
-            // Tenant isolation
-            publishFilter = { message ->
-                message.attributes["tenant-id"] == tenantId
-            }
-            
-            receiveFilter = { message ->
-                message.attributes["tenant-id"] == tenantId ||
-                message.topic.startsWith("global-")
+    
+    install(Persistency) {
+        strategy = PersistencyStrategy.Dynamic { context, registry ->
+            // Publish checkpoint notifications via PubSub
+            when (isExecutingPlanStep(context)) {
+                true -> {
+                    // Notify other agents of progress
+                    publishCheckpointEvent("plan_step_saved", context)
+                    CoordinationStrategies.Single(redisId)
+                }
+                false -> {
+                    publishCheckpointEvent("plan_completed", context)
+                    CoordinationStrategies.WriteToAll(listOf(redisId, postgresId))
+                }
             }
         }
+        registry.register(RedisPersistencyStorageProvider(), "redis")
+        registry.register(PostgresPersistencyStorageProvider(), "postgres")
     }
 }
 ```
 
-## Error Handling
-
-The PubSub feature includes comprehensive error handling:
+### Multi-Tenant Configuration
 
 ```kotlin
-// Provider-level exceptions
+// Tenant-aware messaging
+val tenantConfig = PubSubFeatureConfig().apply {
+    autoSubscribeTopics = listOf("tenant-$tenantId-commands", "global-announcements")
+    publishFilter = { message -> message.attributes["tenant-id"] == tenantId }
+    receiveFilter = { message -> 
+        message.attributes["tenant-id"] == tenantId || message.topic.startsWith("global-")
+    }
+}
+```
+
+## Error Handling & Monitoring
+
+```kotlin
+// Error handling
 try {
     provider.publish("topic", "message")
 } catch (e: PubSubException) {
-    println("Operation ${e.operation} failed on topic ${e.topic}: ${e.message}")
-    // Handle specific error types
-    when (e.operation) {
-        "publish" -> handlePublishError(e)
-        "subscribe" -> handleSubscribeError(e)
-    }
+    logger.error("${e.operation} failed on ${e.topic}: ${e.message}")
 }
 
-// Connection monitoring
-val healthInfo = provider.getHealthInfo()
-if (healthInfo["connected"] != true) {
-    // Handle disconnection
-    reconnectProvider()
-}
-```
-
-## Performance Considerations
-
-### Message Throughput
-
-- **Redis**: Handles 100K+ messages/second with proper configuration
-- **GCP PubSub**: Scales automatically, handles millions of messages/day
-- **Batching**: Use batch publishing for high-volume scenarios
-
-### Memory Management
-
-- **maxConcurrentMessages**: Limits concurrent message processing to prevent memory issues
-- **autoAcknowledge**: Automatically acknowledges messages for faster processing
-- **Flow backpressure**: Built-in Flow mechanisms handle backpressure automatically
-
-### Connection Pooling
-
-Redis provider supports connection pooling:
-
-```kotlin
-val redisProvider = RedisPubSubProvider(
-    host = "localhost",
-    port = 6379,
-    connectionPoolSize = 10,  // Multiple connections for high concurrency
-    connectionTimeout = 5000
-)
-```
-
-## Monitoring and Observability
-
-### Health Monitoring
-
-```kotlin
-// Check provider health
+// Health monitoring
 val health = provider.getHealthInfo()
-println("Provider: ${health["provider"]}")
-println("Connected: ${health["connected"]}")
-println("Active subscriptions: ${health["subscriptions"]}")
-
-// Redis-specific metrics
-println("Connection pool size: ${health["pool-size"]}")
-println("Active connections: ${health["active-connections"]}")
-```
-
-### Event Metrics
-
-Enable event publishing to monitor agent behavior:
-
-```kotlin
-val config = PubSubFeatureConfig().apply {
-    publishAgentEvents = true
-    publishToolEvents = true
-    publishLLMEvents = true
-}
-
-// Subscribe to metrics topics
-provider.subscribe("agent-events").collect { event ->
-    when (event.content) {
-        "agent_started" -> metrics.incrementAgentStarts()
-        "tool_executed" -> metrics.recordToolExecution(event.attributes)
-        "llm_request" -> metrics.recordLLMUsage(event.attributes)
-    }
+if (health["connected"] != true) {
+    reconnectProvider()
 }
 ```
 
 ## Testing
 
-### Unit Testing with No-Op Provider
+Use `NoPubSubProvider()` for unit tests to avoid real messaging infrastructure:
 
 ```kotlin
 @Test
 fun testAgentWithPubSub() = runTest {
-    val config = PubSubFeatureConfig().apply {
-        provider = NoPubSubProvider()  // No real messaging in tests
-        autoSubscribeTopics = listOf("test-topic")
-    }
-    
-    val agent = AIAgent(
-        promptExecutor = mockExecutor,
-        strategy = SimpleStrategy(),
-        features = listOf(PubSub.Feature to config)
-    )
-    
-    // Test agent behavior without actual messaging
-    agent.start()
-    // assertions...
-}
-```
-
-### Integration Testing
-
-```kotlin
-@Test  
-fun testRedisIntegration() = runTest {
-    val redisProvider = RedisPubSubProvider("localhost", 6379)
-    
-    // Test publish/subscribe flow
-    val receivedMessages = mutableListOf<ReceivedMessage>()
-    
-    launch {
-        redisProvider.subscribe("test-topic").collect { message ->
-            receivedMessages.add(message)
+    val agent = AIAgent(executor, strategy) {
+        install(PubSub) {
+            provider = NoPubSubProvider() // No-op for testing
+            autoSubscribeTopics = listOf("test-topic")
         }
     }
-    
-    delay(100) // Allow subscription to establish
-    
-    redisProvider.publish("test-topic", "test message")
-    
-    delay(100) // Allow message delivery
-    
-    assertEquals(1, receivedMessages.size)
-    assertEquals("test message", receivedMessages[0].content)
+    // Test agent behavior...
 }
 ```
-
-## Best Practices
-
-### Topic Naming
-
-- Use hierarchical naming: `agent-events/lifecycle`, `planning/coordination`
-- Include environment: `prod-agent-events`, `dev-notifications`  
-- Version topics: `api-v1-commands`, `api-v2-commands`
-
-### Message Design
-
-- Keep messages small and focused
-- Use attributes for routing metadata
-- Include correlation IDs for request tracking
-- Add timestamps for ordering and debugging
-
-### Resource Management
-
-- Always close providers in finally blocks or use `use` blocks
-- Limit concurrent subscriptions to prevent resource exhaustion
-- Monitor connection health and implement reconnection logic
-- Use circuit breakers for provider failures
-
-### Security
-
-- Validate message content before processing
-- Use authentication credentials for production providers
-- Implement rate limiting to prevent abuse
-- Filter sensitive information from published events
-
-## Examples
-
-See [EXAMPLES.md](EXAMPLES.md) for comprehensive usage examples including:
-- Basic Redis and GCP PubSub setup
-- Planning agent coordination patterns
-- Multi-tenant configurations
-- High-throughput optimizations
-- Custom provider implementations
 
 ## API Reference
 
