@@ -50,7 +50,7 @@ public class PersistencyFeatureConfig: FeatureConfig() {
      * - [PersistencyStrategy.Fixed]: Use a fixed coordination strategy for all agents
      * - [PersistencyStrategy.None]: Disable persistence entirely
      * - [PersistencyStrategy.Dynamic]: Select coordination strategies based on agent context using custom logic
-     * - [PersistencyStrategy.AutoSelectForTask]: LLM-powered coordination selection using predefined options
+     * - [PersistencyStrategy.AutoSelectCoordination]: LLM-powered coordination selection using predefined options
      * 
      * When not explicitly set, defaults to [PersistencyStrategy.Fixed] with a Single coordination
      * using the provider from the [storage] property.

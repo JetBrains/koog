@@ -40,8 +40,8 @@ fun main() = runBlocking {
     // Example 2: Dynamic Strategy
     dynamicStrategyExample()
     
-    // Example 3: AutoSelectForTask Strategy
-    autoSelectForTaskExample()
+    // Example 3: AutoSelectCoordination Strategy
+    autoSelectCoordinationExample()
 }
 
 /**
@@ -153,13 +153,13 @@ suspend fun dynamicStrategyExample() {
 }
 
 /**
- * Example 3: AutoSelectForTask Strategy
+ * Example 3: AutoSelectCoordination Strategy
  * Uses LLM to intelligently select the best coordination pattern based on task context.
  * The LLM chooses from predefined coordination options.
  */
 @OptIn(ExperimentalUuidApi::class)
-suspend fun autoSelectForTaskExample() {
-    println("3. AutoSelectForTask Strategy Example")
+suspend fun autoSelectCoordinationExample() {
+    println("3. AutoSelectCoordination Strategy Example")
     println("LLM-driven coordination selection from predefined options")
     
     val executor: PromptExecutor = simpleOllamaAIExecutor()
@@ -198,7 +198,7 @@ suspend fun autoSelectForTaskExample() {
                 CoordinationStrategies.WriteWithBackup(postgresId, listOf(s3Id)) // Durable with backup
             )
             
-            strategy = PersistencyStrategy.AutoSelectForTask(
+            strategy = PersistencyStrategy.AutoSelectCoordination(
                 taskDescription = "Real-time trading agent requiring sub-second latency and reliable checkpoint recovery",
                 options = coordinationOptions,
                 registry = registry,

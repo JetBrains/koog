@@ -152,7 +152,7 @@ class PersistencyStrategyProviderTest {
     }
     
     @Test
-    fun testAutoSelectForTaskStructure() = runTest {
+    fun testAutoSelectCoordinationStructure() = runTest {
         // Given
         val redisProvider = InMemoryPersistencyStorageProvider("redis")
         val postgresProvider = InMemoryPersistencyStorageProvider("postgres")
@@ -166,7 +166,7 @@ class PersistencyStrategyProviderTest {
             CoordinationStrategies.WriteToAll(listOf(redisId, postgresId))
         )
         
-        val strategy = PersistencyStrategy.AutoSelectForTask(
+        val strategy = PersistencyStrategy.AutoSelectCoordination(
             taskDescription = "High-frequency trading agent requiring fast operations",
             options = options,
             registry = registry,

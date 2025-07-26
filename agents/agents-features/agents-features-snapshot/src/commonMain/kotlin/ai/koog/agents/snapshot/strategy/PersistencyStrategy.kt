@@ -140,10 +140,10 @@ public sealed interface PersistencyStrategy {
      * 
      * This strategy uses the LLM to determine the most appropriate coordination strategy based on:
      * - The current agent task description
-     * - Available coordination options
-     * - Provider descriptions (from @LLMDescription annotations)
+     * - Available coordination options with their @LLMDescription annotations
+     * - Task-specific performance and reliability requirements
      * 
-     * The LLM chooses from a predefined set of coordination options rather than
+     * The LLM chooses from a predefined set of coordination strategies rather than
      * arbitrary provider combinations, ensuring type safety and validation.
      * 
      * @property taskDescription Description of the current task/context for the LLM
@@ -151,7 +151,7 @@ public sealed interface PersistencyStrategy {
      * @property registry Provider registry for resolving provider references
      * @property maxRetries Maximum number of retries for LLM selection (default: 3)
      */
-    public data class AutoSelectForTask(
+    public data class AutoSelectCoordination(
         val taskDescription: String,
         val options: List<CoordinationStrategy>,
         val registry: ProviderRegistry,

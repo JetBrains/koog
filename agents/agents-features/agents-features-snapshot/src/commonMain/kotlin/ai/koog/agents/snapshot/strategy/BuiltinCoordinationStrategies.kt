@@ -1,5 +1,6 @@
 package ai.koog.agents.snapshot.strategy
 
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -15,6 +16,7 @@ public object CoordinationStrategies {
      * Use a single provider for all operations.
      * Simple and reliable for basic use cases.
      */
+    @LLMDescription("Single provider coordination - uses one storage provider for all checkpoint operations. Simple, fast, and reliable for basic use cases.")
     public class Single(public val provider: ProviderId) : CoordinationStrategy {
         
         override suspend fun saveCheckpoint(checkpoint: AgentCheckpointData, registry: ProviderRegistry) {
@@ -34,6 +36,7 @@ public object CoordinationStrategies {
      * Write to all specified providers. Fails if any provider fails.
      * Useful for scenarios requiring guaranteed consistency across all providers.
      */
+    @LLMDescription("Write-to-all coordination - writes checkpoints to all providers simultaneously, ensuring strict consistency. Fails if any provider fails. Best for critical data requiring guaranteed replication.")
     public class WriteToAll(
         private val providers: List<ProviderId>,
         private val readFrom: ProviderId = providers.first()
@@ -69,6 +72,7 @@ public object CoordinationStrategies {
      * Write to all specified providers. Succeeds if at least one provider succeeds.
      * Provides high availability with best-effort consistency.
      */
+    @LLMDescription("Best-effort write-all coordination - attempts to write to all providers but succeeds if at least one succeeds. Provides high availability and fault tolerance for resilient checkpoint storage.")
     public class WriteAllBestEffort(
         private val providers: List<ProviderId>,
         private val readFrom: ProviderId = providers.first()
@@ -112,6 +116,7 @@ public object CoordinationStrategies {
      * Write to primary provider, then backup providers. Succeeds if primary succeeds.
      * Provides durability with backup redundancy.
      */
+    @LLMDescription("Primary-backup coordination - writes to primary provider first (must succeed), then writes to backup providers (best-effort). Ensures reliable storage with redundant backup copies.")
     public class WriteWithBackup(
         private val primary: ProviderId,
         private val backups: List<ProviderId> = emptyList()
@@ -152,6 +157,7 @@ public object CoordinationStrategies {
      * Try providers in the specified order for both reads and writes.
      * Provides failover capability with ordered preference.
      */
+    @LLMDescription("Prioritized failover coordination - tries providers in order until one succeeds. Excellent for performance optimization (fast provider first) with reliable fallbacks. Use for speed-critical operations with redundancy.")
     public class Prioritized(private val providers: List<ProviderId>) : CoordinationStrategy {
         
         override suspend fun saveCheckpoint(checkpoint: AgentCheckpointData, registry: ProviderRegistry) {

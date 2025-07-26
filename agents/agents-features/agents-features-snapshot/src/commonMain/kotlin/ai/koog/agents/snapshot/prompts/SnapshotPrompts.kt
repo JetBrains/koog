@@ -10,7 +10,7 @@ public object SnapshotPrompts {
     
 
     /**
-     * Prompt for LLM-based provider selection in AutoSelectForTask strategy.
+     * Prompt for LLM-based coordination selection in AutoSelectCoordination strategy.
      */
     public fun selectPersistencyProvider(
         taskDescription: String,

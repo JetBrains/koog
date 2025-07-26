@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+import ai.koog.agents.core.tools.reflect.getPreferredClassDescriptionAnnotation
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.prompts.SnapshotPrompts
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
@@ -81,7 +82,7 @@ public open class PersistencyStrategyProvider(
                 strategy.selector(agentContext, registry)
             }
 
-            is PersistencyStrategy.AutoSelectForTask -> selectCoordinationWithLLM(strategy)
+            is PersistencyStrategy.AutoSelectCoordination -> selectCoordinationWithLLM(strategy)
         }
         
         // Cache the selected coordination to ensure all operations use the same strategy
@@ -103,11 +104,13 @@ public open class PersistencyStrategyProvider(
      */
     @OptIn(DetachedPromptExecutorAPI::class)
     private suspend fun selectCoordinationWithLLM(
-        strategy: PersistencyStrategy.AutoSelectForTask
+        strategy: PersistencyStrategy.AutoSelectCoordination
     ): CoordinationStrategy {
-        // Build coordination descriptions for LLM
+        // Build coordination descriptions for LLM using @LLMDescription annotations
         val coordinationDescriptions = strategy.options.mapIndexed { index, coordination ->
-            val description = coordination.toString() // Use toString() for custom implementations
+            val description = coordination::class.getPreferredClassDescriptionAnnotation()?.description
+                ?: coordination::class.simpleName 
+                ?: "Custom coordination strategy"
             "Option $index: $description"
         }.joinToString("\n")
 
