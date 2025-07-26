@@ -77,6 +77,71 @@ public sealed interface PersistencyStrategy {
     
 
     /**
+     * Uses multiple providers simultaneously with configurable read/write strategies.
+     *
+     * This strategy enables advanced patterns like:
+     * - Write-through caching (write to both fast and durable, read fast first)
+     * - Backup/redundancy (write to multiple providers for safety)
+     * - Performance optimization (read from fastest provider, fallback to others)
+     *
+     * @property providers Map of provider names to their instances
+     * @property writeStrategy Defines which providers to write to and error handling
+     * @property readStrategy Defines the order and fallback behavior for reads
+     */
+    public data class MultiProvider(
+        val providers: Map<String, PersistencyStorageProvider>,
+        val writeStrategy: WriteStrategy,
+        val readStrategy: ReadStrategy
+    ) : PersistencyStrategy {
+        
+        /**
+         * Defines how writes are distributed across providers.
+         */
+        public sealed interface WriteStrategy {
+            /**
+             * Write to all specified providers. Fails if any provider fails.
+             */
+            public data class WriteToAll(val providerNames: List<String>) : WriteStrategy
+            
+            /**
+             * Write to all specified providers. Succeeds if at least one provider succeeds.
+             */
+            public data class WriteToAllBestEffort(val providerNames: List<String>) : WriteStrategy
+            
+            /**
+             * Write to primary provider, then backup providers. Succeeds if primary succeeds.
+             */
+            public data class WriteWithBackup(
+                val primary: String,
+                val backups: List<String> = emptyList()
+            ) : WriteStrategy
+        }
+        
+        /**
+         * Defines how reads are performed across providers.
+         */
+        public sealed interface ReadStrategy {
+            /**
+             * Try providers in the specified order, return first successful result.
+             */
+            public data class Prioritized(val providerNames: List<String>) : ReadStrategy
+            
+            /**
+             * Read from primary provider only.
+             */
+            public data class PrimaryOnly(val primary: String) : ReadStrategy
+            
+            /**
+             * Try fastest provider first, fallback to others if needed.
+             */
+            public data class FastestFirst(
+                val fast: String,
+                val fallbacks: List<String>
+            ) : ReadStrategy
+        }
+    }
+
+    /**
      * LLM-driven strategy for intelligent provider selection.
      *
      * This strategy uses the LLM to determine the most appropriate persistence provider based on:

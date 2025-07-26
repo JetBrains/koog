@@ -43,7 +43,8 @@ public class PersistencyFeatureConfig: FeatureConfig() {
      * This property supports various strategies:
      * - [PersistencyStrategy.Single]: Use a single provider for all operations (backward compatible)
      * - [PersistencyStrategy.None]: Disable persistence entirely
-     * - [PersistencyStrategy.Dynamic]: Select providers based on operation context using custom logic
+     * - [PersistencyStrategy.Dynamic]: Select providers based on agent context using custom logic
+     * - [PersistencyStrategy.MultiProvider]: Use multiple providers simultaneously with configurable read/write strategies
      * - [PersistencyStrategy.AutoSelectForTask]: LLM-powered provider selection using @LLMDescription annotations
      * 
      * When not explicitly set, defaults to [PersistencyStrategy.Single] with the
