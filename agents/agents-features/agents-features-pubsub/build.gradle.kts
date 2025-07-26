@@ -33,6 +33,9 @@ kotlin {
                 // Redis PubSub dependencies  
                 implementation(libs.lettuce.core)
                 implementation(libs.kotlinx.coroutines.reactive)
+                
+                // GCP PubSub dependencies
+                implementation("com.google.cloud:google-cloud-pubsub:1.129.0")
             }
         }
 

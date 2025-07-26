@@ -6,9 +6,19 @@ import ai.koog.agents.features.pubsub.providers.PubSubException
 import ai.koog.agents.features.pubsub.providers.PubSubProvider
 import ai.koog.agents.features.pubsub.providers.ReceivedMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.lettuce.core.RedisClient
 import io.lettuce.core.RedisURI
+import io.lettuce.core.pubsub.StatefulRedisPubSubConnection
+import io.lettuce.core.pubsub.RedisPubSubListener
+import io.lettuce.core.pubsub.api.reactive.RedisPubSubReactiveCommands
+import io.lettuce.core.api.coroutines
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -44,7 +54,7 @@ import kotlin.uuid.Uuid
  * @property connectionTimeout Connection timeout in milliseconds (default: 5000)
  * @property enablePatternSubscription Whether to enable pattern-based subscriptions (default: false)
  */
-@OptIn(ExperimentalUuidApi::class)
+@OptIn(ExperimentalUuidApi::class, io.lettuce.core.ExperimentalLettuceCoroutinesApi::class)
 public class RedisPubSubProvider(
     private val redisUri: RedisURI,
     private val keyPrefix: String = "pubsub:",
@@ -55,6 +65,15 @@ public class RedisPubSubProvider(
     private companion object {
         private val logger = KotlinLogging.logger { }
     }
+    
+    private val redisClient: RedisClient by lazy { RedisClient.create(redisUri) }
+    private val pubSubConnection: StatefulRedisPubSubConnection<String, String> by lazy { 
+        redisClient.connectPubSub()
+    }
+    private val pubSubCommands by lazy { pubSubConnection.reactive() }
+    
+    // Track active subscriptions for cleanup
+    private val activeSubscriptions = mutableSetOf<String>()
 
     override suspend fun publish(message: PubSubMessage): String? {
         return when (message) {
@@ -88,10 +107,16 @@ public class RedisPubSubProvider(
                 content
             }
 
-            // TODO: Implement actual Redis publishing
-            val messageId = Uuid.random().toString()
-            logger.debug { "Published message to channel '$channel'" }
-            messageId
+            // Use Lettuce coroutines API to publish the message
+            val regularConnection = redisClient.connect()
+            val coroutineCommands = regularConnection.coroutines()
+            
+            val subscriberCount = coroutineCommands.publish(channel, messageContent)
+            
+            logger.debug { "Published message to Redis channel '$channel', reached $subscriberCount subscribers" }
+            
+            // Generate a unique message ID for tracking (Redis PUBLISH doesn't return one)
+            Uuid.random().toString()
             
         } catch (e: Exception) {
             throw PubSubException("publish", topic, "Failed to publish message to Redis channel", e)
@@ -104,11 +129,92 @@ public class RedisPubSubProvider(
 
     override suspend fun subscribe(topics: List<String>): Flow<ReceivedMessage> {
         return try {
-            // TODO: Implement actual Redis subscription
-            logger.info { "Subscribing to topics: ${topics.joinToString()}" }
-            emptyFlow()
+            if (topics.isEmpty()) {
+                return emptyFlow()
+            }
+            
+            val channels = topics.map { prefixedChannel(it) }
+            logger.info { "Subscribing to Redis channels: ${channels.joinToString()}" }
+            
+            callbackFlow {
+                // Set up the listener for messages
+                val listener = object : RedisPubSubListener<String, String> {
+                    override fun message(channel: String, message: String) {
+                        try {
+                            val originalTopic = channel.removePrefix(keyPrefix)
+                            val (attributes, content) = parseMessage(message)
+                            
+                            val receivedMessage = RedisReceivedMessage(
+                                messageId = Uuid.random().toString(),
+                                topic = originalTopic,
+                                content = content,
+                                attributes = attributes
+                            )
+                            
+                            if (isActive) {
+                                trySend(receivedMessage)
+                            }
+                        } catch (e: Exception) {
+                            logger.error(e) { "Error processing received message from channel: $channel" }
+                        }
+                    }
+                    
+                    override fun message(pattern: String, channel: String, message: String) {
+                        // Handle pattern subscriptions if enabled
+                        if (enablePatternSubscription) {
+                            message(channel, message)
+                        }
+                    }
+                    
+                    override fun subscribed(channel: String, count: Long) {
+                        logger.debug { "Subscribed to Redis channel: $channel (total: $count)" }
+                    }
+                    
+                    override fun unsubscribed(channel: String, count: Long) {
+                        logger.debug { "Unsubscribed from Redis channel: $channel (remaining: $count)" }
+                    }
+                    
+                    override fun psubscribed(pattern: String, count: Long) {
+                        logger.debug { "Pattern subscribed: $pattern (total: $count)" }
+                    }
+                    
+                    override fun punsubscribed(pattern: String, count: Long) {
+                        logger.debug { "Pattern unsubscribed: $pattern (remaining: $count)" }
+                    }
+                }
+                
+                // Add the listener to the connection
+                pubSubConnection.addListener(listener)
+                
+                // Subscribe to the channels using reactive API
+                pubSubCommands.subscribe(*channels.toTypedArray()).awaitFirstOrNull()
+                
+                // Track subscriptions for cleanup
+                synchronized(activeSubscriptions) {
+                    activeSubscriptions.addAll(channels)
+                }
+                
+                awaitClose {
+                    try {
+                        // Remove listener and unsubscribe (non-suspend operations in awaitClose)
+                        pubSubConnection.removeListener(listener)
+                        
+                        // Use reactive subscribe for cleanup (non-suspend)
+                        pubSubCommands.unsubscribe(*channels.toTypedArray()).subscribe()
+                        
+                        synchronized(activeSubscriptions) {
+                            activeSubscriptions.removeAll(channels.toSet())
+                        }
+                        
+                        logger.debug { "Unsubscribed from Redis channels: ${channels.joinToString()}" }
+                    } catch (e: Exception) {
+                        logger.error(e) { "Error during unsubscribe cleanup" }
+                    }
+                }
+            }
             
         } catch (e: Exception) {
+            logger.error(e) { "Failed to subscribe to Redis channels: ${topics.joinToString()}" }
             throw PubSubException("subscribe", topics.joinToString(","), "Failed to subscribe to Redis channels", e)
         }
     }
@@ -117,8 +223,14 @@ public class RedisPubSubProvider(
         try {
             val channel = prefixedChannel(topic)
             
-            // TODO: Implement actual Redis unsubscription
-            logger.debug { "Unsubscribed from channel: $channel" }
+            // Unsubscribe from the channel
+            pubSubCommands.unsubscribe(channel).awaitFirstOrNull()
+            
+            synchronized(activeSubscriptions) {
+                activeSubscriptions.remove(channel)
+            }
+            
+            logger.debug { "Unsubscribed from Redis channel: $channel" }
             
         } catch (e: Exception) {
             throw PubSubException("unsubscribe", topic, "Failed to unsubscribe from Redis channel", e)
@@ -127,24 +239,30 @@ public class RedisPubSubProvider(
 
     override suspend fun isConnected(): Boolean {
         return try {
-            // TODO: Implement actual connection check
-            false
+            // Test connection by pinging the Redis server
+            val regularConnection = redisClient.connect()
+            val coroutineCommands = regularConnection.coroutines()
+            val result = coroutineCommands.ping()
+            result == "PONG"
         } catch (e: Exception) {
+            logger.debug(e) { "Redis connection check failed" }
             false
         }
     }
 
     override suspend fun getHealthInfo(): Map<String, Any> {
         return try {
+            val connected = isConnected()
             val info = mutableMapOf<String, Any>(
                 "provider" to "redis",
-                "connected" to isConnected(),
+                "connected" to connected,
                 "redisUri" to redisUri.toString(),
                 "keyPrefix" to keyPrefix,
-                "patternSubscription" to enablePatternSubscription
+                "patternSubscription" to enablePatternSubscription,
+                "activeSubscriptions" to synchronized(activeSubscriptions) { activeSubscriptions.size }
             )
 
-            if (isConnected()) {
+            if (connected) {
                 info["healthy"] = true
             } else {
                 info["healthy"] = false
@@ -165,7 +283,26 @@ public class RedisPubSubProvider(
     override fun close() {
         try {
             logger.info { "Closing Redis PubSub connections" }
-            // TODO: Implement actual cleanup
+            
+            // Close the pub/sub connection (will be created if not already initialized)
+            try {
+                pubSubConnection.close()
+            } catch (e: Exception) {
+                logger.debug(e) { "Error closing pub/sub connection" }
+            }
+            
+            // Shutdown the Redis client (will be created if not already initialized)
+            try {
+                redisClient.shutdown()
+            } catch (e: Exception) {
+                logger.debug(e) { "Error shutting down Redis client" }
+            }
+            
+            // Clear tracking data
+            synchronized(activeSubscriptions) {
+                activeSubscriptions.clear()
+            }
+            
             logger.info { "Redis PubSub connections closed successfully" }
         } catch (e: Exception) {
             logger.error(e) { "Error closing Redis PubSub connections" }
@@ -177,6 +314,59 @@ public class RedisPubSubProvider(
     private fun prefixedChannel(topic: String): String {
         return if (keyPrefix.isNotEmpty()) "$keyPrefix$topic" else topic
     }
+    
+    /**
+     * Parse a message that may contain encoded attributes.
+     * Format: "ATTRS:key1=value1;key2=value2;CONTENT:actual content"
+     * Or just: "actual content" if no attributes
+     */
+    private fun parseMessage(message: String): Pair<Map<String, String>, String> {
+        if (!message.startsWith("ATTRS:")) {
+            return emptyMap<String, String>() to message
+        }
+        
+        val contentIndex = message.indexOf("CONTENT:")
+        if (contentIndex == -1) {
+            return emptyMap<String, String>() to message
+        }
+        
+        val attributesString = message.substring(6, contentIndex) // Skip "ATTRS:"
+        val content = message.substring(contentIndex + 8) // Skip "CONTENT:"
+        
+        val attributes = mutableMapOf<String, String>()
+        if (attributesString.isNotBlank()) {
+            attributesString.split(";").forEach { pair ->
+                val equalIndex = pair.indexOf("=")
+                if (equalIndex != -1) {
+                    val key = pair.substring(0, equalIndex)
+                    val value = pair.substring(equalIndex + 1)
+                    attributes[key] = value
+                }
+            }
+        }
+        
+        return attributes to content
+    }
 
     //endregion Private Methods
+}
+
+/**
+ * Redis-specific ReceivedMessage that handles acknowledgments properly.
+ * Since Redis pub/sub doesn't have acknowledgments, this is a no-op implementation.
+ */
+private class RedisReceivedMessage(
+    messageId: String,
+    topic: String,
+    content: String,
+    attributes: Map<String, String>
+) : ReceivedMessage(messageId, topic, content, attributes, null) {
+    
+    override suspend fun acknowledge() {
+        // Redis pub/sub doesn't support acknowledgments - this is a no-op
+    }
+    
+    override suspend fun nack() {
+        // Redis pub/sub doesn't support negative acknowledgments - this is a no-op
+    }
 }

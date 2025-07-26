@@ -7,9 +7,39 @@ import ai.koog.agents.features.pubsub.providers.PubSubProvider
 import ai.koog.agents.features.pubsub.providers.ReceivedMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.channels.awaitClose
+import com.google.cloud.pubsub.v1.*
+import com.google.pubsub.v1.ProjectSubscriptionName
+import com.google.pubsub.v1.ProjectTopicName
+import com.google.pubsub.v1.PubsubMessage
+import com.google.pubsub.v1.ProjectName
+import com.google.protobuf.ByteString
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+
+/**
+ * GCP-specific ReceivedMessage that handles acknowledgments properly.
+ */
+private class GCPReceivedMessage(
+    messageId: String,
+    topic: String,
+    content: String,
+    attributes: Map<String, String>,
+    private val ackReplyConsumer: AckReplyConsumer
+) : ReceivedMessage(messageId, topic, content, attributes, ackReplyConsumer) {
+    
+    override suspend fun acknowledge() {
+        ackReplyConsumer.ack()
+    }
+    
+    override suspend fun nack() {
+        ackReplyConsumer.nack()
+    }
+}
 
 /**
  * Google Cloud Pub/Sub implementation of [PubSubProvider].
@@ -62,6 +92,11 @@ public class GCPPubSubProvider(
     private companion object {
         private val logger = KotlinLogging.logger { }
     }
+    
+    private val topicAdminClient: TopicAdminClient by lazy { TopicAdminClient.create() }
+    private val subscriptionAdminClient: SubscriptionAdminClient by lazy { SubscriptionAdminClient.create() }
+    private val publishers = mutableMapOf<String, Publisher>()
+    private val subscribers = mutableMapOf<String, Subscriber>()
 
     override suspend fun publish(message: PubSubMessage): String? {
         return when (message) {
@@ -79,10 +114,27 @@ public class GCPPubSubProvider(
         attributes: Map<String, String>
     ): String? {
         return try {
-            // TODO: Implement actual GCP Pub/Sub publishing
-            // For now, return a mock message ID
-            val messageId = Uuid.random().toString()
-            logger.debug { "Published message to topic '$topic' with ID: $messageId" }
+            val topicName = ProjectTopicName.of(projectId, topic)
+            
+            // Auto-create topic if it doesn't exist
+            if (autoCreateTopics) {
+                createTopicIfNotExists(topicName)
+            }
+            
+            // Get or create publisher for this topic
+            val publisher = getOrCreatePublisher(topicName)
+            
+            // Build the message
+            val pubsubMessage = PubsubMessage.newBuilder()
+                .setData(ByteString.copyFromUtf8(content))
+                .putAllAttributes(attributes)
+                .build()
+            
+            // Publish and get the message ID
+            val future = publisher.publish(pubsubMessage)
+            val messageId = future.get() // This blocks, but we're in a suspend function
+            
+            logger.debug { "Published message to GCP topic '$topic' with ID: $messageId" }
             messageId
             
         } catch (e: Exception) {
@@ -96,10 +148,55 @@ public class GCPPubSubProvider(
 
     override suspend fun subscribe(topics: List<String>): Flow<ReceivedMessage> {
         return try {
-            // TODO: Implement actual GCP Pub/Sub subscription
-            // For now, return empty flow
-            logger.info { "Subscribing to topics: ${topics.joinToString()}" }
-            emptyFlow()
+            if (topics.isEmpty()) {
+                return emptyFlow()
+            }
+            
+            // For simplicity, we'll handle single topic subscriptions
+            // Multiple topics would require multiple subscribers
+            val topic = topics.first()
+            val topicName = ProjectTopicName.of(projectId, topic)
+            val subscriptionName = ProjectSubscriptionName.of(projectId, "${subscriptionPrefix}${topic}")
+            
+            // Auto-create topic and subscription if they don't exist
+            if (autoCreateTopics) {
+                createTopicIfNotExists(topicName)
+            }
+            if (autoCreateSubscriptions) {
+                createSubscriptionIfNotExists(subscriptionName, topicName)
+            }
+            
+            logger.info { "Subscribing to GCP topic: $topic" }
+            
+            callbackFlow {
+                val messageReceiver = MessageReceiver { message, consumer ->
+                    try {
+                        val receivedMessage = GCPReceivedMessage(
+                            messageId = message.messageId,
+                            topic = topic,
+                            content = message.data.toStringUtf8(),
+                            attributes = message.attributesMap,
+                            ackReplyConsumer = consumer
+                        )
+                        
+                        if (isActive) {
+                            trySend(receivedMessage)
+                        }
+                    } catch (e: Exception) {
+                        logger.error(e) { "Error processing received message: ${message.messageId}" }
+                        consumer.nack()
+                    }
+                }
+                
+                val subscriber = Subscriber.newBuilder(subscriptionName, messageReceiver)
+                    .build()
+                
+                subscriber.startAsync().awaitRunning()
+                
+                awaitClose {
+                    subscriber.stopAsync().awaitTerminated()
+                }
+            }
             
         } catch (e: Exception) {
             logger.error(e) { "Failed to subscribe to topics: ${topics.joinToString()}" }
@@ -109,8 +206,16 @@ public class GCPPubSubProvider(
 
     override suspend fun unsubscribe(topic: String, subscriptionId: String?) {
         try {
-            // TODO: Implement actual GCP Pub/Sub unsubscription
-            logger.info { "Unsubscribed from topic: $topic" }
+            val actualSubscriptionId = subscriptionId ?: "${subscriptionPrefix}${topic}"
+            val subscriptionName = ProjectSubscriptionName.of(projectId, actualSubscriptionId)
+            
+            // Stop the subscriber if it exists
+            subscribers[actualSubscriptionId]?.let { subscriber ->
+                subscriber.stopAsync().awaitTerminated()
+                subscribers.remove(actualSubscriptionId)
+            }
+            
+            logger.debug { "Unsubscribed from GCP topic: $topic" }
             
         } catch (e: Exception) {
             throw PubSubException("unsubscribe", topic, "Failed to unsubscribe from GCP Pub/Sub topic", e)
@@ -119,9 +224,12 @@ public class GCPPubSubProvider(
 
     override suspend fun isConnected(): Boolean {
         return try {
-            // TODO: Implement actual connection check
-            false
+            // Try to list topics to check connectivity
+            val projectName = ProjectName.of(projectId)
+            topicAdminClient.listTopics(projectName).iterateAll().iterator().hasNext()
+            true
         } catch (e: Exception) {
+            logger.debug(e) { "GCP Pub/Sub connection check failed" }
             false
         }
     }
@@ -159,10 +267,62 @@ public class GCPPubSubProvider(
     override fun close() {
         try {
             logger.info { "Closing GCP Pub/Sub connections" }
-            // TODO: Implement actual cleanup
+            
+            // Close all publishers
+            publishers.values.forEach { publisher ->
+                publisher.shutdown()
+            }
+            publishers.clear()
+            
+            // Stop all subscribers
+            subscribers.values.forEach { subscriber ->
+                subscriber.stopAsync().awaitTerminated()
+            }
+            subscribers.clear()
+            
+            // Close admin clients
+            topicAdminClient.close()
+            subscriptionAdminClient.close()
+            
             logger.info { "GCP Pub/Sub connections closed successfully" }
         } catch (e: Exception) {
             logger.error(e) { "Error closing GCP Pub/Sub connections" }
         }
     }
+
+    //region Private Helper Methods
+    
+    private fun createTopicIfNotExists(topicName: ProjectTopicName) {
+        try {
+            topicAdminClient.getTopic(topicName)
+        } catch (e: Exception) {
+            // Topic doesn't exist, create it
+            topicAdminClient.createTopic(topicName)
+            logger.debug { "Created GCP topic: ${topicName.topic}" }
+        }
+    }
+    
+    private fun createSubscriptionIfNotExists(subscriptionName: ProjectSubscriptionName, topicName: ProjectTopicName) {
+        try {
+            subscriptionAdminClient.getSubscription(subscriptionName)
+        } catch (e: Exception) {
+            // Subscription doesn't exist, create it
+            val subscription = com.google.pubsub.v1.Subscription.newBuilder()
+                .setName(subscriptionName.toString())
+                .setTopic(topicName.toString())
+                .setAckDeadlineSeconds(ackDeadlineSeconds)
+                .build()
+            
+            subscriptionAdminClient.createSubscription(subscription)
+            logger.debug { "Created GCP subscription: ${subscriptionName.subscription}" }
+        }
+    }
+    
+    private fun getOrCreatePublisher(topicName: ProjectTopicName): Publisher {
+        return publishers.getOrPut(topicName.topic) {
+            Publisher.newBuilder(topicName).build()
+        }
+    }
+    
+    //endregion Private Helper Methods
 }
