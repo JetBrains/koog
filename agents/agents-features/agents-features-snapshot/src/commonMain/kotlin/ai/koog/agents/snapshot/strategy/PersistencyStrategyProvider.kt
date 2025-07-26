@@ -24,12 +24,12 @@ public class PersistencyStrategyProvider(
     private val strategy: PersistencyStrategy,
     private val context: AIAgentContextBase
 ) : PersistencyStorageProvider {
-    
+
     private companion object {
         private val logger = KotlinLogging.logger { }
         private val noOpProvider = NoPersistencyStorageProvider()
     }
-    
+
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
         val provider = selectProvider(
             operation = PersistencyStrategy.Dynamic.Operation.SaveCheckpoint,
@@ -37,18 +37,18 @@ public class PersistencyStrategyProvider(
         )
         provider.saveCheckpoint(agentCheckpointData)
     }
-    
+
     override suspend fun getCheckpoints(): List<AgentCheckpointData> {
         val provider = selectProvider(PersistencyStrategy.Dynamic.Operation.GetCheckpoints)
         return provider.getCheckpoints()
     }
-    
+
     override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
         val provider = selectProvider(PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint)
         return provider.getLatestCheckpoint()
     }
-    
-    
+
+
     /**
      * Selects a provider based on the strategy and operation context.
      */
@@ -58,11 +58,11 @@ public class PersistencyStrategyProvider(
     ): PersistencyStorageProvider {
         return when (strategy) {
             is PersistencyStrategy.Single -> strategy.provider
-            
+
             is PersistencyStrategy.None -> noOpProvider
-            
+
             is PersistencyStrategy.Failover -> selectWithFailover(strategy.providers, operation)
-            
+
             is PersistencyStrategy.Dynamic -> {
                 val context = PersistencyStrategy.Dynamic.OperationContext(
                     operation = operation,
@@ -73,15 +73,16 @@ public class PersistencyStrategyProvider(
                 strategy.providers[providerName]
                     ?: throw IllegalStateException("Provider '$providerName' not found in Dynamic strategy")
             }
-            
+
             is PersistencyStrategy.Hybrid -> selectHybridProvider(strategy, operation, checkpoint)
-            
+
             is PersistencyStrategy.AutoSelectForTask -> selectWithLLM(strategy, operation, checkpoint)
         }
     }
-    
+
     /**
      * Attempts to find a working provider from the failover list.
+     * Performs health checks for both read and write operations to ensure provider availability.
      */
     private suspend fun selectWithFailover(
         providers: List<PersistencyStorageProvider>,
@@ -90,29 +91,67 @@ public class PersistencyStrategyProvider(
         if (providers.isEmpty()) {
             throw IllegalStateException("No providers configured in Failover strategy")
         }
-        
-        // For read operations, try each provider until we find one that works
-        if (operation is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint ||
-            operation is PersistencyStrategy.Dynamic.Operation.GetCheckpoints
-        ) {
-            for ((index, provider) in providers.withIndex()) {
-                try {
-                    // Test if provider is accessible by trying to get checkpoints
-                    provider.getCheckpoints()
-                    return provider
-                } catch (e: Exception) {
-                    logger.warn { "Provider at index $index failed health check: ${e.message}" }
-                    if (index == providers.lastIndex) {
-                        throw IllegalStateException("All providers in failover list are unavailable", e)
+
+        var lastException: Exception? = null
+
+        // Try each provider until we find one that works
+        for ((index, provider) in providers.withIndex()) {
+            try {
+                // Perform health check based on operation type
+                when (operation) {
+                    is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> {
+                        // For write operations, test with a lightweight health check
+                        // Try to read existing checkpoints to verify connectivity
+                        provider.getCheckpoints()
+                        logger.debug { "Provider at index $index passed write health check" }
+                        return provider
+                    }
+
+                    is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint,
+                    is PersistencyStrategy.Dynamic.Operation.GetCheckpoints,
+                    is PersistencyStrategy.Dynamic.Operation.GetCheckpointById -> {
+                        // For read operations, test read capability
+                        provider.getCheckpoints()
+                        logger.debug { "Provider at index $index passed read health check" }
+                        return provider
+                    }
+
+                    is PersistencyStrategy.Dynamic.Operation.DeleteCheckpoint,
+                    is PersistencyStrategy.Dynamic.Operation.DeleteAllCheckpoints -> {
+                        // For delete operations, verify provider is accessible
+                        provider.getCheckpoints()
+                        logger.debug { "Provider at index $index passed delete health check" }
+                        return provider
+                    }
+
+                    is PersistencyStrategy.Dynamic.Operation.GetCheckpointCount -> {
+                        // For count operations, test read capability
+                        provider.getCheckpoints()
+                        logger.debug { "Provider at index $index passed count health check" }
+                        return provider
                     }
                 }
+            } catch (e: Exception) {
+                lastException = e
+                logger.warn { "Provider at index $index failed health check for ${operation::class.simpleName}: ${e.message}" }
+
+                // If this is the last provider, we'll throw below
+                if (index == providers.lastIndex) {
+                    break
+                }
+
+                // Continue to next provider
+                continue
             }
         }
-        
-        // For write operations, use the first available provider
-        return providers.first()
+
+        // All providers failed
+        throw IllegalStateException(
+            "All ${providers.size} providers in failover list are unavailable for ${operation::class.simpleName}",
+            lastException
+        )
     }
-    
+
     /**
      * Selects a provider based on the Hybrid strategy logic.
      */
@@ -131,23 +170,23 @@ public class PersistencyStrategyProvider(
             return when (strategy.selector.invoke(context)) {
                 PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL -> strategy.ephemeralProvider
                 PersistencyStrategy.Hybrid.ProviderType.DURABLE -> strategy.durableProvider
-                PersistencyStrategy.Hybrid.ProviderType.CRITICAL -> 
+                PersistencyStrategy.Hybrid.ProviderType.CRITICAL ->
                     strategy.criticalProvider ?: strategy.durableProvider
             }
         }
-        
+
         // Default hybrid logic
         return when (operation) {
             // Fast operations use ephemeral storage
             is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> {
                 // Determine if this is a mid-execution checkpoint based on context
-                if (isMidExecutionCheckpoint()) {
+                if (isMidExecutionCheckpoint(checkpoint)) {
                     strategy.ephemeralProvider
                 } else {
                     strategy.durableProvider
                 }
             }
-            
+
             // Read operations try ephemeral first, then durable
             is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint,
             is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> {
@@ -161,42 +200,55 @@ public class PersistencyStrategyProvider(
                         else -> null
                     }
                 }.getOrNull()
-                
-                if (ephemeralResult != null && 
+
+                if (ephemeralResult != null &&
                     (ephemeralResult !is List<*> || ephemeralResult.isNotEmpty())) {
                     strategy.ephemeralProvider
                 } else {
                     strategy.durableProvider
                 }
             }
-            
+
             // Other operations use durable storage
             else -> strategy.durableProvider
         }
     }
-    
+
     /**
      * Determines if the current checkpoint is a mid-execution checkpoint.
-     * This is a heuristic based on the agent's execution state.
+     * This is a heuristic based on the agent's execution state and checkpoint characteristics.
      */
-    private fun isMidExecutionCheckpoint(): Boolean {
-        // Check if we're in the middle of a strategy execution
-        // This is a simplified heuristic - real implementation might check:
-        // - Node depth in the strategy  
-        // - Time since last checkpoint
-        // - Checkpoint frequency
-        // - Explicit metadata
-        
-        // For now, we'll use a simple heuristic
-        // In a real implementation, this could be determined by:
-        // - Checking if we're not at a start or finish node
-        // - Analyzing the checkpoint metadata
-        // - Using custom indicators set by the agent
-        
-        // Default to false, allowing users to override with custom selector
-        return false
+    private suspend fun isMidExecutionCheckpoint(checkpoint: AgentCheckpointData?): Boolean {
+        if (checkpoint == null) return false
+
+        // Heuristic 1: Check node naming patterns
+        val nodeId = checkpoint.nodeId
+        val isMidExecutionNode = when {
+            // Common start/end node patterns
+            nodeId.lowercase().matches(Regex("(start|begin|init|entry|root).*")) -> false
+            nodeId.lowercase().matches(Regex(".*(end|finish|complete|final|exit|done).*")) -> false
+
+            // Common mid-execution patterns
+            nodeId.lowercase().contains("processing") -> true
+            nodeId.lowercase().contains("step") -> true
+            nodeId.matches(Regex(".*-\\d+.*")) -> true // step-1, node-2, etc.
+            nodeId.contains("_") && nodeId.split("_").size > 2 -> true // complex_processing_step
+
+            else -> false
+        }
+
+        // Heuristic 2: Check message history size (mid-execution likely has more messages)
+        val hasSignificantHistory = checkpoint.messageHistory.size > 2
+
+        // Heuristic 3: Check if we have context about execution depth
+        // For now, we use message history as a proxy for execution depth
+        // In a real implementation, this could check agent execution metadata
+        val executionDepthIndicator = hasSignificantHistory
+
+        // Combined heuristic: mid-execution if any strong indicator is true
+        return isMidExecutionNode || (hasSignificantHistory && executionDepthIndicator)
     }
-    
+
     /**
      * Data class for LLM provider selection response.
      */
@@ -205,9 +257,10 @@ public class PersistencyStrategyProvider(
         val providerName: String,
         val reasoning: String? = null
     )
-    
+
     /**
      * Selects a provider using LLM based on the context and provider descriptions.
+     * Includes retry mechanism and fallback logic for robustness.
      */
     @OptIn(DetachedPromptExecutorAPI::class)
     private suspend fun selectWithLLM(
@@ -217,78 +270,128 @@ public class PersistencyStrategyProvider(
     ): PersistencyStorageProvider {
         // Build provider descriptions for LLM
         val providerDescriptions = strategy.providers.entries.joinToString("\n") { (name, info) ->
-            "- $name: ${info.description}" + 
+            "- $name: ${info.description}" +
             if (info.capabilities.isNotEmpty()) " (capabilities: ${info.capabilities.joinToString(", ")})" else ""
         }
-        
+
         // Build operation context
         val operationDescription = when (operation) {
-            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> 
+            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint ->
                 "Saving a checkpoint (nodeId: ${checkpoint?.nodeId}, messageCount: ${checkpoint?.messageHistory?.size})"
-            is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint -> 
+            is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint ->
                 "Retrieving the latest checkpoint"
-            is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> 
+            is PersistencyStrategy.Dynamic.Operation.GetCheckpoints ->
                 "Retrieving all checkpoints"
-            is PersistencyStrategy.Dynamic.Operation.GetCheckpointById -> 
+            is PersistencyStrategy.Dynamic.Operation.GetCheckpointById ->
                 "Retrieving checkpoint by ID: ${operation.id}"
-            is PersistencyStrategy.Dynamic.Operation.DeleteCheckpoint -> 
+            is PersistencyStrategy.Dynamic.Operation.DeleteCheckpoint ->
                 "Deleting checkpoint: ${operation.id}"
-            is PersistencyStrategy.Dynamic.Operation.DeleteAllCheckpoints -> 
+            is PersistencyStrategy.Dynamic.Operation.DeleteAllCheckpoints ->
                 "Deleting all checkpoints"
-            is PersistencyStrategy.Dynamic.Operation.GetCheckpointCount -> 
+            is PersistencyStrategy.Dynamic.Operation.GetCheckpointCount ->
                 "Getting checkpoint count"
         }
-        
-        val selected = context.llm.writeSession {
-            val initialPrompt = prompt
-            
-            replaceHistoryWithTLDR()
-            
-            updatePrompt {
-                user {
-                    """
-                    Select the most appropriate persistence provider for the following operation.
-                    
-                    Task context: ${strategy.taskDescription}
-                    
-                    Current operation: $operationDescription
-                    
-                    Available providers:
-                    $providerDescriptions
-                    
-                    Consider factors like:
-                    - Speed requirements (ephemeral vs durable)
-                    - Data criticality
-                    - Query needs
-                    - Cost implications
-                    
-                    Return the name of the most suitable provider.
-                    """.trimIndent()
-                }
+
+        // Determine fallback provider (first available, preferring "durable" providers)
+        val fallbackProvider = strategy.providers.entries.minByOrNull { (name, _) ->
+            when {
+                name.lowercase().contains("durable") -> 0
+                name.lowercase().contains("postgres") -> 1
+                name.lowercase().contains("sql") -> 2
+                else -> 3
             }
-            
-            val selectedProvider = this.requestLLMStructured(
-                structure = JsonStructuredData.createJsonStructure<SelectedProvider>(
-                    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                    examples = listOf(
-                        SelectedProvider("redis", "Fast ephemeral storage for mid-execution checkpoints"),
-                        SelectedProvider("postgres", "Durable storage for session persistence")
+        }?.value?.provider
+
+        var lastException: Exception? = null
+
+        // Attempt LLM selection with retries
+        for (attempt in 0 until strategy.maxRetries) {
+            try {
+                val selected = context.llm.writeSession {
+                    val initialPrompt = prompt
+
+                    replaceHistoryWithTLDR()
+
+                    updatePrompt {
+                        user {
+                            """
+                            Select the most appropriate persistence provider for the following operation.
+
+                            Task context: ${strategy.taskDescription}
+
+                            Current operation: $operationDescription
+
+                            Available providers:
+                            $providerDescriptions
+
+                            Consider factors like:
+                            - Speed requirements (ephemeral vs durable)
+                            - Data criticality
+                            - Query needs
+                            - Cost implications
+
+                            You must select one of these exact provider names: ${strategy.providers.keys.joinToString(", ")}
+
+                            Return the name of the most suitable provider.
+                            """.trimIndent()
+                        }
+                    }
+
+                    val selectedProvider = this.requestLLMStructured(
+                        structure = JsonStructuredData.createJsonStructure<SelectedProvider>(
+                            schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                            examples = strategy.providers.keys.take(2).map { providerName ->
+                                SelectedProvider(
+                                    providerName,
+                                    "Selected $providerName based on operation requirements"
+                                )
+                            }
+                        ),
+                        retries = 1, // Single retry per attempt to avoid nested retries
+                    ).getOrThrow()
+
+                    prompt = initialPrompt
+
+                    selectedProvider.structure
+                }
+
+                // Validate LLM selection
+                val selectedProvider = strategy.providers[selected.providerName]?.provider
+                if (selectedProvider != null) {
+                    logger.debug {
+                        "LLM selected provider '${selected.providerName}' for operation $operation on attempt ${attempt + 1}" +
+                        selected.reasoning?.let { " (reasoning: $it)" }.orEmpty()
+                    }
+                    return selectedProvider
+                } else {
+                    val availableProviders = strategy.providers.keys.joinToString(", ")
+                    throw IllegalStateException(
+                        "LLM selected unknown provider '${selected.providerName}'. Available providers: $availableProviders"
                     )
-                ),
-                retries = strategy.maxRetries,
-            ).getOrThrow()
-            
-            prompt = initialPrompt
-            
-            selectedProvider.structure
+                }
+
+            } catch (e: Exception) {
+                lastException = e
+                logger.warn {
+                    "LLM provider selection failed on attempt ${attempt + 1}/${strategy.maxRetries}: ${e.message}"
+                }
+
+                // Continue to next iteration for retry
+            }
         }
-        
-        logger.debug { 
-            "LLM selected provider '${selected.providerName}' for operation $operation" + 
-            selected.reasoning?.let { " (reasoning: $it)" }.orEmpty()
+
+        // All LLM attempts failed, use fallback strategy
+        if (fallbackProvider != null) {
+            logger.warn {
+                "LLM provider selection failed after ${strategy.maxRetries} attempts, falling back to ${fallbackProvider::class.simpleName}"
+            }
+            return fallbackProvider
+        } else {
+            // No fallback available, throw the last exception
+            throw IllegalStateException(
+                "LLM provider selection failed after ${strategy.maxRetries} attempts and no fallback provider available",
+                lastException
+            )
         }
-        
-        return strategy.providers[selected.providerName]?.provider
-            ?: throw IllegalStateException("LLM selected unknown provider: ${selected.providerName}")
     }
 }
