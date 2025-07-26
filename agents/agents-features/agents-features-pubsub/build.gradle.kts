@@ -35,7 +35,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.reactive)
                 
                 // GCP PubSub dependencies
-                implementation("com.google.cloud:google-cloud-pubsub:1.129.0")
+                implementation(libs.google.cloud.pubsub)
             }
         }
 

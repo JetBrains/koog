@@ -39,7 +39,7 @@ dependencies {
 
     // Redis and GCP dependencies for PubSub examples
     implementation(libs.lettuce.core)
-    implementation("com.google.cloud:google-cloud-pubsub:1.129.0")
+    implementation(libs.google.cloud.pubsub)
 
     implementation(libs.logback.classic)
     implementation(libs.opentelemetry.exporter.logging)
