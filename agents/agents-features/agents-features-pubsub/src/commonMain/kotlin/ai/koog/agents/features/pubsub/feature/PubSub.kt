@@ -13,6 +13,7 @@ import ai.koog.agents.features.pubsub.providers.ReceivedMessage
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.catch
+import kotlinx.datetime.Clock
 import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -123,7 +124,7 @@ public class PubSub {
                         agentId = eventContext.agent.id,
                         runId = eventContext.runId,
                         strategyName = eventContext.strategy.name,
-                        timestamp = 0 // Cross-platform compatibility
+                        timestamp = Clock.System.now().toEpochMilliseconds()
                     )
                     publishEvent(config, config.agentEventTopic, event)
                 }
@@ -133,7 +134,7 @@ public class PubSub {
                         agentId = eventContext.agentId,
                         runId = eventContext.runId,
                         result = eventContext.result?.toString(),
-                        timestamp = 0 // Cross-platform compatibility
+                        timestamp = Clock.System.now().toEpochMilliseconds()
                     )
                     publishEvent(config, config.agentEventTopic, event)
                 }
@@ -143,7 +144,7 @@ public class PubSub {
                         agentId = eventContext.agentId,
                         runId = eventContext.runId,
                         error = eventContext.throwable.message ?: "Unknown error",
-                        timestamp = 0 // Cross-platform compatibility
+                        timestamp = Clock.System.now().toEpochMilliseconds()
                     )
                     publishEvent(config, config.agentEventTopic, event)
                 }
@@ -160,7 +161,7 @@ public class PubSub {
                         toolCallId = eventContext.toolCallId ?: "unknown",
                         toolName = eventContext.tool.name,
                         toolArgs = eventContext.toolArgs.toString(),
-                        timestamp = 0 // Cross-platform compatibility
+                        timestamp = Clock.System.now().toEpochMilliseconds()
                     )
                     publishEvent(config, config.toolEventTopic, event)
                 }
@@ -171,7 +172,7 @@ public class PubSub {
                         toolCallId = eventContext.toolCallId ?: "unknown",
                         toolName = eventContext.tool.name,
                         result = eventContext.result?.toString() ?: "null",
-                        timestamp = 0 // Cross-platform compatibility
+                        timestamp = Clock.System.now().toEpochMilliseconds()
                     )
                     publishEvent(config, config.toolEventTopic, event)
                 }
@@ -188,7 +189,7 @@ public class PubSub {
                         model = eventContext.model.toString(),
                         promptLength = eventContext.prompt.toString().length,
                         toolCount = eventContext.tools.size,
-                        timestamp = 0 // Cross-platform compatibility
+                        timestamp = Clock.System.now().toEpochMilliseconds()
                     )
                     publishEvent(config, config.llmEventTopic, event)
                 }
@@ -198,7 +199,7 @@ public class PubSub {
                         runId = eventContext.runId,
                         model = eventContext.model.toString(),
                         responseCount = eventContext.responses.size,
-                        timestamp = 0 // Cross-platform compatibility
+                        timestamp = Clock.System.now().toEpochMilliseconds()
                     )
                     publishEvent(config, config.llmEventTopic, event)
                 }
