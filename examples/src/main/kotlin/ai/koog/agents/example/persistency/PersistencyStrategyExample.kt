@@ -23,10 +23,9 @@ import kotlin.uuid.ExperimentalUuidApi
  * 
  * The PersistencyStrategy pattern allows flexible configuration of persistence
  * providers, enabling:
- * - Single provider usage
- * - Failover between providers
- * - Dynamic provider selection based on context
- * - Hybrid strategies for different use cases
+ * - Single provider usage (backward compatible)
+ * - Dynamic provider selection based on operation context
+ * - LLM-powered intelligent provider selection using @LLMDescription annotations
  */
 @OptIn(ExperimentalUuidApi::class)
 fun main() = runBlocking {
@@ -203,11 +202,11 @@ suspend fun autoSelectForTaskExample() {
     
     val result = agent.run("Execute high-frequency trade")
     println("Result: $result")
-    println("\nNote: In production, the LLM would analyze the operation context")
-    println("and select the most appropriate provider based on:")
-    println("- Operation type (save/retrieve)")
-    println("- Performance requirements")
-    println("- Data criticality")
-    println("- Cost considerations")
+    println("\nNote: In production, the LLM analyzes the task description")
+    println("and selects the most appropriate provider based on:")
+    println("- Task-specific performance requirements")
+    println("- Data retention and durability needs")
+    println("- Cost and resource constraints")
+    println("- Provider capabilities from @LLMDescription annotations")
     println()
 }
