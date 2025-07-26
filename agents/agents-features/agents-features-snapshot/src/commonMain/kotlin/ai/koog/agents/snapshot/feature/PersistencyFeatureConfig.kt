@@ -40,11 +40,10 @@ public class PersistencyFeatureConfig: FeatureConfig() {
      * Defines the strategy for selecting persistence providers.
      * 
      * This property supports various strategies:
-     * - [PersistencyStrategy.Single]: Use a single provider for all operations
-     * - [PersistencyStrategy.None]: Disable persistence
-     * - [PersistencyStrategy.Failover]: Use multiple providers with failover
-     * - [PersistencyStrategy.Dynamic]: Select providers based on context
-     * - [PersistencyStrategy.Hybrid]: Pre-configured strategy for common patterns
+     * - [PersistencyStrategy.Single]: Use a single provider for all operations (backward compatible)
+     * - [PersistencyStrategy.None]: Disable persistence entirely
+     * - [PersistencyStrategy.Dynamic]: Select providers based on operation context using custom logic
+     * - [PersistencyStrategy.AutoSelectForTask]: LLM-powered provider selection using @LLMDescription annotations
      * 
      * When not explicitly set, defaults to [PersistencyStrategy.Single] with the
      * provider from the [storage] property.
