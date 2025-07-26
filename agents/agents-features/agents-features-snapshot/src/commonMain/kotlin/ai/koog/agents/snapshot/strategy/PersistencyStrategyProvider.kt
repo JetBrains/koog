@@ -64,8 +64,6 @@ public class PersistencyStrategyProvider(
 
             is PersistencyStrategy.None -> noOpProvider
 
-            is PersistencyStrategy.Failover -> selectWithFailover(strategy.providers, operation)
-
             is PersistencyStrategy.Dynamic -> {
                 val context = PersistencyStrategy.Dynamic.OperationContext(
                     operation = operation,
@@ -86,78 +84,6 @@ public class PersistencyStrategyProvider(
     }
 
     /**
-     * Attempts to find a working provider from the failover list.
-     * Performs health checks for both read and write operations to ensure provider availability.
-     */
-    private suspend fun selectWithFailover(
-        providers: List<PersistencyStorageProvider>,
-        operation: PersistencyStrategy.Dynamic.Operation
-    ): PersistencyStorageProvider {
-        if (providers.isEmpty()) {
-            throw IllegalStateException("No providers configured in Failover strategy")
-        }
-
-        var lastException: Exception? = null
-
-        // Try each provider until we find one that works
-        for ((index, provider) in providers.withIndex()) {
-            try {
-                // Perform health check based on operation type
-                when (operation) {
-                    is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> {
-                        // For write operations, test with a lightweight health check
-                        // Try to read existing checkpoints to verify connectivity
-                        provider.getCheckpoints()
-                        logger.debug { "Provider at index $index passed write health check" }
-                        return provider
-                    }
-
-                    is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint,
-                    is PersistencyStrategy.Dynamic.Operation.GetCheckpoints,
-                    is PersistencyStrategy.Dynamic.Operation.GetCheckpointById -> {
-                        // For read operations, test read capability
-                        provider.getCheckpoints()
-                        logger.debug { "Provider at index $index passed read health check" }
-                        return provider
-                    }
-
-                    is PersistencyStrategy.Dynamic.Operation.DeleteCheckpoint,
-                    is PersistencyStrategy.Dynamic.Operation.DeleteAllCheckpoints -> {
-                        // For delete operations, verify provider is accessible
-                        provider.getCheckpoints()
-                        logger.debug { "Provider at index $index passed delete health check" }
-                        return provider
-                    }
-
-                    is PersistencyStrategy.Dynamic.Operation.GetCheckpointCount -> {
-                        // For count operations, test read capability
-                        provider.getCheckpoints()
-                        logger.debug { "Provider at index $index passed count health check" }
-                        return provider
-                    }
-                }
-            } catch (e: Exception) {
-                lastException = e
-                logger.warn { "Provider at index $index failed health check for ${operation::class.simpleName}: ${e.message}" }
-
-                // If this is the last provider, we'll throw below
-                if (index == providers.lastIndex) {
-                    break
-                }
-
-                // Continue to next provider
-                continue
-            }
-        }
-
-        // All providers failed
-        throw IllegalStateException(
-            "All ${providers.size} providers in failover list are unavailable for ${operation::class.simpleName}",
-            lastException
-        )
-    }
-
-    /**
      * Selects a provider based on the Hybrid strategy logic.
      */
     private suspend fun selectHybridProvider(
@@ -165,56 +91,22 @@ public class PersistencyStrategyProvider(
         operation: PersistencyStrategy.Dynamic.Operation,
         checkpoint: AgentCheckpointData?
     ): PersistencyStorageProvider {
-        // Use custom selector if provided
-        if (strategy.selector != null) {
-            val context = PersistencyStrategy.Dynamic.OperationContext(
-                operation = operation,
-                agentContext = context,
-                checkpoint = checkpoint
-            )
-            return when (strategy.selector.invoke(context)) {
-                PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL -> strategy.ephemeralProvider
-                PersistencyStrategy.Hybrid.ProviderType.DURABLE -> strategy.durableProvider
-                PersistencyStrategy.Hybrid.ProviderType.CRITICAL ->
-                    strategy.criticalProvider ?: strategy.durableProvider
-            }
-        }
-
-        // Default hybrid logic: simple and predictable behavior
-        return when (operation) {
-            // All saves go to durable storage by default for consistency
-            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> strategy.durableProvider
-
-            // Read operations try ephemeral first, then durable (for recent data)
-            is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint,
-            is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> {
-                // Try ephemeral first for recent checkpoints
-                val ephemeralResult = runCatching {
-                    when (operation) {
-                        is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint ->
-                            strategy.ephemeralProvider.getLatestCheckpoint()
-                        is PersistencyStrategy.Dynamic.Operation.GetCheckpoints ->
-                            strategy.ephemeralProvider.getCheckpoints()
-                        else -> null
-                    }
-                }.getOrNull()
-
-                if (ephemeralResult != null &&
-                    (ephemeralResult !is List<*> || ephemeralResult.isNotEmpty())) {
-                    strategy.ephemeralProvider
-                } else {
-                    strategy.durableProvider
-                }
-            }
-
-            // Other operations use durable storage
-            else -> strategy.durableProvider
+        val context = PersistencyStrategy.Dynamic.OperationContext(
+            operation = operation,
+            agentContext = context,
+            checkpoint = checkpoint
+        )
+        return when (strategy.selector.invoke(context)) {
+            PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL -> strategy.ephemeralProvider
+            PersistencyStrategy.Hybrid.ProviderType.DURABLE -> strategy.durableProvider
+            PersistencyStrategy.Hybrid.ProviderType.CRITICAL ->
+                strategy.criticalProvider ?: strategy.durableProvider
         }
     }
 
     /**
      * Selects a provider using LLM-driven smart hybrid logic.
-     * Falls back to simple hybrid behavior if LLM selection fails.
+     * Falls back to built-in hybrid behavior if LLM selection fails.
      */
     @OptIn(DetachedPromptExecutorAPI::class)
     private suspend fun selectSmartHybridProvider(
@@ -222,11 +114,11 @@ public class PersistencyStrategyProvider(
         operation: PersistencyStrategy.Dynamic.Operation,
         checkpoint: AgentCheckpointData?
     ): PersistencyStorageProvider {
-        // For read operations, use simple hybrid logic (try ephemeral first)
+        // For read operations, use built-in hybrid logic (try ephemeral first)
         if (operation is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint ||
             operation is PersistencyStrategy.Dynamic.Operation.GetCheckpoints
         ) {
-            return selectSimpleHybridProvider(strategy, operation)
+            return selectSmartHybridFallbackProvider(strategy, operation)
         }
 
         // For save operations, try LLM-based routing
@@ -242,22 +134,23 @@ public class PersistencyStrategyProvider(
             } catch (e: Exception) {
                 logger.warn { "SmartHybrid LLM selection failed: ${e.message}" }
                 if (strategy.fallbackToSimple) {
-                    logger.debug { "Falling back to simple hybrid logic" }
-                    return selectSimpleHybridProvider(strategy, operation)
+                    logger.debug { "Falling back to built-in hybrid logic" }
+                    return selectSmartHybridFallbackProvider(strategy, operation)
                 } else {
                     throw e
                 }
             }
         }
 
-        // Default to simple hybrid logic for other operations
-        return selectSimpleHybridProvider(strategy, operation)
+        // Default to fallback logic for other operations
+        return selectSmartHybridFallbackProvider(strategy, operation)
     }
 
     /**
-     * Simple hybrid provider selection logic (fallback behavior).
+     * Built-in hybrid provider selection logic for SmartHybrid fallback behavior.
+     * This provides sensible defaults when LLM selection is unavailable.
      */
-    private suspend fun selectSimpleHybridProvider(
+    private suspend fun selectSmartHybridFallbackProvider(
         strategy: PersistencyStrategy.SmartHybrid,
         operation: PersistencyStrategy.Dynamic.Operation
     ): PersistencyStorageProvider {

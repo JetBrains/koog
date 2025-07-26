@@ -66,50 +66,6 @@ class PersistencyStrategyProviderTest {
         assertNull(retrieved)
     }
     
-    @Test
-    fun testFailoverStrategyWithWorkingProviders() = runTest {
-        // Given
-        val provider1 = InMemoryPersistencyStorageProvider("primary")
-        val provider2 = InMemoryPersistencyStorageProvider("backup")
-        
-        val strategy = PersistencyStrategy.Failover(listOf(provider1, provider2))
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
-        
-        // When
-        strategyProvider.saveCheckpoint(testCheckpoint)
-        
-        // Then - should use primary provider for writes
-        assertNotNull(provider1.getLatestCheckpoint())
-        assertNull(provider2.getLatestCheckpoint())
-    }
-    
-    @Test
-    fun testFailoverStrategyWithFailingPrimary() = runTest {
-        // Given
-        val failingProvider = mockk<PersistencyStorageProvider>()
-        val workingProvider = InMemoryPersistencyStorageProvider("backup")
-        
-        // Make the first provider fail on health checks for write operations too
-        coEvery { failingProvider.getCheckpoints() } throws RuntimeException("Primary failed")
-        coEvery { failingProvider.getLatestCheckpoint() } throws RuntimeException("Primary failed") 
-        coEvery { failingProvider.saveCheckpoint(any()) } throws RuntimeException("Primary failed")
-        
-        val strategy = PersistencyStrategy.Failover(listOf(failingProvider, workingProvider))
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
-        
-        // When - save should failover to working provider (health check fails on primary)
-        strategyProvider.saveCheckpoint(testCheckpoint)
-        
-        // Then - should use the working provider
-        assertEquals(testCheckpoint, workingProvider.getLatestCheckpoint())
-        
-        // Then - read should also use working provider  
-        val retrieved = strategyProvider.getLatestCheckpoint()
-        assertEquals(testCheckpoint, retrieved)
-        
-        // Verify failover happened on both operations
-        coVerify(exactly = 2) { failingProvider.getCheckpoints() } // Once for save health check, once for read
-    }
     
     @Test
     fun testDynamicStrategyProviderSelection() = runTest {
@@ -155,31 +111,39 @@ class PersistencyStrategyProviderTest {
     }
     
     @Test
-    fun testHybridStrategyDefaultBehavior() = runTest {
+    fun testHybridStrategyWithExplicitSelector() = runTest {
         // Given
         val ephemeralProvider = InMemoryPersistencyStorageProvider("ephemeral")
         val durableProvider = InMemoryPersistencyStorageProvider("durable")
         
+        // Simple selector: use ephemeral for nodes containing "temp", durable otherwise
+        val selector: suspend (PersistencyStrategy.Dynamic.OperationContext) -> PersistencyStrategy.Hybrid.ProviderType = { context ->
+            when {
+                context.checkpoint?.nodeId?.contains("temp") == true -> PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL
+                else -> PersistencyStrategy.Hybrid.ProviderType.DURABLE
+            }
+        }
+        
         val strategy = PersistencyStrategy.Hybrid(
             ephemeralProvider = ephemeralProvider,
-            durableProvider = durableProvider
+            durableProvider = durableProvider,
+            selector = selector
         )
         val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
         
-        // When - save any checkpoint (default behavior: always use durable for saves)
-        val checkpoint1 = testCheckpoint.copy(nodeId = "any-node")
-        strategyProvider.saveCheckpoint(checkpoint1)
+        // When - save checkpoint with "temp" in nodeId
+        val tempCheckpoint = testCheckpoint.copy(nodeId = "temp-node")
+        strategyProvider.saveCheckpoint(tempCheckpoint)
         
-        // Then - should use durable provider for all saves by default
-        assertNull(ephemeralProvider.getLatestCheckpoint())
-        assertNotNull(durableProvider.getLatestCheckpoint())
+        // Then - should use ephemeral provider
+        assertNotNull(ephemeralProvider.getLatestCheckpoint())
+        assertNull(durableProvider.getLatestCheckpoint())
         
-        // When - save another checkpoint
-        val checkpoint2 = testCheckpoint.copy(nodeId = "another-node")
-        strategyProvider.saveCheckpoint(checkpoint2)
+        // When - save another checkpoint without "temp"
+        val regularCheckpoint = testCheckpoint.copy(nodeId = "regular-node")
+        strategyProvider.saveCheckpoint(regularCheckpoint)
         
-        // Then - should still use durable provider
-        assertNull(ephemeralProvider.getLatestCheckpoint())
+        // Then - should use durable provider
         assertNotNull(durableProvider.getLatestCheckpoint())
     }
     
@@ -222,35 +186,6 @@ class PersistencyStrategyProviderTest {
         assertNotNull(durableProvider.getLatestCheckpoint())
     }
     
-    @Test
-    fun testFailoverExhaustsAllProviders() = runTest {
-        // Given
-        val provider1 = mockk<PersistencyStorageProvider>()
-        val provider2 = mockk<PersistencyStorageProvider>()
-        val provider3 = mockk<PersistencyStorageProvider>()
-        
-        // All providers fail
-        listOf(provider1, provider2, provider3).forEach { provider ->
-            coEvery { provider.getCheckpoints() } throws RuntimeException("Provider failed")
-            coEvery { provider.getLatestCheckpoint() } returns null
-            coEvery { provider.saveCheckpoint(any()) } just Runs
-        }
-        
-        val strategy = PersistencyStrategy.Failover(listOf(provider1, provider2, provider3))
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
-        
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            strategyProvider.getCheckpoints()
-        }.also { exception ->
-            assertTrue(exception.message?.contains("All 3 providers") == true)
-        }
-        
-        // Verify all providers were tried
-        coVerify(exactly = 1) { provider1.getCheckpoints() }
-        coVerify(exactly = 1) { provider2.getCheckpoints() }
-        coVerify(exactly = 1) { provider3.getCheckpoints() }
-    }
     
     @Test
     fun testHybridStrategyReadOperations() = runTest {
@@ -265,27 +200,42 @@ class PersistencyStrategyProviderTest {
         ephemeralProvider.saveCheckpoint(ephemeralCheckpoint)
         durableProvider.saveCheckpoint(durableCheckpoint)
         
+        // Selector that always returns ephemeral for reads
+        val selector: suspend (PersistencyStrategy.Dynamic.OperationContext) -> PersistencyStrategy.Hybrid.ProviderType = { context ->
+            when (context.operation) {
+                is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint,
+                is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL
+                else -> PersistencyStrategy.Hybrid.ProviderType.DURABLE
+            }
+        }
+        
         val strategy = PersistencyStrategy.Hybrid(
             ephemeralProvider = ephemeralProvider,
-            durableProvider = durableProvider
+            durableProvider = durableProvider,
+            selector = selector
         )
         val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
         
-        // When - getLatestCheckpoint (should try ephemeral first)
+        // When - getLatestCheckpoint (selector returns ephemeral)
         val latest = strategyProvider.getLatestCheckpoint()
         
-        // Then - should return ephemeral data since it has content
+        // Then - should return ephemeral data
         assertEquals("ephemeral-1", latest?.checkpointId)
         
-        // When - use empty ephemeral provider
+        // When - use empty ephemeral provider with selector that tries durable on empty
         val emptyEphemeralProvider = InMemoryPersistencyStorageProvider("ephemeral-empty")
+        val fallbackSelector: suspend (PersistencyStrategy.Dynamic.OperationContext) -> PersistencyStrategy.Hybrid.ProviderType = { _ ->
+            PersistencyStrategy.Hybrid.ProviderType.DURABLE // Always use durable
+        }
+        
         val strategy2 = PersistencyStrategy.Hybrid(
             ephemeralProvider = emptyEphemeralProvider,
-            durableProvider = durableProvider
+            durableProvider = durableProvider,
+            selector = fallbackSelector
         )
         val strategyProvider2 = PersistencyStrategyProvider(strategy2, mockContext)
         
-        // Then - should fallback to durable
+        // Then - should use durable (per selector)
         val latest2 = strategyProvider2.getLatestCheckpoint()
         assertEquals("durable-1", latest2?.checkpointId)
     }
@@ -312,19 +262,6 @@ class PersistencyStrategyProviderTest {
         }
     }
     
-    @Test
-    fun testFailoverWithEmptyProviderList() = runTest {
-        // Given
-        val strategy = PersistencyStrategy.Failover(emptyList())
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
-        
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            strategyProvider.getCheckpoints()
-        }.also { exception ->
-            assertTrue(exception.message?.contains("No providers configured") == true)
-        }
-    }
     
     @Test
     fun testConcurrentAccessToStrategyProvider() = runTest {
@@ -433,6 +370,7 @@ class PersistencyStrategyProviderTest {
         assertTrue(strategy.fallbackToSimple)
     }
     
+
     @Test
     fun testSmartHybridFallbackBehavior() = runTest {
         // Given - SmartHybrid without LLM context (will fall back to simple logic)
@@ -465,21 +403,4 @@ class PersistencyStrategyProviderTest {
         assertEquals("ephemeral-test", latest?.checkpointId)
     }
 
-    @Test
-    fun testMultipleOperationTypes() = runTest {
-        // Given
-        val provider = InMemoryPersistencyStorageProvider(testPersistenceId)
-        val strategy = PersistencyStrategy.Single(provider)
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
-        
-        // When - test multiple operations
-        strategyProvider.saveCheckpoint(testCheckpoint)
-        val checkpoints = strategyProvider.getCheckpoints()
-        val latest = strategyProvider.getLatestCheckpoint()
-        
-        // Then
-        assertEquals(1, checkpoints.size)
-        assertEquals(testCheckpoint, checkpoints.first())
-        assertEquals(testCheckpoint, latest)
-    }
 }

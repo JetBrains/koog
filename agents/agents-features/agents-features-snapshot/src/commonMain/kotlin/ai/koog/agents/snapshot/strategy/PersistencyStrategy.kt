@@ -10,7 +10,7 @@ import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
  * This interface provides different configurations for persistence selection, from using a single
  * provider to dynamically selecting providers based on context or custom logic.
  *
- * Similar to [ToolSelectionStrategy], this pattern allows flexible persistence configurations
+ * This pattern allows flexible persistence configurations
  * that can adapt to different use cases:
  * - High-frequency checkpoints during execution → Redis
  * - Long-term session persistence → PostgreSQL/SQL
@@ -38,17 +38,6 @@ public sealed interface PersistencyStrategy {
      */
     public data object None : PersistencyStrategy
 
-    /**
-     * Uses multiple providers with failover capability.
-     *
-     * Attempts to use providers in order, falling back to the next if an operation fails.
-     * This provides resilience against individual provider failures.
-     *
-     * @property providers Ordered list of providers to attempt, from highest to lowest priority
-     */
-    public data class Failover(
-        val providers: List<PersistencyStorageProvider>
-    ) : PersistencyStrategy
 
     /**
      * Dynamically selects a provider based on the operation context.
@@ -96,26 +85,26 @@ public sealed interface PersistencyStrategy {
     }
 
     /**
-     * Hybrid strategy optimized for different checkpoint scenarios.
+     * Hybrid strategy with explicit routing logic for different checkpoint scenarios.
      *
-     * Provides pre-configured logic for common use cases:
+     * Provides three provider types with custom routing logic:
      * - Mid-execution checkpoints → Fast, ephemeral storage (e.g., Redis)
      * - Session persistence → Durable storage (e.g., PostgreSQL)
      * - Critical checkpoints → Most reliable storage available
      *
-     * This is a specialized version of [Dynamic] with built-in logic for
-     * typical persistence patterns.
+     * This is a specialized version of [Dynamic] with predefined provider types
+     * but requires explicit routing logic for predictable behavior.
      *
      * @property ephemeralProvider Provider for fast, temporary checkpoints
      * @property durableProvider Provider for long-term persistence
      * @property criticalProvider Optional provider for critical checkpoints (defaults to durable)
-     * @property selector Optional custom selector to override default behavior
+     * @property selector Function that determines which provider type to use for each operation
      */
     public data class Hybrid(
         val ephemeralProvider: PersistencyStorageProvider,
         val durableProvider: PersistencyStorageProvider,
         val criticalProvider: PersistencyStorageProvider? = null,
-        val selector: (suspend (Dynamic.OperationContext) -> ProviderType)? = null
+        val selector: suspend (Dynamic.OperationContext) -> ProviderType
     ) : PersistencyStrategy {
         public enum class ProviderType {
             EPHEMERAL,
@@ -156,7 +145,7 @@ public sealed interface PersistencyStrategy {
     /**
      * LLM-driven strategy for intelligent provider selection.
      *
-     * Similar to [ToolSelectionStrategy.AutoSelectForTask], this strategy uses the LLM
+     * This strategy uses the LLM
      * to determine the most appropriate persistence provider based on:
      * - The current operation context
      * - Checkpoint characteristics
