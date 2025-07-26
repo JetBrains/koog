@@ -24,6 +24,7 @@ dependencies {
     api(project(":agents:agents-features:agents-features-event-handler"))
     api(project(":agents:agents-features:agents-features-memory"))
     api(project(":agents:agents-features:agents-features-opentelemetry"))
+    api(project(":agents:agents-features:agents-features-pubsub"))
     api(project(":agents:agents-features:agents-features-snapshot"))
 
     api(project(":prompt:prompt-markdown"))
@@ -35,6 +36,10 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
     api(libs.kotlinx.datetime)
+
+    // Redis and GCP dependencies for PubSub examples
+    implementation(libs.lettuce.core)
+    implementation("com.google.cloud:google-cloud-pubsub:1.129.0")
 
     implementation(libs.logback.classic)
     implementation(libs.opentelemetry.exporter.logging)

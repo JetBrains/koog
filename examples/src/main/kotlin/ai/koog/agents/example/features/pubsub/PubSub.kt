@@ -244,7 +244,7 @@ fun basicPubSubExample() = runBlocking {
             systemPrompt = "You are a helpful assistant."
         ) {
             install(PubSub) {
-                provider = this@try.provider
+                this.provider = provider
                 autoSubscribeTopics = listOf("notifications", "commands")
                 publishAgentEvents = true
             }
