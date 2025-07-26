@@ -3,7 +3,7 @@ package ai.koog.agents.example.features.pubsub
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.pubsub.feature.PubSub
-import ai.koog.agents.features.pubsub.providers.InMemoryPubSubProvider
+import ai.koog.agents.features.pubsub.providers.local.LocalFilePubSubProvider
 import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -18,9 +18,9 @@ import kotlinx.coroutines.runBlocking
  * - Setting up agents with PubSub capabilities
  * - Publishing and subscribing to messages between agents
  * - Coordinating agent behavior through message passing
- * - Using the InMemoryPubSubProvider for local development
+ * - Using the LocalFilePubSubProvider for true cross-process coordination
  * 
- * For production use cases, you can replace InMemoryPubSubProvider with:
+ * For production use cases, you can replace LocalFilePubSubProvider with:
  * - RedisPubSubProvider for high-performance distributed messaging
  * - GCPPubSubProvider for enterprise-scale messaging with guaranteed delivery
  */
@@ -30,7 +30,8 @@ fun main() = runBlocking {
     println("Demonstrating multiagent coordination through message passing")
     
     // Create a shared PubSub provider for all agents
-    val pubSubProvider = InMemoryPubSubProvider()
+    // This enables true cross-process coordination through file-based messaging
+    val pubSubProvider = LocalFilePubSubProvider()
     
     try {
         // Coordinator Agent - orchestrates tasks and delegates work
@@ -233,7 +234,7 @@ fun basicPubSubExample() = runBlocking {
     
     println("=== Basic PubSub Operations Example ===")
     
-    val provider = InMemoryPubSubProvider()
+    val provider = LocalFilePubSubProvider()
     
     try {
         // Create a simple agent with PubSub

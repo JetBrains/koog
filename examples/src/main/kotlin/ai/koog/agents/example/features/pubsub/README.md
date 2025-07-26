@@ -17,6 +17,7 @@ Demonstrates a practical multiagent system where:
 - Results are aggregated for a final comprehensive response
 
 **Key concepts shown:**
+- Cross-process agent coordination through file-based messaging
 - Agent-to-agent task delegation
 - Asynchronous message handling
 - Result aggregation and coordination
@@ -32,7 +33,29 @@ Shows fundamental PubSub operations:
 
 ## Provider Options
 
-The examples use `InMemoryPubSubProvider` for simplicity, but production systems can use:
+The examples use `LocalFilePubSubProvider` which enables true cross-process coordination. Other options include:
+
+### LocalFile Provider (Default)
+```kotlin
+install(PubSub) {
+    provider = LocalFilePubSubProvider(
+        // Uses temp directory by default
+        pollingIntervalMs = 100,
+        cleanupIntervalMs = 60_000
+    )
+}
+```
+**Benefits:** No external dependencies, true cross-process coordination  
+**Limitations:** Single machine only, filesystem performance
+
+### InMemory Provider (Single Process Only)
+```kotlin  
+install(PubSub) {
+    provider = InMemoryPubSubProvider() // Only works within same process
+}
+```
+**Benefits:** Fastest for single-process testing  
+**Limitations:** Cannot coordinate across processes
 
 ### Redis Provider
 ```kotlin

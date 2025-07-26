@@ -187,36 +187,55 @@ public class NoPubSubProvider : PubSubProvider {
 }
 
 /**
- * In-memory implementation of [PubSubProvider] for local development and testing.
+ * In-memory implementation of [PubSubProvider] for single-process testing and development.
  *
- * This provider implements full pub/sub functionality within a single JVM process:
+ * **IMPORTANT**: This provider only works within a single JVM process. It cannot coordinate
+ * between agents running in different processes. For true local cross-process coordination,
+ * use a file-based or database-based provider instead.
+ *
+ * This provider implements pub/sub functionality within a single process:
  * - Messages are stored in memory and delivered to all active subscribers
- * - Supports multiple subscribers per topic
+ * - Supports multiple subscribers per topic within the same process
  * - Messages are acknowledged/nacked through callback mechanisms
- * - Provides real pub/sub behavior without external dependencies
  * - Thread-safe operations using coroutines and mutex synchronization
  *
  * Ideal for:
- * - Local development environments
- * - Unit and integration testing
- * - CI/CD environments without external services
- * - Development setups where Redis/GCP is not available
+ * - Unit testing within a single process
+ * - Simple examples that don't require cross-process coordination
+ * - Testing agent coordination logic without external dependencies
+ * - Development scenarios with all agents in the same JVM
+ *
+ * NOT suitable for:
+ * - Multiagent systems across different processes
+ * - Distributed agent coordination
+ * - Production deployments
+ * - Cross-platform agent communication
  *
  * Example usage:
  * ```kotlin
  * val provider = InMemoryPubSubProvider()
  * 
- * // Publish a message
+ * // Publish a message (within same process)
  * val messageId = provider.publish("events", "Hello, World!", mapOf("source" to "agent"))
  * 
- * // Subscribe to messages
+ * // Subscribe to messages (within same process)
  * provider.subscribe("events").collect { message ->
  *     println("Received: ${message.content}")
- *     message.acknowledge() // Important for proper cleanup
+ *     message.acknowledge()
  * }
  * ```
  *
- * Note: Messages are not persisted across process restarts since they're stored in memory.
+ * For cross-process local development, consider these alternatives:
+ * 
+ * **LocalFilePubSubProvider** (file-based, cross-process):
+ * ```kotlin
+ * val provider = LocalFilePubSubProvider() // Works across processes on same machine
+ * ```
+ * 
+ * **Redis with Docker** (high-performance):
+ * ```bash
+ * docker run -d -p 6379:6379 redis:latest
+ * ```
  */
 @OptIn(ExperimentalUuidApi::class)
 public class InMemoryPubSubProvider : PubSubProvider {
