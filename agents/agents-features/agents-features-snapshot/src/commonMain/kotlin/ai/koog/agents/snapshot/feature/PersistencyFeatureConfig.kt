@@ -1,5 +1,6 @@
 package ai.koog.agents.snapshot.feature
 
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
@@ -57,6 +58,19 @@ public class PersistencyFeatureConfig: FeatureConfig() {
                 storage = value.provider
             }
         }
+
+    /**
+     * Optional factory function for creating custom PersistencyStrategyProvider instances.
+     * 
+     * When set, this factory will be used instead of the default PersistencyStrategyProvider
+     * to create the strategy provider. This enables custom strategy implementations beyond
+     * the built-in strategy types.
+     * 
+     * @param strategy The configured strategy
+     * @param context The agent context
+     * @return A PersistencyStorageProvider instance (typically a PersistencyStrategyProvider subclass)
+     */
+    public var strategyProviderFactory: ((PersistencyStrategy, AIAgentContextBase) -> PersistencyStorageProvider)? = null
 
     /**
      * Controls whether the feature's state should be automatically persisted.

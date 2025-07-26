@@ -98,7 +98,11 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
                 val provider = when (val strategy = config.strategy) {
                     is PersistencyStrategy.Single -> strategy.provider
                     is PersistencyStrategy.None -> NoPersistencyStorageProvider()
-                    else -> PersistencyStrategyProvider(config.strategy, ctx)
+                    else -> {
+                        // Use custom factory if provided, otherwise use default
+                        config.strategyProviderFactory?.invoke(config.strategy, ctx)
+                            ?: PersistencyStrategyProvider(config.strategy, ctx)
+                    }
                 }
                 return@interceptContextAgentFeature Persistency(provider)
             }
