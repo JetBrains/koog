@@ -24,9 +24,9 @@ import kotlinx.serialization.Serializable
  * @property context The agent context used for strategy decisions
  */
 @OptIn(InternalAgentsApi::class)
-public class PersistencyStrategyProvider(
-    private val strategy: PersistencyStrategy,
-    private val context: AIAgentContextBase
+public open class PersistencyStrategyProvider(
+    protected val strategy: PersistencyStrategy,
+    protected val context: AIAgentContextBase
 ) : PersistencyStorageProvider {
 
     private companion object {
@@ -55,8 +55,9 @@ public class PersistencyStrategyProvider(
 
     /**
      * Selects a provider based on the strategy and operation context.
+     * Can be overridden to add support for custom strategy types.
      */
-    private suspend fun selectProvider(
+    protected open suspend fun selectProvider(
         operation: PersistencyStrategy.Dynamic.Operation,
         checkpoint: AgentCheckpointData? = null
     ): PersistencyStorageProvider {
