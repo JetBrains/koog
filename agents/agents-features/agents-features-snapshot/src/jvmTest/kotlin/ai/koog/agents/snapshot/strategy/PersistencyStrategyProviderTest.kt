@@ -284,8 +284,8 @@ class PersistencyStrategyProviderTest {
     }
 
     @Test
-    fun testFastestFirstCoordinationStrategy() = runTest {
-        // Given
+    fun testPrioritizedCoordinationStrategyWithFastFirst() = runTest {
+        // Given - test prioritized strategy with fast provider first (replaces FastestFirst)
         val fastProvider = InMemoryPersistencyStorageProvider("fast")
         val fallbackProvider = InMemoryPersistencyStorageProvider("fallback")
         fallbackProvider.saveCheckpoint(testCheckpoint)
@@ -294,7 +294,7 @@ class PersistencyStrategyProviderTest {
         val fallbackId = registry.register(fallbackProvider, "fallback")
         
         val strategy = PersistencyStrategy.Fixed(
-            CoordinationStrategies.FastestFirst(fastId, listOf(fallbackId))
+            CoordinationStrategies.Prioritized(listOf(fastId, fallbackId))
         )
         
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)

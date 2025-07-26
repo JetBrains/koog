@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
-import ai.koog.agents.core.tools.reflect.getPreferredClassDescriptionAnnotation
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.prompts.SnapshotPrompts
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider

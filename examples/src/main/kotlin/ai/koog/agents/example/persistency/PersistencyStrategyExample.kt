@@ -11,6 +11,8 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.agents.snapshot.strategy.PersistencyStrategy
+import ai.koog.agents.snapshot.strategy.CoordinationStrategies
+import ai.koog.agents.snapshot.strategy.ProviderRegistry
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
@@ -18,14 +20,15 @@ import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
 /**
- * This example demonstrates the various PersistencyStrategy patterns available
- * for agent checkpoint persistence.
+ * This example demonstrates the open-ended PersistencyStrategy coordination patterns
+ * available for agent checkpoint persistence.
  * 
- * The PersistencyStrategy pattern allows flexible configuration of persistence
- * providers, enabling:
- * - Single provider usage (backward compatible)
- * - Dynamic provider selection based on operation context
- * - LLM-powered intelligent provider selection using @LLMDescription annotations
+ * The PersistencyStrategy pattern provides unlimited customization for coordinating
+ * multiple persistence providers:
+ * - Fixed coordination with built-in patterns
+ * - Dynamic coordination selection based on agent context
+ * - Custom coordination logic for specialized use cases
+ * - LLM-powered coordination selection from predefined options
  */
 @OptIn(ExperimentalUuidApi::class)
 fun main() = runBlocking {
@@ -37,18 +40,18 @@ fun main() = runBlocking {
     // Example 2: Dynamic Strategy
     dynamicStrategyExample()
     
-    // Example 5: AutoSelectForTask Strategy
+    // Example 3: AutoSelectForTask Strategy
     autoSelectForTaskExample()
 }
 
 /**
- * Example 1: Single Strategy
- * The simplest strategy - uses a single persistence provider for all operations.
- * This is equivalent to the traditional approach.
+ * Example 1: Fixed Strategy with Single Coordination
+ * The simplest coordination - uses a single persistence provider for all operations.
+ * This is equivalent to the traditional approach but uses the new registry system.
  */
 @OptIn(ExperimentalUuidApi::class)
 suspend fun singleStrategyExample() {
-    println("1. Single Strategy Example")
+    println("1. Fixed Strategy with Single Coordination Example")
     println("Using a single InMemory provider for all persistence")
     
     val executor: PromptExecutor = simpleOllamaAIExecutor()
@@ -67,12 +70,13 @@ suspend fun singleStrategyExample() {
         id = "single-strategy-agent"
     ) {
         install(Persistency) {
-            // Traditional approach (backward compatible)
-            // storage = InMemoryPersistencyStorageProvider("single-agent")
+            val registry = getRegistry()
+            val provider = InMemoryPersistencyStorageProvider("single-agent")
+            val providerId = registry.register(provider, "main")
             
-            // Using strategy pattern
-            strategy = PersistencyStrategy.Single(
-                provider = InMemoryPersistencyStorageProvider("single-agent")
+            // Using Fixed strategy with Single coordination
+            strategy = PersistencyStrategy.Fixed(
+                CoordinationStrategies.Single(providerId)
             )
             
             enableAutomaticPersistency = true
@@ -86,14 +90,14 @@ suspend fun singleStrategyExample() {
 
 
 /**
- * Example 3: Dynamic Strategy
- * Selects providers based on operation context.
- * Enables sophisticated routing logic.
+ * Example 2: Dynamic Strategy
+ * Selects coordination patterns based on agent context.
+ * Enables sophisticated routing logic with unlimited customization.
  */
 @OptIn(ExperimentalUuidApi::class)
 suspend fun dynamicStrategyExample() {
-    println("3. Dynamic Strategy Example")
-    println("Different providers for different operations")
+    println("2. Dynamic Strategy Example")
+    println("Different coordination patterns based on agent context")
     
     val executor: PromptExecutor = simpleOllamaAIExecutor()
     
@@ -101,10 +105,6 @@ suspend fun dynamicStrategyExample() {
         tool(AskUser)
         tool(SayToUser)
     }
-    
-    val fastProvider = InMemoryPersistencyStorageProvider("fast")
-    val durableProvider = InMemoryPersistencyStorageProvider("durable")
-    val archiveProvider = InMemoryPersistencyStorageProvider("archive")
     
     val agent = AIAgent(
         executor = executor,
@@ -115,47 +115,52 @@ suspend fun dynamicStrategyExample() {
         id = "dynamic-strategy-agent"
     ) {
         install(Persistency) {
-            strategy = PersistencyStrategy.Dynamic(
-                providers = mapOf(
-                    "fast" to fastProvider,
-                    "durable" to durableProvider,
-                    "archive" to archiveProvider
-                ),
-                selector = { context ->
-                    when {
-                        // Save operations during execution use fast storage
-                        context.operation is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint &&
-                        context.checkpoint?.nodeId?.contains("processing") == true -> "fast"
-                        
-                        // Critical checkpoints use durable storage
-                        context.checkpoint?.nodeId?.contains("critical") == true -> "durable"
-                        
-                        // Old checkpoints go to archive
-                        context.operation is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> "archive"
-                        
-                        // Default to durable
-                        else -> "durable"
-                    }
+            val registry = getRegistry()
+            
+            // Register providers
+            val fastProvider = InMemoryPersistencyStorageProvider("fast")
+            val durableProvider = InMemoryPersistencyStorageProvider("durable")
+            val archiveProvider = InMemoryPersistencyStorageProvider("archive")
+            
+            val fastId = registry.register(fastProvider, "fast")
+            val durableId = registry.register(durableProvider, "durable")
+            val archiveId = registry.register(archiveProvider, "archive")
+            
+            // Dynamic strategy that selects coordination based on agent context
+            strategy = PersistencyStrategy.Dynamic { context, registry ->
+                when {
+                    // Critical agents use write-to-all for redundancy
+                    context.agentContext.id.contains("critical") -> 
+                        CoordinationStrategies.WriteToAll(listOf(durableId, archiveId))
+                    
+                    // Fast agents use single fast provider
+                    context.agentContext.id.contains("fast") -> 
+                        CoordinationStrategies.Single(fastId)
+                    
+                    // Default agents use durable with fast backup
+                    else -> 
+                        CoordinationStrategies.WriteWithBackup(durableId, listOf(fastId))
                 }
-            )
+            }
+            
             enableAutomaticPersistency = true
         }
     }
     
-    val result = agent.run("Test dynamic routing")
+    val result = agent.run("Test dynamic coordination selection")
     println("Result: $result")
     println()
 }
 
 /**
  * Example 3: AutoSelectForTask Strategy
- * Uses LLM to intelligently select the best provider based on task context.
- * Similar to ToolSelectionStrategy.AutoSelectForTask but for persistence.
+ * Uses LLM to intelligently select the best coordination pattern based on task context.
+ * The LLM chooses from predefined coordination options.
  */
 @OptIn(ExperimentalUuidApi::class)
 suspend fun autoSelectForTaskExample() {
-    println("5. AutoSelectForTask Strategy Example")
-    println("LLM-driven provider selection based on task requirements")
+    println("3. AutoSelectForTask Strategy Example")
+    println("LLM-driven coordination selection from predefined options")
     
     val executor: PromptExecutor = simpleOllamaAIExecutor()
     
@@ -163,22 +168,6 @@ suspend fun autoSelectForTaskExample() {
         tool(AskUser)
         tool(SayToUser)
     }
-    
-    // Define providers with @LLMDescription annotations
-    @LLMDescription("Fast in-memory cache with TTL support, ideal for temporary data and high-frequency operations")
-    class RedisLikeProvider : InMemoryPersistencyStorageProvider("redis-like")
-    
-    @LLMDescription("Reliable SQL database with ACID compliance, perfect for long-term storage and complex queries")
-    class PostgresLikeProvider : InMemoryPersistencyStorageProvider("postgres-like")
-    
-    @LLMDescription("Object storage for archival and compliance, cost-effective for large volumes")
-    class S3LikeProvider : InMemoryPersistencyStorageProvider("s3-like")
-    
-    val providers = mapOf(
-        "redis" to RedisLikeProvider(),
-        "postgres" to PostgresLikeProvider(),
-        "s3" to S3LikeProvider()
-    )
     
     val agent = AIAgent(
         executor = executor,
@@ -190,9 +179,29 @@ suspend fun autoSelectForTaskExample() {
         id = "auto-select-agent"
     ) {
         install(Persistency) {
+            val registry = getRegistry()
+            
+            // Register providers with descriptive names
+            val redisProvider = InMemoryPersistencyStorageProvider("redis-cache")
+            val postgresProvider = InMemoryPersistencyStorageProvider("postgres-db")
+            val s3Provider = InMemoryPersistencyStorageProvider("s3-archive")
+            
+            val redisId = registry.register(redisProvider, "redis")
+            val postgresId = registry.register(postgresProvider, "postgres")
+            val s3Id = registry.register(s3Provider, "s3")
+            
+            // Define coordination options for LLM to choose from
+            val coordinationOptions = listOf(
+                CoordinationStrategies.Single(redisId), // Fast single provider
+                CoordinationStrategies.Single(postgresId), // Reliable single provider
+                CoordinationStrategies.WriteToAll(listOf(redisId, postgresId)), // High availability
+                CoordinationStrategies.WriteWithBackup(postgresId, listOf(s3Id)) // Durable with backup
+            )
+            
             strategy = PersistencyStrategy.AutoSelectForTask(
-                providers = providers,
-                taskDescription = "Real-time trading agent that processes market data and executes trades with sub-second latency requirements",
+                taskDescription = "Real-time trading agent requiring sub-second latency and reliable checkpoint recovery",
+                options = coordinationOptions,
+                registry = registry,
                 maxRetries = 3
             )
             
@@ -203,10 +212,10 @@ suspend fun autoSelectForTaskExample() {
     val result = agent.run("Execute high-frequency trade")
     println("Result: $result")
     println("\nNote: In production, the LLM analyzes the task description")
-    println("and selects the most appropriate provider based on:")
+    println("and selects the most appropriate coordination pattern based on:")
     println("- Task-specific performance requirements")
     println("- Data retention and durability needs")
-    println("- Cost and resource constraints")
-    println("- Provider capabilities from @LLMDescription annotations")
+    println("- Coordination pattern characteristics")
+    println("- Provider capabilities and trade-offs")
     println()
 }

@@ -228,27 +228,4 @@ public object CoordinationStrategies {
         }
     }
     
-    /**
-     * Try fastest provider first, fallback to others if needed.
-     * Optimizes for performance with reliability fallbacks.
-     */
-    public class FastestFirst(
-        private val fast: ProviderId,
-        private val fallbacks: List<ProviderId>
-    ) : CoordinationStrategy {
-        
-        private val prioritized = Prioritized(listOf(fast) + fallbacks)
-        
-        override suspend fun saveCheckpoint(checkpoint: AgentCheckpointData, registry: ProviderRegistry) {
-            prioritized.saveCheckpoint(checkpoint, registry)
-        }
-        
-        override suspend fun getCheckpoints(registry: ProviderRegistry): List<AgentCheckpointData> {
-            return prioritized.getCheckpoints(registry)
-        }
-        
-        override suspend fun getLatestCheckpoint(registry: ProviderRegistry): AgentCheckpointData? {
-            return prioritized.getLatestCheckpoint(registry)
-        }
-    }
 }
