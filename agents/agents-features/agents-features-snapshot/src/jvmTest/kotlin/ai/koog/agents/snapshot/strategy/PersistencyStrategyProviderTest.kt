@@ -180,16 +180,8 @@ class PersistencyStrategyProviderTest {
         val postgresProvider = InMemoryPersistencyStorageProvider("postgres")
         
         val providers = mapOf(
-            "redis" to PersistencyStrategy.AutoSelectForTask.ProviderInfo(
-                provider = redisProvider,
-                description = "Fast in-memory cache with TTL support",
-                capabilities = listOf("fast", "ephemeral")
-            ),
-            "postgres" to PersistencyStrategy.AutoSelectForTask.ProviderInfo(
-                provider = postgresProvider,
-                description = "Durable SQL database with ACID compliance",
-                capabilities = listOf("durable", "queryable")
-            )
+            "redis" to redisProvider,
+            "postgres" to postgresProvider
         )
         
         val strategy = PersistencyStrategy.AutoSelectForTask(
@@ -205,16 +197,9 @@ class PersistencyStrategyProviderTest {
         assertEquals("High-frequency trading agent requiring fast operations", strategy.taskDescription)
         assertEquals(3, strategy.maxRetries)
         
-        // Verify provider info
-        val redisInfo = strategy.providers["redis"]!!
-        assertEquals("Fast in-memory cache with TTL support", redisInfo.description)
-        assertEquals(listOf("fast", "ephemeral"), redisInfo.capabilities)
-        assertEquals(redisProvider, redisInfo.provider)
-        
-        val postgresInfo = strategy.providers["postgres"]!!
-        assertEquals("Durable SQL database with ACID compliance", postgresInfo.description)
-        assertEquals(listOf("durable", "queryable"), postgresInfo.capabilities)
-        assertEquals(postgresProvider, postgresInfo.provider)
+        // Verify provider instances
+        assertEquals(redisProvider, strategy.providers["redis"])
+        assertEquals(postgresProvider, strategy.providers["postgres"])
     }
     
     

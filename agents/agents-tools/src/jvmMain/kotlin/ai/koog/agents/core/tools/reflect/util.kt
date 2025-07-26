@@ -392,6 +392,17 @@ private fun KFunction<*>.getPreferredToolDescriptionAndMethod(): Pair<KFunction<
 }
 
 /**
+ * Retrieves the preferred `LLMDescription` annotation for a class.
+ * This function provides a consistent way to get class-level descriptions
+ * following the same pattern as other annotation utilities in this file.
+ *
+ * @return The `LLMDescription` annotation if present on the class, otherwise null.
+ */
+public fun KClass<*>.getPreferredClassDescriptionAnnotation(): LLMDescription? {
+    return findAnnotation<LLMDescription>()
+}
+
+/**
  * Retrieves a sequence of methods that are implemented by the current function within its class hierarchy.
  *
  * The sequence includes all methods that are overridden by the current function, traversing through

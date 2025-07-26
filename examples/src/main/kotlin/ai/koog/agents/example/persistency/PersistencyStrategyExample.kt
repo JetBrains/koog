@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -34,14 +35,8 @@ fun main() = runBlocking {
     // Example 1: Single Strategy
     singleStrategyExample()
     
-    // Example 2: Failover Strategy
-    failoverStrategyExample()
-    
-    // Example 3: Dynamic Strategy
+    // Example 2: Dynamic Strategy
     dynamicStrategyExample()
-    
-    // Example 4: Hybrid Strategy
-    hybridStrategyExample()
     
     // Example 5: AutoSelectForTask Strategy
     autoSelectForTaskExample()
@@ -90,55 +85,6 @@ suspend fun singleStrategyExample() {
     println()
 }
 
-
-/**
- * Example 2: Failover Strategy
- * Provides resilience by failing over to backup providers if primary fails.
- * Useful for high-availability scenarios.
- */
-@OptIn(ExperimentalUuidApi::class)
-suspend fun failoverStrategyExample() {
-    println("2. Failover Strategy Example")
-    println("Primary provider with automatic failover to backup")
-    
-    val executor: PromptExecutor = simpleOllamaAIExecutor()
-    
-    val toolRegistry = ToolRegistry {
-        tool(AskUser)
-        tool(SayToUser)
-    }
-    
-    val agent = AIAgent(
-        executor = executor,
-        llmModel = OllamaModels.Meta.LLAMA_3_2,
-        strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
-        toolRegistry = toolRegistry,
-        systemPrompt = "You are a resilient assistant with failover capabilities.",
-        id = "failover-strategy-agent"
-    ) {
-        install(Persistency) {
-            strategy = PersistencyStrategy.Failover(
-                providers = listOf(
-                    InMemoryPersistencyStorageProvider("primary"),
-                    InMemoryPersistencyStorageProvider("backup1"),
-                    InMemoryPersistencyStorageProvider("backup2")
-                )
-            )
-            enableAutomaticPersistency = true
-        }
-    }
-    
-    // Run multiple times to see failover in action
-    repeat(3) { i ->
-        try {
-            val result = agent.run("Message $i")
-            println("Success on attempt ${i + 1}: $result")
-        } catch (e: Exception) {
-            println("Failed on attempt ${i + 1}: ${e.message}")
-        }
-    }
-    println()
-}
 
 /**
  * Example 3: Dynamic Strategy
@@ -203,71 +149,7 @@ suspend fun dynamicStrategyExample() {
 }
 
 /**
- * Example 4: Hybrid Strategy
- * Pre-configured strategy optimized for common patterns.
- * Separates ephemeral and durable persistence needs.
- */
-@OptIn(ExperimentalUuidApi::class)
-suspend fun hybridStrategyExample() {
-    println("4. Hybrid Strategy Example")
-    println("Ephemeral for mid-execution, durable for session persistence")
-    
-    val executor: PromptExecutor = simpleOllamaAIExecutor()
-    
-    val toolRegistry = ToolRegistry {
-        tool(AskUser)
-        tool(SayToUser)
-    }
-    
-    // Simulating Redis-like ephemeral storage
-    val ephemeralProvider = InMemoryPersistencyStorageProvider("ephemeral")
-    
-    // Simulating PostgreSQL-like durable storage  
-    val durableProvider = InMemoryPersistencyStorageProvider("durable")
-    
-    // Optional critical provider for most important checkpoints
-    val criticalProvider = InMemoryPersistencyStorageProvider("critical")
-    
-    val agent = AIAgent(
-        executor = executor,
-        llmModel = OllamaModels.Meta.LLAMA_3_2,
-        strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
-        toolRegistry = toolRegistry,
-        systemPrompt = "You are a multi-step processing assistant with optimized persistence.",
-        id = "hybrid-strategy-agent"
-    ) {
-        install(Persistency) {
-            strategy = PersistencyStrategy.Hybrid(
-                ephemeralProvider = ephemeralProvider,
-                durableProvider = durableProvider,
-                criticalProvider = criticalProvider,
-                selector = { context ->
-                    // Custom logic to determine provider type
-                    when {
-                        // Use critical storage for final results
-                        context.checkpoint?.nodeId == "final" -> 
-                            PersistencyStrategy.Hybrid.ProviderType.CRITICAL
-                        
-                        // Use ephemeral for intermediate steps
-                        context.checkpoint?.nodeId?.startsWith("step") == true ->
-                            PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL
-                        
-                        // Default to durable
-                        else -> PersistencyStrategy.Hybrid.ProviderType.DURABLE
-                    }
-                }
-            )
-            enableAutomaticPersistency = true
-        }
-    }
-    
-    val result = agent.run("Multi-step process")
-    println("Final result: $result")
-    println()
-}
-
-/**
- * Example 5: AutoSelectForTask Strategy
+ * Example 3: AutoSelectForTask Strategy
  * Uses LLM to intelligently select the best provider based on task context.
  * Similar to ToolSelectionStrategy.AutoSelectForTask but for persistence.
  */
@@ -283,23 +165,20 @@ suspend fun autoSelectForTaskExample() {
         tool(SayToUser)
     }
     
-    // Define available providers with descriptions
+    // Define providers with @LLMDescription annotations
+    @LLMDescription("Fast in-memory cache with TTL support, ideal for temporary data and high-frequency operations")
+    class RedisLikeProvider : InMemoryPersistencyStorageProvider("redis-like")
+    
+    @LLMDescription("Reliable SQL database with ACID compliance, perfect for long-term storage and complex queries")
+    class PostgresLikeProvider : InMemoryPersistencyStorageProvider("postgres-like")
+    
+    @LLMDescription("Object storage for archival and compliance, cost-effective for large volumes")
+    class S3LikeProvider : InMemoryPersistencyStorageProvider("s3-like")
+    
     val providers = mapOf(
-        "redis" to PersistencyStrategy.AutoSelectForTask.ProviderInfo(
-            provider = InMemoryPersistencyStorageProvider("redis-like"),
-            description = "Fast in-memory cache with TTL support, ideal for temporary data and high-frequency operations",
-            capabilities = listOf("fast", "ephemeral", "distributed", "ttl-support")
-        ),
-        "postgres" to PersistencyStrategy.AutoSelectForTask.ProviderInfo(
-            provider = InMemoryPersistencyStorageProvider("postgres-like"),
-            description = "Reliable SQL database with ACID compliance, perfect for long-term storage and complex queries",
-            capabilities = listOf("durable", "queryable", "transactional", "relational")
-        ),
-        "s3" to PersistencyStrategy.AutoSelectForTask.ProviderInfo(
-            provider = InMemoryPersistencyStorageProvider("s3-like"),
-            description = "Object storage for archival and compliance, cost-effective for large volumes",
-            capabilities = listOf("archival", "compliant", "cost-effective", "scalable")
-        )
+        "redis" to RedisLikeProvider(),
+        "postgres" to PostgresLikeProvider(),
+        "s3" to S3LikeProvider()
     )
     
     val agent = AIAgent(

@@ -1,11 +1,13 @@
 package ai.koog.agents.snapshot.providers
 
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * No-op implementation of [PersistencyStorageProvider].
  */
+@LLMDescription("No-op provider that disables persistence, suitable when checkpoints are not needed")
 public class NoPersistencyStorageProvider: PersistencyStorageProvider {
     private val logger = KotlinLogging.logger {  }
 

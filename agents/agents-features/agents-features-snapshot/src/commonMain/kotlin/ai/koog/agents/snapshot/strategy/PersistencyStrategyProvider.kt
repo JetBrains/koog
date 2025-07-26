@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+import ai.koog.agents.core.tools.reflect.getPreferredClassDescriptionAnnotation
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.prompts.SnapshotPrompts
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
@@ -98,10 +99,11 @@ public class PersistencyStrategyProvider(
         operation: PersistencyStrategy.Dynamic.Operation,
         checkpoint: AgentCheckpointData?
     ): PersistencyStorageProvider {
-        // Build provider descriptions for LLM
-        val providerDescriptions = strategy.providers.entries.joinToString("\n") { (name, info) ->
-            "- $name: ${info.description}" +
-            if (info.capabilities.isNotEmpty()) " (capabilities: ${info.capabilities.joinToString(", ")})" else ""
+        // Build provider descriptions for LLM using annotations
+        val providerDescriptions = strategy.providers.entries.joinToString("\n") { (name, provider) ->
+            val description = provider::class.getPreferredClassDescriptionAnnotation()?.description 
+                ?: "${provider::class.simpleName} persistence provider"
+            "- $name: $description"
         }
 
         // Build operation context
@@ -130,7 +132,7 @@ public class PersistencyStrategyProvider(
                 name.lowercase().contains("sql") -> 2
                 else -> 3
             }
-        }?.value?.provider
+        }?.value
 
         var lastException: Exception? = null
 
@@ -172,7 +174,7 @@ public class PersistencyStrategyProvider(
                 }
 
                 // Validate LLM selection
-                val selectedProvider = strategy.providers[selected.providerName]?.provider
+                val selectedProvider = strategy.providers[selected.providerName]
                 if (selectedProvider != null) {
                     logger.debug {
                         "LLM selected provider '${selected.providerName}' for operation $operation on attempt ${attempt + 1}" +

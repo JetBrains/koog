@@ -1,5 +1,6 @@
 package ai.koog.agents.snapshot.providers
 
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -8,7 +9,8 @@ import kotlinx.coroutines.sync.withLock
  * In-memory implementation of [PersistencyStorageProvider].
  * This provider stores snapshots in a mutable map.
  */
-public class InMemoryPersistencyStorageProvider(private val persistenceId: String) : PersistencyStorageProvider {
+@LLMDescription("Fast in-memory storage for temporary checkpoints, ideal for development and testing")
+public open class InMemoryPersistencyStorageProvider(private val persistenceId: String) : PersistencyStorageProvider {
     private val mutex = Mutex()
     private val snapshotMap = mutableMapOf<String, List<AgentCheckpointData>>()
 

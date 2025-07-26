@@ -1,5 +1,6 @@
 package ai.koog.agents.snapshot.providers.file
 
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.rag.base.files.FileMetadata
@@ -16,6 +17,7 @@ import kotlinx.serialization.json.Json
  * @param fs A file system provider enabling read and write operations for file storage.
  * @param root Root file path where the checkpoint storage will organize data.
  */
+@LLMDescription("File-based persistent storage with JSON serialization, suitable for durable local checkpoint storage")
 public open class FilePersistencyStorageProvider<Path>(
     private val persistenceId: String,
     private val fs: FileSystemProvider.ReadWrite<Path>,

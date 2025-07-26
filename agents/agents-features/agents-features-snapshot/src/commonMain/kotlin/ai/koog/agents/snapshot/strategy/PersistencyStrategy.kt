@@ -89,33 +89,28 @@ public sealed interface PersistencyStrategy {
     /**
      * LLM-driven strategy for intelligent provider selection.
      *
-     * This strategy uses the LLM
-     * to determine the most appropriate persistence provider based on:
+     * This strategy uses the LLM to determine the most appropriate persistence provider based on:
      * - The current operation context
      * - Checkpoint characteristics
-     * - Provider capabilities
+     * - Provider descriptions (from @LLMDescription annotation)
      * - Task description
      *
-     * @property providers Map of provider names to their instances with descriptions
+     * Providers should be annotated with @LLMDescription for optimal selection:
+     * ```kotlin
+     * @LLMDescription("Fast in-memory cache with TTL support for ephemeral data")
+     * class RedisProvider : PersistencyStorageProvider { ... }
+     * 
+     * @LLMDescription("Durable SQL database with ACID compliance for persistent storage")
+     * class PostgresProvider : PersistencyStorageProvider { ... }
+     * ```
+     *
+     * @property providers Map of provider names to their instances (descriptions via annotations)
      * @property taskDescription Description of the current task/context for the LLM
      * @property maxRetries Maximum number of retries for LLM selection (default: 3)
      */
     public data class AutoSelectForTask(
-        val providers: Map<String, ProviderInfo>,
+        val providers: Map<String, PersistencyStorageProvider>,
         val taskDescription: String,
         val maxRetries: Int = 3
-    ) : PersistencyStrategy {
-        /**
-         * Information about a persistence provider for LLM decision-making.
-         *
-         * @property provider The actual persistence provider instance
-         * @property description Human-readable description of the provider's characteristics
-         * @property capabilities List of capabilities (e.g., "fast", "durable", "queryable")
-         */
-        public data class ProviderInfo(
-            val provider: PersistencyStorageProvider,
-            val description: String,
-            val capabilities: List<String> = emptyList()
-        )
-    }
+    ) : PersistencyStrategy
 }
