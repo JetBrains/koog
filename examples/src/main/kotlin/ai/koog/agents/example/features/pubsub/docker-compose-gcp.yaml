@@ -1,6 +1,6 @@
 services:
   gcp-pubsub-emulator:
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    image: google/cloud-sdk:emulators
     container_name: koog-pubsub-gcp-emulator
     ports:
       - "8085:8085"
@@ -8,31 +8,32 @@ services:
       sh -c "gcloud beta emulators pubsub start 
              --project=koog-pubsub-dev 
              --host-port=0.0.0.0:8085 
-             --verbosity=debug"
+             --verbosity=info"
     environment:
       - PUBSUB_PROJECT_ID=koog-pubsub-dev
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8085 || exit 1"]
-      interval: 5s
-      timeout: 3s
+      test: ["CMD-SHELL", "curl -f http://localhost:8085 || nc -z localhost 8085"]
+      interval: 10s
+      timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 15s
 
-  # Optional: Web UI for managing PubSub topics and subscriptions
-  pubsub-ui:
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:latest
-    container_name: koog-pubsub-ui
+  # Optional: Info container that shows connection details
+  pubsub-info:
+    image: google/cloud-sdk:alpine
+    container_name: koog-pubsub-info
     depends_on:
       gcp-pubsub-emulator:
         condition: service_healthy
-    ports:
-      - "8080:8080"
     environment:
       - PUBSUB_EMULATOR_HOST=gcp-pubsub-emulator:8085
       - PUBSUB_PROJECT_ID=koog-pubsub-dev
     command: >
-      sh -c "echo 'GCP Pub/Sub Emulator is running at http://localhost:8085' &&
-             echo 'Project ID: koog-pubsub-dev' &&
-             echo 'Set PUBSUB_EMULATOR_HOST=localhost:8085 in your environment' &&
-             echo 'Keeping container alive...' &&
+      sh -c "echo '🚀 GCP Pub/Sub Emulator is running!' &&
+             echo '📍 Emulator endpoint: http://localhost:8085' &&
+             echo '🆔 Project ID: koog-pubsub-dev' &&
+             echo '🔧 Set environment variable:' &&
+             echo '   export PUBSUB_EMULATOR_HOST=localhost:8085' &&
+             echo '✅ Ready for Koog PubSub examples' &&
+             echo '💤 Keeping container alive for monitoring...' &&
              tail -f /dev/null"
