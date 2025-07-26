@@ -166,18 +166,20 @@ class PersistencyStrategyProviderTest {
         )
         val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
         
-        // When - save checkpoint with mid-execution pattern
-        val midExecCheckpoint = testCheckpoint.copy(nodeId = "processing-step-1")
-        strategyProvider.saveCheckpoint(midExecCheckpoint)
+        // When - save any checkpoint (default behavior: always use durable for saves)
+        val checkpoint1 = testCheckpoint.copy(nodeId = "any-node")
+        strategyProvider.saveCheckpoint(checkpoint1)
         
-        // Then - should use ephemeral for mid-execution
-        assertNotNull(ephemeralProvider.getLatestCheckpoint())
+        // Then - should use durable provider for all saves by default
+        assertNull(ephemeralProvider.getLatestCheckpoint())
+        assertNotNull(durableProvider.getLatestCheckpoint())
         
-        // When - save checkpoint with end pattern
-        val endCheckpoint = testCheckpoint.copy(nodeId = "final-result")
-        strategyProvider.saveCheckpoint(endCheckpoint)
+        // When - save another checkpoint
+        val checkpoint2 = testCheckpoint.copy(nodeId = "another-node")
+        strategyProvider.saveCheckpoint(checkpoint2)
         
-        // Then - should use durable for end nodes
+        // Then - should still use durable provider
+        assertNull(ephemeralProvider.getLatestCheckpoint())
         assertNotNull(durableProvider.getLatestCheckpoint())
     }
     

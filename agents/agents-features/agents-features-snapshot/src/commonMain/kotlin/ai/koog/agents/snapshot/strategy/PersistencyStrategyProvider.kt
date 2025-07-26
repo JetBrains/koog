@@ -175,19 +175,12 @@ public class PersistencyStrategyProvider(
             }
         }
 
-        // Default hybrid logic
+        // Default hybrid logic: simple and predictable behavior
         return when (operation) {
-            // Fast operations use ephemeral storage
-            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> {
-                // Determine if this is a mid-execution checkpoint based on context
-                if (isMidExecutionCheckpoint(checkpoint)) {
-                    strategy.ephemeralProvider
-                } else {
-                    strategy.durableProvider
-                }
-            }
+            // All saves go to durable storage by default for consistency
+            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> strategy.durableProvider
 
-            // Read operations try ephemeral first, then durable
+            // Read operations try ephemeral first, then durable (for recent data)
             is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint,
             is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> {
                 // Try ephemeral first for recent checkpoints
@@ -214,40 +207,6 @@ public class PersistencyStrategyProvider(
         }
     }
 
-    /**
-     * Determines if the current checkpoint is a mid-execution checkpoint.
-     * This is a heuristic based on the agent's execution state and checkpoint characteristics.
-     */
-    private suspend fun isMidExecutionCheckpoint(checkpoint: AgentCheckpointData?): Boolean {
-        if (checkpoint == null) return false
-
-        // Heuristic 1: Check node naming patterns
-        val nodeId = checkpoint.nodeId
-        val isMidExecutionNode = when {
-            // Common start/end node patterns
-            nodeId.lowercase().matches(Regex("(start|begin|init|entry|root).*")) -> false
-            nodeId.lowercase().matches(Regex(".*(end|finish|complete|final|exit|done).*")) -> false
-
-            // Common mid-execution patterns
-            nodeId.lowercase().contains("processing") -> true
-            nodeId.lowercase().contains("step") -> true
-            nodeId.matches(Regex(".*-\\d+.*")) -> true // step-1, node-2, etc.
-            nodeId.contains("_") && nodeId.split("_").size > 2 -> true // complex_processing_step
-
-            else -> false
-        }
-
-        // Heuristic 2: Check message history size (mid-execution likely has more messages)
-        val hasSignificantHistory = checkpoint.messageHistory.size > 2
-
-        // Heuristic 3: Check if we have context about execution depth
-        // For now, we use message history as a proxy for execution depth
-        // In a real implementation, this could check agent execution metadata
-        val executionDepthIndicator = hasSignificantHistory
-
-        // Combined heuristic: mid-execution if any strong indicator is true
-        return isMidExecutionNode || (hasSignificantHistory && executionDepthIndicator)
-    }
 
     /**
      * Data class for LLM provider selection response.
