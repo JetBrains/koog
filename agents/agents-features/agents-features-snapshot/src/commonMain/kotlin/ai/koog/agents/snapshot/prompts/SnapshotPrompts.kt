@@ -14,24 +14,21 @@ public object SnapshotPrompts {
      */
     public fun selectPersistencyProvider(
         taskDescription: String,
-        operationDescription: String,
         providerDescriptions: String,
         availableProviderNames: String
     ): String = """
-        Select the most appropriate persistence provider for the following operation.
+        Select the most appropriate persistence provider for the following task.
 
-        Task context: $taskDescription
-
-        Current operation: $operationDescription
+        Task: $taskDescription
 
         Available providers:
         $providerDescriptions
 
         Consider factors like:
-        - Speed requirements (ephemeral vs durable)
-        - Data criticality
-        - Query needs
-        - Cost implications
+        - Speed vs durability requirements for this task
+        - Data criticality and retention needs
+        - Expected frequency and access patterns
+        - Cost and resource constraints
 
         You must select one of these exact provider names: $availableProviderNames
 

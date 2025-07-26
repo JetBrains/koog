@@ -76,7 +76,7 @@ public class PersistencyStrategyProvider(
                     ?: throw IllegalStateException("Provider '$providerName' not found in Dynamic strategy")
             }
 
-            is PersistencyStrategy.AutoSelectForTask -> selectWithLLM(strategy, operation, checkpoint)
+            is PersistencyStrategy.AutoSelectForTask -> selectWithLLM(strategy)
         }
     }
 
@@ -90,14 +90,12 @@ public class PersistencyStrategyProvider(
     )
 
     /**
-     * Selects a provider using LLM based on the context and provider descriptions.
+     * Selects a provider using LLM based on the task description and provider annotations.
      * Includes retry mechanism and fallback logic for robustness.
      */
     @OptIn(DetachedPromptExecutorAPI::class)
     private suspend fun selectWithLLM(
-        strategy: PersistencyStrategy.AutoSelectForTask,
-        operation: PersistencyStrategy.Dynamic.Operation,
-        checkpoint: AgentCheckpointData?
+        strategy: PersistencyStrategy.AutoSelectForTask
     ): PersistencyStorageProvider {
         // Build provider descriptions for LLM using annotations
         val providerDescriptions = strategy.providers.entries.joinToString("\n") { (name, provider) ->
@@ -106,23 +104,6 @@ public class PersistencyStrategyProvider(
             "- $name: $description"
         }
 
-        // Build operation context
-        val operationDescription = when (operation) {
-            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint ->
-                "Saving a checkpoint (nodeId: ${checkpoint?.nodeId}, messageCount: ${checkpoint?.messageHistory?.size})"
-            is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint ->
-                "Retrieving the latest checkpoint"
-            is PersistencyStrategy.Dynamic.Operation.GetCheckpoints ->
-                "Retrieving all checkpoints"
-            is PersistencyStrategy.Dynamic.Operation.GetCheckpointById ->
-                "Retrieving checkpoint by ID: ${operation.id}"
-            is PersistencyStrategy.Dynamic.Operation.DeleteCheckpoint ->
-                "Deleting checkpoint: ${operation.id}"
-            is PersistencyStrategy.Dynamic.Operation.DeleteAllCheckpoints ->
-                "Deleting all checkpoints"
-            is PersistencyStrategy.Dynamic.Operation.GetCheckpointCount ->
-                "Getting checkpoint count"
-        }
 
         // Determine fallback provider (first available, preferring "durable" providers)
         val fallbackProvider = strategy.providers.entries.minByOrNull { (name, _) ->
@@ -148,7 +129,6 @@ public class PersistencyStrategyProvider(
                         user {
                             SnapshotPrompts.selectPersistencyProvider(
                                 taskDescription = strategy.taskDescription,
-                                operationDescription = operationDescription,
                                 providerDescriptions = providerDescriptions,
                                 availableProviderNames = strategy.providers.keys.joinToString(", ")
                             )
@@ -177,7 +157,7 @@ public class PersistencyStrategyProvider(
                 val selectedProvider = strategy.providers[selected.providerName]
                 if (selectedProvider != null) {
                     logger.debug {
-                        "LLM selected provider '${selected.providerName}' for operation $operation on attempt ${attempt + 1}" +
+                        "LLM selected provider '${selected.providerName}' for task '${strategy.taskDescription}' on attempt ${attempt + 1}" +
                         selected.reasoning?.let { " (reasoning: $it)" }.orEmpty()
                     }
                     return selectedProvider
