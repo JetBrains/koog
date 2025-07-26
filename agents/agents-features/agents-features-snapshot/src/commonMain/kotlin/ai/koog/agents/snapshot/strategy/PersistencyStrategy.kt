@@ -55,50 +55,34 @@ public class ProviderRegistry {
 
 /**
  * Defines HOW to coordinate operations across multiple providers.
- * This is separate from the selection strategy to enable composition.
+ * 
+ * This open interface allows for completely custom coordination logic,
+ * enabling users to implement any coordination pattern they need.
  */
-public sealed interface CoordinationStrategy {
+public interface CoordinationStrategy {
     /**
-     * Use a single provider for all operations.
+     * Saves a checkpoint using this coordination strategy.
+     * 
+     * @param checkpoint The checkpoint data to save
+     * @param registry Registry for accessing providers
      */
-    public data class Single(val provider: ProviderId) : CoordinationStrategy
+    public suspend fun saveCheckpoint(checkpoint: AgentCheckpointData, registry: ProviderRegistry)
     
     /**
-     * Write to all specified providers. Fails if any provider fails.
+     * Retrieves all checkpoints using this coordination strategy.
+     * 
+     * @param registry Registry for accessing providers
+     * @return List of all checkpoints
      */
-    public data class WriteToAll(
-        val providers: List<ProviderId>,
-        val readFrom: ProviderId = providers.first()
-    ) : CoordinationStrategy
+    public suspend fun getCheckpoints(registry: ProviderRegistry): List<AgentCheckpointData>
     
     /**
-     * Write to all specified providers. Succeeds if at least one provider succeeds.
+     * Retrieves the latest checkpoint using this coordination strategy.
+     * 
+     * @param registry Registry for accessing providers
+     * @return The latest checkpoint, or null if none exists
      */
-    public data class WriteAllBestEffort(
-        val providers: List<ProviderId>,
-        val readFrom: ProviderId = providers.first()
-    ) : CoordinationStrategy
-    
-    /**
-     * Write to primary provider, then backup providers. Succeeds if primary succeeds.
-     */
-    public data class WriteWithBackup(
-        val primary: ProviderId,
-        val backups: List<ProviderId> = emptyList()
-    ) : CoordinationStrategy
-    
-    /**
-     * Try providers in the specified order for both reads and writes.
-     */
-    public data class Prioritized(val providers: List<ProviderId>) : CoordinationStrategy
-    
-    /**
-     * Try fastest provider first, fallback to others if needed.
-     */
-    public data class FastestFirst(
-        val fast: ProviderId,
-        val fallbacks: List<ProviderId>
-    ) : CoordinationStrategy
+    public suspend fun getLatestCheckpoint(registry: ProviderRegistry): AgentCheckpointData?
 }
 
 /**

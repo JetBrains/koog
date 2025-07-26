@@ -13,6 +13,7 @@ import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.agents.snapshot.strategy.PersistencyStrategy
 import ai.koog.agents.snapshot.strategy.PersistencyStrategyProvider
 import ai.koog.agents.snapshot.strategy.CoordinationStrategy
+import ai.koog.agents.snapshot.strategy.CoordinationStrategies
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
@@ -99,7 +100,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
                 val provider = when (val strategy = config.strategy) {
                     is PersistencyStrategy.Fixed -> {
                         when (val coordination = strategy.coordination) {
-                            is CoordinationStrategy.Single -> config.getRegistry().get(coordination.provider)
+                            is CoordinationStrategies.Single -> config.getRegistry().get(coordination.provider)
                             else -> PersistencyStrategyProvider(strategy, config.getRegistry(), ctx)
                         }
                     }

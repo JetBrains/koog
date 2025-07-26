@@ -45,7 +45,7 @@ class PersistencyStrategyProviderTest {
         // Given
         val provider = InMemoryPersistencyStorageProvider("test-persistence")
         val providerId = registry.register(provider, "test-provider")
-        val strategy = PersistencyStrategy.Fixed(CoordinationStrategy.Single(providerId))
+        val strategy = PersistencyStrategy.Fixed(CoordinationStrategies.Single(providerId))
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When
@@ -84,9 +84,9 @@ class PersistencyStrategyProviderTest {
             selectorCallCount++
             // Agent-level routing based on agent ID or context characteristics
             if (context.agentContext.id.contains("fast")) {
-                CoordinationStrategy.Single(ephemeralId)
+                CoordinationStrategies.Single(ephemeralId)
             } else {
-                CoordinationStrategy.Single(durableId)
+                CoordinationStrategies.Single(durableId)
             }
         }
         
@@ -117,7 +117,7 @@ class PersistencyStrategyProviderTest {
         // Given
         val provider = InMemoryPersistencyStorageProvider("concurrent")
         val providerId = registry.register(provider, "concurrent")
-        val strategy = PersistencyStrategy.Fixed(CoordinationStrategy.Single(providerId))
+        val strategy = PersistencyStrategy.Fixed(CoordinationStrategies.Single(providerId))
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         val numConcurrentOperations = 20
@@ -161,9 +161,9 @@ class PersistencyStrategyProviderTest {
         val postgresId = registry.register(postgresProvider, "postgres")
         
         val options = listOf(
-            CoordinationStrategy.Single(redisId),
-            CoordinationStrategy.Single(postgresId),
-            CoordinationStrategy.WriteToAll(listOf(redisId, postgresId))
+            CoordinationStrategies.Single(redisId),
+            CoordinationStrategies.Single(postgresId),
+            CoordinationStrategies.WriteToAll(listOf(redisId, postgresId))
         )
         
         val strategy = PersistencyStrategy.AutoSelectForTask(
@@ -180,9 +180,9 @@ class PersistencyStrategyProviderTest {
         assertEquals(registry, strategy.registry)
         
         // Verify coordination options
-        assertTrue(strategy.options[0] is CoordinationStrategy.Single)
-        assertTrue(strategy.options[1] is CoordinationStrategy.Single)
-        assertTrue(strategy.options[2] is CoordinationStrategy.WriteToAll)
+        assertTrue(strategy.options[0] is CoordinationStrategies.Single)
+        assertTrue(strategy.options[1] is CoordinationStrategies.Single)
+        assertTrue(strategy.options[2] is CoordinationStrategies.WriteToAll)
     }
 
     @Test
@@ -194,7 +194,7 @@ class PersistencyStrategyProviderTest {
         val provider2Id = registry.register(provider2, "p2")
         
         val strategy = PersistencyStrategy.Fixed(
-            CoordinationStrategy.WriteToAll(listOf(provider1Id, provider2Id), readFrom = provider1Id)
+            CoordinationStrategies.WriteToAll(listOf(provider1Id, provider2Id), readFrom = provider1Id)
         )
         
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
@@ -222,7 +222,7 @@ class PersistencyStrategyProviderTest {
         val failingId = registry.register(failingProvider, "failing")
         
         val strategy = PersistencyStrategy.Fixed(
-            CoordinationStrategy.WriteAllBestEffort(listOf(workingId, failingId), readFrom = workingId)
+            CoordinationStrategies.WriteAllBestEffort(listOf(workingId, failingId), readFrom = workingId)
         )
         
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
@@ -244,7 +244,7 @@ class PersistencyStrategyProviderTest {
         val backupId = registry.register(backupProvider, "backup")
         
         val strategy = PersistencyStrategy.Fixed(
-            CoordinationStrategy.WriteWithBackup(primaryId, listOf(backupId))
+            CoordinationStrategies.WriteWithBackup(primaryId, listOf(backupId))
         )
         
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
@@ -270,7 +270,7 @@ class PersistencyStrategyProviderTest {
         val filledId = registry.register(filledProvider, "filled")
         
         val strategy = PersistencyStrategy.Fixed(
-            CoordinationStrategy.Prioritized(listOf(emptyId, filledId))
+            CoordinationStrategies.Prioritized(listOf(emptyId, filledId))
         )
         
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
@@ -294,7 +294,7 @@ class PersistencyStrategyProviderTest {
         val fallbackId = registry.register(fallbackProvider, "fallback")
         
         val strategy = PersistencyStrategy.Fixed(
-            CoordinationStrategy.FastestFirst(fastId, listOf(fallbackId))
+            CoordinationStrategies.FastestFirst(fastId, listOf(fallbackId))
         )
         
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
@@ -316,7 +316,7 @@ class PersistencyStrategyProviderTest {
         val failing2Id = registry.register(failingProvider2, "fail2")
         
         val strategy = PersistencyStrategy.Fixed(
-            CoordinationStrategy.WriteAllBestEffort(listOf(failing1Id, failing2Id))
+            CoordinationStrategies.WriteAllBestEffort(listOf(failing1Id, failing2Id))
         )
         
         val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)

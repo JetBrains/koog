@@ -40,34 +40,37 @@ public open class PersistencyStrategyProvider(
     private var cachedCoordination: CoordinationStrategy? = null
 
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        val handler = getCoordinationHandler()
-        handler.saveCheckpoint(agentCheckpointData)
+        val coordination = getCoordinationStrategy()
+        coordination.saveCheckpoint(agentCheckpointData, registry)
     }
 
     override suspend fun getCheckpoints(): List<AgentCheckpointData> {
-        val handler = getCoordinationHandler()
-        return handler.getCheckpoints()
+        val coordination = getCoordinationStrategy()
+        return coordination.getCheckpoints(registry)
     }
 
     override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-        val handler = getCoordinationHandler()
-        return handler.getLatestCheckpoint()
+        val coordination = getCoordinationStrategy()
+        return coordination.getLatestCheckpoint(registry)
     }
 
     /**
-     * Gets the coordination handler for this agent, using caching to ensure consistency.
+     * Gets the coordination strategy for this agent, using caching to ensure consistency.
      * All operations for an agent will use the same coordination strategy.
      */
-    private suspend fun getCoordinationHandler(): PersistencyStorageProvider {
-        // Return cached handler if already selected
-        cachedCoordination?.let { coordination ->
-            return createCoordinationHandler(coordination)
-        }
+    private suspend fun getCoordinationStrategy(): CoordinationStrategy {
+        // Return cached coordination if already selected
+        cachedCoordination?.let { return it }
         
         // Select coordination strategy based on strategy
         val coordination = when (strategy) {
             is PersistencyStrategy.None -> {
-                return noOpProvider
+                // Return a no-op coordination strategy
+                return object : CoordinationStrategy {
+                    override suspend fun saveCheckpoint(checkpoint: AgentCheckpointData, registry: ProviderRegistry) {}
+                    override suspend fun getCheckpoints(registry: ProviderRegistry): List<AgentCheckpointData> = emptyList()
+                    override suspend fun getLatestCheckpoint(registry: ProviderRegistry): AgentCheckpointData? = null
+                }
             }
 
             is PersistencyStrategy.Fixed -> strategy.coordination
@@ -84,14 +87,7 @@ public open class PersistencyStrategyProvider(
         
         // Cache the selected coordination to ensure all operations use the same strategy
         cachedCoordination = coordination
-        return createCoordinationHandler(coordination)
-    }
-
-    /**
-     * Creates a handler for the specified coordination strategy.
-     */
-    private fun createCoordinationHandler(coordination: CoordinationStrategy): PersistencyStorageProvider {
-        return CoordinationHandler(coordination, registry)
+        return coordination
     }
 
     /**
@@ -112,20 +108,7 @@ public open class PersistencyStrategyProvider(
     ): CoordinationStrategy {
         // Build coordination descriptions for LLM
         val coordinationDescriptions = strategy.options.mapIndexed { index, coordination ->
-            val description = when (coordination) {
-                is CoordinationStrategy.Single -> 
-                    "Single provider (${coordination.provider.value}) - simple, reliable"
-                is CoordinationStrategy.WriteToAll -> 
-                    "Write to all providers (${coordination.providers.joinToString { it.value }}) - maximum durability"
-                is CoordinationStrategy.WriteAllBestEffort -> 
-                    "Best effort write to all providers - high availability"
-                is CoordinationStrategy.WriteWithBackup -> 
-                    "Primary (${coordination.primary.value}) with backups - reliable with redundancy"
-                is CoordinationStrategy.Prioritized -> 
-                    "Prioritized providers (${coordination.providers.joinToString { it.value }}) - failover"
-                is CoordinationStrategy.FastestFirst -> 
-                    "Fast first (${coordination.fast.value}) with fallbacks - optimized performance"
-            }
+            val description = coordination.toString() // Use toString() for custom implementations
             "Option $index: $description"
         }.joinToString("\n")
 
@@ -211,241 +194,4 @@ public open class PersistencyStrategyProvider(
         }
     }
 
-    /**
-     * Handler for coordination strategies that coordinates operations across multiple providers.
-     */
-    private class CoordinationHandler(
-        private val coordination: CoordinationStrategy,
-        private val registry: ProviderRegistry
-    ) : PersistencyStorageProvider {
-
-        private companion object {
-            private val logger = KotlinLogging.logger { }
-        }
-
-        override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-            when (coordination) {
-                is CoordinationStrategy.Single -> {
-                    registry.get(coordination.provider).saveCheckpoint(agentCheckpointData)
-                }
-                
-                is CoordinationStrategy.WriteToAll -> {
-                    writeToAll(agentCheckpointData, coordination.providers, failOnAnyError = true)
-                }
-                
-                is CoordinationStrategy.WriteAllBestEffort -> {
-                    writeToAll(agentCheckpointData, coordination.providers, failOnAnyError = false)
-                }
-                
-                is CoordinationStrategy.WriteWithBackup -> {
-                    writeWithBackup(agentCheckpointData, coordination.primary, coordination.backups)
-                }
-                
-                is CoordinationStrategy.Prioritized -> {
-                    writePrioritized(agentCheckpointData, coordination.providers)
-                }
-                
-                is CoordinationStrategy.FastestFirst -> {
-                    val providers = listOf(coordination.fast) + coordination.fallbacks
-                    writePrioritized(agentCheckpointData, providers)
-                }
-            }
-        }
-
-        override suspend fun getCheckpoints(): List<AgentCheckpointData> {
-            return when (coordination) {
-                is CoordinationStrategy.Single -> {
-                    registry.get(coordination.provider).getCheckpoints()
-                }
-                
-                is CoordinationStrategy.WriteToAll -> {
-                    registry.get(coordination.readFrom).getCheckpoints()
-                }
-                
-                is CoordinationStrategy.WriteAllBestEffort -> {
-                    registry.get(coordination.readFrom).getCheckpoints()
-                }
-                
-                is CoordinationStrategy.WriteWithBackup -> {
-                    registry.get(coordination.primary).getCheckpoints()
-                }
-                
-                is CoordinationStrategy.Prioritized -> {
-                    readPrioritizedNonNull(coordination.providers) { it.getCheckpoints() }
-                }
-                
-                is CoordinationStrategy.FastestFirst -> {
-                    val providers = listOf(coordination.fast) + coordination.fallbacks
-                    readPrioritizedNonNull(providers) { it.getCheckpoints() }
-                }
-            }
-        }
-
-        override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-            return when (coordination) {
-                is CoordinationStrategy.Single -> {
-                    registry.get(coordination.provider).getLatestCheckpoint()
-                }
-                
-                is CoordinationStrategy.WriteToAll -> {
-                    registry.get(coordination.readFrom).getLatestCheckpoint()
-                }
-                
-                is CoordinationStrategy.WriteAllBestEffort -> {
-                    registry.get(coordination.readFrom).getLatestCheckpoint()
-                }
-                
-                is CoordinationStrategy.WriteWithBackup -> {
-                    registry.get(coordination.primary).getLatestCheckpoint()
-                }
-                
-                is CoordinationStrategy.Prioritized -> {
-                    readPrioritizedNullable(coordination.providers) { it.getLatestCheckpoint() }
-                }
-                
-                is CoordinationStrategy.FastestFirst -> {
-                    val providers = listOf(coordination.fast) + coordination.fallbacks
-                    readPrioritizedNullable(providers) { it.getLatestCheckpoint() }
-                }
-            }
-        }
-
-        private suspend fun writeToAll(
-            checkpoint: AgentCheckpointData,
-            providerIds: List<ProviderId>,
-            failOnAnyError: Boolean
-        ) {
-            val providers = providerIds.map { registry.get(it) }
-            val exceptions = mutableListOf<Exception>()
-            var successCount = 0
-
-            for ((index, provider) in providers.withIndex()) {
-                try {
-                    provider.saveCheckpoint(checkpoint)
-                    successCount++
-                    logger.debug { "Successfully wrote checkpoint to ${providerIds[index].value}" }
-                } catch (e: Exception) {
-                    exceptions.add(e)
-                    logger.warn(e) { "Failed to write checkpoint to ${providerIds[index].value}" }
-                    
-                    if (failOnAnyError) {
-                        throw IllegalStateException("Write failed to ${providerIds[index].value}", e)
-                    }
-                }
-            }
-
-            if (successCount == 0) {
-                throw IllegalStateException(
-                    "All ${providers.size} providers failed to save checkpoint",
-                    exceptions.firstOrNull()
-                )
-            }
-
-            logger.debug { "Checkpoint written to $successCount/${providers.size} providers" }
-        }
-
-        private suspend fun writeWithBackup(
-            checkpoint: AgentCheckpointData,
-            primaryId: ProviderId,
-            backupIds: List<ProviderId>
-        ) {
-            val primary = registry.get(primaryId)
-
-            // Write to primary first
-            try {
-                primary.saveCheckpoint(checkpoint)
-                logger.debug { "Successfully wrote checkpoint to primary provider ${primaryId.value}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to write checkpoint to primary provider ${primaryId.value}" }
-                throw e
-            }
-
-            // Write to backups (best effort)
-            for (backupId in backupIds) {
-                try {
-                    val backup = registry.get(backupId)
-                    backup.saveCheckpoint(checkpoint)
-                    logger.debug { "Successfully wrote checkpoint to backup provider ${backupId.value}" }
-                } catch (e: Exception) {
-                    logger.warn(e) { "Failed to write checkpoint to backup provider ${backupId.value}" }
-                    // Continue with other backups
-                }
-            }
-        }
-
-        private suspend fun writePrioritized(
-            checkpoint: AgentCheckpointData,
-            providerIds: List<ProviderId>
-        ) {
-            var lastException: Exception? = null
-
-            for (providerId in providerIds) {
-                try {
-                    val provider = registry.get(providerId)
-                    provider.saveCheckpoint(checkpoint)
-                    logger.debug { "Successfully wrote checkpoint to provider ${providerId.value}" }
-                    return
-                } catch (e: Exception) {
-                    lastException = e
-                    logger.warn(e) { "Failed to write checkpoint to provider ${providerId.value}" }
-                    // Continue to next provider
-                }
-            }
-
-            throw IllegalStateException(
-                "All ${providerIds.size} providers failed to save checkpoint",
-                lastException
-            )
-        }
-
-        private suspend fun <T> readPrioritizedNullable(
-            providerIds: List<ProviderId>,
-            operation: suspend (PersistencyStorageProvider) -> T?
-        ): T? {
-            for (providerId in providerIds) {
-                try {
-                    val provider = registry.get(providerId)
-                    val result = operation(provider)
-                    if (result != null) {
-                        logger.debug { "Successfully read non-null result from provider ${providerId.value}" }
-                        return result
-                    } else {
-                        logger.debug { "Provider ${providerId.value} returned null, trying next provider" }
-                    }
-                } catch (e: Exception) {
-                    logger.warn(e) { "Failed to read from provider ${providerId.value}" }
-                    // Continue to next provider
-                }
-            }
-
-            // All providers returned null or failed - return null
-            logger.debug { "All ${providerIds.size} providers returned null or failed" }
-            return null
-        }
-
-        private suspend fun <T> readPrioritizedNonNull(
-            providerIds: List<ProviderId>,
-            operation: suspend (PersistencyStorageProvider) -> T
-        ): T {
-            var lastException: Exception? = null
-
-            for (providerId in providerIds) {
-                try {
-                    val provider = registry.get(providerId)
-                    val result = operation(provider)
-                    logger.debug { "Successfully read from provider ${providerId.value}" }
-                    return result
-                } catch (e: Exception) {
-                    lastException = e
-                    logger.warn(e) { "Failed to read from provider ${providerId.value}" }
-                    // Continue to next provider
-                }
-            }
-
-            throw IllegalStateException(
-                "All ${providerIds.size} providers failed to read data",
-                lastException
-            )
-        }
-    }
 }

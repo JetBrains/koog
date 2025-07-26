@@ -6,6 +6,7 @@ import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.agents.snapshot.strategy.PersistencyStrategy
 import ai.koog.agents.snapshot.strategy.CoordinationStrategy
+import ai.koog.agents.snapshot.strategy.CoordinationStrategies
 import ai.koog.agents.snapshot.strategy.ProviderRegistry
 
 
@@ -30,14 +31,14 @@ public class PersistencyFeatureConfig: FeatureConfig() {
      */
     @Deprecated(
         message = "Use strategy property instead for more flexible persistence configurations",
-        replaceWith = ReplaceWith("strategy = PersistencyStrategy.Fixed(CoordinationStrategy.Single(registry.register(storage)))")
+        replaceWith = ReplaceWith("strategy = PersistencyStrategy.Fixed(CoordinationStrategies.Single(registry.register(storage)))")
     )
     public var storage: PersistencyStorageProvider = NoPersistencyStorageProvider()
         set(value) {
             field = value
             val providerId = registry.register(value, "default")
             // Update strategy when storage is set directly
-            _strategy = PersistencyStrategy.Fixed(CoordinationStrategy.Single(providerId))
+            _strategy = PersistencyStrategy.Fixed(CoordinationStrategies.Single(providerId))
         }
 
     private var _strategy: PersistencyStrategy? = null
@@ -57,12 +58,12 @@ public class PersistencyFeatureConfig: FeatureConfig() {
     public var strategy: PersistencyStrategy
         get() = _strategy ?: run {
             val providerId = registry.register(storage, "default")
-            PersistencyStrategy.Fixed(CoordinationStrategy.Single(providerId))
+            PersistencyStrategy.Fixed(CoordinationStrategies.Single(providerId))
         }
         set(value) {
             _strategy = value
             // Update storage for backward compatibility when using Fixed+Single strategy
-            if (value is PersistencyStrategy.Fixed && value.coordination is CoordinationStrategy.Single) {
+            if (value is PersistencyStrategy.Fixed && value.coordination is CoordinationStrategies.Single) {
                 try {
                     storage = registry.get(value.coordination.provider)
                 } catch (e: Exception) {
