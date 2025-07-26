@@ -18,11 +18,13 @@ class PersistencyStrategyProviderTest {
     
     private lateinit var mockContext: AIAgentContextBase
     private lateinit var testCheckpoint: AgentCheckpointData
-    private val testPersistenceId = "test-agent"
+    private lateinit var registry: ProviderRegistry
     
     @BeforeTest
     fun setUp() {
-        mockContext = mockk(relaxed = true)
+        mockContext = mockk(relaxed = true) {
+            every { id } returns "test-agent"
+        }
         testCheckpoint = AgentCheckpointData(
             checkpointId = Uuid.random().toString(),
             messageHistory = emptyList(),
@@ -30,6 +32,7 @@ class PersistencyStrategyProviderTest {
             lastInput = JsonNull,
             createdAt = Clock.System.now()
         )
+        registry = ProviderRegistry()
     }
     
     @AfterTest
@@ -38,11 +41,12 @@ class PersistencyStrategyProviderTest {
     }
     
     @Test
-    fun testSingleStrategyProvider() = runTest {
+    fun testFixedSingleStrategyProvider() = runTest {
         // Given
-        val provider = InMemoryPersistencyStorageProvider(testPersistenceId)
-        val strategy = PersistencyStrategy.Single(provider)
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val provider = InMemoryPersistencyStorageProvider("test-persistence")
+        val providerId = registry.register(provider, "test-provider")
+        val strategy = PersistencyStrategy.Fixed(CoordinationStrategy.Single(providerId))
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When
         strategyProvider.saveCheckpoint(testCheckpoint)
@@ -56,7 +60,7 @@ class PersistencyStrategyProviderTest {
     fun testNoneStrategyProvider() = runTest {
         // Given
         val strategy = PersistencyStrategy.None
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When
         strategyProvider.saveCheckpoint(testCheckpoint)
@@ -66,27 +70,28 @@ class PersistencyStrategyProviderTest {
         assertNull(retrieved)
     }
     
-    
     @Test
     fun testDynamicStrategyProviderSelection() = runTest {
         // Given
         val ephemeralProvider = InMemoryPersistencyStorageProvider("ephemeral")
         val durableProvider = InMemoryPersistencyStorageProvider("durable")
         
-        val providers = mapOf(
-            "ephemeral" to ephemeralProvider,
-            "durable" to durableProvider
-        )
+        val ephemeralId = registry.register(ephemeralProvider, "ephemeral")
+        val durableId = registry.register(durableProvider, "durable")
         
         var selectorCallCount = 0
-        val selector: suspend (PersistencyStrategy.Dynamic.AgentContext) -> String = { context ->
+        val selector: suspend (PersistencyStrategy.Dynamic.AgentContext, ProviderRegistry) -> CoordinationStrategy = { context, _ ->
             selectorCallCount++
             // Agent-level routing based on agent ID or context characteristics
-            if (context.agentContext.id.contains("fast")) "ephemeral" else "durable"
+            if (context.agentContext.id.contains("fast")) {
+                CoordinationStrategy.Single(ephemeralId)
+            } else {
+                CoordinationStrategy.Single(durableId)
+            }
         }
         
-        val strategy = PersistencyStrategy.Dynamic(providers, selector)
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategy = PersistencyStrategy.Dynamic(selector)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When - save multiple checkpoints (all should use same cached provider)
         val checkpoint1 = testCheckpoint.copy(nodeId = "first-checkpoint")
@@ -98,7 +103,7 @@ class PersistencyStrategyProviderTest {
         // Then - selector called only once, all operations use the same provider
         assertEquals(1, selectorCallCount)
         
-        // Since mockContext.id doesn't contain "fast", should use durable provider
+        // Since mockContext.id is "test-agent" (doesn't contain "fast"), should use durable provider
         assertNull(ephemeralProvider.getLatestCheckpoint())
         assertNotNull(durableProvider.getLatestCheckpoint())
         
@@ -107,37 +112,13 @@ class PersistencyStrategyProviderTest {
         assertEquals(2, checkpoints.size)
     }
     
-    
-    
-    @Test
-    fun testDynamicStrategyWithInvalidProvider() = runTest {
-        // Given
-        val providers = mapOf(
-            "valid" to InMemoryPersistencyStorageProvider("valid")
-        )
-        
-        val selector: suspend (PersistencyStrategy.Dynamic.AgentContext) -> String = { _ ->
-            "invalid" // Return non-existent provider
-        }
-        
-        val strategy = PersistencyStrategy.Dynamic(providers, selector)
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
-        
-        // When/Then
-        assertFailsWith<IllegalStateException> {
-            strategyProvider.saveCheckpoint(testCheckpoint)
-        }.also { exception ->
-            assertTrue(exception.message?.contains("Provider 'invalid' not found") == true)
-        }
-    }
-    
-    
     @Test
     fun testConcurrentAccessToStrategyProvider() = runTest {
         // Given
         val provider = InMemoryPersistencyStorageProvider("concurrent")
-        val strategy = PersistencyStrategy.Single(provider)
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val providerId = registry.register(provider, "concurrent")
+        val strategy = PersistencyStrategy.Fixed(CoordinationStrategy.Single(providerId))
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         val numConcurrentOperations = 20
         val checkpoints = mutableListOf<AgentCheckpointData>()
@@ -176,43 +157,47 @@ class PersistencyStrategyProviderTest {
         val redisProvider = InMemoryPersistencyStorageProvider("redis")
         val postgresProvider = InMemoryPersistencyStorageProvider("postgres")
         
-        val providers = mapOf(
-            "redis" to redisProvider,
-            "postgres" to postgresProvider
+        val redisId = registry.register(redisProvider, "redis")
+        val postgresId = registry.register(postgresProvider, "postgres")
+        
+        val options = listOf(
+            CoordinationStrategy.Single(redisId),
+            CoordinationStrategy.Single(postgresId),
+            CoordinationStrategy.WriteToAll(listOf(redisId, postgresId))
         )
         
         val strategy = PersistencyStrategy.AutoSelectForTask(
-            providers = providers,
             taskDescription = "High-frequency trading agent requiring fast operations",
+            options = options,
+            registry = registry,
             maxRetries = 3
         )
         
         // Then - verify structure (LLM interaction testing requires integration tests)
-        assertEquals(2, strategy.providers.size)
-        assertTrue(strategy.providers.containsKey("redis"))
-        assertTrue(strategy.providers.containsKey("postgres"))
+        assertEquals(3, strategy.options.size)
         assertEquals("High-frequency trading agent requiring fast operations", strategy.taskDescription)
         assertEquals(3, strategy.maxRetries)
+        assertEquals(registry, strategy.registry)
         
-        // Verify provider instances
-        assertEquals(redisProvider, strategy.providers["redis"])
-        assertEquals(postgresProvider, strategy.providers["postgres"])
+        // Verify coordination options
+        assertTrue(strategy.options[0] is CoordinationStrategy.Single)
+        assertTrue(strategy.options[1] is CoordinationStrategy.Single)
+        assertTrue(strategy.options[2] is CoordinationStrategy.WriteToAll)
     }
 
     @Test
-    fun testMultiProviderWriteToAllStrategy() = runTest {
+    fun testWriteToAllCoordinationStrategy() = runTest {
         // Given
         val provider1 = InMemoryPersistencyStorageProvider("provider1")
         val provider2 = InMemoryPersistencyStorageProvider("provider2")
-        val providers = mapOf("p1" to provider1, "p2" to provider2)
+        val provider1Id = registry.register(provider1, "p1")
+        val provider2Id = registry.register(provider2, "p2")
         
-        val strategy = PersistencyStrategy.MultiProvider(
-            providers = providers,
-            writeStrategy = PersistencyStrategy.MultiProvider.WriteStrategy.WriteToAll(listOf("p1", "p2")),
-            readStrategy = PersistencyStrategy.MultiProvider.ReadStrategy.PrimaryOnly("p1")
+        val strategy = PersistencyStrategy.Fixed(
+            CoordinationStrategy.WriteToAll(listOf(provider1Id, provider2Id), readFrom = provider1Id)
         )
         
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When
         strategyProvider.saveCheckpoint(testCheckpoint)
@@ -222,22 +207,25 @@ class PersistencyStrategyProviderTest {
         assertNotNull(provider2.getLatestCheckpoint())
         assertEquals(testCheckpoint.checkpointId, provider1.getLatestCheckpoint()?.checkpointId)
         assertEquals(testCheckpoint.checkpointId, provider2.getLatestCheckpoint()?.checkpointId)
+        
+        // But reads should come from the readFrom provider (provider1)
+        val retrieved = strategyProvider.getLatestCheckpoint()
+        assertEquals(testCheckpoint.checkpointId, retrieved?.checkpointId)
     }
 
     @Test
-    fun testMultiProviderWriteToAllBestEffortStrategy() = runTest {
+    fun testWriteAllBestEffortCoordinationStrategy() = runTest {
         // Given
         val workingProvider = InMemoryPersistencyStorageProvider("working")
         val failingProvider = FailingPersistencyStorageProvider()
-        val providers = mapOf("working" to workingProvider, "failing" to failingProvider)
+        val workingId = registry.register(workingProvider, "working")
+        val failingId = registry.register(failingProvider, "failing")
         
-        val strategy = PersistencyStrategy.MultiProvider(
-            providers = providers,
-            writeStrategy = PersistencyStrategy.MultiProvider.WriteStrategy.WriteToAllBestEffort(listOf("working", "failing")),
-            readStrategy = PersistencyStrategy.MultiProvider.ReadStrategy.PrimaryOnly("working")
+        val strategy = PersistencyStrategy.Fixed(
+            CoordinationStrategy.WriteAllBestEffort(listOf(workingId, failingId), readFrom = workingId)
         )
         
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When/Then - should succeed even if one provider fails
         strategyProvider.saveCheckpoint(testCheckpoint)
@@ -248,19 +236,18 @@ class PersistencyStrategyProviderTest {
     }
 
     @Test
-    fun testMultiProviderWriteWithBackupStrategy() = runTest {
+    fun testWriteWithBackupCoordinationStrategy() = runTest {
         // Given
         val primaryProvider = InMemoryPersistencyStorageProvider("primary")
         val backupProvider = InMemoryPersistencyStorageProvider("backup")
-        val providers = mapOf("primary" to primaryProvider, "backup" to backupProvider)
+        val primaryId = registry.register(primaryProvider, "primary")
+        val backupId = registry.register(backupProvider, "backup")
         
-        val strategy = PersistencyStrategy.MultiProvider(
-            providers = providers,
-            writeStrategy = PersistencyStrategy.MultiProvider.WriteStrategy.WriteWithBackup("primary", listOf("backup")),
-            readStrategy = PersistencyStrategy.MultiProvider.ReadStrategy.PrimaryOnly("primary")
+        val strategy = PersistencyStrategy.Fixed(
+            CoordinationStrategy.WriteWithBackup(primaryId, listOf(backupId))
         )
         
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When
         strategyProvider.saveCheckpoint(testCheckpoint)
@@ -273,21 +260,20 @@ class PersistencyStrategyProviderTest {
     }
 
     @Test
-    fun testMultiProviderPrioritizedReadStrategy() = runTest {
+    fun testPrioritizedCoordinationStrategy() = runTest {
         // Given
         val emptyProvider = InMemoryPersistencyStorageProvider("empty")
         val filledProvider = InMemoryPersistencyStorageProvider("filled")
         filledProvider.saveCheckpoint(testCheckpoint)
         
-        val providers = mapOf("empty" to emptyProvider, "filled" to filledProvider)
+        val emptyId = registry.register(emptyProvider, "empty")
+        val filledId = registry.register(filledProvider, "filled")
         
-        val strategy = PersistencyStrategy.MultiProvider(
-            providers = providers,
-            writeStrategy = PersistencyStrategy.MultiProvider.WriteStrategy.WriteToAll(listOf("filled")),
-            readStrategy = PersistencyStrategy.MultiProvider.ReadStrategy.Prioritized(listOf("empty", "filled"))
+        val strategy = PersistencyStrategy.Fixed(
+            CoordinationStrategy.Prioritized(listOf(emptyId, filledId))
         )
         
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When
         val result = strategyProvider.getLatestCheckpoint()
@@ -298,21 +284,20 @@ class PersistencyStrategyProviderTest {
     }
 
     @Test
-    fun testMultiProviderFastestFirstReadStrategy() = runTest {
+    fun testFastestFirstCoordinationStrategy() = runTest {
         // Given
         val fastProvider = InMemoryPersistencyStorageProvider("fast")
         val fallbackProvider = InMemoryPersistencyStorageProvider("fallback")
         fallbackProvider.saveCheckpoint(testCheckpoint)
         
-        val providers = mapOf("fast" to fastProvider, "fallback" to fallbackProvider)
+        val fastId = registry.register(fastProvider, "fast")
+        val fallbackId = registry.register(fallbackProvider, "fallback")
         
-        val strategy = PersistencyStrategy.MultiProvider(
-            providers = providers,
-            writeStrategy = PersistencyStrategy.MultiProvider.WriteStrategy.WriteToAll(listOf("fallback")),
-            readStrategy = PersistencyStrategy.MultiProvider.ReadStrategy.FastestFirst("fast", listOf("fallback"))
+        val strategy = PersistencyStrategy.Fixed(
+            CoordinationStrategy.FastestFirst(fastId, listOf(fallbackId))
         )
         
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When
         val result = strategyProvider.getLatestCheckpoint()
@@ -323,23 +308,43 @@ class PersistencyStrategyProviderTest {
     }
 
     @Test
-    fun testMultiProviderWriteToAllFailsIfAllProvidersFail() = runTest {
+    fun testWriteAllBestEffortFailsIfAllProvidersFail() = runTest {
         // Given
         val failingProvider1 = FailingPersistencyStorageProvider()
         val failingProvider2 = FailingPersistencyStorageProvider()
-        val providers = mapOf("fail1" to failingProvider1, "fail2" to failingProvider2)
+        val failing1Id = registry.register(failingProvider1, "fail1")
+        val failing2Id = registry.register(failingProvider2, "fail2")
         
-        val strategy = PersistencyStrategy.MultiProvider(
-            providers = providers,
-            writeStrategy = PersistencyStrategy.MultiProvider.WriteStrategy.WriteToAllBestEffort(listOf("fail1", "fail2")),
-            readStrategy = PersistencyStrategy.MultiProvider.ReadStrategy.PrimaryOnly("fail1")
+        val strategy = PersistencyStrategy.Fixed(
+            CoordinationStrategy.WriteAllBestEffort(listOf(failing1Id, failing2Id))
         )
         
-        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        val strategyProvider = PersistencyStrategyProvider(strategy, registry, mockContext)
         
         // When/Then - should fail when all providers fail
         assertFailsWith<IllegalStateException> {
             strategyProvider.saveCheckpoint(testCheckpoint)
+        }
+    }
+
+    @Test
+    fun testProviderRegistryTypesafety() {
+        // Given
+        val provider = InMemoryPersistencyStorageProvider("test")
+        
+        // When
+        val providerId = registry.register(provider, "test-provider")
+        
+        // Then
+        assertEquals("test-provider", providerId.value)
+        assertTrue(registry.contains(providerId))
+        assertEquals(provider, registry.get(providerId))
+        
+        // Test invalid provider access
+        val invalidId = ProviderId("non-existent")
+        assertFalse(registry.contains(invalidId))
+        assertFailsWith<IllegalStateException> {
+            registry.get(invalidId)
         }
     }
 

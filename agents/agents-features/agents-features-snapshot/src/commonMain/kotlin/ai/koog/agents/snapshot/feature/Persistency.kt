@@ -12,6 +12,7 @@ import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.agents.snapshot.strategy.PersistencyStrategy
 import ai.koog.agents.snapshot.strategy.PersistencyStrategyProvider
+import ai.koog.agents.snapshot.strategy.CoordinationStrategy
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
@@ -96,9 +97,14 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             // For all strategies, we need to set up context-aware feature creation
             pipeline.interceptContextAgentFeature(this) { ctx ->
                 val provider = when (val strategy = config.strategy) {
-                    is PersistencyStrategy.Single -> strategy.provider
+                    is PersistencyStrategy.Fixed -> {
+                        when (val coordination = strategy.coordination) {
+                            is CoordinationStrategy.Single -> config.getRegistry().get(coordination.provider)
+                            else -> PersistencyStrategyProvider(strategy, config.getRegistry(), ctx)
+                        }
+                    }
                     is PersistencyStrategy.None -> NoPersistencyStorageProvider()
-                    else -> PersistencyStrategyProvider(config.strategy, ctx)
+                    else -> PersistencyStrategyProvider(strategy, config.getRegistry(), ctx)
                 }
                 return@interceptContextAgentFeature Persistency(provider)
             }
