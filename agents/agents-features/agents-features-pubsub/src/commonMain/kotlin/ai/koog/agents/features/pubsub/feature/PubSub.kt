@@ -101,7 +101,7 @@ public class PubSub {
             val interceptContext = InterceptContext(this, PubSub())
             
             // Start subscription management coroutine
-            val subscriptionJob = CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+            val subscriptionJob = CoroutineScope(Dispatchers.Default + SupervisorJob()).launch {
                 startSubscriptions(config)
             }
 
@@ -123,7 +123,7 @@ public class PubSub {
                         agentId = eventContext.agent.id,
                         runId = eventContext.runId,
                         strategyName = eventContext.strategy.name,
-                        timestamp = System.currentTimeMillis()
+                        timestamp = 0 // Cross-platform compatibility
                     )
                     publishEvent(config, config.agentEventTopic, event)
                 }
@@ -133,7 +133,7 @@ public class PubSub {
                         agentId = eventContext.agentId,
                         runId = eventContext.runId,
                         result = eventContext.result?.toString(),
-                        timestamp = System.currentTimeMillis()
+                        timestamp = 0 // Cross-platform compatibility
                     )
                     publishEvent(config, config.agentEventTopic, event)
                 }
@@ -143,7 +143,7 @@ public class PubSub {
                         agentId = eventContext.agentId,
                         runId = eventContext.runId,
                         error = eventContext.throwable.message ?: "Unknown error",
-                        timestamp = System.currentTimeMillis()
+                        timestamp = 0 // Cross-platform compatibility
                     )
                     publishEvent(config, config.agentEventTopic, event)
                 }
@@ -160,7 +160,7 @@ public class PubSub {
                         toolCallId = eventContext.toolCallId ?: "unknown",
                         toolName = eventContext.tool.name,
                         toolArgs = eventContext.toolArgs.toString(),
-                        timestamp = System.currentTimeMillis()
+                        timestamp = 0 // Cross-platform compatibility
                     )
                     publishEvent(config, config.toolEventTopic, event)
                 }
@@ -171,7 +171,7 @@ public class PubSub {
                         toolCallId = eventContext.toolCallId ?: "unknown",
                         toolName = eventContext.tool.name,
                         result = eventContext.result?.toString() ?: "null",
-                        timestamp = System.currentTimeMillis()
+                        timestamp = 0 // Cross-platform compatibility
                     )
                     publishEvent(config, config.toolEventTopic, event)
                 }
@@ -188,7 +188,7 @@ public class PubSub {
                         model = eventContext.model.toString(),
                         promptLength = eventContext.prompt.toString().length,
                         toolCount = eventContext.tools.size,
-                        timestamp = System.currentTimeMillis()
+                        timestamp = 0 // Cross-platform compatibility
                     )
                     publishEvent(config, config.llmEventTopic, event)
                 }
@@ -198,7 +198,7 @@ public class PubSub {
                         runId = eventContext.runId,
                         model = eventContext.model.toString(),
                         responseCount = eventContext.responses.size,
-                        timestamp = System.currentTimeMillis()
+                        timestamp = 0 // Cross-platform compatibility
                     )
                     publishEvent(config, config.llmEventTopic, event)
                 }
