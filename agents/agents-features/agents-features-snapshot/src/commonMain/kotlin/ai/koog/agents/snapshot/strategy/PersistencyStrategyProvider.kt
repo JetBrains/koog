@@ -33,52 +33,55 @@ public open class PersistencyStrategyProvider(
         private val logger = KotlinLogging.logger { }
         private val noOpProvider = NoPersistencyStorageProvider()
     }
+    
+    // Cache the selected provider to ensure all operations use the same provider
+    private var cachedProvider: PersistencyStorageProvider? = null
 
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        val provider = selectProvider(
-            operation = PersistencyStrategy.Dynamic.Operation.SaveCheckpoint,
-            checkpoint = agentCheckpointData
-        )
+        val provider = getSelectedProvider()
         provider.saveCheckpoint(agentCheckpointData)
     }
 
     override suspend fun getCheckpoints(): List<AgentCheckpointData> {
-        val provider = selectProvider(PersistencyStrategy.Dynamic.Operation.GetCheckpoints)
+        val provider = getSelectedProvider()
         return provider.getCheckpoints()
     }
 
     override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-        val provider = selectProvider(PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint)
+        val provider = getSelectedProvider()
         return provider.getLatestCheckpoint()
     }
 
 
     /**
-     * Selects a provider based on the strategy and operation context.
-     * Can be overridden to add support for custom strategy types.
+     * Gets the selected provider for this agent, using caching to ensure consistency.
+     * All operations for an agent will use the same provider to prevent data corruption.
      */
-    protected open suspend fun selectProvider(
-        operation: PersistencyStrategy.Dynamic.Operation,
-        checkpoint: AgentCheckpointData? = null
-    ): PersistencyStorageProvider {
-        return when (strategy) {
+    private suspend fun getSelectedProvider(): PersistencyStorageProvider {
+        // Return cached provider if already selected
+        cachedProvider?.let { return it }
+        
+        // Select provider based on strategy
+        val provider = when (strategy) {
             is PersistencyStrategy.Single -> strategy.provider
 
             is PersistencyStrategy.None -> noOpProvider
 
             is PersistencyStrategy.Dynamic -> {
-                val context = PersistencyStrategy.Dynamic.OperationContext(
-                    operation = operation,
-                    agentContext = context,
-                    checkpoint = checkpoint
+                val agentContext = PersistencyStrategy.Dynamic.AgentContext(
+                    agentContext = context
                 )
-                val providerName = strategy.selector(context)
+                val providerName = strategy.selector(agentContext)
                 strategy.providers[providerName]
                     ?: throw IllegalStateException("Provider '$providerName' not found in Dynamic strategy")
             }
 
             is PersistencyStrategy.AutoSelectForTask -> selectWithLLM(strategy)
         }
+        
+        // Cache the selected provider to ensure all operations use the same provider
+        cachedProvider = provider
+        return provider
     }
 
     /**

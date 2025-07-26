@@ -40,48 +40,38 @@ public sealed interface PersistencyStrategy {
 
 
     /**
-     * Dynamically selects a provider based on the operation context.
+     * Dynamically selects a provider based on the agent context.
      *
      * This strategy allows for intelligent provider selection based on:
-     * - Operation type (save vs retrieve)
-     * - Checkpoint characteristics (size, frequency)
-     * - Agent context (strategy, node, criticality)
-     * - Custom business logic
+     * - Agent context (strategy, task, criticality) 
+     * - Checkpoint characteristics (agent type, expected duration)
+     * - Custom business logic (environment, tenant, load balancing)
+     *
+     * IMPORTANT: The selector function should return the same provider for all operations
+     * of a given agent to ensure data consistency. The provider is selected once per agent
+     * session and used for all subsequent checkpoint operations.
      *
      * @property providers Map of provider names to their instances
-     * @property selector Function that determines which provider to use for each operation
+     * @property selector Function that determines which provider to use for this agent
      */
     public data class Dynamic(
         val providers: Map<String, PersistencyStorageProvider>,
-        val selector: suspend (OperationContext) -> String
+        val selector: suspend (AgentContext) -> String
     ) : PersistencyStrategy {
         /**
          * Context provided to the selector function for making provider decisions.
          *
-         * @property operation The type of persistence operation being performed
+         * This context focuses on agent-level characteristics rather than individual operations
+         * to ensure all operations for an agent use the same provider consistently.
+         *
          * @property agentContext The current agent execution context
-         * @property checkpoint Optional checkpoint data (for save operations)
          * @property metadata Additional metadata that might influence provider selection
          */
-        public data class OperationContext(
-            val operation: Operation,
+        public data class AgentContext(
             val agentContext: AIAgentContextBase,
-            val checkpoint: AgentCheckpointData? = null,
             val metadata: Map<String, Any> = emptyMap()
         )
 
-        /**
-         * Types of persistence operations that can be performed.
-         */
-        public sealed interface Operation {
-            public data object SaveCheckpoint : Operation
-            public data object GetLatestCheckpoint : Operation
-            public data object GetCheckpoints : Operation
-            public data class GetCheckpointById(val id: String) : Operation
-            public data class DeleteCheckpoint(val id: String) : Operation
-            public data object DeleteAllCheckpoints : Operation
-            public data object GetCheckpointCount : Operation
-        }
     }
 
     

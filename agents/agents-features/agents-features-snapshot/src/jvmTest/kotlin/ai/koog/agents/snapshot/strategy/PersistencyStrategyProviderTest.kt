@@ -79,35 +79,32 @@ class PersistencyStrategyProviderTest {
         )
         
         var selectorCallCount = 0
-        val selector: suspend (PersistencyStrategy.Dynamic.OperationContext) -> String = { context ->
+        val selector: suspend (PersistencyStrategy.Dynamic.AgentContext) -> String = { context ->
             selectorCallCount++
-            when (context.operation) {
-                is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> {
-                    if (context.checkpoint?.nodeId?.contains("fast") == true) "ephemeral" else "durable"
-                }
-                else -> "durable"
-            }
+            // Agent-level routing based on agent ID or context characteristics
+            if (context.agentContext.id.contains("fast")) "ephemeral" else "durable"
         }
         
         val strategy = PersistencyStrategy.Dynamic(providers, selector)
         val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
         
-        // When - save with "fast" node
-        val fastCheckpoint = testCheckpoint.copy(nodeId = "fast-processing")
-        strategyProvider.saveCheckpoint(fastCheckpoint)
+        // When - save multiple checkpoints (all should use same cached provider)
+        val checkpoint1 = testCheckpoint.copy(nodeId = "first-checkpoint")
+        val checkpoint2 = testCheckpoint.copy(nodeId = "second-checkpoint")
         
-        // Then
+        strategyProvider.saveCheckpoint(checkpoint1)
+        strategyProvider.saveCheckpoint(checkpoint2)
+        
+        // Then - selector called only once, all operations use the same provider
         assertEquals(1, selectorCallCount)
-        assertNotNull(ephemeralProvider.getLatestCheckpoint())
-        assertNull(durableProvider.getLatestCheckpoint())
         
-        // When - save with regular node
-        val regularCheckpoint = testCheckpoint.copy(nodeId = "regular-processing")
-        strategyProvider.saveCheckpoint(regularCheckpoint)
-        
-        // Then
-        assertEquals(2, selectorCallCount)
+        // Since mockContext.id doesn't contain "fast", should use durable provider
+        assertNull(ephemeralProvider.getLatestCheckpoint())
         assertNotNull(durableProvider.getLatestCheckpoint())
+        
+        // Verify both checkpoints went to the same (durable) provider
+        val checkpoints = durableProvider.getCheckpoints()
+        assertEquals(2, checkpoints.size)
     }
     
     
@@ -119,7 +116,7 @@ class PersistencyStrategyProviderTest {
             "valid" to InMemoryPersistencyStorageProvider("valid")
         )
         
-        val selector: suspend (PersistencyStrategy.Dynamic.OperationContext) -> String = { _ ->
+        val selector: suspend (PersistencyStrategy.Dynamic.AgentContext) -> String = { _ ->
             "invalid" // Return non-existent provider
         }
         
