@@ -84,63 +84,7 @@ public sealed interface PersistencyStrategy {
         }
     }
 
-    /**
-     * Hybrid strategy with explicit routing logic for different checkpoint scenarios.
-     *
-     * Provides three provider types with custom routing logic:
-     * - Mid-execution checkpoints → Fast, ephemeral storage (e.g., Redis)
-     * - Session persistence → Durable storage (e.g., PostgreSQL)
-     * - Critical checkpoints → Most reliable storage available
-     *
-     * This is a specialized version of [Dynamic] with predefined provider types
-     * but requires explicit routing logic for predictable behavior.
-     *
-     * @property ephemeralProvider Provider for fast, temporary checkpoints
-     * @property durableProvider Provider for long-term persistence
-     * @property criticalProvider Optional provider for critical checkpoints (defaults to durable)
-     * @property selector Function that determines which provider type to use for each operation
-     */
-    public data class Hybrid(
-        val ephemeralProvider: PersistencyStorageProvider,
-        val durableProvider: PersistencyStorageProvider,
-        val criticalProvider: PersistencyStorageProvider? = null,
-        val selector: suspend (Dynamic.OperationContext) -> ProviderType
-    ) : PersistencyStrategy {
-        public enum class ProviderType {
-            EPHEMERAL,
-            DURABLE,
-            CRITICAL
-        }
-    }
     
-    /**
-     * Intelligent hybrid strategy with LLM-driven routing decisions.
-     *
-     * This strategy combines the simplicity of [Hybrid] with the intelligence of LLM-based
-     * routing. It automatically determines whether checkpoints should go to ephemeral or
-     * durable storage based on contextual analysis of:
-     * - Node execution state (start, middle, end)
-     * - Checkpoint characteristics (message history, criticality)
-     * - Agent context and task description
-     *
-     * Unlike hardcoded heuristics, this uses the LLM to make intelligent routing decisions
-     * while providing fallback behavior for reliability.
-     *
-     * @property ephemeralProvider Provider for fast, temporary checkpoints
-     * @property durableProvider Provider for long-term persistence
-     * @property criticalProvider Optional provider for critical checkpoints
-     * @property taskDescription Description of the agent's task for context-aware routing
-     * @property maxRetries Maximum LLM retries before falling back to simple logic (default: 2)
-     * @property fallbackToSimple Whether to use simple hybrid logic on LLM failure (default: true)
-     */
-    public data class SmartHybrid(
-        val ephemeralProvider: PersistencyStorageProvider,
-        val durableProvider: PersistencyStorageProvider,
-        val criticalProvider: PersistencyStorageProvider? = null,
-        val taskDescription: String = "General agent task",
-        val maxRetries: Int = 2,
-        val fallbackToSimple: Boolean = true
-    ) : PersistencyStrategy
 
     /**
      * LLM-driven strategy for intelligent provider selection.
