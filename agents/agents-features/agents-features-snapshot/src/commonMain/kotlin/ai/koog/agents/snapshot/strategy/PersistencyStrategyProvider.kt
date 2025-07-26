@@ -76,6 +76,8 @@ public class PersistencyStrategyProvider(
 
             is PersistencyStrategy.Hybrid -> selectHybridProvider(strategy, operation, checkpoint)
 
+            is PersistencyStrategy.SmartHybrid -> selectSmartHybridProvider(strategy, operation, checkpoint)
+
             is PersistencyStrategy.AutoSelectForTask -> selectWithLLM(strategy, operation, checkpoint)
         }
     }
@@ -207,6 +209,187 @@ public class PersistencyStrategyProvider(
         }
     }
 
+    /**
+     * Selects a provider using LLM-driven smart hybrid logic.
+     * Falls back to simple hybrid behavior if LLM selection fails.
+     */
+    @OptIn(DetachedPromptExecutorAPI::class)
+    private suspend fun selectSmartHybridProvider(
+        strategy: PersistencyStrategy.SmartHybrid,
+        operation: PersistencyStrategy.Dynamic.Operation,
+        checkpoint: AgentCheckpointData?
+    ): PersistencyStorageProvider {
+        // For read operations, use simple hybrid logic (try ephemeral first)
+        if (operation is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint ||
+            operation is PersistencyStrategy.Dynamic.Operation.GetCheckpoints
+        ) {
+            return selectSimpleHybridProvider(strategy, operation)
+        }
+
+        // For save operations, try LLM-based routing
+        if (operation is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint && checkpoint != null) {
+            try {
+                val providerType = selectProviderWithLLM(strategy, checkpoint)
+                return when (providerType) {
+                    PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL -> strategy.ephemeralProvider
+                    PersistencyStrategy.Hybrid.ProviderType.DURABLE -> strategy.durableProvider
+                    PersistencyStrategy.Hybrid.ProviderType.CRITICAL ->
+                        strategy.criticalProvider ?: strategy.durableProvider
+                }
+            } catch (e: Exception) {
+                logger.warn { "SmartHybrid LLM selection failed: ${e.message}" }
+                if (strategy.fallbackToSimple) {
+                    logger.debug { "Falling back to simple hybrid logic" }
+                    return selectSimpleHybridProvider(strategy, operation)
+                } else {
+                    throw e
+                }
+            }
+        }
+
+        // Default to simple hybrid logic for other operations
+        return selectSimpleHybridProvider(strategy, operation)
+    }
+
+    /**
+     * Simple hybrid provider selection logic (fallback behavior).
+     */
+    private suspend fun selectSimpleHybridProvider(
+        strategy: PersistencyStrategy.SmartHybrid,
+        operation: PersistencyStrategy.Dynamic.Operation
+    ): PersistencyStorageProvider {
+        return when (operation) {
+            is PersistencyStrategy.Dynamic.Operation.SaveCheckpoint -> strategy.durableProvider
+
+            is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint,
+            is PersistencyStrategy.Dynamic.Operation.GetCheckpoints -> {
+                // Try ephemeral first for recent checkpoints
+                val ephemeralResult = runCatching {
+                    when (operation) {
+                        is PersistencyStrategy.Dynamic.Operation.GetLatestCheckpoint ->
+                            strategy.ephemeralProvider.getLatestCheckpoint()
+                        is PersistencyStrategy.Dynamic.Operation.GetCheckpoints ->
+                            strategy.ephemeralProvider.getCheckpoints()
+                        else -> null
+                    }
+                }.getOrNull()
+
+                if (ephemeralResult != null &&
+                    (ephemeralResult !is List<*> || ephemeralResult.isNotEmpty())
+                ) {
+                    strategy.ephemeralProvider
+                } else {
+                    strategy.durableProvider
+                }
+            }
+
+            else -> strategy.durableProvider
+        }
+    }
+
+    /**
+     * Uses LLM to determine the appropriate provider type for a checkpoint.
+     */
+    @OptIn(DetachedPromptExecutorAPI::class)
+    private suspend fun selectProviderWithLLM(
+        strategy: PersistencyStrategy.SmartHybrid,
+        checkpoint: AgentCheckpointData
+    ): PersistencyStrategy.Hybrid.ProviderType {
+        @Serializable
+        data class ProviderTypeSelection(
+            val providerType: String, // "ephemeral", "durable", or "critical"
+            val reasoning: String? = null
+        )
+
+        var lastException: Exception? = null
+
+        for (attempt in 0 until strategy.maxRetries) {
+            try {
+                val selection = context.llm.writeSession {
+                    val initialPrompt = prompt
+
+                    replaceHistoryWithTLDR()
+
+                    updatePrompt {
+                        user {
+                            """
+                            Analyze this agent checkpoint and determine the most appropriate storage type.
+                            
+                            Task Context: ${strategy.taskDescription}
+                            
+                            Checkpoint Details:
+                            - Node ID: ${checkpoint.nodeId}
+                            - Message History Length: ${checkpoint.messageHistory.size}
+                            - Created At: ${checkpoint.createdAt}
+                            
+                            Available Storage Types:
+                            - "ephemeral": Fast, temporary storage for mid-execution checkpoints that don't need long-term persistence
+                            - "durable": Reliable, long-term storage for important checkpoints and session state
+                            - "critical": Most reliable storage for final results or critical decision points${if (strategy.criticalProvider == null) " (not available)" else ""}
+                            
+                            Consider:
+                            - Is this a mid-execution checkpoint or an important milestone/result?
+                            - Does the node ID suggest temporary processing or final state?
+                            - Does the message history indicate significant progress worth preserving?
+                            
+                            Choose the most appropriate storage type: ${
+                                listOfNotNull("ephemeral", "durable", if (strategy.criticalProvider != null) "critical" else null)
+                                    .joinToString(", ")
+                            }
+                            """.trimIndent()
+                        }
+                    }
+
+                    val result = this.requestLLMStructured(
+                        structure = JsonStructuredData.createJsonStructure<ProviderTypeSelection>(
+                            schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                            examples = listOf(
+                                ProviderTypeSelection("ephemeral", "Mid-execution processing step"),
+                                ProviderTypeSelection("durable", "Important milestone checkpoint"),
+                                ProviderTypeSelection("critical", "Final result or critical decision")
+                            )
+                        ),
+                        retries = 1
+                    ).getOrThrow()
+
+                    prompt = initialPrompt
+                    result.structure
+                }
+
+                val providerType = when (selection.providerType.lowercase()) {
+                    "ephemeral" -> PersistencyStrategy.Hybrid.ProviderType.EPHEMERAL
+                    "durable" -> PersistencyStrategy.Hybrid.ProviderType.DURABLE
+                    "critical" -> {
+                        if (strategy.criticalProvider != null) {
+                            PersistencyStrategy.Hybrid.ProviderType.CRITICAL
+                        } else {
+                            PersistencyStrategy.Hybrid.ProviderType.DURABLE
+                        }
+                    }
+                    else -> PersistencyStrategy.Hybrid.ProviderType.DURABLE
+                }
+
+                logger.debug {
+                    "SmartHybrid LLM selected '${selection.providerType}' for checkpoint '${checkpoint.nodeId}' on attempt ${attempt + 1}" +
+                            selection.reasoning?.let { " (reasoning: $it)" }.orEmpty()
+                }
+
+                return providerType
+
+            } catch (e: Exception) {
+                lastException = e
+                logger.warn {
+                    "SmartHybrid LLM selection failed on attempt ${attempt + 1}/${strategy.maxRetries}: ${e.message}"
+                }
+            }
+        }
+
+        // All attempts failed
+        throw IllegalStateException(
+            "SmartHybrid LLM selection failed after ${strategy.maxRetries} attempts",
+            lastException
+        )
+    }
 
     /**
      * Data class for LLM provider selection response.

@@ -41,12 +41,22 @@ sealed interface PersistencyStrategy {
         val selector: suspend (OperationContext) -> String
     )
     
-    // Pre-configured hybrid approach with intelligent defaults
+    // Pre-configured hybrid approach with simple defaults
     data class Hybrid(
         val ephemeralProvider: PersistencyStorageProvider,
         val durableProvider: PersistencyStorageProvider,
         val criticalProvider: PersistencyStorageProvider? = null,
         val selector: (suspend (OperationContext) -> ProviderType)? = null // Custom selection logic
+    )
+    
+    // LLM-powered hybrid strategy with intelligent routing
+    data class SmartHybrid(
+        val ephemeralProvider: PersistencyStorageProvider,
+        val durableProvider: PersistencyStorageProvider,
+        val criticalProvider: PersistencyStorageProvider? = null,
+        val taskDescription: String = "General agent task",
+        val maxRetries: Int = 2,
+        val fallbackToSimple: Boolean = true
     )
     
     // LLM-driven provider selection
@@ -96,13 +106,24 @@ strategy = PersistencyStrategy.Dynamic(
 )
 ```
 
-**Intelligent Cost Optimization**
+**Simple Cost Optimization**
 ```kotlin
 strategy = PersistencyStrategy.Hybrid(
-    ephemeralProvider = localCache,      // Free, mid-execution checkpoints
-    durableProvider = postgres,          // Moderate cost, important checkpoints
-    criticalProvider = s3Provider        // Low cost, high durability for final states
+    ephemeralProvider = localCache,      // Free, try first for reads
+    durableProvider = postgres,          // Moderate cost, all saves by default
+    criticalProvider = s3Provider        // Low cost, high durability if using custom selector
 ) // Simple defaults: durable for saves, ephemeral-first for reads
+```
+
+**LLM-Powered Intelligent Routing**
+```kotlin
+strategy = PersistencyStrategy.SmartHybrid(
+    ephemeralProvider = redis,           // Fast, temporary checkpoints  
+    durableProvider = postgres,          // Important milestones
+    criticalProvider = s3Provider,       // Final results
+    taskDescription = "Multi-step data processing pipeline with decision points",
+    fallbackToSimple = true              // Graceful degradation if LLM fails
+) // LLM analyzes context to route checkpoints intelligently
 ```
 
 ## Architecture
@@ -131,6 +152,7 @@ Comprehensive JVM-based test suite covering:
 - Failover scenarios with health check validation
 - Dynamic selection logic with context awareness
 - Hybrid strategy with simple, predictable default behavior
+- SmartHybrid strategy with LLM-powered intelligent routing and fallback logic
 - Concurrent access and thread safety
 - Error handling and retry mechanisms
 - Provider health monitoring and automatic failover
@@ -160,6 +182,7 @@ strategy = PersistencyStrategy.AutoSelectForTask(
 This PR includes production-ready enhancements:
 - **Health Check Integration**: All failover strategies now perform comprehensive health checks before using providers
 - **Simple Hybrid Strategy**: Clean default behavior with custom selector support for advanced use cases
+- **LLM-Powered SmartHybrid**: Intelligent routing with context analysis and graceful fallback to simple logic
 - **Retry & Fallback Logic**: AutoSelectForTask includes robust error handling with configurable retries and fallback providers
 - **Thread Safety**: Full concurrent access support for high-throughput scenarios
 - **Comprehensive Testing**: JVM-based test suite with proper mocking and edge case coverage

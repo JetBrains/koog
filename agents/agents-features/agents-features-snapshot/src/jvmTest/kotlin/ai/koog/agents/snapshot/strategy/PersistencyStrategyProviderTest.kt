@@ -409,6 +409,63 @@ class PersistencyStrategyProviderTest {
     }
     
     @Test
+    fun testSmartHybridStrategyStructure() = runTest {
+        // Given
+        val ephemeralProvider = InMemoryPersistencyStorageProvider("ephemeral")
+        val durableProvider = InMemoryPersistencyStorageProvider("durable")
+        val criticalProvider = InMemoryPersistencyStorageProvider("critical")
+        
+        val strategy = PersistencyStrategy.SmartHybrid(
+            ephemeralProvider = ephemeralProvider,
+            durableProvider = durableProvider,
+            criticalProvider = criticalProvider,
+            taskDescription = "Data processing pipeline with frequent checkpoints",
+            maxRetries = 2,
+            fallbackToSimple = true
+        )
+        
+        // Then - verify structure
+        assertEquals(ephemeralProvider, strategy.ephemeralProvider)
+        assertEquals(durableProvider, strategy.durableProvider)
+        assertEquals(criticalProvider, strategy.criticalProvider)
+        assertEquals("Data processing pipeline with frequent checkpoints", strategy.taskDescription)
+        assertEquals(2, strategy.maxRetries)
+        assertTrue(strategy.fallbackToSimple)
+    }
+    
+    @Test
+    fun testSmartHybridFallbackBehavior() = runTest {
+        // Given - SmartHybrid without LLM context (will fall back to simple logic)
+        val ephemeralProvider = InMemoryPersistencyStorageProvider("ephemeral")
+        val durableProvider = InMemoryPersistencyStorageProvider("durable")
+        
+        val strategy = PersistencyStrategy.SmartHybrid(
+            ephemeralProvider = ephemeralProvider,
+            durableProvider = durableProvider,
+            taskDescription = "Test task",
+            maxRetries = 1,
+            fallbackToSimple = true
+        )
+        val strategyProvider = PersistencyStrategyProvider(strategy, mockContext)
+        
+        // When - save checkpoint (should fallback to simple logic: durable for saves)
+        strategyProvider.saveCheckpoint(testCheckpoint)
+        
+        // Then - should use durable provider for saves (fallback behavior)
+        assertNotNull(durableProvider.getLatestCheckpoint())
+        assertNull(ephemeralProvider.getLatestCheckpoint())
+        
+        // Add some data to ephemeral for read test
+        ephemeralProvider.saveCheckpoint(testCheckpoint.copy(checkpointId = "ephemeral-test"))
+        
+        // When - read operations (should try ephemeral first)
+        val latest = strategyProvider.getLatestCheckpoint()
+        
+        // Then - should return from ephemeral if it has data
+        assertEquals("ephemeral-test", latest?.checkpointId)
+    }
+
+    @Test
     fun testMultipleOperationTypes() = runTest {
         // Given
         val provider = InMemoryPersistencyStorageProvider(testPersistenceId)

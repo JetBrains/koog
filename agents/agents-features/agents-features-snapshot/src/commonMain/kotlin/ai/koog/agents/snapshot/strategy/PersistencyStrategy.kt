@@ -125,6 +125,35 @@ public sealed interface PersistencyStrategy {
     }
     
     /**
+     * Intelligent hybrid strategy with LLM-driven routing decisions.
+     *
+     * This strategy combines the simplicity of [Hybrid] with the intelligence of LLM-based
+     * routing. It automatically determines whether checkpoints should go to ephemeral or
+     * durable storage based on contextual analysis of:
+     * - Node execution state (start, middle, end)
+     * - Checkpoint characteristics (message history, criticality)
+     * - Agent context and task description
+     *
+     * Unlike hardcoded heuristics, this uses the LLM to make intelligent routing decisions
+     * while providing fallback behavior for reliability.
+     *
+     * @property ephemeralProvider Provider for fast, temporary checkpoints
+     * @property durableProvider Provider for long-term persistence
+     * @property criticalProvider Optional provider for critical checkpoints
+     * @property taskDescription Description of the agent's task for context-aware routing
+     * @property maxRetries Maximum LLM retries before falling back to simple logic (default: 2)
+     * @property fallbackToSimple Whether to use simple hybrid logic on LLM failure (default: true)
+     */
+    public data class SmartHybrid(
+        val ephemeralProvider: PersistencyStorageProvider,
+        val durableProvider: PersistencyStorageProvider,
+        val criticalProvider: PersistencyStorageProvider? = null,
+        val taskDescription: String = "General agent task",
+        val maxRetries: Int = 2,
+        val fallbackToSimple: Boolean = true
+    ) : PersistencyStrategy
+
+    /**
      * LLM-driven strategy for intelligent provider selection.
      *
      * Similar to [ToolSelectionStrategy.AutoSelectForTask], this strategy uses the LLM
