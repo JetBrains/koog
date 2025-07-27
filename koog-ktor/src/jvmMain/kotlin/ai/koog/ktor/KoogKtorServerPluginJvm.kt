@@ -5,8 +5,8 @@ import ai.koog.agents.mcp.McpToolDescriptorParser
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_NAME
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_VERSION
-import ai.koog.agents.utils.Closeable
 import io.modelcontextprotocol.kotlin.sdk.client.Client
+import io.modelcontextprotocol.kotlin.sdk.shared.DEFAULT_REQUEST_TIMEOUT
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration
 
 /**
  * Configuration class for MCPTools that manages the integration of various tool registries
@@ -115,13 +117,15 @@ public class MCPToolsConfig(
  *
  * @param configure A suspend lambda used to configure the MCPToolsConfig instance.
  */
-public fun KoogAgentsConfig.AgentConfig.mcp(configure: MCPToolsConfig.() -> Unit) {
+public fun KoogAgentsConfig.AgentConfig.mcp(
+    timeout: Duration = DEFAULT_REQUEST_TIMEOUT,
+    configure: MCPToolsConfig.() -> Unit
+) {
     val job = Job()
     val scope = CoroutineScope(Dispatchers.IO + job)
     MCPToolsConfig(this@mcp, scope).configure()
-    // TODO: timeout?
     runBlocking {
         job.complete()
-        job.join()
+        withTimeout(timeout) { job.join() }
     }
 }
