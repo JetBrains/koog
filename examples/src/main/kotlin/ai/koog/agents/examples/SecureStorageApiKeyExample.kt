@@ -7,6 +7,7 @@ import ai.koog.agents.secure.storage.SecureStorage
 import ai.koog.agents.secure.storage.SecureStorageConfig
 import ai.koog.agents.secure.storage.EncryptedMode
 import ai.koog.agents.secure.crypto.PassphraseKeyProvider
+import ai.koog.agents.secure.crypto.createPlatformKeyProvider
 import ai.koog.agents.secure.apikeys.ApiKeySource
 import ai.koog.agents.secure.storage.backend.SecureKVBackendImpl
 import ai.koog.agents.secure.storage.backend.SecurePersistencyBackendImpl
@@ -183,11 +184,15 @@ object AgentFactory {
     private fun setupProductionStorage(): SecureStorage {
         return SecureStorage(SecureStorageConfig().apply {
             mode = EncryptedMode(
-                keyProvider = PassphraseKeyProvider(
-                    passphrase = System.getenv("MASTER_PASSPHRASE") 
-                        ?: throw IllegalStateException("MASTER_PASSPHRASE required"),
-                    salt = "production-salt-change-me".encodeToByteArray(),
-                    iterations = 600000
+                keyProvider = createPlatformKeyProvider(
+                    keyIdentifier = "koog-production-key",
+                    serviceName = "ai.koog.agents.production",
+                    fallbackProvider = PassphraseKeyProvider(
+                        passphrase = System.getenv("MASTER_PASSPHRASE") 
+                            ?: throw IllegalStateException("MASTER_PASSPHRASE required"),
+                        salt = "production-salt-change-me".encodeToByteArray(),
+                        iterations = 600000
+                    )
                 ),
                 databasePath = "production-secure.db"
             )
@@ -210,11 +215,15 @@ object AgentFactory {
     private fun setupEnterpriseStorage(): SecureStorage {
         return SecureStorage(SecureStorageConfig().apply {
             mode = EncryptedMode(
-                keyProvider = PassphraseKeyProvider(
-                    passphrase = System.getenv("ENTERPRISE_MASTER_KEY")
-                        ?: throw IllegalStateException("ENTERPRISE_MASTER_KEY required"),
-                    salt = "enterprise-salt-change-me".encodeToByteArray(),
-                    iterations = 600000
+                keyProvider = createPlatformKeyProvider(
+                    keyIdentifier = "koog-enterprise-key",
+                    serviceName = "ai.koog.agents.enterprise",
+                    fallbackProvider = PassphraseKeyProvider(
+                        passphrase = System.getenv("ENTERPRISE_MASTER_KEY")
+                            ?: throw IllegalStateException("ENTERPRISE_MASTER_KEY required"),
+                        salt = "enterprise-salt-change-me".encodeToByteArray(),
+                        iterations = 600000
+                    )
                 ),
                 databasePath = "enterprise-secure.db"
             )
