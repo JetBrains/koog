@@ -5,8 +5,15 @@ import ai.koog.agents.mcp.McpToolDescriptorParser
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_NAME
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_VERSION
+import ai.koog.agents.utils.Closeable
 import io.modelcontextprotocol.kotlin.sdk.client.Client
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Configuration class for MCPTools that manages the integration of various tool registries
@@ -14,7 +21,12 @@ import kotlinx.coroutines.runBlocking
  *
  * @param agentConfig Configuration for the Koog agent server, which includes tool registry details.
  */
-public class MCPToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfig) {
+public class MCPToolsConfig(
+    private val agentConfig: KoogAgentsConfig.AgentConfig,
+    private val scope: CoroutineScope
+) {
+    private val mutex = Mutex()
+
     /**
      * Processes a given `Process` instance to register tools from an MCP server.
      *
@@ -31,18 +43,21 @@ public class MCPToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
      * @param version The version of the MCP client for identifying the source of the tools.
      *                Defaults to `DEFAULT_MCP_CLIENT_VERSION`.
      */
-    public suspend fun process(
+    public fun process(
         process: Process,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
     ) {
-        agentConfig.toolRegistry += McpToolRegistryProvider.fromTransport(
-            transport = McpToolRegistryProvider.defaultStdioTransport(process),
-            mcpToolParser = mcpToolParser,
-            name = name,
-            version = version,
-        )
+        scope.launch {
+            val transport = McpToolRegistryProvider.fromTransport(
+                transport = McpToolRegistryProvider.defaultStdioTransport(process),
+                mcpToolParser = mcpToolParser,
+                name = name,
+                version = version,
+            )
+            mutex.withLock { agentConfig.toolRegistry += transport }
+        }
     }
 
     /**
@@ -57,18 +72,21 @@ public class MCPToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
      * @param name The name of the MCP client. Defaults to `DEFAULT_MCP_CLIENT_NAME`.
      * @param version The version of the MCP client. Defaults to `DEFAULT_MCP_CLIENT_VERSION`.
      */
-    public suspend fun sse(
+    public fun sse(
         url: String,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
     ) {
-        agentConfig.toolRegistry += McpToolRegistryProvider.fromTransport(
-            transport = McpToolRegistryProvider.defaultSseTransport(url),
-            mcpToolParser = mcpToolParser,
-            name = name,
-            version = version,
-        )
+        scope.launch {
+            val transport = McpToolRegistryProvider.fromTransport(
+                transport = McpToolRegistryProvider.defaultSseTransport(url),
+                mcpToolParser = mcpToolParser,
+                name = name,
+                version = version,
+            )
+            mutex.withLock { agentConfig.toolRegistry += transport }
+        }
     }
 
     /**
@@ -81,11 +99,14 @@ public class MCPToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
      * @param mcpToolParser The parser used to convert raw tool information into standardized tool descriptors.
      * Defaults to the standard parser implementation.
      */
-    public suspend fun client(
+    public fun client(
         mcpClient: Client,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser
     ) {
-        agentConfig.toolRegistry += McpToolRegistryProvider.fromClient(mcpClient, mcpToolParser)
+        scope.launch {
+            val fromClient = McpToolRegistryProvider.fromClient(mcpClient, mcpToolParser)
+            mutex.withLock { agentConfig.toolRegistry += fromClient }
+        }
     }
 }
 
@@ -94,8 +115,13 @@ public class MCPToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfi
  *
  * @param configure A suspend lambda used to configure the MCPToolsConfig instance.
  */
-public fun KoogAgentsConfig.AgentConfig.mcp(configure: suspend MCPToolsConfig.() -> Unit) {
+public fun KoogAgentsConfig.AgentConfig.mcp(configure: MCPToolsConfig.() -> Unit) {
+    val job = Job()
+    val scope = CoroutineScope(Dispatchers.IO + job)
+    MCPToolsConfig(this@mcp, scope).configure()
+    // TODO: timeout?
     runBlocking {
-        MCPToolsConfig(this@mcp).configure()
+        job.complete()
+        job.join()
     }
 }
