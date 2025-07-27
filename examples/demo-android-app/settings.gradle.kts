@@ -21,6 +21,11 @@ dependencyResolutionManagement {
         // For Koog development only, skip this if you don't need to load any local dependencies.
         mavenLocal()
     }
+    versionCatalogs {
+        create("ktorLibs") {
+            from("io.ktor:ktor-version-catalog:3.2.2")
+        }
+    }
 }
 
 rootProject.name = "koog-demo-android-app"
