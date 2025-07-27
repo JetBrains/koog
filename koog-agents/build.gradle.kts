@@ -25,6 +25,7 @@ val included = setOf(
     ":agents:agents-features:agents-features-trace",
     ":agents:agents-features:agents-features-tokenizer",
     ":agents:agents-features:agents-features-snapshot",
+    ":agents:agents-features:agents-features-secure-storage",
     ":agents:agents-mcp",
     ":agents:agents-tools",
     ":agents:agents-utils",
@@ -89,8 +90,26 @@ kotlin {
                 }
 
                 projects.forEach {
-                    api(project(it.path))
+                    // Exclude secure storage from WASM targets since Kottage doesn't support WASM
+                    if (it.path == ":agents:agents-features:agents-features-secure-storage") {
+                        // This will be added conditionally for JVM and JS only
+                    } else {
+                        api(project(it.path))
+                    }
                 }
+            }
+        }
+        
+        // Add secure storage dependency only for targets that support it (JVM and JS)
+        jvmMain {
+            dependencies {
+                api(project(":agents:agents-features:agents-features-secure-storage"))
+            }
+        }
+        
+        jsMain {
+            dependencies {
+                api(project(":agents:agents-features:agents-features-secure-storage"))
             }
         }
     }

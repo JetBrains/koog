@@ -16,6 +16,7 @@ include(":agents:agents-features:agents-features-opentelemetry")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-features:agents-features-tokenizer")
 include(":agents:agents-features:agents-features-snapshot")
+include(":agents:agents-features:agents-features-secure-storage")
 
 include(":agents:agents-mcp")
 include(":agents:agents-test")
