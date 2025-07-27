@@ -12,7 +12,7 @@ val excluded = setOf(
     ":examples",
     ":integration-tests",
     ":koog-spring-boot-starter",
-    ":koog-ktor-plugin",
+    ":koog-ktor",
     project.path, // the current project should not depend on itself
 )
 

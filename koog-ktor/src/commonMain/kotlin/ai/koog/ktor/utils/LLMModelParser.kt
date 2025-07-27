@@ -200,7 +200,6 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
 private val GOOGLE_MODELS_MAP = mapOf(
     "gemini1_5pro" to GoogleModels.Gemini1_5Pro,
     "gemini1_5prolatest" to GoogleModels.Gemini1_5ProLatest,
-    "gemini2_5propreview0506" to GoogleModels.Gemini2_5ProPreview0506,
     "gemini2_0flash" to GoogleModels.Gemini2_0Flash,
     "gemini2_0flash001" to GoogleModels.Gemini2_0Flash001,
     "gemini2_0flashlite" to GoogleModels.Gemini2_0FlashLite,
@@ -211,7 +210,6 @@ private val GOOGLE_MODELS_MAP = mapOf(
     "gemini1_5flash8b" to GoogleModels.Gemini1_5Flash8B,
     "gemini1_5flash8b001" to GoogleModels.Gemini1_5Flash8B001,
     "gemini1_5flash8blatest" to GoogleModels.Gemini1_5Flash8BLatest,
-    "gemini2_5flashpreview0417" to GoogleModels.Gemini2_5FlashPreview0417
 )
 
 private val OPENROUTER_MODELS_MAP = mapOf(

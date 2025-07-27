@@ -67,7 +67,7 @@ fun Application.configureKoog() {
             fallback { }
         }
 
-        agent {
+        agentConfig {
             mcp {
                 sse("put some url here...")
             }
@@ -111,6 +111,7 @@ private fun Route.agenticRoutes() {
 
         if (isHarmful) {
             call.respond(HttpStatusCode.BadRequest, "Harmful content detected")
+            return@get
         }
 
         val updatedRequest = llm().execute(prompt("id") {

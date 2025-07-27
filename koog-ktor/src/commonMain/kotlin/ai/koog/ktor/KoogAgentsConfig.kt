@@ -431,7 +431,7 @@ public class KoogAgentsConfig {
     }
 
     /**
-     * Configures and initializes an AI agent with the specified settings.
+     * Configures default configuration for all AI agents with the specified settings.
      *
      * This method allows the customization of an AI agent by providing a suspendable configuration block
      * that modifies the agent's prompt, model, tool registry, and other parameters. The resulting agent
@@ -441,7 +441,7 @@ public class KoogAgentsConfig {
      * The configuration block operates on an instance of [AgentConfig], where properties such as
      * `prompt`, `model`, `maxAgentIterations`, and tools can be customized.
      */
-    public fun agent(configure: AgentConfig.() -> Unit) {
+    public fun agentConfig(configure: AgentConfig.() -> Unit) {
         with(AgentConfig()) {
             configure()
 

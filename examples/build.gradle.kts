@@ -33,8 +33,7 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
-
-    api(project(":koog-ktor-plugin"))
+    api(project(":koog-ktor"))
 
     api(libs.kotlinx.datetime)
 
