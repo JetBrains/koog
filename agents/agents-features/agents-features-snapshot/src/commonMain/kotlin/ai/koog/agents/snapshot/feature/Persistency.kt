@@ -8,6 +8,7 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.memory.feature.memory
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -15,6 +16,7 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 import kotlin.time.ExperimentalTime
@@ -37,7 +39,10 @@ import kotlin.uuid.Uuid
  * @property currentNodeId The ID of the node currently being executed
  */
 @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
-public class Persistency(private val persistencyStorageProvider: PersistencyStorageProvider) {
+public class Persistency(
+    private val persistencyStorageProvider: PersistencyStorageProvider,
+    private val config: PersistencyFeatureConfig
+) {
     /**
      * Represents the identifier of the current node being executed within the agent pipeline.
      *
@@ -90,7 +95,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             config: PersistencyFeatureConfig,
             pipeline: AIAgentPipeline
         ) {
-            val featureImpl = Persistency(config.storage)
+            val featureImpl = Persistency(config.storage, config)
             val interceptContext = InterceptContext(this, featureImpl)
 
             pipeline.interceptContextAgentFeature(this) { ctx ->
@@ -99,9 +104,11 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
 
             pipeline.interceptBeforeAgentStarted(interceptContext) { ctx ->
                 require(ctx.strategy.metadata.uniqueNames) { "Checkpoint feature requires unique node names in the strategy metadata" }
-                val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+                val checkpoint = ctx.feature.getLatestCheckpoint()
 
                 if (checkpoint != null) {
+                    // Restore from the latest checkpoint
+                    ctx.feature.rollbackToLatestCheckpoint<Unit>(ctx.context)
                     logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
                 } else {
                     logger.info { "No checkpoint found, starting from the beginning" }
@@ -128,8 +135,9 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
     /**
      * Creates a checkpoint of the agent's current state.
      *
-     * This method captures the agent's message history, current node, and input data
-     * and stores it as a checkpoint using the configured storage provider.
+     * This method captures the agent's message history, current node, input data,
+     * and optionally memory snapshots and custom data, storing it as a comprehensive
+     * checkpoint using the configured storage provider.
      *
      * @param agentContext The context of the agent containing the state to checkpoint
      * @param nodeId The ID of the node where the checkpoint is created
@@ -151,13 +159,38 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             return null
         }
 
+        // Capture memory snapshot if configured
+        val memorySnapshot = if (config.includeMemorySnapshot) {
+            try {
+                val memoryProvider = agentContext.memory().agentMemory
+                config.memorySnapshotTransformer.captureSnapshot(memoryProvider)
+            } catch (e: Exception) {
+                logger.warn { "Failed to capture memory snapshot for checkpoint $nodeId: ${e.message}" }
+                null
+            }
+        } else {
+            null
+        }
+
+        // Capture custom snapshot data if configured
+        val extraSnapshotData = config.extraSnapshotDataProvider?.let { provider ->
+            try {
+                provider.invoke(agentContext)
+            } catch (e: Exception) {
+                logger.warn { "Failed to capture extra snapshot data for checkpoint $nodeId: ${e.message}" }
+                null
+            }
+        }
+
         val checkpoint = agentContext.llm.readSession {
             return@readSession AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
                 lastInput = inputJson,
-                createdAt = Clock.System.now()
+                createdAt = Clock.System.now(),
+                memorySnapshot = memorySnapshot,
+                extraSnapshotData = extraSnapshotData
             )
         }
 
@@ -223,41 +256,112 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * Rolls back an agent's state to a specific checkpoint.
      *
      * This method retrieves the checkpoint with the specified ID and, if found,
-     * sets the agent's context to the state captured in that checkpoint.
+     * sets the agent's context to the state captured in that checkpoint,
+     * restores memory snapshots, and returns any extra snapshot data.
      *
      * @param checkpointId The ID of the checkpoint to roll back to
      * @param agentContext The context of the agent to roll back
-     * @return The checkpoint data that was restored or null if the checkpoint was not found
+     * @return The extra snapshot data from the checkpoint, or null if checkpoint not found or no extra data
      */
-    public suspend fun rollbackToCheckpoint(
+    public suspend fun <T> rollbackToCheckpoint(
         checkpointId: String,
         agentContext: AIAgentContextBase
-    ): AgentCheckpointData? {
+    ): T? {
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
+            // Restore execution context
             agentContext.store(checkpoint.toAgentContextData())
+            
+            // Restore memory snapshot if present
+            restoreMemorySnapshot(checkpoint, agentContext)
+            
+            // Return extra snapshot data if present
+            @Suppress("UNCHECKED_CAST")
+            return checkpoint.extraSnapshotData as? T
         }
-        return checkpoint
+        return null
     }
+
+    /**
+     * Rolls back an agent's state to a specific checkpoint (JsonObject return type for backward compatibility).
+     *
+     * @param checkpointId The ID of the checkpoint to roll back to
+     * @param agentContext The context of the agent to roll back
+     * @return The extra snapshot data as JsonObject, or null if checkpoint not found or no extra data
+     */
+    public suspend fun rollbackToCheckpointAsJson(
+        checkpointId: String,
+        agentContext: AIAgentContextBase
+    ): JsonObject? = rollbackToCheckpoint<JsonObject>(checkpointId, agentContext)
 
     /**
      * Rolls back an agent's state to the latest checkpoint.
      *
      * This method retrieves the most recent checkpoint for the agent and,
-     * if found, sets the agent's context to the state captured in that checkpoint.
+     * if found, sets the agent's context to the state captured in that checkpoint,
+     * restores memory snapshots, and returns any extra snapshot data.
      *
      * @param agentContext The context of the agent to roll back
-     * @return The checkpoint data that was restored or null if no checkpoint was found
+     * @return The extra snapshot data from the checkpoint, or null if no checkpoint found or no extra data
      */
-    public suspend fun rollbackToLatestCheckpoint(
+    public suspend fun <T> rollbackToLatestCheckpoint(
         agentContext: AIAgentContextBase
-    ): AgentCheckpointData? {
+    ): T? {
         val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
         if (checkpoint != null) {
+            // Restore execution context
             agentContext.store(checkpoint.toAgentContextData())
+            
+            // Restore memory snapshot if present
+            restoreMemorySnapshot(checkpoint, agentContext)
+            
+            // Return extra snapshot data if present
+            @Suppress("UNCHECKED_CAST")
+            return checkpoint.extraSnapshotData as? T
         }
-        return checkpoint
+        return null
     }
+
+    /**
+     * Rolls back an agent's state to the latest checkpoint (JsonObject return type for backward compatibility).
+     *
+     * @param agentContext The context of the agent to roll back
+     * @return The extra snapshot data as JsonObject, or null if no checkpoint found or no extra data
+     */
+    public suspend fun rollbackToLatestCheckpointAsJson(
+        agentContext: AIAgentContextBase
+    ): JsonObject? = rollbackToLatestCheckpoint<JsonObject>(agentContext)
+
+    /**
+     * Restores memory snapshot from a checkpoint if present and memory feature is available.
+     *
+     * @param checkpoint The checkpoint containing potential memory snapshot
+     * @param agentContext The agent context to restore memory to
+     */
+    private suspend fun restoreMemorySnapshot(
+        checkpoint: AgentCheckpointData,
+        agentContext: AIAgentContextBase
+    ) {
+        checkpoint.memorySnapshot?.let { memorySnapshot ->
+            try {
+                val memoryProvider = agentContext.memory().agentMemory
+                config.memorySnapshotTransformer.restoreSnapshot(memoryProvider, memorySnapshot)
+                logger.info { "Successfully restored memory snapshot from checkpoint ${checkpoint.checkpointId}" }
+            } catch (e: Exception) {
+                logger.warn { "Failed to restore memory snapshot from checkpoint ${checkpoint.checkpointId}: ${e.message}" }
+            }
+        }
+    }
+
+    /**
+     * Gets all checkpoints from the storage.
+     *
+     * @return List of all checkpoints
+     */
+    public suspend fun getCheckpoints(): List<AgentCheckpointData> {
+        return persistencyStorageProvider.getCheckpoints()
+    }
+
 }
 
 /**
