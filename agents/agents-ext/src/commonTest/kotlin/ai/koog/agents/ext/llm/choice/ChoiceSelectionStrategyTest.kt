@@ -1,6 +1,5 @@
-package ai.koog.agents.core.feature.choice
+package ai.koog.agents.ext.llm.choice
 
-import ai.koog.agents.core.feature.PromptExecutorWithChoiceSelection
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -34,8 +33,10 @@ class ChoiceSelectionStrategyTest {
         val testPrompt = prompt("test") {}
 
         // Create two different choices
-        val firstChoice: LLMChoice = listOf(Message.Assistant("First choice", metaInfo = ResponseMetaInfo.create(testClock)))
-        val secondChoice: LLMChoice = listOf(Message.Assistant("Second choice", metaInfo = ResponseMetaInfo.create(testClock)))
+        val firstChoice: LLMChoice =
+            listOf(Message.Assistant("First choice", metaInfo = ResponseMetaInfo.create(testClock)))
+        val secondChoice: LLMChoice =
+            listOf(Message.Assistant("Second choice", metaInfo = ResponseMetaInfo.create(testClock)))
         val choices = listOf(firstChoice, secondChoice)
 
         // Act
@@ -50,17 +51,32 @@ class ChoiceSelectionStrategyTest {
     fun `PromptExecutorWithChoiceSelection should delegate to strategy`() = runTest {
         // Arrange
         val mockExecutor = object : PromptExecutor {
-            override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-                return listOf(Message.Assistant("Default response", metaInfo = ResponseMetaInfo.create(testClock)))
+            override suspend fun execute(
+                prompt: Prompt,
+                model: LLModel,
+                tools: List<ToolDescriptor>
+            ): List<Message.Response> {
+                return listOf(
+                    Message.Assistant(
+                        "Default response",
+                        metaInfo = ResponseMetaInfo.create(testClock)
+                    )
+                )
             }
 
             override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
                 emit("Default streaming response")
             }
 
-            override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
-                val choice1 = listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
-                val choice2 = listOf(Message.Assistant("Choice 2", metaInfo = ResponseMetaInfo.create(testClock)))
+            override suspend fun executeMultipleChoices(
+                prompt: Prompt,
+                model: LLModel,
+                tools: List<ToolDescriptor>
+            ): List<LLMChoice> {
+                val choice1 =
+                    listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
+                val choice2 =
+                    listOf(Message.Assistant("Choice 2", metaInfo = ResponseMetaInfo.create(testClock)))
                 return listOf(choice1, choice2)
             }
 
@@ -85,6 +101,10 @@ class ChoiceSelectionStrategyTest {
 
         val result = executor.execute(testPrompt, testModel, emptyList())
 
-        assertEquals("Choice 2", (result.first() as Message.Assistant).content, "PromptExecutorChoice should delegate to strategy and return the chosen choice")
+        assertEquals(
+            "Choice 2",
+            (result.first() as Message.Assistant).content,
+            "PromptExecutorChoice should delegate to strategy and return the chosen choice"
+        )
     }
 }

@@ -28,7 +28,14 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(libs.logback.classic)
+                runtimeOnly(libs.slf4j.simple)
+            }
+        }
+
+        jsTest {
+            dependencies {
+                implementation(kotlin("test-js"))
+                runtimeOnly(libs.slf4j.simple)
             }
         }
     }
