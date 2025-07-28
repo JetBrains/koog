@@ -143,7 +143,7 @@ public object ProvideVerifiedSubgraphResult : ProvideSubgraphResult<VerifiedSubg
  * - Execution logic that returns the input `StringSubgraphResult` as output without transformation.
  *
  * Features:
- * - The `descriptor` describes the tool as "finish_task_execution" and requires a parameter named "result"
+ * - The `descriptor` describes the tool as "finish_task_execution_result" and requires a parameter named "result"
  *   representing the task result.
  * - The `execute` method processes the input argument and returns the result.
  */
@@ -151,7 +151,7 @@ public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraph
     override val argsSerializer: KSerializer<StringSubgraphResult> = StringSubgraphResult.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "finish_task_execution",
+        name = "finish_task_execution_result",
         description = "Please call this tool after you are sure that the task is completed. Verify if the task was completed correctly and provide additional information if there are problems.",
         requiredParameters = listOf(
             ToolParameterDescriptor(
