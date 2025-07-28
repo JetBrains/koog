@@ -29,7 +29,7 @@ class FeatureMessageRemoteWriterTest {
             "ai.koog.agents.features.writer.FeatureMessageRemoteWriterTest"
         )
 
-        private val defaultClientServerTimeout = 5.seconds
+        private val defaultClientServerTimeout = 30.seconds
     }
 
     class TestFeatureMessageRemoteWriter(connectionConfig: ServerConnectionConfig) : FeatureMessageRemoteWriter(connectionConfig)

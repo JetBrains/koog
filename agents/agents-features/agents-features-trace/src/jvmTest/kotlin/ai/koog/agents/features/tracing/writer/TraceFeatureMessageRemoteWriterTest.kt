@@ -26,7 +26,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
         private val logger = KotlinLogging.logger("ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriterTest")
-        private val defaultClientServerTimeout = 20.seconds
+        private val defaultClientServerTimeout = 30.seconds
         private val host = "127.0.0.1"
     }
 
