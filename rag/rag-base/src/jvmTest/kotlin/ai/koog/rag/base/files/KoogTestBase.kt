@@ -56,7 +56,7 @@ open class KoogTestBase {
     private val testCode2 = loadTextFromResource("files/testCode2.kt")
 
     @BeforeEach
-    fun setup() {
+    open fun setup() {
         dir1 = tempDir.resolve("dir1").apply { this.createDirectories() }
         src1 = dir1.resolve("src").apply { this.createDirectories() }
         resources = src1.resolve("resources").apply { this.createDirectories() }
