@@ -9,6 +9,9 @@ import ai.koog.agents.secure.storage.EncryptedMode
 import ai.koog.agents.secure.crypto.PassphraseKeyProvider
 import ai.koog.agents.secure.crypto.createPlatformKeyProvider
 import ai.koog.agents.secure.apikeys.ApiKeySource
+import ai.koog.agents.secure.apikeys.ApiKeyProviders
+import ai.koog.agents.secure.apikeys.resolveApiKey
+import ai.koog.agents.secure.apikeys.saveApiKey
 import ai.koog.agents.secure.storage.backend.SecureKVBackendImpl
 import ai.koog.agents.secure.storage.backend.SecurePersistencyBackendImpl
 import ai.koog.agents.memory.providers.SecureMemoryProvider
@@ -37,7 +40,7 @@ fun createPersonalAssistantAgent(
     // Get user's API key for OpenAI
     val userApiKey = runBlocking {
         resolver.resolveApiKey(
-            service = "openai",
+            ApiKeyProviders.OpenAI,
             userContext = "user:$userId",
             agentContext = "agent:personal-assistant"
         ) ?: throw SecurityException("No OpenAI API key available for user $userId")
@@ -61,7 +64,7 @@ suspend fun createPersonalAssistantAgentWithUserKey(
     secureStorage: SecureStorage
 ): AIAgent<String, String> {
     // Store user's API key securely
-    secureStorage.apiKeys("user:$userId").saveApiKey("openai", userApiKey)
+    secureStorage.apiKeys("user:$userId").saveApiKey(ApiKeyProviders.OpenAI, userApiKey)
     
     return createPersonalAssistantAgent(userId, secureStorage)
 }
@@ -87,7 +90,7 @@ fun createEnterpriseAgent(
     // Get the most specific API key available
     val apiKey = runBlocking {
         resolver.resolveApiKey(
-            service = "openai",
+            ApiKeyProviders.OpenAI,
             userContext = userContext,
             agentContext = agentContext
         ) ?: throw SecurityException("No API key configured for tenant $tenantId")
@@ -113,7 +116,7 @@ suspend fun createEnterpriseAgentWithDepartmentKey(
 ): AIAgent<String, String> {
     // Store department-specific API key
     val departmentContext = "tenant:$tenantId:dept:$departmentId"
-    secureStorage.apiKeys().saveApiKey("openai", departmentApiKey, departmentContext)
+    secureStorage.apiKeys().saveApiKey(ApiKeyProviders.OpenAI, departmentApiKey, departmentContext)
     
     return createEnterpriseAgent(tenantId, departmentId, secureStorage)
 }
@@ -131,7 +134,7 @@ fun createDevelopmentAgent(
     val apiKey = try {
         val resolver = secureStorage.apiKeyResolver()
         runBlocking {
-            resolver.resolveApiKey("openai")
+            resolver.resolveApiKey(ApiKeyProviders.OpenAI)
         }
     } catch (e: SecurityException) {
         // If secure storage is in plain mode, fall back to ApiKeyService
