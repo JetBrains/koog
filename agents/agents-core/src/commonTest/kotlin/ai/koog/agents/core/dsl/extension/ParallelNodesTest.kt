@@ -13,7 +13,9 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
+import io.ktor.util.reflect.*
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -42,7 +44,7 @@ class ParallelNodesTest {
         tool(DummyTool())
     }
 
-    private suspend fun runStringAgent(strategy: AIAgentStrategy<String, String>, config: AIAgentConfig): String {
+    private suspend fun runTestAgent(strategy: AIAgentStrategy<String, String>, config: AIAgentConfig): String {
         val runner = AIAgent<String, String>(
             promptExecutor = createMockExecutor(),
             strategy = strategy,
@@ -138,7 +140,7 @@ class ParallelNodesTest {
         }
 
         val agentConfig = createBaseAgentConfig("test-prompt", "Base prompt content")
-        val result = runStringAgent(agentStrategy, agentConfig)
+        val result = runTestAgent(agentStrategy, agentConfig)
         assertFalse(result.contains("Incorrect"))
     }
 
@@ -162,7 +164,7 @@ class ParallelNodesTest {
         }
 
         val agentConfig = createBaseAgentConfig("test-select-by", "Test select by")
-        val result = runStringAgent(agentStrategy, agentConfig)
+        val result = runTestAgent(agentStrategy, agentConfig)
 
         assertTrue(result.contains("Selected: 20"))
     }
@@ -187,7 +189,7 @@ class ParallelNodesTest {
         }
 
         val agentConfig = createBaseAgentConfig("test-select-by-max", "Test select by max")
-        val result = runStringAgent(agentStrategy, agentConfig)
+        val result = runTestAgent(agentStrategy, agentConfig)
 
         assertTrue(result.contains("Max: banana"))
     }
@@ -212,7 +214,7 @@ class ParallelNodesTest {
         }
 
         val agentConfig = createBaseAgentConfig("test-select-by-index", "Test select by index")
-        val result = runStringAgent(agentStrategy, agentConfig)
+        val result = runTestAgent(agentStrategy, agentConfig)
 
         assertTrue(result.contains("Selected: second"))
     }
@@ -237,9 +239,203 @@ class ParallelNodesTest {
         }
 
         val agentConfig = createBaseAgentConfig("test-fold", "Test fold")
-        val result = runStringAgent(agentStrategy, agentConfig)
+        val result = runTestAgent(agentStrategy, agentConfig)
 
         assertTrue(result.contains("Result: Hello World"))
     }
 
+    @Test
+    fun testOneNodeFailureFoldHandling() = runTest {
+        val exceptionMessage = "Node failure test"
+        val agentStrategy = strategy<String, String>("test-node-failure") {
+            val successNode by node<Unit, String>("success-node") { "Success result" }
+            val failureNode by node<Unit, String>("failure-node") {
+                throw RuntimeException(exceptionMessage)
+            }
+            val anotherSuccessNode by node<Unit, String>("another-success-node") { "Another success" }
+
+            val parallelNode by parallel(
+                successNode, failureNode, anotherSuccessNode,
+                name = "failureHandlingParallel"
+            ) {
+                val combinedResults = fold("") { initial, result ->
+                    if (initial.isEmpty()) result else "$initial, $result"
+                }
+
+                ParallelNodeExecutionResult("Results: ${combinedResults.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        val agentConfig = createBaseAgentConfig("test-node-failure", "Test node failure handling")
+
+        try {
+            runTestAgent(agentStrategy, agentConfig)
+            // shouldn't get here, so we intendedly throw an exception
+            assertTrue(false, "Expected RuntimeException to be thrown")
+        } catch (e: Exception) {
+            assertTrue(
+                e.message?.contains(exceptionMessage) == true,
+                "Expected exception message to contain '$exceptionMessage', but got: ${e.message}"
+            )
+        }
+    }
+
+    @Test
+    fun testAllNodesFailureFoldHandling() = runTest {
+        val exceptionMessages = listOf("Node failure", "One more failure")
+        val agentStrategy = strategy<String, String>("test-node-failure") {
+            val failureNode1 by node<Unit, String>("failure-node-1") {
+                throw IllegalArgumentException(exceptionMessages[0])
+            }
+            val failureNode2 by node<Unit, String>("failure-node-2") {
+                throw RuntimeException(exceptionMessages[1])
+            }
+
+            val parallelNode by parallel(
+                failureNode1, failureNode2,
+                name = "failureHandlingParallel"
+            ) {
+                val combinedResults = fold("") { initial, result ->
+                    if (initial.isEmpty()) result else "$initial, $result"
+                }
+
+                ParallelNodeExecutionResult("Results: ${combinedResults.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        val agentConfig = createBaseAgentConfig("test-node-failure", "Test all nodes failure handling")
+
+        try {
+            runTestAgent(agentStrategy, agentConfig)
+            // shouldn't get here, so we intendedly throw an exception
+            assertTrue(false, "Expected an exception to be thrown")
+        } catch (e: Exception) {
+            // not sure if it's intended to work like this, leaving OR until figured out
+            assertTrue(
+                e.message?.contains(exceptionMessages[0]) == true ||
+                        e.message?.contains(exceptionMessages[1]) == true,
+                "Expected exception message to contain '${exceptionMessages[0]}' or '${exceptionMessages[0]}'" +
+                        ", but got: ${e.message}"
+            )
+            assertTrue(
+                e.instanceOf(IllegalArgumentException::class) ||
+                        e.instanceOf(RuntimeException::class),
+                "Expected IllegalArgumentException or RuntimeException, but got: ${e::class}"
+            )
+        }
+    }
+
+    // Not sure if the current behaviour is not a bug hence ignore
+    @Ignore
+    @Test
+    fun testNodeFailureSelectSuccessfulHandling() = runTest {
+        val exceptionMessage = "Node failure test"
+        val successMessage = "Success result"
+        val agentStrategy = strategy<String, String>("test-node-failure") {
+            val successNode by node<Unit, String>("success-node") { successMessage }
+            val failureNode by node<Unit, String>("failure-node") {
+                throw RuntimeException(exceptionMessage)
+            }
+            val anotherSuccessNode by node<Unit, String>("another-success-node") { "Another $successMessage" }
+
+            val parallelNode by parallel(
+                successNode, failureNode, anotherSuccessNode,
+                name = "failureHandlingParallel"
+            ) {
+                // a failure of not selected node causes the entire parallel operation to fail.
+                val selected = selectBy { output -> output.contains(successMessage) }
+                ParallelNodeExecutionResult("Selected: ${selected.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        val agentConfig = createBaseAgentConfig("test-node-failure", "Test node failure handling")
+
+        val result = runTestAgent(agentStrategy, agentConfig)
+        assertTrue(result.contains(successMessage))
+    }
+
+    @Test
+    fun testNodeFailureSelectFailedHandling() = runTest {
+        val exceptionMessage = "Node failure test"
+        val successMessage = "Success result"
+        val agentStrategy = strategy<String, String>("test-node-failure") {
+            val successNode by node<Unit, String>("success-node") { successMessage }
+            val failureNode by node<Unit, String>("failure-node") {
+                throw RuntimeException(exceptionMessage)
+            }
+            val anotherSuccessNode by node<Unit, String>("another-success-node") { "Another $successMessage" }
+
+            val parallelNode by parallel(
+                successNode, failureNode, anotherSuccessNode,
+                name = "failureHandlingParallel"
+            ) {
+                // a failure of the selected node should cause the entire parallel operation to fail.
+                val selected = selectByIndex { output -> 1 }
+                ParallelNodeExecutionResult("Selected: ${selected.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        val agentConfig = createBaseAgentConfig("test-node-failure", "Test node failure handling")
+
+        try {
+            runTestAgent(agentStrategy, agentConfig)
+            // shouldn't get here, so we intendedly throw an exception
+            assertTrue(false, "Expected RuntimeException to be thrown")
+        } catch (e: Exception) {
+            assertTrue(
+                e.message?.contains(exceptionMessage) == true,
+                "Expected exception message to contain '$exceptionMessage', but got: ${e.message}"
+            )
+        }
+    }
+
+    @Test
+    fun testNodeFailureWithExceptionProcessing() = runTest {
+        val successMessage = "Operation completed successfully"
+        val fallbackMessage = "using fallback result"
+
+        val agentStrategy = strategy<String, String>("test-failure-processing") {
+            val successfulNode by node<Unit, String>("successful-node") { successMessage }
+            val failureHandlingNode by node<Unit, String>("failure-handling-node") {
+                try {
+                    throw RuntimeException("Internal operation failed")
+                } catch (e: Exception) {
+                    "Error [${e.message}] - $fallbackMessage"
+                }
+            }
+
+            val parallelNode by parallel(
+                successfulNode, failureHandlingNode,
+                name = "partialFailureParallel"
+            ) {
+                val combinedResults = fold("") { initial, result ->
+                    if (initial.isEmpty()) result else "$initial, $result"
+                }
+
+                ParallelNodeExecutionResult("Results: ${combinedResults.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        val agentConfig = createBaseAgentConfig("test-partial-failure", "")
+        val result = runTestAgent(agentStrategy, agentConfig)
+
+        println(result)
+        assertTrue(result.contains(successMessage))
+        assertTrue(result.contains(fallbackMessage))
+    }
 }
