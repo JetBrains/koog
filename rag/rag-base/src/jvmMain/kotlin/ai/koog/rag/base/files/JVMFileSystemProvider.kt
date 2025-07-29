@@ -117,9 +117,9 @@ public object JVMFileSystemProvider {
          */
         override suspend fun metadata(path: Path): FileMetadata? {
             return if (path.isRegularFile()) {
-                FileMetadata(FileType.File, path.isHidden(), path.contentType())
+                FileMetadataImpl(FileType.File, path.isHidden(), path.contentType())
             } else if (path.isDirectory()) {
-                FileMetadata(FileType.Directory, path.isHidden(), path.contentType())
+                FileMetadataImpl(FileType.Directory, path.isHidden(), path.contentType())
             } else {
                 null
             }

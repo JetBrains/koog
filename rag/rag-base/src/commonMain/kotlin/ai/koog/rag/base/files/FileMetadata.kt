@@ -10,13 +10,11 @@ import kotlinx.serialization.Serializable
  * @property hidden A flag indicating whether the file or directory is hidden.
  * @property content The type of content stored in the file.
  */
-@Serializable
-public data class FileMetadata(
-    @SerialName("content_type")
-    val type: FileType,
-    val hidden: Boolean,
-    val content: FileContent,
-) {
+public interface FileMetadata {
+    public val type: FileType
+    public val hidden: Boolean
+    public val content: FileContent
+
     /**
      * Represents the type of a file in the context of file metadata.
      */
@@ -82,3 +80,18 @@ public data class FileMetadata(
         Inapplicable("inapplicable");
     }
 }
+
+/**
+ * Implementation of the FileMetadata interface.
+ *
+ * @property type The type of the file, indicating whether it is a file or a directory.
+ * @property hidden A flag indicating whether the file or directory is hidden.
+ * @property content The type of content stored in the file.
+ */
+@Serializable
+public data class FileMetadataImpl(
+    @SerialName("content_type")
+    override val type: FileMetadata.FileType,
+    override val hidden: Boolean,
+    override val content: FileMetadata.FileContent,
+) : FileMetadata

@@ -169,14 +169,14 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test metadata file`() = runBlocking {
-        val metadata = FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
+        val metadata = FileMetadataImpl(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
         val testMetadata = select.metadata(file1)
         assertEquals(metadata, testMetadata)
     }
 
     @Test
     fun `test metadata dir`() = runBlocking {
-        val metadata = FileMetadata(
+        val metadata = FileMetadataImpl(
             FileMetadata.FileType.Directory,
             hidden = false,
             content = FileMetadata.FileContent.Inapplicable
@@ -781,7 +781,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     @Test
     fun `test ReadOnly metadata`() = runBlocking {
         val metadata =
-            FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
+            FileMetadataImpl(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
         val testMetadata = readOnly.metadata(file1)
         assertEquals(metadata, testMetadata)
     }
@@ -902,7 +902,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     @Test
     fun `test ReadWrite metadata`() = runBlocking {
         val metadata =
-            FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
+            FileMetadataImpl(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
         val testMetadata = readWrite.metadata(file1)
         assertEquals(metadata, testMetadata)
     }
