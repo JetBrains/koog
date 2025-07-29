@@ -18,12 +18,12 @@ kotlin {
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.serialization.json)
 
-                api(ktorLibs.client.contentNegotiation)
-                api(ktorLibs.client.logging)
-                api(ktorLibs.serialization.kotlinx.json)
-                api(ktorLibs.server.sse)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.client.logging)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.ktor.server.sse)
                 api(libs.oshai.kotlin.logging)
-                api(ktorLibs.server.cio)
+                api(libs.ktor.server.cio)
             }
         }
 
@@ -37,7 +37,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(ktorLibs.client.cio)
+                api(libs.ktor.client.cio)
             }
         }
 
@@ -49,13 +49,13 @@ kotlin {
 
         jsMain {
             dependencies {
-                api(ktorLibs.client.js)
+                api(libs.ktor.client.js)
             }
         }
 
         wasmJsMain {
             dependencies {
-                api(ktorLibs.client.js)
+                api(libs.ktor.client.js)
             }
         }
     }

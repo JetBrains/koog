@@ -39,7 +39,7 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(kotlin("test-junit5"))
                 implementation(libs.junit.jupiter.params)
-                implementation(ktorLibs.client.cio)
+                implementation(libs.ktor.client.cio)
             }
         }
     }

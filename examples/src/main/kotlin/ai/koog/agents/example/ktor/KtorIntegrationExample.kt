@@ -42,6 +42,7 @@ fun main(args: Array<String>) = EngineMain.main(args)
 
 fun Application.main() {
     configureKoog()
+
     defineRoutes()
 }
 

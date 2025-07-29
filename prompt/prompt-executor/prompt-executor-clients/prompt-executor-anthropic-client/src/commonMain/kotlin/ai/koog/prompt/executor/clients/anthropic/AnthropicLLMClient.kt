@@ -44,32 +44,9 @@ import kotlin.uuid.Uuid
 public class AnthropicClientSettings(
     public val modelVersionsMap: Map<LLModel, String> = DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP,
     public val baseUrl: String = "https://api.anthropic.com",
-    public val apiVersion: String = DEFAULT_ANTHROPIC_API_VERSION,
+    public val apiVersion: String = "2023-06-01",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
-) {
-    /**
-     * Contains default values for the [AnthropicClientSettings] parameters
-     * */
-    public companion object {
-        /**
-         * Default versions map for anthropic versions. See [AnthropicClientSettings.modelVersionsMap] for more information
-         * */
-        public val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
-            AnthropicModels.Opus_3 to "claude-3-opus-20240229",
-            AnthropicModels.Haiku_3 to "claude-3-haiku-20240307",
-            AnthropicModels.Sonnet_3_5 to "claude-3-5-sonnet-20241022",
-            AnthropicModels.Haiku_3_5 to "claude-3-5-haiku-20241022",
-            AnthropicModels.Sonnet_3_7 to "claude-3-7-sonnet-20250219",
-            AnthropicModels.Sonnet_4 to "claude-sonnet-4-20250514",
-            AnthropicModels.Opus_4 to "claude-opus-4-20250514"
-        )
-
-        /**
-         * Dfault version of anthropic API.
-         * */
-        public val DEFAULT_ANTHROPIC_API_VERSION: String = "2023-06-01"
-    }
-}
+)
 
 /**
  * A client implementation for interacting with Anthropic's API in a suspendable and direct manner.

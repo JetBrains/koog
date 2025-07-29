@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLModel
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.routing.RoutingContext
 import kotlin.reflect.KType
@@ -27,13 +28,15 @@ public fun RoutingContext.llm(): PromptExecutor =
  * @return An instance of `AIAgent` configured with the specified strategy and the route's resources.
  * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
  */
-public fun <Input, Output> RoutingContext.aiAgent(
+public suspend fun <Input, Output> RoutingContext.aiAgent(
     inputType: KType,
     outputType: KType,
+    model: LLModel,
     strategy: AIAgentStrategy<Input, Output>,
     tools: ToolRegistry = ToolRegistry.EMPTY,
 ): AIAgent<Input, Output> {
     val plugin = requireNotNull(call.application.pluginOrNull(Koog)) { "Plugin $Koog is not configured" }
+
     return AIAgent(
         inputType = inputType,
         outputType = outputType,

@@ -40,6 +40,8 @@ public class Koog(
      */
     public companion object Companion : Plugin<ApplicationCallPipeline, KoogAgentsConfig, Koog> {
         override fun install(pipeline: ApplicationCallPipeline, configure: KoogAgentsConfig.() -> Unit): Koog {
+
+
             val config = try {
                 pipeline.environment.loadAgentsConfig()
             } catch (e: Exception) {

@@ -19,21 +19,21 @@ kotlin {
                 api(project(":prompt:prompt-model"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.datetime)
-                api(ktorLibs.client.contentNegotiation)
-                api(ktorLibs.serialization.kotlinx.json)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
             }
         }
 
         jvmMain {
             dependencies {
-                api(ktorLibs.client.cio)
+                api(libs.ktor.client.cio)
             }
         }
 
         jsMain {
             dependencies {
-                api(ktorLibs.client.js)
+                api(libs.ktor.client.js)
             }
         }
 

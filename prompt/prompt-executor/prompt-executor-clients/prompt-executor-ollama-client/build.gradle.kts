@@ -21,19 +21,19 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
                 api(project(":embeddings:embeddings-base"))
 
-                api(ktorLibs.client.logging)
+                api(libs.ktor.client.logging)
                 api(libs.kotlinx.datetime)
                 api(libs.kotlinx.coroutines.core)
-                api(ktorLibs.client.contentNegotiation)
-                api(ktorLibs.serialization.kotlinx.json)
-                api(ktorLibs.client.cio)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
+                api(libs.ktor.client.cio)
                 implementation(libs.oshai.kotlin.logging)
             }
         }
 
         jsMain {
             dependencies {
-                api(ktorLibs.client.js)
+                api(libs.ktor.client.js)
             }
         }
 

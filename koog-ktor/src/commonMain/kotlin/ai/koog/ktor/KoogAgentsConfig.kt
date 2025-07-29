@@ -14,7 +14,6 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings.Companion.DEFAULT_ANTHROPIC_API_VERSION
-import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings.Companion.DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -578,7 +577,7 @@ public class KoogAgentsConfig {
          * This property is typically utilized in the configuration of interaction with Anthropic LLM clients
          * to ensure appropriate versioned models are used during LLM execution.
          */
-        public var modelVersionsMap: Map<LLModel, String> = DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP
+        public var modelVersionsMap: Map<LLModel, String>? = null
 
         /**
          * Specifies the API version used for requests to the Anthropic API.
@@ -838,14 +837,23 @@ public class KoogAgentsConfig {
     internal fun anthropic(apiKey: String, configure: AnthropicConfig.() -> Unit) {
         val client = with(AnthropicConfig(apiKey)) {
             configure()
+
+            val settings = modelVersionsMap?.let {
+                AnthropicClientSettings(
+                    baseUrl = baseUrl,
+                    apiVersion = apiVersion,
+                    timeoutConfig = timeoutConfig,
+                    modelVersionsMap = it
+                )
+            } ?: AnthropicClientSettings(
+                baseUrl = baseUrl,
+                apiVersion = apiVersion,
+                timeoutConfig = timeoutConfig,
+            )
+
             AnthropicLLMClient(
                 apiKey = apiKey,
-                settings = AnthropicClientSettings(
-                    baseUrl = baseUrl,
-                    modelVersionsMap = modelVersionsMap,
-                    apiVersion = apiVersion,
-                    timeoutConfig = timeoutConfig
-                ),
+                settings = settings,
                 baseClient = httpClient
             )
         }

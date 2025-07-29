@@ -6,17 +6,6 @@ pluginManagement {
     }
 }
 
-dependencyResolutionManagement {
-    repositories {
-        mavenCentral()
-    }
-    versionCatalogs {
-        create("ktorLibs") {
-            from("io.ktor:ktor-version-catalog:3.2.2")
-        }
-    }
-}
-
 include(":agents:agents-core")
 include(":agents:agents-ext")
 
@@ -73,4 +62,5 @@ include(":rag:rag-base")
 include(":rag:vector-storage")
 
 include(":koog-spring-boot-starter")
+
 include(":koog-ktor")

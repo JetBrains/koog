@@ -27,7 +27,7 @@ import kotlinx.datetime.Clock
  * @property clock The clock used for timestamps of messages
  */
 @PromptDSL
-public class PromptBuilder constructor(
+public class PromptBuilder internal constructor(
     private val id: String,
     private val params: LLMParams = LLMParams(),
     private val clock: Clock = Clock.System

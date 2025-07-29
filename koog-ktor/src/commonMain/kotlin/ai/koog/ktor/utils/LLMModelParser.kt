@@ -6,6 +6,9 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
+import io.ktor.util.logging.KtorSimpleLogger
+
+private val logger = KtorSimpleLogger("ai.koog.ktor.utils.LLMModelParser")
 
 /**
  * Gets a model from a string identifier in the format "provider.category.model" or "provider.model".
@@ -31,7 +34,7 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
         "ollama" -> ollama(parts, identifier)
 
         else -> {
-            println("Unsupported LLM provider: $providerName")
+            logger.debug("Unsupported LLM provider: $providerName")
             return null
         }
     }
@@ -39,7 +42,7 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
 
 private fun ollama(parts: List<String>, identifier: String): LLModel? {
     if (parts.size < 2) {
-        println("Ollama model identifier must be in format 'ollama.maker.model' or 'ollama.model', got: $identifier")
+        logger.debug("Ollama model identifier must be in format 'ollama.maker.model' or 'ollama.model', got: $identifier")
         return null
     }
 
@@ -72,7 +75,7 @@ private fun ollama(parts: List<String>, identifier: String): LLModel? {
 
 private fun openrouter(parts: List<String>, identifier: String): LLModel? {
     if (parts.size < 2) {
-        println("OpenRouter model identifier must be in format 'openrouter.model', got: $identifier")
+        logger.debug("OpenRouter model identifier must be in format 'openrouter.model', got: $identifier")
         return null
     }
 
@@ -93,7 +96,7 @@ private fun openrouter(parts: List<String>, identifier: String): LLModel? {
 
 private fun google(parts: List<String>, identifier: String): LLModel? {
     if (parts.size < 2) {
-        println("Google model identifier must be in format 'google.model', got: $identifier")
+        logger.debug("Google model identifier must be in format 'google.model', got: $identifier")
         return null
     }
 
@@ -102,7 +105,7 @@ private fun google(parts: List<String>, identifier: String): LLModel? {
     val normalizedModelName = modelName.replace("-", "_").replace(".", "_").lowercase()
     val model = GOOGLE_MODELS_MAP[normalizedModelName]
     if (model == null) {
-        println("Model '$modelName' not found in GoogleModels")
+        logger.debug("Model '$modelName' not found in GoogleModels")
         return null
     }
 
@@ -111,7 +114,7 @@ private fun google(parts: List<String>, identifier: String): LLModel? {
 
 private fun anthropic(parts: List<String>, identifier: String): LLModel? {
     if (parts.size < 2) {
-        println("Anthropic model identifier must be in format 'anthropic.model', got: $identifier")
+        logger.debug("Anthropic model identifier must be in format 'anthropic.model', got: $identifier")
         return null
     }
 
@@ -121,7 +124,7 @@ private fun anthropic(parts: List<String>, identifier: String): LLModel? {
     val normalizedModelName = modelName.replace("-", "_").lowercase()
     val model = ANTHROPIC_MODELS_MAP[normalizedModelName]
     if (model == null) {
-        println("Model '$modelName' not found in AnthropicModels")
+        logger.debug("Model '$modelName' not found in AnthropicModels")
         return null
     }
 
@@ -130,7 +133,7 @@ private fun anthropic(parts: List<String>, identifier: String): LLModel? {
 
 private fun openAI(parts: List<String>, identifier: String): LLModel? {
     if (parts.size < 3) {
-        println("OpenAI model identifier must be in format 'openai.category.model', got: $identifier")
+        logger.debug("OpenAI model identifier must be in format 'openai.category.model', got: $identifier")
         return null
     }
 
@@ -139,13 +142,13 @@ private fun openAI(parts: List<String>, identifier: String): LLModel? {
 
     val categoryMap = OPENAI_MODELS_MAP[category]
     if (categoryMap == null) {
-        println("Unknown OpenAI category: $category")
+        logger.debug("Unknown OpenAI category: $category")
         return null
     }
 
     val model = categoryMap[modelName]
     if (model == null) {
-        println("Model '$modelName' not found in OpenAI category '$category'")
+        logger.debug("Model '$modelName' not found in OpenAI category '$category'")
         return null
     }
 

@@ -25,7 +25,7 @@ import ai.koog.prompt.llm.LLModel
  * | [Sonnet_4]   | Fast            | $3-$15       | Text, Image, Tools | Text, Tools |
  * | [Opus_4]     | Moderately fast | $15-$75      | Text, Image, Tools | Text, Tools |
  */
-public object AnthropicModels : LLModelDefinitions {
+public object AnthropicModels: LLModelDefinitions {
 
     /**
      * Claude 3 Opus is Anthropic's most powerful model, designed for highly complex tasks.
@@ -194,3 +194,13 @@ public object AnthropicModels : LLModelDefinitions {
         maxOutputTokens = 32_000,
     )
 }
+
+internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
+    AnthropicModels.Opus_3 to "claude-3-opus-20240229",
+    AnthropicModels.Haiku_3 to "claude-3-haiku-20240307",
+    AnthropicModels.Sonnet_3_5 to "claude-3-5-sonnet-20241022",
+    AnthropicModels.Haiku_3_5 to "claude-3-5-haiku-20241022",
+    AnthropicModels.Sonnet_3_7 to "claude-3-7-sonnet-20250219",
+    AnthropicModels.Sonnet_4 to "claude-sonnet-4-20250514",
+    AnthropicModels.Opus_4 to "claude-opus-4-20250514"
+)

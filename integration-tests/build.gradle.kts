@@ -31,7 +31,7 @@ kotlin {
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.kotlinx.serialization.json)
-                implementation(ktorLibs.client.contentNegotiation)
+                implementation(libs.ktor.client.content.negotiation)
                 runtimeOnly(libs.slf4j.simple)
             }
         }

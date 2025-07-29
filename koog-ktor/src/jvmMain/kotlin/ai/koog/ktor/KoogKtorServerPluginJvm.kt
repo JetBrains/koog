@@ -9,6 +9,7 @@ import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.shared.DEFAULT_REQUEST_TIMEOUT
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -123,7 +124,6 @@ public fun KoogAgentsConfig.AgentConfig.mcp(
 ) {
     val job = Job()
     val scope = CoroutineScope(Dispatchers.IO + job)
-    MCPToolsConfig(this@mcp, scope).configure()
     runBlocking {
         job.complete()
         withTimeout(timeout) { job.join() }

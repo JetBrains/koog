@@ -28,12 +28,12 @@ kotlin {
                 api(project(":prompt:prompt-model"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
-                api(ktorLibs.client.contentNegotiation)
+                api(libs.ktor.client.content.negotiation)
             }
         }
         jvmMain {
             dependencies {
-                api(ktorLibs.client.cio)
+                api(libs.ktor.client.cio)
             }
         }
         commonTest {
