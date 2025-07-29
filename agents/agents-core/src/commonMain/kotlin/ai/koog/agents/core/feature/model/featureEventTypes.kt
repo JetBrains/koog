@@ -7,6 +7,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Represents a sealed class for defining feature-related events in the system.
@@ -282,7 +283,7 @@ public data class ToolCallEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: String,
+    val toolArgs: JsonObject,
     override val eventId: String = ToolCallEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 
@@ -302,7 +303,7 @@ public data class ToolValidationErrorEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: String,
+    val toolArgs: JsonObject,
     val error: String,
     override val eventId: String = ToolValidationErrorEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -324,7 +325,7 @@ public data class ToolCallFailureEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: String,
+    val toolArgs: JsonObject,
     val error: AIAgentError,
     override val eventId: String = ToolCallFailureEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
@@ -346,7 +347,7 @@ public data class ToolCallResultEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
-    val toolArgs: String,
+    val toolArgs: JsonObject,
     val result: String?,
     override val eventId: String = ToolCallResultEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()

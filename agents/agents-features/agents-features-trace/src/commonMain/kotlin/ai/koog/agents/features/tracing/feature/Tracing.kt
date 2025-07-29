@@ -219,7 +219,7 @@ public class Tracing {
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
-                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs)
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs)
                 )
                 processMessage(config, event)
             }
@@ -233,7 +233,7 @@ public class Tracing {
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
-                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs),
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
                     error = eventContext.error
                 )
                 processMessage(config, event)
@@ -248,7 +248,7 @@ public class Tracing {
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
-                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs),
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
                     error = eventContext.throwable.toAgentError()
                 )
                 processMessage(config, event)
@@ -263,7 +263,7 @@ public class Tracing {
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
-                    toolArgs = tool.encodeArgsToString(eventContext.toolArgs),
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
                     result = eventContext.result?.let { result -> tool.encodeResultToString(result) }
                 )
                 processMessage(config, event)

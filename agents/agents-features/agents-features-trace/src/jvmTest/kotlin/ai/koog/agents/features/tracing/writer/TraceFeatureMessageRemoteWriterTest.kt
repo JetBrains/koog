@@ -274,13 +274,13 @@ class TraceFeatureMessageRemoteWriterTest {
                         runId = runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
-                        toolArgs = dummyTool.encodeArgsToString(DummyTool.Args("test"))
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"))
                     ),
                     ToolCallResultEvent(
                         runId = runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
-                        toolArgs = dummyTool.encodeArgsToString(DummyTool.Args("test")),
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
                         result = dummyTool.result
                     ),
                     AIAgentNodeExecutionEndEvent(
