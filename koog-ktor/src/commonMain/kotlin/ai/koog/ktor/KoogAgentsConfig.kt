@@ -13,7 +13,6 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
-import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings.Companion.DEFAULT_ANTHROPIC_API_VERSION
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -469,10 +468,10 @@ public class KoogAgentsConfig {
          * connects to for making API requests. It is used to construct the full URL for various
          * API operations such as chat completions, embeddings, and moderations.
          *
-         * The default value is set to "https://api.openai.com". This can be overridden for
+         * The default value is set to "[OpenAIClientSettings.baseUrl]". This can be overridden for
          * custom API endpoints or testing purposes by changing its value.
          */
-        public var baseUrl: String = "https://api.openai.com"
+        public var baseUrl: String? = null
 
         /**
          * A configuration property that defines timeout settings for network interactions with the OpenAI API.
@@ -485,33 +484,35 @@ public class KoogAgentsConfig {
          *
          * Used primarily when configuring an [OpenAILLMClient] for making API requests.
          */
-        public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+        public var timeoutConfig: ConnectionTimeoutConfig? = null
 
         /**
          * Represents the API path segment used for OpenAI's chat completions endpoint.
          *
          * This variable can be configured to specify a custom endpoint path when interacting
-         * with the OpenAI chat completions API. By default, it is set to "v1/chat/completions".
+         * with the OpenAI chat completions API. By default, it is set to [OpenAIClientSettings.chatCompletionsPath].
          */
-        public var chatCompletionsPath: String = "v1/chat/completions"
+        public var chatCompletionsPath: String? = null
 
         /**
          * Specifies the API path for embedding operations in the OpenAI API.
          *
          * This variable determines the endpoint to be used when interacting with
          * embedding-related functionalities provided by the OpenAI service.
-         * By default, it is set to "v1/embeddings".
+         * By default, it is set to [OpenAIClientSettings.embeddingsPath].
          *
          * Can be customized to target a different API path if required.
          */
-        public var embeddingsPath: String = "v1/embeddings"
+        public var embeddingsPath: String? = null
 
         /**
          * Represents the API path for the moderation endpoint used in OpenAI API requests.
          * This is a constant value and is typically appended to the base URL when making
          * requests to moderation-related services.
+         *
+         * By default, it is set to [OpenAIClientSettings.moderationsPath].
          */
-        public val moderationsPath: String = "v1/moderations"
+        public val moderationsPath: String? = null
 
         /**
          * Represents the HTTP client used for making network requests to the OpenAI API.
@@ -562,16 +563,16 @@ public class KoogAgentsConfig {
          *
          * This URL serves as the root endpoint for all API interactions with Anthropic services.
          * It can be customized to point to different server environments (e.g., production, staging, or testing).
-         * By default, it is set to "https://api.anthropic.com".
+         * By default, it is set to [AnthropicClientSettings.baseUrl].
          */
-        public var baseUrl: String = "https://api.anthropic.com"
+        public var baseUrl: String? = null
 
         /**
          * Maps a specific `LLModel` to its corresponding version string. This configuration is primarily
          * used to associate particular model identifiers with their appropriate versions, allowing the
          * system to select or adjust model behaviors based on these mappings.
          *
-         * By default, this property is initialized with a predefined map ([DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP]),
+         * By default, this property is initialized with a predefined map ([AnthropicClientSettings.modelVersionsMap]),
          * but can be customized to support other mappings depending on the requirements.
          *
          * This property is typically utilized in the configuration of interaction with Anthropic LLM clients
@@ -588,7 +589,7 @@ public class KoogAgentsConfig {
          *
          * The value can be updated to specify a different version if required for a specific use case.
          */
-        public var apiVersion: String = DEFAULT_ANTHROPIC_API_VERSION
+        public var apiVersion: String? = null
 
         /**
          * Configures the timeout settings for API requests, connection establishment, and
@@ -596,7 +597,7 @@ public class KoogAgentsConfig {
          * This property is used to customize timeout behavior to handle use cases
          * requiring different default durations for network-related operations.
          */
-        public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+        public var timeoutConfig: ConnectionTimeoutConfig? = null
 
         /**
          * Represents the HTTP client that is used to perform network operations
@@ -647,10 +648,10 @@ public class KoogAgentsConfig {
          * Specifies the base URL for API requests to the Generative Language API.
          * It determines the endpoint to which HTTP requests are made.
          *
-         * By default, this is set to "https://generativelanguage.googleapis.com".
+         * By default, this is set to "[GoogleClientSettings.baseUrl]".
          * Users can customize this value to point to alternative endpoints if needed.
          */
-        public var baseUrl: String = "https://generativelanguage.googleapis.com"
+        public var baseUrl: String? = null
 
         /**
          * Represents the timeout configuration for network interactions with the Google API.
@@ -660,7 +661,7 @@ public class KoogAgentsConfig {
          * The default values for the configuration are inherited from the defaults specified
          * in the [ConnectionTimeoutConfig] class.
          */
-        public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+        public var timeoutConfig: ConnectionTimeoutConfig? = null
 
         /**
          * httpClient is an instance of HttpClient used for making HTTP requests to external services.
@@ -709,9 +710,9 @@ public class KoogAgentsConfig {
          * This property allows customization of the API's base endpoint to interact with different server environments
          * or instances beyond the default URL.
          *
-         * The default value is `https://openrouter.ai`.
+         * The default value is `[OpenRouterClientSettings.baseUrl]`.
          */
-        public var baseUrl: String = "https://openrouter.ai"
+        public var baseUrl: String? = null
 
         /**
          * Represents the configuration for connection timeouts used in network requests.
@@ -759,7 +760,7 @@ public class KoogAgentsConfig {
     public class OllamaConfig {
         /**
          * The base URL for the Ollama API, used as the endpoint for all HTTP requests made
-         * by the Ollama client. By default, it is set to `http://localhost:11434`.
+         * by the Ollama client. By default, it is set to `[OllamaClient.baseUrl]`.
          *
          * This property can be configured to point to a custom server or different instance
          * of the Ollama service, depending on the deployment or development needs.
@@ -767,7 +768,7 @@ public class KoogAgentsConfig {
          * For example, `baseUrl` might need to be updated if the Ollama service is hosted on
          * a remote server or a different port.
          */
-        public var baseUrl: String = "http://localhost:11434"
+        public var baseUrl: String? = null
 
         /**
          * Configuration object for specifying timeout settings for network operations
@@ -813,14 +814,16 @@ public class KoogAgentsConfig {
     internal fun openAI(apiKey: String, configure: OpenAIConfig.() -> Unit) {
         val client = with(OpenAIConfig(apiKey)) {
             configure()
+            val defaults = OpenAIClientSettings()
+
             OpenAILLMClient(
                 apiKey = apiKey,
                 settings = OpenAIClientSettings(
-                    baseUrl = baseUrl,
-                    timeoutConfig = timeoutConfig,
-                    chatCompletionsPath = chatCompletionsPath,
-                    embeddingsPath = embeddingsPath,
-                    moderationsPath = moderationsPath
+                    baseUrl = baseUrl ?: defaults.baseUrl,
+                    timeoutConfig = timeoutConfig ?: defaults.timeoutConfig,
+                    chatCompletionsPath = chatCompletionsPath ?: defaults.chatCompletionsPath,
+                    embeddingsPath = embeddingsPath ?: defaults.embeddingsPath,
+                    moderationsPath = moderationsPath ?: defaults.moderationsPath,
                 ),
                 baseClient = httpClient
             )
@@ -838,17 +841,12 @@ public class KoogAgentsConfig {
         val client = with(AnthropicConfig(apiKey)) {
             configure()
 
-            val settings = modelVersionsMap?.let {
-                AnthropicClientSettings(
-                    baseUrl = baseUrl,
-                    apiVersion = apiVersion,
-                    timeoutConfig = timeoutConfig,
-                    modelVersionsMap = it
-                )
-            } ?: AnthropicClientSettings(
-                baseUrl = baseUrl,
-                apiVersion = apiVersion,
-                timeoutConfig = timeoutConfig,
+            val default = AnthropicClientSettings()
+            val settings = AnthropicClientSettings(
+                baseUrl = baseUrl ?: default.baseUrl,
+                apiVersion = apiVersion ?: default.apiVersion,
+                timeoutConfig = timeoutConfig ?: default.timeoutConfig,
+                modelVersionsMap = modelVersionsMap ?: default.modelVersionsMap,
             )
 
             AnthropicLLMClient(
@@ -869,11 +867,13 @@ public class KoogAgentsConfig {
     internal fun google(apiKey: String, configure: GoogleConfig.() -> Unit) {
         val client = with(GoogleConfig(apiKey)) {
             configure()
+            val defaults = GoogleClientSettings()
+
             GoogleLLMClient(
                 apiKey = apiKey,
                 settings = GoogleClientSettings(
-                    baseUrl = baseUrl,
-                    timeoutConfig = timeoutConfig
+                    baseUrl = baseUrl ?: defaults.baseUrl,
+                    timeoutConfig = timeoutConfig ?: defaults.timeoutConfig,
                 ),
                 baseClient = httpClient
             )
@@ -890,10 +890,12 @@ public class KoogAgentsConfig {
     internal fun openRouter(apiKey: String, configure: OpenRouterConfig.() -> Unit) {
         val client = with(OpenRouterConfig(apiKey)) {
             configure()
+            val defaults = OpenRouterClientSettings()
+
             OpenRouterLLMClient(
                 apiKey = apiKey,
                 settings = OpenRouterClientSettings(
-                    baseUrl = baseUrl,
+                    baseUrl = baseUrl ?: defaults.baseUrl,
                     timeoutConfig = timeoutConfig
                 ),
                 baseClient = httpClient
@@ -910,8 +912,10 @@ public class KoogAgentsConfig {
     internal fun ollama(configure: OllamaConfig.() -> Unit) {
         val client = with(OllamaConfig()) {
             configure()
+            val defaults = OllamaClient()
+
             OllamaClient(
-                baseUrl = baseUrl,
+                baseUrl = baseUrl ?: defaults.baseUrl,
                 baseClient = httpClient,
                 timeoutConfig = timeoutConfig
             )

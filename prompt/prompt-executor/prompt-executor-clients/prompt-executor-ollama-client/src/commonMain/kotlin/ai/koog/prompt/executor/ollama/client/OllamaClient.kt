@@ -42,7 +42,7 @@ import kotlinx.serialization.json.Json
  * - LLMEmbeddingProvider for generating embeddings from input text.
  */
 public class OllamaClient(
-    private val baseUrl: String = "http://localhost:11434",
+    public val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     private val clock: Clock = Clock.System
