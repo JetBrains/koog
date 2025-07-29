@@ -1,7 +1,6 @@
 package ai.koog.ktor
 
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
-import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.feature.AIAgentFeature
@@ -27,6 +26,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlin.collections.set
@@ -38,7 +38,7 @@ import kotlin.time.Duration.Companion.seconds
  * Configuration class for setting up a Koog agents server.
  * Provides options to configure LLM connections, agent tools, features, and other related settings.
  */
-public class KoogAgentsConfig {
+public class KoogAgentsConfig(private val scope: CoroutineScope) {
     /**
      * A mutable map that associates `LLMProvider` instances with their corresponding `LLMClient` implementations.
      *
@@ -293,6 +293,9 @@ public class KoogAgentsConfig {
      * - Installing additional features
      */
     public inner class AgentConfig {
+        internal val scope: CoroutineScope
+            get() = this@KoogAgentsConfig.scope
+
         /**
          * Represents the registry of tools available to an agent within the AgentConfig context.
          *
@@ -417,12 +420,8 @@ public class KoogAgentsConfig {
     /**
      * Configuration class for OpenAI integration, providing options to set
      * API-specific paths, network timeouts, and base connection settings.
-     *
-     * @param apiKey The API key used for authenticating with the OpenAI service.
      */
-    public class OpenAIConfig(
-        private val apiKey: String,
-    ) {
+    public class OpenAIConfig {
 
         /**
          * The base URL for the OpenAI API. This property defines the endpoint that the client
@@ -516,9 +515,7 @@ public class KoogAgentsConfig {
      *
      * @param apiKey The API key used for authenticating requests to the Anthropic API.
      */
-    public class AnthropicConfig(
-        private val apiKey: String,
-    ) {
+    public class AnthropicConfig {
         /**
          * Specifies the base URL for the Anthropic API used in client requests.
          *
@@ -602,9 +599,7 @@ public class KoogAgentsConfig {
      *
      * @param apiKey The API key required to authenticate requests to the Google Generative Language API.
      */
-    public class GoogleConfig(
-        private val apiKey: String,
-    ) {
+    public class GoogleConfig {
         /**
          * Specifies the base URL for API requests to the Generative Language API.
          * It determines the endpoint to which HTTP requests are made.
@@ -663,9 +658,7 @@ public class KoogAgentsConfig {
      *
      * @property apiKey The API key used for authenticating with the OpenRouter service.
      */
-    public class OpenRouterConfig(
-        private val apiKey: String,
-    ) {
+    public class OpenRouterConfig {
         /**
          * Defines the base URL used for configuring the target endpoint of the OpenRouter API.
          * This property allows customization of the API's base endpoint to interact with different server environments
@@ -773,7 +766,7 @@ public class KoogAgentsConfig {
      * @param configure A lambda receiver to customize the OpenAI configuration such as base URL, timeout settings, and paths.
      */
     internal fun openAI(apiKey: String, configure: OpenAIConfig.() -> Unit) {
-        val client = with(OpenAIConfig(apiKey)) {
+        val client = with(OpenAIConfig()) {
             configure()
             val defaults = OpenAIClientSettings()
 
@@ -799,7 +792,7 @@ public class KoogAgentsConfig {
      * @param configure A lambda function to customize the Anthropic client settings.
      */
     internal fun anthropic(apiKey: String, configure: AnthropicConfig.() -> Unit) {
-        val client = with(AnthropicConfig(apiKey)) {
+        val client = with(AnthropicConfig()) {
             configure()
 
             val default = AnthropicClientSettings()
@@ -826,7 +819,7 @@ public class KoogAgentsConfig {
      * @param configure A configuration block used to set up the `GoogleConfig` instance for the client.
      */
     internal fun google(apiKey: String, configure: GoogleConfig.() -> Unit) {
-        val client = with(GoogleConfig(apiKey)) {
+        val client = with(GoogleConfig()) {
             configure()
             val defaults = GoogleClientSettings()
 
@@ -849,7 +842,7 @@ public class KoogAgentsConfig {
      * @param configure A lambda to set up additional configurations for the OpenRouter client.
      */
     internal fun openRouter(apiKey: String, configure: OpenRouterConfig.() -> Unit) {
-        val client = with(OpenRouterConfig(apiKey)) {
+        val client = with(OpenRouterConfig()) {
             configure()
             val defaults = OpenRouterClientSettings()
 

@@ -6,16 +6,9 @@ import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_NAME
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_VERSION
 import io.modelcontextprotocol.kotlin.sdk.client.Client
-import io.modelcontextprotocol.kotlin.sdk.shared.DEFAULT_REQUEST_TIMEOUT
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
-import kotlin.time.Duration
 
 /**
  * Configuration class for MCPTools that manages the integration of various tool registries
@@ -23,10 +16,7 @@ import kotlin.time.Duration
  *
  * @param agentConfig Configuration for the Koog agent server, which includes tool registry details.
  */
-public class McpToolsConfig(
-    private val agentConfig: KoogAgentsConfig.AgentConfig,
-    private val scope: CoroutineScope
-) {
+public class McpToolsConfig(private val agentConfig: KoogAgentsConfig.AgentConfig) {
     private val mutex = Mutex()
 
     /**
@@ -51,7 +41,7 @@ public class McpToolsConfig(
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
     ) {
-        scope.launch {
+        agentConfig.scope.launch {
             val transport = McpToolRegistryProvider.fromTransport(
                 transport = McpToolRegistryProvider.defaultStdioTransport(process),
                 mcpToolParser = mcpToolParser,
@@ -80,7 +70,7 @@ public class McpToolsConfig(
         name: String = DEFAULT_MCP_CLIENT_NAME,
         version: String = DEFAULT_MCP_CLIENT_VERSION,
     ) {
-        scope.launch {
+        agentConfig.scope.launch {
             val transport = McpToolRegistryProvider.fromTransport(
                 transport = McpToolRegistryProvider.defaultSseTransport(url),
                 mcpToolParser = mcpToolParser,
@@ -105,7 +95,7 @@ public class McpToolsConfig(
         mcpClient: Client,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser
     ) {
-        scope.launch {
+        agentConfig.scope.launch {
             val fromClient = McpToolRegistryProvider.fromClient(mcpClient, mcpToolParser)
             mutex.withLock { agentConfig.toolRegistry += fromClient }
         }
@@ -117,14 +107,6 @@ public class McpToolsConfig(
  *
  * @param configure A suspend lambda used to configure the MCPToolsConfig instance.
  */
-public fun KoogAgentsConfig.AgentConfig.mcp(
-    timeout: Duration = DEFAULT_REQUEST_TIMEOUT,
-    configure: McpToolsConfig.() -> Unit
-) {
-    val job = Job()
-    val scope = CoroutineScope(Dispatchers.IO + job)
-    runBlocking {
-        job.complete()
-        withTimeout(timeout) { job.join() }
-    }
+public fun KoogAgentsConfig.AgentConfig.mcp(configure: McpToolsConfig.() -> Unit) {
+    McpToolsConfig(this).configure()
 }

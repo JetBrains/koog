@@ -7,19 +7,22 @@ import ai.koog.prompt.llm.LLMProvider
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.engine.applicationEnvironment
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+@DelicateCoroutinesApi
 class ConfigurationLoadingTest {
 
     @Test
     fun testLoadCompleteConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("complete_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenAI configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.OpenAI])
@@ -46,7 +49,7 @@ class ConfigurationLoadingTest {
     fun testLoadDefaultModelConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("default_model_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify no fallback settings
         assertNull(koogConfig.fallbackLLMSettings)
@@ -56,7 +59,7 @@ class ConfigurationLoadingTest {
     fun testLoadFallbackConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("fallback_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify fallback settings
         assertNotNull(koogConfig.fallbackLLMSettings)
@@ -68,7 +71,7 @@ class ConfigurationLoadingTest {
     fun testLoadOpenAIConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("openai_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenAI configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.OpenAI])
@@ -84,7 +87,7 @@ class ConfigurationLoadingTest {
     fun testLoadAnthropicConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("anthropic_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify Anthropic configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.Anthropic])
@@ -100,7 +103,7 @@ class ConfigurationLoadingTest {
     fun testLoadGoogleConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("google_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify Google configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.Google])
@@ -116,7 +119,7 @@ class ConfigurationLoadingTest {
     fun testLoadOpenRouterConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("openrouter_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenRouter configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
@@ -132,7 +135,7 @@ class ConfigurationLoadingTest {
     fun testLoadOllamaConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("ollama_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify Ollama configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.Ollama])
@@ -148,7 +151,7 @@ class ConfigurationLoadingTest {
     fun testLoadInvalidConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("invalid_config.yaml")
-        }.loadAgentsConfig()
+        }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenAI configuration is not loaded due to missing API key
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])

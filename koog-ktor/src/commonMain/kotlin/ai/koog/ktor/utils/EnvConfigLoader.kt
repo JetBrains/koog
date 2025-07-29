@@ -4,6 +4,7 @@ import ai.koog.ktor.KoogAgentsConfig
 import ai.koog.prompt.llm.LLMProvider
 import io.ktor.server.application.ApplicationEnvironment
 import io.ktor.server.config.ApplicationConfig
+import kotlinx.coroutines.CoroutineScope
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -15,8 +16,8 @@ import kotlin.time.Duration.Companion.milliseconds
  *                  for configuring Koog agents and associated integrations.
  * @return A populated instance of [KoogAgentsConfig] with the environment-specific settings applied.
  */
-internal fun ApplicationEnvironment.loadAgentsConfig(): KoogAgentsConfig {
-    val koogConfig = KoogAgentsConfig()
+internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): KoogAgentsConfig {
+    val koogConfig = KoogAgentsConfig(scope)
         .openAI(config)
         .anthropic(config)
         .google(config)

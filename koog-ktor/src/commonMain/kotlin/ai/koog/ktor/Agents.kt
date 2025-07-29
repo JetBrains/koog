@@ -28,7 +28,7 @@ public fun RoutingContext.llm(): PromptExecutor =
  * @return An instance of `AIAgent` configured with the specified strategy and the route's resources.
  * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
  */
-public fun <Input, Output> RoutingContext.aiAgent(
+public suspend fun <Input, Output> RoutingContext.aiAgent(
     inputType: KType,
     outputType: KType,
     strategy: AIAgentStrategy<Input, Output>,
@@ -56,7 +56,7 @@ public fun <Input, Output> RoutingContext.aiAgent(
  * @return An instance of `AIAgent` configured with the specified strategy and the route's resources.
  * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
  */
-public inline fun <reified Input, reified Output> RoutingContext.aiAgent(
+public suspend inline fun <reified Input, reified Output> RoutingContext.aiAgent(
     strategy: AIAgentStrategy<Input, Output>,
     model: LLModel,
     tools: ToolRegistry = ToolRegistry.EMPTY,
