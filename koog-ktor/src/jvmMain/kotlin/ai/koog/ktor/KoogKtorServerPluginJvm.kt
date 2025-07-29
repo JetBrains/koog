@@ -9,7 +9,6 @@ import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.shared.DEFAULT_REQUEST_TIMEOUT
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -24,7 +23,7 @@ import kotlin.time.Duration
  *
  * @param agentConfig Configuration for the Koog agent server, which includes tool registry details.
  */
-public class MCPToolsConfig(
+public class McpToolsConfig(
     private val agentConfig: KoogAgentsConfig.AgentConfig,
     private val scope: CoroutineScope
 ) {
@@ -120,7 +119,7 @@ public class MCPToolsConfig(
  */
 public fun KoogAgentsConfig.AgentConfig.mcp(
     timeout: Duration = DEFAULT_REQUEST_TIMEOUT,
-    configure: MCPToolsConfig.() -> Unit
+    configure: McpToolsConfig.() -> Unit
 ) {
     val job = Job()
     val scope = CoroutineScope(Dispatchers.IO + job)
