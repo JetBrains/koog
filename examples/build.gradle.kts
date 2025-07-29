@@ -42,9 +42,6 @@ dependencies {
     implementation(libs.opentelemetry.exporter.otlp)
     implementation(libs.ktor.server.cio)
     implementation(project.dependencies.platform(libs.opentelemetry.bom))
-    implementation("io.ktor:ktor-server-call-logging:3.1.3")
-    implementation("io.ktor:ktor-server-call-id:3.1.3")
-    implementation("io.ktor:ktor-server-call-logging:3.1.3")
 
     testImplementation(kotlin("test"))
     testImplementation(project(":agents:agents-test"))
