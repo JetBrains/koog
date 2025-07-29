@@ -79,11 +79,11 @@ class JVMFilteredFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test select does not throw`() {
-        fsReadOnly.parent(src2)
-        fsReadOnly.fromRelativeString(src2, fsReadOnly.relativize(src2, file2)!!)
-        fsReadOnly.fromAbsoluteString(fsReadOnly.toAbsolutePathString(file2))
-        fsReadOnly.name(src2)
-        fsReadOnly.extension(file2)
+        assertNotNull(fsReadOnly.parent(src2))
+        assertNotNull(fsReadOnly.fromRelativeString(src2, assertNotNull(fsReadOnly.relativize(src2, file2))))
+        assertNotNull(fsReadOnly.fromAbsoluteString(assertNotNull(fsReadOnly.toAbsolutePathString(file2))))
+        assertNotNull(fsReadOnly.name(src2))
+        assertNotNull(fsReadOnly.extension(file2))
     }
 
     @Test
