@@ -42,7 +42,7 @@ public class AIAgentContext(
     override val strategyName: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
-    override val id: String,
+    override val agentId: String,
 ) : AIAgentContextBase {
 
     /**
@@ -190,7 +190,7 @@ public class AIAgentContext(
         runId = runId,
         strategyName = strategyName,
         pipeline = pipeline,
-        id = this.id,
+        agentId = this.agentId,
     )
 
     /**

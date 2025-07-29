@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.withContext
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
@@ -148,15 +149,28 @@ public open class AIAgentNode<Input, Output> internal constructor(
 
 ) : AIAgentNodeBase<Input, Output>() {
 
-    @InternalAgentsApi
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
-        return withContext(NodeInfoContextElement(nodeName = name)) {
-            context.pipeline.onBeforeNode(context = context, node = this@AIAgentNode, input = input, inputType = inputType)
-            val nodeOutput = context.execute(input)
-            context.pipeline.onAfterNode(context = context, node = this@AIAgentNode, input = input, output = nodeOutput, inputType = inputType, outputType = outputType)
-            return@withContext nodeOutput
-        }
+    private companion object {
+        private val logger = KotlinLogging.logger { }
     }
+
+    @InternalAgentsApi
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output =
+        withContext(NodeInfoContextElement(nodeName = name)) {
+            logger.debug { "Start executing node (name: $name)" }
+            context.pipeline.onBeforeNode(this@AIAgentNode, context, input, inputType)
+
+            try {
+                val output = context.execute(input)
+                logger.debug { "Finished executing node (name: $name) with output: $output" }
+
+                context.pipeline.onAfterNode(this@AIAgentNode, context, input, output, inputType, outputType)
+                return@withContext output
+            } catch (t: Throwable) {
+                logger.error(t) { "Error executing node (name: $name): ${t.message}" }
+                context.pipeline.onNodeExecutionError(this@AIAgentNode, context, t)
+                throw t
+            }
+        }
 }
 
 /**
@@ -213,3 +227,4 @@ public class FinishNode<Output> internal constructor(
         throw IllegalStateException("${this::class.simpleName} cannot have outgoing edges")
     }
 }
+

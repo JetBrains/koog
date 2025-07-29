@@ -19,6 +19,7 @@ import kotlin.reflect.KType
  * Additionally, it supports features for custom workflows and extensibility.
  */
 public interface AIAgentContextBase {
+
     /**
      * Represents the environment in which the agent operates.
      *
@@ -34,7 +35,13 @@ public interface AIAgentContextBase {
      * This identifier is used to distinguish between different agents and is essential
      * for tracking and managing the agent's lifecycle, especially in multi-agent scenarios.
      */
-    public val id: String
+    public val agentId: String
+
+    /**
+     * A unique identifier for the current session associated with the AI agent context.
+     * Used to track and differentiate sessions within the execution of the agent pipeline.
+     */
+    public val runId: String
 
     /**
      * Represents the input provided to the agent's execution.
@@ -89,12 +96,6 @@ public interface AIAgentContextBase {
      * and storing data specific to the agent's operation.
      */
     public val storage: AIAgentStorage
-
-    /**
-     * A unique identifier for the current session associated with the AI agent context.
-     * Used to track and differentiate sessions within the execution of the agent pipeline.
-     */
-    public val runId: String
 
     /**
      * Represents the name of the strategy being used in the current AI agent context.

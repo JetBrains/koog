@@ -27,6 +27,7 @@ import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 
 class AIAgentPipelineTest {
 
@@ -67,6 +68,49 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
+    @Test
+    @JsName("testPipelineInterceptorsForNodeExecutionErrorEvents")
+    fun `test pipeline interceptors for node execution errors events`() = runTest {
+
+        val interceptedEvents = mutableListOf<String>()
+
+        val nodeName = "Node with error"
+        val testErrorMessage = "Test error"
+
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
+            val nodeWithError by node<String, String>(nodeName) {
+                throw IllegalStateException(testErrorMessage)
+            }
+
+            edge(nodeStart forwardTo nodeWithError)
+            edge(nodeWithError forwardTo nodeFinish transformed { "Done" })
+        }
+
+        val agentInput = "Hello World!"
+
+        createAgent(strategy = strategy) {
+            install(TestFeature) { events = interceptedEvents }
+        }.use { agent ->
+            val throwable = assertFails { agent.run(agentInput) }
+            assertEquals(testErrorMessage, throwable.message)
+        }
+
+        val actualEvents = interceptedEvents.filter { it.startsWith("Node: ") }
+        val expectedEvents = listOf(
+            "Node: start node (name: __start__, input: $agentInput)",
+            "Node: finish node (name: __start__, input: $agentInput, output: $agentInput)",
+            "Node: start node (name: $nodeName, input: $agentInput)",
+            "Node: execution error (name: $nodeName, error: $testErrorMessage)",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
+        )
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
     @Test @JsName("testPipelineInterceptorsForLLmCallEvents")
     fun `test pipeline interceptors for llm call events`() = runTest {
 
@@ -88,7 +132,6 @@ class AIAgentPipelineTest {
         }
 
         val actualEvents = interceptedEvents.filter { it.startsWith("LLM: ") }
-        // , metadata=ResponseMetadata(timestamp=2023-01-01T00:00:00Z, tokensCount=null)
         val expectedEvents = listOf(
             "LLM: start LLM call (prompt: Test user message, tools: [])",
             "LLM: finish LLM call (responses: [Assistant: Default test response])",
@@ -319,5 +362,6 @@ class AIAgentPipelineTest {
             installFeatures = installFeatures,
         )
     }
+
     //endregion Private Methods
 }

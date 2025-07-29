@@ -53,6 +53,10 @@ class TestFeature(val events: MutableList<String>) {
                 feature.events += "Node: finish node (name: ${event.node.name}, input: ${event.input}, output: ${event.output})"
             }
 
+            pipeline.interceptNodeExecutionError(context) { event ->
+                feature.events += "Node: execution error (name: ${event.node.name}, error: ${event.throwable.message})"
+            }
+
             pipeline.interceptToolCall(context) { event ->
                 feature.events += "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
             }

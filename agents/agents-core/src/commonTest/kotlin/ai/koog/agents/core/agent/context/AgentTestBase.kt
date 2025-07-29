@@ -96,7 +96,7 @@ open class AgentTestBase {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
-            id = "test-context-id",
+            agentId = "test-context-id",
         )
     }
 }

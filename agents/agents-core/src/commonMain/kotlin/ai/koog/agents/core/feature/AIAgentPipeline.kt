@@ -152,7 +152,7 @@ public class AIAgentPipeline {
      * @param strategy The strategy being executed by the agent
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(runId: String, agent: AIAgent<*, *>, strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase,) {
+    public suspend fun onBeforeAgentStarted(runId: String, agent: AIAgent<*, *>, strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase) {
         agentHandlers.values.forEach { handler ->
             val eventContext =
                 AgentStartContext(agent = agent, runId = runId, strategy = strategy, feature = handler.feature, context = context)
@@ -305,7 +305,7 @@ public class AIAgentPipeline {
         input: Any?,
         inputType: KType
     ) {
-        val eventContext = NodeBeforeExecuteContext(context, node, input, inputType)
+        val eventContext = NodeBeforeExecuteContext(node, context, input, inputType)
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(eventContext) }
     }
 
@@ -325,8 +325,24 @@ public class AIAgentPipeline {
         inputType: KType,
         outputType: KType,
     ) {
-        val eventContext = NodeAfterExecuteContext(context, node, input, output, inputType, outputType)
+        val eventContext = NodeAfterExecuteContext(node, context, input, output, inputType, outputType)
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(eventContext) }
+    }
+
+    /**
+     * Handles errors occurring during the execution of a node by invoking all registered node execution error handlers.
+     *
+     * @param node The instance of the node where the error occurred.
+     * @param context The context associated with the AI agent executing the node.
+     * @param throwable The exception or error that occurred during node execution.
+     */
+    public suspend fun onNodeExecutionError(
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentContextBase,
+        throwable: Throwable
+    ) {
+        val eventContext = NodeExecutionErrorContext(node, context, throwable)
+        executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionErrorHandler.handle(eventContext) }
     }
 
     //endregion Trigger Node Handlers
@@ -702,6 +718,30 @@ public class AIAgentPipeline {
         val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
 
         existingHandler.afterNodeHandler = AfterNodeHandler { eventContext: NodeAfterExecuteContext ->
+            with(interceptContext.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts and handles node execution errors for a given feature.
+     *
+     * @param interceptContext The context containing the feature and its implementation required for interception.
+     * @param handle A suspend function that processes the node execution error within the scope of the provided feature.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptNodeExecutionError(InterceptContext) { eventContext ->
+     *     logger.error("Node ${eventContext.node.name} execution failed with error: ${eventContext.throwable}")
+     * }
+     * ```
+     */
+    public fun <TFeature : Any> interceptNodeExecutionError(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: NodeExecutionErrorContext) -> Unit
+    ) {
+        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
+
+        existingHandler.nodeExecutionErrorHandler = NodeExecutionErrorHandler { eventContext: NodeExecutionErrorContext ->
             with(interceptContext.featureImpl) { handle(eventContext) }
         }
     }

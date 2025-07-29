@@ -36,7 +36,7 @@ class AIAgentParallelNodesMergeContextTest {
         val results = createParallelResults()
         val mergeContext = AIAgentParallelNodesMergeContext(underlyingContext, results)
 
-        assertEquals(underlyingContext.id, mergeContext.id)
+        assertEquals(underlyingContext.agentId, mergeContext.agentId)
         assertEquals(underlyingContext.runId, mergeContext.runId)
         assertEquals(underlyingContext.strategyName, mergeContext.strategyName)
     }

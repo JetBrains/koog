@@ -178,7 +178,7 @@ public open class AIAgent<Input, Output>(
                 runId = runId,
                 strategyName = strategy.name,
                 pipeline = pipeline,
-                id = id,
+                agentId = id,
             )
 
             logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }

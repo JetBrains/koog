@@ -31,7 +31,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
 ) : AIAgentContextBase {
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
-    override val id: String get() = underlyingContextBase.id
+    override val agentId: String get() = underlyingContextBase.agentId
     override val agentInput: Any? get() = underlyingContextBase.agentInput
     override val agentInputType: KType get() = underlyingContextBase.agentInputType
     override val config: AIAgentConfigBase get() = underlyingContextBase.config

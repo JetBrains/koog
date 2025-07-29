@@ -27,7 +27,7 @@ import kotlin.reflect.KType
 @TestOnly
 public class DummyAIAgentContext(
     private val builder: AIAgentContextMockBuilder,
-    override val id: String = "DummyAgentId",
+    override val agentId: String = "DummyAgentId",
 ) : AIAgentContextBase {
     /**
      * Indicates whether a Language Learning Model (LLM) is defined in the current context.
