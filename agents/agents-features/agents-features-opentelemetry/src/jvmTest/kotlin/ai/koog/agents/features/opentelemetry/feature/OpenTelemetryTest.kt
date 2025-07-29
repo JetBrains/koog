@@ -13,7 +13,11 @@ import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
+import io.opentelemetry.sdk.trace.export.SpanExporter
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import java.util.*
@@ -886,6 +890,63 @@ class OpenTelemetryTest {
     }
 
     @Test
+    fun `test install Open Telemetry feature with custom sdk, should use provided sdk`() = runBlocking {
+        val strategy = strategy<String, String>("test-strategy") {
+            edge(nodeStart forwardTo nodeFinish transformed { "Done" })
+        }
+
+        val expectedSdk = OpenTelemetrySdk.builder().build()
+        var actualSdk: OpenTelemetrySdk? = null
+
+        createAgent(
+            strategy = strategy,
+        ) {
+            install(OpenTelemetry) {
+                setSdk(expectedSdk)
+                actualSdk = sdk
+            }
+        }
+
+        assertEquals(expectedSdk, actualSdk)
+    }
+
+    @Test
+    fun `test Open Telemetry feature with custom sdk configuration emits correct spans`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+            val userPrompt = "What's the weather in Paris?"
+
+            val strategy = strategy("test-strategy") {
+                val nodeSendInput by nodeLLMRequest("test-llm-call")
+                edge(nodeStart forwardTo nodeSendInput)
+                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
+
+            val mockExecutor = getMockExecutor {
+                mockLLMAnswer(mockResponse) onRequestEquals userPrompt
+            }
+
+            val expectedSdk = createCustomSdk(mockExporter)
+
+            val agent = createAgent(
+                promptExecutor = mockExecutor,
+                strategy = strategy,
+            ) {
+                install(OpenTelemetry) {
+                    setSdk(expectedSdk)
+                }
+            }
+
+            agent.run(userPrompt)
+            val collectedSpans = mockExporter.collectedSpans
+            agent.close()
+
+            assertEquals(5, collectedSpans.size)
+        }
+    }
+
+    @Test
     fun `test spans are created for agent with node execution error`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
 
@@ -1029,6 +1090,20 @@ class OpenTelemetryTest {
 
             assertEventsForSpan(spanName, expectedEvents, actualEvents)
         }
+    }
+
+    private fun createCustomSdk(exporter: SpanExporter): OpenTelemetrySdk {
+        val builder = OpenTelemetrySdk.builder()
+
+        val traceProviderBuilder = SdkTracerProvider
+            .builder()
+            .addSpanProcessor(SimpleSpanProcessor.builder(exporter).build())
+
+        val sdk = builder
+            .setTracerProvider(traceProviderBuilder.build())
+            .build()
+
+        return sdk
     }
 
     private fun assertSpanNames(expectedSpanNames: List<String>, actualSpanNames: List<String>) {

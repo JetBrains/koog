@@ -189,6 +189,24 @@ public class OpenTelemetryConfig : FeatureConfig() {
         _verbose = verbose
     }
 
+    /**
+     *  Manually sets the [OpenTelemetrySdk] instance.
+     *
+     * This method allows injection of a pre-configured [OpenTelemetrySdk].
+     * When the SDK is set through this method, it also updates the instrumentation scope name and version
+     * based on the current service information.
+     *
+     * > Note: When using this method, any custom configuration applied via
+     * > [addSpanExporter], [addSpanProcessor], [addResourceAttributes] or [setSampler]
+     * > will be ignored, since the provided SDK is assumed to be fully configured.
+     *
+     * @param sdk The [OpenTelemetrySdk] instance to use for OpenTelemetry configuration.
+     */
+    public fun setSdk(sdk: OpenTelemetrySdk) {
+        _sdk = sdk
+    }
+
+
     //region Private Methods
 
     private fun initializeOpenTelemetry(): OpenTelemetrySdk {
