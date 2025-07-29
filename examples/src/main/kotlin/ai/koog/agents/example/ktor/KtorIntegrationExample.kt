@@ -60,11 +60,6 @@ fun Application.configureKoog() {
                 // baseUrl = "custom-override-url"
             }
 
-            // You can also add configurations for providers not specified in the YAML file
-            // or leave this section empty to use only the YAML configuration
-
-            defaultLLM = OpenAIModels.Chat.GPT4_1
-
             fallback { }
         }
 
@@ -123,12 +118,12 @@ private fun Route.agenticRoutes() {
             user(userRequest)
         }, OllamaModels.Meta.LLAMA_3_2)
 
-        val output = singleRunAgent(updatedRequest.content)
+        val output = singleRunAgent(updatedRequest.content, OpenAIModels.Chat.GPT4_1)
         call.respond(HttpStatusCode.OK, output)
     }
     get("organization") {
         val orgName = call.parameters["name"]!!
-        val output = aiAgent(reActStrategy(), "What's new in $orgName organization")
+        val output = aiAgent(reActStrategy(), OpenAIModels.Chat.GPT4_1, "What's new in $orgName organization")
         call.respond(HttpStatusCode.OK, output)
     }
 }
