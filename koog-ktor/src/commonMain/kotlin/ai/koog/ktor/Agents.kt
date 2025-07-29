@@ -28,11 +28,11 @@ public fun RoutingContext.llm(): PromptExecutor =
  * @return An instance of `AIAgent` configured with the specified strategy and the route's resources.
  * @throws IllegalArgumentException If the agent configuration (`agentConfig`) is not set in the route.
  */
-public suspend fun <Input, Output> RoutingContext.aiAgent(
+public fun <Input, Output> RoutingContext.aiAgent(
     inputType: KType,
     outputType: KType,
-    model: LLModel,
     strategy: AIAgentStrategy<Input, Output>,
+    model: LLModel,
     tools: ToolRegistry = ToolRegistry.EMPTY,
 ): AIAgent<Input, Output> {
     val plugin = requireNotNull(call.application.pluginOrNull(Koog)) { "Plugin $Koog is not configured" }
@@ -42,8 +42,8 @@ public suspend fun <Input, Output> RoutingContext.aiAgent(
         outputType = outputType,
         promptExecutor = plugin.promptExecutor,
         strategy = strategy,
-        agentConfig = plugin.agentConfig,
-        toolRegistry = plugin.tools + tools,
+        agentConfig = plugin.agentConfig(model),
+        toolRegistry = plugin.agentConfig.toolRegistry + tools,
     )
 }
 
@@ -58,8 +58,9 @@ public suspend fun <Input, Output> RoutingContext.aiAgent(
  */
 public inline fun <reified Input, reified Output> RoutingContext.aiAgent(
     strategy: AIAgentStrategy<Input, Output>,
+    model: LLModel,
     tools: ToolRegistry = ToolRegistry.EMPTY,
-): AIAgent<Input, Output> = aiAgent(typeOf<Input>(), typeOf<Output>(), strategy, tools)
+): AIAgent<Input, Output> = aiAgent(typeOf<Input>(), typeOf<Output>(), strategy, model, tools)
 
 
 /**
@@ -68,8 +69,9 @@ public inline fun <reified Input, reified Output> RoutingContext.aiAgent(
  */
 public suspend inline fun <reified Input, reified Output> RoutingContext.aiAgent(
     strategy: AIAgentStrategy<Input, Output>,
+    model: LLModel,
     input: Input
-): Output = aiAgent(strategy) { it.run(input) }
+): Output = aiAgent(strategy, model) { it.run(input) }
 
 /**
  * Creates an AI agent using the provided AI agent strategy within the specified route.
@@ -82,8 +84,9 @@ public suspend inline fun <reified Input, reified Output> RoutingContext.aiAgent
  */
 public suspend inline fun <reified Input, reified Output, Result> RoutingContext.aiAgent(
     strategy: AIAgentStrategy<Input, Output>,
+    model: LLModel,
     block: suspend (agent: AIAgent<Input, Output>) -> Result
-): Result = aiAgent(strategy).use(block)
+): Result = aiAgent(strategy, model).use(block)
 
 /**
  * A `simpleRungAgent` is an agent that runs using [singleRunStrategy], by default, it relies on sequential [ToolCalls].
@@ -91,8 +94,9 @@ public suspend inline fun <reified Input, reified Output, Result> RoutingContext
  */
 public suspend fun <Result> RoutingContext.singleRunAgent(
     runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL,
+    model: LLModel,
     block: suspend (agent: AIAgent<String, String>) -> Result
-): Result = aiAgent(singleRunStrategy(runMode)).use(block)
+): Result = aiAgent(singleRunStrategy(runMode), model).use(block)
 
 /**
  * A `simpleRungAgent` is an agent that runs using [singleRunStrategy], by default, it relies on sequential [ToolCalls].
@@ -100,5 +104,6 @@ public suspend fun <Result> RoutingContext.singleRunAgent(
  */
 public suspend fun RoutingContext.singleRunAgent(
     input: String,
+    model: LLModel,
     runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL,
-): String = singleRunAgent(runMode) { it.run(input) }
+): String = singleRunAgent(runMode, model) { it.run(input) }

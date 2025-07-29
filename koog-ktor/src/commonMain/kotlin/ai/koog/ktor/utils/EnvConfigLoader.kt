@@ -26,57 +26,42 @@ internal fun ApplicationEnvironment.loadAgentsConfig(): KoogAgentsConfig {
         koogConfig.ollama(config)
     }
 
-    config.propertyOrNull("koog.llm.default")?.getString()?.let { modelIdentifier ->
-        val model = getModelFromIdentifier(modelIdentifier)
-        if (model != null) {
-            koogConfig.defaultLLM = model
-        } else {
-            // TODO should this be fatal?
-            log.warn("Could not resolve model from identifier '$modelIdentifier'")
-        }
-    }
-
     val fallbackProviderStr = config.propertyOrNull("koog.llm.fallback.provider")?.getString()
     val fallbackModelStr = config.propertyOrNull("koog.llm.fallback.model")?.getString()
 
     if (fallbackProviderStr != null && fallbackModelStr != null) {
-        try {
-            val fallbackProvider = when (fallbackProviderStr.lowercase()) {
-                "openai" -> LLMProvider.OpenAI
-                "anthropic" -> LLMProvider.Anthropic
-                "google" -> LLMProvider.Google
-                "openrouter" -> LLMProvider.OpenRouter
-                "ollama" -> LLMProvider.Ollama
-                else -> throw IllegalArgumentException("Unsupported LLM provider: $fallbackProviderStr")
-            }
+        val fallbackProvider = when (fallbackProviderStr.lowercase()) {
+            "openai" -> LLMProvider.OpenAI
+            "anthropic" -> LLMProvider.Anthropic
+            "google" -> LLMProvider.Google
+            "openrouter" -> LLMProvider.OpenRouter
+            "ollama" -> LLMProvider.Ollama
+            else -> throw IllegalArgumentException("Unsupported LLM provider: $fallbackProviderStr")
+        }
 
-            val fullIdentifier =
-                if (fallbackProviderStr.lowercase() == "openai" && !fallbackModelStr.contains(".")) {
-                    // For OpenAI, we need to specify a category if not provided
-                    // Default to "chat" category if not specified
-                    "$fallbackProviderStr.chat.$fallbackModelStr"
-                } else {
-                    "$fallbackProviderStr.$fallbackModelStr"
-                }
-
-            val fallbackModel = getModelFromIdentifier(fullIdentifier)
-
-            if (fallbackModel != null) {
-                if (fallbackModel.provider != fallbackProvider) {
-                    log.warn("Model provider (${fallbackModel.provider.id}) does not match specified fallback provider ($fallbackProviderStr)")
-                } else {
-                    koogConfig.llm {
-                        fallback {
-                            provider = fallbackProvider
-                            model = fallbackModel
-                        }
-                    }
-                }
+        val fullIdentifier =
+            if (fallbackProviderStr.lowercase() == "openai" && !fallbackModelStr.contains(".")) {
+                // For OpenAI, we need to specify a category if not provided
+                // Default to "chat" category if not specified
+                "$fallbackProviderStr.chat.$fallbackModelStr"
             } else {
-                log.warn("Could not resolve fallback model from identifier '$fullIdentifier'")
+                "$fallbackProviderStr.$fallbackModelStr"
             }
-        } catch (e: Exception) {
-            log.error("Error setting up fallback LLM", e)
+
+        val fallbackModel = getModelFromIdentifier(fullIdentifier)
+
+        when {
+            fallbackModel != null && fallbackModel.provider != fallbackProvider ->
+                log.warn("Model provider (${fallbackModel.provider.id}) does not match specified fallback provider ($fallbackProviderStr)")
+
+            fallbackModel != null -> koogConfig.llm {
+                fallback {
+                    provider = fallbackProvider
+                    model = fallbackModel
+                }
+            }
+
+            else -> log.warn("Could not resolve fallback model from identifier '$fullIdentifier'")
         }
     }
 

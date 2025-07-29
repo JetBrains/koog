@@ -36,11 +36,6 @@ class ConfigurationLoadingTest {
         // Verify Ollama configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.Ollama])
 
-        // Verify default LLM
-        assertNotNull(koogConfig.defaultLLM)
-        assertEquals(LLMProvider.OpenAI, koogConfig.defaultLLM?.provider)
-        assertEquals(OpenAIModels.Chat.GPT4o, koogConfig.defaultLLM)
-
         // Verify fallback settings
         assertNotNull(koogConfig.fallbackLLMSettings)
         assertEquals(LLMProvider.Anthropic, koogConfig.fallbackLLMSettings?.fallbackProvider)
@@ -53,11 +48,6 @@ class ConfigurationLoadingTest {
             config = createConfigFromResource("default_model_config.yaml")
         }.loadAgentsConfig()
 
-        // Verify default LLM
-        assertNotNull(koogConfig.defaultLLM)
-        assertEquals(LLMProvider.OpenAI, koogConfig.defaultLLM?.provider)
-        assertEquals(OpenAIModels.Chat.GPT4o, koogConfig.defaultLLM)
-
         // Verify no fallback settings
         assertNull(koogConfig.fallbackLLMSettings)
     }
@@ -67,9 +57,6 @@ class ConfigurationLoadingTest {
         val koogConfig = applicationEnvironment {
             config = createConfigFromResource("fallback_config.yaml")
         }.loadAgentsConfig()
-
-        // Verify no default LLM
-        assertNull(koogConfig.defaultLLM)
 
         // Verify fallback settings
         assertNotNull(koogConfig.fallbackLLMSettings)
@@ -168,9 +155,6 @@ class ConfigurationLoadingTest {
 
         // Verify Anthropic configuration is loaded despite invalid timeout
         assertNotNull(koogConfig.llmConnections[LLMProvider.Anthropic])
-
-        // Verify default LLM is not set due to invalid model identifier
-        assertNull(koogConfig.defaultLLM)
 
         // Verify fallback settings are not set due to missing model
         assertNull(koogConfig.fallbackLLMSettings)

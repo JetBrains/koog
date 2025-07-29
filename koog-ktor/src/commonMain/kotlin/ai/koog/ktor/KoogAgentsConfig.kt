@@ -9,7 +9,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
-import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.dsl.PromptDSL
+import ai.koog.prompt.dsl.prompt as koogPrompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
@@ -26,6 +27,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import io.ktor.client.HttpClient
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlin.collections.set
 import kotlin.time.Duration
@@ -69,35 +71,6 @@ public class KoogAgentsConfig {
     internal var fallbackLLMSettings: MultiLLMPromptExecutor.FallbackPromptExecutorSettings? = null
 
     /**
-     * Represents the default Large Language Model (LLM) to be used in the configuration if no specific model is provided.
-     *
-     * This variable holds an optional instance of `LLModel`, which defines the LLM provider, model identifier,
-     * and supported capabilities. If not explicitly set, the absence of a default value will result in an error
-     * when a model is required but not specified.
-     *
-     * The `defaultLLM` acts as a fallback mechanism within the system, ensuring that an appropriate LLM instance
-     * is available when not overridden by specific configurations. It plays a critical role in defining the system's
-     * behavior regarding language model selection.
-     */
-    public var defaultLLM: LLModel? = null
-
-    /**
-     * The registry used to manage and provide a collection of tools for agents.
-     *
-     * The `agentTools` variable holds a [ToolRegistry], which serves as a central repository
-     * for all tools available to an agent. By default, it is initialized to an empty registry
-     * ([ToolRegistry.EMPTY]), but it can be populated and updated as part of the agent configuration process.
-     *
-     * The available tools within this registry are utilized by agents during their operations to perform
-     * various actions and tasks. The tools are configured through the agent setup process and are accessible
-     * via this registry.
-     *
-     * Note: This property is internal and intended for use within the configuration and execution context
-     * of agents in the `KoogAgentsServerConfig` class.
-     */
-    internal var agentTools: ToolRegistry = ToolRegistry.EMPTY
-
-    /**
      * Represents the configuration of an AI agent within the server.
      *
      * This variable holds an instance of `AIAgentConfig` that defines the specific settings,
@@ -109,7 +82,7 @@ public class KoogAgentsConfig {
      *
      * If no configuration is provided, the value remains null.
      */
-    internal var agentConfig: AIAgentConfig? = null
+    internal var agentConfig: AgentConfig = AgentConfig()
 
     /**
      * A mutable list that stores instances of `AgentFeature` for configuring and customizing
@@ -343,19 +316,9 @@ public class KoogAgentsConfig {
          * By default, it uses a [Prompt] instance with the ID "agent" and includes a system
          * message that provides context to the language model by describing its role as a helpful assistant.
          */
-        public var prompt: Prompt = prompt("agent") {
+        internal var prompt: Prompt = koogPrompt("agent") {
             system("You are a helpful assistant")
         }
-
-        /**
-         * Specifies the Large Language Model (LLM) to be used by the agent.
-         *
-         * This property determines which LLM instance the agent will interact with.
-         * If not explicitly set, a default LLM may be used, depending on the system configuration.
-         *
-         * Nullable to allow flexibility in situations where a model might not be immediately specified.
-         */
-        public var model: LLModel? = null
 
         /**
          * Specifies the maximum number of iterations an agent is permitted to perform during its execution cycle.
@@ -392,11 +355,11 @@ public class KoogAgentsConfig {
          * `ToolRegistry.Builder`. The tools are applied to the internal `toolRegistry` of the
          * `AgentConfig` class instance by merging existing tools with the newly registered tools.
          *
-         * @param bindTools A lambda function for configuring the tool registry using the `ToolRegistry.Builder`.
+         * @param build A lambda function for configuring the tool registry using the `ToolRegistry.Builder`.
          */
-        public fun registerTools(bindTools: ToolRegistry.Builder.() -> Unit) {
+        public fun registerTools(build: ToolRegistry.Builder.() -> Unit) {
             toolRegistry += ToolRegistry {
-                bindTools()
+                build()
             }
         }
 
@@ -407,8 +370,14 @@ public class KoogAgentsConfig {
          * and tool selection. Defaults to an instance of `LLMParams`.
          * @param buildPrompt A lambda function that is used to construct the prompt using a `PromptBuilder`.
          */
-        public fun prompt(llmParams: LLMParams = LLMParams(), buildPrompt: PromptBuilder.() -> Unit) {
-            prompt = ai.koog.prompt.dsl.prompt("agent", llmParams, build = buildPrompt)
+        @PromptDSL
+        public fun prompt(
+            name: String = "agent",
+            llmParams: LLMParams = LLMParams(),
+            clock: Clock = Clock.System,
+            build: PromptBuilder.() -> Unit
+        ) {
+            prompt = koogPrompt(name, llmParams, clock, build)
         }
 
         /**
@@ -440,16 +409,8 @@ public class KoogAgentsConfig {
      * `prompt`, `model`, `maxAgentIterations`, and tools can be customized.
      */
     public fun agentConfig(configure: AgentConfig.() -> Unit) {
-        with(AgentConfig()) {
+        agentConfig = AgentConfig().apply {
             configure()
-
-            agentTools = toolRegistry
-            agentConfig = AIAgentConfig(
-                prompt = prompt,
-                model = model ?: defaultLLM ?: throw IllegalArgumentException("Model must be specified"),
-                maxAgentIterations = maxAgentIterations,
-                missingToolsConversionStrategy = missingToolsConversionStrategy,
-            )
         }
     }
 
@@ -778,7 +739,7 @@ public class KoogAgentsConfig {
          * The timeout settings can be updated using the `timeouts` function within the
          * OllamaConfig class, where custom timeout values can be provided.
          */
-        public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+        public var timeoutConfig: ConnectionTimeoutConfig? = null
 
         /**
          * A configurable HTTP client used for handling HTTP requests and responses.
@@ -917,7 +878,7 @@ public class KoogAgentsConfig {
             OllamaClient(
                 baseUrl = baseUrl ?: defaults.baseUrl,
                 baseClient = httpClient,
-                timeoutConfig = timeoutConfig
+                timeoutConfig = timeoutConfig ?: ConnectionTimeoutConfig()
             )
         }
         addLLMClient(LLMProvider.Ollama, client)

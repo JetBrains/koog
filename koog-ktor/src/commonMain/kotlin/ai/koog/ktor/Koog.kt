@@ -2,7 +2,6 @@ package ai.koog.ktor
 
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.ktor.utils.loadAgentsConfig
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -24,11 +23,17 @@ import io.ktor.util.AttributeKey
 public class Koog(
     public val pipeline: ApplicationCallPipeline,
     public val promptExecutor: PromptExecutor,
-    public val defaultLLM: LLModel?,
-    public val tools: ToolRegistry,
-    public val agentConfig: AIAgentConfig,
+    public val agentConfig: KoogAgentsConfig.AgentConfig,
     public val agentFeatures: List<FeatureContext.() -> Unit>
 ) {
+
+    internal fun agentConfig(model: LLModel): AIAgentConfig = AIAgentConfig(
+        agentConfig.prompt,
+        model,
+        agentConfig.maxAgentIterations,
+        agentConfig.missingToolsConversionStrategy
+    )
+
     /**
      * A scoped plugin named "KoogAgents" for managing the Koog instance lifecycle in the application context.
      *
@@ -40,7 +45,6 @@ public class Koog(
      */
     public companion object Companion : Plugin<ApplicationCallPipeline, KoogAgentsConfig, Koog> {
         override fun install(pipeline: ApplicationCallPipeline, configure: KoogAgentsConfig.() -> Unit): Koog {
-
 
             val config = try {
                 pipeline.environment.loadAgentsConfig()
@@ -55,9 +59,7 @@ public class Koog(
             return Koog(
                 pipeline,
                 executor,
-                config.defaultLLM,
-                config.agentTools,
-                requireNotNull(config.agentConfig) { "agentConfig is not set" },
+                config.agentConfig,
                 config.agentFeatures
             )
         }
