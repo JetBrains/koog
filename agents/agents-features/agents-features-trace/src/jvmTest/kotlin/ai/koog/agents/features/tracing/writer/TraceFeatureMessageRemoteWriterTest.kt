@@ -63,9 +63,7 @@ import kotlin.time.Duration.Companion.seconds
 class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger = KotlinLogging.logger(
-            "ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriterTest"
-        )
+        private val logger = KotlinLogging.logger { }
         private val defaultClientServerTimeout = 30.seconds
         private const val HOST = "127.0.0.1"
     }
@@ -241,6 +239,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         }
 
                         actualEvents.add(event as DefinedFeatureEvent)
+                        logger.info { "[${actualEvents.size}/$expectedEventsCount] Received event: $event" }
 
                         if (actualEvents.size >= expectedEventsCount) {
                             cancel()
@@ -365,9 +364,6 @@ class TraceFeatureMessageRemoteWriterTest {
                     expectedEvents.size,
                     "expectedEventsCount variable in the test need to be updated"
                 )
-                assertContentEquals(expectedEvents, actualEvents)
-
-                assertEquals(expectedEvents.size, actualEvents.size)
                 assertContentEquals(expectedEvents, actualEvents)
 
                 isClientFinished.complete(true)
@@ -586,6 +582,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         }
 
                         actualEvents.add(event as DefinedFeatureEvent)
+                        logger.info { "[${actualEvents.size}/$expectedEventsCount] Received event: $event" }
 
                         if (actualEvents.size >= expectedEventsCount) {
                             cancel()

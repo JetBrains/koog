@@ -229,7 +229,7 @@ install(MyFeature) {
 }
 ```
 
-The `FeatureMessageRemoteWriter` takes an optional `ServerConnectionConfig` parameter that specifies the host and port for the remote server. If not provided, it uses a default configuration with port 8080.
+The `FeatureMessageRemoteWriter` takes an optional `ServerConnectionConfig` parameter that specifies the host and port for the remote server. If not provided, it uses a default configuration with port 50881.
 
 ## Configuring Features
 

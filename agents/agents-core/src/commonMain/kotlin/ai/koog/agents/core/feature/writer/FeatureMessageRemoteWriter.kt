@@ -13,7 +13,7 @@ import kotlinx.coroutines.sync.Mutex
  * An abstract class that facilitates writing feature messages to a remote server.
  *
  * @param connectionConfig Configuration for the server connection. If not provided,
- * a default configuration using port 8080 will be used.
+ * a default configuration using port 50881 will be used.
  */
 public abstract class FeatureMessageRemoteWriter(
     connectionConfig: ServerConnectionConfig? = null
