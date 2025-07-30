@@ -1,5 +1,8 @@
 package ai.koog.integration.tests
 
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
@@ -11,6 +14,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -23,9 +27,10 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.seconds
 
 class ToolSchemaExecutorIntegrationTest {
@@ -44,7 +49,64 @@ class ToolSchemaExecutorIntegrationTest {
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
         }
+
+        @JvmStatic
+        fun invalidToolDescriptors(): Stream<ToolDescriptor> {
+            return Stream.of(
+                // Empty tool name
+                ToolDescriptor(
+                    name = "",
+                    description = "Tool with empty name"
+                ),
+                // Whitespace-only properties
+                ToolDescriptor(
+                    name = "   ",
+                    description = "\t\n",
+                    requiredParameters = listOf(
+                        ToolParameterDescriptor(
+                            name = " ",
+                            description = "  \t  ",
+                            type = ToolParameterType.String
+                        )
+                    )
+                ),
+                // Todo uncomment when KG-185 is fixed
+                /*
+                // Empty tool description
+                ToolDescriptor(
+                    name = "valid_tool_name",
+                    description = ""
+                ),
+                // Empty parameter name
+                ToolDescriptor(
+                    name = "valid_tool",
+                    description = "Tool with empty parameter name",
+                    requiredParameters = listOf(
+                        ToolParameterDescriptor(
+                            name = "",
+                            description = "Parameter with empty name",
+                            type = ToolParameterType.String
+                        )
+                    )
+                ),
+                // Empty parameter description
+                ToolDescriptor(
+                    name = "valid_tool",
+                    description = "Tool with empty parameter description",
+                    requiredParameters = listOf(
+                        ToolParameterDescriptor(
+                            name = "validParam",
+                            description = "",
+                            type = ToolParameterType.String
+                        )
+                    )
+                )*/
+            )
+        }
     }
+
+    val model = OpenAIModels.Chat.GPT4o
+    val client = OpenAILLMClient(TestUtils.readTestOpenAIKeyFromEnv())
 
     class FileTools : ToolSet {
 
@@ -104,4 +166,18 @@ class ToolSchemaExecutorIntegrationTest {
             assertEquals("Hello, World!", fileOperation.content)
         }
     }
+
+    @ParameterizedTest
+    @MethodSource("invalidToolDescriptors")
+    fun integration_testInvalidToolDescriptorShouldFail(invalidToolDescriptor: ToolDescriptor) =
+        runTest(timeout = 300.seconds) {
+            val prompt = prompt("test-invalid-tool", params = LLMParams(toolChoice = ToolChoice.Required)) {
+                system("You are a helpful assistant with access to tools.")
+                user("Hi.")
+            }
+
+            assertFailsWith<Exception> {
+                client.execute(prompt, model, listOf(invalidToolDescriptor))
+            }
+        }
 }
