@@ -20,13 +20,13 @@ public abstract class ConnectionConfig {
      *
      * This property is used to retrieve the configured [Json] instance for handling feature messages
      * and remote communication. It incorporates custom serialization modules and settings
-     * designed for efficient processing of [FeatureMessage] objects.
+     * designed for efficient processing of [ai.koog.agents.core.feature.message.FeatureMessage] objects.
      *
      * The configuration can be modified dynamically by appending additional serializer modules
      * to accommodate new data types or adjust serialization behavior.
      *
-     * This property is commonly utilized in contexts where the serialization or deserialization of
-     * messages, such as [FeatureMessage], is required for communication between systems.
+     * This property is commonly used in contexts where the serialization or deserialization of
+     * messages, such as [ai.koog.agents.core.feature.message.FeatureMessage], is required for communication between systems.
      *
      * @return The current [Json] instance used for serialization and deserialization.
      */

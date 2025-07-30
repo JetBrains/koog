@@ -6,6 +6,9 @@ import ai.koog.agents.core.feature.message.FeatureStringMessage
 import ai.koog.agents.core.feature.writer.FeatureMessageLogWriter.LogLevel
 import ai.koog.agents.utils.use
 import io.github.oshai.kotlinlogging.KLogger
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -17,6 +20,10 @@ class FeatureMessageLogWriterTest {
         targetLogger: KLogger,
         logLevel: LogLevel = LogLevel.INFO,
     ) : FeatureMessageLogWriter(targetLogger = targetLogger, logLevel = logLevel) {
+
+        override val isOpen: StateFlow<Boolean> =
+            MutableStateFlow(true).asStateFlow()
+
         override fun FeatureMessage.toLoggerMessage(): String {
             return when (this) {
                 is FeatureStringMessage -> {

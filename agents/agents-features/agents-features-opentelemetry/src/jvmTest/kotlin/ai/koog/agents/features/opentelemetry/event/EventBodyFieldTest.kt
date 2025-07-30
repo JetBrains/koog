@@ -124,7 +124,7 @@ class EventBodyFieldTest {
     }
 
     @Test
-    fun `test  toAttribute for the LIST OF INTEGERS`() {
+    fun `test toAttribute for the LIST OF INTEGERS`() {
         val list = listOf(1, 2, 3)
 
         testToAttributeConversion(

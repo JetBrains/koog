@@ -4,6 +4,8 @@ import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessor
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * An abstract base class for implementing a stream feature provider that logs incoming feature messages
@@ -41,10 +43,8 @@ public abstract class FeatureMessageLogWriter(
         }
     }
 
-    /**
-     * Converts the incoming [ai.koog.agents.core.feature.message.FeatureMessage] into a target logger message.
-     */
-    public abstract fun FeatureMessage.toLoggerMessage(): String
+    override val isOpen: StateFlow<Boolean>
+        get() = MutableStateFlow(true)
 
     override suspend fun processMessage(message: FeatureMessage) {
         val logString = "Received feature message [${message.messageType.value}]: ${message.toLoggerMessage()}"
@@ -57,10 +57,19 @@ public abstract class FeatureMessageLogWriter(
 
     override suspend fun close() { }
 
+    /**
+     * Converts the incoming [ai.koog.agents.core.feature.message.FeatureMessage] into a target logger message.
+     */
+    public abstract fun FeatureMessage.toLoggerMessage(): String
+
+    //region Private Methods
+
     private fun isTargetLogLevelEnabled(targetLogLevel: LogLevel, targetLogger: KLogger): Boolean {
         return when (targetLogLevel) {
             LogLevel.INFO -> targetLogger.isInfoEnabled()
             LogLevel.DEBUG -> targetLogger.isDebugEnabled()
         }
     }
+
+    //endregion Private Methods
 }

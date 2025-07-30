@@ -9,10 +9,14 @@ import ai.koog.agents.core.feature.writer.TestFeatureEventMessage
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.utils.use
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.MutableStateFlow
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -58,7 +62,7 @@ class FeatureMessageRemoteClientTest {
 
         val clientJob = launch {
             FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
-                assertFalse(client.isConnected)
+                assertFalse(client.isConnected.value)
 
                 logger.info { "Client connecting to remote server: ${client.connectionConfig.url}" }
                 isServerStarted.await()
@@ -68,7 +72,7 @@ class FeatureMessageRemoteClientTest {
 
                 isClientFinished.complete(true)
 
-                assertTrue(client.isConnected)
+                assertTrue(client.isConnected.value)
                 logger.info { "Client is finished successfully" }
             }
         }
@@ -107,10 +111,10 @@ class FeatureMessageRemoteClientTest {
 
                 logger.info { "Server is started. Connecting client..." }
                 client.connect()
-                assertTrue(client.isConnected)
+                assertTrue(client.isConnected.value)
 
                 client.connect()
-                assertTrue(client.isConnected)
+                assertTrue(client.isConnected.value)
 
                 isClientFinished.complete(true)
                 logger.info { "Client is finished successfully" }
@@ -141,7 +145,7 @@ class FeatureMessageRemoteClientTest {
             assertNotNull(actualErrorMessage)
 
             assertTrue(actualErrorMessage.contains("Connection refused"))
-            assertFalse(client.isConnected)
+            assertFalse(client.isConnected.value)
             logger.info { "Client is finished successfully" }
         }
     }
@@ -174,11 +178,11 @@ class FeatureMessageRemoteClientTest {
 
             logger.info { "Server is started. Connecting client..." }
             client.connect()
-            assertTrue(client.isConnected)
+            assertTrue(client.isConnected.value)
 
             logger.info { "Close connected client." }
             client.close()
-            assertFalse(client.isConnected)
+            assertFalse(client.isConnected.value)
 
             isClientFinished.complete(true)
         }
@@ -196,11 +200,58 @@ class FeatureMessageRemoteClientTest {
         val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         val client = FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this)
-        assertFalse(client.isConnected)
+        assertFalse(client.isConnected.value)
 
         logger.info { "Close client." }
         client.close()
-        assertFalse(client.isConnected)
+        assertFalse(client.isConnected.value)
+    }
+
+    @Test
+    fun `test server is started with wait connection flag client connected`() = runBlocking {
+        val port = findAvailablePort()
+        val serverConfig = DefaultServerConnectionConfig(port = port, waitConnection = true)
+        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
+
+        FeatureMessageRemoteServer(connectionConfig = serverConfig).use { server ->
+            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+
+                val isServerReceiveConnection = MutableStateFlow(false)
+                val isClientConnected = MutableStateFlow(false)
+
+                val serverJob = launch(Dispatchers.IO) {
+                    logger.info { "Server is started on port: ${server.connectionConfig.port}" }
+                    server.start()
+                    isServerReceiveConnection.value = true
+                    logger.info { "Server is finished successfully" }
+                }
+
+                val clientJob = launch(Dispatchers.IO) {
+                    logger.info { "Client connecting to remote server: ${client.connectionConfig.url}" }
+
+                    server.isStarted.first { it }
+                    client.connect()
+                    isClientConnected.value = client.isConnected.first { it }
+                    logger.info { "Client is finished successfully" }
+                }
+
+                withTimeoutOrNull(defaultClientServerTimeout) {
+                    isServerReceiveConnection.first { it } && isClientConnected.first { it }
+                } != null
+
+                serverJob.cancelAndJoin()
+                clientJob.cancelAndJoin()
+
+                assertTrue(
+                    isServerReceiveConnection.value,
+                    "Server did not receive a connection: $defaultClientServerTimeout"
+                )
+                assertTrue(
+                    isClientConnected.value,
+                    "Client is not connected after a timeout: $defaultClientServerTimeout"
+                )
+            }
+        }
     }
 
     //endregion Start / Stop
@@ -361,7 +412,8 @@ class FeatureMessageRemoteClientTest {
 
                 isClientFinished.complete(true)
 
-                val expectedErrorMessage = "Failed to send message: $testClientMessage. Response (status: 500, message: Error on receiving message: Unexpected JSON token at offset 0"
+                val expectedErrorMessage =
+                    "Failed to send message: $testClientMessage. Response (status: 500, message: Error on receiving message: Unexpected JSON token at offset 0"
                 val actualErrorMessage = throwable.message ?: ""
 
                 assertTrue(

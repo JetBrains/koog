@@ -22,11 +22,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
-import kotlin.test.assertFails
+import kotlin.test.*
 
 class TraceFeatureMessageTestWriterTest {
 

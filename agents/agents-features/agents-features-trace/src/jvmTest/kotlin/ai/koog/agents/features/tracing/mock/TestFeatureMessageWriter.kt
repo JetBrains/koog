@@ -4,6 +4,8 @@ import ai.koog.agents.core.feature.model.AIAgentStartedEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessor
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 class TestFeatureMessageWriter : FeatureMessageProcessor() {
 
@@ -17,6 +19,9 @@ class TestFeatureMessageWriter : FeatureMessageProcessor() {
     companion object {
         private val logger = KotlinLogging.logger("ai.koog.agents.features.tracing.writer.TestEventMessageWriter")
     }
+
+    override val isOpen: StateFlow<Boolean> =
+        MutableStateFlow(true)
 
     override suspend fun processMessage(message: FeatureMessage) {
         logger.info { "Process feature message: $message" }

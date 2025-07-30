@@ -1,6 +1,7 @@
 package ai.koog.agents.core.feature.message
 
 import ai.koog.agents.utils.Closeable
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Represents a provider responsible for handling outbound feature messages or events.
@@ -17,6 +18,11 @@ import ai.koog.agents.utils.Closeable
  * information about various events or updates related to features in the system.
  */
 public abstract class FeatureMessageProcessor : Closeable {
+
+    /**
+     * A [StateFlow] representing the current open state of the processor.
+     */
+    public abstract val isOpen: StateFlow<Boolean>
 
     /**
      * Initializes the feature output stream provider to ensure it is ready for use.

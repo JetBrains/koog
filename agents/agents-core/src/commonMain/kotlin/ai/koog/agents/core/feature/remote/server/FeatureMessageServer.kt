@@ -2,6 +2,7 @@ package ai.koog.agents.core.feature.remote.server
 
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.utils.Closeable
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Represents a server responsible for managing and facilitating communication of feature messages.
@@ -13,28 +14,33 @@ import ai.koog.agents.utils.Closeable
  * Please see description for a client in [ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient].
  *
  * Features:
- *   - Send SSE events [ai.koog.agents.core.feature.message.FeatureMessage] during agent execution, e.g. [ai.koog.agents.core.feature.model.AgentCreateEvent];
+ *   - Send SSE events [ai.koog.agents.core.feature.message.FeatureMessage] during agent execution;
  *   - Process incoming messages from a client;
  *   - Respond to client's health check requests to verify connection state.
  */
 public interface FeatureMessageServer : Closeable {
 
     /**
-     * Indicates whether the server has been started.
+     * Represents the current state of the server, indicating whether it has been started and is actively running.
      *
-     * This property returns `true` if the server is initialized and running,
-     * and `false` if it has not been initialized or has been stopped.
+     * This state flow emits a boolean value:
+     * - `true` if the server is running and ready to process incoming connections or events.
+     * - `false` if the server is stopped or has not yet been started.
      *
-     * It is used to ensure the state of the server before performing operations
-     * such as message broadcasting or responding to client requests.
+     * The value of `isStarted` is updated automatically based on the server's lifecycle transitions,
+     * such as when starting or stopping the server.
+     *
+     * This property can be used to monitor the server's state, ensuring that its operations
+     * are executed only when it is in the appropriate running state.
+     * It is particularly useful for preventing redundant start operations or for providing feedback to the client.
      */
-    public val isStarted: Boolean
+    public val isStarted: StateFlow<Boolean>
 
     /**
-     * Starts the server, initializing any necessary resources and beginning to listen for incoming client connections or events.
+     * Starts the server, initializing any necessary resources, and beginning to listen for incoming client connections or events.
      *
      * This method ensures that the server transitions into a running state, allowing it to process incoming messages,
-     * send SSE events [ai.koog.agents.core.feature.message.FeatureMessage], and respond to health check requests from clients.
+     * send SSE events [FeatureMessage], and respond to health check requests from clients.
      *
      * It is recommended to check the server's state using [isStarted] before invoking this method to prevent redundant operations.
      *
@@ -46,11 +52,11 @@ public interface FeatureMessageServer : Closeable {
     /**
      * Sends a feature message for further processing or delivery to connected clients via server-sent events (SSE).
      *
-     * This method is designed to enqueue the given [ai.koog.agents.core.feature.message.FeatureMessage] into a channel, from which
+     * This method is designed to enqueue the given [FeatureMessage] into a channel, from which
      * it will be serialized and sent to all subscribed clients or receivers, if applicable. The
-     * method ensures that the message conforms to the expected [ai.koog.agents.core.feature.message.FeatureMessage] interface.
+     * method ensures that the message conforms to the expected [FeatureMessage] interface.
      *
-     * @param message The message to be sent, implementing the [ai.koog.agents.core.feature.message.FeatureMessage] interface. This message
+     * @param message The message to be sent, implementing the [FeatureMessage] interface. This message
      *                includes information such as a timestamp and type, ensuring proper context
      *                for the recipient.
      */

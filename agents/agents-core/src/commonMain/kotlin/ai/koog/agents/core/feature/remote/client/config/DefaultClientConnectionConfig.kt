@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.remote.client.config
 
-import io.ktor.http.URLProtocol
+import io.ktor.http.*
 
 /**
  * Default implementation for configuring a client connection.
@@ -15,7 +15,17 @@ import io.ktor.http.URLProtocol
  * @param protocol The protocol used for the connection, such as HTTP or HTTPS. Defaults to HTTPS.
  */
 public class DefaultClientConnectionConfig(
-    host: String = "localhost",
-    port: Int? = null,
-    protocol: URLProtocol = URLProtocol.HTTPS,
-) : ClientConnectionConfig(host, port, protocol)
+    host: String = DEFAULT_HOST,
+    port: Int? = DEFAULT_PORT,
+    protocol: URLProtocol = defaultProtocol,
+) : ClientConnectionConfig(host, port, protocol) {
+
+    private companion object {
+
+        const val DEFAULT_PORT: Int = 50881
+
+        const val DEFAULT_HOST: String = "127.0.0.1"
+
+        val defaultProtocol: URLProtocol = URLProtocol.HTTPS
+    }
+}

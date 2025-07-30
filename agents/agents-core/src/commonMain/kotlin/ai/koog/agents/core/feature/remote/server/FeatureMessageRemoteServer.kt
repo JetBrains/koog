@@ -1,18 +1,22 @@
 package ai.koog.agents.core.feature.remote.server
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.utils.ExceptionExtractor.rootCause
 import ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig
+import ai.koog.agents.core.utils.ExceptionExtractor.rootCause
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.ApplicationStopped
+import io.ktor.server.application.ServerReady
 import io.ktor.server.application.install
-import io.ktor.server.cio.*
+import io.ktor.server.cio.CIO
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
@@ -21,11 +25,12 @@ import io.ktor.server.sse.sse
 import io.ktor.sse.ServerSentEvent
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.serializer
 import kotlin.properties.Delegates
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A server for managing remote feature message communication via server-sent events (SSE) and HTTP endpoints.
@@ -45,14 +50,39 @@ public class FeatureMessageRemoteServer(
         private val logger = KotlinLogging.logger { }
     }
 
-    private var isInitialized = false
-
     private var server: EmbeddedServer<ApplicationEngine, ApplicationEngine.Configuration> by Delegates.notNull()
 
-    private val toSendMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
+    private val _isStarted: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    override val isStarted: Boolean
-        get() = isInitialized
+    override val isStarted: StateFlow<Boolean>
+        get() = _isStarted
+
+    private val _isClientConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    internal val isClientConnected: StateFlow<Boolean>
+        get() = _isClientConnected
+
+    /**
+     * A channel for managing feature messages that are pending to be sent to connected clients.
+     *
+     * `toSendMessages` serves as a primary mechanism for queuing outgoing messages of type [FeatureMessage]
+     * that will be processed and transmitted, typically over server-sent events (SSE). The channel is configured
+     * to support an unlimited buffer, allowing it to handle a potentially large number of messages awaiting
+     * transmission without blocking the sending operations.
+     *
+     * Key Responsibilities:
+     * - Acts as a queue for messages to maintain order and ensure reliability in the delivery process.
+     * - Allows for non-blocking message production via `send` and controlled message consumption via `consumeAsFlow`.
+     *
+     * Use Cases:
+     * - Enqueue messages within the `sendMessage` method to prepare them for delivery to clients.
+     * - Process queued messages in server operations, such as streaming them to clients using SSE or similar protocols.
+     *
+     * Note:
+     * - This channel is closed during server shutdown via the `stopServer` function, ensuring proper resource cleanup
+     *   and halting further message enqueuing.
+     */
+    private val toSendMessages: Channel<FeatureMessage> = Channel(Channel.UNLIMITED)
 
     /**
      * A channel used to receive and process incoming feature messages sent to the server.
@@ -63,7 +93,8 @@ public class FeatureMessageRemoteServer(
      *
      * Key Characteristics:
      * - The channel is configured with an unlimited capacity, allowing it to buffer incoming messages
-     *   without restriction. This ensures robustness during high message throughput scenarios.
+     *   without restriction.
+     *   This ensures robustness during high-message throughput scenarios.
      * - Incoming feature messages may represent various system events, categorized by their
      *   `messageType` or timestamp as per the [FeatureMessage] interface.
      *
@@ -107,28 +138,34 @@ public class FeatureMessageRemoteServer(
     override suspend fun start() {
         logger.info { "Feature Message Remote Server. Starting server on port ${connectionConfig.port}" }
 
-        if (isInitialized) {
+        if (isStarted.value) {
             logger.warn { "Feature Message Remote Server. Server is already started! Skip initialization." }
             return
         }
 
-        startServer(host = connectionConfig.host, port = connectionConfig.port)
-        logger.debug { "Feature Message Remote Server. Initialized successfully on port ${connectionConfig.port}" }
+        startServer(
+            host = connectionConfig.host,
+            port = connectionConfig.port
+        )
 
-        isInitialized = true
+        logger.info { "Feature Message Remote Server. Server has been successfully started on port ${connectionConfig.port}" }
+
+        if (connectionConfig.waitConnection) {
+            // Suspend until the first connection to a server
+            logger.info { "Feature Message Remote Server. Start waiting for the first connection on port ${connectionConfig.port}" }
+            isClientConnected.first { it }
+        }
     }
 
     override suspend fun close() {
-        logger.info { "Feature Message Remote Server. Starting closing server on port ${connectionConfig.port}" }
+        logger.info { "Feature Message Remote Server. Closing server on port ${connectionConfig.port}" }
 
-        if (!isInitialized) {
+        if (!isStarted.value) {
             logger.warn { "Feature Message Remote Server. Server is already stopped! Skip stopping." }
             return
         }
 
         stopServer()
-
-        isInitialized = false
     }
 
     //endregion Start / Stop
@@ -143,10 +180,10 @@ public class FeatureMessageRemoteServer(
 
     //region Private Methods
 
-    private fun startServer(host: String, port: Int) {
+    private suspend fun startServer(host: String, port: Int) {
         try {
             val server = createServer(host = host, port = port)
-            server.start(wait = false)
+            server.startSuspend(wait = false)
         } catch (t: CancellationException) {
             // Server start() method starts a coroutine job canceled in case of IOException.
             // The result is that we get a JobCancellationException here in case of any error on server start.
@@ -173,58 +210,25 @@ public class FeatureMessageRemoteServer(
         server = embeddedServer(factory = factory, host = host, port = port) {
             install(SSE)
 
+            // Intercept first connection to server
+            intercept(ApplicationCallPipeline.Call) {
+                _isClientConnected.value = true
+            }
+
             routing {
-                sse("/sse") {
-                    toSendMessages.consumeAsFlow().collect { message: FeatureMessage ->
-                        logger.debug { "Feature Message Remote Server. Process server event: $message" }
+                routingSse()
+                routingGet()
+                routingPost()
+            }
 
-                        try {
-                            val serverEventData: String = message.toServerEventData()
-                            logger.debug { "Feature Message Remote Server. Send encoded message: $serverEventData" }
+            monitor.subscribe(ServerReady) {
+                logger.debug { "Feature Message Remote Server. Server has been started and ready to receive connections." }
+                _isStarted.value = true
+            }
 
-                            val serverEvent = ServerSentEvent(
-                                event = message.messageType.value,
-                                data = serverEventData,
-                            )
-
-                            logger.debug { "Feature Message Remote Server. Sending SSE server event: $serverEvent" }
-                            send(serverEvent)
-                        } catch (t: CancellationException) {
-                            logger.info {
-                                "Feature Message Remote Server. Sending SSE message (message: $message) has been canceled: ${t.message}"
-                            }
-                            throw t
-                        } catch (t: Throwable) {
-                            logger.error(t) {
-                                "Feature Message Remote Server. Error while sending SSE event: ${t.message}"
-                            }
-                        }
-                    }
-                }
-
-                get("/health") {
-                    call.respond(HttpStatusCode.OK, "Feature Message Remote Server. Server is running.")
-                }
-
-                post("/message") {
-                    try {
-                        val messageString = call.receiveText()
-                        val message = messageString.toFeatureMessage()
-                        logger.debug { "Feature Message Remote Server. Received message: $message" }
-
-                        receivedMessages.send(message)
-
-                        call.respond(HttpStatusCode.OK)
-                    } catch (t: CancellationException) {
-                        logger.debug {
-                            "Feature Message Remote Server. Received message has been canceled: ${t.message}"
-                        }
-                        throw t
-                    } catch (t: Throwable) {
-                        logger.error(t) { "Feature Message Remote Server. Error while receiving message: ${t.message}" }
-                        call.respond(HttpStatusCode.InternalServerError, "Error on receiving message: ${t.message}")
-                    }
-                }
+            monitor.subscribe(ApplicationStopped) {
+                logger.debug { "Feature Message Remote Server. Server has been stopped." }
+                _isStarted.value = false
             }
         }
 
@@ -233,9 +237,7 @@ public class FeatureMessageRemoteServer(
     }
 
     private suspend fun stopServer() {
-        logger.info {
-            "Feature Message Remote Server. Starting stopping server jobs for server on port: ${connectionConfig.port}"
-        }
+        logger.info { "Feature Message Remote Server. Starting stopping server jobs for server on port: ${connectionConfig.port}" }
 
         toSendMessages.close()
         receivedMessages.close()
@@ -244,12 +246,75 @@ public class FeatureMessageRemoteServer(
         logger.info { "Feature Message Remote Server. The server on port ${connectionConfig.port} has been stopped" }
     }
 
+    //region Routing
+
+    private fun Route.routingSse() {
+        sse("/sse") {
+            toSendMessages.consumeAsFlow().collect { message: FeatureMessage ->
+                logger.debug { "Feature Message Remote Server. Process server event: $message" }
+
+                try {
+                    val serverEventData: String = message.toServerEventData()
+                    logger.debug { "Feature Message Remote Server. Send encoded message: $serverEventData" }
+
+                    val serverEvent = ServerSentEvent(
+                        event = message.messageType.value,
+                        data = serverEventData,
+                    )
+
+                    logger.debug { "Feature Message Remote Server. Sending SSE server event: $serverEvent" }
+                    send(serverEvent)
+                } catch (t: CancellationException) {
+                    logger.info {
+                        "Feature Message Remote Server. Sending SSE message (message: $message) has been canceled: ${t.message}"
+                    }
+                    throw t
+                } catch (t: Throwable) {
+                    logger.error(t) {
+                        "Feature Message Remote Server. Error while sending SSE event: ${t.message}"
+                    }
+                }
+            }
+        }
+    }
+
+    private fun Route.routingGet() {
+        get("/health") {
+            call.respond(HttpStatusCode.OK, "Feature Message Remote Server. Server is running.")
+        }
+    }
+
+    private fun Route.routingPost() {
+        post("/message") {
+            try {
+                val messageString = call.receiveText()
+                val message = messageString.toFeatureMessage()
+                logger.debug { "Feature Message Remote Server. Received message: $message" }
+
+                receivedMessages.send(message)
+
+                        call.respond(HttpStatusCode.OK)
+                    } catch (t: CancellationException) {
+                        logger.debug {
+                            "Feature Message Remote Server. Received message has been canceled: ${t.message}"
+                        }
+                        throw t
+
+                    } catch (t: Throwable) {
+                        logger.error(t) { "Feature Message Remote Server. Error while receiving message: ${t.message}" }
+                        call.respond(HttpStatusCode.InternalServerError, "Error on receiving message: ${t.message}")
+            }
+        }
+    }
+
     private fun String.toFeatureMessage(): FeatureMessage {
         return connectionConfig.jsonConfig.decodeFromString(
             deserializer = connectionConfig.jsonConfig.serializersModule.serializer(),
             string = this
         )
     }
+
+    //endregion Routing
 
     //endregion Private Methods
 }

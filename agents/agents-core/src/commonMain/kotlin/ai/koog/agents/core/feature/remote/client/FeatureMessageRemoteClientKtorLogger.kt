@@ -20,12 +20,13 @@ internal class FeatureMessageRemoteClientKtorLogger : Logger {
      * configurations specific to this logger.
      */
     private companion object {
+
         /**
          * A private logger instance used for logging debug and informational messages.
          *
          * This logger is specifically created for the `FeatureMessageRemoteClientKtorLogger` class to handle
          * logging functionality, such as outputting debug information or tracing issues within the class operations.
-         * It utilizes the `LoggerFactory` to configure and provide the appropriate logging mechanism.
+         * It uses the `LoggerFactory` to configure and provide the appropriate logging mechanism.
          */
         private val logger = KotlinLogging.logger { }
     }

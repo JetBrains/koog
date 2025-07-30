@@ -50,14 +50,14 @@ class FeatureMessageFileWriterTest {
     @Test
     fun `test base state for non-initialized writer`(@TempDir tempDir: Path) = runBlocking {
         val writer = TestFeatureMessageFileWriter(tempDir)
-        assertFalse(writer.isOpen)
+        assertFalse(writer.isOpen.value)
     }
 
     @Test
     fun `test base state for initialized writer`(@TempDir tempDir: Path) = runBlocking {
         TestFeatureMessageFileWriter(tempDir).use { writer ->
             writer.initialize()
-            assertTrue(writer.isOpen)
+            assertTrue(writer.isOpen.value)
         }
     }
 
@@ -66,7 +66,7 @@ class FeatureMessageFileWriterTest {
         TestFeatureMessageFileWriter(tempDir).use { writer ->
             writer.initialize()
             writer.initialize()
-            assertTrue(writer.isOpen)
+            assertTrue(writer.isOpen.value)
         }
     }
 
@@ -109,7 +109,7 @@ class FeatureMessageFileWriterTest {
 
         val expectedError = "Writer is not initialized. Please make sure you call method 'initialize()' before."
         assertEquals(expectedError, throwable.message)
-        assertFalse(writer.isOpen)
+        assertFalse(writer.isOpen.value)
     }
 
     @Test
@@ -170,40 +170,40 @@ class FeatureMessageFileWriterTest {
     fun `test close non-initialized writer`(@TempDir tempDir: Path) = runBlocking {
         val writer = TestFeatureMessageFileWriter(tempDir)
         writer.close()
-        assertFalse(writer.isOpen)
+        assertFalse(writer.isOpen.value)
     }
 
     @Test
     fun `test close initialized writer`(@TempDir tempDir: Path) = runBlocking {
         val writer = TestFeatureMessageFileWriter(tempDir)
         writer.initialize()
-        assertTrue(writer.isOpen)
+        assertTrue(writer.isOpen.value)
 
         writer.close()
-        assertFalse(writer.isOpen)
+        assertFalse(writer.isOpen.value)
     }
 
     @Test
     fun `test close already closed writer`(@TempDir tempDir: Path) = runBlocking {
         val writer = TestFeatureMessageFileWriter(tempDir)
         writer.initialize()
-        assertTrue(writer.isOpen)
+        assertTrue(writer.isOpen.value)
 
         writer.close()
-        assertFalse(writer.isOpen)
+        assertFalse(writer.isOpen.value)
 
         writer.close()
-        assertFalse(writer.isOpen)
+        assertFalse(writer.isOpen.value)
     }
 
     @Test
     fun `test write after close throws exception`(@TempDir tempDir: Path) = runBlocking {
         val writer = TestFeatureMessageFileWriter(tempDir)
         writer.initialize()
-        assertTrue(writer.isOpen)
+        assertTrue(writer.isOpen.value)
 
         writer.close()
-        assertFalse(writer.isOpen)
+        assertFalse(writer.isOpen.value)
 
         val throwable = assertThrows<IllegalStateException> {
             writer.processMessage(message = FeatureStringMessage("test-message"))

@@ -2,10 +2,11 @@ package ai.koog.agents.core.feature.writer
 
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessor
-import ai.koog.agents.core.utils.MutexCheck.withLockCheck
 import ai.koog.agents.core.feature.remote.server.FeatureMessageRemoteServer
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig
+import ai.koog.agents.core.utils.MutexCheck.withLockCheck
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 
 /**
@@ -21,19 +22,6 @@ public abstract class FeatureMessageRemoteWriter(
     private val writerMutex = Mutex()
 
     /**
-     * Indicates the internal state of the writer, specifically whether the connection to the remote server
-     * is currently open (`true`) or closed (`false`).
-     *
-     * This variable is used internally for managing the lifecycle of the server connection.
-     * It is updated during server initialization and closure processes, and its state determines
-     * whether certain operations can be performed, such as message processing.
-     *
-     * The value of this property should not be accessed or modified directly outside the class.
-     * Use the public `isOpen` getter for read-only access.
-     */
-    private var _isOpen: Boolean = false
-
-    /**
      * Indicates whether the writer is currently open and initialized.
      *
      * A value of `true` means the writer is open and ready to process messages,
@@ -41,31 +29,27 @@ public abstract class FeatureMessageRemoteWriter(
      *
      * This property reflects the internal `_isOpen` state and ensures thread-safe access.
      */
-    public val isOpen: Boolean
-        get() = _isOpen
+    override val isOpen: StateFlow<Boolean>
+        get() = server.isStarted
 
     internal val server: FeatureMessageRemoteServer =
         FeatureMessageRemoteServer(connectionConfig = connectionConfig ?: DefaultServerConnectionConfig())
 
     override suspend fun initialize() {
         withLockEnsureClosed {
-            server.start()
             super.initialize()
-
-            _isOpen = true
+            server.start()
         }
     }
 
     override suspend fun processMessage(message: FeatureMessage) {
-        check(isOpen) { "Writer is not initialized. Please make sure you call method 'initialize()' before." }
+        check(isOpen.value) { "Writer is not initialized. Please make sure you call method 'initialize()' before." }
         server.sendMessage(message)
     }
 
     override suspend fun close() {
         withLockEnsureOpen {
             server.close()
-
-            _isOpen = false
         }
     }
 
@@ -73,14 +57,14 @@ public abstract class FeatureMessageRemoteWriter(
 
     private suspend fun withLockEnsureClosed(action: suspend () -> Unit) =
         writerMutex.withLockCheck(
-            check = { isOpen },
+            check = { isOpen.value },
             message = { "Server is already started" },
             action = action
         )
 
     private suspend fun withLockEnsureOpen(action: suspend () -> Unit) =
         writerMutex.withLockCheck(
-            check = { !isOpen },
+            check = { !isOpen.value },
             message = { "Server is already stopped" },
             action = action
         )
