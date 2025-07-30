@@ -1,40 +1,24 @@
 package ai.koog.rag.base.files
 
+import ai.koog.rag.base.files.filter.PathFilter
 import kotlinx.io.IOException
 import kotlinx.io.Sink
 import kotlinx.io.Source
 
 /**
- * Filters the current read-only file system implementation based on the specified root path such that
- * only paths that are contained within the given root or paths that contain the root are visible and accessible.
- *
- * @param root The root path to use as the basis for filtering.
- * @return A new file system provider instance that is filtered based on the given root path.
+ * Filters the current read-only file system implementation such that
+ * only paths that are accepted by [filter] are visible and accessible.
  */
-public fun <Path> FileSystemProvider.ReadOnly<Path>.filterByRoot(root: Path): FileSystemProvider.ReadOnly<Path> {
-    val filter = PathFilter { path, fs ->
-        root.contains(path, fs) || path.contains(root, fs)
-    }
+public fun <Path> FileSystemProvider.ReadOnly<Path>.filter(filter: PathFilter<Path>): FileSystemProvider.ReadOnly<Path> {
     return FilteredReadOnly(this, filter)
 }
 
 /**
- * Filters the current read-write file system implementation based on the specified root path such that
- * only paths that are contained within the given root or paths that contain the root are visible and accessible.
- *
- * @param root The root path to use as the basis for filtering.
- * @return A new file system provider instance that is filtered based on the given root path.
+ * Filters the current read-write file system implementation such that
+ * only paths that are accepted by [filter] are visible and accessible.
  */
-public fun <Path> FileSystemProvider.ReadWrite<Path>.filterByRoot(root: Path): FileSystemProvider.ReadWrite<Path> {
-    val filter = PathFilter { path, fs ->
-        root.contains(path, fs) || path.contains(root, fs)
-    }
+public fun <Path> FileSystemProvider.ReadWrite<Path>.filter(filter: PathFilter<Path>): FileSystemProvider.ReadWrite<Path> {
     return FilteredReadWrite(this, filter)
-}
-
-internal fun interface PathFilter<Path> {
-    fun show(path: Path, fs: FileSystemProvider.ReadOnly<Path>): Boolean
-    fun hide(path: Path, fs: FileSystemProvider.ReadOnly<Path>): Boolean = !show(path, fs)
 }
 
 internal open class FilteredReadOnly<P>(
