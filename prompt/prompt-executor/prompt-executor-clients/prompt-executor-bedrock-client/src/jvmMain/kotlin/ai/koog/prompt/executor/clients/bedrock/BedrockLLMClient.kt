@@ -22,6 +22,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
+import aws.sdk.kotlin.runtime.auth.credentials.ProfileCredentialsProvider
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
@@ -38,6 +39,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -69,6 +71,22 @@ public class BedrockClientSettings(
     internal val enableLogging: Boolean = false,
     internal val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null
 )
+
+private fun bedrockClient(
+    settings: BedrockClientSettings,
+    credentialsProvider: CredentialsProvider
+): BedrockRuntimeClient = BedrockRuntimeClient {
+    this.region = settings.region
+    this.credentialsProvider = credentialsProvider
+
+    settings.endpointUrl?.let { url ->
+        this.endpointUrl = Url.parse(url)
+    }
+
+    this.retryStrategy = StandardRetryStrategy {
+        maxAttempts = settings.maxRetries
+    }
+}
 
 /**
  * Represents the settings configuration for Bedrock guardrails.
@@ -116,13 +134,14 @@ public class BedrockLLMClient(
         settings: BedrockClientSettings = BedrockClientSettings(),
         clock: Clock = Clock.System,
     ) : this(
-        bedrockClient = BedrockRuntimeClient {
-            this.region = settings.region
-            this.credentialsProvider = StaticCredentialsProvider {
+        bedrockClient = bedrockClient(
+            settings = settings,
+            credentialsProvider = StaticCredentialsProvider {
                 this.accessKeyId = awsAccessKeyId
                 this.secretAccessKey = awsSecretAccessKey
                 awsSessionToken?.let { this.sessionToken = it }
             }
+        )
 
             // Configure a custom endpoint if provided
             settings.endpointUrl?.let { url ->
@@ -346,8 +365,8 @@ public class BedrockLLMClient(
         if (moderationGuardrailsSettings == null) {
             throw IllegalArgumentException(
                 "Moderation Guardrails settings are not provided to the Bedrock client. " +
-                    "Please provide them to the BedrockClientSettings when creating the Bedrock client. " +
-                    "See https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html for more information."
+                        "Please provide them to the BedrockClientSettings when creating the Bedrock client. " +
+                        "See https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html for more information."
             )
         }
 
