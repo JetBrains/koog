@@ -36,7 +36,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor

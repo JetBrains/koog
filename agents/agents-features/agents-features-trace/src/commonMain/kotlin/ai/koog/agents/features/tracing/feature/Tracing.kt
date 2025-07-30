@@ -23,8 +23,8 @@ import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
 import ai.koog.agents.features.tracing.eventString
 import io.github.oshai.kotlinlogging.KotlinLogging
 

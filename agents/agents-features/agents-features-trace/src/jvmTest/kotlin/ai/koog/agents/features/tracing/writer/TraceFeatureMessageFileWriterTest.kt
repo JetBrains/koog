@@ -19,9 +19,9 @@ import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.common.message.FeatureEvent
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureStringMessage
+import ai.koog.agents.core.feature.message.FeatureEvent
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider

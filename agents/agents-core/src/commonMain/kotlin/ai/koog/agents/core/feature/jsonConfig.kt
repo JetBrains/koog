@@ -16,8 +16,8 @@ import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallFailureEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
-import ai.koog.agents.features.common.message.FeatureEvent
-import ai.koog.agents.features.common.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureEvent
+import ai.koog.agents.core.feature.message.FeatureMessage
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 

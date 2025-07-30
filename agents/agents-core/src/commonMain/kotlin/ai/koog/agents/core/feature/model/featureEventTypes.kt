@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.model
 
-import ai.koog.agents.features.common.message.FeatureEvent
-import ai.koog.agents.features.common.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureEvent
+import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message

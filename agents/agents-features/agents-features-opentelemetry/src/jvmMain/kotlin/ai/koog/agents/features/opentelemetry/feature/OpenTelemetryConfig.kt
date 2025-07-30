@@ -1,6 +1,6 @@
 package ai.koog.agents.features.opentelemetry.feature
 
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey

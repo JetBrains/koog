@@ -1,7 +1,7 @@
 package ai.koog.agents.features.tracing.writer
 
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.writer.FeatureMessageFileWriter
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.writer.FeatureMessageFileWriter
 import kotlinx.io.Sink
 
 /**

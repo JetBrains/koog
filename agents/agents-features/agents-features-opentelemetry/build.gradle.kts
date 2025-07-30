@@ -16,7 +16,6 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-core"))
-                api(project(":agents:agents-features:agents-features-common"))
                 api(project(":agents:agents-features:agents-features-trace"))
 
                 api(libs.kotlinx.serialization.json)

@@ -49,7 +49,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel

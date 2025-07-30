@@ -1,7 +1,7 @@
 package ai.koog.agents.features.tracing.writer
 
-import ai.koog.agents.features.common.remote.server.config.ServerConnectionConfig
-import ai.koog.agents.features.common.writer.FeatureMessageRemoteWriter
+import ai.koog.agents.core.feature.remote.server.config.ServerConnectionConfig
+import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 
 /**
  * A message processor that sends trace events to a remote server.

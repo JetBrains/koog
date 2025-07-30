@@ -1,7 +1,6 @@
 package ai.koog.agents.core.feature.remote.client.config
 
 import ai.koog.agents.core.feature.agentFeatureMessageSerializersModule
-import ai.koog.agents.features.common.remote.client.config.ClientConnectionConfig
 import io.ktor.http.URLProtocol
 
 /**

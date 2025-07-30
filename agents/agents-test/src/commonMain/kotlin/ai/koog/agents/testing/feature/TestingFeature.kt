@@ -26,7 +26,7 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext

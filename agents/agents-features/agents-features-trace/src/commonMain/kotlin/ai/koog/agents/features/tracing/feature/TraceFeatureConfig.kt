@@ -1,7 +1,7 @@
 package ai.koog.agents.features.tracing.feature
 
-import ai.koog.agents.features.common.config.FeatureConfig
-import ai.koog.agents.features.common.message.FeatureMessage
+import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.message.FeatureMessage
 
 /**
  * Configuration for the tracing feature.

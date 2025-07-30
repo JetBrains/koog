@@ -1,6 +1,6 @@
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 

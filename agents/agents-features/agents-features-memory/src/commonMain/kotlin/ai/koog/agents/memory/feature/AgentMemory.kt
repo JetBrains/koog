@@ -10,7 +10,7 @@ import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.model.Concept
