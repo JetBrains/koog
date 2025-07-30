@@ -1093,7 +1093,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         val executor = simpleBedrockExecutor(
             readAwsAccessKeyIdFromEnv(),
             readAwsSecretAccessKeyFromEnv(),
-            readAwsSessionTokenFromEnv() ?: "",
+            readAwsSessionTokenFromEnv(),
         )
 
         val prompt = Prompt.build("test-simple-bedrock-executor") {

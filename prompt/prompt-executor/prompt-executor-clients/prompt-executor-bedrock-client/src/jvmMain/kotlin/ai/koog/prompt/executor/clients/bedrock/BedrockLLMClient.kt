@@ -147,10 +147,10 @@ public class BedrockLLMClient(
     internal fun getBedrockModelFamily(model: LLModel): BedrockModelFamilies {
         require(model.provider == LLMProvider.Bedrock) { "Model ${model.id} is not a Bedrock model" }
         return when {
-            model.id.startsWith("anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
-            model.id.startsWith("amazon.nova") -> BedrockModelFamilies.AmazonNova
-            model.id.startsWith("ai21.jamba") -> BedrockModelFamilies.AI21Jamba
-            model.id.startsWith("meta.llama") -> BedrockModelFamilies.Meta
+            model.id.startsWith("us.anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
+            model.id.startsWith("us.amazon.nova") -> BedrockModelFamilies.AmazonNova
+            model.id.startsWith("us.ai21.jamba") -> BedrockModelFamilies.AI21Jamba
+            model.id.startsWith("us.meta.llama") -> BedrockModelFamilies.Meta
             else -> throw IllegalArgumentException("Model ${model.id} is not a supported Bedrock model")
         }
     }

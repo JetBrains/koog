@@ -40,7 +40,6 @@ import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -123,13 +122,12 @@ class BedrockLLMClientTest {
         // Test older Claude models with standard capabilities
         val olderClaudeModels = listOf(
             BedrockModels.AnthropicClaude21,
-            BedrockModels.AnthropicClaude2,
             BedrockModels.AnthropicClaudeInstant
         )
 
         olderClaudeModels.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("anthropic.claude"))
+            assertTrue(model.id.startsWith("us.anthropic.claude"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -144,7 +142,7 @@ class BedrockLLMClientTest {
 
         novaModels.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("amazon.nova"))
+            assertTrue(model.id.startsWith("us.amazon.nova"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -157,7 +155,7 @@ class BedrockLLMClientTest {
 
         ai21Models.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("ai21.jamba"))
+            assertTrue(model.id.startsWith("us.ai21.jamba"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -170,7 +168,7 @@ class BedrockLLMClientTest {
 
         metaModels.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("meta.llama"))
+            assertTrue(model.id.startsWith("us.meta.llama"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -207,30 +205,29 @@ class BedrockLLMClientTest {
     @Test
     fun `model IDs follow expected patterns`() {
         // Verify Anthropic model IDs
-        assertTrue(BedrockModels.AnthropicClaude4Opus.id == "anthropic.claude-opus-4-20250514-v1:0")
-        assertTrue(BedrockModels.AnthropicClaude4Sonnet.id == "anthropic.claude-sonnet-4-20250514-v1:0")
-        assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id == "anthropic.claude-3-5-sonnet-20241022-v2:0")
-        assertTrue(BedrockModels.AnthropicClaude35Haiku.id == "anthropic.claude-3-5-haiku-20241022-v1:0")
-        assertTrue(BedrockModels.AnthropicClaude3Opus.id.startsWith("anthropic.claude-3-opus"))
-        assertTrue(BedrockModels.AnthropicClaude3Sonnet.id.startsWith("anthropic.claude-3-sonnet"))
-        assertTrue(BedrockModels.AnthropicClaude3Haiku.id.startsWith("anthropic.claude-3-haiku"))
-        assertTrue(BedrockModels.AnthropicClaude21.id == "anthropic.claude-v2:1")
-        assertTrue(BedrockModels.AnthropicClaude2.id == "anthropic.claude-v2")
-        assertTrue(BedrockModels.AnthropicClaudeInstant.id == "anthropic.claude-instant-v1")
+        assertTrue(BedrockModels.AnthropicClaude4Opus.id == "us.anthropic.claude-opus-4-20250514-v1:0")
+        assertTrue(BedrockModels.AnthropicClaude4Sonnet.id == "us.anthropic.claude-sonnet-4-20250514-v1:0")
+        assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id == "us.anthropic.claude-3-5-sonnet-20241022-v2:0")
+        assertTrue(BedrockModels.AnthropicClaude35Haiku.id == "us.anthropic.claude-3-5-haiku-20241022-v1:0")
+        assertTrue(BedrockModels.AnthropicClaude3Opus.id.startsWith("us.anthropic.claude-3-opus"))
+        assertTrue(BedrockModels.AnthropicClaude3Sonnet.id.startsWith("us.anthropic.claude-3-sonnet"))
+        assertTrue(BedrockModels.AnthropicClaude3Haiku.id.startsWith("us.anthropic.claude-3-haiku"))
+        assertTrue(BedrockModels.AnthropicClaude21.id == "us.anthropic.claude-v2:1")
+        assertTrue(BedrockModels.AnthropicClaudeInstant.id == "us.anthropic.claude-instant-v1")
 
         // Verify Amazon Nova model IDs
-        assertTrue(BedrockModels.AmazonNovaMicro.id.startsWith("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaLite.id.startsWith("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPro.id.startsWith("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPremier.id.startsWith("amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaMicro.id.startsWith("us.amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaLite.id.startsWith("us.amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaPro.id.startsWith("us.amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaPremier.id.startsWith("us.amazon.nova"))
 
         // Verify AI21 model IDs
-        assertTrue(BedrockModels.AI21JambaLarge.id == "ai21.jamba-1-5-large-v1:0")
-        assertTrue(BedrockModels.AI21JambaMini.id == "ai21.jamba-1-5-mini-v1:0")
+        assertTrue(BedrockModels.AI21JambaLarge.id == "us.ai21.jamba-1-5-large-v1:0")
+        assertTrue(BedrockModels.AI21JambaMini.id == "us.ai21.jamba-1-5-mini-v1:0")
 
         // Verify Meta Llama model IDs
-        assertTrue(BedrockModels.MetaLlama3_0_8BInstruct.id == "meta.llama3-8b-instruct-v1:0")
-        assertTrue(BedrockModels.MetaLlama3_0_70BInstruct.id == "meta.llama3-70b-instruct-v1:0")
+        assertTrue(BedrockModels.MetaLlama3_0_8BInstruct.id == "us.meta.llama3-8b-instruct-v1:0")
+        assertTrue(BedrockModels.MetaLlama3_0_70BInstruct.id == "us.meta.llama3-70b-instruct-v1:0")
     }
 
     @Test
@@ -281,7 +278,7 @@ class BedrockLLMClientTest {
         )
 
         // Verify that older Claude models don't support tools
-        val olderClaudeModel = BedrockModels.AnthropicClaude2
+        val olderClaudeModel = BedrockModels.AnthropicClaude21
         assertFails {
             client.execute(prompt, olderClaudeModel, tools)
         }
@@ -312,7 +309,6 @@ class BedrockLLMClientTest {
         }
 
         // Test parsing logic (this would normally be done inside the client)
-        val json = Json { ignoreUnknownKeys = true }
         val content = mockResponse["content"]?.jsonArray?.firstOrNull()?.jsonObject
 
         assertNotNull(content)
@@ -353,7 +349,6 @@ class BedrockLLMClientTest {
             }
         }
 
-        val json = Json { ignoreUnknownKeys = true }
         val content = mockResponse["content"]?.jsonArray
 
         assertNotNull(content)
@@ -391,7 +386,6 @@ class BedrockLLMClientTest {
             }
         }
 
-        val json = Json { ignoreUnknownKeys = true }
         val content = mockResponse["content"]?.jsonArray
 
         assertNotNull(content)
@@ -408,15 +402,6 @@ class BedrockLLMClientTest {
 
     @Test
     fun testToolChoiceConfiguration() {
-        val tools = listOf(
-            ToolDescriptor(
-                name = "search",
-                description = "Search for information",
-                requiredParameters = listOf(
-                    ToolParameterDescriptor("query", "Search query", ToolParameterType.String)
-                )
-            )
-        )
 
         // Test different tool choice configurations
         val autoPrompt = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
@@ -530,11 +515,6 @@ class BedrockLLMClientTest {
         val guardrailsSettings = BedrockGuardrailsSettings(
             guardrailIdentifier = "test-guardrail",
             guardrailVersion = "1.0"
-        )
-
-        val clientSettings = BedrockClientSettings(
-            region = "us-east-1",
-            moderationGuardrailsSettings = guardrailsSettings
         )
 
         val mockClient = object : BedrockRuntimeClient {

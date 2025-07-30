@@ -45,7 +45,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude3Opus: LLModel = AnthropicModels.Opus_3.copy(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-3-opus-20240229-v1:0",
+        id = "us.anthropic.claude-3-opus-20240229-v1:0",
     )
 
     /**
@@ -62,7 +62,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude4Opus: LLModel = AnthropicModels.Opus_4.copy(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-opus-4-20250514-v1:0",
+        id = "us.anthropic.claude-opus-4-20250514-v1:0",
     )
 
     /**
@@ -79,7 +79,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude4Sonnet: LLModel = AnthropicModels.Sonnet_4.copy(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-sonnet-4-20250514-v1:0",
+        id = "us.anthropic.claude-sonnet-4-20250514-v1:0",
     )
 
     /**
@@ -94,7 +94,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude3Sonnet: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-3-sonnet-20240229-v1:0",
+        id = "us.anthropic.claude-3-sonnet-20240229-v1:0",
         capabilities = fullCapabilities,
         contextLength = 200_000,
         maxOutputTokens = 4_096,
@@ -113,7 +113,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude35SonnetV2: LLModel = AnthropicModels.Sonnet_3_5.copy(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        id = "us.anthropic.claude-3-sonnet-20241022-v2:0",
     )
 
     /**
@@ -130,7 +130,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude35Haiku: LLModel = AnthropicModels.Haiku_3_5.copy(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-3-5-haiku-20241022-v1:0",
+        id = "us.anthropic.claude-3-5-haiku-20241022-v1:0",
     )
 
     /**
@@ -145,7 +145,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude3Haiku: LLModel = AnthropicModels.Haiku_3.copy(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-3-haiku-20240307-v1:0",
+        id = "us.anthropic.claude-3-haiku-20240307-v1:0",
     )
 
     /**
@@ -160,25 +160,9 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude21: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-v2:1",
+        id = "us.anthropic.claude-v2:1",
         capabilities = standardCapabilities,
         contextLength = 200_000,
-    )
-
-    /**
-     * Claude 2.0 - Previous generation Claude model
-     *
-     * Features:
-     * - 100K context window
-     * - Good general-purpose performance
-     * - Text-only (no vision support)
-     * - No tool calling support
-     */
-    public val AnthropicClaude2: LLModel = LLModel(
-        provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-v2",
-        capabilities = standardCapabilities,
-        contextLength = 100_000,
     )
 
     /**
@@ -192,7 +176,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaudeInstant: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "anthropic.claude-instant-v1",
+        id = "us.anthropic.claude-instant-v1",
         capabilities = standardCapabilities,
         contextLength = 100_000,
     )
@@ -210,7 +194,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AmazonNovaMicro: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "amazon.nova-micro-v1:0",
+        id = "us.amazon.nova-micro-v1:0",
         capabilities = standardCapabilities,
         contextLength = 128_000,
     )
@@ -228,7 +212,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AmazonNovaLite: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "amazon.nova-lite-v1:0",
+        id = "us.amazon.nova-lite-v1:0",
         capabilities = standardCapabilities,
         contextLength = 300_000,
     )
@@ -246,7 +230,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AmazonNovaPro: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "amazon.nova-pro-v1:0",
+        id = "us.amazon.nova-pro-v1:0",
         capabilities = standardCapabilities,
         contextLength = 300_000,
     )
@@ -264,7 +248,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AmazonNovaPremier: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "amazon.nova-premier-v1:0",
+        id = "us.amazon.nova-premier-v1:0",
         capabilities = standardCapabilities,
         contextLength = 1_000_000,
     )
@@ -284,7 +268,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AI21JambaLarge: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "ai21.jamba-1-5-large-v1:0",
+        id = "us.ai21.jamba-1-5-large-v1:0",
         capabilities = toolCapabilities,
         contextLength = 256_000,
     )
@@ -303,7 +287,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AI21JambaMini: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "ai21.jamba-1-5-mini-v1:0",
+        id = "us.ai21.jamba-1-5-mini-v1:0",
         capabilities = toolCapabilities,
         contextLength = 256_000,
     )
@@ -321,7 +305,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_0_8BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-8b-instruct-v1:0",
+        id = "us.meta.llama3-8b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 8_000,
     )
@@ -339,7 +323,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_0_70BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-70b-instruct-v1:0",
+        id = "us.meta.llama3-70b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 8_000,
     )
@@ -357,7 +341,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_1_8BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-1-8b-instruct-v1:0",
+        id = "us.meta.llama3-1-8b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 128_000,
     )
@@ -375,7 +359,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_1_70BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-1-70b-instruct-v1:0",
+        id = "us.meta.llama3-1-70b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 128_000,
     )
@@ -393,7 +377,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_1_405BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-1-405b-instruct-v1:0",
+        id = "us.meta.llama3-1-405b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 128_000,
     )
@@ -411,7 +395,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_2_1BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-2-1b-instruct-v1:0",
+        id = "us.meta.llama3-2-1b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 128_000,
     )
@@ -429,7 +413,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_2_3BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-2-3b-instruct-v1:0",
+        id = "us.meta.llama3-2-3b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 128_000,
     )
@@ -447,7 +431,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_2_11BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-2-11b-instruct-v1:0",
+        id = "us.meta.llama3-2-11b-instruct-v1:0",
         capabilities = fullCapabilities,
         contextLength = 128_000,
     )
@@ -465,7 +449,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_2_90BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-2-90b-instruct-v1:0",
+        id = "us.meta.llama3-2-90b-instruct-v1:0",
         capabilities = fullCapabilities,
         contextLength = 128_000,
     )
@@ -483,7 +467,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val MetaLlama3_3_70BInstruct: LLModel = LLModel(
         provider = LLMProvider.Bedrock,
-        id = "meta.llama3-3-70b-instruct-v1:0",
+        id = "us.meta.llama3-3-70b-instruct-v1:0",
         capabilities = standardCapabilities,
         contextLength = 128_000,
     )
