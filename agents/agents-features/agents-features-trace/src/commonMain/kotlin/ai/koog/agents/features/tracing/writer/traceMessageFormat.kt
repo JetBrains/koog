@@ -6,9 +6,11 @@ import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.traceString
 
+@Suppress("UnusedReceiverParameter")
 internal val FeatureMessage.featureMessage
     get() = "Feature message"
 
+@Suppress("UnusedReceiverParameter")
 internal val FeatureEvent.featureEvent
     get() = "Feature event"
 
@@ -39,6 +41,9 @@ internal val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
 internal val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
     get() = "$eventId (run id: ${runId}, node: ${nodeName}, input: ${input}, output: ${output})"
 
+internal val AIAgentNodeExecutionErrorEvent.nodeExecutionErrorEventFormat
+    get() = "$eventId (run id: ${runId}, node: ${nodeName}, error: ${error.message})"
+
 internal val BeforeLLMCallEvent.llmCallStartEventFormat
     get() = "$eventId (run id: ${runId}, prompt: ${prompt.traceString}, model: ${model}, tools: [${tools.joinToString()}])"
 
@@ -68,6 +73,7 @@ internal val FeatureMessage.traceMessage: String
             is AIAgentStrategyFinishedEvent      -> this.strategyFinishedEventFormat
             is AIAgentNodeExecutionStartEvent    -> this.nodeExecutionStartEventFormat
             is AIAgentNodeExecutionEndEvent      -> this.nodeExecutionEndEventFormat
+            is AIAgentNodeExecutionErrorEvent    -> this.nodeExecutionErrorEventFormat
             is BeforeLLMCallEvent                -> this.llmCallStartEventFormat
             is AfterLLMCallEvent                 -> this.llmCallEndEventFormat
             is ToolCallEvent                     -> this.toolCallEventFormat

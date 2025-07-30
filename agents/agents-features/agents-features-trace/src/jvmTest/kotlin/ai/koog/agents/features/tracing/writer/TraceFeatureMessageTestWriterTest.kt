@@ -5,27 +5,32 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
+import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
 import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
-import ai.koog.agents.features.tracing.createAgent
+import ai.koog.agents.features.tracing.mock.createAgent
 import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.agents.features.tracing.mock.MockFeatureMessageWriter
-import ai.koog.agents.features.tracing.mock.MockLogger
+import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
+import ai.koog.agents.features.tracing.mock.TestLogger
 import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.testing.tools.DummyTool
+import ai.koog.agents.utils.use
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
 class TraceFeatureMessageTestWriterTest {
 
-    private val targetLogger = MockLogger("test-logger")
+    private val targetLogger = TestLogger("test-logger")
 
     @AfterTest
     fun resetLogger() {
@@ -58,7 +63,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(llmRequest1 forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = MockFeatureMessageWriter()
+        val messageProcessor = TestFeatureMessageWriter()
 
         val agent = createAgent(
             userPrompt = "User 0",
@@ -99,7 +104,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = MockFeatureMessageWriter()
+        val messageProcessor = TestFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy
@@ -132,7 +137,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = MockFeatureMessageWriter()
+        val messageProcessor = TestFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy
@@ -167,7 +172,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = MockFeatureMessageWriter()
+        val messageProcessor = TestFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy,
@@ -203,7 +208,7 @@ class TraceFeatureMessageTestWriterTest {
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
-        val messageProcessor = MockFeatureMessageWriter()
+        val messageProcessor = TestFeatureMessageWriter()
 
         val agent = createAgent(
             strategy = strategy,
@@ -222,5 +227,59 @@ class TraceFeatureMessageTestWriterTest {
 
         val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolCallResultEvent>().toList()
         assertEquals(1, toolCallsEndEvent.size, "Tool call end event for existing tool")
+    }
+
+    @Test
+    fun `test agent with node execution error`() = runTest {
+
+        val agentId = "test-agent-id"
+        val nodeWithErrorName = "node-with-error"
+        val testErrorMessage = "Test error"
+
+        var expectedStackTrace = ""
+
+        val strategy = strategy("test-strategy") {
+            val nodeWithError by node<String, String>(nodeWithErrorName) {
+                // Get expected stack trace before throwing exception
+                try {
+                    throw IllegalStateException(testErrorMessage)
+                }
+                catch (t: IllegalStateException) {
+                    expectedStackTrace = t.stackTraceToString()
+                    throw t
+                }
+            }
+
+            edge(nodeStart forwardTo nodeWithError)
+            edge(nodeWithError forwardTo nodeFinish)
+        }
+
+        TestFeatureMessageWriter().use { writer ->
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy
+            ) {
+                install(Tracing) {
+                    addMessageProcessor(writer)
+                }
+            }.use { agent ->
+                val throwable = assertFails { agent.run("") }
+                assertEquals(testErrorMessage, throwable.message)
+
+                val actualEvents = writer.messages.filterIsInstance<AIAgentNodeExecutionErrorEvent>().toList()
+
+                val expectedEvents = listOf(
+                    AIAgentNodeExecutionErrorEvent(
+                        runId = writer.runId,
+                        nodeName = nodeWithErrorName,
+                        error = AIAgentError(testErrorMessage, expectedStackTrace, null)
+                    )
+                )
+
+                assertEquals(expectedEvents.size, actualEvents.size)
+                assertContentEquals(expectedEvents, actualEvents)
+            }
+        }
     }
 }

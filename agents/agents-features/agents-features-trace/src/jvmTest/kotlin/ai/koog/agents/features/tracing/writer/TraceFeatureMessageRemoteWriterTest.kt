@@ -11,8 +11,15 @@ import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.features.tracing.*
 import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.agents.features.tracing.mock.MockFeatureMessageWriter
+import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
+import ai.koog.agents.features.tracing.mock.assistantMessage
+import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.systemMessage
+import ai.koog.agents.features.tracing.mock.testClock
+import ai.koog.agents.features.tracing.mock.toolCallMessage
+import ai.koog.agents.features.tracing.mock.toolResult
+import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -361,7 +368,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use {
-                MockFeatureMessageWriter().use { testWriter ->
+                TestFeatureMessageWriter().use { testWriter ->
 
                     val strategy = strategy<String, String>(strategyName) {
                         val llmCallNode by nodeLLMRequest("test LLM call")

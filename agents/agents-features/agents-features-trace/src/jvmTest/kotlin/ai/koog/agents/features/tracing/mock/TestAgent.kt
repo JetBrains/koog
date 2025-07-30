@@ -1,4 +1,4 @@
-package ai.koog.agents.features.tracing
+package ai.koog.agents.features.tracing.mock
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.features.tracing.mock.MockLLMExecutor
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.AttachmentBuilder
 import ai.koog.prompt.dsl.prompt

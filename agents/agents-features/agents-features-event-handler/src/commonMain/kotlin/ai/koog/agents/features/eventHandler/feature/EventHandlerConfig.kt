@@ -67,6 +67,8 @@ public class EventHandlerConfig : FeatureConfig() {
 
     private var _onAfterNode: suspend (eventHandler: NodeAfterExecuteContext) -> Unit = { _ -> }
 
+    private var _onNodeExecutionError: suspend (eventHandler: NodeExecutionErrorContext) -> Unit = { _ -> }
+
     //endregion Node Handlers
 
     //region LLM Call Handlers
@@ -440,6 +442,17 @@ public class EventHandlerConfig : FeatureConfig() {
         }
     }
 
+    /**
+     * Append handler called when an error occurs during the execution of a node.
+     */
+    public fun onNodeExecutionError(handler: suspend (eventContext: NodeExecutionErrorContext) -> Unit) {
+        val originalHandler = this._onNodeExecutionError
+        this._onNodeExecutionError = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
     //endregion Node Handlers
 
     //region LLM Call Handlers
@@ -580,6 +593,13 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     internal suspend fun invokeOnAfterNode(eventContext: NodeAfterExecuteContext) {
         _onAfterNode.invoke(eventContext)
+    }
+
+    /**
+     * Invokes the error handling logic for a node execution error event.
+     */
+    internal suspend fun invokeOnNodeExecutionError(interceptContext: NodeExecutionErrorContext) {
+        _onNodeExecutionError.invoke(interceptContext)
     }
 
     //endregion Invoke Node Handlers

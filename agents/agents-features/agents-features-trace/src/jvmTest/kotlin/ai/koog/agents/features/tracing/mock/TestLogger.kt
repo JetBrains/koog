@@ -5,7 +5,7 @@ import io.github.oshai.kotlinlogging.KLoggingEventBuilder
 import io.github.oshai.kotlinlogging.Level
 import io.github.oshai.kotlinlogging.Marker
 
-class MockLogger(
+class TestLogger(
     override val name: String,
     val infoEnabled: Boolean = true,
     val debugEnabled: Boolean = true,

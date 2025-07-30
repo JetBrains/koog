@@ -11,6 +11,13 @@ import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.*
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
+import ai.koog.agents.features.tracing.mock.assistantMessage
+import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.systemMessage
+import ai.koog.agents.features.tracing.mock.testClock
+import ai.koog.agents.features.tracing.mock.toolCallMessage
+import ai.koog.agents.features.tracing.mock.toolResult
+import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
@@ -119,7 +126,9 @@ class TraceFeatureMessageFileWriterTest {
             ) {
                 install(Tracing) {
                     messageFilter = { message ->
-                        if (message is AIAgentStartedEvent) { runId = message.runId }
+                        if (message is AIAgentStartedEvent) {
+                            runId = message.runId
+                        }
                         true
                     }
                     addMessageProcessor(writer)
@@ -148,18 +157,45 @@ class TraceFeatureMessageFileWriterTest {
                         )
                     ).traceString
                 }, model: ${testModel.eventString}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-llm-call, input: ${userPrompt}, output: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")})",
-                "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")})",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-llm-call, input: ${userPrompt}, output: ${
+                    toolCallMessage(
+                        dummyTool.name,
+                        content = """{"dummy":"test"}"""
+                    )
+                })",
+                "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${
+                    toolCallMessage(
+                        dummyTool.name,
+                        content = """{"dummy":"test"}"""
+                    )
+                })",
                 "${ToolCallEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"})",
                 "${ToolCallResultEvent::class.simpleName} (run id: ${runId}, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"}, result: ${dummyTool.result})",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")}, output: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
-                "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-node-llm-send-tool-result, input: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-tool-call, input: ${
+                    toolCallMessage(
+                        dummyTool.name,
+                        content = """{"dummy":"test"}"""
+                    )
+                }, output: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
+                "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: ${runId}, node: test-node-llm-send-tool-result, input: ${
+                    toolResult(
+                        "0",
+                        dummyTool.name,
+                        dummyTool.result,
+                        dummyTool.result
+                    )
+                })",
                 "${BeforeLLMCallEvent::class.simpleName} (run id: ${runId}, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                            toolResult(
+                                "0",
+                                dummyTool.name,
+                                dummyTool.result,
+                                dummyTool.result
+                            ).toMessage(clock = testClock)
                         )
                     ).traceString
                 }, model: ${testModel.eventString}, tools: [${dummyTool.name}])",
@@ -168,11 +204,23 @@ class TraceFeatureMessageFileWriterTest {
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                            toolResult(
+                                "0",
+                                dummyTool.name,
+                                dummyTool.result,
+                                dummyTool.result
+                            ).toMessage(clock = testClock)
                         )
                     ).traceString
                 }, model: ${testModel.eventString}, responses: [{${expectedResponse.traceString}}])",
-                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-node-llm-send-tool-result, input: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)}, output: $expectedResponse)",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: ${runId}, node: test-node-llm-send-tool-result, input: ${
+                    toolResult(
+                        "0",
+                        dummyTool.name,
+                        dummyTool.result,
+                        dummyTool.result
+                    )
+                }, output: $expectedResponse)",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (run id: ${runId}, strategy: $strategyName, result: ${mockResponse})",
                 "${AIAgentFinishedEvent::class.simpleName} (agent id: ${agentId}, run id: ${runId}, result: ${mockResponse})",
                 "${AIAgentBeforeCloseEvent::class.simpleName} (agent id: ${agentId})",
@@ -394,7 +442,9 @@ class TraceFeatureMessageFileWriterTest {
             ) {
                 install(Tracing) {
                     messageFilter = { message ->
-                        if (message is AIAgentStartedEvent) { runId = message.runId }
+                        if (message is AIAgentStartedEvent) {
+                            runId = message.runId
+                        }
                         message is BeforeLLMCallEvent || message is AfterLLMCallEvent
                     }
                     addMessageProcessor(writer)
@@ -423,7 +473,12 @@ class TraceFeatureMessageFileWriterTest {
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                            toolResult(
+                                "0",
+                                dummyTool.name,
+                                dummyTool.result,
+                                dummyTool.result
+                            ).toMessage(clock = testClock)
                         )
                     ).traceString
                 }, model: ${testModel.eventString}, tools: [${dummyTool.name}])",
@@ -432,7 +487,12 @@ class TraceFeatureMessageFileWriterTest {
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                            toolResult(
+                                "0",
+                                dummyTool.name,
+                                dummyTool.result,
+                                dummyTool.result
+                            ).toMessage(clock = testClock)
                         )
                     ).traceString
                 }, model: ${testModel.eventString}, responses: [{${expectedResponse.traceString}}])",

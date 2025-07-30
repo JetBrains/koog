@@ -186,6 +186,25 @@ public class OpenTelemetry {
                 spanProcessor.endSpan(nodeExecuteSpanId)
             }
 
+            pipeline.interceptNodeExecutionError(interceptContext) { eventContext ->
+                logger.debug { "Execute OpenTelemetry node execution error handler" }
+
+                // Find current NodeExecuteSpan
+                val agentRunInfoElement = currentCoroutineContext().getAgentRunInfoElementOrThrow()
+
+                // Finish existing NodeExecuteSpan
+                val nodeExecuteSpanId = NodeExecuteSpan.createId(
+                    agentId = agentRunInfoElement.agentId,
+                    runId = agentRunInfoElement.runId,
+                    nodeName = eventContext.node.name
+                )
+
+                spanProcessor.endSpan(
+                    spanId = nodeExecuteSpanId,
+                    spanEndStatus = SpanEndStatus(code = StatusCode.ERROR, description = eventContext.throwable.message)
+                )
+            }
+
             //endregion Node
 
             //region LLM Call

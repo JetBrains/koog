@@ -112,6 +112,10 @@ public class EventHandler {
                 config.invokeOnAfterNode(eventContext)
             }
 
+            pipeline.interceptNodeExecutionError(interceptContext) intercept@{ eventContext: NodeExecutionErrorContext ->
+                config.invokeOnNodeExecutionError(eventContext)
+            }
+
             //endregion Intercept Node Events
 
             //region Intercept LLM Call Events

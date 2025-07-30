@@ -14,6 +14,8 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.assertThrows
+import kotlin.IllegalStateException
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -228,6 +230,56 @@ class EventHandlerTest {
             "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
             "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
             "OnAgentBeforeClose (agent id: test-agent-id)",
+        )
+
+        assertEquals(expectedEvents.size, eventsCollector.size)
+        assertContentEquals(expectedEvents, eventsCollector.collectedEvents)
+    }
+
+    @Test
+    fun `test event handler for agent with node execution error`() = runBlocking {
+
+        val eventsCollector = TestEventsCollector()
+
+        val agentId = "test-agent-id"
+        val strategyName = "test-strategy"
+        val agentInput = "Hello, world!!!"
+        val agentResult = "Done"
+
+        val errorNodeName = "Node with error"
+        val testErrorMessage = "Test error"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val nodeWithError by node<String, String>(errorNodeName) {
+                throw IllegalStateException(testErrorMessage)
+            }
+
+            edge(nodeStart forwardTo nodeWithError)
+            edge(nodeWithError forwardTo nodeFinish transformed { agentResult })
+        }
+
+        createAgent(
+            agentId = agentId,
+            strategy = strategy,
+            installFeatures = {
+                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+            }
+        ).use { agent ->
+            val throwable = assertThrows<IllegalStateException> { agent.run(agentInput) }
+            assertEquals(testErrorMessage, throwable.message)
+        }
+
+        val runId = eventsCollector.runId
+
+        val expectedEvents = listOf(
+            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId, strategy: $strategyName)",
+            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
+            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
+            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
+            "OnBeforeNode (run id: $runId, node: $errorNodeName, input: $agentInput)",
+            "OnNodeExecutionError (run id: $runId, node: $errorNodeName, error: $testErrorMessage)",
+            "OnAgentRunError (agent id: $agentId, run id: $runId, error: $testErrorMessage)",
+            "OnAgentBeforeClose (agent id: $agentId)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)

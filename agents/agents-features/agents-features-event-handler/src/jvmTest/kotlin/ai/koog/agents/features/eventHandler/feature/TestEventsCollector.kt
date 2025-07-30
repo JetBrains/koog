@@ -27,7 +27,7 @@ class TestEventsCollector {
         }
 
         onAgentRunError { eventContext ->
-            _collectedEvents.add("OnAgentRunError (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, throwable: ${eventContext.throwable.message})")
+            _collectedEvents.add("OnAgentRunError (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, error: ${eventContext.throwable.message})")
         }
 
         onAgentBeforeClose { eventContext ->
@@ -48,6 +48,10 @@ class TestEventsCollector {
 
         onAfterNode { eventContext ->
             _collectedEvents.add("OnAfterNode (run id: ${eventContext.context.runId}, node: ${eventContext.node.name}, input: ${eventContext.input}, output: ${eventContext.output})")
+        }
+
+        onNodeExecutionError { eventContext ->
+            _collectedEvents.add("OnNodeExecutionError (run id: ${eventContext.context.runId}, node: ${eventContext.node.name}, error: ${eventContext.throwable.message})")
         }
 
         onBeforeLLMCall { eventContext ->
@@ -75,6 +79,7 @@ class TestEventsCollector {
         }
     }
 
+    @Suppress("unused")
     fun reset() {
         _collectedEvents.clear()
     }

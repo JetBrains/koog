@@ -32,7 +32,7 @@ class TestFeature(val events: MutableList<String>) {
                 feature.events += "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
             }
 
-            pipeline.interceptContextAgentFeature(this) { agentContext: AIAgentContextBase ->
+            pipeline.interceptContextAgentFeature(this) { _: AIAgentContextBase ->
                 feature.events += "Agent Context: request features from agent context"
                 TestFeature(mutableListOf())
             }

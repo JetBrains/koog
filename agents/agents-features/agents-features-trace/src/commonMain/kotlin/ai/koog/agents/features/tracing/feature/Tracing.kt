@@ -181,6 +181,15 @@ public class Tracing {
                 processMessage(config, event)
             }
 
+            pipeline.interceptNodeExecutionError(interceptContext) intercept@{ eventContext ->
+                val event = AIAgentNodeExecutionErrorEvent(
+                    runId = eventContext.context.runId,
+                    nodeName = eventContext.node.name,
+                    error = eventContext.throwable.toAgentError()
+                )
+                processMessage(config, event)
+            }
+
             //endregion Intercept Node Events
 
             //region Intercept LLM Call Events
