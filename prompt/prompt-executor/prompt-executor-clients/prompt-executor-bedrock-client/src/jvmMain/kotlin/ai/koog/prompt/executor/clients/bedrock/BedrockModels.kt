@@ -113,7 +113,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude35SonnetV2: LLModel = AnthropicModels.Sonnet_3_5.copy(
         provider = LLMProvider.Bedrock,
-        id = "us.anthropic.claude-3-sonnet-20241022-v2:0",
+        id = "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
     )
 
     /**

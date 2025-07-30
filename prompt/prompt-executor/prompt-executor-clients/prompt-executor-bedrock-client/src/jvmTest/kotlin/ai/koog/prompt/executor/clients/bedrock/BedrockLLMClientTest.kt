@@ -402,7 +402,6 @@ class BedrockLLMClientTest {
 
     @Test
     fun testToolChoiceConfiguration() {
-
         // Test different tool choice configurations
         val autoPrompt = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
             user("Search for something")

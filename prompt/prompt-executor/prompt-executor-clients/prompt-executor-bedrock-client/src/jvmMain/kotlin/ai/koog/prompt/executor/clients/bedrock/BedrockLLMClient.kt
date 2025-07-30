@@ -62,7 +62,7 @@ import kotlinx.serialization.json.Json
  * @property moderationGuardrailsSettings Optional settings of the AWS bedrock Guardrails (see [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) ) that would be used for the [LLMClient.moderate] request
  */
 public class BedrockClientSettings(
-    internal val region: String = "us-east-1",
+    internal val region: String = "us-west-2",
     internal val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     internal val endpointUrl: String? = null,
     internal val maxRetries: Int = 3,
