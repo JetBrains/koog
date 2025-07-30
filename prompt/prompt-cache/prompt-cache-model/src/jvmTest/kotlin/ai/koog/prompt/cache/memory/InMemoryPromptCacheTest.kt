@@ -25,7 +25,8 @@ class InMemoryPromptCacheTest {
         private val testTools = emptyList<ToolDescriptor>()
         private val testResponse = listOf(createAssistantMessage("Hello, user!"))
         private val updatedTestResponse = listOf(createAssistantMessage("Hello, user, updated!"))
-        private val testToolCallResponse = listOf(Message.Tool.Call("test-id", "test-tool", "test-content", ResponseMetaInfo.Empty))
+        private val testToolCallResponse =
+            listOf(Message.Tool.Call("test-id", "test-tool", "test-content", ResponseMetaInfo.Empty))
 
         private val testPrompts = (1..5).map { iter -> Prompt.build(testPrompt) { user("Hello, world! $iter") } }
         private val testResponses = (1..5).map { iter -> listOf(createAssistantMessage("Hello, user $iter")) }
@@ -90,9 +91,18 @@ class InMemoryPromptCacheTest {
         smallCache.put(testPrompt, testTools, testResponse)
 
         // Verify that the least recently used entry was removed
-        assertNotNull(smallCache.get(testPrompts[0], testTools, testClock), "Recently accessed entry should still be in cache")
-        assertNull(smallCache.get(testPrompts[1], testTools, testClock), "Least recently accessed entry should be removed")
-        assertNotNull(smallCache.get(testPrompts[2], testTools, testClock), "Recently accessed entry should still be in cache")
+        assertNotNull(
+            smallCache.get(testPrompts[0], testTools, testClock),
+            "Recently accessed entry should still be in cache"
+        )
+        assertNull(
+            smallCache.get(testPrompts[1], testTools, testClock),
+            "Least recently accessed entry should be removed"
+        )
+        assertNotNull(
+            smallCache.get(testPrompts[2], testTools, testClock),
+            "Recently accessed entry should still be in cache"
+        )
         assertNotNull(smallCache.get(testPrompt, testTools, testClock), "Newly added entry should be in cache")
     }
 
@@ -162,7 +172,8 @@ class InMemoryPromptCacheTest {
     fun `test cache retrieval with different timestamps`() = runTest {
         val originalPrompt = createTestPrompt(listOf(testUserMessage))
 
-        val sameUserMessageDifferentTime = testUserMessage.copy(metaInfo = testUserMessage.metaInfo.copy(timestamp = differentTestClock.now()))
+        val sameUserMessageDifferentTime =
+            testUserMessage.copy(metaInfo = testUserMessage.metaInfo.copy(timestamp = differentTestClock.now()))
         val samePromptDifferentTime = createTestPrompt(listOf(sameUserMessageDifferentTime))
 
         cache.put(originalPrompt, testTools, testResponse)
@@ -204,7 +215,7 @@ class InMemoryPromptCacheTest {
 
     @Test
     fun `test cache with numeric limit configurations`() {
-        val configs = listOf(100, 1, 0)
+        val configs = listOf(100, 1)
 
         configs.forEach {
             val cache = InMemoryPromptCache.create("memory:$it")
@@ -214,7 +225,7 @@ class InMemoryPromptCacheTest {
 
     @Test
     fun `test cache with invalid configurations`() {
-        val configs = listOf("abc", "100.5", "-100")
+        val configs = listOf("abc", "100.5", "-100", "0")
 
         configs.forEach {
             assertFailsWith<IllegalStateException> {
