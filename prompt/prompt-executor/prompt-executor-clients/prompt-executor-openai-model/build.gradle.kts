@@ -12,9 +12,23 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
-                api(project(":prompt:prompt-structure"))
+                api(project(":agents:agents-utils"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients"))
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
+            }
+        }
+
+        jvmMain {
+            dependencies {
+                api(libs.ktor.client.cio)
+            }
+        }
+
+        jsMain {
+            dependencies {
+                api(libs.ktor.client.js)
             }
         }
 

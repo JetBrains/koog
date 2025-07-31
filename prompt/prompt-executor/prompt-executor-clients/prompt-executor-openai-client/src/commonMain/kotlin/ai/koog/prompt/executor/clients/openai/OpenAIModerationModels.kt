@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.prompt.executor.clients.openai.models.Content
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,7 +12,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 internal data class OpenAIModerationRequest(
-    @Serializable(with = ContentSerializer::class)
     val input: Content?,
     val model: String? = null
 )

@@ -8,6 +8,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 
 internal data class MockResponse(
     val content: String,
@@ -27,6 +28,12 @@ internal fun createMockHttpClient(responses: Map<String, MockResponse>): HttpCli
         }
     }
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true })
+        json(Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            encodeDefaults = true
+            explicitNulls = false
+            namingStrategy = JsonNamingStrategy.SnakeCase
+        })
     }
 }

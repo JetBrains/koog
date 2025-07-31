@@ -41,6 +41,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model")
 
 include(":prompt:prompt-executor:prompt-executor-llms")
 include(":prompt:prompt-executor:prompt-executor-llms-all")
