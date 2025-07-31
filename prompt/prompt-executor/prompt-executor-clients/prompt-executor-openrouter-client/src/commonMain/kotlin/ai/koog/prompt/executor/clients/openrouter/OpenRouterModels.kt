@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -41,10 +40,12 @@ public object OpenRouterModels : LLModelDefinitions {
      * Claude 3 Opus is designed to support various advanced language model tasks enabled by its multimodal features,
      * and is suitable for integration through systems compatible with the OpenRouter provider.
      */
-    public val Claude3Opus: LLModel = AnthropicModels.Opus_3.copy(
+    public val Claude3Opus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-opus",
         capabilities = multimodalCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
     )
 
     /**
@@ -67,10 +68,12 @@ public object OpenRouterModels : LLModelDefinitions {
      * This model is designed to handle multimodal capabilities and is identified by the
      * ID "anthropic/claude-3-haiku". It uses the OpenRouter provider as its delivery system.
      */
-    public val Claude3Haiku: LLModel = AnthropicModels.Haiku_3.copy(
+    public val Claude3Haiku: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-haiku",
         capabilities = multimodalCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
     )
 
     /**
@@ -123,6 +126,34 @@ public object OpenRouterModels : LLModelDefinitions {
         id = "openai/gpt-3.5-turbo",
         capabilities = standardCapabilities,
         contextLength = 16_385,
+    )
+
+    /**
+     * Represents the Google Gemini 1.5 Pro language model accessed through the OpenRouter provider.
+     *
+     * This model supports multimodal capabilities, which enable handling multiple types of input or tasks.
+     * It is identified by the `google/gemini-1.5-pro` model ID within the OpenRouter ecosystem.
+     */
+    public val Gemini15Pro: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "google/gemini-1.5-pro",
+        capabilities = multimodalCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
+    )
+
+    /**
+     * Represents the Gemini 1.5 Flash language model provided via the OpenRouter platform.
+     *
+     * This language model is identified by its unique `id` and supports multimodal capabilities,
+     * enabling it to handle various modes of input and output effectively.
+     */
+    public val Gemini15Flash: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "google/gemini-1.5-flash",
+        capabilities = multimodalCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 8_192,
     )
 
     /**
@@ -205,10 +236,12 @@ public object OpenRouterModels : LLModelDefinitions {
      * accessible through the OpenRouter provider. Its identifier is
      * `"anthropic/claude-3-opus-vision"`, and it supports multimodal capabilities.
      */
-    public val Claude3VisionOpus: LLModel = AnthropicModels.Opus_3.copy(
+    public val Claude3VisionOpus: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-opus-vision",
         capabilities = multimodalCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
     )
 
     /**
@@ -218,9 +251,11 @@ public object OpenRouterModels : LLModelDefinitions {
      * textual and visual inputs. It utilizes the OpenRouter infrastructure to facilitate access
      * to Anthropic's Claude 3 model with vision support.
      */
-    public val Claude3VisionHaiku: LLModel = AnthropicModels.Haiku_3.copy(
+    public val Claude3VisionHaiku: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "anthropic/claude-3-haiku-vision",
         capabilities = multimodalCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
     )
 }
