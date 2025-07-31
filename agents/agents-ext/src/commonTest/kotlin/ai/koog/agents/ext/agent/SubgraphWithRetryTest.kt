@@ -10,7 +10,9 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
+import kotlin.also
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -20,7 +22,7 @@ import kotlin.test.assertTrue
 
 private const val MAX_AGENT_ITERATIONS = 20
 private const val SUCCESS = "success"
-private val TEST_CONDITION: AIAgentContextBase.(String) -> ConditionResult = { (it == SUCCESS).asConditionResult}
+private val TEST_CONDITION: AIAgentContextBase.(String) -> ConditionResult = { (it == SUCCESS).asConditionResult }
 private fun getBasicResult(
     output: String? = "test output",
     success: Boolean = true,
@@ -426,6 +428,67 @@ class SubgraphWithRetryTest {
                     nodeStart then processNode then nodeFinish
                 }
             }
+        }
+    }
+
+    @Test
+    fun testSubgraphWithRetryFeedback() = runTest {
+        val numRetries = 4
+        val lastMessagesInThePrompt = mutableListOf<Message?>()
+        var retries = 0
+
+        val testStrategy = strategy("test-strategy") {
+            val retrySubgraph by subgraphWithRetry(
+                condition = { result ->
+                    if (result == SUCCESS) ConditionResult.Approve
+                    else ConditionResult.Reject("Retry ${++retries}")
+                },
+                conditionDescription = "Condition description",
+                maxRetries = numRetries,
+                name = "test-retry-simple",
+            ) {
+                val checkLastMessage by node<String, String> { input ->
+                    lastMessagesInThePrompt.add(llm.readSession { prompt.messages.lastOrNull() })
+                    "failure"
+                }
+                nodeStart then checkLastMessage then nodeFinish
+            }
+
+            nodeStart then retrySubgraph then nodeFinish
+        }
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test-agent") {},
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = MAX_AGENT_ITERATIONS,
+        )
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor {},
+            strategy = testStrategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry {
+                tool(DummyTool())
+            },
+        )
+
+        agent.run("test input")
+
+        val actualConditionDescriptionMessage = lastMessagesInThePrompt[0]
+        assertIs<Message.User>(actualConditionDescriptionMessage)
+        assertEquals(
+            "Condition description",
+            actualConditionDescriptionMessage.content,
+            "Condition description message should be added to the prompt"
+        )
+        for (i in 1..numRetries - 1) {
+            val actualFeedbackMessage = lastMessagesInThePrompt[i]
+            assertIs<Message.User>(actualFeedbackMessage)
+            assertEquals(
+                "Retry $i",
+                actualFeedbackMessage.content,
+                "Feedback message number $i should be added to the prompt"
+            )
         }
     }
 }
