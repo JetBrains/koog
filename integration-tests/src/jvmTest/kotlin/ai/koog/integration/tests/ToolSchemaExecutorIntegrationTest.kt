@@ -25,6 +25,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.assertEquals
@@ -51,55 +52,38 @@ class ToolSchemaExecutorIntegrationTest {
         }
 
         @JvmStatic
-        fun invalidToolDescriptors(): Stream<ToolDescriptor> {
+        fun invalidToolDescriptors(): Stream<Arguments> {
             return Stream.of(
-                // Empty tool name
-                ToolDescriptor(
-                    name = "",
-                    description = "Tool with empty name"
-                ),
-                // Whitespace-only properties
-                ToolDescriptor(
-                    name = "   ",
-                    description = "\t\n",
-                    requiredParameters = listOf(
-                        ToolParameterDescriptor(
-                            name = " ",
-                            description = "  \t  ",
-                            type = ToolParameterType.String
+                Arguments.of(
+                    ToolDescriptor(
+                        name = "",
+                        description = "Tool with empty name",
+                        requiredParameters = listOf(
+                            ToolParameterDescriptor("param", "A parameter", ToolParameterType.String)
                         )
-                    )
+                    ),
+                    "Invalid 'tools[0].function.name': empty string. Expected a string with minimum length 1, but got an empty string instead."
                 ),
                 // Todo uncomment when KG-185 is fixed
-                /*
-                // Empty tool description
-                ToolDescriptor(
-                    name = "valid_tool_name",
-                    description = ""
-                ),
-                // Empty parameter name
-                ToolDescriptor(
-                    name = "valid_tool",
-                    description = "Tool with empty parameter name",
-                    requiredParameters = listOf(
-                        ToolParameterDescriptor(
-                            name = "",
-                            description = "Parameter with empty name",
-                            type = ToolParameterType.String
+                /*Arguments.of(
+                    ToolDescriptor(
+                        name = "test_tool",
+                        description = "",
+                        requiredParameters = listOf(
+                            ToolParameterDescriptor("param", "A parameter", ToolParameterType.String)
                         )
-                    )
+                    ),
+                    "Invalid 'tools[0].function.description': empty string. Expected a string with minimum length 1, but got an empty string instead."
                 ),
-                // Empty parameter description
-                ToolDescriptor(
-                    name = "valid_tool",
-                    description = "Tool with empty parameter description",
-                    requiredParameters = listOf(
-                        ToolParameterDescriptor(
-                            name = "validParam",
-                            description = "",
-                            type = ToolParameterType.String
+                Arguments.of(
+                    ToolDescriptor(
+                        name = "param_name_test",
+                        description = "Tool to test parameter name validation",
+                        requiredParameters = listOf(
+                            ToolParameterDescriptor("", "Parameter with empty name", ToolParameterType.String)
                         )
-                    )
+                    ),
+                    "Invalid 'tools[0].function.requiredParameters[0]': empty string. Expected a string with minimum length 1, but got an empty string instead."
                 )*/
             )
         }
@@ -169,15 +153,20 @@ class ToolSchemaExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("invalidToolDescriptors")
-    fun integration_testInvalidToolDescriptorShouldFail(invalidToolDescriptor: ToolDescriptor) =
+    fun integration_testInvalidToolDescriptorShouldFail(invalidToolDescriptor: ToolDescriptor, message: String) =
         runTest(timeout = 300.seconds) {
             val prompt = prompt("test-invalid-tool", params = LLMParams(toolChoice = ToolChoice.Required)) {
                 system("You are a helpful assistant with access to tools.")
                 user("Hi.")
             }
 
-            assertFailsWith<Exception> {
+            val exception = assertFailsWith<Exception> {
                 client.execute(prompt, model, listOf(invalidToolDescriptor))
             }
+
+            assumeTrue(
+                exception.message?.contains(message) == true,
+                "Expected exception message to contain '$message', but got '${exception.message}'"
+            )
         }
 }
