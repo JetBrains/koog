@@ -30,8 +30,7 @@ public data class RetrySubgraphResult<Output>(
  *
  * Implementations:
  * - [Approve]: Indicates that the condition was approved.
- * - [Reject]: Indicates that the condition was rejected without further feedback.
- * - [RejectWithFeedback]: Indicates that the condition was rejected with additional feedback.
+ * - [Reject]: Indicates that the condition was rejected, optionally with feedback.
  */
 public sealed interface ConditionResult {
     /**
@@ -44,34 +43,19 @@ public sealed interface ConditionResult {
     /**
      * Object representing an approved condition result.
      *
-     * This implementation of the ConditionResult sealed interface signifies that a specific condition
-     * has been evaluated and approved within a given system or workflow, enabling further progression
-     * or execution of associated processes.
+     * This implementation of the [ConditionResult] interface indicates that a retry condition has succeeded.
      */
-    public object Approve: ConditionResult
+    public object Approve : ConditionResult
 
     /**
-     * Represents a condition result indicating rejection without additional feedback.
+     * Represents a condition result indicating rejection, optionally with feedback.
      *
-     * This implementation of the [ConditionResult] sealed interface signifies that a specific condition
-     * has been evaluated and rejected within a system or workflow. Unlike other implementations,
-     * this result does not include any accompanying feedback or explanation for the rejection.
+     * This implementation of the [ConditionResult] interface indicates that a retry condition has failed.
+     * It can contain optional [feedback] parameter which will be passed to the llm for the next retries.
      *
-     * Typically used in scenarios where a condition fails to meet predefined requirements or constraints.
+     * @property feedback An optional descriptive message or information explaining the reason for the rejection.
      */
-    public object Reject: ConditionResult
-
-    /**
-     * Represents a condition result that indicates rejection combined with specific feedback.
-     *
-     * This implementation of the [ConditionResult] sealed interface signifies that a condition
-     * has been evaluated and rejected within a system or workflow. Unlike a standard rejection,
-     * this result includes accompanying feedback to provide additional context or guidance
-     * regarding the rejection.
-     *
-     * @property feedback A descriptive message or information explaining the reason for the rejection.
-     */
-    public class RejectWithFeedback(public val feedback: String): ConditionResult
+    public class Reject(public val feedback: String? = null) : ConditionResult
 }
 
 /**
@@ -82,7 +66,7 @@ public sealed interface ConditionResult {
  * This allows for explicit conversion from Boolean to ConditionResult.
  */
 public val Boolean.asConditionResult: ConditionResult
-    get() = if (this) ConditionResult.Approve else ConditionResult.Reject
+    get() = if (this) ConditionResult.Approve else ConditionResult.Reject()
 
 /**
  * Creates a subgraph with retry mechanism, allowing a specified action subgraph to be retried multiple
@@ -109,7 +93,6 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
         val retriesKey = createStorageKey<Int>("${name}_retires")
         val initialInputKey = createStorageKey<Any>("${name}_initial_input")
         val initialContextKey = createStorageKey<AIAgentContextBase>("${name}_initial_context")
-        val clarificationMessagesKey = createStorageKey<List<String>>("${name}_clarification_messages")
 
         val beforeAction by node<Input, Input> { input ->
             val retries = storage.get(retriesKey) ?: 0
@@ -117,7 +100,14 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
             // Store initial input and clarification message on the first run
             if (retries == 0) {
                 storage.set(initialInputKey, input)
-                storage.set(clarificationMessagesKey, listOfNotNull(conditionDescription))
+
+                if (conditionDescription != null) {
+                    llm.writeSession {
+                        updatePrompt {
+                            user(conditionDescription)
+                        }
+                    }
+                }
             } else {
                 // return the initial context
                 this.replace(storage.getValue(initialContextKey))
@@ -127,16 +117,6 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
 
             // Increment retries
             storage.set(retriesKey, retries + 1)
-
-            // Add clarification messages to the prompt
-            val clarificationMessages = storage.getValue(clarificationMessagesKey)
-            llm.writeSession {
-                updatePrompt {
-                    clarificationMessages.forEach { message ->
-                        assistant { message }
-                    }
-                }
-            }
 
             input
         }
@@ -154,8 +134,13 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
             // so that user can update prompt and call llm
             // to determine if the condition is satisfied
             val conditionResult = fork().condition(output)
-            if (conditionResult is ConditionResult.RejectWithFeedback) {
-                storage.set(clarificationMessagesKey, storage.getValue(clarificationMessagesKey) + conditionResult.feedback)
+            if (conditionResult is ConditionResult.Reject && conditionResult.feedback != null) {
+                // Update the prompt if feedback is provided
+                storage.getValue(initialContextKey).llm.writeSession {
+                    updatePrompt {
+                        user(conditionResult.feedback)
+                    }
+                }
             }
 
             RetrySubgraphResult(
@@ -169,7 +154,6 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
             storage.remove(retriesKey)
             storage.remove(initialInputKey)
             storage.remove(initialContextKey)
-            storage.remove(clarificationMessagesKey)
             result
         }
 
@@ -211,7 +195,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
  * Example usage:
  * ```
  * val subgraphRetryCallLLM by subgraphWithRetrySimple(
- *     condition = { it is Message.Tool.Call},
+ *     condition = { (it is Message.Tool.Call).asConditionResult },
  *     maxRetries = 2,
  * ) {
  *     val nodeCallLLM by nodeLLMRequest("sendInput")
