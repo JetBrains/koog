@@ -1,6 +1,7 @@
 package ai.koog.ktor.utils
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
@@ -31,6 +32,7 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
         "anthropic" -> anthropic(parts, identifier)
         "google" -> google(parts, identifier)
         "openrouter" -> openrouter(parts, identifier)
+        "deepseek" -> deepSeek(parts, identifier)
         "ollama" -> ollama(parts, identifier)
 
         else -> {
@@ -90,6 +92,27 @@ private fun openrouter(parts: List<String>, identifier: String): LLModel? {
     val model = openRouterModels[normalizedModelName]
     if (model == null) {
         println("Model '$modelName' not found in OpenRouterModels")
+        return null
+    }
+
+    return model
+}
+
+private fun deepSeek(parts: List<String>, identifier: String): LLModel? {
+    if (parts.size < 2) {
+        logger.debug("DeepSeek model identifier must be in format 'deepseek.model', got: $identifier")
+        return null
+    }
+
+    val modelName = parts[1].lowercase()
+
+    // Map for DeepSeek models by name
+    val deepSeekModels = DEEPSEEK_MODELS_MAP
+
+    val normalizedModelName = modelName.lowercase()
+    val model = deepSeekModels[normalizedModelName]
+    if (model == null) {
+        println("Model '$modelName' not found in DeepSeekModels")
         return null
     }
 
@@ -217,6 +240,11 @@ private val OPENROUTER_MODELS_MAP = mapOf(
     "gpt4o" to OpenRouterModels.GPT4o,
     "gpt4turbo" to OpenRouterModels.GPT4Turbo,
     "gpt35turbo" to OpenRouterModels.GPT35Turbo
+)
+
+private val DEEPSEEK_MODELS_MAP = mapOf(
+    "deepseek-chat" to DeepSeekModels.DeepSeekChat,
+    "deepseek-reasoner" to DeepSeekModels.DeepSeekReasoner,
 )
 
 private val OLLAMA_GROQ_MODELS_MAP = mapOf(

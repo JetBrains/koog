@@ -2,6 +2,7 @@ package ai.koog.ktor
 
 import ai.koog.ktor.utils.getModelFromIdentifier
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
@@ -234,6 +235,22 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt35Turbo)
         assertEquals(LLMProvider.OpenRouter, gpt35Turbo.provider)
         assertEquals(OpenRouterModels.GPT35Turbo, gpt35Turbo)
+    }
+
+    // DeepSeek model identifier tests
+    @Test
+    fun testDeepSeekModels() = runTest {
+        // Test DeepSeek Chat
+        val deepSeekChat = getModelFromIdentifier("deepseek.deepseek-chat")
+        assertNotNull(deepSeekChat)
+        assertEquals(LLMProvider.DeepSeek, deepSeekChat.provider)
+        assertEquals(DeepSeekModels.DeepSeekChat, deepSeekChat)
+
+        // Test DeepSeek Reasoner
+        val deepSeekReasoner = getModelFromIdentifier("deepseek.deepseek-reasoner")
+        assertNotNull(deepSeekReasoner)
+        assertEquals(LLMProvider.DeepSeek, deepSeekReasoner.provider)
+        assertEquals(DeepSeekModels.DeepSeekReasoner, deepSeekReasoner)
     }
 
     // Ollama model identifier tests

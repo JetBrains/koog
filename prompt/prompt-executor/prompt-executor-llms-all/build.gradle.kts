@@ -13,11 +13,12 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-ext"))

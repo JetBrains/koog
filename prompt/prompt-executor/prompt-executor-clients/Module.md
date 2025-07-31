@@ -32,21 +32,27 @@ respective API requirements.
 Add the dependency for the specific client you want to use:
 
 ```kotlin
-dependencies {
-    // For Anthropic
-    implementation("ai.koog.prompt:prompt-executor-anthropic-client:$version")
+dependencies { 
+   // For Anthropic 
+   implementation("ai.koog.prompt:prompt-executor-anthropic-client:$version")
 
-    // For OpenAI
-    implementation("ai.koog.prompt:prompt-executor-openai-client:$version")
+   // For Bedrock
+   implementation("ai.koog.prompt:prompt-executor-bedrock-client:$version")
 
-    // For Google Gemini
-    implementation("ai.koog.prompt:prompt-executor-google-client:$version")
+   // For DeepSeek
+   implementation("ai.koog.prompt:prompt-executor-deepseek-client:$version")
 
-    // For OpenRouter
-    implementation("ai.koog.prompt:prompt-executor-openrouter-client:$version")
+   // For Google Gemini 
+   implementation("ai.koog.prompt:prompt-executor-google-client:$version")
 
-    // For Ollama
-    implementation("ai.koog.prompt:prompt-executor-ollama-client:$version")
+   // For Ollama 
+   implementation("ai.koog.prompt:prompt-executor-ollama-client:$version")
+
+   // For OpenAI
+   implementation("ai.koog.prompt:prompt-executor-openai-client:$version")
+
+   // For OpenRouter 
+   implementation("ai.koog.prompt:prompt-executor-openrouter-client:$version")
 }
 ```
 
