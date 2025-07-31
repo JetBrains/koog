@@ -26,7 +26,7 @@ kotlin {
     linuxArm64()
     watchosSimulatorArm64()
     watchosX64()
-    //watchosArm32() // Not supported by kotlin logging
+    watchosArm32()
     watchosArm64()
     tvosSimulatorArm64()
     tvosX64()
@@ -35,7 +35,7 @@ kotlin {
 
     // Tier 3
     mingwX64()
-    //watchosDeviceArm64() // Not supported by ktor
+    watchosDeviceArm64()
 
     // jvm & js
     jvm {
