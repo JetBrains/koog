@@ -29,7 +29,7 @@ Key features of Koog include:
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
 - **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
-- **Multiplatform**: Run agents on JVM, JS, WasmJS targets with Kotlin Multiplatform.
+- **Multiplatform**: Run agents on JVM, JS, WasmJS, Apple, Linux, Windows targets with Kotlin Multiplatform.
 
 ### Available LLM providers and platforms
 
@@ -65,7 +65,7 @@ fun main() = runBlocking {
 
 ### Supported targets
 
-Currently, the framework supports the JVM, JS and WasmJS targets.
+Currently, the framework supports the JVM, JS, WasmJS, Apple, Linux and Windows targets.
 
 On JVM, JDK 17 or higher is required to use the framework.
 
