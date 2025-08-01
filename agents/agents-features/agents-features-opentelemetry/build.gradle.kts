@@ -61,10 +61,15 @@ val generateProductProperties = tasks.register("generateProductProperties") {
     outputs.file(propertiesFile)
 
     doLast {
+        val version = inputs.properties["version"] as String
+        val group = inputs.properties["group"] as String
+
         propertiesFile.asFile.parentFile.mkdirs()
         propertiesFile.asFile.writeText("""
             version=$rootProjectVersion
             name=$rootProjectGroup
+            version=$version
+            name=$group
         """.trimIndent())
     }
 }
