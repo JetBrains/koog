@@ -43,7 +43,7 @@ class McpToolTest {
         val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
                 McpToolRegistryProvider.fromTransport(
-                    transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$testPort"),
+                    transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$testPort/sse"),
                     name = "test-client",
                     version = "0.1.0"
                 )

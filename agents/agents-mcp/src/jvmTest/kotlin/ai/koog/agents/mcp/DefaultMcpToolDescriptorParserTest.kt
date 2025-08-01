@@ -540,7 +540,9 @@ class DefaultMcpToolDescriptorParserTest {
             inputSchema = Tool.Input(
                 properties = properties,
                 required = required
-            )
+            ),
+            outputSchema = null,
+            annotations = null,
         )
     }
 }
