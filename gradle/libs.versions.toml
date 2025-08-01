@@ -1,5 +1,5 @@
 [versions]
-annotations = "26.0.1"
+annotations = "26.0.2"
 junit = "5.8.2"
 kotlin = "2.1.21"
 kotlinx-coroutines = "1.10.2"
