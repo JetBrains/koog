@@ -45,6 +45,10 @@ import kotlin.jvm.JvmInline
  * If true, returns the log probabilities of each output token returned in the `content` of `message`.
  * @property maxCompletionTokens An upper bound for the number of tokens that can be generated for a completion,
  * including visible output tokens and reasoning tokens.
+ * @property maxTokens (`Deprecated`) The maximum number of tokens that can be generated in the chat completion.
+ * This value can be used to control costs for text generated via API.
+ *
+ * This value is now deprecated in favor of [maxCompletionTokens], and is not compatible with
  * @property metadata Set of 16 key-value pairs that can be attached to an object.
  * This can be useful for storing additional information about the object in a structured format
  * and querying for objects via API or the dashboard.
@@ -143,6 +147,10 @@ import kotlin.jvm.JvmInline
  * So 0.1 means only the tokens comprising the top 10% probability mass are considered.
  *
  * We generally recommend altering this or [temperature] but not both.
+ * @property user (`Deprecated`) This field is being replaced by [safetyIdentifier] and [promptCacheKey].
+ * Use [promptCacheKey] instead to maintain caching optimizations.
+ * A stable identifier for your end-users.
+ * Used to boost cache hit rates by better bucketing similar requests and to help OpenAI detect and prevent abuse.
  * @property webSearchOptions This tool searches the web for relevant results to use in a response.
  */
 @Serializable
@@ -154,6 +162,7 @@ public class OpenAIChatCompletionRequest(
     public val logitBias: Map<String, Int>? = null,
     public val logprobs: Boolean? = null,
     public val maxCompletionTokens: Int? = null,
+    public val maxTokens: Int? = null,
     public val metadata: Map<String, String>? = null,
     public val modalities: List<OpenAIModalities>? = null,
     @SerialName("n")
@@ -176,6 +185,7 @@ public class OpenAIChatCompletionRequest(
     public val tools: List<OpenAITool>? = null,
     public val topLogprobs: Int? = null,
     public val topP: Double? = null,
+    public val user: String? = null,
     public val webSearchOptions: OpenAIWebSearchOptions? = null
 )
 

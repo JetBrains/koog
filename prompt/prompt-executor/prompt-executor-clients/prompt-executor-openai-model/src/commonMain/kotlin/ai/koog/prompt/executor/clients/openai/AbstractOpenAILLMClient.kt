@@ -232,12 +232,12 @@ public abstract class AbstractOpenAILLMClient(
             modalities = modalities,
             numberOfChoices = model.takeIf { it.supports(LLMCapability.MultipleChoices) }
                 ?.let { prompt.params.numberOfChoices },
-            safetyIdentifier = prompt.params.user,
             stream = stream,
             temperature = model.takeIf { it.supports(LLMCapability.Temperature) }
                 ?.let { prompt.params.temperature },
             toolChoice = toolChoice,
             tools = openAITools,
+            user = prompt.params.user,
         )
     }
 
