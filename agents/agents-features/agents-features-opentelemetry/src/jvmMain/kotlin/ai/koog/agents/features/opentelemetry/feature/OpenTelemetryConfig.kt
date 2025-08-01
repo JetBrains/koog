@@ -206,7 +206,6 @@ public class OpenTelemetryConfig : FeatureConfig() {
         _sdk = sdk
     }
 
-
     //region Private Methods
 
     private fun initializeOpenTelemetry(): OpenTelemetrySdk {
