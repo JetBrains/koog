@@ -1,6 +1,7 @@
 version: 2
 updates:
-  - package-ecosystem: gradle
+  # Gradle dependencies
+  - package-ecosystem: "gradle"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -9,11 +10,11 @@ updates:
     groups:
       kotlin-ecosystem:
         patterns:
-          - "org.jetbrains.kotlin:*"
-          - "org.jetbrains.kotlinx:*"
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains.kotlinx*"
       ktor:
         patterns:
-          - "io.ktor:*"
+          - "io.ktor*"
       spring-ecosystem:
         patterns:
           - "org.springframework*"
@@ -27,18 +28,18 @@ updates:
           - "*junit*"
           - "*mockk*"
           - "*testcontainers*"
-        monitoring:
-          patterns:
-            - "io.opentelemetry*"
-            - "ch.qos.logback*"
-            - "org.slf4j*"
-            - "io.github.oshai*"
-        build-plugins:
-          patterns:
-            - "com.github.johnrengelman*"
-            - "org.jetbrains.dokka*"
-            - "org.jetbrains.kotlinx.kover*"
-            - "org.jlleitschuh.gradle.ktlint*"
+      monitoring:
+        patterns:
+          - "io.opentelemetry*"
+          - "ch.qos.logback*"
+          - "org.slf4j*"
+          - "io.github.oshai*"
+      build-plugins:
+        patterns:
+          - "com.github.johnrengelman*"
+          - "org.jetbrains.dokka*"
+          - "org.jetbrains.kotlinx.kover*"
+          - "org.jlleitschuh.gradle.ktlint*"
     # Ignoring
     ignore:
       # Kotlin majority updates
@@ -46,7 +47,7 @@ updates:
         update-types: [ "version-update:semver-major" ]
       # Spring Boot majority updates
       - dependency-name: "org.springframework.boot*"
-        update-types: [ "version-update:semver-major" ]
+        update-types: ["version-update:semver-major"]
     # Settings PR
     open-pull-requests-limit: 10
     target-branch: "develop"
