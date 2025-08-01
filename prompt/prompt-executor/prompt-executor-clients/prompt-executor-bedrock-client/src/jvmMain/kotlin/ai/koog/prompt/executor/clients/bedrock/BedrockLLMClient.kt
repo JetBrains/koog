@@ -157,6 +157,27 @@ public class BedrockLLMClient(
         clock = clock
     )
 
+    /**
+     * Creates a new Bedrock LLM client configured with the specified AWS profile.
+     *
+     * @param credentialsProvider any [CredentialsProvider] implementation to use for authentication
+     * @param settings Configuration settings for the Bedrock client, such as region and endpoint
+     * @param clock A clock used for time-based operations
+     * @return A configured [LLMClient] instance for Bedrock
+     */
+    public constructor(
+        credentialsProvider: CredentialsProvider,
+        settings: BedrockClientSettings = BedrockClientSettings(),
+        clock: Clock = Clock.System,
+    ) : this(
+        bedrockClient = bedrockClient(
+            settings = settings,
+            credentialsProvider = credentialsProvider
+        ),
+        moderationGuardrailsSettings = settings.moderationGuardrailsSettings,
+        clock = clock
+    )
+
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
