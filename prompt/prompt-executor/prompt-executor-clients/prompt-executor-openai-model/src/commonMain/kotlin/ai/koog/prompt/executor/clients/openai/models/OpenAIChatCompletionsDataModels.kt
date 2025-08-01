@@ -48,7 +48,7 @@ import kotlin.jvm.JvmInline
  * @property maxTokens (`Deprecated`) The maximum number of tokens that can be generated in the chat completion.
  * This value can be used to control costs for text generated via API.
  *
- * This value is now deprecated in favor of [maxCompletionTokens], and is not compatible with
+ * This value is now deprecated in favor of [maxCompletionTokens], and is not compatible with `o-series` models.
  * @property metadata Set of 16 key-value pairs that can be attached to an object.
  * This can be useful for storing additional information about the object in a structured format
  * and querying for objects via API or the dashboard.
@@ -574,7 +574,7 @@ public sealed interface OpenAIResponseFormat {
 public class JsonSchemaObject(
     public val name: String,
     public val description: String? = null,
-    public val schema: OpenAIResponseFormat.JsonObject? = null,
+    public val schema: JsonObject? = null,
     public val strict: Boolean? = null
 )
 
