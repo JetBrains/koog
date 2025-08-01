@@ -629,7 +629,6 @@ class OllamaExecutorIntegrationTest {
         }
     }
 
-    @Disabled("KG-46")
     @Test
     fun `ollama_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
         val countries = mutableListOf<Country>()
