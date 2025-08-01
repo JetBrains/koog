@@ -9,7 +9,6 @@ import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.PromptDSL
-import ai.koog.prompt.dsl.prompt as koogPrompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
@@ -33,6 +32,7 @@ import kotlin.collections.set
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
+import ai.koog.prompt.dsl.prompt as koogPrompt
 
 /**
  * Configuration class for setting up a Koog agents server.
@@ -281,7 +281,6 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     public fun llm(configure: LLMConfig.() -> Unit) {
         LLMConfig().configure()
     }
-
 
     /**
      * Configuration class for managing agent-specific settings and tools.

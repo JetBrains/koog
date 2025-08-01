@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-
 kotlin {
     sourceSets {
         commonMain {

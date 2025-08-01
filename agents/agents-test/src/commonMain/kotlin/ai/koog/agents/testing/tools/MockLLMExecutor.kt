@@ -114,10 +114,11 @@ internal class MockLLMExecutor(
     }
 
     private fun getLastMessage(prompt: Prompt): Message? {
-        return if (handleLastAssistantMessage && prompt.messages.any { it is Message.Assistant })
+        return if (handleLastAssistantMessage && prompt.messages.any { it is Message.Assistant }) {
             prompt.messages.lastOrNull { it is Message.Assistant }
-        else
+        } else {
             prompt.messages.lastOrNull()
+        }
     }
 
     /**
@@ -148,8 +149,12 @@ internal class MockLLMExecutor(
 
         // Check partial response match
         val partiallyMatchedResponse =
-            if (exactMatchedResponse == null) findPartialResponse(lastMessage, responseMatcher.partialMatches)
-                ?: listOf() else listOf()
+            if (exactMatchedResponse == null) {
+                findPartialResponse(lastMessage, responseMatcher.partialMatches)
+                    ?: listOf()
+            } else {
+                listOf()
+            }
         if (partiallyMatchedResponse.any()) {
             logger.debug { "Returning response for partial prompt match: $partiallyMatchedResponse" }
         }
@@ -174,12 +179,13 @@ internal class MockLLMExecutor(
             logger.debug { "Returning response for conditional match: $response" }
             response
         }
-    } else emptyList()
-
+    } else {
+        emptyList()
+    }
 
     /*
     Additional helper functions
-    */
+     */
 
     /**
      * Finds a response that matches the message content partially.
@@ -195,7 +201,9 @@ internal class MockLLMExecutor(
         return partialMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
             if (message.content.contains(pattern)) {
                 response
-            } else null
+            } else {
+                null
+            }
         }
     }
 
@@ -213,7 +221,9 @@ internal class MockLLMExecutor(
         return exactMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
             if (message.content == pattern) {
                 response
-            } else null
+            } else {
+                null
+            }
         }
     }
 }

@@ -1,13 +1,13 @@
 package ai.koog.prompt.executor.clients.bedrock
 
-import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
-import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.llm.LLMCapability
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
+import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -27,7 +27,6 @@ import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterConfid
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterType
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentPolicyAction
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentPolicyAssessment
-import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailTopicPolicyAction
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithBidirectionalStreamRequest
@@ -39,23 +38,23 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
-import kotlin.test.assertNotNull
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class BedrockLLMClientTest {
     @Test
@@ -293,15 +292,17 @@ class BedrockLLMClientTest {
         // Simulate Anthropic Claude response with tool calls
         val mockResponse = buildJsonObject {
             putJsonArray("content") {
-                add(buildJsonObject {
-                    put("type", "tool_use")
-                    put("id", "toolu_012345")
-                    put("name", "get_weather")
-                    putJsonObject("input") {
-                        put("city", "Paris")
-                        put("units", "celsius")
+                add(
+                    buildJsonObject {
+                        put("type", "tool_use")
+                        put("id", "toolu_012345")
+                        put("name", "get_weather")
+                        putJsonObject("input") {
+                            put("city", "Paris")
+                            put("units", "celsius")
+                        }
                     }
-                })
+                )
             }
             putJsonObject("usage") {
                 put("input_tokens", 100)
@@ -329,22 +330,26 @@ class BedrockLLMClientTest {
     fun testAnthropicMultipleToolCallsParsing() {
         val mockResponse = buildJsonObject {
             putJsonArray("content") {
-                add(buildJsonObject {
-                    put("type", "tool_use")
-                    put("id", "toolu_001")
-                    put("name", "get_weather")
-                    putJsonObject("input") {
-                        put("city", "London")
+                add(
+                    buildJsonObject {
+                        put("type", "tool_use")
+                        put("id", "toolu_001")
+                        put("name", "get_weather")
+                        putJsonObject("input") {
+                            put("city", "London")
+                        }
                     }
-                })
-                add(buildJsonObject {
-                    put("type", "tool_use")
-                    put("id", "toolu_002")
-                    put("name", "calculate")
-                    putJsonObject("input") {
-                        put("expression", "2 + 2")
+                )
+                add(
+                    buildJsonObject {
+                        put("type", "tool_use")
+                        put("id", "toolu_002")
+                        put("name", "calculate")
+                        putJsonObject("input") {
+                            put("expression", "2 + 2")
+                        }
                     }
-                })
+                )
             }
         }
 
@@ -367,18 +372,22 @@ class BedrockLLMClientTest {
     fun testAnthropicMixedTextAndToolResponse() {
         val mockResponse = buildJsonObject {
             putJsonArray("content") {
-                add(buildJsonObject {
-                    put("type", "text")
-                    put("text", "I'll help you with the weather. Let me check that for you.")
-                })
-                add(buildJsonObject {
-                    put("type", "tool_use")
-                    put("id", "toolu_123")
-                    put("name", "get_weather")
-                    putJsonObject("input") {
-                        put("city", "Tokyo")
+                add(
+                    buildJsonObject {
+                        put("type", "text")
+                        put("text", "I'll help you with the weather. Let me check that for you.")
                     }
-                })
+                )
+                add(
+                    buildJsonObject {
+                        put("type", "tool_use")
+                        put("id", "toolu_123")
+                        put("name", "get_weather")
+                        putJsonObject("input") {
+                            put("city", "Tokyo")
+                        }
+                    }
+                )
             }
         }
 

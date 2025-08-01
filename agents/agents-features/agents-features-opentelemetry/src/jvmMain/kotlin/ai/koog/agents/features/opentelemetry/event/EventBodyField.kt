@@ -9,7 +9,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 internal abstract class EventBodyField {
 
     companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     abstract val key: String
@@ -40,11 +40,13 @@ internal abstract class EventBodyField {
             is Map<*, *> -> {
                 value.entries
                     .filter { it.key != null && it.value != null }
-                    .joinToString(separator = ",", prefix = "{", postfix = "}") { entry -> "\"${entry.key}\":${convertValueToString(entry.key!!, entry.value!!)}" }
+                    .joinToString(separator = ",", prefix = "{", postfix = "}") { entry ->
+                        "\"${entry.key}\":${convertValueToString(entry.key!!, entry.value!!)}"
+                    }
             }
 
             else -> {
-                logger.debug { "${key}: Custom type for event body: ${value::class.simpleName}. Use toString()" }
+                logger.debug { "$key: Custom type for event body: ${value::class.simpleName}. Use toString()" }
                 value.toString()
             }
         }

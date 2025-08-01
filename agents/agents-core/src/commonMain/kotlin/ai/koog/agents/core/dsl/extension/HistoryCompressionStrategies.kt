@@ -44,7 +44,7 @@ public abstract class HistoryCompressionStrategy {
             dropTrailingToolCalls()
             updatePrompt {
                 user {
-                     summarizeInTLDR()
+                    summarizeInTLDR()
                 }
             }
             listOf(llmSession.requestLLMWithoutTools())
@@ -70,16 +70,18 @@ public abstract class HistoryCompressionStrategy {
             val systemMessages = prompt.messages.filterIsInstance<Message.System>()
             val firstUserMessage = prompt.messages.firstOrNull { it is Message.User }
 
-            prompt = prompt.withMessages { buildList {
-                addAll(systemMessages)
-                // Restore memory messages if needed
-                if (preserveMemory && memoryMessages.isNotEmpty()) {
-                    addAll(memoryMessages)
-                }
+            prompt = prompt.withMessages {
+                buildList {
+                    addAll(systemMessages)
+                    // Restore memory messages if needed
+                    if (preserveMemory && memoryMessages.isNotEmpty()) {
+                        addAll(memoryMessages)
+                    }
 
-                if (firstUserMessage != null) add(firstUserMessage)
-                addAll(tldrMessages)
-            }}
+                    if (firstUserMessage != null) add(firstUserMessage)
+                    addAll(tldrMessages)
+                }
+            }
         }
     }
 
@@ -200,4 +202,3 @@ public abstract class HistoryCompressionStrategy {
         }
     }
 }
-

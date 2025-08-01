@@ -11,7 +11,7 @@ import kotlinx.coroutines.runBlocking
 
 /**
  *  Example of Koog agents tracing to [W&B Weave](https://wandb.ai/site/weave/)
- * 
+ *
  * Agent traces are exported to:
  * - Weave OTLP endpoint instance using [OtlpHttpSpanExporter]
  *

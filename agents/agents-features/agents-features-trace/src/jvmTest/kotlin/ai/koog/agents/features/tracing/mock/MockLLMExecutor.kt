@@ -29,7 +29,6 @@ class MockLLMExecutor : PromptExecutor {
     }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
-
         val lastMessage = prompt.messages.last()
         if (lastMessage.content.contains("tool")) {
             return Message.Tool.Call(

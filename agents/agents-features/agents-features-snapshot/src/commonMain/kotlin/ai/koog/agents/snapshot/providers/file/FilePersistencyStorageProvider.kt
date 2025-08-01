@@ -56,11 +56,11 @@ public open class FilePersistencyStorageProvider<Path>(
 
     override suspend fun getCheckpoints(): List<AgentCheckpointData> {
         val agentDir = agentCheckpointsDir()
-        
+
         if (!fs.exists(agentDir)) {
             return emptyList()
         }
-        
+
         return fs.list(agentDir).mapNotNull { path ->
             try {
                 val content = fs.read(path).decodeToString()

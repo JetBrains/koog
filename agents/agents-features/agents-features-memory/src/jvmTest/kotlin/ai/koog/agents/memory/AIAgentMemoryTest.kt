@@ -8,7 +8,14 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.AgentMemory
-import ai.koog.agents.memory.model.*
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.DefaultTimeProvider
+import ai.koog.agents.memory.model.Fact
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.MultipleFacts
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
 import ai.koog.agents.testing.tools.MockEnvironment
@@ -20,7 +27,13 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.mockkObject
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -28,7 +41,6 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-
 
 @OptIn(InternalAgentsApi::class)
 class AIAgentMemoryTest {
@@ -116,8 +128,8 @@ class AIAgentMemoryTest {
             memoryProvider.save(
                 match {
                     it is SingleFact &&
-                            it.concept == concept &&
-                            it.timestamp > 0 // Verify timestamp is set
+                        it.concept == concept &&
+                        it.timestamp > 0 // Verify timestamp is set
                 },
                 MemorySubjects.User,
                 MemoryScope.Agent("test")
@@ -229,7 +241,9 @@ class AIAgentMemoryTest {
         coEvery {
             memoryProvider.load(any(), any(), any())
         } answers {
-            println("[DEBUG_LOG] Loading facts for subject: ${secondArg<MemorySubject>()}, scope: ${thirdArg<MemoryScope>()}")
+            println(
+                "[DEBUG_LOG] Loading facts for subject: ${secondArg<MemorySubject>()}, scope: ${thirdArg<MemoryScope>()}"
+            )
             listOf(machineFact)
         }
 
@@ -239,7 +253,7 @@ class AIAgentMemoryTest {
         // Mock LLM context to capture prompt updates
         mockkConstructor(AIAgentLLMWriteSession::class)
 
-        val llmContext = mockk<AIAgentLLMContext>() {
+        val llmContext = mockk<AIAgentLLMContext> {
             coEvery {
                 writeSession<Any?>(any<suspend AIAgentLLMWriteSession.() -> Any?>())
             } coAnswers {
@@ -448,7 +462,9 @@ class AIAgentMemoryTest {
         val testScopeName = "test"
 
         val response = mockk<Message.Response>()
-        every { response.content } returns """
+        every {
+            response.content
+        } returns """
             {
                 "facts": [
                     {"fact": "Java for backend services"},
@@ -521,10 +537,10 @@ class AIAgentMemoryTest {
             memoryProvider.save(
                 match {
                     it is MultipleFacts &&
-                            it.concept == concept &&
-                            it.timestamp > 0 &&
-                            it.values.size == expectedFacts.size &&
-                            expectedFacts.all { expected -> it.values.contains(expected) }
+                        it.concept == concept &&
+                        it.timestamp > 0 &&
+                        it.values.size == expectedFacts.size &&
+                        expectedFacts.all { expected -> it.values.contains(expected) }
                 },
                 MemorySubjects.User,
                 MemoryScope.Agent(testScopeName)

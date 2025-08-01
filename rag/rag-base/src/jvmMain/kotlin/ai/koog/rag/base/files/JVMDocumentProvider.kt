@@ -6,7 +6,6 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeLines
 import kotlin.io.path.writeText
 
-
 /**
  * An implementation of the `DocumentProvider` interface for handling documents represented as `Path` objects.
  * This object provides functionality to read and write text from files, allowing for document editing and
@@ -50,8 +49,12 @@ public object JVMDocumentProvider : DocumentProvider<Path, Path> {
         ): List<String> {
             require(range.start <= range.end) { "Start position is greater than end position" }
             require(range.start.line in lines.indices) { "Start line ${range.start.line} is out of file lines range" }
-            require(range.start.column <= lines[range.start.line].length) { "Start column ${range.start.column} is not in line ${range.start.line} range" }
-            require(range.end.column <= lines[range.end.line].length) { "End column ${range.end.column} is not in line ${range.end.line} range" }
+            require(range.start.column <= lines[range.start.line].length) {
+                "Start column ${range.start.column} is not in line ${range.start.line} range"
+            }
+            require(range.end.column <= lines[range.end.line].length) {
+                "End column ${range.end.column} is not in line ${range.end.line} range"
+            }
             require(range.end.line in lines.indices) { "End line ${range.end.line} is out of file lines range" }
 
             val startLine = lines[range.start.line].substring(0, range.start.column)

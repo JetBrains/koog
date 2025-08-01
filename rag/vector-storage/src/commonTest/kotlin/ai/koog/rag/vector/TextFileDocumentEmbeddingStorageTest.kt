@@ -26,7 +26,7 @@ class TextFileDocumentEmbeddingStorageTest {
             // Number of intersecting elements (words) in 2 texts
             val intersectionsSize = embedding1.values.count { it in embedding2.values }
             val totalSize = embedding1.values.size + embedding2.values.size
-            return 1.0 - 2.0 * intersectionsSize / totalSize;
+            return 1.0 - 2.0 * intersectionsSize / totalSize
         }
     }
 
@@ -78,7 +78,6 @@ class TextFileDocumentEmbeddingStorageTest {
         val documents = listOf(MockDocument("doc1"), MockDocument("doc2"), MockDocument("doc3"))
         val documentIds = mutableListOf<String>()
 
-
         // Store multiple documents
         documents.forEach { doc ->
             val id = storage.store(doc, Unit)
@@ -94,7 +93,8 @@ class TextFileDocumentEmbeddingStorageTest {
     @Test
     fun testRankDocuments() = runTest {
         val storage = createTestStorage()
-        val documents = listOf(MockDocument("hello world"), MockDocument("goodbye world"), MockDocument("hello universe"))
+        val documents =
+            listOf(MockDocument("hello world"), MockDocument("goodbye world"), MockDocument("hello universe"))
         val documentIds = mutableListOf<String>()
 
         // Store documents

@@ -11,28 +11,38 @@ import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.utils.use
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.http.*
-import kotlinx.coroutines.*
+import io.ktor.http.URLProtocol
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class FeatureMessageRemoteWriterTest {
 
     companion object {
         private val logger: KLogger = KotlinLogging.logger(
-            FeatureMessageRemoteWriterTest::class.qualifiedName ?:
-            "ai.koog.agents.features.writer.FeatureMessageRemoteWriterTest"
+            FeatureMessageRemoteWriterTest::class.qualifiedName
+                ?: "ai.koog.agents.features.writer.FeatureMessageRemoteWriterTest"
         )
 
         private val defaultClientServerTimeout = 30.seconds
     }
 
-    class TestFeatureMessageRemoteWriter(connectionConfig: ServerConnectionConfig) : FeatureMessageRemoteWriter(connectionConfig)
+    class TestFeatureMessageRemoteWriter(connectionConfig: ServerConnectionConfig) : FeatureMessageRemoteWriter(
+        connectionConfig
+    )
 
     //region Initialize
 
@@ -89,7 +99,6 @@ class FeatureMessageRemoteWriterTest {
 
     @Test
     fun `test client make health check with get request`() = runBlocking {
-
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
         val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
@@ -138,7 +147,6 @@ class FeatureMessageRemoteWriterTest {
 
     @Test
     fun `test string sse message received from a server`() = runBlocking {
-
         val port = findAvailablePort()
         val serverConfig = DefaultServerConnectionConfig(port = port)
         val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
@@ -175,7 +183,9 @@ class FeatureMessageRemoteWriterTest {
                 assertEquals(FeatureMessage.Type.Message, actualMessage.messageType)
 
                 val actualStringMessage = actualMessage as? FeatureStringMessage
-                assertNotNull(actualStringMessage) { "Client received a server SSE message, but it is not a string message" }
+                assertNotNull(actualStringMessage) {
+                    "Client received a server SSE message, but it is not a string message"
+                }
                 assertEquals(testServerMessage.message, actualStringMessage.message)
 
                 logger.info { "Client is finished successfully" }
@@ -191,7 +201,6 @@ class FeatureMessageRemoteWriterTest {
 
     @Test
     fun `test event sse message received from a server`() = runBlocking {
-
         val port = findAvailablePort()
 
         val customSerializersModule = SerializersModule {
@@ -200,8 +209,14 @@ class FeatureMessageRemoteWriterTest {
             }
         }
 
-        val serverConfig = DefaultServerConnectionConfig(port = port).apply { appendSerializersModule(customSerializersModule) }
-        val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP).apply {
+        val serverConfig = DefaultServerConnectionConfig(port = port).apply {
+            appendSerializersModule(customSerializersModule)
+        }
+        val clientConfig = DefaultClientConnectionConfig(
+            host = "127.0.0.1",
+            port = port,
+            protocol = URLProtocol.HTTP
+        ).apply {
             appendSerializersModule(customSerializersModule)
         }
 
@@ -237,7 +252,9 @@ class FeatureMessageRemoteWriterTest {
                 assertEquals(FeatureMessage.Type.Event, actualMessage.messageType)
 
                 val actualEventMessage = actualMessage as? TestFeatureEventMessage
-                assertNotNull(actualEventMessage) { "Client received a server SSE message, but it is not a string message" }
+                assertNotNull(actualEventMessage) {
+                    "Client received a server SSE message, but it is not a string message"
+                }
                 assertEquals(testServerMessage.eventId, actualEventMessage.eventId)
 
                 logger.info { "Client is finished successfully" }

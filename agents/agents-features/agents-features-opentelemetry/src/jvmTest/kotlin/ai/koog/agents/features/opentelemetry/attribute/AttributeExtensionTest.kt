@@ -29,7 +29,6 @@ class AttributeExtensionTest {
             expectedValue = 123L
         )
 
-
     @Test
     fun `test convert BOOLEAN attribute to sdk map`() =
         testAttributeType(
@@ -104,7 +103,6 @@ class AttributeExtensionTest {
 
     @Test
     fun `test convert UNSUPPORTED type attribute to sdk map`() {
-
         val unsupportedTypeObj = UnsupportedType("unsupportedType")
         val testCustomAttribute = CustomAttribute("unsupportedKey", unsupportedTypeObj)
 
@@ -121,7 +119,6 @@ class AttributeExtensionTest {
 
     @Test
     fun `test convert LIST OF UNSUPPORTED type attribute to sdk map`() {
-
         val unsupportedTypeObj1 = UnsupportedType("unsupportedType1")
         val unsupportedTypeObj2 = UnsupportedType("unsupportedType2")
         val unsupportedTypeList = listOf(unsupportedTypeObj1, unsupportedTypeObj2)
@@ -219,7 +216,7 @@ class AttributeExtensionTest {
         )
     }
 
-    private fun <TActual, TExpected>testAttributeType(
+    private fun <TActual, TExpected> testAttributeType(
         key: String,
         value: TActual,
         expectedType: AttributeType,

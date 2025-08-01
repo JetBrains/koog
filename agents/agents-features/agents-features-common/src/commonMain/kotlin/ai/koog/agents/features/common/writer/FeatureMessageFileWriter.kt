@@ -3,9 +3,9 @@ package ai.koog.agents.features.common.writer
 import ai.koog.agents.features.common.MutexCheck.withLockCheck
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.message.FeatureMessageProcessor
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.io.Sink
 import kotlin.concurrent.Volatile
 import kotlin.properties.Delegates
@@ -24,9 +24,8 @@ public abstract class FeatureMessageFileWriter<Path>(
 ) : FeatureMessageProcessor() {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
-
 
     private var _sink: Sink by Delegates.notNull()
 
@@ -34,7 +33,6 @@ public abstract class FeatureMessageFileWriter<Path>(
     private var _isOpen: Boolean = false
 
     private val writerMutex = Mutex()
-
 
     /**
      * Indicates whether the writer is currently open and ready for operation.
@@ -51,7 +49,6 @@ public abstract class FeatureMessageFileWriter<Path>(
      */
     public val isOpen: Boolean
         get() = _isOpen
-
 
     /**
      * Converts the `FeatureMessage` instance to its corresponding string representation

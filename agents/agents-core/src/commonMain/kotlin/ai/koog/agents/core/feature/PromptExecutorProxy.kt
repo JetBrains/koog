@@ -60,7 +60,7 @@ public class PromptExecutorProxy(
                 .appendLine("Finished LLM call with LLM Choice response:")
 
             responses.forEachIndexed { index, response ->
-                messageBuilder.appendLine("- Response #${index}")
+                messageBuilder.appendLine("- Response #$index")
                 response.forEach { message ->
                     messageBuilder.appendLine("  -- [${message.role}] ${message.content}")
                 }

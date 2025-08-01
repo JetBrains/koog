@@ -74,7 +74,9 @@ internal class LLMCallTool : SimpleTool<LLMCallTool.Args>() {
             user("Set the color to blue")
         }
         return executor.execute(
-            prompt, OllamaModels.Meta.LLAMA_3_2, emptyList()
+            prompt,
+            OllamaModels.Meta.LLAMA_3_2,
+            emptyList()
         ).first().content
     }
 }

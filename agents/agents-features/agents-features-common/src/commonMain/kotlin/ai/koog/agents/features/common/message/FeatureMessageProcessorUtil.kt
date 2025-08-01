@@ -2,7 +2,6 @@ package ai.koog.agents.features.common.message
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-
 /**
  * Utility object providing safe handling and processing of feature messages for collections
  * and individual `FeatureMessageProcessor` implementations.
@@ -13,13 +12,12 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  */
 public object FeatureMessageProcessorUtil {
 
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     internal suspend fun FeatureMessageProcessor.onMessageSafe(message: FeatureMessage) {
         try {
             this.processMessage(message)
-        }
-        catch (t: Throwable) {
+        } catch (t: Throwable) {
             logger.error(t) { "Error while processing the provider onMessage handler: ${message.messageType.value}" }
         }
     }

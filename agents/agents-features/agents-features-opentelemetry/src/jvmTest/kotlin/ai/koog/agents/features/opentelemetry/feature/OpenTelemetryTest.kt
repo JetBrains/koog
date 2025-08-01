@@ -2,7 +2,11 @@ package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
@@ -16,7 +20,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.sdk.trace.data.SpanData
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
-import java.util.*
+import java.util.Properties
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -791,7 +795,9 @@ class OpenTelemetryTest {
 
                 // Define a node to run joke generation in parallel
                 val nodeGenerateJokes by parallel(
-                    nodeFirstJoke, nodeSecondJoke, nodeThirdJoke
+                    nodeFirstJoke,
+                    nodeSecondJoke,
+                    nodeThirdJoke
                 ) {
                     selectByIndex {
                         // Always select the first joke for testing purposes
@@ -867,7 +873,11 @@ class OpenTelemetryTest {
             // Verify parallel node spans have the correct conversation ID
             val parallelNodeSpans = collectedSpans.filter {
                 it.name.startsWith("node.") &&
-                        (it.name.contains("nodeFirstJoke") || it.name.contains("nodeSecondJoke") || it.name.contains("nodeThirdJoke"))
+                    (
+                        it.name.contains("nodeFirstJoke") ||
+                            it.name.contains("nodeSecondJoke") ||
+                            it.name.contains("nodeThirdJoke")
+                        )
             }
 
             assertEquals(3, parallelNodeSpans.size, "Should have 3 parallel node spans")
@@ -878,7 +888,8 @@ class OpenTelemetryTest {
                 }
 
                 assertEquals(
-                    mockExporter.lastRunId, spanAttributes["gen_ai.conversation.id"],
+                    mockExporter.lastRunId,
+                    spanAttributes["gen_ai.conversation.id"],
                     "Parallel node span ${span.name} should have conversation ID '${mockExporter.lastRunId}'"
                 )
             }
@@ -1053,7 +1064,9 @@ class OpenTelemetryTest {
         expectedEvents: Map<String, Map<String, Any>>,
         actualEvents: Map<String, Map<String, Any>>
     ) {
-        logger.debug { "Asserting events for the Span (name: $spanName).\nExpected events:\n$expectedEvents\nActual events:\n$actualEvents" }
+        logger.debug {
+            "Asserting events for the Span (name: $spanName).\nExpected events:\n$expectedEvents\nActual events:\n$actualEvents"
+        }
 
         assertEquals(
             expectedEvents.size,
@@ -1084,14 +1097,28 @@ class OpenTelemetryTest {
         expectedAttributes: Map<String, Any>,
         actualAttributes: Map<String, Any>
     ) {
-        logger.debug { "Asserting attributes for the Span (name: $spanName).\nExpected attributes:\n$expectedAttributes\nActual attributes:\n$actualAttributes" }
+        logger.debug {
+            "Asserting attributes for the Span (name: $spanName).\nExpected attributes:\n$expectedAttributes\nActual attributes:\n$actualAttributes"
+        }
 
         assertEquals(
             expectedAttributes.size,
             actualAttributes.size,
             "Expected collection of attributes should be the same size for the span (name: $spanName)\n" +
-                    "Expected: <${expectedAttributes.toList().joinToString(prefix = "\n{\n", postfix = "\n}", separator = "\n") { pair -> "  ${pair.first}=${pair.second}" }}>,\n" +
-                    "Actual: <${actualAttributes.toList().joinToString(prefix = "\n{\n", postfix = "\n}", separator = "\n") { pair -> "  ${pair.first}=${pair.second}" }}>"
+                "Expected: <${expectedAttributes.toList().joinToString(
+                    prefix = "\n{\n",
+                    postfix = "\n}",
+                    separator = "\n"
+                ) { pair ->
+                    "  ${pair.first}=${pair.second}"
+                }}>,\n" +
+                "Actual: <${actualAttributes.toList().joinToString(
+                    prefix = "\n{\n",
+                    postfix = "\n}",
+                    separator = "\n"
+                ) { pair ->
+                    "  ${pair.first}=${pair.second}"
+                }}>"
         )
 
         actualAttributes.forEach { (actualArgName: String, actualArgValue: Any) ->
@@ -1118,8 +1145,8 @@ class OpenTelemetryTest {
                         expectedArgValue,
                         actualArgValue,
                         "Attribute values should be the same for the span (name: $spanName)\n" +
-                                "Expected: <${expectedArgValue}>,\n" +
-                                "Actual: <${actualArgValue}>"
+                            "Expected: <$expectedArgValue>,\n" +
+                            "Actual: <$actualArgValue>"
                     )
                 }
             }

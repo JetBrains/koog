@@ -11,7 +11,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.ollama.client.findByNameOrNull
-import ai.koog.prompt.llm.LLMCapability.*
+import ai.koog.prompt.llm.LLMCapability.Completion
+import ai.koog.prompt.llm.LLMCapability.Schema
+import ai.koog.prompt.llm.LLMCapability.Temperature
+import ai.koog.prompt.llm.LLMCapability.Tools
+import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.markdown.markdown
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -25,10 +29,14 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
+import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.pathString
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
@@ -36,8 +44,8 @@ import kotlinx.io.files.Path as KtPath
 class OllamaExecutorIntegrationTest {
     companion object {
         /*
-        * Comment on this part if you want to run tests against a local Ollama client.
-        * */
+         * Comment on this part if you want to run tests against a local Ollama client.
+         * */
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture
         private val executor get() = fixture.executor
@@ -47,13 +55,13 @@ class OllamaExecutorIntegrationTest {
         private val client get() = fixture.client
 
         /*
-        * Uncomment this part and add required imports if you want to run tests against a local Ollama client.
+         * Uncomment this part and add required imports if you want to run tests against a local Ollama client.
         val client = OllamaClient()
         val executor = SingleLLMPromptExecutor(client)
         val model = OllamaModels.Meta.LLAMA_3_2
         val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
         val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
-        * */
+         * */
 
         private lateinit var testResourcesDir: Path
 
@@ -288,7 +296,10 @@ class OllamaExecutorIntegrationTest {
 
     @Serializable
     enum class CalculatorOperation {
-        ADD, SUBTRACT, MULTIPLY, DIVIDE
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE
     }
 
     @Test
@@ -403,7 +414,7 @@ class OllamaExecutorIntegrationTest {
         URGENT,
         CRITICAL,
         NORMAL,
-        LOW;
+        LOW
     }
 
     @Test
@@ -459,7 +470,9 @@ class OllamaExecutorIntegrationTest {
     fun ollama_testStreamingApiWithLargeText() = runTest(timeout = 600.seconds) {
         val prompt = prompt("test") {
             system("You are a helpful assistant.")
-            user("Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words.")
+            user(
+                "Write a detailed essay about the history of artificial intelligence, including its origins, major milestones, key figures, and current state. Please make it at least 1000 words."
+            )
         }
 
         val flow = executor.executeStreaming(prompt, model)
@@ -572,7 +585,6 @@ class OllamaExecutorIntegrationTest {
                 }
                 buffer.clear()
             }
-
         }
     }
 
@@ -617,7 +629,6 @@ class OllamaExecutorIntegrationTest {
         }
     }
 
-
     @Disabled("KG-46")
     @Test
     fun `ollama_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
@@ -633,7 +644,7 @@ class OllamaExecutorIntegrationTest {
                 $countryDefinition
 
                 Make sure to follow this exact format with the # for country names and * for details.
-            """.trimIndent()
+                """.trimIndent()
             )
         }
 
@@ -682,7 +693,9 @@ class OllamaExecutorIntegrationTest {
     fun `ollama_test moderate multiple messages`() = runTest {
         val safeQuestion = String(
             Base64.getDecoder()
-                .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/")
+                .decode(
+                    "RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gYW5vdGhlciBwbGFuZXQgYWxzbyBkZXNlcnZlIHRvIGJlIGFsaXZlIGFuZCBiZSByZXNwZWN0ZWQ/"
+                )
         ) // for testing purposes
         val unsafeAnswer = String(
             Base64.getDecoder().decode("SSB0aGluayB0aGV5IGRlc2VydmUgZGVhdGggb3IgdG8gYmUgc2VydmFudHMgdG8gdXMh")
@@ -711,7 +724,6 @@ class OllamaExecutorIntegrationTest {
         assert(
             executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful
         ) { "Answer alone should be detected as harmful!" }
-
 
         val multiMessageReply = executor.moderate(
             prompt = promptWithMultipleMessages,
@@ -792,7 +804,8 @@ class OllamaExecutorIntegrationTest {
             val response = executor.execute(prompt, visionModel)
 
             when (scenario) {
-                ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG, ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
+                ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
                     checkExecutorMediaResponse(response)
                     assertTrue(response.content.isNotEmpty(), "Response should not be empty")
                     println("Ollama image processing response for ${scenario.name}: ${response.content}")
@@ -823,5 +836,4 @@ class OllamaExecutorIntegrationTest {
             }
         }
     }
-
 }

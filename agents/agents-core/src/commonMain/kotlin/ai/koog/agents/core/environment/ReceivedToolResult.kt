@@ -1,8 +1,8 @@
 package ai.koog.agents.core.environment
 
+import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
 import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -46,7 +46,7 @@ public data class ReceivedToolResult(
 public fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
     check(this is AIAgentEnvironmentToolResultToAgentContent) {
         "AI agent must receive AIAgentEnvironmentToolResultToAgentContent," +
-                " but ${this::class.simpleName} was received"
+            " but ${this::class.simpleName} was received"
     }
 
     return toResult()

@@ -87,7 +87,6 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
     )
 }
 
-
 /**
  * Converts a ToolDescriptor to an Ollama Tool object.
  */

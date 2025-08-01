@@ -67,14 +67,17 @@ kotlin {
 
                 val obsoleteIncluded = included - projectsPaths
                 require(obsoleteIncluded.isEmpty()) {
-                    "There are obsolete modules that are used for '${project.name}' main jar dependencies but no longer exist, please remove them from 'included' in ${project.name}/build.gradle.kts:\n" +
-                            obsoleteIncluded.joinToString(",\n") { "\"$it\"" }
+                    "There are obsolete modules that are used for '${project.name}' main jar dependencies" +
+                        "but no longer exist," +
+                        "please remove them from 'included' in ${project.name}/build.gradle.kts:\n" +
+                        obsoleteIncluded.joinToString(",\n") { "\"$it\"" }
                 }
 
                 val notIncluded = projectsPaths - included
                 require(notIncluded.isEmpty()) {
-                    "There are modules that are not listed for '${project.name}' main jar dependencies, please add them to 'included' or 'excluded' in ${project.name}/build.gradle.kts:\n" +
-                            notIncluded.joinToString(",\n") { "\"$it\"" }
+                    "There are modules that are not listed for '${project.name}' main jar dependencies," +
+                        "please add them to 'included' or 'excluded' in ${project.name}/build.gradle.kts:\n" +
+                        notIncluded.joinToString(",\n") { "\"$it\"" }
                 }
 
                 projects.forEach {

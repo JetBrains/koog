@@ -7,7 +7,8 @@ internal fun <Path> Path.contains(
     val currentComponents = this.components(fs)
     val otherComponents = other.components(fs)
     return currentComponents.zip(otherComponents)
-        .all { it.first == it.second } && otherComponents.size >= currentComponents.size
+        .all { it.first == it.second } &&
+        otherComponents.size >= currentComponents.size
 }
 
 private fun <Path> Path.components(fs: FileSystemProvider.ReadOnly<Path>): List<String> {

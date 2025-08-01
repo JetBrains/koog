@@ -101,13 +101,13 @@ public sealed class LLMCapability(public val id: String) {
      * such as transcription, audio generation, or audio-based interactions.
      */
     @Serializable
-    public data object Audio: LLMCapability("audio")
+    public data object Audio : LLMCapability("audio")
 
     /**
      * Represents a specific language model capability associated with handling documents.
      */
     @Serializable
-    public data object Document: LLMCapability("document")
+    public data object Document : LLMCapability("document")
 
     /**
      * Represents the capability of generating embeddings within the context of language models.
@@ -139,7 +139,7 @@ public sealed class LLMCapability(public val id: String) {
      * Use this capability to represent models that support caching functionalities.
      */
     @Serializable
-    public data object PromptCaching: LLMCapability("promptCaching")
+    public data object PromptCaching : LLMCapability("promptCaching")
 
     /**
      * Represents a capability in the Large Language Model (LLM) for content moderation.
@@ -149,7 +149,7 @@ public sealed class LLMCapability(public val id: String) {
      * self-harm, sexual content, violence, etc.
      */
     @Serializable
-    public data object Moderation: LLMCapability("moderation")
+    public data object Moderation : LLMCapability("moderation")
 
     /**
      * Represents a structured schema capability for a language model. The schema defines certain characteristics or

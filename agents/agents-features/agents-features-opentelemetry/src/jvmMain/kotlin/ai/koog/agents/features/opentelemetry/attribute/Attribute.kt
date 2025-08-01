@@ -7,5 +7,5 @@ internal interface Attribute {
     val verbose: Boolean
         get() = false
 
-    fun String.concatKey(other: String) = this.plus(".${other}")
+    fun String.concatKey(other: String) = this.plus(".$other")
 }

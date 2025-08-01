@@ -11,8 +11,33 @@ import kotlinx.io.files.SystemFileSystem
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
-import java.nio.file.*
-import kotlin.io.path.*
+import java.nio.file.FileAlreadyExistsException
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createDirectory
+import kotlin.io.path.createFile
+import kotlin.io.path.createParentDirectories
+import kotlin.io.path.deleteExisting
+import kotlin.io.path.deleteRecursively
+import kotlin.io.path.exists
+import kotlin.io.path.extension
+import kotlin.io.path.fileSize
+import kotlin.io.path.inputStream
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isHidden
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.moveTo
+import kotlin.io.path.name
+import kotlin.io.path.notExists
+import kotlin.io.path.pathString
+import kotlin.io.path.readBytes
+import kotlin.io.path.relativeToOrNull
+import kotlin.io.path.writeBytes
 import kotlin.use
 
 /**
@@ -231,7 +256,8 @@ public object JVMFileSystemProvider {
      * It provides operations for path serialization, structure navigation, and
      * content reading in a read-only manner.
      */
-    public object ReadOnly : FileSystemProvider.ReadOnly<Path>,
+    public object ReadOnly :
+        FileSystemProvider.ReadOnly<Path>,
         FileSystemProvider.Select<Path> by Select,
         FileSystemProvider.Read<Path> by Read {
 
@@ -275,7 +301,6 @@ public object JVMFileSystemProvider {
          * @return The file extension as a string.
          */
         override fun extension(path: Path): String = Serialization.extension(path)
-
     }
 
     /**
@@ -285,7 +310,8 @@ public object JVMFileSystemProvider {
      * read-only and write capabilities. By delegating to `ReadOnly` and `Write` objects, it provides
      * comprehensive file system operations including reading, writing, serialization, and path manipulation.
      */
-    public object ReadWrite : FileSystemProvider.ReadWrite<Path>,
+    public object ReadWrite :
+        FileSystemProvider.ReadWrite<Path>,
         FileSystemProvider.ReadOnly<Path> by ReadOnly,
         FileSystemProvider.Write<Path> by Write {
 
@@ -470,7 +496,6 @@ public object JVMFileSystemProvider {
                 }
             }
         }
-
     }
 
     /**

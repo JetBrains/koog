@@ -45,7 +45,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -183,10 +182,10 @@ class SingleLLMPromptExecutorIntegrationTest {
             val fullResponse = responseChunks.joinToString("")
             assertTrue(
                 fullResponse.contains("1") &&
-                        fullResponse.contains("2") &&
-                        fullResponse.contains("3") &&
-                        fullResponse.contains("4") &&
-                        fullResponse.contains("5"),
+                    fullResponse.contains("2") &&
+                    fullResponse.contains("3") &&
+                    fullResponse.contains("4") &&
+                    fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
         }
@@ -200,7 +199,9 @@ class SingleLLMPromptExecutorIntegrationTest {
 
         val prompt = Prompt.build("test-code") {
             system("You are a helpful coding assistant.")
-            user("Write a simple Kotlin function to calculate the factorial of a number. Make sure the name of the function starts with 'factorial'.")
+            user(
+                "Write a simple Kotlin function to calculate the factorial of a number. Make sure the name of the function starts with 'factorial'."
+            )
         }
 
         var response: List<Message>
@@ -275,8 +276,10 @@ class SingleLLMPromptExecutorIntegrationTest {
                     ToolParameterDescriptor(
                         name = "operation",
                         description = "The operation to perform.",
-                        type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }
-                            .toTypedArray())
+                        type = ToolParameterType.Enum(
+                            TestUtils.CalculatorOperation.entries.map { it.name }
+                                .toTypedArray()
+                        )
                     ),
                     ToolParameterDescriptor(
                         name = "a",
@@ -299,7 +302,9 @@ class SingleLLMPromptExecutorIntegrationTest {
             )
 
             val prompt = Prompt.build("test-tools") {
-                system("You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST.")
+                system(
+                    "You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST."
+                )
                 user("What is 123 + 456?")
             }
 
@@ -401,8 +406,12 @@ class SingleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "color",
                     description = "The color to be picked.",
-                    type = ToolParameterType.List(ToolParameterType.Enum(TestUtils.Colors.entries.map { it.name }
-                        .toTypedArray()))
+                    type = ToolParameterType.List(
+                        ToolParameterType.Enum(
+                            TestUtils.Colors.entries.map { it.name }
+                                .toTypedArray()
+                        )
+                    )
                 )
             )
         )
@@ -476,10 +485,10 @@ class SingleLLMPromptExecutorIntegrationTest {
             val fullResponse = responseChunks.joinToString("")
             assertTrue(
                 fullResponse.contains("1") &&
-                        fullResponse.contains("2") &&
-                        fullResponse.contains("3") &&
-                        fullResponse.contains("4") &&
-                        fullResponse.contains("5"),
+                    fullResponse.contains("2") &&
+                    fullResponse.contains("3") &&
+                    fullResponse.contains("4") &&
+                    fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
         }
@@ -505,7 +514,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 $countryDefinition
 
                 Make sure to follow this exact format with the # for country names and * for details.
-            """.trimIndent()
+                """.trimIndent()
             )
         }
 
@@ -545,7 +554,9 @@ class SingleLLMPromptExecutorIntegrationTest {
     }
 
     private fun createCalculatorPrompt() = Prompt.build("test-tools") {
-        system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
+        system(
+            "You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself."
+        )
         user("What is 123 + 456?")
     }
 
@@ -638,11 +649,11 @@ class SingleLLMPromptExecutorIntegrationTest {
     }
 
     /*
-    * IMPORTANT about the testing approach!
-    * The number of combinations between specific executors and media types will make tests slower.
-    * The compatibility of each LLM profile with the media processing is covered in the E2E agents tests.
-    * Therefore, in the scope of the executor tests, we'll check one executor of each provider
-    * to decrease the number of possible combinations and to avoid redundant checks.*/
+     * IMPORTANT about the testing approach!
+     * The number of combinations between specific executors and media types will make tests slower.
+     * The compatibility of each LLM profile with the media processing is covered in the E2E agents tests.
+     * Therefore, in the scope of the executor tests, we'll check one executor of each provider
+     * to decrease the number of possible combinations and to avoid redundant checks.*/
 
     // ToDo add video & pdf specific scenarios
 
@@ -806,7 +817,10 @@ class SingleLLMPromptExecutorIntegrationTest {
                                 )
                             } else if (model.provider == LLMProvider.OpenAI) {
                                 assertTrue(
-                                    e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                    e.message?.contains(
+                                        "You uploaded an unsupported image. Please make sure your image is valid."
+                                    ) ==
+                                        true,
                                     "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -841,7 +855,6 @@ class SingleLLMPromptExecutorIntegrationTest {
                             "I'm sending you a text file. Please analyze it and summarize its content."
                         }
 
-
                         attachments {
                             textFile(KtPath(file.pathString), "text/plain")
                         }
@@ -874,7 +887,10 @@ class SingleLLMPromptExecutorIntegrationTest {
                                     "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
                                 assertTrue(
-                                    e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
+                                    e.message?.contains(
+                                        "Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."
+                                    ) ==
+                                        true,
                                     "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -961,8 +977,8 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
     /*
-    * Checking just images to make sure the file is uploaded in base64 format
-    * */
+     * Checking just images to make sure the file is uploaded in base64 format
+     * */
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testBase64EncodedAttachment(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -1004,7 +1020,6 @@ class SingleLLMPromptExecutorIntegrationTest {
             val response = executor.execute(prompt, model)
             checkExecutorMediaResponse(response)
 
-
             assertTrue(
                 response.content.contains("image", ignoreCase = true),
                 "Response should mention the image"
@@ -1013,8 +1028,8 @@ class SingleLLMPromptExecutorIntegrationTest {
     }
 
     /*
-    * Checking just images to make sure the file is uploaded by URL
-    * */
+     * Checking just images to make sure the file is uploaded by URL
+     * */
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testUrlBasedAttachment(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -1050,8 +1065,8 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             assertTrue(
                 response.content.contains("image", ignoreCase = true) ||
-                        response.content.contains("python", ignoreCase = true) ||
-                        response.content.contains("logo", ignoreCase = true),
+                    response.content.contains("python", ignoreCase = true) ||
+                    response.content.contains("logo", ignoreCase = true),
                 "Response should mention the image content"
             )
         }

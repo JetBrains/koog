@@ -4,7 +4,7 @@ package ai.koog.agents.core.tools
  * A base sealed class representing exceptions specific to tools.
  * This class provides a structure for exceptions with a custom message.
  */
-public sealed class ToolException(override val message: String): Exception() {
+public sealed class ToolException(override val message: String) : Exception() {
     /**
      * Represents a failure that occurs during validation processes.
      *
@@ -15,7 +15,7 @@ public sealed class ToolException(override val message: String): Exception() {
      * @constructor Creates a ValidationFailure instance with the given message.
      * @param message The detail message describing the validation error.
      */
-    public class ValidationFailure(message: String): ToolException(message)
+    public class ValidationFailure(message: String) : ToolException(message)
 }
 
 /**
@@ -37,7 +37,7 @@ public fun validate(expectation: Boolean, message: () -> String) {
  * @return The same non-null value that was provided as input.
  * @throws ToolException.ValidationFailure if the value is null.
  */
-public fun <T: Any> validateNotNull(value: T?, message: () -> String): T {
+public fun <T : Any> validateNotNull(value: T?, message: () -> String): T {
     if (value == null) throw ToolException.ValidationFailure(message())
     return value
 }

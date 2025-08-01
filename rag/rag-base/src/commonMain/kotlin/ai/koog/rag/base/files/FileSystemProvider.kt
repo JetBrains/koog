@@ -173,7 +173,7 @@ public object FileSystemProvider {
      * It provides operations for path serialization, structure navigation, and content reading
      * in a read-only manner without modifying the filesystem.
      */
-    public interface ReadOnly<Path> : Serialization<Path>, Select<Path>, Read<Path> {}
+    public interface ReadOnly<Path> : Serialization<Path>, Select<Path>, Read<Path>
 
     /**
      * Provides operations for creating, moving, writing, and deleting files or directories.

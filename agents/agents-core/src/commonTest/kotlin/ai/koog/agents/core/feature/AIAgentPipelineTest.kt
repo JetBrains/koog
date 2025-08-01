@@ -34,7 +34,6 @@ class AIAgentPipelineTest {
     @Test
     @JsName("testPipelineInterceptorsForNodeEvents")
     fun `test pipeline interceptors for node events`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
 
         val dummyNodeName = "dummy node"
@@ -71,7 +70,6 @@ class AIAgentPipelineTest {
     @Test
     @JsName("testPipelineInterceptorsForNodeExecutionErrorEvents")
     fun `test pipeline interceptors for node execution errors events`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
 
         val nodeName = "Node with error"
@@ -113,7 +111,6 @@ class AIAgentPipelineTest {
 
     @Test @JsName("testPipelineInterceptorsForLLmCallEvents")
     fun `test pipeline interceptors for llm call events`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
 
         val strategy = strategy<String, String>("test-interceptors-strategy") {
@@ -151,7 +148,6 @@ class AIAgentPipelineTest {
     @Test
     @JsName("testPipelineInterceptorsForToolCallEvents")
     fun `test pipeline interceptors for tool call events`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
 
         val strategy = strategy("test-interceptors-strategy") {
@@ -197,7 +193,6 @@ class AIAgentPipelineTest {
     @Test
     @JsName("testPipelineInterceptorsForAgentCreateEvents")
     fun `test pipeline interceptors before agent started events`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
 
         val strategy = strategy<String, String>("test-interceptors-strategy") {
@@ -226,7 +221,6 @@ class AIAgentPipelineTest {
     @Test
     @JsName("testPipelineInterceptorsForStrategyEvents")
     fun `test pipeline interceptors for strategy started events`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
 
         val strategy = strategy<String, String>("test-interceptors-strategy") {
@@ -255,7 +249,6 @@ class AIAgentPipelineTest {
     @Test
     @JsName("testPipelineInterceptorsForStageContextEvents")
     fun `test pipeline interceptors for stage context events`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
         val strategy = strategy<String, String>("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
@@ -285,20 +278,21 @@ class AIAgentPipelineTest {
     @Test
     @JsName("testSeveralAgentsShareOnePipeline")
     fun `test several agents share one pipeline`() = runTest {
-
         val interceptedEvents = mutableListOf<String>()
 
         createAgent(
             strategy = strategy("test-interceptors-strategy-1") {
                 edge(nodeStart forwardTo nodeFinish transformed { "Done" })
-            }) {
+            }
+        ) {
             install(TestFeature) { events = interceptedEvents }
         }.use { agent1 ->
 
             createAgent(
                 strategy = strategy("test-interceptors-strategy-2") {
                     edge(nodeStart forwardTo nodeFinish transformed { "Done" })
-                }) {
+                }
+            ) {
                 install(TestFeature) { events = interceptedEvents }
             }.use { agent2 ->
 
@@ -336,7 +330,6 @@ class AIAgentPipelineTest {
         promptExecutor: PromptExecutor? = null,
         installFeatures: FeatureContext.() -> Unit = {}
     ): AIAgent<String, String> {
-
         val agentConfig = AIAgentConfig(
             prompt = prompt("test", clock = testClock) {
                 system(systemPrompt ?: "Test system message")
@@ -348,7 +341,10 @@ class AIAgentPipelineTest {
         )
 
         val testExecutor = getMockExecutor(clock = testClock) {
-            mockLLMAnswer("Here's a summary of the conversation: Test user asked questions and received responses.") onRequestContains "Summarize all the main achievements"
+            mockLLMAnswer(
+                "Here's a summary of the conversation: Test user asked questions and received responses."
+            ) onRequestContains
+                "Summarize all the main achievements"
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 

@@ -4,7 +4,11 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -15,7 +19,6 @@ import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertThrows
-import kotlin.IllegalStateException
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -24,7 +27,6 @@ class EventHandlerTest {
 
     @Test
     fun `test event handler for agent without nodes and tools`() = runBlocking {
-
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
@@ -62,7 +64,6 @@ class EventHandlerTest {
 
     @Test
     fun `test event handler single node without tools`() = runBlocking {
-
         val agentId = "test-agent-id"
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
@@ -103,14 +104,12 @@ class EventHandlerTest {
             "OnAgentBeforeClose (agent id: $agentId)",
         )
 
-
         assertEquals(expectedEvents.size, eventsCollector.size)
         assertContentEquals(expectedEvents, eventsCollector.collectedEvents)
     }
 
     @Test
     fun `test event handler single node with tools`() = runBlocking {
-
         val eventsCollector = TestEventsCollector()
         val strategyName = "test-strategy"
 
@@ -161,12 +160,12 @@ class EventHandlerTest {
         val expectedEvents = listOf(
             "OnBeforeAgentStarted (agent id: $agentId, run id: $runId, strategy: $strategyName)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: ${userPrompt})",
-            "OnAfterNode (run id: $runId, node: __start__, input: ${userPrompt}, output: ${userPrompt})",
-            "OnBeforeNode (run id: $runId, node: test-llm-call, input: ${userPrompt})",
+            "OnBeforeNode (run id: $runId, node: __start__, input: $userPrompt)",
+            "OnAfterNode (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
+            "OnBeforeNode (run id: $runId, node: test-llm-call, input: $userPrompt)",
             "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, tools: [dummy])",
             "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: Tool, message: {\"dummy\":\"test\"}])",
-            "OnAfterNode (run id: $runId, node: test-llm-call, input: ${userPrompt}, output: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
+            "OnAfterNode (run id: $runId, node: test-llm-call, input: $userPrompt, output: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
             "OnBeforeNode (run id: $runId, node: test-tool-call, input: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
             "OnToolCall (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test))",
             "OnToolCallResult (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test), result: Text(text=${dummyTool.result}))",
@@ -186,7 +185,6 @@ class EventHandlerTest {
 
     @Test
     fun `test event handler several nodes`() = runBlocking {
-
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
@@ -202,7 +200,7 @@ class EventHandlerTest {
 
         val agent = createAgent(
             strategy = strategy,
-            toolRegistry = ToolRegistry{ tool(DummyTool()) },
+            toolRegistry = ToolRegistry { tool(DummyTool()) },
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
@@ -217,8 +215,8 @@ class EventHandlerTest {
         val expectedEvents = listOf(
             "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: ${agentInput})",
-            "OnAfterNode (run id: $runId, node: __start__, input: ${agentInput}, output: ${agentInput})",
+            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
+            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
             "OnBeforeNode (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
             "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
             "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
@@ -238,7 +236,6 @@ class EventHandlerTest {
 
     @Test
     fun `test event handler for agent with node execution error`() = runBlocking {
-
         val eventsCollector = TestEventsCollector()
 
         val agentId = "test-agent-id"
@@ -304,15 +301,21 @@ class EventHandlerTest {
                 install(EventHandler) {
                     onBeforeAgentStarted { eventContext ->
                         runId = eventContext.runId
-                        collectedEvents.add("OnBeforeAgentStarted first (agent id: ${eventContext.agent.id}, strategy: ${eventContext.strategy.name})")
+                        collectedEvents.add(
+                            "OnBeforeAgentStarted first (agent id: ${eventContext.agent.id}, strategy: ${eventContext.strategy.name})"
+                        )
                     }
 
                     onBeforeAgentStarted { eventContext ->
-                        collectedEvents.add("OnBeforeAgentStarted second (agent id: ${eventContext.agent.id}, strategy: ${eventContext.strategy.name})")
+                        collectedEvents.add(
+                            "OnBeforeAgentStarted second (agent id: ${eventContext.agent.id}, strategy: ${eventContext.strategy.name})"
+                        )
                     }
 
                     onAgentFinished { eventContext ->
-                        collectedEvents.add("OnAgentFinished (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: $agentResult)")
+                        collectedEvents.add(
+                            "OnAgentFinished (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: $agentResult)"
+                        )
                     }
                 }
             }

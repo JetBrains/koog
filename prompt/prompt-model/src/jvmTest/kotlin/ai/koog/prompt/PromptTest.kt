@@ -170,7 +170,7 @@ class PromptTest {
             if (decodedMessage.role == Message.Role.Assistant) {
                 assertTrue(
                     (decodedMessage as Message.Assistant).finishReason ==
-                            (prompt.messages[index] as Message.Assistant).finishReason
+                        (prompt.messages[index] as Message.Assistant).finishReason
                 )
             }
 

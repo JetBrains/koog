@@ -25,7 +25,6 @@ class AIAgentNodesTest {
 
             edge(nodeStart forwardTo compress transformed { })
             edge(compress forwardTo nodeFinish transformed { "Done" })
-
         }
 
         val results = mutableListOf<Any?>()
@@ -36,9 +35,11 @@ class AIAgentNodesTest {
             maxAgentIterations = 10
         )
 
-
         val testExecutor = getMockExecutor {
-            mockLLMAnswer("Here's a summary of the conversation: Test user asked questions and received responses.") onRequestContains "Summarize all the main achievements"
+            mockLLMAnswer(
+                "Here's a summary of the conversation: Test user asked questions and received responses."
+            ) onRequestContains
+                "Summarize all the main achievements"
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
@@ -78,13 +79,17 @@ class AIAgentNodesTest {
         val agentStrategy = strategy<String, String>("test") {
             val compress by nodeLLMCompressHistory<Unit>(retrievalModel = customModel)
 
-            edge(nodeStart forwardTo compress transformed {
-                executionEvents += "nodeStart -> compress"
-            })
-            edge(compress forwardTo nodeFinish transformed {
-                executionEvents += "compress -> nodeFinish"
-                "Done"
-            })
+            edge(
+                nodeStart forwardTo compress transformed {
+                    executionEvents += "nodeStart -> compress"
+                }
+            )
+            edge(
+                compress forwardTo nodeFinish transformed {
+                    executionEvents += "compress -> nodeFinish"
+                    "Done"
+                }
+            )
         }
 
         val agentConfig = AIAgentConfig(

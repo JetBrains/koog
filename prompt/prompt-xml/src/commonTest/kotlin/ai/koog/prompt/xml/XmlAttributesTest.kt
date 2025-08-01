@@ -19,11 +19,14 @@ class XmlAttributesTest {
     @Test
     fun testMultipleAttributes() {
         val result = xml {
-            tag("element", linkedMapOf(
-                "id" to "123",
-                "class" to "main",
-                "data-test" to "true"
-            )) {
+            tag(
+                "element",
+                linkedMapOf(
+                    "id" to "123",
+                    "class" to "main",
+                    "data-test" to "true"
+                )
+            ) {
                 text("Content")
             }
         }
@@ -33,10 +36,13 @@ class XmlAttributesTest {
     @Test
     fun testAttributesWithSpecialCharacters() {
         val result = xml {
-            tag("element", linkedMapOf(
-                "data-value" to "a < b & c > d",
-                "title" to "Quote: \"Hello\""
-            )) {
+            tag(
+                "element",
+                linkedMapOf(
+                    "data-value" to "a < b & c > d",
+                    "title" to "Quote: \"Hello\""
+                )
+            ) {
                 text("Content")
             }
         }
@@ -56,12 +62,15 @@ class XmlAttributesTest {
     @Test
     fun testSelfClosingTagWithAttributes() {
         val result = xml {
-            selfClosingTag("img", linkedMapOf(
-                "src" to "image.jpg",
-                "alt" to "An image",
-                "width" to "100",
-                "height" to "100"
-            ))
+            selfClosingTag(
+                "img",
+                linkedMapOf(
+                    "src" to "image.jpg",
+                    "alt" to "An image",
+                    "width" to "100",
+                    "height" to "100"
+                )
+            )
         }
         assertEquals("<img src=\"image.jpg\" alt=\"An image\" width=\"100\" height=\"100\"/>", result)
     }
@@ -100,11 +109,14 @@ class XmlAttributesTest {
                     tag("title") {
                         text("Test Document")
                     }
-                    selfClosingTag("link", linkedMapOf(
-                        "rel" to "stylesheet",
-                        "href" to "styles.css",
-                        "type" to "text/css"
-                    ))
+                    selfClosingTag(
+                        "link",
+                        linkedMapOf(
+                            "rel" to "stylesheet",
+                            "href" to "styles.css",
+                            "type" to "text/css"
+                        )
+                    )
                 }
                 tag("body", linkedMapOf("class" to "main-content", "data-theme" to "light")) {
                     tag("div", linkedMapOf("id" to "container", "class" to "wrapper")) {
@@ -127,7 +139,7 @@ class XmlAttributesTest {
                 }
             }
         }
-        
+
         // We don't need to check the exact output, just that it doesn't throw exceptions
         // and produces a non-empty string with proper attributes
         assertTrue(result.contains("xmlns=\"http://www.w3.org/1999/xhtml\""))

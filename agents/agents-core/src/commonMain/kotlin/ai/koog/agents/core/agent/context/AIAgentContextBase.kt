@@ -131,7 +131,7 @@ public interface AIAgentContextBase {
      * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding data.
      * @return The data associated with the provided key, or null if no matching data is found.
      */
-    public fun<T> get(key: AIAgentStorageKey<*>): T?
+    public fun <T> get(key: AIAgentStorageKey<*>): T?
 
     /**
      * Removes a feature or data associated with the specified key from the agent's storage.

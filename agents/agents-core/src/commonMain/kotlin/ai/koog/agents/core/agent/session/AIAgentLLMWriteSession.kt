@@ -147,10 +147,14 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return A SafeTool instance wrapping the found tool and its environment.
      * @throws IllegalArgumentException if the specified tool is not found in the tool registry.
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> findTool(toolClass: KClass<out Tool<TArgs, TResult>>): SafeTool<TArgs, TResult> {
+    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> findTool(
+        toolClass: KClass<out Tool<TArgs, TResult>>
+    ): SafeTool<TArgs, TResult> {
         @Suppress("UNCHECKED_CAST")
-        val tool = (toolRegistry.tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
-            ?: throw IllegalArgumentException("Tool with type ${toolClass.simpleName} is not defined"))
+        val tool = (
+            toolRegistry.tools.find(toolClass::isInstance) as? Tool<TArgs, TResult>
+                ?: throw IllegalArgumentException("Tool with type ${toolClass.simpleName} is not defined")
+            )
 
         return SafeTool(tool, environment, clock)
     }
@@ -281,10 +285,14 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return the tool that matches the specified name and types
      * @throws IllegalArgumentException if the tool is not defined or the types are incompatible
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> findToolByNameAndArgs(toolName: String): Tool<TArgs, TResult> =
+    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> findToolByNameAndArgs(
+        toolName: String
+    ): Tool<TArgs, TResult> =
         @Suppress("UNCHECKED_CAST")
-        (toolRegistry.getTool(toolName) as? Tool<TArgs, TResult>
-            ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments"))
+        (
+            toolRegistry.getTool(toolName) as? Tool<TArgs, TResult>
+                ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments")
+            )
 
     /**
      * Finds a tool by its name and ensures its arguments are compatible with the specified type.
@@ -296,8 +304,10 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     public inline fun <reified TArgs : ToolArgs> findToolByName(toolName: String): SafeTool<TArgs, *> {
         @Suppress("UNCHECKED_CAST")
-        val tool = (toolRegistry.getTool(toolName) as? Tool<TArgs, *>
-            ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments"))
+        val tool = (
+            toolRegistry.getTool(toolName) as? Tool<TArgs, *>
+                ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined or has incompatible arguments")
+            )
 
         return SafeTool(tool, environment, clock)
     }
@@ -447,7 +457,7 @@ public class AIAgentLLMWriteSession internal constructor(
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {
-                     definition.definition(this)
+                    definition.definition(this)
                 }
             }
             this.prompt = prompt

@@ -68,11 +68,17 @@ class Logging(val logger: Logger) {
             }
 
             pipeline.interceptAfterNode(interceptContext) { eventContext ->
-                logger.info("Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}")
+                logger.info(
+                    "Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}"
+                )
             }
 
             pipeline.interceptBeforeLLMCall(interceptContext) { eventContext ->
-                logger.info("Before LLM call with prompt: ${eventContext.prompt}, tools: [${eventContext.tools.joinToString { it.name }}]")
+                logger.info(
+                    "Before LLM call with prompt: ${eventContext.prompt}, tools: [${eventContext.tools.joinToString {
+                        it.name
+                    }}]"
+                )
             }
 
             pipeline.interceptAfterLLMCall(interceptContext) { eventContext ->

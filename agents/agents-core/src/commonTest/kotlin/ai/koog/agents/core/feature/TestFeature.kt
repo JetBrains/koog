@@ -38,11 +38,17 @@ class TestFeature(val events: MutableList<String>) {
             }
 
             pipeline.interceptBeforeLLMCall(context) { event ->
-                feature.events += "LLM: start LLM call (prompt: ${event.prompt.messages.firstOrNull { it.role == Message.Role.User }?.content}, tools: [${event.tools.joinToString { it.name }}])"
+                feature.events +=
+                    "LLM: start LLM call (prompt: ${event.prompt.messages.firstOrNull {
+                        it.role == Message.Role.User
+                    }?.content}, tools: [${event.tools.joinToString { it.name }}])"
             }
 
             pipeline.interceptAfterLLMCall(context) { event ->
-                feature.events += "LLM: finish LLM call (responses: [${event.responses.joinToString(", ") { "${it.role.name}: ${it.content}" }}])"
+                feature.events +=
+                    "LLM: finish LLM call (responses: [${event.responses.joinToString(", ") {
+                        "${it.role.name}: ${it.content}"
+                    }}])"
             }
 
             pipeline.interceptBeforeNode(context) { event ->
@@ -50,7 +56,8 @@ class TestFeature(val events: MutableList<String>) {
             }
 
             pipeline.interceptAfterNode(context) { event ->
-                feature.events += "Node: finish node (name: ${event.node.name}, input: ${event.input}, output: ${event.output})"
+                feature.events +=
+                    "Node: finish node (name: ${event.node.name}, input: ${event.input}, output: ${event.output})"
             }
 
             pipeline.interceptNodeExecutionError(context) { event ->
@@ -62,7 +69,8 @@ class TestFeature(val events: MutableList<String>) {
             }
 
             pipeline.interceptToolCallResult(context) { event ->
-                feature.events += "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.toStringDefault() ?: "null"})"
+                feature.events +=
+                    "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.toStringDefault() ?: "null"})"
             }
         }
     }

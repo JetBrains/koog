@@ -31,9 +31,9 @@ public fun List<OllamaModelCard>.findBestSuitedModels(
     requiredCapabilities: List<LLMCapability>? = null,
 ): List<OllamaModelCard> = filter { card ->
     (family?.let { card.family == it } ?: true) &&
-            (maxSize?.let { card.size <= it } ?: true) &&
-            (minParameterCount?.let { card.parameterCount != null && card.parameterCount >= it } ?: true) &&
-            (minContextLength?.let { card.contextLength != null && card.contextLength >= it } ?: true) &&
-            (minEmbeddingLength?.let { card.embeddingLength != null && card.embeddingLength >= it } ?: true) &&
-            (requiredCapabilities?.let { card.capabilities.containsAll(it) } ?: true)
+        (maxSize?.let { card.size <= it } ?: true) &&
+        (minParameterCount?.let { card.parameterCount != null && card.parameterCount >= it } ?: true) &&
+        (minContextLength?.let { card.contextLength != null && card.contextLength >= it } ?: true) &&
+        (minEmbeddingLength?.let { card.embeddingLength != null && card.embeddingLength >= it } ?: true) &&
+        (requiredCapabilities?.let { card.capabilities.containsAll(it) } ?: true)
 }

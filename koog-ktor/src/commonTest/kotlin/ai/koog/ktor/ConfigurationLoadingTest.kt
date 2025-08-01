@@ -2,7 +2,6 @@ package ai.koog.ktor
 
 import ai.koog.ktor.utils.loadAgentsConfig
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMProvider
 import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.config.MapApplicationConfig
@@ -162,7 +161,6 @@ class ConfigurationLoadingTest {
         // Verify fallback settings are not set due to missing model
         assertNull(koogConfig.fallbackLLMSettings)
     }
-
 
     // For testing purposes, we'll create a simplified configuration directly
     // In a real implementation, we would use a proper YAML parser

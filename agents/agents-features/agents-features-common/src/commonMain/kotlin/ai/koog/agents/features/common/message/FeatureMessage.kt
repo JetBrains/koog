@@ -17,6 +17,7 @@ public interface FeatureMessage {
      * facilitating temporal analysis, ordering, or correlation within the system.
      */
     public val timestamp: Long
+
     /**
      * Specifies the type of a feature message or event.
      *
@@ -46,6 +47,7 @@ public interface FeatureMessage {
          * @property message The textual content of the message.
          */
         Message("message"),
+
         /**
          * Represents an event with a specific name or identifier.
          *
@@ -102,6 +104,7 @@ public data class FeatureStringMessage(val message: String) : FeatureMessage {
      * the system clock at the time of initialization.
      */
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds()
+
     /**
      * Represents the type of the feature message, identifying the message's purpose or category.
      *
@@ -142,6 +145,7 @@ public data class FeatureEventMessage(override val eventId: String) : FeatureEve
      * precise tracking and ordering of event processing.
      */
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds()
+
     /**
      * Specifies the type of the feature message, indicating the nature of the message being processed.
      *

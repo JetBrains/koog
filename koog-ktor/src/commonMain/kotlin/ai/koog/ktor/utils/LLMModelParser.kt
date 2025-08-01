@@ -42,7 +42,9 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
 
 private fun ollama(parts: List<String>, identifier: String): LLModel? {
     if (parts.size < 2) {
-        logger.debug("Ollama model identifier must be in format 'ollama.maker.model' or 'ollama.model', got: $identifier")
+        logger.debug(
+            "Ollama model identifier must be in format 'ollama.maker.model' or 'ollama.model', got: $identifier"
+        )
         return null
     }
 
@@ -119,7 +121,6 @@ private fun anthropic(parts: List<String>, identifier: String): LLModel? {
     }
 
     val modelName = parts[1].lowercase()
-
 
     val normalizedModelName = modelName.replace("-", "_").lowercase()
     val model = ANTHROPIC_MODELS_MAP[normalizedModelName]

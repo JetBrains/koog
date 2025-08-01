@@ -95,7 +95,9 @@ class ToolSchemaExecutorIntegrationTest {
     class FileTools : ToolSet {
 
         @Tool
-        @LLMDescription("Writes content to a file (creates new or overwrites existing). BOTH filePath AND content parameters are REQUIRED.")
+        @LLMDescription(
+            "Writes content to a file (creates new or overwrites existing). BOTH filePath AND content parameters are REQUIRED."
+        )
         fun writeFile(
             @LLMDescription("Full path where the file should be created") filePath: String,
             @LLMDescription("Content to write to the file - THIS IS REQUIRED AND CANNOT BE EMPTY") content: String,
@@ -111,7 +113,6 @@ class ToolSchemaExecutorIntegrationTest {
         val content: String,
         val overwrite: Boolean = false
     )
-
 
     @ParameterizedTest
     @MethodSource("anthropicModels", "googleModels", "openAIModels")
@@ -132,7 +133,6 @@ class ToolSchemaExecutorIntegrationTest {
         val tools = toolsFromCallable.map { it.descriptor }
 
         val writeFileTool = tools.first { it.name == "writeFile" }
-
 
         val prompt = prompt("test-write-file", params = LLMParams(toolChoice = ToolChoice.Required)) {
             system("You are a helpful assistant with access to a file writing tool. ALWAYS use tools.")

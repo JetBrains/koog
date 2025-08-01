@@ -2,17 +2,31 @@ package ai.koog.agents.features.tracing.writer
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.feature.model.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
+import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
+import ai.koog.agents.core.feature.model.AIAgentStartedEvent
+import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
+import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
+import ai.koog.agents.core.feature.model.AfterLLMCallEvent
+import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.DefinedFeatureEvent
+import ai.koog.agents.core.feature.model.ToolCallEvent
+import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
-import ai.koog.agents.features.tracing.*
+import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
+import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.assistantMessage
 import ai.koog.agents.features.tracing.mock.createAgent
 import ai.koog.agents.features.tracing.mock.systemMessage
@@ -28,24 +42,36 @@ import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.plugins.sse.*
-import io.ktor.http.*
-import kotlinx.coroutines.*
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.http.URLProtocol
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.consumeAsFlow
-import kotlin.test.*
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger = KotlinLogging.logger("ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriterTest")
+        private val logger = KotlinLogging.logger(
+            "ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriterTest"
+        )
         private val defaultClientServerTimeout = 30.seconds
         private const val HOST = "127.0.0.1"
     }
 
     @Test
     fun `test health check on agent run`() = runBlocking {
-
         val port = findAvailablePort()
         val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
         val clientConfig =
@@ -98,7 +124,6 @@ class TraceFeatureMessageRemoteWriterTest {
 
     @Test
     fun `test feature message remote writer collect events on agent run`() = runBlocking {
-
         // Agent Config
         val agentId = "test-agent-id"
         val strategyName = "test-strategy"
@@ -175,7 +200,8 @@ class TraceFeatureMessageRemoteWriterTest {
                 }
 
                 val mockExecutor = getMockExecutor(clock = testClock) {
-                    mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals userPrompt
+                    mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals
+                        userPrompt
                     mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
                 }
 
@@ -334,7 +360,11 @@ class TraceFeatureMessageRemoteWriterTest {
                 // The 'runId' is updated when the agent is finished.
                 // We cannot simplify that and move the expected events list before the job is finished
                 // and relay on the number of elements in the list.
-                assertEquals(expectedEventsCount, expectedEvents.size, "expectedEventsCount variable in the test need to be updated")
+                assertEquals(
+                    expectedEventsCount,
+                    expectedEvents.size,
+                    "expectedEventsCount variable in the test need to be updated"
+                )
                 assertContentEquals(expectedEvents, actualEvents)
 
                 assertEquals(expectedEvents.size, actualEvents.size)
@@ -353,7 +383,6 @@ class TraceFeatureMessageRemoteWriterTest {
 
     @Test
     fun `test feature message remote writer is not set`() = runBlocking {
-
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
@@ -375,7 +404,11 @@ class TraceFeatureMessageRemoteWriterTest {
                         val llmCallWithToolsNode by nodeLLMRequest("test LLM call with tools")
 
                         edge(nodeStart forwardTo llmCallNode transformed { "Test LLM call prompt" })
-                        edge(llmCallNode forwardTo llmCallWithToolsNode transformed { "Test LLM call with tools prompt" })
+                        edge(
+                            llmCallNode forwardTo llmCallWithToolsNode transformed {
+                                "Test LLM call with tools prompt"
+                            }
+                        )
                         edge(llmCallWithToolsNode forwardTo nodeFinish transformed { "Done" })
                     }
 
@@ -433,7 +466,6 @@ class TraceFeatureMessageRemoteWriterTest {
 
     @Test
     fun `test feature message remote writer filter`() = runBlocking {
-
         // Agent Config
         val agentId = "test-agent-id"
         val strategyName = "test-strategy"
@@ -510,7 +542,8 @@ class TraceFeatureMessageRemoteWriterTest {
                 }
 
                 val mockExecutor = getMockExecutor(clock = testClock) {
-                    mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals userPrompt
+                    mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals
+                        userPrompt
                     mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
                 }
 
@@ -596,7 +629,11 @@ class TraceFeatureMessageRemoteWriterTest {
                 // The 'runId' is updated when the agent is finished.
                 // We cannot simplify that and move the expected events list before the job is finished
                 // and relay on the number of elements in the list.
-                assertEquals(expectedEventsCount, expectedEvents.size, "expectedEventsCount variable in the test need to be updated")
+                assertEquals(
+                    expectedEventsCount,
+                    expectedEvents.size,
+                    "expectedEventsCount variable in the test need to be updated"
+                )
                 assertContentEquals(expectedEvents, actualEvents)
 
                 assertEquals(expectedEvents.size, actualEvents.size)

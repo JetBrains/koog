@@ -7,7 +7,7 @@ import kotlin.test.assertFailsWith
 
 class JsonStructureLanguageTest {
     private val structuredLanguage = JsonStructureLanguage()
-    
+
     @Serializable
     private data class SimpleData(val value: String)
 
@@ -43,7 +43,6 @@ class JsonStructureLanguageTest {
         val data = structuredLanguage.parse<SimpleData>(json)
         assertEquals("test", data.value)
     }
-
 
     @Test
     fun testJsonFormatHandling() {

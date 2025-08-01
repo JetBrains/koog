@@ -10,9 +10,14 @@ import ai.koog.agents.features.writer.TestFeatureEventMessage
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.utils.use
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.http.*
-import kotlinx.coroutines.*
+import io.ktor.http.URLProtocol
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -25,7 +30,7 @@ import kotlin.time.Duration.Companion.seconds
 class FeatureMessageRemoteClientTest {
 
     companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         private val defaultClientServerTimeout = 30.seconds
     }

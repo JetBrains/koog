@@ -52,7 +52,11 @@ fun main() = runBlocking {
                 analysisAgent.asTool(
                     agentName = "analyzeTransactions",
                     agentDescription = "Performs analytics for user transactions",
-                    inputDescriptor = ToolParameterDescriptor("request", "Transaction analytics request", ToolParameterType.String)
+                    inputDescriptor = ToolParameterDescriptor(
+                        "request",
+                        "Transaction analytics request",
+                        ToolParameterType.String
+                    )
                 )
             )
         },

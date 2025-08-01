@@ -21,21 +21,42 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.sse.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.accept
+import io.ktor.client.request.header
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.readRawBytes
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.ClassDiscriminatorMode
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -228,7 +249,7 @@ public open class OpenAILLMClient(
                  to support OpenAI-compatible providers that do not support attachments.
 
                  Otherwise create a single content instance with all the parts
-                */
+                 */
                 if (contents.all { it is Content.Text }) {
                     val text = contents.joinToString(separator = "\n\n") { (it as Content.Text).value }
 
@@ -299,7 +320,9 @@ public open class OpenAILLMClient(
                         buildMap {
                             appliedTypes.harassment?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Harassment, it) }
-                            appliedTypes.harassmentThreatening?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                            appliedTypes.harassmentThreatening?.map {
+                                ModerationResult.InputType.valueOf(it.uppercase())
+                            }
                                 ?.let { put(ModerationCategory.HarassmentThreatening, it) }
                             appliedTypes.hate?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Hate, it) }
@@ -317,7 +340,9 @@ public open class OpenAILLMClient(
                                 ?.let { put(ModerationCategory.SelfHarm, it) }
                             appliedTypes.selfHarmIntent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.SelfHarmIntent, it) }
-                            appliedTypes.selfHarmInstructions?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                            appliedTypes.selfHarmInstructions?.map {
+                                ModerationResult.InputType.valueOf(it.uppercase())
+                            }
                                 ?.let { put(ModerationCategory.SelfHarmInstructions, it) }
                             appliedTypes.illicit?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
                                 ?.let { put(ModerationCategory.Illicit, it) }
@@ -432,11 +457,14 @@ public open class OpenAILLMClient(
             val parametersObject = buildJsonObject {
                 put("type", JsonPrimitive("object"))
                 put("properties", JsonObject(propertiesMap))
-                put("required", buildJsonArray {
-                    tool.requiredParameters.forEach { param ->
-                        add(JsonPrimitive(param.name))
+                put(
+                    "required",
+                    buildJsonArray {
+                        tool.requiredParameters.forEach { param ->
+                            add(JsonPrimitive(param.name))
+                        }
                     }
-                })
+                )
             }
 
             OpenAITool(
@@ -456,10 +484,14 @@ public open class OpenAILLMClient(
             null -> null
         }
 
-        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) listOf(
-            OpenAIModalities.Text,
-            OpenAIModalities.Audio
-        ) else null
+        val modalities = if (model.capabilities.contains(LLMCapability.Audio)) {
+            listOf(
+                OpenAIModalities.Text,
+                OpenAIModalities.Audio
+            )
+        } else {
+            null
+        }
         // TODO allow passing this externally and actually controlling this behavior
         val audio = modalities?.let {
             OpenAIAudioConfig(
@@ -471,8 +503,22 @@ public open class OpenAILLMClient(
         return OpenAIRequest(
             model = model.id,
             messages = messages,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
-            numberOfChoices = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
+            temperature = if (model.capabilities.contains(
+                    LLMCapability.Temperature
+                )
+            ) {
+                prompt.params.temperature
+            } else {
+                null
+            },
+            numberOfChoices = if (model.capabilities.contains(
+                    LLMCapability.MultipleChoices
+                )
+            ) {
+                prompt.params.numberOfChoices
+            } else {
+                null
+            },
             tools = if (tools.isNotEmpty()) openAITools else null,
             modalities = modalities,
             audio = audio,
@@ -527,7 +573,9 @@ public open class OpenAILLMClient(
                             val imageUrl: String = when (val content = attachment.content) {
                                 is AttachmentContent.URL -> content.url
                                 is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
-                                else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                                else -> throw IllegalArgumentException(
+                                    "Unsupported image attachment content: ${content::class}"
+                                )
                             }
 
                             add(ContentPart.Image(ContentPart.ImageUrl(imageUrl)))
@@ -540,7 +588,9 @@ public open class OpenAILLMClient(
 
                             val inputAudio: ContentPart.InputAudio = when (val content = attachment.content) {
                                 is AttachmentContent.Binary -> ContentPart.InputAudio(content.base64, attachment.format)
-                                else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
+                                else -> throw IllegalArgumentException(
+                                    "Unsupported audio attachment content: ${content::class}"
+                                )
                             }
 
                             add(ContentPart.Audio(inputAudio))
@@ -557,7 +607,9 @@ public open class OpenAILLMClient(
                                     filename = attachment.fileName
                                 )
 
-                                else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                                else -> throw IllegalArgumentException(
+                                    "Unsupported file attachment content: ${content::class}"
+                                )
                             }
 
                             add(ContentPart.File(fileData))
@@ -585,18 +637,24 @@ public open class OpenAILLMClient(
             ToolParameterType.String -> put("type", JsonPrimitive("string"))
             is ToolParameterType.Enum -> {
                 put("type", JsonPrimitive("string"))
-                put("enum", buildJsonArray {
-                    type.entries.forEach { entry ->
-                        add(JsonPrimitive(entry))
+                put(
+                    "enum",
+                    buildJsonArray {
+                        type.entries.forEach { entry ->
+                            add(JsonPrimitive(entry))
+                        }
                     }
-                })
+                )
             }
 
             is ToolParameterType.List -> {
                 put("type", JsonPrimitive("array"))
-                put("items", buildJsonObject {
-                    fillOpenAIParamType(type.itemsType)
-                })
+                put(
+                    "items",
+                    buildJsonObject {
+                        fillOpenAIParamType(type.itemsType)
+                    }
+                )
             }
 
             is ToolParameterType.Object -> {
@@ -604,14 +662,20 @@ public open class OpenAILLMClient(
                 type.additionalProperties?.let {
                     put("additionalProperties", type.additionalProperties)
                 }
-                put("properties", buildJsonObject {
-                    type.properties.forEach { property ->
-                        put(property.name, buildJsonObject {
-                            fillOpenAIParamType(property.type)
-                            put("description", property.description)
-                        })
+                put(
+                    "properties",
+                    buildJsonObject {
+                        type.properties.forEach { property ->
+                            put(
+                                property.name,
+                                buildJsonObject {
+                                    fillOpenAIParamType(property.type)
+                                    put("description", property.description)
+                                }
+                            )
+                        }
                     }
-                })
+                )
             }
         }
     }

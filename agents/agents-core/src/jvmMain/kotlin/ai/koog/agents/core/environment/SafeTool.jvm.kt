@@ -52,8 +52,8 @@ public data class SafeToolFromCallable<TResult>(
         val params = toolFunction.parameters
         check(args.size == params.size) {
             "Number of arguments provided must match the the number " +
-                    "of parameters in the tool function:" +
-                    " ${toolFunction.name} ${params.size} != ${args.size}"
+                "of parameters in the tool function:" +
+                " ${toolFunction.name} ${params.size} != ${args.size}"
         }
 
         val argsMap = (params zip args).associate { (param, arg) ->
@@ -187,10 +187,11 @@ public data class SafeToolFromCallable<TResult>(
  * @return A `SafeToolFromCallable.Result` object, either a `Success` with the extracted result
  *         and content or a `Failure` with an appropriate message.
  */
-private fun <TResult> ReceivedToolResult.toSafeResultFromCallable(): SafeToolFromCallable.Result<TResult> = when (result) {
-    null -> SafeToolFromCallable.Result.Failure(message = content)
-    else -> SafeToolFromCallable.Result.Success(
-        result = (result as ToolFromCallable.Result).result as TResult,
-        content = content
-    )
-}
+private fun <TResult> ReceivedToolResult.toSafeResultFromCallable(): SafeToolFromCallable.Result<TResult> =
+    when (result) {
+        null -> SafeToolFromCallable.Result.Failure(message = content)
+        else -> SafeToolFromCallable.Result.Success(
+            result = (result as ToolFromCallable.Result).result as TResult,
+            content = content
+        )
+    }

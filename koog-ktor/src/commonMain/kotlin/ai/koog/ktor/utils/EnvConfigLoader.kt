@@ -53,7 +53,9 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
 
         when {
             fallbackModel != null && fallbackModel.provider != fallbackProvider ->
-                log.warn("Model provider (${fallbackModel.provider.id}) does not match specified fallback provider ($fallbackProviderStr)")
+                log.warn(
+                    "Model provider (${fallbackModel.provider.id}) does not match specified fallback provider ($fallbackProviderStr)"
+                )
 
             fallbackModel != null -> koogConfig.llm {
                 fallback {
@@ -129,4 +131,3 @@ private fun KoogAgentsConfig.TimeoutConfiguration.configure(config: ApplicationC
         ?.toLongOrNull()
         ?.let { socketTimeout = it.milliseconds }
 }
-

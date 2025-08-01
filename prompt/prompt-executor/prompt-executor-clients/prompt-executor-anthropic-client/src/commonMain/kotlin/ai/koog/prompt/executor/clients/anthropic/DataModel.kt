@@ -379,7 +379,6 @@ public data class AnthropicStreamDelta(
     val toolUse: AnthropicResponseContent.ToolUse? = null
 )
 
-
 /**
  * Represents a sealed interface for different tool choices in the Anthropic client API.
  * This API is marked as internal and may change or be removed without notice.

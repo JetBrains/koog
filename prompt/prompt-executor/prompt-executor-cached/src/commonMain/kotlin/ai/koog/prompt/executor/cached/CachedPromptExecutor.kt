@@ -46,7 +46,8 @@ public class CachedPromptExecutor(
     }
 
     private suspend fun getOrPut(prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel): List<Message.Response> {
-        return cache.get(prompt, tools, clock) ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
+        return cache.get(prompt, tools, clock)
+            ?: nested.execute(prompt, model, tools).also { cache.put(prompt, tools, it) }
     }
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = nested.moderate(prompt, model)

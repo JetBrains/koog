@@ -29,7 +29,7 @@ class JVMFileDocumentEmbeddingStorageTest {
             // Number of intersecting elements (words) in 2 texts
             val intersectionsSize = embedding1.values.count { it in embedding2.values }
             val totalSize = embedding1.values.size + embedding2.values.size
-            return 1.0 - 2.0 * intersectionsSize / totalSize;
+            return 1.0 - 2.0 * intersectionsSize / totalSize
         }
     }
 
@@ -143,11 +143,11 @@ class JVMFileDocumentEmbeddingStorageTest {
             }
 
             // Documents containing "hello" should be more similar (lower distance)
-            val helloDocuments = rankedDocs.filter { 
-                Files.readString(it.document).contains("hello") 
+            val helloDocuments = rankedDocs.filter {
+                Files.readString(it.document).contains("hello")
             }
-            val nonHelloDocuments = rankedDocs.filter { 
-                !Files.readString(it.document).contains("hello") 
+            val nonHelloDocuments = rankedDocs.filter {
+                !Files.readString(it.document).contains("hello")
             }
 
             if (helloDocuments.isNotEmpty() && nonHelloDocuments.isNotEmpty()) {

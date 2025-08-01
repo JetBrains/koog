@@ -70,16 +70,24 @@ public class RetrieveFactsFromHistory(public val concepts: List<Concept>) : Hist
             I've been actively working on this task through approximately $iterationsCount tool interactions. 
             The above summary represents the key findings, attempted approaches, and intermediate results from my work so far.
             
-            I'm ready to continue from this point. Let me quickly orient myself to the current state and proceed with the next logical step based on my previous findings.""".trimIndent()
+            I'm ready to continue from this point. Let me quickly orient myself to the current state and proceed with the next logical step based on my previous findings.
+            """.trimIndent()
 
         val userMessage =
             """Yes, that's correct. Your memory compression accurately captures your progress. Please continue your work from where you left off. 
             For context, you still have access to all the same tools, and the task requirements remain unchanged. Focus on building upon what you've already discovered rather than re-exploring completed paths.
-            Continue with your analysis and implementation.""".trimIndent()
+            Continue with your analysis and implementation.
+            """.trimIndent()
 
         val oldMessages = llmSession.prompt.messages
         val lastResult = oldMessages.filterIsInstance<Message.Tool.Result>().lastOrNull()
-        val lastToolCallMessages = lastResult?.let { result -> oldMessages.filterIsInstance<Message.Tool.Call>().find { it.id == result.id }?.let { listOf(it, result) } } ?: emptyList()
+        val lastToolCallMessages =
+            lastResult?.let { result ->
+                oldMessages.filterIsInstance<Message.Tool.Call>().find {
+                    it.id == result.id
+                }?.let { listOf(it, result) }
+            }
+                ?: emptyList()
 
         val newMessages = Prompt.build(llmSession.prompt.id) {
             assistant(assistantMessage)

@@ -37,6 +37,7 @@ public class DummyAIAgentContext(
      * capabilities are available.
      */
     public val isLLMDefined: Boolean = builder.llm != null
+
     /**
      * Indicates whether the environment for the agent context is defined.
      *
@@ -172,6 +173,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * @see AIAgentEnvironment
      */
     public var environment: AIAgentEnvironment?
+
     /**
      * Represents the input to be used by the AI agent during its execution.
      * This variable can be set to define specific data or context relevant to the agent's task.
@@ -195,6 +197,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * supplied configurations.
      */
     public var config: AIAgentConfigBase?
+
     /**
      * Represents the LLM context associated with an AI agent during testing scenarios.
      * This variable is used to configure and manage the context for an AI agent's
@@ -207,6 +210,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * @see AIAgentLLMContext
      */
     public var llm: AIAgentLLMContext?
+
     /**
      * Represents an optional state manager for an AI agent in the context of building its mock environment.
      * The `stateManager` is responsible for maintaining and managing the internal state of the agent in
@@ -217,6 +221,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * in the mock context.
      */
     public var stateManager: AIAgentStateManager?
+
     /**
      * Represents a concurrent-safe key-value storage used for managing data within the context of mock
      * AI agent construction. This property typically holds an optional instance of [AIAgentStorage],
@@ -229,6 +234,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * internal states of the agent.
      */
     public var storage: AIAgentStorage?
+
     /**
      * Represents the unique identifier associated with the session in the mock builder context.
      *
@@ -236,6 +242,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * run to a specific context or operation.
      */
     public var runId: String?
+
     /**
      * Represents the identifier of a strategy to be used within the context of an AI agent.
      *
@@ -291,6 +298,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * @see AIAgentEnvironment
      */
     override var environment: AIAgentEnvironment? = null
+
     /**
      * Represents the agent's input data used in constructing or testing the agent's context.
      *
@@ -316,6 +324,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * the absence of a specific configuration.
      */
     override var config: AIAgentConfigBase? = null
+
     /**
      * Represents the context for accessing and managing an AI agent's LLM (Large Language Model) configuration
      * and behavior. The `llm` property allows you to define or override the LLM context for the agent,
@@ -326,6 +335,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * fallback mechanisms may be utilized by the containing class.
      */
     override var llm: AIAgentLLMContext? = null
+
     /**
      * An overrideable property for managing the agent's state using an instance of [AIAgentStateManager].
      *
@@ -341,6 +351,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * specific `AIAgentStateManager` instance for managing agent state in custom scenarios.
      */
     override var stateManager: AIAgentStateManager? = null
+
     /**
      * Represents a concurrent-safe key-value storage instance for an AI agent.
      *
@@ -352,6 +363,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * to the context builder. If not provided, the default value remains `null`.
      */
     override var storage: AIAgentStorage? = null
+
     /**
      * Defines the unique identifier for the session context within the agent's lifecycle.
      * This property can be used to correlate and differentiate multiple sessions for the same agent
@@ -360,6 +372,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * The `runId` can be null, indicating that the session has not been associated with an identifier.
      */
     override var runId: String? = null
+
     /**
      * Represents the identifier for the strategy to be used in the agent context.
      *
@@ -462,7 +475,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
                  *
                  * @return A string in the format `DummyProxy<name>`.
                  */
-                override fun toString() = "DummyProxy<${name}>"
+                override fun toString() = "DummyProxy<$name>"
 
                 /**
                  * Checks whether this instance is equal to the specified object.

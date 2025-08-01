@@ -1,7 +1,7 @@
 package ai.koog.agents.features.common.remote.client
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.plugins.logging.*
+import io.ktor.client.plugins.logging.Logger
 
 /**
  * A logging utility class that implements the `Logger` interface, designed to provide logging
@@ -27,7 +27,7 @@ internal class FeatureMessageRemoteClientKtorLogger : Logger {
          * logging functionality, such as outputting debug information or tracing issues within the class operations.
          * It utilizes the `LoggerFactory` to configure and provide the appropriate logging mechanism.
          */
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     /**

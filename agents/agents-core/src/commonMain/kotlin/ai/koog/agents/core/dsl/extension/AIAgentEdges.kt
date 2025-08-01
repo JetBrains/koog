@@ -18,8 +18,7 @@ import kotlin.reflect.KClass
  * @param klass The class to check instance against (not actually used, see implementation comment)
  */
 @EdgeTransformationDslMarker
-public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified T : Any>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onIsInstance(
+public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified T : Any> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onIsInstance(
     /*
      klass is not used, but we need to use this trick to avoid passing all generic parameters on the usage side.
      Removing this parameter and just passing the correct type via generic reified parameter won't work, it requires all
@@ -31,7 +30,6 @@ public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reif
     return onCondition { output -> output is T }
         .transformed { it as T }
 }
-
 
 /**
  * Filters and transforms the intermediate outputs of the AI agent node based on the success results of a tool operation.
@@ -47,8 +45,7 @@ public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reif
  */
 @Suppress("UNCHECKED_CAST")
 @EdgeTransformationDslMarker
-public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onSuccessful(
+public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onSuccessful(
     crossinline condition: suspend (TResult) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result.Success<TResult>, OutgoingInput> =
     onIsInstance(SafeTool.Result.Success::class).transformed { it as SafeTool.Result.Success<TResult> }
@@ -68,8 +65,7 @@ public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolRe
  */
 @Suppress("UNCHECKED_CAST")
 @EdgeTransformationDslMarker
-public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onFailure(
+public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onFailure(
     crossinline condition: suspend (error: String) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result.Failure<TResult>, OutgoingInput> =
     onIsInstance(SafeTool.Result.Failure::class).transformed { it as SafeTool.Result.Failure<TResult> }
@@ -83,8 +79,7 @@ public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolRe
  * @param block A function that evaluates whether to accept a tool call message
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     block: suspend (Message.Tool.Call) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
     return onIsInstance(Message.Tool.Call::class)
@@ -98,8 +93,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param block A function that evaluates the tool arguments to determine if the edge should accept the message
  */
 @EdgeTransformationDslMarker
-public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : ToolArgs>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
+public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : ToolArgs> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<Args, *>,
     crossinline block: suspend (Args) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
@@ -117,8 +111,7 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Ar
  * @param tool The tool to match against
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<*, *>,
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
     return onIsInstance(Message.Tool.Call::class)
@@ -133,8 +126,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param tool The tool to match against
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolNotCalled(
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolNotCalled(
     tool: Tool<*, *>,
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
     return onIsInstance(Message.Tool.Call::class)
@@ -150,8 +142,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param block A function that evaluates the tool result to determine if the edge should accept the message
  */
 @EdgeTransformationDslMarker
-public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result : ToolResult>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolResult(
+public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result : ToolResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolResult(
     tool: Tool<*, Result>,
     crossinline block: suspend (SafeTool.Result<Result>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, ReceivedToolResult, OutgoingInput> {
@@ -167,8 +158,7 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Re
  * @param block A function that evaluates whether to accept a list of tool call messages
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleToolCalls(
+public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleToolCalls(
     block: suspend (List<Message.Tool.Call>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Tool.Call>, OutgoingInput> {
     return onIsInstance(List::class)
@@ -186,8 +176,7 @@ public infix fun <IncomingOutput, OutgoingInput>
  */
 @Suppress("unused")
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleToolResults(
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onMultipleToolResults(
     block: suspend (List<ReceivedToolResult>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<ReceivedToolResult>, OutgoingInput> {
     return onIsInstance(List::class)
@@ -203,8 +192,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
  * @param block A function that evaluates whether to accept an assistant message
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessage(
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessage(
     block: suspend (Message.Assistant) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, String, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)
@@ -212,15 +200,13 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
         .transformed { it.content }
 }
 
-
 /**
  * Creates an edge that filters assistant messages based on a custom condition and extracts their content.
  *
  * @param block A function that evaluates whether to accept an assistant message
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleAssistantMessages(
+public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Response>, OutgoingInput>.onMultipleAssistantMessages(
     block: suspend (List<Message.Assistant>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Assistant>, OutgoingInput> {
     return onIsInstance(List::class)
@@ -237,8 +223,7 @@ public infix fun <IncomingOutput, OutgoingInput>
  * @param block A function that evaluates whether to accept an assistant message with media
  */
 @EdgeTransformationDslMarker
-public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput>
-        AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessageWithMedia(
+public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessageWithMedia(
     block: suspend (Message.Assistant) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, Attachment, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)

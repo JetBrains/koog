@@ -2,11 +2,11 @@ package ai.koog.agents.example.subgraphwithtask
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.ext.agent.ProvideVerifiedSubgraphResult
 import ai.koog.agents.ext.agent.VerifiedSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
-import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 
@@ -30,7 +30,7 @@ fun customWizardStrategy(
             2. Initially, the project is empty.
             3. DO NOT FINISH BEFORE CREATING ALL FILES AND FOLDERS.
             4. ONLY CALL TOOLS, DON'T CHAT WITH ME!!!!!!!!!!!!!!!!!!
-            """.trimIndent()
+        """.trimIndent()
     }
 
     val fix by subgraphWithTask<VerifiedSubgraphResult>(
@@ -45,7 +45,7 @@ fun customWizardStrategy(
 
             3. DO NOT FINISH BEFORE YOU CHANGED EVERYTHING THAT IS REQUIRED TO MAKE THE PROJECT WORK.
             4. ONLY CALL TOOLS, DON'T CHAT WITH ME!!!!!!!!!!!!!!!!!!
-            """.trimIndent()
+        """.trimIndent()
     }
 
     val verify by subgraphWithVerification(
@@ -61,7 +61,7 @@ fun customWizardStrategy(
                 YOU CAN ALSO READ FILES AND DIRECTORIES IF YOU LIKE.
                 
                 Once you are finished and 100% sure the project is correct, provide the result by calling the `${ProvideVerifiedSubgraphResult.name}` tool.
-            """.trimIndent()
+        """.trimIndent()
     }
 
     edge(nodeStart forwardTo generate transformed { })

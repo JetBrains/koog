@@ -124,8 +124,11 @@ object Models {
             .split(",")
             .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
-        
+
         val shouldSkip = skipProviders.contains(provider.id.lowercase())
-        assumeTrue(!shouldSkip, "Test skipped because provider ${provider.display} is in the skip list (${skipProvidersRaw})")
+        assumeTrue(
+            !shouldSkip,
+            "Test skipped because provider ${provider.display} is in the skip list ($skipProvidersRaw)"
+        )
     }
 }

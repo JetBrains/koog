@@ -43,7 +43,7 @@ public val OllamaModelCard.nameWithoutTag: String get() = name.withoutTag
 
 private val logger = KotlinLogging.logger { }
 
-private const val DEFAULT_CONTEXT_LENGTH : Long = 4_096
+private const val DEFAULT_CONTEXT_LENGTH: Long = 4_096
 
 /**
  * Converts an instance of `OllamaModelCard` to an `LLModel` representation.

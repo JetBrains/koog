@@ -30,8 +30,10 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
 
     logger.debug { "Configured endpoint for Langfuse telemetry: $url" }
 
-    val publicKey = requireNotNull(langfusePublicKey ?: System.getenv()["LANGFUSE_PUBLIC_KEY"]) { "LANGFUSE_PUBLIC_KEY is not set" }
-    val secretKey = requireNotNull(langfuseSecretKey ?: System.getenv()["LANGFUSE_SECRET_KEY"]) { "LANGFUSE_SECRET_KEY is not set" }
+    val publicKey =
+        requireNotNull(langfusePublicKey ?: System.getenv()["LANGFUSE_PUBLIC_KEY"]) { "LANGFUSE_PUBLIC_KEY is not set" }
+    val secretKey =
+        requireNotNull(langfuseSecretKey ?: System.getenv()["LANGFUSE_SECRET_KEY"]) { "LANGFUSE_SECRET_KEY is not set" }
 
     val credentials = "$publicKey:$secretKey"
     val auth = Base64.getEncoder().encodeToString(credentials.toByteArray(Charsets.UTF_8))

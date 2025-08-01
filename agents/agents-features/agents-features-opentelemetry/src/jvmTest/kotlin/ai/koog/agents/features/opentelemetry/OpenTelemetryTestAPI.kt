@@ -28,7 +28,6 @@ internal object OpenTelemetryTestAPI {
         assistantPrompt: String? = null,
         installFeatures: AIAgent.FeatureContext.() -> Unit = { }
     ): AIAgent<String, String> {
-
         val agentConfig = AIAgentConfig(
             prompt = prompt(promptId ?: "Test prompt", clock = clock, params = LLMParams(temperature = temperature)) {
                 system(systemPrompt ?: "Test system message")

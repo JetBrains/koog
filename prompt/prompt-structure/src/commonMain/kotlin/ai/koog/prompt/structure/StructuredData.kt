@@ -2,7 +2,6 @@ package ai.koog.prompt.structure
 
 import ai.koog.prompt.params.LLMParams
 
-
 /**
  * Represents a generic structure for handling data with a specific schema.
  *
@@ -30,6 +29,7 @@ public abstract class StructuredData<TStruct>(
      * @return The structured data representation of type TStruct derived from the input text.
      */
     public abstract fun parse(text: String): TStruct
+
     /**
      * Formats the given structured data into a human-readable string representation.
      *

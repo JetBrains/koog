@@ -29,7 +29,7 @@ class FileDocumentEmbeddingStorageTest {
             // Number of intersecting elements (words) in 2 texts
             val intersectionsSize = embedding1.values.count { it in embedding2.values }
             val totalSize = embedding1.values.size + embedding2.values.size
-            return 1.0 - 2.0 * intersectionsSize / totalSize;
+            return 1.0 - 2.0 * intersectionsSize / totalSize
         }
     }
 
@@ -50,7 +50,6 @@ class FileDocumentEmbeddingStorageTest {
         // Store document
         val documentId = storage.store(document)
         assertNotNull(documentId)
-
 
         // Read document back
         val retrievedDocument = storage.read(documentId)
@@ -143,7 +142,6 @@ class FileDocumentEmbeddingStorageTest {
             val id = storage.store(doc)
             documentIds.add(id)
         }
-
 
         // Verify all documents can be retrieved
         documentIds.zip(documents).forEach { (id, expectedDoc) ->

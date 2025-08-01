@@ -40,7 +40,6 @@ class MarkdownListTest {
         assertEquals(expected, md)
     }
 
-
     @Test
     fun testNestedLists() {
         val md = markdown {
@@ -108,12 +107,12 @@ class MarkdownListTest {
 
             bulleted {
                 item("Frontend")
-                item() {
+                item {
                     +"Backend"
                     bulleted {
                         item("Set up database")
                         item("Create API endpoints")
-                        item() {
+                        item {
                             +"Implement authentication"
                             numbered {
                                 item("Research OAuth providers")
@@ -123,7 +122,7 @@ class MarkdownListTest {
                         }
                     }
                 }
-                item() {
+                item {
                     +"DevOps"
                     numbered {
                         item("Set up CI/CD")
@@ -137,7 +136,7 @@ class MarkdownListTest {
 
             numbered {
                 item("Planning")
-                item() {
+                item {
                     +"Development"
                     bulleted {
                         item("Sprint 1")

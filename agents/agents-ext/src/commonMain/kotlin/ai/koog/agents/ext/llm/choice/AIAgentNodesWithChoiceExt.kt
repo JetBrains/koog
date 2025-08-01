@@ -28,7 +28,6 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendResultsMultipleChoices(
         }
     }
 
-
 /**
  * A node that chooses an LLM choice based on the given strategy.
  *
@@ -43,7 +42,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeSelectLLMChoice(
     node(name) { choices ->
         llm.writeSession {
             choiceSelectionStrategy.choose(prompt, choices).also { choice ->
-                choice.forEach { updatePrompt { message(it)} }
+                choice.forEach { updatePrompt { message(it) } }
             }
         }
     }

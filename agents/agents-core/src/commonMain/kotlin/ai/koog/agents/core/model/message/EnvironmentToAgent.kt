@@ -27,6 +27,7 @@ public sealed interface EnvironmentToAgentContent {
      * for routing and processing communication or actions.
      */
     public val agentId: String
+
     /**
      * Represents the textual content of a message exchanged between the environment and the agent.
      *
@@ -56,6 +57,7 @@ public abstract class EnvironmentInitializeToAgentContent : EnvironmentToAgentCo
      * entity in multi-agent systems or when multiple agents operate within the same environment.
      */
     abstract override val agentId: String
+
     /**
      * A contextual message providing details related to the interaction between the environment
      * and an agent.
@@ -125,6 +127,7 @@ public abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentCo
      * identifier is assigned or supported.
      */
     public abstract val toolCallId: String?
+
     /**
      * The name of the tool associated with the current execution or message.
      *

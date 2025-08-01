@@ -54,5 +54,4 @@ kotlin {
     explicitApi()
 }
 
-
 publishToMaven()

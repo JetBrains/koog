@@ -31,7 +31,6 @@ public sealed interface Attachment {
      */
     public val fileName: String?
 
-
     /**
      * Image attachment (jpg, png, gif, etc.).
      */
@@ -99,7 +98,7 @@ public sealed interface AttachmentContent {
      * Plain text content.
      */
     @Serializable
-    public data class PlainText(val text: String): AttachmentContent {
+    public data class PlainText(val text: String) : AttachmentContent {
         override fun toString(): String {
             return "PlainText(length=${text.length})"
         }
@@ -109,7 +108,7 @@ public sealed interface AttachmentContent {
      * URL of the content (e.g. image or a document).
      */
     @Serializable
-    public data class URL(val url: String): AttachmentContent
+    public data class URL(val url: String) : AttachmentContent
 
     /**
      * Binary content.
@@ -125,7 +124,7 @@ public sealed interface AttachmentContent {
          * Binary content represented as byte array.
          */
         @Serializable
-        public data class Bytes(val data: ByteArray): Binary {
+        public data class Bytes(val data: ByteArray) : Binary {
             /**
              * Lazily evaluated Base64 representation of the underlying byte array
              */
@@ -154,7 +153,7 @@ public sealed interface AttachmentContent {
          * Binary content represented as Base64 encoded string.
          */
         @Serializable
-        public data class Base64(override val base64: String): Binary {
+        public data class Base64(override val base64: String) : Binary {
             override fun toString(): String {
                 return "Base64(length=${base64.length})"
             }

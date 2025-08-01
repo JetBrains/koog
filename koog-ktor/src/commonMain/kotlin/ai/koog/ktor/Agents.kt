@@ -62,7 +62,6 @@ public suspend inline fun <reified Input, reified Output> RoutingContext.aiAgent
     tools: ToolRegistry = ToolRegistry.EMPTY,
 ): AIAgent<Input, Output> = aiAgent(typeOf<Input>(), typeOf<Output>(), strategy, model, tools)
 
-
 /**
  * Creates an agent using [aiAgent], and immediately runs it given the [input].
  * When the agent is completed it provides the final [Output].

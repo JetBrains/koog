@@ -6,8 +6,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 /**
  * No-op implementation of [PersistencyStorageProvider].
  */
-public class NoPersistencyStorageProvider: PersistencyStorageProvider {
-    private val logger = KotlinLogging.logger {  }
+public class NoPersistencyStorageProvider : PersistencyStorageProvider {
+    private val logger = KotlinLogging.logger { }
 
     override suspend fun getCheckpoints(): List<AgentCheckpointData> {
         return emptyList()

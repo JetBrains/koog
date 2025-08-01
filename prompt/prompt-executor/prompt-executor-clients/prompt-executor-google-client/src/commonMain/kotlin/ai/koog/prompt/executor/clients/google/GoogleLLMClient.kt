@@ -17,25 +17,39 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.sse.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.*
-import io.ktor.http.*
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
 import io.ktor.http.headers
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -154,7 +168,11 @@ public open class GoogleLLMClient(
         }
     }
 
-    override suspend fun executeMultipleChoices(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<LLMChoice> {
+    override suspend fun executeMultipleChoices(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): List<LLMChoice> {
         logger.debug { "Executing prompt with multiple choices: $prompt with tools: $tools and model: $model" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -300,11 +318,24 @@ public open class GoogleLLMClient(
             ?.let { GoogleContent(parts = it) }
 
         val generationConfig = GoogleGenerationConfig(
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
-            numberOfChoices = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
+            temperature = if (model.capabilities.contains(
+                    LLMCapability.Temperature
+                )
+            ) {
+                prompt.params.temperature
+            } else {
+                null
+            },
+            numberOfChoices = if (model.capabilities.contains(
+                    LLMCapability.MultipleChoices
+                )
+            ) {
+                prompt.params.numberOfChoices
+            } else {
+                null
+            },
             maxOutputTokens = 2048,
         )
-
 
         val functionCallingConfig = when (val toolChoice = prompt.params.toolChoice) {
             LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
@@ -343,7 +374,9 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
-                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                            else -> throw IllegalArgumentException(
+                                "Unsupported image attachment content: ${content::class}"
+                            )
                         }
 
                         add(GooglePart.InlineData(blob))
@@ -356,7 +389,9 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
-                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
+                            else -> throw IllegalArgumentException(
+                                "Unsupported audio attachment content: ${content::class}"
+                            )
                         }
 
                         add(GooglePart.InlineData(blob))
@@ -369,7 +404,9 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
-                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                            else -> throw IllegalArgumentException(
+                                "Unsupported file attachment content: ${content::class}"
+                            )
                         }
 
                         add(GooglePart.InlineData(blob))
@@ -382,7 +419,9 @@ public open class GoogleLLMClient(
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
                             is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
-                            else -> throw IllegalArgumentException("Unsupported video attachment content: ${content::class}")
+                            else -> throw IllegalArgumentException(
+                                "Unsupported video attachment content: ${content::class}"
+                            )
                         }
 
                         add(GooglePart.InlineData(blob))
@@ -422,14 +461,20 @@ public open class GoogleLLMClient(
 
                 is ToolParameterType.Object -> {
                     put("type", "object")
-                    put("properties", buildJsonObject {
-                        type.properties.forEach { property ->
-                            put(property.name, buildJsonObject {
-                                putType(property.type)
-                                put("description", property.description)
-                            })
+                    put(
+                        "properties",
+                        buildJsonObject {
+                            type.properties.forEach { property ->
+                                put(
+                                    property.name,
+                                    buildJsonObject {
+                                        putType(property.type)
+                                        put("description", property.description)
+                                    }
+                                )
+                            }
                         }
-                    })
+                    )
                 }
             }
         }

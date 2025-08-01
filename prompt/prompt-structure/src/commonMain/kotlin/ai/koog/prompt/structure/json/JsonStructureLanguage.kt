@@ -63,6 +63,7 @@ public class JsonStructureLanguage(
      * @return A JSON string representation of the given value.
      */
     public fun <T> string(value: T, serializer: KSerializer<T>): String = json.encodeToString(serializer, value)
+
     /**
      * Serializes a given value of type [T] into its JSON string representation using the default serializer.
      *
@@ -111,7 +112,7 @@ public class JsonStructureLanguage(
      * @return A cleaned string containing only JSON-related lines or primitives.
      */
     private fun cleanup(text: String): String {
-        //cleanup some lines that are not json
+        // cleanup some lines that are not json
         var lines = text.lines().map { it.trim() }
         lines = lines.filter { it.isNotBlank() }
         lines = lines.filter {

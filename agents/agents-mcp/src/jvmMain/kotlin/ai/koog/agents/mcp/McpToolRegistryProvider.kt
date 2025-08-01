@@ -2,8 +2,8 @@ package ai.koog.agents.mcp
 
 import ai.koog.agents.core.tools.ToolRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.plugins.sse.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.sse.SSE
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
@@ -23,7 +23,7 @@ import kotlinx.io.buffered
  * 4. Registering the transformed tools in a ToolRegistry
  */
 public object McpToolRegistryProvider {
-    private val logger = KotlinLogging.logger (McpToolRegistryProvider::class.qualifiedName!!)
+    private val logger = KotlinLogging.logger(McpToolRegistryProvider::class.qualifiedName!!)
 
     /**
      * Default name for the MCP client when connecting to an MCP server.
@@ -34,7 +34,6 @@ public object McpToolRegistryProvider {
      * Default version for the MCP client when connecting to an MCP server.
      */
     public const val DEFAULT_MCP_CLIENT_VERSION: String = "1.0.0"
-
 
     /**
      * Creates a default standard input/output transport for a provided process.

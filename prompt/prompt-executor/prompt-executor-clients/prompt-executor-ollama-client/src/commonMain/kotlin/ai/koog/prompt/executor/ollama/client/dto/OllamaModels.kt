@@ -32,7 +32,6 @@ internal data class OllamaToolCallDTO(
     )
 }
 
-
 /**
  * Tool definition for the chat API.
  */

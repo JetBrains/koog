@@ -4,7 +4,21 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
-import ai.koog.agents.core.feature.handler.*
+import ai.koog.agents.core.feature.handler.AfterLLMCallContext
+import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
+import ai.koog.agents.core.feature.handler.AgentFinishedContext
+import ai.koog.agents.core.feature.handler.AgentRunErrorContext
+import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
+import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
+import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
+import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
+import ai.koog.agents.core.feature.handler.StrategyFinishContext
+import ai.koog.agents.core.feature.handler.StrategyStartContext
+import ai.koog.agents.core.feature.handler.ToolCallContext
+import ai.koog.agents.core.feature.handler.ToolCallFailureContext
+import ai.koog.agents.core.feature.handler.ToolCallResultContext
+import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -32,7 +46,7 @@ import kotlin.uuid.Uuid
  *     onToolCall { stage, tool, toolArgs ->
  *         println("Tool called: ${tool.name} with args $toolArgs")
  *     }
- *     
+ *
  *     onAgentFinished { strategyName, result ->
  *         println("Agent finished with result: $result")
  *     }
@@ -91,7 +105,6 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //endregion Tool Call Handlers
 
-
     //region Deprecated Agent Handlers
 
     /**
@@ -104,8 +117,14 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * To ensure future compatibility, transition to the recommended function-based approach for appending handlers.
      */
-    @Deprecated(message = "Please use onBeforeAgentStarted() instead", replaceWith = ReplaceWith("onBeforeAgentStarted(handler)"))
-    public var onBeforeAgentStarted: suspend (strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *>) -> Unit = { strategy: AIAgentStrategy<* ,*>, agent: AIAgent<*, *> -> }
+    @Deprecated(
+        message = "Please use onBeforeAgentStarted() instead",
+        replaceWith = ReplaceWith("onBeforeAgentStarted(handler)")
+    )
+    public var onBeforeAgentStarted: suspend (
+        strategy: AIAgentStrategy<*, *>,
+        agent: AIAgent<*, *>
+    ) -> Unit = { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> -> }
         set(value) {
             this.onBeforeAgentStarted { eventContext ->
                 value(eventContext.strategy, eventContext.agent)
@@ -122,7 +141,10 @@ public class EventHandlerConfig : FeatureConfig() {
      * @deprecated Use `onAgentFinished(handler)` instead.
      */
     @Deprecated(message = "Please use onAgentFinished() instead", replaceWith = ReplaceWith("onAgentFinished(handler)"))
-    public var onAgentFinished: suspend (strategyName: String, result: Any?) -> Unit = { strategyName: String, result: Any? -> }
+    public var onAgentFinished: suspend (
+        strategyName: String,
+        result: Any?
+    ) -> Unit = { strategyName: String, result: Any? -> }
         set(value) {
             this.onAgentFinished { eventContext ->
                 value("", eventContext.result)
@@ -138,7 +160,11 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     @OptIn(ExperimentalUuidApi::class)
     @Deprecated(message = "Please use onAgentRunError() instead", replaceWith = ReplaceWith("onAgentRunError(handler)"))
-    public var onAgentRunError: suspend (strategyName: String, sessionUuid: Uuid?, throwable: Throwable) -> Unit = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
+    public var onAgentRunError: suspend (
+        strategyName: String,
+        sessionUuid: Uuid?,
+        throwable: Throwable
+    ) -> Unit = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
         set(value) {
             this.onAgentRunError { eventContext ->
                 value("", Uuid.parse(eventContext.runId), eventContext.throwable)
@@ -159,8 +185,13 @@ public class EventHandlerConfig : FeatureConfig() {
      * @deprecated Use `onStrategyStarted(handler)` instead for appending multiple handlers.
      * Replace this property with the `onStrategyStarted(handler)` function for better extensibility.
      */
-    @Deprecated(message = "Please use onStrategyStarted() instead", replaceWith = ReplaceWith("onStrategyStarted(handler)"))
-    public var onStrategyStarted: suspend (strategy: AIAgentStrategy<*, *>) -> Unit = { strategy: AIAgentStrategy<*, *> -> }
+    @Deprecated(
+        message = "Please use onStrategyStarted() instead",
+        replaceWith = ReplaceWith("onStrategyStarted(handler)")
+    )
+    public var onStrategyStarted: suspend (
+        strategy: AIAgentStrategy<*, *>
+    ) -> Unit = { strategy: AIAgentStrategy<*, *> -> }
         set(value) {
             this.onStrategyStarted { eventContext ->
                 value(eventContext.strategy)
@@ -174,8 +205,14 @@ public class EventHandlerConfig : FeatureConfig() {
      * @deprecated Use `onStrategyFinished(handler)` instead for appending handlers.
      * This variable is retained for backward compatibility but is not the recommended approach.
      */
-    @Deprecated(message = "Please use onStrategyFinished() instead", replaceWith = ReplaceWith("onStrategyFinished(handler)"))
-    public var onStrategyFinished: suspend (strategy: AIAgentStrategy<*, *>, result: Any?) -> Unit = { strategy: AIAgentStrategy<*, *>, result: Any? -> }
+    @Deprecated(
+        message = "Please use onStrategyFinished() instead",
+        replaceWith = ReplaceWith("onStrategyFinished(handler)")
+    )
+    public var onStrategyFinished: suspend (
+        strategy: AIAgentStrategy<*, *>,
+        result: Any?
+    ) -> Unit = { strategy: AIAgentStrategy<*, *>, result: Any? -> }
         set(value) {
             this.onStrategyFinished { eventContext ->
                 value(eventContext.strategy, eventContext.result)
@@ -198,7 +235,11 @@ public class EventHandlerConfig : FeatureConfig() {
      * Deprecated: Use the `onBeforeNode(handler)` method for appending handlers to the event.
      */
     @Deprecated(message = "Please use onBeforeNode() instead", replaceWith = ReplaceWith("onBeforeNode(handler)"))
-    public var onBeforeNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? -> }
+    public var onBeforeNode: suspend (
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentContextBase,
+        input: Any?
+    ) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? -> }
         set(value) {
             this.onBeforeNode { eventContext ->
                 value(eventContext.node, eventContext.context, eventContext.input)
@@ -219,13 +260,17 @@ public class EventHandlerConfig : FeatureConfig() {
      * as this variable is deprecated.
      */
     @Deprecated(message = "Please use onAfterNode() instead", replaceWith = ReplaceWith("onAfterNode(handler)"))
-    public var onAfterNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? -> }
+    public var onAfterNode: suspend (
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentContextBase,
+        input: Any?,
+        output: Any?
+    ) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? -> }
         set(value) {
             this.onAfterNode { eventContext ->
                 value(eventContext.node, eventContext.context, eventContext.input, eventContext.output)
             }
         }
-
 
     //endregion Deprecated Node Handlers
 
@@ -241,7 +286,12 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     @OptIn(ExperimentalUuidApi::class)
     @Deprecated(message = "Please use onBeforeLLMCall() instead", replaceWith = ReplaceWith("onBeforeLLMCall(handler)"))
-    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
+    public var onBeforeLLMCall: suspend (
+        prompt: Prompt,
+        tools: List<ToolDescriptor>,
+        model: LLModel,
+        sessionUuid: Uuid
+    ) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
         set(value) {
             this.onBeforeLLMCall { eventContext ->
                 value(eventContext.prompt, eventContext.tools, eventContext.model, Uuid.parse(eventContext.runId))
@@ -264,10 +314,29 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     @OptIn(ExperimentalUuidApi::class)
     @Deprecated(message = "Please use onAfterLLMCall() instead", replaceWith = ReplaceWith("onAfterLLMCall(handler)"))
-    public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionUuid: Uuid -> }
+    public var onAfterLLMCall: suspend (
+        prompt: Prompt,
+        tools: List<ToolDescriptor>,
+        model: LLModel,
+        responses: List<Message.Response>,
+        sessionUuid: Uuid
+    ) -> Unit = {
+            prompt: Prompt,
+            tools: List<ToolDescriptor>,
+            model: LLModel,
+            responses: List<Message.Response>,
+            sessionUuid: Uuid
+        ->
+    }
         set(value) {
             this.onAfterLLMCall { eventContext ->
-                value(eventContext.prompt, eventContext.tools, eventContext.model, eventContext.responses, Uuid.parse(eventContext.runId))
+                value(
+                    eventContext.prompt,
+                    eventContext.tools,
+                    eventContext.model,
+                    eventContext.responses,
+                    Uuid.parse(eventContext.runId)
+                )
             }
         }
 
@@ -283,7 +352,10 @@ public class EventHandlerConfig : FeatureConfig() {
      * @deprecated Use `onToolCall(handler)` instead for appending handlers in a preferred manner.
      */
     @Deprecated(message = "Please use onToolCall() instead", replaceWith = ReplaceWith("onToolCall(handler)"))
-    public var onToolCall: suspend (tool: Tool<*, *>, toolArgs: ToolArgs) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs -> }
+    public var onToolCall: suspend (
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs
+    ) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs -> }
         set(value) {
             this.onToolCall { eventContext ->
                 value(eventContext.tool, eventContext.toolArgs)
@@ -301,8 +373,15 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * This property is deprecated and maintained for backward compatibility.
      */
-    @Deprecated(message = "Please use onToolValidationError() instead", replaceWith = ReplaceWith("onToolValidationError(handler)"))
-    public var onToolValidationError: suspend (tool: Tool<*, *>, toolArgs: ToolArgs, value: String) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs, value: String -> }
+    @Deprecated(
+        message = "Please use onToolValidationError() instead",
+        replaceWith = ReplaceWith("onToolValidationError(handler)")
+    )
+    public var onToolValidationError: suspend (
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs,
+        value: String
+    ) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs, value: String -> }
         set(value) {
             this.onToolValidationError { eventContext ->
                 value(eventContext.tool, eventContext.toolArgs, eventContext.error)
@@ -317,8 +396,15 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * Replacing this property with the newer `onToolCallFailure` function ensures better consistency and management of handlers.
      */
-    @Deprecated(message = "Please use onToolCallFailure() instead", replaceWith = ReplaceWith("onToolCallFailure(handler)"))
-    public var onToolCallFailure: suspend (tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable -> }
+    @Deprecated(
+        message = "Please use onToolCallFailure() instead",
+        replaceWith = ReplaceWith("onToolCallFailure(handler)")
+    )
+    public var onToolCallFailure: suspend (
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs,
+        throwable: Throwable
+    ) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs, throwable: Throwable -> }
         set(value) {
             this.onToolCallFailure { eventContext ->
                 value(eventContext.tool, eventContext.toolArgs, eventContext.throwable)
@@ -332,8 +418,15 @@ public class EventHandlerConfig : FeatureConfig() {
      * @deprecated Use the `onToolCallResult(handler)` function instead. This property will be removed in future versions.
      * @see onToolCallResult
      */
-    @Deprecated(message = "Please use onToolCallResult() instead", replaceWith = ReplaceWith("onToolCallResult(handler)"))
-    public var onToolCallResult: suspend (tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult?) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult? -> }
+    @Deprecated(
+        message = "Please use onToolCallResult() instead",
+        replaceWith = ReplaceWith("onToolCallResult(handler)")
+    )
+    public var onToolCallResult: suspend (
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs,
+        result: ToolResult?
+    ) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs, result: ToolResult? -> }
         set(value) {
             this.onToolCallResult { eventContext ->
                 value(eventContext.tool, eventContext.toolArgs, eventContext.result)
@@ -341,7 +434,6 @@ public class EventHandlerConfig : FeatureConfig() {
         }
 
     //endregion Deprecated Tool Call Handlers
-
 
     //region Agent Handlers
 

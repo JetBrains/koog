@@ -859,7 +859,7 @@ class MarkdownParserTest {
                 - Feature 3.2
                 - Feature 3.3
                 - Feature 3.4
-            """.trimIndent()
+                """.trimIndent()
             )
         }
 

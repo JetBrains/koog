@@ -64,7 +64,7 @@ public data class LLMParams(
          * It extends the Schema interface and has a property for schema representation.
          */
         @Serializable
-        public sealed interface JSON: Schema {
+        public sealed interface JSON : Schema {
             /**
              * Represents the JSON schema definition as a JsonObject.
              *
@@ -87,6 +87,7 @@ public data class LLMParams(
              */
             @Serializable
             public data class Simple(override val name: String, override val schema: JsonObject) : JSON
+
             /**
              * Represents a complete JSON schema structure.
              *
@@ -110,24 +111,24 @@ public data class LLMParams(
          *  LLM will call the tool [name] as a response
          */
         @Serializable
-        public data class Named(val name: String): ToolChoice()
+        public data class Named(val name: String) : ToolChoice()
 
         /**
          * LLM will not call tools at all, and only generate text
          */
         @Serializable
-        public object None: ToolChoice()
+        public object None : ToolChoice()
 
         /**
          * LLM will automatically decide whether to call tools or to generate text
          */
         @Serializable
-        public object Auto: ToolChoice()
+        public object Auto : ToolChoice()
 
         /**
          * LLM will only call tools
          */
         @Serializable
-        public object Required: ToolChoice()
+        public object Required : ToolChoice()
     }
 }

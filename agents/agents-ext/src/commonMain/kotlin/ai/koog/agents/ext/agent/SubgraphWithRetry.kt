@@ -96,17 +96,17 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
         // Repeat the action with initial input when condition is not met and the number of retries does not exceed max retries.
         edge(
             decide forwardTo beforeAction
-                    onCondition { result -> !result.success && result.retryCount < maxRetries }
-                    transformed {
-                @Suppress("UNCHECKED_CAST")
-                storage.getValue(initialInputKey) as Input
-            }
+                onCondition { result -> !result.success && result.retryCount < maxRetries }
+                transformed {
+                    @Suppress("UNCHECKED_CAST")
+                    storage.getValue(initialInputKey) as Input
+                }
         )
 
         // Otherwise return the last iteration result.
         edge(
             decide forwardTo cleanup
-                    onCondition { result -> result.success || result.retryCount >= maxRetries }
+                onCondition { result -> result.success || result.retryCount >= maxRetries }
         )
 
         cleanup then nodeFinish

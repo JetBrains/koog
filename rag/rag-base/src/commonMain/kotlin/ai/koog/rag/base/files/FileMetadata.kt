@@ -28,6 +28,7 @@ public data class FileMetadata(
          * between files and directories.
          */
         File,
+
         /**
          * Represents a directory in the file system.
          *
@@ -65,6 +66,7 @@ public data class FileMetadata(
          * Associated with the string display value "text".
          */
         Text("text"),
+
         /**
          * Represents the binary file content type within the FileContent enum.
          *
@@ -72,6 +74,7 @@ public data class FileMetadata(
          * It provides a display string ("binary") to identify this content type.
          */
         Binary("binary"),
+
         /**
          * Represents a file content type that is not applicable or relevant.
          * Typically used in scenarios where the file content type does not
@@ -79,6 +82,6 @@ public data class FileMetadata(
          *
          * This enumeration is part of the `FileContent` enum.
          */
-        Inapplicable("inapplicable");
+        Inapplicable("inapplicable")
     }
 }

@@ -9,7 +9,9 @@ import kotlinx.io.Source
  * Filters the current read-only file system implementation such that
  * only paths that are accepted by [filter] are visible and accessible.
  */
-public fun <Path> FileSystemProvider.ReadOnly<Path>.filter(filter: PathFilter<Path>): FileSystemProvider.ReadOnly<Path> {
+public fun <Path> FileSystemProvider.ReadOnly<Path>.filter(
+    filter: PathFilter<Path>
+): FileSystemProvider.ReadOnly<Path> {
     return FilteredReadOnly(this, filter)
 }
 
@@ -17,7 +19,9 @@ public fun <Path> FileSystemProvider.ReadOnly<Path>.filter(filter: PathFilter<Pa
  * Filters the current read-write file system implementation such that
  * only paths that are accepted by [filter] are visible and accessible.
  */
-public fun <Path> FileSystemProvider.ReadWrite<Path>.filter(filter: PathFilter<Path>): FileSystemProvider.ReadWrite<Path> {
+public fun <Path> FileSystemProvider.ReadWrite<Path>.filter(
+    filter: PathFilter<Path>
+): FileSystemProvider.ReadWrite<Path> {
     return FilteredReadWrite(this, filter)
 }
 
@@ -119,6 +123,4 @@ internal class FilteredReadWrite<P>(
         ensureAllowed(fs.fromRelativeString(parent, name))
         fs.delete(parent, name)
     }
-
-
 }

@@ -8,8 +8,20 @@ import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
-import ai.koog.agents.features.opentelemetry.event.*
-import ai.koog.agents.features.opentelemetry.span.*
+import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
+import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
+import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
+import ai.koog.agents.features.opentelemetry.event.ModerationResponseEvent
+import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
+import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
+import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
+import ai.koog.agents.features.opentelemetry.span.CreateAgentSpan
+import ai.koog.agents.features.opentelemetry.span.ExecuteToolSpan
+import ai.koog.agents.features.opentelemetry.span.InferenceSpan
+import ai.koog.agents.features.opentelemetry.span.InvokeAgentSpan
+import ai.koog.agents.features.opentelemetry.span.NodeExecuteSpan
+import ai.koog.agents.features.opentelemetry.span.SpanEndStatus
+import ai.koog.agents.features.opentelemetry.span.SpanProcessor
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.trace.StatusCode
@@ -55,14 +67,18 @@ public class OpenTelemetry {
             val spanProcessor = SpanProcessor(tracer)
 
             // Stop all unfinished spans on a process finish to report them
-            Runtime.getRuntime().addShutdownHook(Thread {
-                if (spanProcessor.spansCount > 1) {
-                    logger.warn { "Unfinished spans detected. Please check your code for unclosed spans." }
-                }
+            Runtime.getRuntime().addShutdownHook(
+                Thread {
+                    if (spanProcessor.spansCount > 1) {
+                        logger.warn { "Unfinished spans detected. Please check your code for unclosed spans." }
+                    }
 
-                logger.debug { "Closing unended OpenTelemetry spans on process shutdown (size: ${spanProcessor.spansCount})" }
-                spanProcessor.endUnfinishedSpans()
-            })
+                    logger.debug {
+                        "Closing unended OpenTelemetry spans on process shutdown (size: ${spanProcessor.spansCount})"
+                    }
+                    spanProcessor.endUnfinishedSpans()
+                }
+            )
 
             //region Agent
 

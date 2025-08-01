@@ -15,8 +15,9 @@ class SimpleAzureOpenAiExecutorTest {
     @Test
     fun shouldFormProperUrlFromAzureSettings() {
         val mockResponses = mapOf(
-            "https://azure-resource-name.openai.azure.com/openai/deployments/azure-deployment-name/chat/completions?api-version=2025-01-01-preview" to MockResponse(
-                content = """{
+            "https://azure-resource-name.openai.azure.com/openai/deployments/azure-deployment-name/chat/completions?api-version=2025-01-01-preview" to
+                MockResponse(
+                    content = """{
                     "choices": [
                         {
                             "finish_reason": "stop",
@@ -40,8 +41,8 @@ class SimpleAzureOpenAiExecutorTest {
                         }
                     ]
                 }""",
-                status = HttpStatusCode.OK,
-            )
+                    status = HttpStatusCode.OK,
+                )
         )
         val mockClient = createMockHttpClient(mockResponses)
 

@@ -98,7 +98,7 @@ class SystemMessageEventTest {
     //region Private Methods
 
     private fun createTestSystemMessage(content: String): Message.System = Message.System(
-        content = content, 
+        content = content,
         metaInfo = RequestMetaInfo(Clock.System.now())
     )
 

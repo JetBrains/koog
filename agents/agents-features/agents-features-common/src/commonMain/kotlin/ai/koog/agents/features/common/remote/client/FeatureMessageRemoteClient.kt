@@ -3,19 +3,35 @@ package ai.koog.agents.features.common.remote.client
 import ai.koog.agents.features.common.message.FeatureMessage
 import ai.koog.agents.features.common.remote.client.config.ClientConnectionConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
-import io.ktor.client.plugins.sse.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.sse.*
-import kotlinx.coroutines.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.plugins.sse.ClientSSESession
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.sseSession
+import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.http.headers
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.sse.ServerSentEvent
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.serializer
 import kotlin.properties.Delegates
 
@@ -37,7 +53,7 @@ public class FeatureMessageRemoteClient(
 ) : FeatureMessageClient {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     private var isInitialized = false
@@ -47,7 +63,6 @@ public class FeatureMessageRemoteClient(
     private var sseJob: Job? = null
 
     private val client: HttpClient = baseClient.prepare()
-
 
     /**
      * Indicates whether the client is currently connected to the remote feature messaging service.
@@ -87,7 +102,9 @@ public class FeatureMessageRemoteClient(
 
         createSSESession()
 
-        logger.info { "Feature Message Remote Client. Client is connected successfully to server: ${connectionConfig.url}" }
+        logger.info {
+            "Feature Message Remote Client. Client is connected successfully to server: ${connectionConfig.url}"
+        }
         isInitialized = true
     }
 
@@ -101,9 +118,9 @@ public class FeatureMessageRemoteClient(
 
         logger.debug {
             "Feature Message Remote Client. Closing client status:\n" +
-                    "* session.isActive: ${session.isActive}\n  " +
-                    "* sseJob.isActive:  ${sseJob?.isActive}\n  " +
-                    "* client.isActive:  ${client.isActive}"
+                "* session.isActive: ${session.isActive}\n  " +
+                "* sseJob.isActive:  ${sseJob?.isActive}\n  " +
+                "* client.isActive:  ${client.isActive}"
         }
 
         receivedMessages.close()
@@ -200,13 +217,13 @@ public class FeatureMessageRemoteClient(
                 try {
                     val featureMessage = serverEvent.toFeatureMessage()
                     receivedMessages.send(featureMessage)
-                }
-                catch (t: CancellationException) {
+                } catch (t: CancellationException) {
                     logger.info { "Feature Message Remote Client. Client SSE reading has been cancelled: ${t.message}" }
                     throw t
-                }
-                catch (t: Throwable) {
-                    logger.error(t) { "Feature Message Remote Client. Client SSE reading received an error: ${t.message}" }
+                } catch (t: Throwable) {
+                    logger.error(t) {
+                        "Feature Message Remote Client. Client SSE reading received an error: ${t.message}"
+                    }
                 }
             }
         }

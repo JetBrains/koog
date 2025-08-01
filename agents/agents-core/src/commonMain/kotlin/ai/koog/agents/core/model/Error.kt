@@ -1,6 +1,10 @@
 package ai.koog.agents.core.model
 
-import ai.koog.agents.core.exception.*
+import ai.koog.agents.core.exception.AgentEngineException
+import ai.koog.agents.core.exception.AgentNotFoundException
+import ai.koog.agents.core.exception.MalformedMessageException
+import ai.koog.agents.core.exception.UnexpectedMessageTypeException
+import ai.koog.agents.core.exception.UnexpectedServerException
 import kotlinx.serialization.Serializable
 
 /**
@@ -19,6 +23,7 @@ public enum class AgentServiceErrorType {
      * in the communication protocol.
      */
     UNEXPECTED_MESSAGE_TYPE,
+
     /**
      * Indicates that a received message is malformed. This can occur when the message does not adhere
      * to the expected format, structure, or content requirements.
@@ -29,12 +34,14 @@ public enum class AgentServiceErrorType {
      * Errors of this type usually require client-side corrections to the message before resending.
      */
     MALFORMED_MESSAGE,
+
     /**
      * Represents a specific error type indicating that the requested agent could not be found.
      * This error may occur if the agent is unavailable, unregistered, or the identifier provided
      * does not correspond to any existing agent in the system.
      */
     AGENT_NOT_FOUND,
+
     /**
      * Represents an unexpected error encountered by the AI Agent.
      *

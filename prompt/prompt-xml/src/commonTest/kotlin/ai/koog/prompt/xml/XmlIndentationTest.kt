@@ -127,7 +127,7 @@ class XmlIndentationTest {
                 }
             }
         }
-        
+
         // We don't need to check the exact output, just that it doesn't throw exceptions
         // and produces a non-empty string with proper indentation
         assertTrue(result.contains("  ")) // Should have indentation

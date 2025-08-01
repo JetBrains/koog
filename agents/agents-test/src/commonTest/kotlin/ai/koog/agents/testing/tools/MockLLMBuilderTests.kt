@@ -238,8 +238,8 @@ class MockLLMBuilderTests {
         val toolCall = response as Message.Tool.Call
 
         // Find the tool condition that matches this call
-        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.firstOrNull { 
-            it.tool.name == toolCall.tool 
+        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.firstOrNull {
+            it.tool.name == toolCall.tool
         }
 
         assertNotNull(toolCondition)
@@ -275,7 +275,7 @@ class MockLLMBuilderTests {
         assertTrue(specificResponse is Message.Tool.Call)
 
         val specificToolCall = specificResponse as Message.Tool.Call
-        val specificToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first { 
+        val specificToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(specificToolCall)
         }
 
@@ -292,7 +292,7 @@ class MockLLMBuilderTests {
         assertTrue(otherResponse is Message.Tool.Call)
 
         val otherToolCall = otherResponse as Message.Tool.Call
-        val otherToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first { 
+        val otherToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(otherToolCall)
         }
 
@@ -328,7 +328,7 @@ class MockLLMBuilderTests {
         assertTrue(response is Message.Tool.Call)
 
         val toolCall = response
-        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.first { 
+        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(toolCall)
         }
 

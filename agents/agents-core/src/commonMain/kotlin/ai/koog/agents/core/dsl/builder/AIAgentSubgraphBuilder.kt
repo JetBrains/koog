@@ -4,12 +4,22 @@ package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.getAgentContextData
-import ai.koog.agents.core.agent.entity.*
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.FinishNode
+import ai.koog.agents.core.agent.entity.StartNode
+import ai.koog.agents.core.agent.entity.SubgraphMetadata
+import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.supervisorScope
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -144,7 +154,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Creates an edge between nodes.
      * @param edgeIntermediate Intermediate edge builder
      */
-    public fun <IncomingOutput, OutgoingInput, CompatibleOutput: OutgoingInput> edge(
+    public fun <IncomingOutput, OutgoingInput, CompatibleOutput : OutgoingInput> edge(
         edgeIntermediate: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>
     ) {
         val edge = AIAgentEdgeBuilder(edgeIntermediate).build()
@@ -170,7 +180,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     private fun getNodePath(node: AIAgentNodeBase<*, *>, parentPath: String): String {
-        return "${parentPath}:${node.id}"
+        return "$parentPath:${node.id}"
     }
 
     internal fun buildSubgraphMetadata(start: StartNode<Input>, parentName: String, strategy: AIAgentStrategy<Input, Output>): SubgraphMetadata {
@@ -179,7 +189,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
 
         // Check if the finish node is reachable from the start node
         if (!isFinishReachable(start)) {
-            throw IllegalStateException("Finish node is not reachable from the start node in the subgraph '$parentName'.")
+            throw IllegalStateException(
+                "Finish node is not reachable from the start node in the subgraph '$parentName'."
+            )
         }
 
         // Validate that all nodes have unique names within the subgraph
@@ -199,8 +211,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
             if (node is FinishNode<*>) return
             if (getNodePath(node, parentName) in map) return
             if (node !is StartNode<*>) {
-                if (node.name in map)
+                if (node.name in map) {
                     throw IllegalStateException("Node with name '${node.name}' already exists in the subgraph.")
+                }
 
                 map[getNodePath(node, parentName)] = node
             }
@@ -310,7 +323,6 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
     }
 }
 
-
 /**
  * Represents the result of a parallel node execution, containing both the output value and the execution context.
  *
@@ -352,7 +364,8 @@ public data class ParallelResult<Input, Output>(
  */
 public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
     private val nodes: List<AIAgentNodeBase<Input, Output>>,
-    private val merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
+    private val merge:
+    suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
     private val dispatcher: CoroutineDispatcher
 ) : AIAgentNodeBuilder<Input, Output>(
     inputType = nodes.first().inputType,
@@ -368,7 +381,9 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
                     val nodeOutput = node.execute(nodeContext, input)
 
                     if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
-                        throw IllegalStateException("Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}")
+                        throw IllegalStateException(
+                            "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}"
+                        )
                     }
 
                     @Suppress("UNCHECKED_CAST")

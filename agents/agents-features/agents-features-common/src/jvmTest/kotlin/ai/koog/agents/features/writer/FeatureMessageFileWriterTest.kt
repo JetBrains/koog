@@ -18,7 +18,11 @@ import java.nio.file.Path
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.pathString
 import kotlin.io.path.readLines
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class FeatureMessageFileWriterTest {
 
@@ -52,10 +56,10 @@ class FeatureMessageFileWriterTest {
 
     @Test
     fun `test base state for initialized writer`(@TempDir tempDir: Path) = runBlocking {
-       TestFeatureMessageFileWriter(tempDir).use { writer ->
-           writer.initialize()
-           assertTrue(writer.isOpen)
-       }
+        TestFeatureMessageFileWriter(tempDir).use { writer ->
+            writer.initialize()
+            assertTrue(writer.isOpen)
+        }
     }
 
     @Test
@@ -69,7 +73,6 @@ class FeatureMessageFileWriterTest {
 
     @Test
     fun `test initialize from different threads`(@TempDir tempDir: Path) = runBlocking {
-
         val cs = this@runBlocking
 
         TestFeatureMessageFileWriter(tempDir).use { writer ->
@@ -84,7 +87,8 @@ class FeatureMessageFileWriterTest {
 
             jobs.joinAll()
 
-            val expectedContent = List(jobCount) { number -> "[${FeatureMessage.Type.Message.value}] Test message $number" }
+            val expectedContent =
+                List(jobCount) { number -> "[${FeatureMessage.Type.Message.value}] Test message $number" }
             val actualContent = tempDir.listDirectoryEntries().first().readLines().sorted()
 
             assertEquals(expectedContent.size, actualContent.size)
@@ -134,7 +138,6 @@ class FeatureMessageFileWriterTest {
 
     @Test
     fun `test write messages from multiple threads`(@TempDir tempDir: Path) = runBlocking {
-
         val cs = this@runBlocking
 
         TestFeatureMessageFileWriter(tempDir).use { writer ->
@@ -151,7 +154,8 @@ class FeatureMessageFileWriterTest {
 
             writeJobs.joinAll()
 
-            val expectedContent = List(threadsCount) { number -> "[${FeatureMessage.Type.Message.value}] Test message $number" }
+            val expectedContent =
+                List(threadsCount) { number -> "[${FeatureMessage.Type.Message.value}] Test message $number" }
             val actualContent = writer.targetPath.readLines().sorted()
 
             assertEquals(expectedContent.size, actualContent.size)

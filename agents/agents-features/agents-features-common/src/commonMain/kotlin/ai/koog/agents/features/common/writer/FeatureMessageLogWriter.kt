@@ -17,7 +17,7 @@ public abstract class FeatureMessageLogWriter(
 ) : FeatureMessageProcessor() {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     /**

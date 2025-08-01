@@ -63,7 +63,6 @@ public class AIAgentStorage internal constructor() {
         storage[key] as T?
     }
 
-
     /**
      * Retrieves the non-null value associated with the given key from the storage.
      * If the key does not exist in the storage, a [NoSuchElementException] is thrown.

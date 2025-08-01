@@ -8,7 +8,6 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlin.time.Duration
 
-
 /**
  * Represents a data structure for a prompt, consisting of a list of messages, a unique identifier,
  * and optional parameters for language model settings.

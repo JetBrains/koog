@@ -2,7 +2,7 @@ package ai.koog.prompt.tokenizer
 
 /**
  * Interface for tokenizing text and counting tokens.
- * 
+ *
  * Tokenizers are used to estimate the number of tokens in a text string.
  * This is particularly useful for LLMs that don't provide token counts
  * in their responses, requiring client-side estimation, or if you want to have
@@ -23,7 +23,7 @@ public interface Tokenizer {
 
 /**
  * A tokenizer implementation that always returns 0.
- * 
+ *
  * This is useful when token counting is not needed or when you want to
  * save computational resources by skipping token counting.
  */
@@ -39,18 +39,18 @@ public class NoTokenizer : Tokenizer {
 
 /**
  * A simple regex-based tokenizer that splits text on whitespace and common punctuation.
- * 
+ *
  * This tokenizer provides a reasonable approximation of token counts for most LLMs,
  * though it's not as accurate as model-specific tokenizers. It's efficient and doesn't
  * require any external dependencies.
- * 
+ *
  * Note: Ollama does not provide tokens in responses, so this client-side estimation
  * is necessary for token counting.
  */
 public class SimpleRegexBasedTokenizer : Tokenizer {
     /**
      * Counts tokens by splitting on whitespace and common punctuation.
-     * 
+     *
      * The implementation adds a small overhead factor (1.1x) to account for
      * special tokens and tokenization differences in actual LLM tokenizers.
      *

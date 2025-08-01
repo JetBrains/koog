@@ -62,7 +62,6 @@ public object OllamaModels {
         )
     }
 
-
     /**
      * The `Meta` object represents the configuration for the Meta large language models (LLMs).
      * It contains the predefined model specifications for Meta's LLMs, including their identifiers
@@ -303,5 +302,4 @@ public object OllamaModels {
             contextLength = 16_384,
         )
     }
-
 }

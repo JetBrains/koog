@@ -33,6 +33,7 @@ public sealed class DefinedFeatureEvent() : FeatureEvent {
      * performing time-based analysis within the system.
      */
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds()
+
     /**
      * Specifies the type of the feature message for this event.
      *

@@ -1,8 +1,8 @@
 package ai.koog.agents.core.tools
 
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmInline
 
 /**
@@ -40,7 +40,9 @@ public interface ToolResult {
          *
          * @param e The exception from which to generate the message.
          */
-        public constructor(e: Exception) : this("Failed with exception '${e::class.simpleName}' and message '${e.message}'")
+        public constructor(
+            e: Exception
+        ) : this("Failed with exception '${e::class.simpleName}' and message '${e.message}'")
 
         /**
          * Companion object for the [Text] class providing utility functions.
@@ -52,7 +54,9 @@ public interface ToolResult {
              * @param block A lambda that operates on a [StringBuilder] to construct the text content.
              * @return A [Text] instance containing the constructed string.
              */
-            public inline fun build(block: StringBuilder.() -> Unit): Text = Text(StringBuilder().apply(block).toString())
+            public inline fun build(
+                block: StringBuilder.() -> Unit
+            ): Text = Text(StringBuilder().apply(block).toString())
         }
 
         override fun toStringDefault(): String = text
@@ -79,6 +83,7 @@ public interface ToolResult {
              * It is used to signify a positive or affirmative condition.
              */
             public val TRUE: Boolean = Boolean(true)
+
             /**
              * Represents the boolean constant `false` in the custom `Boolean` value class.
              * It is a pre-defined instance of the `Boolean` type with its internal value set to `false`.

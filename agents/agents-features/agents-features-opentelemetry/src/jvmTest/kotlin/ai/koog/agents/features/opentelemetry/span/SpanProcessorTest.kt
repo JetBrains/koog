@@ -1,13 +1,18 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.mock.MockTracer
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
+import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import io.opentelemetry.api.trace.StatusCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SpanProcessorTest {
 
@@ -50,7 +55,7 @@ class SpanProcessorTest {
         val retrievedSpan = spanProcessor.getSpan<GenAIAgentSpan>(spanId)
 
         assertNull(retrievedSpan)
-        assertEquals(0,  spanProcessor.spansCount)
+        assertEquals(0, spanProcessor.spansCount)
     }
 
     @Test
@@ -114,7 +119,7 @@ class SpanProcessorTest {
         }
 
         assertEquals(
-            "Span with id <${spanId}> is not of expected type. Expected: <${InvokeAgentSpan::class.simpleName}>, actual: <${MockGenAIAgentSpan::class.simpleName}>",
+            "Span with id <$spanId> is not of expected type. Expected: <${InvokeAgentSpan::class.simpleName}>, actual: <${MockGenAIAgentSpan::class.simpleName}>",
             throwable.message
         )
 

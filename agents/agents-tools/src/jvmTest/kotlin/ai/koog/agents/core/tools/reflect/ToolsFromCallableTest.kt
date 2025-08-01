@@ -20,7 +20,6 @@ import kotlin.reflect.KFunction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-
 @Tool
 @LLMDescription("Global tool description")
 suspend fun globalTool(
@@ -66,7 +65,6 @@ interface ToolSet1 : ToolSet1BaseInterface, ToolSet {
         arg: Int
     ): String
 
-
     fun tool2(
         @LLMDescription("int argument")
         arg: Int
@@ -86,7 +84,6 @@ interface ToolSet1 : ToolSet1BaseInterface, ToolSet {
         intArg: Int
     ): String
 }
-
 
 open class ToolSet1Impl : ToolSet1 {
     override fun tool1(arg: Int): String {
@@ -170,7 +167,6 @@ class MyTools : Tools {
         return argInt + Integer.parseInt(argString)
     }
 
-
     @Tool
     @LLMDescription("Crazy tool 5")
     suspend fun tool5(
@@ -179,7 +175,6 @@ class MyTools : Tools {
     ): ComplexType {
         return ComplexType(1, argString)
     }
-
 
     @Tool
     @LLMDescription("Non serializable tool 6")
@@ -206,7 +201,6 @@ class MyTools : Tools {
     ): String {
         return "tool 7 called"
     }
-
 }
 
 @OptIn(InternalAgentToolsApi::class)
@@ -279,7 +273,8 @@ class ToolsFromCallableTest {
         fun descriptionTestVariants(): Array<Arguments> {
             return arrayOf(
                 Arguments.of(
-                    ToolSet1Impl().asTools(json), """
+                    ToolSet1Impl().asTools(json),
+                    """
 #0: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #1: ToolDescriptor(name=tool2, description=Wonderful tool number 2, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
 #2: ToolDescriptor(name=tool4, description=Perfect tool 4, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
@@ -288,7 +283,8 @@ class ToolsFromCallableTest {
 """.trim()
                 ),
                 Arguments.of(
-                    DerivedToolSet1Impl().asTools(json), """
+                    DerivedToolSet1Impl().asTools(json),
+                    """
 #0: ToolDescriptor(name=derivedTool5, description=Derived tool 5, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
 #1: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #2: ToolDescriptor(name=tool2, description=Wonderful tool number 2, requiredParameters=[ToolParameterDescriptor(name=arg, description=arg, type=Integer)], optionalParameters=[])
@@ -298,7 +294,8 @@ class ToolsFromCallableTest {
 """.trim()
                 ),
                 Arguments.of(
-                    ToolSet1Impl().asToolsByInterface<ToolSet1>(json), """
+                    ToolSet1Impl().asToolsByInterface<ToolSet1>(json),
+                    """
 #0: ToolDescriptor(name=tool1, description=The best tool number 1, requiredParameters=[ToolParameterDescriptor(name=arg, description=int argument, type=Integer)], optionalParameters=[])
 #1: ToolDescriptor(name=toolBase1, description=Base tool 1, requiredParameters=[], optionalParameters=[])
 #2: ToolDescriptor(name=toolBase2OverriddenInInterface, description=Base tool 2 description overridden, requiredParameters=[ToolParameterDescriptor(name=intArg, description=int argument overridden, type=Integer)], optionalParameters=[])
@@ -307,7 +304,6 @@ class ToolsFromCallableTest {
             )
         }
     }
-
 
     @ParameterizedTest
     @MethodSource("testVariants")
@@ -339,5 +335,4 @@ class ToolsFromCallableTest {
         }.trim()
         assertEquals(expectedDescription, rendered)
     }
-
 }

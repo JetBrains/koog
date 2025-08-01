@@ -28,7 +28,6 @@ import kotlinx.serialization.json.jsonObject
 @InternalAgentToolsApi
 public interface DirectToolCallsEnabler
 
-
 /**
  * Represents a tool that, when executed, makes changes to the environment.
  */

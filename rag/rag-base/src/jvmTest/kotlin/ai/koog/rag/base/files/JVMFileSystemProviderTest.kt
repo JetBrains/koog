@@ -4,15 +4,35 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.io.readString
 import kotlinx.io.writeString
 import org.jetbrains.annotations.TestOnly
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertAll
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import java.io.File
 import java.io.IOException
-import java.nio.file.*
-import kotlin.io.path.*
+import java.nio.file.FileAlreadyExistsException
+import java.nio.file.FileSystems
+import java.nio.file.Files
+import java.nio.file.InvalidPathException
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
+import kotlin.io.path.absolute
+import kotlin.io.path.createDirectory
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
+import kotlin.io.path.pathString
+import kotlin.io.path.readLines
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 import kotlin.test.assertContentEquals
 import kotlin.test.assertNull
 
@@ -183,7 +203,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         )
         val testMetadata = select.metadata(dir1)
         assertEquals(metadata, testMetadata)
-
     }
 
     @Test
@@ -264,7 +283,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     fun `test name dir`() = runBlocking {
         val testName = select.name(dir1)
         assertEquals("dir1", testName)
-
     }
 
     @Test
@@ -347,7 +365,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test source method read non-existing file`() {
-        assertThrows<IllegalArgumentException>() {
+        assertThrows<IllegalArgumentException> {
             runBlocking {
                 read.source(Path.of(file1.pathString + "fake")).use { source ->
                     source.readString()
@@ -358,7 +376,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test source method read directory`() {
-        assertThrows<IllegalArgumentException>() {
+        assertThrows<IllegalArgumentException> {
             runBlocking {
                 read.source(dir2).use { source ->
                     source.readString()
@@ -420,7 +438,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         }
     }
 
-
     @Test
     fun `test create file`() {
         runBlocking {
@@ -459,7 +476,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         assertEmpty(dirPath.listDirectoryEntries())
         dirPath.listDirectoryEntries().forEach { it.toFile().deleteRecursively() }
     }
-
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
@@ -525,7 +541,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         dirPath.listDirectoryEntries().forEach { it.toFile().deleteRecursively() }
     }
 
-
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `test create Windows invalid name directory`() {
@@ -581,7 +596,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         runBlocking { write.delete(dirEmpty, dirName) }
         assertFalse(dirTest.exists())
     }
-
 
     @Test
     fun `test delete not empty directory`() {
@@ -831,7 +845,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadOnly source with non-existing file`() {
-        assertThrows<IllegalArgumentException>() {
+        assertThrows<IllegalArgumentException> {
             runBlocking {
                 readOnly.source(Path.of(file1.pathString + "fake")).use { source ->
                     source.readString()
@@ -842,7 +856,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadOnly source with directory`() {
-        assertThrows<IllegalArgumentException>() {
+        assertThrows<IllegalArgumentException> {
             runBlocking {
                 readOnly.source(dir2).use { source ->
                     source.readString()
@@ -952,7 +966,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadWrite source with non-existing file`() {
-        assertThrows<IllegalArgumentException>() {
+        assertThrows<IllegalArgumentException> {
             runBlocking {
                 readWrite.source(Path.of(file1.pathString + "fake")).use { source ->
                     source.readString()
@@ -963,7 +977,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadWrite source with directory`() {
-        assertThrows<IllegalArgumentException>() {
+        assertThrows<IllegalArgumentException> {
             runBlocking {
                 readWrite.source(dir2).use { source ->
                     source.readString()

@@ -11,7 +11,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-
 class JsonStructuredDataTest {
     // Simple data structure for basic tests
     @Serializable
@@ -142,7 +141,11 @@ class JsonStructuredDataTest {
         assertTrue(content.contains("DEFINITION OF simple"))
         assertTrue(content.contains("SimpleData description"))
         assertTrue(content.contains("SimpleData.value description"))
-        assertTrue(content.contains("is defined only and solely with JSON, without any additional characters, backticks or anything similar."))
+        assertTrue(
+            content.contains(
+                "is defined only and solely with JSON, without any additional characters, backticks or anything similar."
+            )
+        )
     }
 
     @Test
@@ -151,7 +154,9 @@ class JsonStructuredDataTest {
         structuredSimple.definition(builder)
         val content = builder.build()
 
-        assertTrue(content.contains("""
+        assertTrue(
+            content.contains(
+                """
             Here are some examples of valid responses:
             {
               "value": "example1"
@@ -159,7 +164,9 @@ class JsonStructuredDataTest {
             {
               "value": "example2"
             }
-        """.trimIndent()))
+                """.trimIndent()
+            )
+        )
     }
 
     @Test
@@ -168,12 +175,16 @@ class JsonStructuredDataTest {
         structuredSimpleOneExample.definition(builder)
         val content = builder.build()
 
-        assertTrue(content.contains("""
+        assertTrue(
+            content.contains(
+                """
             Here is an example of a valid response:
             {
               "value": "example1"
             }
-        """.trimIndent()))
+                """.trimIndent()
+            )
+        )
     }
 
     @Test
@@ -347,11 +358,11 @@ class JsonStructuredDataTest {
         val content = builder.build()
 
         assertTrue(content.contains("DEFINITION OF Animal"))
-        assertTrue(content.contains("kind"))  // Type discriminator
-        assertTrue(content.contains("Dog"))   // Subclass name
-        assertTrue(content.contains("Cat"))   // Subclass name
-        assertTrue(content.contains("name"))  // Common property
-        assertTrue(content.contains("age"))   // Common property
+        assertTrue(content.contains("kind")) // Type discriminator
+        assertTrue(content.contains("Dog")) // Subclass name
+        assertTrue(content.contains("Cat")) // Subclass name
+        assertTrue(content.contains("name")) // Common property
+        assertTrue(content.contains("age")) // Common property
         assertTrue(content.contains("breed")) // Dog-specific property
         assertTrue(content.contains("color")) // Cat-specific property
     }
@@ -412,7 +423,6 @@ class JsonStructuredDataTest {
         assertEquals("Luna", cat.name)
         assertEquals(2, cat.age)
         assertEquals("Black", cat.color)
-
 
         // Check example format
         val pretty = petStore.pretty(parsed)

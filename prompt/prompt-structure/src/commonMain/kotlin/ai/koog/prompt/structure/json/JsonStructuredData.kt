@@ -26,7 +26,7 @@ public class JsonStructuredData<TStruct>(
     private val structureLanguage: JsonStructureLanguage,
     examples: List<TStruct>,
     private val jsonSchema: LLMParams.Schema.JSON
-): StructuredData<TStruct>(id, examples, jsonSchema) {
+) : StructuredData<TStruct>(id, examples, jsonSchema) {
 
     /**
      * Represents the type of JSON schema that can be utilized for structured data definition.
@@ -37,7 +37,9 @@ public class JsonStructuredData<TStruct>(
          * Represents the complete schema type in the enumeration, typically used to indicate
          * that the JSON schema should be fully applied or adhered to without simplification.
          */
-        FULL, /**
+        FULL,
+
+        /**
          * Represents a simplified schema type used within the JsonSchemaType enumeration.
          * This type is typically used for scenarios where a minimal representation of the schema is sufficient.
          */
@@ -61,6 +63,7 @@ public class JsonStructuredData<TStruct>(
                 +"Here is an example of a valid response:"
                 structure(structureLanguage, examples.first(), serializer)
             }
+
             else -> {
                 +"Here are some examples of valid responses:"
                 examples.forEach {
@@ -154,7 +157,11 @@ public class JsonStructuredData<TStruct>(
             schemaType: JsonSchemaType = JsonSchemaType.SIMPLE
         ): StructuredData<T> {
             val structureLanguage = JsonStructureLanguage(json)
-            val schema = JsonSchemaGenerator(json, schemaFormat, maxDepth).generate(id, serializer, descriptionOverrides)
+            val schema = JsonSchemaGenerator(
+                json,
+                schemaFormat,
+                maxDepth
+            ).generate(id, serializer, descriptionOverrides)
 
             return JsonStructuredData(
                 id = id,

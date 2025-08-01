@@ -21,5 +21,4 @@ public object NetUtil {
             return socket.localPort
         }
     }
-
 }

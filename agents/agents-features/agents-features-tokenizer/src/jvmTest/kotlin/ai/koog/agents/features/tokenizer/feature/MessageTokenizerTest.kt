@@ -4,7 +4,11 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -101,9 +105,13 @@ class MessageTokenizerTest {
         val requestMetainfo = RequestMetaInfo.create(Clock.System)
         val responseMetainfo = ResponseMetaInfo.create(Clock.System)
         // Count tokens for individual messages
-        val systemTokens = promptTokenizer.tokenCountFor(Message.System("You are a helpful assistant.", requestMetainfo))
+        val systemTokens = promptTokenizer.tokenCountFor(
+            Message.System("You are a helpful assistant.", requestMetainfo)
+        )
         val userTokens = promptTokenizer.tokenCountFor(Message.User("What is the capital of France?", requestMetainfo))
-        val assistantTokens = promptTokenizer.tokenCountFor(Message.Assistant("Paris is the capital of France.", responseMetainfo))
+        val assistantTokens = promptTokenizer.tokenCountFor(
+            Message.Assistant("Paris is the capital of France.", responseMetainfo)
+        )
 
         // Print token counts for each message
         println("[DEBUG_LOG] System message tokens: $systemTokens")

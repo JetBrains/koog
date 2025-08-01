@@ -6,7 +6,6 @@ import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.io.Sink
 import kotlinx.io.Source
 
-
 sealed interface MockFSEntry
 
 data class MockDocument(val content: String) : MockFSEntry
@@ -32,7 +31,6 @@ class MockFileSystem {
         return documents.remove(path) != null
     }
 }
-
 
 class MockDocumentProvider(val mockFileSystem: MockFileSystem) : DocumentProvider<String, MockDocument> {
     override suspend fun document(path: String): MockDocument {

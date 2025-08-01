@@ -8,7 +8,11 @@ import ai.koog.agents.utils.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlin.js.JsName
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class FeatureMessageProcessorTest {
 
@@ -33,14 +37,15 @@ class FeatureMessageProcessorTest {
         override val messageType: FeatureMessage.Type = FeatureMessage.Type.Event
     }
 
-    @Test @JsName("testProcessMessageAddsMessagesToTheList")
+    @Test
+    @JsName("testProcessMessageAddsMessagesToTheList")
     fun `test processMessage adds messages to the list`() = runTest {
         val processor = TestFeatureMessageProcessor()
 
         val stringMessage1 = FeatureStringMessage("Test message 1")
-        val eventMessage1  = TestFeatureEventMessage("Test event 1")
+        val eventMessage1 = TestFeatureEventMessage("Test event 1")
         val stringMessage2 = FeatureStringMessage("Test message 2")
-        val eventMessage2  = TestFeatureEventMessage("Test event 2")
+        val eventMessage2 = TestFeatureEventMessage("Test event 2")
 
         val expectedMessages = listOf(stringMessage1, eventMessage1, stringMessage2, eventMessage2)
         expectedMessages.forEach { message -> processor.processMessage(message) }
@@ -49,7 +54,8 @@ class FeatureMessageProcessorTest {
         assertContentEquals(expectedMessages, processor.processedMessages)
     }
 
-    @Test @JsName("testCloseSetsIsCloseFlagToTrue")
+    @Test
+    @JsName("testCloseSetsIsCloseFlagToTrue")
     fun `test close sets isClose flag to true`() = runTest {
         val processor = TestFeatureMessageProcessor()
         assertFalse(processor.isClose)
@@ -59,7 +65,8 @@ class FeatureMessageProcessorTest {
         assertTrue(processor.isClose)
     }
 
-    @Test @JsName("testCloseMethodIsCalledWithUseMethod")
+    @Test
+    @JsName("testCloseMethodIsCalledWithUseMethod")
     fun `test close method is called with with use method`() = runTest {
         val processor = TestFeatureMessageProcessor()
         assertFalse(processor.isClose)

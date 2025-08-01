@@ -94,29 +94,44 @@ internal object BedrockAI21JambaSerialization {
                         description = tool.description,
                         parameters = buildJsonObject {
                             put("type", "object")
-                            put("properties", buildJsonObject {
-                                (tool.requiredParameters + tool.optionalParameters).forEach { param ->
-                                    put(param.name, BedrockToolSerialization.buildToolParameterSchema(param))
-                                }
-                            })
-                            if (tool.requiredParameters.isNotEmpty()) {
-                                put("required", buildJsonObject {
-                                    tool.requiredParameters.forEachIndexed { index, param ->
-                                        put(index.toString(), param.name)
+                            put(
+                                "properties",
+                                buildJsonObject {
+                                    (tool.requiredParameters + tool.optionalParameters).forEach { param ->
+                                        put(param.name, BedrockToolSerialization.buildToolParameterSchema(param))
                                     }
-                                })
+                                }
+                            )
+                            if (tool.requiredParameters.isNotEmpty()) {
+                                put(
+                                    "required",
+                                    buildJsonObject {
+                                        tool.requiredParameters.forEachIndexed { index, param ->
+                                            put(index.toString(), param.name)
+                                        }
+                                    }
+                                )
                             }
                         }
                     )
                 )
             }
-        } else null
+        } else {
+            null
+        }
 
         return JambaRequest(
             model = model.id,
             messages = messages,
             maxTokens = 4096,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            temperature = if (model.capabilities.contains(
+                    LLMCapability.Temperature
+                )
+            ) {
+                prompt.params.temperature
+            } else {
+                null
+            },
             tools = jambaTools
         )
     }

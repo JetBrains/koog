@@ -62,6 +62,7 @@ buildscript {
 plugins {
     id("ai.kotlin.dokka")
     alias(libs.plugins.kotlinx.kover)
+    alias(libs.plugins.ktlint)
 }
 
 allprojects {
@@ -72,9 +73,10 @@ allprojects {
 
 disableDistTasks()
 
-// Apply Kover to all subprojects
+// Apply Kover and ktlint to all subprojects
 subprojects {
     apply(plugin = "org.jetbrains.kotlinx.kover")
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
 }
 
 subprojects {
@@ -219,7 +221,6 @@ kover {
         subprojects {
             it.path !in excludedProjects
         }
-
     }
     reports {
         total {
@@ -228,5 +229,4 @@ kover {
             }
         }
     }
-
 }

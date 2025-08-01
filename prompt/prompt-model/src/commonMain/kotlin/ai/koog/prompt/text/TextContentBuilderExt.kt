@@ -10,19 +10,22 @@ package ai.koog.prompt.text
  * @param body The content builder function
  * @return The [TextContentBuilder] instance with numbered lines
  */
-public fun TextContentBuilderBase<*>.numbered(startLineNumber: Int = 1, body: TextContentBuilderBase<*>.() -> Unit): TextContentBuilderBase<*> {
+public fun TextContentBuilderBase<*>.numbered(
+    startLineNumber: Int = 1,
+    body: TextContentBuilderBase<*>.() -> Unit
+): TextContentBuilderBase<*> {
     // Create a temporary builder to capture the content
     val tempBuilder = TextContentBuilder()
     tempBuilder.body()
-    
+
     // Get the content and split it into lines
     val content = tempBuilder.build()
     val lines = content.lines()
-    
+
     // Calculate the width needed for line numbers based on the last line number
     val maxLineNumber = startLineNumber + lines.size - 1
     val lineNumberWidth = maxLineNumber.toString().length
-    
+
     // Add numbered lines to the original builder
     lines.forEachIndexed { index, line ->
         val lineNumber = startLineNumber + index
@@ -31,7 +34,7 @@ public fun TextContentBuilderBase<*>.numbered(startLineNumber: Int = 1, body: Te
         val formattedLineNumber = lineNumber.toString().padStart(lineNumberWidth, ' ')
         // Use a consistent format for the line number and separator
         text("$formattedLineNumber: $line")
-        
+
         // Add newline only if it's not the last line or if the original content ends with a newline
         // and we're not at the last line yet
         val isLastLine = index == lines.size - 1
@@ -39,6 +42,6 @@ public fun TextContentBuilderBase<*>.numbered(startLineNumber: Int = 1, body: Te
             newline()
         }
     }
-    
+
     return this
 }

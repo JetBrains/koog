@@ -30,9 +30,10 @@ object RetryUtils {
         )
 
         val message = e.message
-        return message != null && errorMessages.any { errorPattern ->
-            message.contains(errorPattern, ignoreCase = true)
-        }
+        return message != null &&
+            errorMessages.any { errorPattern ->
+                message.contains(errorPattern, ignoreCase = true)
+            }
     }
 
     suspend fun <T> withRetry(

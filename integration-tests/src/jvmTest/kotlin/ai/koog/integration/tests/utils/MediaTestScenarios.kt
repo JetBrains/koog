@@ -44,7 +44,7 @@ object MediaTestScenarios {
         NESTED_FORMATTING,
         EMBEDDED_HTML,
         IRREGULAR_TABLES,
-        MATH_NOTATION,       // LaTeX
+        MATH_NOTATION, // LaTeX
         EMPTY_CODE_BLOCKS,
         SPECIAL_CHARS_HEADERS,
         BROKEN_LINKS,
@@ -62,13 +62,14 @@ object MediaTestScenarios {
 
     enum class PdfTestScenario {
         BASIC_PDF,
-        BIG_PDF,             // 20MB for OpenAI/Gemini, 5MB for Anthropic
+        BIG_PDF, // 20MB for OpenAI/Gemini, 5MB for Anthropic
         CORRUPTED_PDF
     }
 
-    enum class VideoTestScenario { // Only Gemini
-        BASIC_VIDEO,        // video/mp4
-        BIG_VIDEO,          // 20MB
+    enum class VideoTestScenario {
+        // Only Gemini
+        BASIC_VIDEO, // video/mp4
+        BIG_VIDEO, // 20MB
         CORRUPTED_VIDEO
     }
 

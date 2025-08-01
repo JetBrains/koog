@@ -1,6 +1,10 @@
 package ai.koog.integration.tests.utils
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.Serializable
@@ -45,12 +49,23 @@ object TestUtils {
 
     @Serializable
     enum class CalculatorOperation {
-        ADD, SUBTRACT, MULTIPLY, DIVIDE
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE
     }
 
     @Serializable
     enum class Colors {
-        WHITE, BLACK, RED, ORANGE, YELLOW, GREEN, BLUE, INDIGO, VIOLET
+        WHITE,
+        BLACK,
+        RED,
+        ORANGE,
+        YELLOW,
+        GREEN,
+        BLUE,
+        INDIGO,
+        VIOLET
     }
 
     @Serializable
@@ -229,7 +244,6 @@ object TestUtils {
                 }
                 buffer.clear()
             }
-
         }
     }
 

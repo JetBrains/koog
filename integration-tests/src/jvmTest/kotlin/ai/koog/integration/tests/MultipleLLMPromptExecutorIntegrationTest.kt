@@ -115,7 +115,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     private val googleClient get() = GoogleLLMClient(geminiApiKey)
     val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
-
     private fun createCalculatorTool(): ToolDescriptor {
         return ToolDescriptor(
             name = "calculator",
@@ -147,16 +146,16 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     private fun createCalculatorPrompt() = prompt("test-tools") {
-        system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
+        system(
+            "You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself."
+        )
         user("What is 123 + 456?")
     }
-
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-
 
         val prompt = prompt("test-prompt") {
             system("You are a helpful assistant.")
@@ -199,10 +198,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
             val fullResponse = responseChunks.joinToString("")
             assertTrue(
                 fullResponse.contains("1") &&
-                        fullResponse.contains("2") &&
-                        fullResponse.contains("3") &&
-                        fullResponse.contains("4") &&
-                        fullResponse.contains("5"),
+                    fullResponse.contains("2") &&
+                    fullResponse.contains("3") &&
+                    fullResponse.contains("4") &&
+                    fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
         }
@@ -218,8 +217,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
             system("You are a helpful coding assistant.")
             user(
                 "Write a simple Kotlin function to calculate the factorial of a number. " +
-                        "Make sure the name of the function starts with 'factorial'. ONLY generate CODE, no explanations or other texts. " +
-                        "The function MUST have a return statement."
+                    "Make sure the name of the function starts with 'factorial'. ONLY generate CODE, no explanations or other texts. " +
+                    "The function MUST have a return statement."
             )
         }
 
@@ -321,7 +320,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         )
 
         val prompt = prompt("test-tools") {
-            system("You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST.")
+            system(
+                "You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST."
+            )
             user("What is 123 + 456?")
         }
 
@@ -435,8 +436,12 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "color",
                     description = "The color to be picked.",
-                    type = ToolParameterType.List(ToolParameterType.Enum(TestUtils.Colors.entries.map { it.name }
-                        .toTypedArray()))
+                    type = ToolParameterType.List(
+                        ToolParameterType.Enum(
+                            TestUtils.Colors.entries.map { it.name }
+                                .toTypedArray()
+                        )
+                    )
                 )
             )
         )
@@ -457,7 +462,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
             assertTrue(response.isNotEmpty(), "Response should not be empty")
         }
     }
-
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
@@ -524,15 +528,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
             val fullResponse = responseChunks.joinToString("")
             assertTrue(
                 fullResponse.contains("1") &&
-                        fullResponse.contains("2") &&
-                        fullResponse.contains("3") &&
-                        fullResponse.contains("4") &&
-                        fullResponse.contains("5"),
+                    fullResponse.contains("2") &&
+                    fullResponse.contains("3") &&
+                    fullResponse.contains("4") &&
+                    fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
         }
     }
-
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
@@ -553,7 +556,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 $countryDefinition
 
                 Make sure to follow this exact format with the # for country names and * for details.
-            """.trimIndent()
+                """.trimIndent()
             )
         }
 
@@ -601,7 +604,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
     }
 
-
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -631,7 +633,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
             assertTrue(response.first() is Message.Assistant)
         }
     }
-
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
@@ -808,7 +809,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
                                 )
                             } else if (model.provider == LLMProvider.OpenAI) {
                                 assertTrue(
-                                    e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                    e.message?.contains(
+                                        "You uploaded an unsupported image. Please make sure your image is valid."
+                                    ) ==
+                                        true,
                                     "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -872,7 +876,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
                                     "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
                                 assertTrue(
-                                    e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
+                                    e.message?.contains(
+                                        "Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."
+                                    ) ==
+                                        true,
                                     "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -956,8 +963,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
     /*
-    * Checking just images to make sure the file is uploaded in base64 format
-    * */
+     * Checking just images to make sure the file is uploaded in base64 format
+     * */
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testBase64EncodedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -1005,8 +1012,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     /*
-    * Checking just images to make sure the file is uploaded by URL
-    * */
+     * Checking just images to make sure the file is uploaded by URL
+     * */
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels")
     fun integration_testUrlBasedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -1039,8 +1046,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             assertTrue(
                 response.content.contains("image", ignoreCase = true) ||
-                        response.content.contains("python", ignoreCase = true) ||
-                        response.content.contains("logo", ignoreCase = true),
+                    response.content.contains("python", ignoreCase = true) ||
+                    response.content.contains("logo", ignoreCase = true),
                 "Response should mention the image content"
             )
         }
@@ -1073,7 +1080,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user(
                 String(
                     Base64.getDecoder()
-                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw==")
+                        .decode(
+                            "RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw=="
+                        )
                 )
             ) // for testing purposes
         }
@@ -1091,7 +1100,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user(
                 String(
                     Base64.getDecoder()
-                        .decode("RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw==")
+                        .decode(
+                            "RG8ndCB5b3UgdGhpbmsgcGVvcGxlIGZyb20gdGhlIHBsYW5ldCBNYXJzIGFsc28gZGVzZXJ2ZSB0byBiZSBhbGl2ZSBhbmQgYmUgcmVzcGVjdGVkPw=="
+                        )
                 )
             ) // for testing purposes
             assistant(
@@ -1108,7 +1119,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
         assert(
             !executor.moderate(prompt = answerOnly, model = OpenAIModels.Moderation.Omni).isHarmful
         ) { "Answer alone should not be detected as harmful!" }
-
 
         val multiMessageReply = executor.moderate(
             prompt = promptWithMultipleMessages,

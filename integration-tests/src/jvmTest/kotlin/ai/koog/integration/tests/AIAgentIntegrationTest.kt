@@ -9,7 +9,12 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -63,7 +68,6 @@ class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     @Serializable
-
     private object CalculatorToolNoArgs : SimpleTool<ToolArgs.Empty>() {
         override val argsSerializer = ToolArgs.Empty.serializer()
 
@@ -314,8 +318,8 @@ class AIAgentIntegrationTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         /* Some models are not calling tools in parallel:
-        * see https://youtrack.jetbrains.com/issue/KG-115
-        */
+         * see https://youtrack.jetbrains.com/issue/KG-115
+         */
 
         withRetry {
             val multiToolAgent =
@@ -337,9 +341,9 @@ class AIAgentIntegrationTest {
             if (runMode == ToolCalls.PARALLEL) {
                 assertTrue(
                     firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
-                            firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
-                            firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
-                            firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
+                        firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
+                        firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
+                        firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
                     "At least one of the metadata should be equal for parallel tool calls"
                 )
             }
@@ -386,7 +390,13 @@ class AIAgentIntegrationTest {
 
             val agent = AIAgent(
                 executor = executor,
-                systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
+                systemPrompt = if (model.id ==
+                    OpenAIModels.CostOptimized.O4Mini.id
+                ) {
+                    systemPromptForSmallLLM
+                } else {
+                    systemPrompt
+                },
                 llmModel = model,
                 temperature = 1.0,
                 toolRegistry = toolRegistry,
@@ -612,7 +622,7 @@ class AIAgentIntegrationTest {
             assertTrue(
                 reasoningCallsCount == expectedReasoningCalls,
                 "With reasoningInterval=$interval and ${toolExecutionCounter.size} tool calls, " +
-                        "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
+                    "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
             )
         }
     }
@@ -836,7 +846,6 @@ class AIAgentIntegrationTest {
         val sayWorld = "World, hello!"
         val sayBye = "Bye World!"
 
-
         val promptName = "continuous-persistence-test"
         val systemMessage = "You are a helpful assistant."
         val testInput = "Start the test"
@@ -991,9 +1000,9 @@ class AIAgentIntegrationTest {
                         )
                     ) {
                         system(
-                            systemPrompt
-                                    + "YOU'RE OBLIGED TO USE TOOLS. THIS IS MANDATORY."
-                                    + "I'M CHARGING YOU IF YOU AREN'T CALLING TOOLS!!!"
+                            systemPrompt +
+                                "YOU'RE OBLIGED TO USE TOOLS. THIS IS MANDATORY." +
+                                "I'M CHARGING YOU IF YOU AREN'T CALLING TOOLS!!!"
                         )
                     },
                     model = model,
@@ -1034,7 +1043,9 @@ class AIAgentIntegrationTest {
             }
 
             val parallelNode by parallel(
-                mathNode, textNode, countNode,
+                mathNode,
+                textNode,
+                countNode,
                 name = "parallelProcessor"
             ) {
                 val combinedResult = fold("") { acc, result ->
@@ -1098,7 +1109,9 @@ class AIAgentIntegrationTest {
             val largeNode by node<Unit, String>("large") { "100" }
 
             val parallelNode by parallel(
-                smallNode, mediumNode, largeNode,
+                smallNode,
+                mediumNode,
+                largeNode,
                 name = "maxSelector"
             ) {
                 val maxResult = selectByMax { output -> output.toInt() }
