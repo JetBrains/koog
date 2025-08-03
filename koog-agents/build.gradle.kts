@@ -9,6 +9,7 @@ plugins {
 
 val excluded = setOf(
     ":agents:agents-test",
+    ":agents:agents-features:agents-features-redis", // Optional Redis persistence provider
     ":examples",
     ":integration-tests",
     ":koog-spring-boot-starter",

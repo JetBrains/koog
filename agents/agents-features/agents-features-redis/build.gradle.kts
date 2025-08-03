@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
+                api(project(":agents:agents-features:agents-features-snapshot"))
                 api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
@@ -30,7 +31,10 @@ kotlin {
 
         jvmMain {
             dependencies {
-                // Redis dependencies moved to agents-features-redis module
+                api(libs.ktor.client.cio)
+                api(libs.lettuce.core)
+                api(libs.kotlinx.coroutines.reactive)
+                implementation(libs.commons.pool2)
             }
         }
 
