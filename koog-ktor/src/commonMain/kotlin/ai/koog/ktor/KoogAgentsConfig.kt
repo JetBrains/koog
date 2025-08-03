@@ -445,30 +445,18 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     public fun mockMode(enabled: Boolean = true, configure: MockPromptExecutor.MockResponseConfig.() -> Unit = {}) {
         mockMode = enabled
         if (enabled) {
-            mockExecutor = MockPromptExecutor().apply {
-                responseConfig.configure()
+            mockExecutor = if (configure == {}) {
+                // Use default responses if no custom configuration provided
+                MockPromptExecutor.withDefaultResponses()
+            } else {
+                // Use custom configuration
+                MockPromptExecutor().apply {
+                    responseConfig.configure()
+                }
             }
         } else {
             mockExecutor = null
         }
-    }
-
-    /**
-     * Enables mock mode with example-friendly default responses.
-     * This is a convenience method that sets up common responses for typical example scenarios.
-     */
-    public fun exampleMode() {
-        mockMode = true
-        mockExecutor = MockPromptExecutor.withExampleResponses()
-    }
-
-    /**
-     * Enables mock mode with test-specific responses.
-     * This is a convenience method that sets up predictable responses for testing.
-     */
-    public fun testMode() {
-        mockMode = true
-        mockExecutor = MockPromptExecutor.withTestResponses()
     }
 
     /**

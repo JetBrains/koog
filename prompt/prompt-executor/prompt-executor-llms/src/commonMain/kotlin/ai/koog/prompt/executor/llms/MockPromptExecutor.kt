@@ -126,46 +126,27 @@ public class MockPromptExecutor(
     
     public companion object {
         /**
-         * Create a MockPromptExecutor with common default responses for examples.
+         * Create a MockPromptExecutor with sensible default responses.
          * 
-         * @return Configured MockPromptExecutor with typical example responses
+         * @return Configured MockPromptExecutor with reasonable default responses
          */
-        public fun withExampleResponses(): MockPromptExecutor {
+        public fun withDefaultResponses(): MockPromptExecutor {
             return MockPromptExecutor().apply {
                 responseConfig.addResponses(mapOf(
-                    "search" to "Found 10 relevant results for your search query.",
+                    "search" to "Found relevant results for your query.",
                     "database" to "Database operation completed successfully.",
                     "admin" to "Administrative command executed successfully.", 
-                    "report" to "Report has been generated and is ready for review.",
-                    "analyze" to "Analysis completed. Here are the key findings...",
-                    "create" to "Resource has been created successfully.",
-                    "update" to "Resource has been updated successfully.",
-                    "delete" to "Resource has been deleted successfully.",
-                    "list" to "Here are the requested items...",
-                    "help" to "Here's how I can help you with that task...",
-                    "guest" to "Task completed for guest user.",
-                    "user" to "Task completed for authenticated user.",
-                    "premium" to "Task completed for premium user.",
-                    "hello" to "Hello! How can I help you today?"
-                ))
-            }
-        }
-        
-        /**
-         * Create a MockPromptExecutor with test-specific responses.
-         * 
-         * @return Configured MockPromptExecutor with predictable test responses
-         */
-        public fun withTestResponses(): MockPromptExecutor {
-            return MockPromptExecutor().apply {
-                responseConfig.addResponses(mapOf(
-                    "test" to "TEST_RESPONSE",
-                    "search" to "TEST_SEARCH_RESULT", 
-                    "database" to "TEST_DATABASE_RESULT",
-                    "admin" to "TEST_ADMIN_RESULT",
-                    "error" to "TEST_ERROR_SIMULATION",
-                    "guest" to "Mock response for guest role",
-                    "user" to "Mock response for user role"
+                    "report" to "Report has been generated.",
+                    "analyze" to "Analysis completed.",
+                    "create" to "Resource created successfully.",
+                    "update" to "Resource updated successfully.",
+                    "delete" to "Resource deleted successfully.",
+                    "list" to "Here are the requested items.",
+                    "help" to "Here's how I can help you.",
+                    "hello" to "Hello! How can I help you today?",
+                    "guest" to "Task completed.",
+                    "user" to "Task completed.",
+                    "premium" to "Task completed."
                 ))
             }
         }

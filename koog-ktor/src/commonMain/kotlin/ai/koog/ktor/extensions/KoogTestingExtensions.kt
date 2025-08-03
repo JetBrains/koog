@@ -22,12 +22,12 @@ import io.ktor.server.application.install
 public fun Application.installKoogForTesting(
     configure: KoogAgentsConfig.() -> Unit = {}
 ): Koog = install(Koog) {
-    testMode()
+    mockMode()
     configure()
 }
 
 /**
- * Installs Koog with example mode enabled.
+ * Installs Koog with mock mode enabled for examples.
  * 
  * This is perfect for examples, demos, and documentation where you want realistic-looking
  * responses without requiring API keys.
@@ -38,7 +38,7 @@ public fun Application.installKoogForTesting(
 public fun Application.installKoogForExamples(
     configure: KoogAgentsConfig.() -> Unit = {}
 ): Koog = install(Koog) {
-    exampleMode()
+    mockMode()
     configure()
 }
 
@@ -94,9 +94,9 @@ public fun Application.installKoogWithCustomMocks(
 public fun Application.installKoogForDevelopment(
     configure: KoogAgentsConfig.() -> Unit = {}
 ): Koog = install(Koog) {
-    // Use example mode by default, but allow override through configuration
+    // Use mock mode by default, but allow override through configuration
     if (!autoDetectTestMode()) {
-        exampleMode()
+        mockMode()
     }
     configure()
 }

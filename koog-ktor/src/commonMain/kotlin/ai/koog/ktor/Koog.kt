@@ -75,7 +75,7 @@ public class Koog(
             // Auto-detect test mode if not explicitly configured
             if (!config.mockMode && config.autoDetectTestMode()) {
                 pipeline.environment.log.info("Test environment detected, enabling mock mode")
-                config.exampleMode()
+                config.mockMode()
             }
 
             job.complete()
@@ -87,7 +87,7 @@ public class Koog(
                 }
                 config.llmConnections.isEmpty() -> {
                     pipeline.environment.log.warn("No LLM clients configured and mock mode disabled, enabling mock mode")
-                    MockPromptExecutor.withExampleResponses()
+                    MockPromptExecutor.withDefaultResponses()
                 }
                 else -> {
                     pipeline.environment.log.info("Using MultiLLMPromptExecutor with ${config.llmConnections.size} LLM client(s)")

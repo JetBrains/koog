@@ -32,11 +32,11 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
             when {
                 isTestMode -> {
                     log.info("Ktor test mode detected")
-                    testMode()
+                    mockMode()
                 }
                 isExampleMode -> {
                     log.info("Koog example mode detected")
-                    exampleMode()
+                    mockMode()
                 }
                 else -> {
                     log.info("Koog mock mode detected")
