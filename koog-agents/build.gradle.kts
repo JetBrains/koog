@@ -23,6 +23,7 @@ val included = setOf(
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-opentelemetry",
+    ":agents:agents-features:agents-features-pool",
     ":agents:agents-features:agents-features-trace",
     ":agents:agents-features:agents-features-tokenizer",
     ":agents:agents-features:agents-features-snapshot",

@@ -24,6 +24,7 @@ dependencies {
     api(project(":agents:agents-features:agents-features-event-handler"))
     api(project(":agents:agents-features:agents-features-memory"))
     api(project(":agents:agents-features:agents-features-opentelemetry"))
+    api(project(":agents:agents-features:agents-features-pool"))
     api(project(":agents:agents-features:agents-features-snapshot"))
 
     api(project(":prompt:prompt-markdown"))
@@ -105,6 +106,7 @@ registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
+registerRunExampleTask("runAgentPoolBenchmark", "ai.koog.agents.example.pool.JvmAgentPoolBenchmarkExampleKt")
 
 dokka {
     dokkaSourceSets.named("main") {

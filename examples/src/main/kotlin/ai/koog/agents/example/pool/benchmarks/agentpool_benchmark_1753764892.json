@@ -1,0 +1,39 @@
+{
+    "timestamp": 1753764892,
+    "results": [
+        {
+            "name": "Cold Agents (Max)",
+            "totalRuns": 450,
+            "successCount": 450,
+            "avgLatencyMs": 800.5244444444445,
+            "p95LatencyMs": 974,
+            "throughput": 5.326641493353535,
+            "concurrency": 3,
+            "peakMemoryMB": 903.2092742919922,
+            "avgMemoryMB": 567.5062028838367,
+            "gcCollections": 55,
+            "cpuUtilizationPercent": 50.144301851085224
+        },
+        {
+            "name": "Pooled Agents (Max)",
+            "totalRuns": 450,
+            "successCount": 450,
+            "avgLatencyMs": 62.022222222222226,
+            "p95LatencyMs": 79,
+            "throughput": 52.65005265005265,
+            "concurrency": 3,
+            "peakMemoryMB": 288.77323150634766,
+            "avgMemoryMB": 285.90737520881873,
+            "gcCollections": 4,
+            "cpuUtilizationPercent": 32.2616097190142
+        }
+    ],
+    "metadata": {
+        "platform": "jvm",
+        "kotlinVersion": "1.9.22",
+        "benchmarkType": "agentpool-max-throughput",
+        "poolSize": 3,
+        "durationSeconds": 15,
+        "targetRps": -1
+    }
+}
