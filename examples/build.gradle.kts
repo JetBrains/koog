@@ -33,14 +33,12 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
-    api(project(":koog-ktor"))
 
     api(libs.kotlinx.datetime)
 
     implementation(libs.logback.classic)
     implementation(libs.opentelemetry.exporter.logging)
     implementation(libs.opentelemetry.exporter.otlp)
-    implementation(libs.ktor.server.cio)
     implementation(project.dependencies.platform(libs.opentelemetry.bom))
 
     testImplementation(kotlin("test"))

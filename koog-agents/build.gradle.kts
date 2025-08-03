@@ -10,6 +10,7 @@ plugins {
 val excluded = setOf(
     ":agents:agents-test",
     ":examples",
+    ":examples-ktor",
     ":integration-tests",
     ":koog-spring-boot-starter",
     ":koog-ktor",
