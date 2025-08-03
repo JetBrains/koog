@@ -99,7 +99,7 @@ private fun KoogAgentsConfig.openrouter(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.openrouter")) { apiKey, baseUrlOrNull ->
         openRouter(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("koog.openai.timeout")) }
+            timeouts { configure(envConfig.config("koog.openrouter.timeout")) }
         }
     }
 
@@ -107,7 +107,7 @@ private fun KoogAgentsConfig.google(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.google")) { apiKey, baseUrlOrNull ->
         google(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("koog.openai.timeout")) }
+            timeouts { configure(envConfig.config("koog.google.timeout")) }
         }
     }
 
@@ -123,7 +123,7 @@ private fun KoogAgentsConfig.anthropic(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.anthropic")) { apiKey, baseUrlOrNull ->
         anthropic(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("koog.openai.timeout")) }
+            timeouts { configure(envConfig.config("koog.anthropic.timeout")) }
         }
     }
 
