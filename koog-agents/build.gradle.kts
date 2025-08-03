@@ -9,6 +9,7 @@ plugins {
 
 val excluded = setOf(
     ":agents:agents-test",
+    ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
     ":examples",
     ":integration-tests",
     ":test-utils",
