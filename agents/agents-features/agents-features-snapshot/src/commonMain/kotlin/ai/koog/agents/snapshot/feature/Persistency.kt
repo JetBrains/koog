@@ -37,7 +37,10 @@ import kotlin.uuid.Uuid
  * @property currentNodeId The ID of the node currently being executed
  */
 @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
-public class Persistency(private val persistencyStorageProvider: PersistencyStorageProvider) {
+public class Persistency(
+    private val persistencyStorageProvider: PersistencyStorageProvider,
+    private val config: PersistencyFeatureConfig
+) {
     /**
      * Represents the identifier of the current node being executed within the agent pipeline.
      *
@@ -90,7 +93,10 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             config: PersistencyFeatureConfig,
             pipeline: AIAgentPipeline
         ) {
-            val featureImpl = Persistency(config.storage)
+            // Validate configuration before installation
+            config.validate()
+            
+            val featureImpl = Persistency(config.storage, config)
             val interceptContext = InterceptContext(this, featureImpl)
 
             pipeline.interceptContextAgentFeature(this) { ctx ->
@@ -101,6 +107,21 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
                 require(ctx.strategy.metadata.uniqueNames) {
                     "Checkpoint feature requires unique node names in the strategy metadata"
                 }
+                
+                // Auto-compute hash if configured
+                if (config.autoComputeHash) {
+                    kotlinx.coroutines.runBlocking {
+                        runCatching {
+                            val computedHash = config.computeAndSetHash(ctx.strategy)
+                            if (computedHash != null) {
+                                logger.debug { "Auto-computed strategy hash: $computedHash" }
+                            }
+                        }.onFailure { e ->
+                            logger.warn(e) { "Failed to auto-compute strategy hash" }
+                        }
+                    }
+                }
+                
                 val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
@@ -156,12 +177,16 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         }
 
         val checkpoint = agentContext.llm.readSession {
+            val messages = config.historyPolicy?.trim(prompt.messages) ?: prompt.messages
             return@readSession AgentCheckpointData(
                 checkpointId = checkpointId ?: Uuid.random().toString(),
-                messageHistory = prompt.messages,
+                messageHistory = messages,
                 nodeId = nodeId,
                 lastInput = inputJson,
-                createdAt = Clock.System.now()
+                createdAt = Clock.System.now(),
+                strategyId = config.strategyId,
+                graphVersion = config.graphVersion,
+                graphHash = config.graphHash
             )
         }
 
@@ -228,6 +253,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      *
      * This method retrieves the checkpoint with the specified ID and, if found,
      * sets the agent's context to the state captured in that checkpoint.
+     * If the checkpoint has an older version, migration is applied automatically.
      *
      * @param checkpointId The ID of the checkpoint to roll back to
      * @param agentContext The context of the agent to roll back
@@ -239,7 +265,9 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
-            agentContext.store(checkpoint.toAgentContextData())
+            val migratedCheckpoint = applyMigrations(checkpoint)
+            agentContext.store(migratedCheckpoint.toAgentContextData())
+            return migratedCheckpoint
         }
         return checkpoint
     }
@@ -249,6 +277,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      *
      * This method retrieves the most recent checkpoint for the agent and,
      * if found, sets the agent's context to the state captured in that checkpoint.
+     * If the checkpoint has an older version, migration is applied automatically.
      *
      * @param agentContext The context of the agent to roll back
      * @return The checkpoint data that was restored or null if no checkpoint was found
@@ -258,9 +287,83 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
         if (checkpoint != null) {
-            agentContext.store(checkpoint.toAgentContextData())
+            val migratedCheckpoint = applyMigrations(checkpoint)
+            agentContext.store(migratedCheckpoint.toAgentContextData())
+            return migratedCheckpoint
         }
-        return checkpoint
+        return null
+    }
+
+    /**
+     * Applies migrations to a checkpoint if needed.
+     * 
+     * This method checks if the checkpoint version is older than the current version
+     * and applies appropriate migrators to bring it up to date. It also validates
+     * the graph hash if configured.
+     * 
+     * @param checkpoint The checkpoint data to potentially migrate
+     * @return The migrated checkpoint data (or original if no migration needed)
+     */
+    internal suspend fun applyMigrations(checkpoint: AgentCheckpointData): AgentCheckpointData {
+        var current = checkpoint
+        
+        // Check if migration is needed
+        if (current.graphVersion < config.graphVersion) {
+            logger.info { 
+                "Migrating checkpoint ${current.checkpointId} from version ${current.graphVersion} to ${config.graphVersion}" 
+            }
+            
+            // Apply migrators in sequence
+            for (migrator in config.migrators) {
+                if (migrator.canMigrate(current.strategyId, current.graphVersion, config.graphVersion)) {
+                    current = migrator.migrate(current, config.graphVersion)
+                    logger.debug { 
+                        "Applied migrator ${migrator::class.simpleName} to checkpoint ${current.checkpointId}" 
+                    }
+                }
+            }
+            
+            // Update version metadata if migration occurred
+            if (current.graphVersion != config.graphVersion) {
+                current = current.copy(
+                    graphVersion = config.graphVersion,
+                    graphHash = config.graphHash
+                )
+            }
+        }
+        
+        // Validate hash if configured (warning only, not blocking)
+        if (config.graphHash != null && current.graphHash != null && current.graphHash != config.graphHash) {
+            logger.warn { 
+                "Graph hash mismatch for checkpoint ${current.checkpointId}: " +
+                "expected ${config.graphHash}, got ${current.graphHash}. " +
+                "This may indicate unexpected changes in graph topology."
+            }
+        }
+        
+        // Block if checkpoint is from a future version
+        if (current.graphVersion > config.graphVersion) {
+            throw IllegalStateException(
+                "Checkpoint ${current.checkpointId} is from a future version " +
+                "(checkpoint: ${current.graphVersion}, current: ${config.graphVersion}). " +
+                "Cannot safely restore from newer checkpoint data."
+            )
+        }
+        
+        return current
+    }
+
+    /**
+     * Resumes agent execution from the latest checkpoint with automatic migration.
+     * 
+     * This is a convenience method that combines checkpoint loading, migration,
+     * and execution point setting in a single operation.
+     * 
+     * @param agentContext The agent context to resume
+     * @return The migrated checkpoint that was used for resumption, or null if no checkpoint exists
+     */
+    public suspend fun resumeFromLatestCheckpoint(agentContext: AIAgentContextBase): AgentCheckpointData? {
+        return rollbackToLatestCheckpoint(agentContext)
     }
 }
 

@@ -16,6 +16,10 @@ import kotlinx.serialization.json.JsonElement
  * @property messageHistory A list of messages exchanged in the session up to the checkpoint. Messages include interactions between the user, system, assistant, and tools.
  * @property nodeId The identifier of the node where the checkpoint was created.
  * @property lastInput Serialized input received for node with [nodeId]
+ * @property strategyId Optional stable identifier for the strategy/graph that created this checkpoint
+ * @property graphVersion Version number of the strategy graph, used for migration logic (defaults to 1 for backwards compatibility)
+ * @property graphHash Optional hash of the graph topology for drift detection
+ * @property customMeta Extensible metadata map for custom checkpoint information
  */
 @Serializable
 public data class AgentCheckpointData(
@@ -24,6 +28,10 @@ public data class AgentCheckpointData(
     val nodeId: String,
     val lastInput: JsonElement,
     val messageHistory: List<Message>,
+    val strategyId: String? = null,
+    val graphVersion: Int = 1,
+    val graphHash: String? = null,
+    val customMeta: Map<String, String> = emptyMap()
 )
 
 /**
