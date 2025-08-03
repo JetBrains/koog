@@ -25,6 +25,7 @@ dependencies {
     api(project(":agents:agents-features:agents-features-memory"))
     api(project(":agents:agents-features:agents-features-opentelemetry"))
     api(project(":agents:agents-features:agents-features-snapshot"))
+    api(project(":agents:agents-features:agents-features-sql"))
 
     api(project(":prompt:prompt-markdown"))
     api(project(":prompt:prompt-structure"))
@@ -105,6 +106,7 @@ registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
+registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.snapshot.sql.SQLPersistentAgentExample")
 
 dokka {
     dokkaSourceSets.named("main") {

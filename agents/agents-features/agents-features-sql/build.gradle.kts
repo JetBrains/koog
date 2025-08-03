@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-common"))
+                api(project(":agents:agents-features:agents-features-snapshot"))
                 api(project(":rag:rag-base"))
 
                 api(libs.kotlinx.serialization.json)
@@ -30,7 +31,16 @@ kotlin {
 
         jvmMain {
             dependencies {
-                // SQL dependencies moved to agents-features-sql module
+                api(libs.exposed.core)
+                api(libs.exposed.dao)
+                api(libs.exposed.jdbc)
+                api(libs.exposed.json)
+                api(libs.exposed.kotlin.datetime)
+                api(libs.postgresql)
+                api(libs.mysql)
+                api(libs.h2)
+                api(libs.sqlite)
+                implementation(libs.hikaricp)
             }
         }
 
