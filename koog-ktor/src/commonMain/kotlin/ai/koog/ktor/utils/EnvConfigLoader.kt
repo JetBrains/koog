@@ -21,32 +21,19 @@ import kotlin.time.Duration.Companion.milliseconds
 internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): KoogAgentsConfig {
     val koogConfig = KoogAgentsConfig(scope)
     
-    // Check for test/example mode first
-    val isTestMode = config.propertyOrNull("ktor.test")?.getString() == "true"
-    val isExampleMode = config.propertyOrNull("koog.example.mode")?.getString() == "true"
-    val isMockMode = config.propertyOrNull("koog.mock.mode")?.getString() == "true"
+    // Check for mock mode triggers
+    val shouldUseMockMode = config.propertyOrNull("ktor.test")?.getString() == "true" ||
+                           config.propertyOrNull("koog.example.mode")?.getString() == "true" ||
+                           config.propertyOrNull("koog.mock.mode")?.getString() == "true"
     
-    if (isTestMode || isExampleMode || isMockMode) {
-        log.info("Test/Example/Mock mode detected, enabling MockPromptExecutor")
+    if (shouldUseMockMode) {
+        log.info("Mock mode detected from environment configuration, enabling MockPromptExecutor")
         return koogConfig.apply {
-            when {
-                isTestMode -> {
-                    log.info("Ktor test mode detected")
-                    mockMode()
-                }
-                isExampleMode -> {
-                    log.info("Koog example mode detected")
-                    mockMode()
-                }
-                else -> {
-                    log.info("Koog mock mode detected")
-                    mockMode()
-                }
-            }
+            mockMode()
         }
     }
     
-    // Only try to load real LLM config if not in test/example mode
+    // Only try to load real LLM config if not in mock mode
     log.info("Loading LLM configuration from environment")
     koogConfig
         .openAI(config)
