@@ -9,6 +9,20 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
+ * Marks declarations that are **delicate** —
+ * they have limited use-case and shall be used with care in general code.
+ * Any use of a delicate declaration has to be carefully reviewed to make sure it is
+ * properly used and does not create problems like resource leaks or deadlocks.
+ * Delicate declarations are not inherently unsafe, but they require extra care.
+ */
+@RequiresOptIn(
+    message = "This is a delicate API and its use requires care. " +
+        "Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.",
+    level = RequiresOptIn.Level.WARNING
+)
+public annotation class DelicateAgentPoolApi
+
+/**
  * A pool of pre-initialized AI agents that can be acquired and released for reuse.
  * 
  * This provides significant performance benefits over creating new agent instances per request by:
@@ -23,12 +37,31 @@ import kotlin.time.Duration.Companion.seconds
 public interface AgentPool<Input, Output> {
     
     /**
+     * Execute a block with an agent from the pool, automatically handling acquire/release.
+     * This is the recommended way to use the pool as it ensures proper resource cleanup.
+     * 
+     * @param timeout Maximum time to wait for an available agent
+     * @param block The block to execute with the acquired agent
+     * @return The result of the block execution
+     * @throws IllegalStateException if no agent becomes available within the timeout
+     */
+    public suspend fun <R> withAgent(
+        timeout: Duration = 30.seconds,
+        block: suspend (AIAgent<Input, Output>) -> R
+    ): R
+    
+    /**
      * Acquire an agent from the pool. Suspends if no agents are available until one becomes free
      * or the timeout is reached.
+     * 
+     * **This is a delicate API.** Consider using [withAgent] instead for automatic resource management.
+     * When using this API, you must ensure that [PooledAgent.release] is called to return the agent
+     * to the pool, preferably in a try/finally block or using [PooledAgent.use].
      * 
      * @param timeout Maximum time to wait for an available agent
      * @return A pooled agent wrapper, or null if timeout is exceeded
      */
+    @DelicateAgentPoolApi
     public suspend fun acquire(timeout: Duration = 30.seconds): PooledAgent<Input, Output>?
     
     /**
@@ -62,8 +95,11 @@ public interface PooledAgent<Input, Output> : AutoCloseable {
     override fun close()
     
     /**
-     * Asynchronously release the agent back to the pool
+     * Asynchronously release the agent back to the pool.
+     * 
+     * **This is a delicate API.** Consider using [withAgent] instead for automatic resource management.
      */
+    @DelicateAgentPoolApi
     public suspend fun release()
 }
 
@@ -88,8 +124,8 @@ public data class PoolStats(
  * Configuration for agent pool behavior
  */
 public data class AgentPoolConfig(
-    val maxSize: Int = 10,
-    val minSize: Int = 1,
+    val maxSize: Int = 50,
+    val minSize: Int = 1, 
     val acquireTimeout: Duration = 30.seconds,
     val enableStatistics: Boolean = true
 )
@@ -149,6 +185,18 @@ public class DefaultAgentPool<Input, Output>(
         } else {
             PoolStats(0, 0, 0, 0, 0, 0, 0, 0)
         }
+    
+    override suspend fun <R> withAgent(
+        timeout: Duration,
+        block: suspend (AIAgent<Input, Output>) -> R
+    ): R {
+        val pooledAgent = acquire(timeout) 
+            ?: throw IllegalStateException("No agent available within timeout: $timeout")
+        
+        return pooledAgent.use { agent ->
+            block(agent)
+        }
+    }
     
     override suspend fun acquire(timeout: Duration): PooledAgent<Input, Output>? {
         if (closed) return null
