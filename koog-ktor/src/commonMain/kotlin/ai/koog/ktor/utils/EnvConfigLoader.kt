@@ -23,7 +23,6 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
     
     // Check for mock mode triggers
     val shouldUseMockMode = config.propertyOrNull("ktor.test")?.getString() == "true" ||
-                           config.propertyOrNull("koog.example.mode")?.getString() == "true" ||
                            config.propertyOrNull("koog.mock.mode")?.getString() == "true"
     
     if (shouldUseMockMode) {
