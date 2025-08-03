@@ -105,6 +105,7 @@ registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
+registerRunExampleTask("runExampleSimpleSubagent", "ai.koog.agents.example.subagent.SimpleSubagentExampleKt")
 
 dokka {
     dokkaSourceSets.named("main") {
