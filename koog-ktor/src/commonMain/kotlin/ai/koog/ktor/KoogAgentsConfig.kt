@@ -20,6 +20,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MockPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -93,6 +94,18 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
      * of specific `AgentFeature` implementations.
      */
     internal val agentFeatures: MutableList<FeatureContext.() -> Unit> = mutableListOf()
+
+    /**
+     * Indicates whether mock mode is enabled for testing and examples.
+     * When enabled, a MockPromptExecutor will be used instead of real LLM connections.
+     */
+    internal var mockMode: Boolean = false
+
+    /**
+     * Mock executor instance for testing and examples.
+     * Only used when mockMode is enabled.
+     */
+    internal var mockExecutor: MockPromptExecutor? = null
 
     /**
      * Configuration class for defining timeout durations in network requests.
@@ -413,6 +426,70 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     public fun agentConfig(configure: AgentConfig.() -> Unit) {
         agentConfig = AgentConfig().apply {
             configure()
+        }
+    }
+
+    /**
+     * Enables mock mode for testing and examples.
+     * 
+     * When mock mode is enabled, Koog will use a MockPromptExecutor instead of real LLM connections.
+     * This is perfect for:
+     * - Running examples without API keys
+     * - Testing applications
+     * - Development environments
+     * - CI/CD pipelines
+     *
+     * @param enabled Whether to enable mock mode (default: true)
+     * @param configure Configuration block for customizing mock responses
+     */
+    public fun mockMode(enabled: Boolean = true, configure: MockPromptExecutor.MockResponseConfig.() -> Unit = {}) {
+        mockMode = enabled
+        if (enabled) {
+            mockExecutor = MockPromptExecutor().apply {
+                responseConfig.configure()
+            }
+        } else {
+            mockExecutor = null
+        }
+    }
+
+    /**
+     * Enables mock mode with example-friendly default responses.
+     * This is a convenience method that sets up common responses for typical example scenarios.
+     */
+    public fun exampleMode() {
+        mockMode = true
+        mockExecutor = MockPromptExecutor.withExampleResponses()
+    }
+
+    /**
+     * Enables mock mode with test-specific responses.
+     * This is a convenience method that sets up predictable responses for testing.
+     */
+    public fun testMode() {
+        mockMode = true
+        mockExecutor = MockPromptExecutor.withTestResponses()
+    }
+
+    /**
+     * Auto-detects if running in a test environment.
+     * 
+     * @return true if test environment is detected
+     */
+    public fun autoDetectTestMode(): Boolean {
+        // Check system properties
+        if (System.getProperty("test.mode") == "true") return true
+        if (System.getProperty("koog.test.mode") == "true") return true
+        
+        // Check environment variables
+        if (System.getenv("TEST_MODE") == "true") return true
+        if (System.getenv("KOOG_TEST_MODE") == "true") return true
+        
+        // Check if we're running in a test context by examining the stack trace
+        return Thread.currentThread().stackTrace.any { stackElement ->
+            stackElement.className.contains("test", ignoreCase = true) ||
+            stackElement.className.contains("junit", ignoreCase = true) ||
+            stackElement.className.contains("TestEngine", ignoreCase = true)
         }
     }
 

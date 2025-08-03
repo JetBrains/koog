@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.ktor.Koog
+import ai.koog.ktor.extensions.installKoogForExamples
 import ai.koog.ktor.aiAgent
 import ai.koog.ktor.llm
 import ai.koog.ktor.mcp
@@ -23,6 +24,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
@@ -54,26 +56,27 @@ fun Application.main() {
 }
 
 fun Application.configureKoog() {
-    // Install the Koog plugin
-    // LLM configurations will be loaded from application.yaml
-    // You can still provide additional configuration or override settings from the YAML file
-    install(Koog) {
-        // The following configurations are optional and will override any settings from application.yaml
+    // Install Koog with example mode enabled by default
+    // This allows the example to run without requiring real LLM API keys
+    // LLM configurations can still be loaded from application.yaml if available
+    installKoogForExamples {
+        // Optional: Override with real LLM configuration if API keys are available
+        // Uncomment and provide real API keys to use actual LLMs instead of mocks
+        /*
         llm {
-            // Example of overriding a configuration from application.yaml
-            // This will take precedence over the configuration in the YAML file
-            openAI(apiKey = System.getenv("OPENAI_API_KEY") ?: "override-from-code") {
-                // Override baseUrl only if needed
-                // baseUrl = "custom-override-url"
+            openAI(apiKey = System.getenv("OPENAI_API_KEY") ?: error("OpenAI API key required")) {
+                // Configure OpenAI settings if needed
             }
-
+            
             fallback { }
         }
+        */
 
         agentConfig {
-            mcp {
-                sse("put some url here...")
-            }
+            // MCP configuration - optional for this example
+            // mcp {
+            //     sse("put some url here...")
+            // }
 
             registerTools {
                 tool(::searchInGoogle)
@@ -82,7 +85,7 @@ fun Application.configureKoog() {
             }
 
             prompt {
-                system("You are professional joke based on user's request")
+                system("You are a professional assistant that can help with various tasks and provide informative responses based on user requests.")
             }
 
             install(OpenTelemetry) {
@@ -105,7 +108,7 @@ fun Application.defineRoutes() {
 }
 
 private fun Route.agenticRoutes() {
-    get("user") {
+    post("user") {
         val userRequest = call.receive<String>()
 
         val isHarmful = llm().moderate(
@@ -117,7 +120,7 @@ private fun Route.agenticRoutes() {
 
         if (isHarmful) {
             call.respond(HttpStatusCode.BadRequest, "Harmful content detected")
-            return@get
+            return@post
         }
 
         val updatedRequest = llm().execute(

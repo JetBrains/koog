@@ -11,6 +11,8 @@ import kotlin.time.Duration.Companion.milliseconds
  * Loads and configures the environment-specific settings for Koog agents based on the provided
  * application configuration. This includes setup for OpenAI, Anthropic, Google, OpenRouter,
  * Ollama, as well as default and fallback LLM (Large Language Model) configurations.
+ * 
+ * Automatically detects test/example modes and configures mock executors accordingly.
  *
  * @param envConfig The application configuration that contains environment-specific properties
  *                  for configuring Koog agents and associated integrations.
@@ -18,6 +20,35 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): KoogAgentsConfig {
     val koogConfig = KoogAgentsConfig(scope)
+    
+    // Check for test/example mode first
+    val isTestMode = config.propertyOrNull("ktor.test")?.getString() == "true"
+    val isExampleMode = config.propertyOrNull("koog.example.mode")?.getString() == "true"
+    val isMockMode = config.propertyOrNull("koog.mock.mode")?.getString() == "true"
+    
+    if (isTestMode || isExampleMode || isMockMode) {
+        log.info("Test/Example/Mock mode detected, enabling MockPromptExecutor")
+        return koogConfig.apply {
+            when {
+                isTestMode -> {
+                    log.info("Ktor test mode detected")
+                    testMode()
+                }
+                isExampleMode -> {
+                    log.info("Koog example mode detected")
+                    exampleMode()
+                }
+                else -> {
+                    log.info("Koog mock mode detected")
+                    mockMode()
+                }
+            }
+        }
+    }
+    
+    // Only try to load real LLM config if not in test/example mode
+    log.info("Loading LLM configuration from environment")
+    koogConfig
         .openAI(config)
         .anthropic(config)
         .google(config)
