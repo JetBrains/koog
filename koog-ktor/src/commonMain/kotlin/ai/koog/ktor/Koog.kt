@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.utils.SuitableForIO
 import ai.koog.ktor.utils.loadAgentsConfig
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.executor.llms.MockPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import io.ktor.server.application.Application
@@ -67,14 +68,32 @@ public class Koog(
             val config = try {
                 pipeline.environment.loadAgentsConfig(scope)
             } catch (e: Exception) {
-                pipeline.environment.log.error("Failed to read Koog configuration from application config", e)
-                KoogAgentsConfig(scope)
+                pipeline.environment.log.warn("Failed to load LLM configuration, falling back to mock mode", e)
+                KoogAgentsConfig(scope).apply { mockMode() }
             }.apply(configure)
+
+            // Auto-detect test mode if not explicitly configured
+            if (!config.mockMode && config.autoDetectTestMode()) {
+                pipeline.environment.log.info("Test environment detected, enabling mock mode")
+                config.mockMode()
+            }
 
             job.complete()
 
-            val executor =
-                MultiLLMPromptExecutor(llmClients = config.llmConnections, fallback = config.fallbackLLMSettings)
+            val executor = when {
+                config.mockMode && config.mockExecutor != null -> {
+                    pipeline.environment.log.info("Using MockPromptExecutor for testing/examples")
+                    config.mockExecutor!!
+                }
+                config.llmConnections.isEmpty() -> {
+                    pipeline.environment.log.warn("No LLM clients configured and mock mode disabled, enabling mock mode")
+                    MockPromptExecutor.withDefaultResponses()
+                }
+                else -> {
+                    pipeline.environment.log.info("Using MultiLLMPromptExecutor with ${config.llmConnections.size} LLM client(s)")
+                    MultiLLMPromptExecutor(llmClients = config.llmConnections, fallback = config.fallbackLLMSettings)
+                }
+            }
 
             return Koog(
                 application,

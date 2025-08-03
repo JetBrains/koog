@@ -23,6 +23,7 @@ include(":agents:agents-tools")
 include(":agents:agents-utils")
 
 include(":examples")
+include(":examples-ktor")
 
 include(":integration-tests")
 

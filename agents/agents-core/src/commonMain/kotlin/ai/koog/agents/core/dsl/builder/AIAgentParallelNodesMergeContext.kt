@@ -10,6 +10,9 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.tools.permissions.PermissionMetadata
+import ai.koog.agents.core.tools.permissions.Role
+import ai.koog.agents.core.tools.permissions.RoleHierarchy
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 
@@ -93,6 +96,14 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override suspend fun fork(): AIAgentContextBase = underlyingContextBase.fork()
 
     override suspend fun replace(context: AIAgentContextBase): Unit = underlyingContextBase.replace(context)
+
+    // Permission delegation
+    override fun hasPermission(metadata: PermissionMetadata): Boolean = underlyingContextBase.hasPermission(metadata)
+    override fun hasRole(role: Role): Boolean = underlyingContextBase.hasRole(role)
+    override val currentRoles: Set<Role>? get() = underlyingContextBase.currentRoles
+    override val roleHierarchy: RoleHierarchy? get() = underlyingContextBase.roleHierarchy
+    override fun getPermissionDenialReason(requiredMetadata: PermissionMetadata): String =
+        underlyingContextBase.getPermissionDenialReason(requiredMetadata)
 
     /**
      * Selects a result based on a predicate.

@@ -1,6 +1,7 @@
 package ai.koog.agents.core.agent.context.element
 
 import ai.koog.agents.core.agent.context.AgentTestBase
+import ai.koog.agents.core.tools.permissions.Role
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlin.test.Test
@@ -8,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 class AgentRunInfoContextElementTest : AgentTestBase() {
 
@@ -26,6 +28,28 @@ class AgentRunInfoContextElementTest : AgentTestBase() {
         assertEquals(testRunId, element.runId)
         assertEquals(config, element.agentConfig)
         assertEquals(strategyName, element.strategyName)
+        assertNull(element.runtimeRoles)
+        assertEquals(AgentRunInfoContextElement.Key, element.key)
+    }
+
+    @Test
+    fun testContextElementCreationWithRuntimeRoles() {
+        val config = createTestConfig()
+        val testRole = Role("test-role", "Test role")
+
+        val element = AgentRunInfoContextElement(
+            agentId = testAgentId,
+            runId = testRunId,
+            agentConfig = config,
+            strategyName = strategyName,
+            runtimeRoles = setOf(testRole)
+        )
+
+        assertEquals(testAgentId, element.agentId)
+        assertEquals(testRunId, element.runId)
+        assertEquals(config, element.agentConfig)
+        assertEquals(strategyName, element.strategyName)
+        assertEquals(setOf(testRole), element.runtimeRoles)
         assertEquals(AgentRunInfoContextElement.Key, element.key)
     }
 

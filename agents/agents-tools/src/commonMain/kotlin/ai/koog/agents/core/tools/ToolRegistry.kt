@@ -1,5 +1,16 @@
 package ai.koog.agents.core.tools
 
+import ai.koog.agents.core.tools.permissions.ToolPolicy
+import ai.koog.agents.core.tools.permissions.ToolPolicyBuilder
+
+/**
+ * Entry in the tool registry containing both tool and its policy.
+ */
+internal data class ToolEntry(
+    val tool: Tool<*, *>,
+    val policy: ToolPolicy? = null
+)
+
 /**
  * A registry that manages a collection of tools for use by agents.
  *
@@ -10,25 +21,35 @@ package ai.koog.agents.core.tools
  * - Maintains a unique collection of named tools
  * - Provides methods to retrieve tools by name or type
  * - Supports merging multiple registries
+ * - Associates governance policies (permissions, rate limits, caching) with tools
  *
  * Usage examples:
  * 1. Creating a registry:
  *    ```
  *    val registry = ToolRegistry {
  *        tool(MyCustomTool())
- *        tool(AnotherTool())
+ *        tool(AnotherTool()) {
+ *            // Permission settings
+ *            minimumRole = userRole
+ *
+ *            // Rate limiting settings
+ *            rateLimits { ... }
+ *
+ *            // Caching settings
+ *            cache { ... }
+ *        }
  *    }
  *    ```
  * 2. Merging registries:
  *    ```
  *    val combinedRegistry = registry1 + registry2
  *    ```
- *
- * @property tools The list of tools contained in this registry
  */
-public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyList()) {
+public class ToolRegistry internal constructor(
+    entries: List<ToolEntry> = emptyList()
+) {
 
-    private val _tools: MutableList<Tool<*, *>> = tools.toMutableList()
+    private val _entries: MutableList<ToolEntry> = entries.toMutableList()
 
     /**
      * Provides an immutable list of tools currently available in the registry.
@@ -37,7 +58,25 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
      * a read-only list to prevent external modification of the registry state.
      */
     public val tools: List<Tool<*, *>>
-        get() = _tools.toList()
+        get() = _entries.map { it.tool }
+
+    /**
+     * Get the policy (permissions, rate limits, caching) for a specific tool.
+     *
+     * @param tool The tool to get the policy for
+     * @return The tool policy or null if no policy is defined
+     */
+    public fun getToolPolicy(tool: Tool<*, *>): ToolPolicy? =
+        _entries.find { it.tool == tool }?.policy
+
+    /**
+     * Get the policy by tool name (for convenience during execution).
+     *
+     * @param toolName The name of the tool
+     * @return The tool policy or null if no policy is defined
+     */
+    public fun getToolPolicyByName(toolName: String): ToolPolicy? =
+        _entries.find { it.tool.name == toolName }?.policy
 
     /**
      * Retrieves a tool by its name from the registry.
@@ -71,27 +110,46 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
     }
 
     /**
+     * Retrieves all tools by their type.
+     *
+     * @return All tools in the registry
+     */
+    public fun getToolsByType(): List<Tool<*, *>> = tools
+
+    /**
      * Combines the tools from this registry and the provided registry into a new ToolRegistry.
      *
      * This method merges the tools from both registries, ensuring that each tool is included only once,
-     * based on its name.
+     * based on its name. Entries from the right-hand registry take precedence.
      *
      * @param toolRegistry The other ToolRegistry whose tools will be merged with the current registry.
      * @return A new ToolRegistry containing the combined list of tools from both registries.
      */
     public operator fun plus(toolRegistry: ToolRegistry): ToolRegistry {
-        val mergedTools = (this.tools + toolRegistry.tools).distinctBy { it.name }
-        return ToolRegistry(mergedTools)
+        val toolsByName = mutableMapOf<String, ToolEntry>()
+
+        // Add entries from this registry
+        _entries.forEach { entry ->
+            toolsByName[entry.tool.name] = entry
+        }
+
+        // Add/override with entries from other registry
+        toolRegistry._entries.forEach { entry ->
+            toolsByName[entry.tool.name] = entry
+        }
+
+        return ToolRegistry(toolsByName.values.toList())
     }
 
     /**
      * Adds a tool to the registry if it is not already present.
      *
      * @param tool The tool to be added to the registry.
+     * @param policy Optional policy for the tool
      */
-    public fun add(tool: Tool<*, *>) {
-        if (_tools.contains(tool)) return
-        _tools.add(tool)
+    public fun add(tool: Tool<*, *>, policy: ToolPolicy? = null) {
+        if (_entries.any { it.tool.name == tool.name }) return
+        _entries.add(ToolEntry(tool, policy))
     }
 
     /**
@@ -112,14 +170,25 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
      * It ensures that each tool added to the registry has a unique name.
      */
     public class Builder internal constructor() {
-        private val tools = mutableListOf<Tool<*, *>>()
+        private val entries = mutableListOf<ToolEntry>()
 
         /**
          * Add a tool to the registry
          */
         public fun tool(tool: Tool<*, *>) {
-            require(tool.name !in tools.map { it.name }) { "Tool \"${tool.name}\" is already defined" }
-            tools.add(tool)
+            require(entries.none { it.tool.name == tool.name }) { "Tool \"${tool.name}\" is already defined" }
+            entries.add(ToolEntry(tool))
+        }
+
+        /**
+         * Add a tool to the registry with policy configuration
+         */
+        public fun tool(tool: Tool<*, *>, configure: ToolPolicyBuilder.() -> Unit) {
+            require(entries.none { it.tool.name == tool.name }) { "Tool \"${tool.name}\" is already defined" }
+
+            val policyBuilder = ToolPolicyBuilder()
+            policyBuilder.configure()
+            entries.add(ToolEntry(tool, policyBuilder.build()))
         }
 
         /**
@@ -130,7 +199,7 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
         }
 
         internal fun build(): ToolRegistry {
-            return ToolRegistry(tools)
+            return ToolRegistry(entries)
         }
     }
 

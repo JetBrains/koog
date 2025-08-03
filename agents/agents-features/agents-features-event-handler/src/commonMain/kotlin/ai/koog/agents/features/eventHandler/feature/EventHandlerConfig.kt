@@ -15,9 +15,14 @@ import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
 import ai.koog.agents.core.feature.handler.StrategyFinishContext
 import ai.koog.agents.core.feature.handler.StrategyStartContext
+import ai.koog.agents.core.feature.handler.ToolCacheHitContext
+import ai.koog.agents.core.feature.handler.ToolCacheMissContext
 import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
 import ai.koog.agents.core.feature.handler.ToolCallResultContext
+import ai.koog.agents.core.feature.handler.ToolPermissionDeniedContext
+import ai.koog.agents.core.feature.handler.ToolRateLimitExceededContext
+import ai.koog.agents.core.feature.handler.ToolResultCachedContext
 import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
@@ -621,6 +626,71 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //endregion Tool Call Handlers
 
+    //region Tool Governance Handlers
+
+    private var _onToolPermissionDenied: suspend (eventContext: ToolPermissionDeniedContext) -> Unit = {}
+    private var _onToolRateLimitExceeded: suspend (eventContext: ToolRateLimitExceededContext) -> Unit = {}
+    private var _onToolCacheHit: suspend (eventContext: ToolCacheHitContext) -> Unit = {}
+    private var _onToolCacheMiss: suspend (eventContext: ToolCacheMissContext) -> Unit = {}
+    private var _onToolResultCached: suspend (eventContext: ToolResultCachedContext) -> Unit = {}
+
+    /**
+     * Adds a handler for when tool execution is denied due to insufficient permissions.
+     */
+    public fun onToolPermissionDenied(handler: suspend (eventContext: ToolPermissionDeniedContext) -> Unit) {
+        val originalHandler = this._onToolPermissionDenied
+        this._onToolPermissionDenied = { eventContext ->
+            originalHandler(eventContext)
+            handler(eventContext)
+        }
+    }
+
+    /**
+     * Adds a handler for when tool execution is denied due to rate limiting.
+     */
+    public fun onToolRateLimitExceeded(handler: suspend (eventContext: ToolRateLimitExceededContext) -> Unit) {
+        val originalHandler = this._onToolRateLimitExceeded
+        this._onToolRateLimitExceeded = { eventContext ->
+            originalHandler(eventContext)
+            handler(eventContext)
+        }
+    }
+
+    /**
+     * Adds a handler for when a tool result is retrieved from cache.
+     */
+    public fun onToolCacheHit(handler: suspend (eventContext: ToolCacheHitContext) -> Unit) {
+        val originalHandler = this._onToolCacheHit
+        this._onToolCacheHit = { eventContext ->
+            originalHandler(eventContext)
+            handler(eventContext)
+        }
+    }
+
+    /**
+     * Adds a handler for when a tool cache lookup misses.
+     */
+    public fun onToolCacheMiss(handler: suspend (eventContext: ToolCacheMissContext) -> Unit) {
+        val originalHandler = this._onToolCacheMiss
+        this._onToolCacheMiss = { eventContext ->
+            originalHandler(eventContext)
+            handler(eventContext)
+        }
+    }
+
+    /**
+     * Adds a handler for when a tool result is cached.
+     */
+    public fun onToolResultCached(handler: suspend (eventContext: ToolResultCachedContext) -> Unit) {
+        val originalHandler = this._onToolResultCached
+        this._onToolResultCached = { eventContext ->
+            originalHandler(eventContext)
+            handler(eventContext)
+        }
+    }
+
+    //endregion Tool Governance Handlers
+
     //region Invoke Agent Handlers
 
     /**
@@ -745,4 +815,43 @@ public class EventHandlerConfig : FeatureConfig() {
     }
 
     //endregion Invoke Tool Call Handlers
+
+    //region Invoke Tool Governance Handlers
+
+    /**
+     * Invoke handlers for tool permission denied events.
+     */
+    internal suspend fun invokeOnToolPermissionDenied(eventContext: ToolPermissionDeniedContext) {
+        _onToolPermissionDenied.invoke(eventContext)
+    }
+
+    /**
+     * Invoke handlers for tool rate limit exceeded events.
+     */
+    internal suspend fun invokeOnToolRateLimitExceeded(eventContext: ToolRateLimitExceededContext) {
+        _onToolRateLimitExceeded.invoke(eventContext)
+    }
+
+    /**
+     * Invoke handlers for tool cache hit events.
+     */
+    internal suspend fun invokeOnToolCacheHit(eventContext: ToolCacheHitContext) {
+        _onToolCacheHit.invoke(eventContext)
+    }
+
+    /**
+     * Invoke handlers for tool cache miss events.
+     */
+    internal suspend fun invokeOnToolCacheMiss(eventContext: ToolCacheMissContext) {
+        _onToolCacheMiss.invoke(eventContext)
+    }
+
+    /**
+     * Invoke handlers for tool result cached events.
+     */
+    internal suspend fun invokeOnToolResultCached(eventContext: ToolResultCachedContext) {
+        _onToolResultCached.invoke(eventContext)
+    }
+
+    //endregion Invoke Tool Governance Handlers
 }

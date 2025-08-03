@@ -13,6 +13,8 @@ import ai.koog.agents.core.agent.entity.SubgraphMetadata
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.permissions.PermissionBuilder
+import ai.koog.agents.core.tools.permissions.PermissionMetadata
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.CoroutineDispatcher
@@ -67,20 +69,32 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      * Defines a new node in the agent's stage, representing a unit of execution that takes an input and produces an output.
      *
      * @param name An optional name for the node. If not provided, the property name of the delegate will be used.
+     * @param permissions Optional permission requirements for this node.
      * @param execute A suspendable function that defines the node's execution logic.
      */
     public inline fun <reified Input, reified Output> node(
         name: String? = null,
+        permissions: PermissionMetadata? = null,
         noinline execute: suspend AIAgentContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(
             name = name,
-            AIAgentNodeBuilder(
+            nodeBuilder = AIAgentNodeBuilder(
                 inputType = typeOf<Input>(),
                 outputType = typeOf<Output>(),
                 execute = execute
-            )
+            ),
+            permissions = permissions
         )
+    }
+
+    protected var subgraphPermissions: PermissionMetadata? = null
+
+    /**
+     * Configure permissions for this subgraph.
+     */
+    public fun permissions(block: PermissionBuilder.() -> Unit) {
+        subgraphPermissions = PermissionBuilder().apply(block).build()
     }
 
     /**
@@ -183,7 +197,12 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         return "$parentPath:${node.id}"
     }
 
-    internal fun buildSubgraphMetadata(start: StartNode<Input>, parentName: String, strategy: AIAgentStrategy<Input, Output>): SubgraphMetadata {
+    internal fun buildSubgraphMetadata(
+        start: StartNode<Input>,
+        parentName: String,
+        strategy: AIAgentStrategy<Input, Output>,
+        permissionMetadata: PermissionMetadata? = null
+    ): SubgraphMetadata {
         val subgraphNodes = buildSubGraphNodesMap(start, parentName)
         subgraphNodes[parentName] = strategy
 
@@ -200,7 +219,8 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
 
         return SubgraphMetadata(
             nodesMap = subgraphNodes,
-            uniqueNames = uniqueNames
+            uniqueNames = uniqueNames,
+            permissionMetadata = permissionMetadata
         )
     }
 
@@ -261,6 +281,9 @@ public class AIAgentSubgraphBuilder<Input, Output>(
         require(isFinishReachable(nodeStart)) {
             "FinishSubgraphNode can't be reached from the StartNode of the agent's graph. Please, review how it was defined."
         }
+
+        // Apply permissions if configured
+        nodeStart.permissionMetadata = subgraphPermissions
 
         return AIAgentSubgraphDelegate(name, nodeStart, nodeFinish, toolSelectionStrategy, llmModel, llmParams)
     }

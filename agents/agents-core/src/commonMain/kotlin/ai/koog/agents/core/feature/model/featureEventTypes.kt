@@ -370,3 +370,122 @@ public data class ToolCallResultEvent(
 ) : DefinedFeatureEvent()
 
 //endregion Tool Call
+
+//region Tool Governance
+
+/**
+ * Represents an event indicating that a tool execution was denied due to insufficient permissions.
+ *
+ * This event is triggered when an agent attempts to use a tool but lacks the required role
+ * or permissions. It provides context about the attempted tool call and the reason for denial.
+ *
+ * @property runId The unique identifier of the AI agent run.
+ * @property toolCallId The identifier of the specific tool call attempt.
+ * @property toolName The name of the tool that was denied.
+ * @property requiredRole The minimum role required to use this tool.
+ * @property effectiveRoles The roles of the agent attempting the call.
+ * @property reason A descriptive message explaining the denial.
+ * @property eventId A string representing the event type.
+ */
+@Serializable
+public data class ToolPermissionDeniedEvent(
+    val runId: String,
+    val toolCallId: String?,
+    val toolName: String,
+    val requiredRole: String?,
+    val effectiveRoles: List<String>?,
+    val reason: String,
+    override val eventId: String = ToolPermissionDeniedEvent::class.simpleName!!,
+) : DefinedFeatureEvent()
+
+/**
+ * Represents an event indicating that a tool execution was denied due to rate limiting.
+ *
+ * This event is triggered when an agent exceeds the allowed rate limit for a tool.
+ * It includes information about the limit that was exceeded and when it will reset.
+ *
+ * @property runId The unique identifier of the AI agent run.
+ * @property toolCallId The identifier of the specific tool call attempt.
+ * @property toolName The name of the tool that was rate limited.
+ * @property limit The rate limit that was exceeded (e.g., "100 per minute").
+ * @property resetIn The duration until the rate limit resets.
+ * @property eventId A string representing the event type.
+ */
+@Serializable
+public data class ToolRateLimitExceededEvent(
+    val runId: String,
+    val toolCallId: String?,
+    val toolName: String,
+    val limit: String,
+    val resetIn: String?,
+    override val eventId: String = ToolRateLimitExceededEvent::class.simpleName!!,
+) : DefinedFeatureEvent()
+
+/**
+ * Represents an event indicating that a tool result was retrieved from cache.
+ *
+ * This event is triggered when a cached result is returned instead of executing the tool.
+ * It helps track cache effectiveness and understand agent behavior.
+ *
+ * @property runId The unique identifier of the AI agent run.
+ * @property toolCallId The identifier of the specific tool call.
+ * @property toolName The name of the tool whose result was cached.
+ * @property cacheKey The key used to retrieve the cached result.
+ * @property cacheAge The age of the cached result in milliseconds.
+ * @property eventId A string representing the event type.
+ */
+@Serializable
+public data class ToolCacheHitEvent(
+    val runId: String,
+    val toolCallId: String?,
+    val toolName: String,
+    val cacheKey: String,
+    val cacheAge: Long?,
+    override val eventId: String = ToolCacheHitEvent::class.simpleName!!,
+) : DefinedFeatureEvent()
+
+/**
+ * Represents an event indicating that a tool was executed because no cached result was available.
+ *
+ * This event is triggered when a cache lookup fails and the tool needs to be executed.
+ * It helps track cache misses and understand when fresh executions are required.
+ *
+ * @property runId The unique identifier of the AI agent run.
+ * @property toolCallId The identifier of the specific tool call.
+ * @property toolName The name of the tool being executed.
+ * @property cacheKey The key that was checked in the cache.
+ * @property eventId A string representing the event type.
+ */
+@Serializable
+public data class ToolCacheMissEvent(
+    val runId: String,
+    val toolCallId: String?,
+    val toolName: String,
+    val cacheKey: String,
+    override val eventId: String = ToolCacheMissEvent::class.simpleName!!,
+) : DefinedFeatureEvent()
+
+/**
+ * Represents an event indicating that a tool result was stored in cache.
+ *
+ * This event is triggered after a successful tool execution when the result is cached
+ * for future use. It helps track caching behavior and cache population.
+ *
+ * @property runId The unique identifier of the AI agent run.
+ * @property toolCallId The identifier of the specific tool call.
+ * @property toolName The name of the tool whose result was cached.
+ * @property cacheKey The key used to store the result.
+ * @property ttlSeconds The time-to-live for the cached result in seconds.
+ * @property eventId A string representing the event type.
+ */
+@Serializable
+public data class ToolResultCachedEvent(
+    val runId: String,
+    val toolCallId: String?,
+    val toolName: String,
+    val cacheKey: String,
+    val ttlSeconds: Long,
+    override val eventId: String = ToolResultCachedEvent::class.simpleName!!,
+) : DefinedFeatureEvent()
+
+//endregion Tool Governance

@@ -1,5 +1,7 @@
 package ai.koog.agents.core.agent.entity
 
+import ai.koog.agents.core.tools.permissions.PermissionMetadata
+
 /**
  * Represents metadata associated with a subgraph in an AI agent strategy graph.
  *
@@ -14,8 +16,12 @@ package ai.koog.agents.core.agent.entity
  * @property uniqueNames A boolean flag indicating if node names within the subgraph are unique. If `true`,
  * all node names in the `nodesMap` are guaranteed to be distinct, which can be useful
  * for ensuring consistency and avoiding conflicts in subgraph operations.
+ *
+ * @property permissionMetadata Optional permission requirements for this subgraph. When present,
+ * the agent must have the specified roles to execute this subgraph.
  */
 public data class SubgraphMetadata(
     val nodesMap: Map<String, AIAgentNodeBase<*, *>>,
     val uniqueNames: Boolean = false,
+    val permissionMetadata: PermissionMetadata? = null,
 )

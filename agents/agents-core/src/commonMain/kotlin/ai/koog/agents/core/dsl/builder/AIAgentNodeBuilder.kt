@@ -3,6 +3,7 @@ package ai.koog.agents.core.dsl.builder
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.tools.permissions.PermissionMetadata
 import ai.koog.agents.core.utils.Some
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
@@ -40,13 +41,24 @@ public open class AIAgentNodeBuilder<Input, Output>(
      */
     public lateinit var name: String
 
+    /**
+     * Optional permission metadata for this node.
+     * When set, the node will check these permissions before executing.
+     */
+    public var permissions: PermissionMetadata? = null
+
     override fun build(): AIAgentNodeBase<Input, Output> {
-        return AIAgentNode(
+        val node = AIAgentNode(
             name = name,
             inputType = inputType,
             outputType = outputType,
             execute = execute
         )
+
+        // Set permissions if provided
+        node.permissionMetadata = permissions
+
+        return node
     }
 }
 
@@ -82,10 +94,12 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  * @param name The optional name of the node. If not provided, the name will be derived from the
  * property to which the delegate is applied.
  * @param nodeBuilder The builder used to construct the [AIAgentNodeBase] instance for this delegate.
+ * @param permissions Optional permission metadata for this node.
  */
 public open class AIAgentNodeDelegate<Input, Output>(
     private val name: String?,
     private val nodeBuilder: AIAgentNodeBuilder<Input, Output>,
+    private val permissions: PermissionMetadata? = null
 ) {
     private var node: AIAgentNodeBase<Input, Output>? = null
 
@@ -100,7 +114,10 @@ public open class AIAgentNodeDelegate<Input, Output>(
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<Input, Output> {
         if (node == null) {
             // if name is explicitly defined, use it, otherwise use property name as node name
-            node = nodeBuilder.also { it.name = name ?: property.name }.build()
+            node = nodeBuilder.also {
+                it.name = name ?: property.name
+                it.permissions = permissions
+            }.build()
         }
 
         return node!!

@@ -66,3 +66,90 @@ public data class ToolCallResultContext(
     val toolArgs: ToolArgs,
     val result: ToolResult?
 ) : ToolEventHandlerContext
+
+/**
+ * Represents the context for when tool execution is denied due to insufficient permissions.
+ *
+ * @property tool The tool that was denied.
+ * @property toolArgs The arguments that were provided for the tool.
+ * @property requiredRole The minimum role required to use this tool.
+ * @property effectiveRoles The roles of the agent attempting the call.
+ * @property reason A descriptive message explaining the denial.
+ */
+public data class ToolPermissionDeniedContext(
+    val runId: String,
+    val toolCallId: String?,
+    val tool: Tool<*, *>,
+    val toolArgs: ToolArgs?,
+    val requiredRole: String?,
+    val effectiveRoles: List<String>,
+    val reason: String
+) : ToolEventHandlerContext
+
+/**
+ * Represents the context for when tool execution is denied due to rate limiting.
+ *
+ * @property tool The tool that was rate limited.
+ * @property toolArgs The arguments that were provided for the tool.
+ * @property limit The rate limit that was exceeded.
+ * @property resetIn The duration until the rate limit resets.
+ */
+public data class ToolRateLimitExceededContext(
+    val runId: String,
+    val toolCallId: String?,
+    val tool: Tool<*, *>,
+    val toolArgs: ToolArgs?,
+    val limit: String,
+    val resetIn: String?
+) : ToolEventHandlerContext
+
+/**
+ * Represents the context for when a tool result is retrieved from cache.
+ *
+ * @property tool The tool whose result was cached.
+ * @property toolArgs The arguments that were used for the cached call.
+ * @property cacheKey The key used to retrieve the cached result.
+ * @property cacheAge The age of the cached result in milliseconds.
+ */
+public data class ToolCacheHitContext(
+    val runId: String,
+    val toolCallId: String?,
+    val tool: Tool<*, *>,
+    val toolArgs: ToolArgs?,
+    val cacheKey: String,
+    val cacheAge: Long?
+) : ToolEventHandlerContext
+
+/**
+ * Represents the context for when a tool cache lookup misses.
+ *
+ * @property tool The tool being executed.
+ * @property toolArgs The arguments being used for the tool call.
+ * @property cacheKey The key that was checked in the cache.
+ */
+public data class ToolCacheMissContext(
+    val runId: String,
+    val toolCallId: String?,
+    val tool: Tool<*, *>,
+    val toolArgs: ToolArgs?,
+    val cacheKey: String
+) : ToolEventHandlerContext
+
+/**
+ * Context for tool result cached events.
+ *
+ * @property runId The unique identifier for the current run.
+ * @property toolCallId The unique identifier for the tool call.
+ * @property tool The tool whose result was cached.
+ * @property toolArgs The arguments used for the tool call.
+ * @property cacheKey The key used to store the result in cache.
+ * @property ttlSeconds The time-to-live in seconds for the cached result.
+ */
+public data class ToolResultCachedContext(
+    val runId: String,
+    val toolCallId: String?,
+    val tool: Tool<*, *>,
+    val toolArgs: ToolArgs?,
+    val cacheKey: String,
+    val ttlSeconds: Long
+) : ToolEventHandlerContext

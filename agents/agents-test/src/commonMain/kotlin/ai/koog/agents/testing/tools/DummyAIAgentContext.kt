@@ -13,6 +13,9 @@ import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.tools.permissions.PermissionMetadata
+import ai.koog.agents.core.tools.permissions.Role
+import ai.koog.agents.core.tools.permissions.RoleHierarchy
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
@@ -144,6 +147,14 @@ public class DummyAIAgentContext(
     override suspend fun replace(context: AIAgentContextBase) {
         throw NotImplementedError("replace() is not supported for mock")
     }
+
+    // Permission-related implementations
+    override fun hasPermission(metadata: PermissionMetadata): Boolean = true
+    override fun hasRole(role: Role): Boolean = true
+    override val currentRoles: Set<Role>? = null
+    override val roleHierarchy: RoleHierarchy? = null
+    override fun getPermissionDenialReason(requiredMetadata: PermissionMetadata): String =
+        "No permissions configured in test context"
 }
 
 /**

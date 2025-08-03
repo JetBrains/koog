@@ -1,5 +1,9 @@
 package ai.koog.agents.core.agent.config
 
+import ai.koog.agents.core.tools.cache.ToolCache
+import ai.koog.agents.core.tools.permissions.PermissionChecker
+import ai.koog.agents.core.tools.permissions.RoleHierarchy
+import ai.koog.agents.core.tools.ratelimit.RateLimiter
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -16,13 +20,21 @@ import ai.koog.prompt.llm.LLModel
  * @param model The model to use for the agent's prompt execution
  * @param maxAgentIterations The maximum number of iterations allowed for an agent during its execution to prevent infinite loops.
  * @param missingToolsConversionStrategy Strategy to handle missing tool definitions in the prompt. Defaults to applying formatting for missing tools. Ex.: if in the LLM history, there are some tools that are currently undefined in the agent (sub)graph.
+ * @param roleHierarchy The complete role hierarchy available to this agent
+ * @param permissionChecker Optional permission checker for role-based access control
+ * @param rateLimiter Optional rate limiter for controlling tool execution frequency
+ * @param toolCache Optional cache for storing tool results
  */
-public class AIAgentConfig(
+public data class AIAgentConfig(
     override val prompt: Prompt,
     override val model: LLModel,
     override val maxAgentIterations: Int,
     override val missingToolsConversionStrategy: MissingToolsConversionStrategy =
-        MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
+        MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
+    public val roleHierarchy: RoleHierarchy? = null,
+    public val permissionChecker: PermissionChecker? = null,
+    public val rateLimiter: RateLimiter? = null,
+    public val toolCache: ToolCache? = null
 ) : AIAgentConfigBase {
 
     init {

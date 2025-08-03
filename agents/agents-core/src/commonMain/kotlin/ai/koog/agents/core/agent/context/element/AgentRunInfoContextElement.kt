@@ -1,6 +1,7 @@
 package ai.koog.agents.core.agent.context.element
 
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.tools.permissions.Role
 import kotlinx.coroutines.currentCoroutineContext
 import kotlin.coroutines.CoroutineContext
 
@@ -16,12 +17,14 @@ import kotlin.coroutines.CoroutineContext
  * @property runId The identifier for the session associated with the current agent run.
  * @property agentConfig The agent configuration property.
  * @property strategyName The name of the strategy being executed by the agent in the current context.
+ * @property runtimeRoles The runtime roles to use for this execution, overriding the configured role.
  */
 public data class AgentRunInfoContextElement(
     val agentId: String,
     val runId: String,
     val agentConfig: AIAgentConfigBase,
-    val strategyName: String
+    val strategyName: String,
+    val runtimeRoles: Set<Role>? = null
 ) : CoroutineContext.Element {
 
     /**

@@ -51,6 +51,36 @@ public class ExecuteToolHandler {
      */
     public var toolCallResultHandler: ToolCallResultHandler =
         ToolCallResultHandler { _ -> }
+
+    /**
+     * Handler for tool permission denied events.
+     */
+    public var toolPermissionDeniedHandler: ToolPermissionDeniedHandler =
+        ToolPermissionDeniedHandler { _ -> }
+
+    /**
+     * Handler for tool rate limit exceeded events.
+     */
+    public var toolRateLimitExceededHandler: ToolRateLimitExceededHandler =
+        ToolRateLimitExceededHandler { _ -> }
+
+    /**
+     * Handler for tool cache hit events.
+     */
+    public var toolCacheHitHandler: ToolCacheHitHandler =
+        ToolCacheHitHandler { _ -> }
+
+    /**
+     * Handler for tool cache miss events.
+     */
+    public var toolCacheMissHandler: ToolCacheMissHandler =
+        ToolCacheMissHandler { _ -> }
+
+    /**
+     * Handler for tool result cached events.
+     */
+    public var toolResultCachedHandler: ToolResultCachedHandler =
+        ToolResultCachedHandler { _ -> }
 }
 
 /**
@@ -97,4 +127,54 @@ public fun interface ToolCallResultHandler {
      * Handles the execution of a specific tool by processing its arguments and optionally handling its result.
      */
     public suspend fun handle(eventContext: ToolCallResultContext)
+}
+
+/**
+ * Handler for tool permission denied events.
+ */
+public fun interface ToolPermissionDeniedHandler {
+    /**
+     * Handles permission denied events during tool execution.
+     */
+    public suspend fun handle(eventContext: ToolPermissionDeniedContext)
+}
+
+/**
+ * Handler for tool rate limit exceeded events.
+ */
+public fun interface ToolRateLimitExceededHandler {
+    /**
+     * Handles rate limit exceeded events during tool execution.
+     */
+    public suspend fun handle(eventContext: ToolRateLimitExceededContext)
+}
+
+/**
+ * Handler for tool cache hit events.
+ */
+public fun interface ToolCacheHitHandler {
+    /**
+     * Handles cache hit events during tool execution.
+     */
+    public suspend fun handle(eventContext: ToolCacheHitContext)
+}
+
+/**
+ * Handler for tool cache miss events.
+ */
+public fun interface ToolCacheMissHandler {
+    /**
+     * Handles cache miss events during tool execution.
+     */
+    public suspend fun handle(eventContext: ToolCacheMissContext)
+}
+
+/**
+ * Handler for tool result cached events.
+ */
+public fun interface ToolResultCachedHandler {
+    /**
+     * Handles result cached events after tool execution.
+     */
+    public suspend fun handle(eventContext: ToolResultCachedContext)
 }

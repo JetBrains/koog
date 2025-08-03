@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.context.getAgentContextData
@@ -11,6 +12,7 @@ import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.permissions.filterToolDescriptorsByRole
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.json.JsonSchemaGenerator
@@ -83,32 +85,48 @@ public open class AIAgentSubgraph<Input, Output>(
     )
 
     @OptIn(DetachedPromptExecutorAPI::class)
-    private suspend fun selectTools(context: AIAgentContextBase) = when (toolSelectionStrategy) {
-        is ToolSelectionStrategy.ALL -> context.llm.tools
-        is ToolSelectionStrategy.NONE -> emptyList()
-        is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
-        is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
-            val initialPrompt = prompt
+    private suspend fun selectTools(context: AIAgentContextBase): List<ToolDescriptor> {
+        // First, select tools based on the strategy
+        val selectedTools = when (toolSelectionStrategy) {
+            is ToolSelectionStrategy.ALL -> context.llm.tools
+            is ToolSelectionStrategy.NONE -> emptyList()
+            is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
+            is ToolSelectionStrategy.AutoSelectForTask -> context.llm.writeSession {
+                val initialPrompt = prompt
 
-            replaceHistoryWithTLDR()
+                replaceHistoryWithTLDR()
 
-            updatePrompt {
-                user {
-                    selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                updatePrompt {
+                    user {
+                        selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                    }
                 }
+
+                val selectedTools = this.requestLLMStructured(
+                    structure = JsonStructuredData.createJsonStructure<SelectedTools>(
+                        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
+                        examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                    ),
+                    retries = toolSelectionStrategy.maxRetries,
+                ).getOrThrow()
+
+                prompt = initialPrompt
+
+                tools.filter { it.name in selectedTools.structure.tools.toSet() }
             }
+        }
 
-            val selectedTools = this.requestLLMStructured(
-                structure = JsonStructuredData.createJsonStructure<SelectedTools>(
-                    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                    examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
-                ),
-                retries = toolSelectionStrategy.maxRetries,
-            ).getOrThrow()
-
-            prompt = initialPrompt
-
-            tools.filter { it.name in selectedTools.structure.tools.toSet() }
+        // Then, filter by role permissions if we have an AIAgentConfig with permissions configured
+        val agentConfig = context.config as? AIAgentConfig
+        return if (agentConfig?.permissionChecker != null && context.llm.toolRegistry != null) {
+            filterToolDescriptorsByRole(
+                descriptors = selectedTools,
+                toolRegistry = context.llm.toolRegistry,
+                role = context.currentRoles?.firstOrNull(),
+                permissionChecker = agentConfig.permissionChecker
+            )
+        } else {
+            selectedTools
         }
     }
 

@@ -31,7 +31,7 @@ public class AIAgentStrategyBuilder<Input, Output>(
             nodeFinish = nodeFinish,
             toolSelectionStrategy = toolSelectionStrategy
         )
-        strategy.metadata = buildSubgraphMetadata(nodeStart, name, strategy)
+        strategy.metadata = buildSubgraphMetadata(nodeStart, name, strategy, subgraphPermissions)
         return strategy
     }
 }

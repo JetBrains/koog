@@ -37,12 +37,22 @@ import ai.koog.agents.core.feature.handler.StrategyFinishedHandler
 import ai.koog.agents.core.feature.handler.StrategyHandler
 import ai.koog.agents.core.feature.handler.StrategyStartContext
 import ai.koog.agents.core.feature.handler.StrategyStartedHandler
+import ai.koog.agents.core.feature.handler.ToolCacheHitContext
+import ai.koog.agents.core.feature.handler.ToolCacheHitHandler
+import ai.koog.agents.core.feature.handler.ToolCacheMissContext
+import ai.koog.agents.core.feature.handler.ToolCacheMissHandler
 import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureHandler
 import ai.koog.agents.core.feature.handler.ToolCallHandler
 import ai.koog.agents.core.feature.handler.ToolCallResultContext
 import ai.koog.agents.core.feature.handler.ToolCallResultHandler
+import ai.koog.agents.core.feature.handler.ToolPermissionDeniedContext
+import ai.koog.agents.core.feature.handler.ToolPermissionDeniedHandler
+import ai.koog.agents.core.feature.handler.ToolRateLimitExceededContext
+import ai.koog.agents.core.feature.handler.ToolRateLimitExceededHandler
+import ai.koog.agents.core.feature.handler.ToolResultCachedContext
+import ai.koog.agents.core.feature.handler.ToolResultCachedHandler
 import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
 import ai.koog.agents.core.feature.handler.ToolValidationErrorHandler
 import ai.koog.agents.core.tools.Tool
@@ -506,6 +516,92 @@ public class AIAgentPipeline {
 
     //endregion Trigger Tool Call Handlers
 
+    //region Trigger Tool Governance Handlers
+
+    /**
+     * Notifies all registered handlers when tool execution is denied due to insufficient permissions.
+     */
+    public suspend fun onToolPermissionDenied(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs?,
+        requiredRole: String?,
+        effectiveRoles: List<String>,
+        reason: String
+    ) {
+        val eventContext = ToolPermissionDeniedContext(runId, toolCallId, tool, toolArgs, requiredRole, effectiveRoles, reason)
+        executeToolHandlers.values.forEach { handler -> handler.toolPermissionDeniedHandler.handle(eventContext) }
+    }
+
+    /**
+     * Notifies all registered handlers when tool execution is denied due to rate limiting.
+     */
+    public suspend fun onToolRateLimitExceeded(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs?,
+        limit: String,
+        resetIn: String?
+    ) {
+        val eventContext = ToolRateLimitExceededContext(runId, toolCallId, tool, toolArgs, limit, resetIn)
+        executeToolHandlers.values.forEach { handler -> handler.toolRateLimitExceededHandler.handle(eventContext) }
+    }
+
+    /**
+     * Notifies all registered handlers when a tool result is retrieved from cache.
+     */
+    public suspend fun onToolCacheHit(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs?,
+        cacheKey: String,
+        cacheAge: Long?
+    ) {
+        val eventContext = ToolCacheHitContext(runId, toolCallId, tool, toolArgs, cacheKey, cacheAge)
+        executeToolHandlers.values.forEach { handler -> handler.toolCacheHitHandler.handle(eventContext) }
+    }
+
+    /**
+     * Notifies all registered handlers when a tool cache lookup misses.
+     */
+    public suspend fun onToolCacheMiss(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs?,
+        cacheKey: String
+    ) {
+        val eventContext = ToolCacheMissContext(runId, toolCallId, tool, toolArgs, cacheKey)
+        executeToolHandlers.values.forEach { handler -> handler.toolCacheMissHandler.handle(eventContext) }
+    }
+
+    /**
+     * Notifies all registered handlers when a tool result is cached.
+     *
+     * @param runId The unique identifier for the current run.
+     * @param toolCallId The unique identifier for the tool call.
+     * @param tool The tool whose result was cached.
+     * @param toolArgs The arguments used for the tool call.
+     * @param cacheKey The key used to store the result in cache.
+     * @param ttlSeconds The time-to-live in seconds for the cached result.
+     */
+    public suspend fun onToolResultCached(
+        runId: String,
+        toolCallId: String?,
+        tool: Tool<*, *>,
+        toolArgs: ToolArgs?,
+        cacheKey: String,
+        ttlSeconds: Long
+    ) {
+        val eventContext = ToolResultCachedContext(runId, toolCallId, tool, toolArgs, cacheKey, ttlSeconds)
+        executeToolHandlers.values.forEach { handler -> handler.toolResultCachedHandler.handle(eventContext) }
+    }
+
+    //endregion Trigger Tool Governance Handlers
+
     //region Interceptors
 
     /**
@@ -936,6 +1032,76 @@ public class AIAgentPipeline {
         val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
 
         existingHandler.toolCallResultHandler = ToolCallResultHandler { eventContext ->
+            with(interceptContext.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts tool permission denied events.
+     */
+    public fun <TFeature : Any> interceptToolPermissionDenied(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolPermissionDeniedContext) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolPermissionDeniedHandler = ToolPermissionDeniedHandler { eventContext ->
+            with(interceptContext.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts tool rate limit exceeded events.
+     */
+    public fun <TFeature : Any> interceptToolRateLimitExceeded(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolRateLimitExceededContext) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolRateLimitExceededHandler = ToolRateLimitExceededHandler { eventContext ->
+            with(interceptContext.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts tool cache hit events.
+     */
+    public fun <TFeature : Any> interceptToolCacheHit(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolCacheHitContext) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolCacheHitHandler = ToolCacheHitHandler { eventContext ->
+            with(interceptContext.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts tool cache miss events.
+     */
+    public fun <TFeature : Any> interceptToolCacheMiss(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolCacheMissContext) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolCacheMissHandler = ToolCacheMissHandler { eventContext ->
+            with(interceptContext.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts tool result cached events.
+     */
+    public fun <TFeature : Any> interceptToolResultCached(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolResultCachedContext) -> Unit
+    ) {
+        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+
+        existingHandler.toolResultCachedHandler = ToolResultCachedHandler { eventContext ->
             with(interceptContext.featureImpl) { handle(eventContext) }
         }
     }

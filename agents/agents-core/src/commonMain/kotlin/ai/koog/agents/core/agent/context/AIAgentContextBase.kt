@@ -9,6 +9,9 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.permissions.PermissionMetadata
+import ai.koog.agents.core.tools.permissions.Role
+import ai.koog.agents.core.tools.permissions.RoleHierarchy
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 
@@ -234,6 +237,44 @@ public interface AIAgentContextBase {
      * @param context The context to replace the current context with.
      */
     public suspend fun replace(context: AIAgentContextBase)
+
+    /**
+     * Checks if the agent has permission based on the provided metadata.
+     * Returns true if the agent's role satisfies the permission requirements.
+     *
+     * @param metadata The permission metadata to check against
+     * @return true if permission is granted, false otherwise
+     */
+    public fun hasPermission(metadata: PermissionMetadata): Boolean
+
+    /**
+     * Checks if the agent has a specific role.
+     *
+     * @param role The role to check for
+     * @return true if the agent has the role (directly or through inheritance)
+     */
+    public fun hasRole(role: Role): Boolean
+
+    /**
+     * Gets all current roles of the agent.
+     * Returns null if no roles are set.
+     */
+    public val currentRoles: Set<Role>?
+
+    /**
+     * Gets the role hierarchy configured for this agent.
+     * Returns null if no role hierarchy is configured.
+     */
+    public val roleHierarchy: RoleHierarchy?
+
+    /**
+     * Gets a human-readable reason why permission was denied for the given metadata.
+     * Can be used in fallback nodes to explain why an action was denied.
+     *
+     * @param requiredMetadata The permission metadata that was required
+     * @return A descriptive message explaining why permission was denied
+     */
+    public fun getPermissionDenialReason(requiredMetadata: PermissionMetadata): String
 }
 
 /**

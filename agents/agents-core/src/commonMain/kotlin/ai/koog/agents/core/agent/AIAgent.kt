@@ -29,13 +29,14 @@ import ai.koog.agents.core.model.message.AgentToolCallToEnvironmentContent
 import ai.koog.agents.core.model.message.AgentToolCallsToEnvironmentMessage
 import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMessage
 import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
-import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.*
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.governance.ToolGovernanceContext
+import ai.koog.agents.core.tools.governance.ToolGovernanceResult
+import ai.koog.agents.core.tools.governance.ToolGovernanceService
+import ai.koog.agents.core.tools.permissions.Role
+import ai.koog.agents.core.tools.permissions.StandardRoles
 import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.dsl.prompt
@@ -137,7 +138,34 @@ public open class AIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
+    /**
+     * Runs the agent with the specified input and optional runtime role.
+     *
+     * @param agentInput The input to process
+     * @param role Optional role to use for this execution, overriding the configured role
+     * @return The output produced by the agent
+     */
+    public suspend fun run(agentInput: Input, role: Role? = null): Output {
+        return runInternal(agentInput, role?.let { setOf(it) })
+    }
+
+    /**
+     * Runs the agent with multiple runtime roles.
+     * This is useful when users have multiple roles simultaneously (e.g., creative + moderator).
+     *
+     * @param agentInput The input to process
+     * @param roles Set of roles to use for this execution
+     * @return The output produced by the agent
+     */
+    public suspend fun run(agentInput: Input, roles: Set<Role>): Output {
+        return runInternal(agentInput, roles)
+    }
+
     override suspend fun run(agentInput: Input): Output {
+        return runInternal(agentInput, null)
+    }
+
+    private suspend fun runInternal(agentInput: Input, runtimeRoles: Set<Role>?): Output {
         runningMutex.withLock {
             if (isRunning) {
                 throw IllegalStateException("Agent is already running")
@@ -156,7 +184,8 @@ public open class AIAgent<Input, Output>(
                 agentId = id,
                 runId = runId,
                 agentConfig = agentConfig,
-                strategyName = strategy.name
+                strategyName = strategy.name,
+                runtimeRoles = runtimeRoles
             )
         ) {
             val stateManager = AIAgentStateManager()
@@ -192,6 +221,7 @@ public open class AIAgent<Input, Output>(
                 strategyName = strategy.name,
                 pipeline = pipeline,
                 agentId = id,
+                runtimeRoles = runtimeRoles,
             )
 
             logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }
@@ -313,7 +343,11 @@ public open class AIAgent<Input, Output>(
         allowToolCalls {
             logger.debug { "Handling tool call sent by server..." }
             val tool = toolRegistry.getTool(content.toolName)
-            // Tool Args
+
+            // Get tool policy from registry
+            val permission = toolRegistry.getToolPolicyByName(tool.name)
+
+            // Parse tool arguments first (but we'll check permissions before using them)
             val toolArgs = try {
                 tool.decodeArgs(content.toolArgs)
             } catch (e: Exception) {
@@ -327,6 +361,116 @@ public open class AIAgent<Input, Output>(
                 )
             }
 
+            // Get governance components from agent config and context
+            val agentRunInfo = currentCoroutineContext().getAgentRunInfoElementOrThrow()
+            val agentConfig = agentRunInfo.agentConfig as? AIAgentConfig
+
+            // Get effective roles from coroutine context (or use default)
+            val effectiveRoles = agentRunInfo.runtimeRoles ?: setOf(StandardRoles.defaultRole)
+
+            // Create governance service and context
+            val governanceService = ToolGovernanceService(
+                permissionChecker = agentConfig?.permissionChecker,
+                rateLimiter = agentConfig?.rateLimiter,
+                toolCache = agentConfig?.toolCache
+            )
+            
+            val governanceContext = ToolGovernanceContext(
+                tool = tool,
+                toolArgs = toolArgs,
+                effectiveRoles = effectiveRoles,
+                agentId = agentRunInfo.agentId,
+                permission = permission
+            )
+
+            // Check governance (permissions, cache, rate limits)
+            when (val governanceResult = governanceService.checkGovernance(governanceContext)) {
+                is ToolGovernanceResult.PermissionDenied -> {
+                    pipeline.onToolPermissionDenied(
+                        runId = content.runId,
+                        toolCallId = content.toolCallId,
+                        tool = tool,
+                        toolArgs = toolArgs,
+                        requiredRole = governanceResult.requiredRole,
+                        effectiveRoles = effectiveRoles.map { it.name },
+                        reason = governanceResult.reason
+                    )
+
+                    return toolResult(
+                        message = governanceResult.reason,
+                        toolCallId = content.toolCallId,
+                        toolName = content.toolName,
+                        agentId = strategy.name,
+                        result = null
+                    )
+                }
+
+                is ToolGovernanceResult.RateLimited -> {
+                    pipeline.onToolRateLimitExceeded(
+                        runId = content.runId,
+                        toolCallId = content.toolCallId,
+                        tool = tool,
+                        toolArgs = toolArgs,
+                        limit = governanceResult.limit,
+                        resetIn = governanceResult.resetIn
+                    )
+
+                    return toolResult(
+                        message = governanceResult.reason,
+                        toolCallId = content.toolCallId,
+                        toolName = content.toolName,
+                        agentId = strategy.name,
+                        result = null
+                    )
+                }
+
+                is ToolGovernanceResult.CacheHit -> {
+                    pipeline.onToolCacheHit(
+                        runId = content.runId,
+                        toolCallId = content.toolCallId,
+                        tool = tool,
+                        toolArgs = toolArgs,
+                        cacheKey = governanceResult.cacheKey,
+                        cacheAge = null
+                    )
+
+                    logger.debug { "Returning cached result for tool '${content.toolName}'" }
+                    return toolResult(
+                        message = governanceResult.result.toString(),
+                        toolCallId = content.toolCallId,
+                        toolName = content.toolName,
+                        agentId = strategy.name,
+                        result = governanceResult.result
+                    )
+                }
+
+                is ToolGovernanceResult.Allowed -> {
+                    // Emit cache miss event if cache is configured but no hit occurred
+                    if (agentConfig?.toolCache != null && permission?.cacheConfig != null) {
+                        val primaryRole = effectiveRoles.firstOrNull()
+                        if (primaryRole != null) {
+                            val cacheKeyContext = ai.koog.agents.core.tools.cache.CacheKeyContext(
+                                tool = tool,
+                                toolArgs = toolArgs,
+                                effectiveRole = primaryRole,
+                                agentId = agentRunInfo.agentId
+                            )
+                            val cacheKey = permission.cacheConfig!!.keyGenerator.generateKey(cacheKeyContext)
+
+                            pipeline.onToolCacheMiss(
+                                runId = content.runId,
+                                toolCallId = content.toolCallId,
+                                tool = tool,
+                                toolArgs = toolArgs,
+                                cacheKey = cacheKey
+                            )
+                        }
+                    }
+                    // Continue with tool execution
+                }
+            }
+
+            // Execute the tool
             pipeline.onToolCall(
                 runId = content.runId,
                 toolCallId = content.toolCallId,
@@ -334,10 +478,38 @@ public open class AIAgent<Input, Output>(
                 toolArgs = toolArgs
             )
 
-            // Tool Execution
+            val startTime = clock.now()
             val toolResult = try {
                 @Suppress("UNCHECKED_CAST")
-                (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
+                val result = (tool as Tool<ToolArgs, ai.koog.agents.core.tools.ToolResult>).execute(toolArgs, toolEnabler)
+
+                // Record successful execution
+                val executionTime = clock.now() - startTime
+
+                // Rate limit usage is already recorded by isAllowed() when it returns true
+
+                // Cache result if configured
+                val cacheKey = governanceService.cacheResult(governanceContext, result)
+                if (cacheKey != null) {
+                    pipeline.onToolResultCached(
+                        runId = content.runId,
+                        toolCallId = content.toolCallId,
+                        tool = tool,
+                        toolArgs = toolArgs,
+                        cacheKey = cacheKey,
+                        ttlSeconds = permission?.cacheConfig?.ttl?.inWholeSeconds ?: 0L
+                    )
+                }
+
+                pipeline.onToolCallResult(
+                    runId = content.runId,
+                    toolCallId = content.toolCallId,
+                    tool = tool,
+                    toolArgs = toolArgs,
+                    result = result
+                )
+
+                result
             } catch (e: ToolException) {
                 pipeline.onToolValidationError(
                     runId = content.runId,
@@ -374,17 +546,6 @@ public open class AIAgent<Input, Output>(
                 )
             }
 
-            // Tool Finished with Result
-            pipeline.onToolCallResult(
-                runId = content.runId,
-                toolCallId = content.toolCallId,
-                tool = tool,
-                toolArgs = toolArgs,
-                result = toolResult
-            )
-
-            logger.debug { "Completed execution of ${content.toolName} with result: $toolResult" }
-
             return toolResult(
                 toolCallId = content.toolCallId,
                 toolName = content.toolName,
@@ -415,7 +576,7 @@ public open class AIAgent<Input, Output>(
         toolName: String,
         agentId: String,
         message: String,
-        result: ToolResult?
+        result: ai.koog.agents.core.tools.ToolResult?
     ): EnvironmentToolResultToAgentContent = AIAgentEnvironmentToolResultToAgentContent(
         toolCallId = toolCallId,
         toolName = toolName,
@@ -435,6 +596,7 @@ public open class AIAgent<Input, Output>(
 
     private fun formatLog(agentId: String, runId: String, message: String): String =
         "[agent id: $agentId, run id: $runId] $message"
+
 
     //endregion Private Methods
 }

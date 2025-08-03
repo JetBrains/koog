@@ -11,6 +11,8 @@ import kotlin.time.Duration.Companion.milliseconds
  * Loads and configures the environment-specific settings for Koog agents based on the provided
  * application configuration. This includes setup for OpenAI, Anthropic, Google, OpenRouter,
  * Ollama, as well as default and fallback LLM (Large Language Model) configurations.
+ * 
+ * Automatically detects test/example modes and configures mock executors accordingly.
  *
  * @param envConfig The application configuration that contains environment-specific properties
  *                  for configuring Koog agents and associated integrations.
@@ -18,6 +20,21 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): KoogAgentsConfig {
     val koogConfig = KoogAgentsConfig(scope)
+    
+    // Check for mock mode triggers
+    val shouldUseMockMode = config.propertyOrNull("ktor.test")?.getString() == "true" ||
+                           config.propertyOrNull("koog.mock.mode")?.getString() == "true"
+    
+    if (shouldUseMockMode) {
+        log.info("Mock mode detected from environment configuration, enabling MockPromptExecutor")
+        return koogConfig.apply {
+            mockMode()
+        }
+    }
+    
+    // Only try to load real LLM config if not in mock mode
+    log.info("Loading LLM configuration from environment")
+    koogConfig
         .openAI(config)
         .anthropic(config)
         .google(config)
@@ -82,7 +99,7 @@ private fun KoogAgentsConfig.openrouter(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.openrouter")) { apiKey, baseUrlOrNull ->
         openRouter(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure(envConfig.config("koog.openrouter.timeout")) }
         }
     }
 
@@ -90,7 +107,7 @@ private fun KoogAgentsConfig.google(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.google")) { apiKey, baseUrlOrNull ->
         google(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure(envConfig.config("koog.google.timeout")) }
         }
     }
 
@@ -98,7 +115,7 @@ private fun KoogAgentsConfig.openAI(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.openai")) { apiKey, baseUrlOrNull ->
         openAI(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure(envConfig.config("koog.openai.timeout")) }
         }
     }
 
@@ -106,7 +123,7 @@ private fun KoogAgentsConfig.anthropic(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.anthropic")) { apiKey, baseUrlOrNull ->
         anthropic(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure(envConfig.config("koog.anthropic.timeout")) }
         }
     }
 

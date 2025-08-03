@@ -33,18 +33,16 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
-    api(project(":koog-ktor"))
 
     api(libs.kotlinx.datetime)
 
     implementation(libs.logback.classic)
     implementation(libs.opentelemetry.exporter.logging)
     implementation(libs.opentelemetry.exporter.otlp)
-    implementation(libs.ktor.server.cio)
     implementation(project.dependencies.platform(libs.opentelemetry.bom))
+    implementation(project(":agents:agents-test"))
 
     testImplementation(kotlin("test"))
-    testImplementation(project(":agents:agents-test"))
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockk)
 }
@@ -54,6 +52,8 @@ val envs = credentialsResolver.resolve(
 )
 
 fun registerRunExampleTask(name: String, mainClassName: String) = tasks.register<JavaExec>(name) {
+    dependsOn(tasks.classes)
+    
     doFirst {
         standardInput = System.`in`
         standardOutput = System.out
@@ -105,6 +105,8 @@ registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
+registerRunExampleTask("runExampleMinecraftAgent", "ai.koog.agents.example.permissions.MinecraftAgentExampleKt")
+registerRunExampleTask("runExampleComprehensivePermissions", "ai.koog.agents.example.permissions.ComprehensivePermissionsExampleKt")
 
 dokka {
     dokkaSourceSets.named("main") {

@@ -1,6 +1,9 @@
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
+import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
@@ -12,6 +15,9 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.permissions.PermissionCheckResult
+import ai.koog.agents.core.tools.permissions.PermissionDeniedException
+import ai.koog.agents.core.tools.permissions.RoleRequirement
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
@@ -21,6 +27,7 @@ import ai.koog.prompt.structure.StructuredData
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
+import kotlin.reflect.KClass
 
 /**
  * A pass-through node that does nothing and returns input as output
@@ -334,7 +341,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendToolResult(
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeExecuteMultipleTools(
     name: String? = null,
-    parallelTools: Boolean = false,
+    parallelTools: Boolean = false
 ): AIAgentNodeDelegate<List<Message.Tool.Call>, List<ReceivedToolResult>> =
     node(name) { toolCalls ->
         if (parallelTools) {
@@ -441,3 +448,128 @@ public inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIA
             toolResult
         }
     }
+
+// =================
+// Utility helpers
+// =================
+
+/**
+ * Try to execute a tool call, returning null if permission is denied.
+ * Useful for implementing fallback logic within nodes.
+ *
+ * @param toolCall The tool call to execute
+ * @return The tool result, or null if permission was denied
+ */
+public suspend fun AIAgentContextBase.tryToolCall(
+    toolCall: Message.Tool.Call
+): ReceivedToolResult? {
+    // Check if we have permission for this tool first
+    if (!hasPermissionForTool(toolCall.tool)) {
+        return null
+    }
+    
+    return environment.executeTool(toolCall)
+}
+
+/**
+ * Request LLM to use a tool with automatic fallback on permission denial.
+ *
+ * @param preferred The preferred tool to use
+ * @param fallback Optional fallback tool if permission is denied
+ * @return The LLM response
+ */
+public suspend fun AIAgentLLMWriteSession.requestWithFallback(
+    preferred: Tool<*, *>,
+    fallback: Tool<*, *>? = null
+): Message.Response {
+    // Check if the preferred tool is available (has permission)
+    return if (tools.contains(preferred.descriptor)) {
+        requestLLMForceOneTool(preferred.descriptor)
+    } else {
+        when {
+            fallback != null -> requestLLMForceOneTool(fallback.descriptor)
+            else -> requestLLM() // Let LLM choose from available tools
+        }
+    }
+}
+
+/**
+ * Request LLM to use a tool with automatic fallback on permission denial.
+ *
+ * @param preferred The preferred tool descriptor
+ * @param fallback Optional fallback tool descriptor if permission is denied
+ * @return The LLM response
+ */
+public suspend fun AIAgentLLMWriteSession.requestWithFallback(
+    preferred: ToolDescriptor,
+    fallback: ToolDescriptor? = null
+): Message.Response {
+    // Check if the preferred tool is available (has permission)
+    return if (tools.contains(preferred)) {
+        requestLLMForceOneTool(preferred)
+    } else {
+        when {
+            fallback != null -> requestLLMForceOneTool(fallback)
+            else -> requestLLM() // Let LLM choose from available tools
+        }
+    }
+}
+
+/**
+ * Extension function to check if the current role has permission to use a specific tool.
+ * Must be called from within a node execution context.
+ *
+ * @param toolClass The tool class to check
+ * @return true if the role has permission, false otherwise
+ */
+public fun <T : Tool<*, *>> AIAgentContextBase.hasPermissionForTool(
+    toolClass: KClass<T>
+): Boolean {
+    val agentConfig = config as? AIAgentConfig ?: return true
+    val tool = llm.toolRegistry?.tools?.firstOrNull { toolClass.isInstance(it) } ?: return false
+    val policy = llm.toolRegistry?.getToolPolicy(tool) ?: return true
+    
+    // If no roles configured or currentRoles is empty, check if there are no role requirements
+    val effectiveRole = currentRoles?.firstOrNull()
+    if (effectiveRole == null) {
+        // No runtime role set - check if the tool has no role requirements
+        return policy.roleRequirement is RoleRequirement.None
+    }
+
+    val permissionChecker = agentConfig.permissionChecker ?: return true
+    val result = permissionChecker.checkPermission(effectiveRole, policy)
+
+    return result is PermissionCheckResult.Granted
+}
+
+/**
+ * Extension function to check if the current role has permission to use a tool by name.
+ * Must be called from within a node execution context.
+ *
+ * @param toolName The name of the tool to check
+ * @return true if the role has permission, false otherwise
+ */
+public fun AIAgentContextBase.hasPermissionForTool(
+    toolName: String
+): Boolean {
+    val agentConfig = config as? AIAgentConfig ?: return true
+    val policy = llm.toolRegistry?.getToolPolicyByName(toolName) ?: return true
+    
+    // If no roles configured or currentRoles is empty, check if there are no role requirements
+    val effectiveRole = currentRoles?.firstOrNull()
+    if (effectiveRole == null) {
+        // No runtime role set - check if the tool has no role requirements
+        return policy.roleRequirement is RoleRequirement.None
+    }
+
+    val permissionChecker = agentConfig.permissionChecker ?: return true
+    val result = permissionChecker.checkPermission(effectiveRole, policy)
+
+    return result is PermissionCheckResult.Granted
+}
+
+/**
+ * Inline reified version for cleaner syntax
+ */
+public inline fun <reified T : Tool<*, *>> AIAgentContextBase.hasPermissionForTool(): Boolean =
+    hasPermissionForTool(T::class)

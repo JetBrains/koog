@@ -5,15 +5,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
-import ai.koog.agents.core.feature.handler.AfterLLMCallContext
-import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
-import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
-import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
-import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
-import ai.koog.agents.core.feature.handler.ToolCallContext
-import ai.koog.agents.core.feature.handler.ToolCallFailureContext
-import ai.koog.agents.core.feature.handler.ToolCallResultContext
-import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
+import ai.koog.agents.core.feature.handler.*
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -161,6 +153,30 @@ public class EventHandler {
             }
 
             //endregion Intercept Tool Call Events
+
+            //region Intercept Tool Governance Events
+
+            pipeline.interceptToolPermissionDenied(interceptContext) intercept@{ eventContext: ToolPermissionDeniedContext ->
+                config.invokeOnToolPermissionDenied(eventContext)
+            }
+
+            pipeline.interceptToolRateLimitExceeded(interceptContext) intercept@{ eventContext: ToolRateLimitExceededContext ->
+                config.invokeOnToolRateLimitExceeded(eventContext)
+            }
+
+            pipeline.interceptToolCacheHit(interceptContext) intercept@{ eventContext: ToolCacheHitContext ->
+                config.invokeOnToolCacheHit(eventContext)
+            }
+
+            pipeline.interceptToolCacheMiss(interceptContext) intercept@{ eventContext: ToolCacheMissContext ->
+                config.invokeOnToolCacheMiss(eventContext)
+            }
+
+            pipeline.interceptToolResultCached(interceptContext) intercept@{ eventContext: ToolResultCachedContext ->
+                config.invokeOnToolResultCached(eventContext)
+            }
+
+            //endregion Intercept Tool Governance Events
         }
     }
 }

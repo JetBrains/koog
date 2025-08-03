@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent.context
 
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -9,6 +10,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.permissions.*
 import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
@@ -43,6 +45,7 @@ public class AIAgentContext(
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
     override val agentId: String,
+    runtimeRoles: Set<Role>? = null,
 ) : AIAgentContextBase {
 
     /**
@@ -52,6 +55,7 @@ public class AIAgentContext(
         var llm: AIAgentLLMContext,
         var stateManager: AIAgentStateManager,
         var storage: AIAgentStorage,
+        var runtimeRoles: Set<Role>? = null,
     ) {
         private val rwLock = RWLock()
 
@@ -61,7 +65,7 @@ public class AIAgentContext(
          */
         suspend fun copy(): MutableAIAgentContext {
             return rwLock.withReadLock {
-                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy())
+                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy(), runtimeRoles)
             }
         }
 
@@ -76,11 +80,32 @@ public class AIAgentContext(
                 llm?.let { this.llm = llm }
                 stateManager?.let { this.stateManager = stateManager }
                 storage?.let { this.storage = storage }
+                // Note: runtimeRoles is not replaced here to preserve it across context replacements
+            }
+        }
+
+        /**
+         * Sets the runtime roles for this context.
+         * @param roles The roles to use at runtime, overriding the configured role
+         */
+        suspend fun setRuntimeRoles(roles: Set<Role>?) {
+            rwLock.withWriteLock {
+                this.runtimeRoles = roles
+            }
+        }
+
+        /**
+         * Gets the current runtime roles.
+         * @return The runtime roles if set, null otherwise
+         */
+        suspend fun getRuntimeRoles(): Set<Role>? {
+            return rwLock.withReadLock {
+                this.runtimeRoles
             }
         }
     }
 
-    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
+    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage, runtimeRoles)
 
     override val llm: AIAgentLLMContext
         get() = mutableAIAgentContext.llm
@@ -191,6 +216,7 @@ public class AIAgentContext(
         strategyName = strategyName,
         pipeline = pipeline,
         agentId = this.agentId,
+        runtimeRoles = this.cachedRuntimeRoles,
     )
 
     /**
@@ -217,6 +243,80 @@ public class AIAgentContext(
             context.stateManager,
             context.storage
         )
+    }
+
+    private val permissionChecker: PermissionChecker = StandardPermissionChecker.Default
+
+    override fun hasPermission(metadata: PermissionMetadata): Boolean {
+        val agentConfig = config as? AIAgentConfig ?: return true // No AIAgentConfig = no restrictions
+        val roleHierarchy = agentConfig.roleHierarchy ?: return true
+        val effectiveRole = currentRoles?.firstOrNull() ?: return true // Use first role from currentRoles
+
+        // Convert metadata to ToolPolicy for checking
+        val minRole = metadata.minimumRole
+        val toolPolicy = when {
+            minRole != null -> ToolPolicy(
+                roleRequirement = RoleRequirement.MinimumRole(minRole)
+            )
+            metadata.requiredRoles.isNotEmpty() -> ToolPolicy(
+                roleRequirement = RoleRequirement.AllowedRoles(metadata.requiredRoles)
+            )
+            else -> ToolPolicy(
+                roleRequirement = RoleRequirement.None
+            )
+        }
+
+        // Get all roles the current role has (including inherited)
+        val allRoles = roleHierarchy.getAllRoles()
+        val agentRoles = setOf(effectiveRole) + allRoles.values.filter {
+            effectiveRole.hasRole(it)
+        }.toSet()
+
+        // Check permission
+        return when (permissionChecker.checkPermission(agentRoles, toolPolicy)) {
+            is PermissionCheckResult.Granted -> true
+            is PermissionCheckResult.Denied -> false
+        }
+    }
+
+    override fun hasRole(role: Role): Boolean {
+        val effectiveRoles = currentRoles ?: return false
+        return effectiveRoles.any { it.hasRole(role) }
+    }
+
+    // Cache the runtime roles to avoid suspend property
+    private var cachedRuntimeRoles: Set<Role>? = runtimeRoles
+
+    override val currentRoles: Set<Role>?
+        get() = cachedRuntimeRoles
+
+    override val roleHierarchy: RoleHierarchy?
+        get() = (config as? AIAgentConfig)?.roleHierarchy
+
+    /**
+     * Sets the runtime roles for this context, overriding the configured role.
+     * This allows agents to execute with different roles without creating new instances.
+     *
+     * @param roles The roles to use for this execution, or null to use the configured role
+     */
+    public suspend fun setRuntimeRoles(roles: Set<Role>?) {
+        mutableAIAgentContext.setRuntimeRoles(roles)
+        cachedRuntimeRoles = roles
+    }
+    override fun getPermissionDenialReason(requiredMetadata: PermissionMetadata): String {
+        val roles = currentRoles ?: return "No role assigned."
+        val primaryRole = roles.firstOrNull() ?: return "No role assigned."
+
+        return when {
+            requiredMetadata.minimumRole != null && !hasRole(requiredMetadata.minimumRole!!) ->
+                "This action requires ${requiredMetadata.minimumRole!!.name} role, but you have ${primaryRole.name} role."
+
+            requiredMetadata.requiredRoles.isNotEmpty() ->
+                "This action requires one of these roles: ${requiredMetadata.requiredRoles.joinToString { it.name }}, but you have ${primaryRole.name} role."
+
+            else ->
+                "You don't have permission to perform this action."
+        }
     }
 }
 

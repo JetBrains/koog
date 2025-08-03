@@ -3,8 +3,11 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.tools.permissions.PermissionDeniedException
+import ai.koog.agents.core.tools.permissions.PermissionMetadata
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -52,6 +55,12 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      */
     public var edges: List<AIAgentEdge<Output, *>> = emptyList()
         private set
+
+    /**
+     * Optional permission requirements for this node. When present,
+     * the agent must have the specified roles to execute this node.
+     */
+    public var permissionMetadata: PermissionMetadata? = null
 
     /**
      * Adds a directed edge from the current node, enabling connections between this node
@@ -153,9 +162,27 @@ public open class AIAgentNode<Input, Output> internal constructor(
     }
 
     @InternalAgentsApi
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output =
-        withContext(NodeInfoContextElement(nodeName = name)) {
+    override suspend fun execute(context: AIAgentContextBase, input: Input): Output {
+        // Build the coroutine context with node info
+        val coroutineContext: CoroutineContext = NodeInfoContextElement(nodeName = name)
+
+        return withContext(coroutineContext) {
             logger.debug { "Start executing node (name: $name)" }
+
+            // Check permissions before executing
+            val permissions = permissionMetadata
+            if (permissions != null && !context.hasPermission(permissions)) {
+                val reason = context.getPermissionDenialReason(permissions)
+                logger.warn { "Permission denied for node '$name': $reason" }
+                throw PermissionDeniedException(
+                    message = "Permission denied for node '$name': $reason",
+                    nodeName = name,
+                    requiredRoles = permissions.requiredRoles,
+                    minimumRole = permissions.minimumRole,
+                    currentRoles = context.currentRoles
+                )
+            }
+
             context.pipeline.onBeforeNode(this@AIAgentNode, context, input, inputType)
 
             try {
@@ -170,6 +197,7 @@ public open class AIAgentNode<Input, Output> internal constructor(
                 throw t
             }
         }
+    }
 }
 
 /**
