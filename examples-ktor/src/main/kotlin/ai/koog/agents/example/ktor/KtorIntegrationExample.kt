@@ -6,7 +6,6 @@ import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.ktor.Koog
-import ai.koog.ktor.extensions.installKoogForExamples
 import ai.koog.ktor.aiAgent
 import ai.koog.ktor.llm
 import ai.koog.ktor.mcp
@@ -56,10 +55,11 @@ fun Application.main() {
 }
 
 fun Application.configureKoog() {
-    // Install Koog with example mode enabled by default
+    // Install Koog with mock mode enabled by default
     // This allows the example to run without requiring real LLM API keys
     // LLM configurations can still be loaded from application.yaml if available
-    installKoogForExamples {
+    install(Koog) {
+        mockMode()
         // Optional: Override with real LLM configuration if API keys are available
         // Uncomment and provide real API keys to use actual LLMs instead of mocks
         /*
