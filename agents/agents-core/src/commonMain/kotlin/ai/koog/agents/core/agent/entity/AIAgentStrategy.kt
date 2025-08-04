@@ -2,10 +2,13 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.agent.CancellationReason
 import ai.koog.agents.core.utils.runCatchingCancellable
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
+import kotlin.coroutines.coroutineContext
 
 /**
  * Represents a strategy for managing and executing AI agent workflows built as subgraphs of interconnected nodes.
@@ -43,13 +46,60 @@ public class AIAgentStrategy<Input, Output>(
     @OptIn(InternalAgentsApi::class)
     override suspend fun execute(context: AIAgentContextBase, input: Input): Output? {
         return runCatchingCancellable {
+            // Cooperative cancellation checkpoint at strategy start
+            coroutineContext.ensureActive()
+            
             context.pipeline.onStrategyStarted(this, context)
+            
+            // Another cancellation checkpoint before main execution
+            coroutineContext.ensureActive()
+            
             val result = super.execute(context = context, input = input)
+            
+            // Final cancellation checkpoint before finishing
+            coroutineContext.ensureActive()
+            
             context.pipeline.onStrategyFinished(this, context, result, outputType)
             result
-        }.onFailure {
-            context.environment.reportProblem(it)
-        }.getOrThrow()
+        }.onFailure { throwable ->
+            // Check if this is a cancellation-related exception and notify environment
+            when (throwable) {
+                is ai.koog.agents.core.agent.AIAgentTerminationByClientException -> {
+                    // This represents a user-requested cancellation via termination message
+                    context.environment.sendTermination(
+                        runId = context.runId,
+                        reason = CancellationReason.UserRequested,
+                        message = throwable.message
+                    )
+                }
+                is kotlinx.coroutines.CancellationException -> {
+                    // This represents a system-level cancellation (timeout, etc.)
+                    context.environment.sendTermination(
+                        runId = context.runId,
+                        reason = CancellationReason.System,
+                        message = throwable.message
+                    )
+                }
+                else -> {
+                    // Regular error handling
+                    context.environment.reportProblem(throwable)
+                }
+            }
+        }.getOrElse { throwable ->
+            // Only return null for cancellation-related exceptions to avoid re-throwing
+            // after termination notifications have been sent. Regular exceptions should still be thrown.
+            when (throwable) {
+                is ai.koog.agents.core.agent.AIAgentTerminationByClientException,
+                is kotlinx.coroutines.CancellationException -> {
+                    // These have been handled with termination notifications, return null
+                    null
+                }
+                else -> {
+                    // Regular exceptions should still be thrown for proper error handling
+                    throw throwable
+                }
+            }
+        }
     }
 
     /**

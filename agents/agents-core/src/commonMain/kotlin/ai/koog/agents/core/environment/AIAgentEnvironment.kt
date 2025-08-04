@@ -1,5 +1,6 @@
 package ai.koog.agents.core.environment
 
+import ai.koog.agents.core.agent.CancellationReason
 import ai.koog.prompt.message.Message
 
 /**
@@ -27,6 +28,26 @@ public interface AIAgentEnvironment {
      * @param exception The exception representing the problem to report.
      */
     public suspend fun reportProblem(exception: Throwable)
+
+    /**
+     * Sends a termination notification for the specified agent run.
+     *
+     * This method provides a way to notify the environment that an agent execution
+     * has been cancelled. Implementations can use this to send the appropriate
+     * [EnvironmentToAgentTerminationMessage] or perform other cleanup operations.
+     *
+     * The default implementation is a no-op, allowing environments that don't need
+     * termination notifications to work without modification.
+     *
+     * @param runId The unique identifier of the agent run being terminated
+     * @param reason The reason for the termination
+     * @param message Optional descriptive message about the termination
+     */
+    public suspend fun sendTermination(runId: String, reason: CancellationReason, message: String? = null) {
+        // Default no-op implementation
+        // Environments can override this to send EnvironmentToAgentTerminationMessage
+        // or perform other termination-related operations
+    }
 }
 
 /**

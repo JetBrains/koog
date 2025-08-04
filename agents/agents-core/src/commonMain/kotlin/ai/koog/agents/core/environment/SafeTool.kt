@@ -2,12 +2,14 @@
 
 package ai.koog.agents.core.environment
 
+import ai.koog.agents.core.agent.CancellationReason
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 /**
  * A wrapper class designed to safely execute a tool within a given AI agent environment.
@@ -26,11 +28,16 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
     private val clock: Clock
 ) {
     /**
-     * Represents a sealed interface for results, which can either be a success or a failure.
+     * Represents a sealed interface for results, which can be a success, failure, or cancellation.
      *
      * This interface models the outcome of an operation, encapsulating both the result content
-     * and the status of the operation (successful or failed). It is parameterized by `TResult`,
+     * and the status of the operation (successful, failed, or cancelled). It is parameterized by `TResult`,
      * which must extend the `ToolResult` interface.
+     *
+     * The tri-state design enables:
+     * - Proper handling of tool cancellations vs failures
+     * - Accurate telemetry and observability for tool execution
+     * - Different error handling strategies for different outcome types
      *
      * @param TResult The type of the result, constrained to types that implement `ToolResult`.
      */
@@ -61,6 +68,13 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
         public fun isFailure(): Boolean = this is Failure<TResult>
 
         /**
+         * Determines whether the current instance represents a cancelled state.
+         *
+         * @return `true` if the current instance is of type `Cancelled`, otherwise `false`.
+         */
+        public fun isCancelled(): Boolean = this is Cancelled<TResult>
+
+        /**
          * Casts the current instance of `Result` to a `Success` type if it is a successful result.
          *
          * @return The current instance cast to `Success<TResult>`.
@@ -69,6 +83,7 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
         public fun asSuccessful(): Success<TResult> = when (this) {
             is Success<TResult> -> this
             is Failure<TResult> -> throw IllegalStateException("Result is not a success: $this")
+            is Cancelled<TResult> -> throw IllegalStateException("Result is not a success: $this")
         }
 
         /**
@@ -83,6 +98,22 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
         public fun asFailure(): Failure<TResult> = when (this) {
             is Success<TResult> -> throw IllegalStateException("Result is not a failure: $this")
             is Failure<TResult> -> this
+            is Cancelled<TResult> -> throw IllegalStateException("Result is not a failure: $this")
+        }
+
+        /**
+         * Casts the current object to a `Cancelled` type.
+         *
+         * This function assumes that the calling instance is of type `Cancelled<TResult>`.
+         * Use it to retrieve the object as a `Cancelled` and access its specific properties and behaviors.
+         *
+         * @return The current instance cast to `Cancelled<TResult>`.
+         * @throws IllegalStateException if not [Cancelled]
+         */
+        public fun asCancelled(): Cancelled<TResult> = when (this) {
+            is Success<TResult> -> throw IllegalStateException("Result is not cancelled: $this")
+            is Failure<TResult> -> throw IllegalStateException("Result is not cancelled: $this")
+            is Cancelled<TResult> -> this
         }
 
         /**
@@ -119,6 +150,32 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
              * understanding the cause or nature of a failure in a tool operation.
              */
             override val content: String get() = message
+        }
+
+        /**
+         * Represents a cancelled tool execution result.
+         *
+         * This class extends the base `Result` interface and is used to indicate that a particular operation
+         * was cancelled before completion. This is distinct from failure - it indicates that the execution
+         * was intentionally stopped rather than encountering an error condition.
+         *
+         * @param TResult The type of the tool result associated with the operation.
+         * @property reason The reason why the tool execution was cancelled.
+         * @property message Optional descriptive message about the cancellation.
+         * @property cancelledAt Timestamp when the cancellation occurred.
+         */
+        public data class Cancelled<TResult : ToolResult>(
+            val reason: CancellationReason,
+            val message: String? = null,
+            val cancelledAt: Instant = kotlinx.datetime.Clock.System.now()
+        ) : Result<TResult> {
+            /**
+             * Returns a descriptive message about the cancellation.
+             *
+             * The `content` property provides access to a formatted cancellation message that includes
+             * the cancellation reason and any additional context provided in the optional message.
+             */
+            override val content: String get() = message ?: "Tool execution cancelled: ${reason.name}"
         }
     }
 

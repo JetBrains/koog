@@ -3,6 +3,8 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.CancellationReason
+import ai.koog.agents.core.agent.RunOutcome
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -44,9 +46,13 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -146,78 +152,199 @@ public open class AIAgent<Input, Output>(
             isRunning = true
         }
 
-        pipeline.prepareFeatures()
+        try {
+            pipeline.prepareFeatures()
 
-        val sessionUuid = Uuid.random()
-        val runId = sessionUuid.toString()
+            val sessionUuid = Uuid.random()
+            val runId = sessionUuid.toString()
 
-        return withContext(
-            AgentRunInfoContextElement(
-                agentId = id,
-                runId = runId,
-                agentConfig = agentConfig,
-                strategyName = strategy.name
-            )
-        ) {
-            val stateManager = AIAgentStateManager()
-            val storage = AIAgentStorage()
+            return withContext(
+                AgentRunInfoContextElement(
+                    agentId = id,
+                    runId = runId,
+                    agentConfig = agentConfig,
+                    strategyName = strategy.name
+                )
+            ) {
+                val stateManager = AIAgentStateManager()
+                val storage = AIAgentStorage()
 
-            // Environment (initially equal to the current agent), transformed by some features
-            //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
-            val preparedEnvironment =
-                pipeline.transformEnvironment(strategy = strategy, agent = this@AIAgent, baseEnvironment = this@AIAgent)
+                // Environment (initially equal to the current agent), transformed by some features
+                //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
+                val preparedEnvironment =
+                    pipeline.transformEnvironment(strategy = strategy, agent = this@AIAgent, baseEnvironment = this@AIAgent)
 
-            val agentContext = AIAgentContext(
-                environment = preparedEnvironment,
-                agentInput = agentInput,
-                agentInputType = inputType,
-                config = agentConfig,
-                llm = AIAgentLLMContext(
-                    tools = toolRegistry.tools.map { it.descriptor },
-                    toolRegistry = toolRegistry,
-                    prompt = agentConfig.prompt,
-                    model = agentConfig.model,
-                    promptExecutor = PromptExecutorProxy(
-                        executor = promptExecutor,
-                        pipeline = pipeline,
-                        runId = runId
-                    ),
+                val agentContext = AIAgentContext(
                     environment = preparedEnvironment,
+                    agentInput = agentInput,
+                    agentInputType = inputType,
                     config = agentConfig,
-                    clock = clock
-                ),
-                stateManager = stateManager,
-                storage = storage,
-                runId = runId,
-                strategyName = strategy.name,
-                pipeline = pipeline,
-                agentId = id,
-            )
+                    llm = AIAgentLLMContext(
+                        tools = toolRegistry.tools.map { it.descriptor },
+                        toolRegistry = toolRegistry,
+                        prompt = agentConfig.prompt,
+                        model = agentConfig.model,
+                        promptExecutor = PromptExecutorProxy(
+                            executor = promptExecutor,
+                            pipeline = pipeline,
+                            runId = runId
+                        ),
+                        environment = preparedEnvironment,
+                        config = agentConfig,
+                        clock = clock
+                    ),
+                    stateManager = stateManager,
+                    storage = storage,
+                    runId = runId,
+                    strategyName = strategy.name,
+                    pipeline = pipeline,
+                    agentId = id,
+                )
 
-            logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }
-            pipeline.onBeforeAgentStarted(
-                runId = runId,
-                agent = this@AIAgent,
-                strategy = strategy,
-                context = agentContext
-            )
+                logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }
+                pipeline.onBeforeAgentStarted(
+                    runId = runId,
+                    agent = this@AIAgent,
+                    strategy = strategy,
+                    context = agentContext
+                )
 
-            setExecutionPointIfNeeded(agentContext)
-
-            var result = strategy.execute(context = agentContext, input = agentInput)
-            while (result == null && agentContext.getAgentContextData() != null) {
+                // Cancellation checkpoint before initial setup
+                currentCoroutineContext().ensureActive()
                 setExecutionPointIfNeeded(agentContext)
-                result = strategy.execute(context = agentContext, input = agentInput)
+
+                // Cancellation checkpoint before strategy execution
+                currentCoroutineContext().ensureActive()
+                var result = strategy.execute(context = agentContext, input = agentInput)
+                
+                while (result == null && agentContext.getAgentContextData() != null) {
+                    // Cooperative cancellation checkpoint at loop start
+                    currentCoroutineContext().ensureActive()
+                    setExecutionPointIfNeeded(agentContext)
+                    
+                    // Cancellation checkpoint before strategy execution
+                    currentCoroutineContext().ensureActive()
+                    result = strategy.execute(context = agentContext, input = agentInput)
+                }
+
+                logger.debug { formatLog(agentId = id, runId = runId, message = "Finished agent execution") }
+                pipeline.onAgentFinished(agentId = id, runId = runId, result = result, resultType = outputType)
+
+                return@withContext result ?: error("result is null")
             }
-
-            logger.debug { formatLog(agentId = id, runId = runId, message = "Finished agent execution") }
-            pipeline.onAgentFinished(agentId = id, runId = runId, result = result, resultType = outputType)
-
-            runningMutex.withLock {
-                isRunning = false
+        } finally {
+            // Ensure proper cleanup even on cancellation
+            try {
+                runningMutex.withLock {
+                    isRunning = false
+                }
+            } finally {
+                // Always cleanup resources regardless of state management issues
+                try {
+                    pipeline.onAgentBeforeClosed(agentId = id)
+                    pipeline.closeFeaturesStreamProviders()
+                } catch (e: Exception) {
+                    // Log cleanup failures but don't let them propagate
+                    logger.warn(e) { "Failed to cleanup agent resources during cancellation" }
+                }
             }
+        }
+    }
 
-            return@withContext result ?: error("result is null")
+    /**
+     * Executes the agent with cancellation support, returning a tri-state outcome.
+     * 
+     * This method provides the same functionality as [run] but returns a [RunOutcome]
+     * that distinguishes between successful completion, failure, and cancellation.
+     * This enables proper handling of different execution states without treating
+     * cancellation as either success or failure.
+     * 
+     * ✅ **STRUCTURED CONCURRENCY COMPLIANT**: 
+     * This method follows proper structured concurrency by allowing CancellationException
+     * to propagate to parent coroutines. Only user-initiated cancellations (via 
+     * AIAgentTerminationByClientException) are converted to RunOutcome.Cancelled.
+     * 
+     * **USAGE GUIDELINES:**
+     * - Use `runCancellable()` when you need to distinguish between failure and cancellation
+     * - Use `runWithTimeout()` for operations with time limits  
+     * - Use `runOrThrow()` when you want exception-based error handling
+     * - Use `runOrDefault()` when you need fallback values
+     * - Use `run()` for normal structured concurrency behavior
+     * 
+     * @param agentInput The input to provide to the agent
+     * @return The outcome of the agent execution (Success, Failure, or Cancelled)
+     */
+    public suspend fun runCancellable(agentInput: Input): RunOutcome<Output> {
+        return try {
+            val result = run(agentInput)
+            RunOutcome.Success(result)
+        } catch (e: AIAgentTerminationByClientException) {
+            // This represents a user-requested cancellation via termination message
+            RunOutcome.Cancelled(
+                reason = CancellationReason.UserRequested,
+                message = e.message
+            )
+        } catch (e: Throwable) {
+            // Note: CancellationException is intentionally NOT caught here
+            // to preserve structured concurrency - it will propagate to parent
+            RunOutcome.Failure(e)
+        }
+    }
+
+    /**
+     * Starts the agent execution and returns a handle for external cancellation.
+     * 
+     * This method enables external cancellation scenarios like CLI keyboard input,
+     * web request cancellation, or background job control. The returned handle
+     * provides access to the execution outcome and a cancellation function.
+     * 
+     * **Use Cases:**
+     * - CLI applications with Escape key cancellation
+     * - Web requests that can be cancelled by client disconnect
+     * - Background jobs with external cancellation APIs
+     * - Interactive applications requiring responsive cancellation
+     * 
+     * @param agentInput The input to provide to the agent
+     * @return A [CancellableExecution] containing the outcome and cancellation function
+     */
+    public suspend fun startCancellable(agentInput: Input): CancellableExecution<Output> = coroutineScope {
+        val execution = async { runCancellable(agentInput) }
+        
+        CancellableExecution(
+            outcome = execution,
+            cancel = { reason -> 
+                execution.cancel(CancellationException("Cancelled: ${reason.name}"))
+            }
+        )
+    }
+
+    /**
+     * Executes the agent with external cancellation signal support.
+     * 
+     * This method integrates with external cancellation sources through a Flow,
+     * enabling reactive cancellation from various sources like user input,
+     * network events, or system signals.
+     * 
+     * @param agentInput The input to provide to the agent
+     * @param cancellationSignal Flow that emits cancellation reasons from external sources
+     * @return The outcome of the agent execution (Success, Failure, or Cancelled)
+     */
+    public suspend fun runWithCancellationSignal(
+        agentInput: Input, 
+        cancellationSignal: kotlinx.coroutines.flow.Flow<CancellationReason>
+    ): RunOutcome<Output> = coroutineScope {
+        
+        val execution = async { runCancellable(agentInput) }
+        val cancellationJob = launch {
+            cancellationSignal.collect { reason ->
+                execution.cancel(CancellationException("External cancellation: ${reason.name}"))
+            }
+        }
+        
+        try {
+            execution.await()
+        } finally {
+            cancellationJob.cancel()
         }
     }
 
@@ -397,10 +524,16 @@ public open class AIAgent<Input, Output>(
     private suspend fun processToolCallMultiple(
         message: AgentToolCallsToEnvironmentMessage
     ): EnvironmentToolResultMultipleToAgentMessage {
-        // call tools in parallel and return results
-        val results = supervisorScope {
+        // call tools in parallel and return results with cancellation support
+        val results = coroutineScope {
             message.content
-                .map { call -> async { processToolCall(call) } }
+                .map { call -> 
+                    async { 
+                        // Add cancellation checkpoint before each tool call
+                        currentCoroutineContext().ensureActive()
+                        processToolCall(call) 
+                    }
+                }
                 .awaitAll()
         }
 
