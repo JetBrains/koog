@@ -118,7 +118,7 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test")
 
         // Verify that a checkpoint was created and saved
-        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), "testAgentId")
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), agent.id)
         val checkpoint = checkpointStorageProvider.getCheckpoints(testContext).firstOrNull()
         assertNotNull(checkpoint, "No checkpoint was created")
         assertEquals("checkpointNode", checkpoint?.nodeId, "Checkpoint has incorrect node ID")
@@ -161,7 +161,7 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test")
 
         // Verify that a checkpoint was created and saved
-        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), "testAgentId")
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), agent.id)
         val checkpoint = checkpointStorageProvider.getCheckpoints(testContext).firstOrNull()
         if (checkpoint == null) {
             error("checkpoint is null")

@@ -22,6 +22,8 @@ import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.feature.withPersistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistencyStorageProvider
+import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
+import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
@@ -686,7 +688,8 @@ class AIAgentIntegrationTest {
 
         agent.run("Start the test")
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints()
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), agent.id)
+        val checkpoints = checkpointStorageProvider.getCheckpoints(testContext)
         assertTrue(checkpoints.isNotEmpty(), "No checkpoints were created")
         assertEquals(save, checkpoints.first().nodeId, "Checkpoint has incorrect node ID")
 
@@ -895,7 +898,8 @@ class AIAgentIntegrationTest {
 
         agent.run(testInput)
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints()
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), agent.id)
+        val checkpoints = checkpointStorageProvider.getCheckpoints(testContext)
         assertTrue(checkpoints.size >= 3, notEnoughCheckpointsError)
 
         val nodeIds = checkpoints.map { it.nodeId }.toSet()
@@ -971,7 +975,8 @@ class AIAgentIntegrationTest {
         agent.run(testInput)
 
         // Verify that a checkpoint was created and saved to the file system
-        val checkpoints = fileStorageProvider.getCheckpoints()
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), agent.id)
+        val checkpoints = fileStorageProvider.getCheckpoints(testContext)
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
     }
