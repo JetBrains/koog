@@ -5,6 +5,8 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.AIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AgentResourceConfig
+import ai.koog.agents.core.agent.config.ToolResourceHandle
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
@@ -49,7 +51,9 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType
@@ -86,6 +90,7 @@ private suspend inline fun <T> allowToolCalls(block: suspend AllowDirectToolCall
  * @property toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
  * @property installFeatures Lambda for installing additional features within the agent environment.
  * @property clock The clock used to calculate message timestamps
+ * @property resourceConfig Configuration for agent resource management (concurrency limits, dispatchers)
  * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
  */
 @OptIn(ExperimentalUuidApi::class)
@@ -98,6 +103,7 @@ public open class AIAgent<Input, Output>(
     override val id: String = Uuid.random().toString(),
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     public val clock: Clock = Clock.System,
+    public val resourceConfig: AgentResourceConfig = AgentResourceConfig.DEFAULT,
     private val installFeatures: FeatureContext.() -> Unit = {},
 ) : AIAgentBase<Input, Output>, AIAgentEnvironment, Closeable {
 
@@ -132,6 +138,11 @@ public open class AIAgent<Input, Output>(
     private val runningMutex = Mutex()
 
     private val pipeline = AIAgentPipeline()
+
+    // Resource management using delegate-based configuration
+    private fun getResourcesForTool(toolName: String): ToolResourceHandle {
+        return resourceConfig.toolClassifier(toolName)
+    }
 
     init {
         FeatureContext(this).installFeatures()
@@ -397,10 +408,23 @@ public open class AIAgent<Input, Output>(
     private suspend fun processToolCallMultiple(
         message: AgentToolCallsToEnvironmentMessage
     ): EnvironmentToolResultMultipleToAgentMessage {
-        // call tools in parallel and return results
+        // call tools in parallel with delegate-based resource management
         val results = supervisorScope {
             message.content
-                .map { call -> async { processToolCall(call) } }
+                .map { call -> 
+                    val resources = getResourcesForTool(call.toolName)
+                    async(resources.dispatcher) { 
+                        // Apply resource limiting based on tool category
+                        if (resources.semaphore != null) {
+                            resources.semaphore.withPermit {
+                                processToolCall(call)
+                            }
+                        } else {
+                            // Unlimited resources for this tool category
+                            processToolCall(call)
+                        }
+                    } 
+                }
                 .awaitAll()
         }
 
@@ -449,6 +473,7 @@ public open class AIAgent<Input, Output>(
  * @property toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
  * @property installFeatures Lambda for installing additional features within the agent environment.
  * @property clock The clock used to calculate message timestamps
+ * @property resourceConfig Configuration for agent resource management (concurrency limits, dispatchers)
  *
  * @see [AIAgent] class
  */
@@ -460,6 +485,7 @@ public inline fun <reified Input, reified Output> AIAgent(
     id: String = Uuid.random().toString(),
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     clock: Clock = Clock.System,
+    resourceConfig: AgentResourceConfig = AgentResourceConfig.DEFAULT,
     noinline installFeatures: FeatureContext.() -> Unit = {},
 ): AIAgent<Input, Output> = AIAgent(
     inputType = typeOf<Input>(),
@@ -470,6 +496,7 @@ public inline fun <reified Input, reified Output> AIAgent(
     id = id,
     toolRegistry = toolRegistry,
     clock = clock,
+    resourceConfig = resourceConfig,
     installFeatures = installFeatures,
 )
 
@@ -484,6 +511,7 @@ public inline fun <reified Input, reified Output> AIAgent(
  * @param toolRegistry The [ToolRegistry] containing tools available to the agent. Default is an empty registry.
  * @param maxIterations Maximum number of iterations for the agent's execution. Default is 50.
  * @param installFeatures A suspending lambda to install additional features for the agent's functionality. Default is an empty lambda.
+ * @param resourceConfig Configuration for agent resource management (concurrency limits, dispatchers). Default is no limits.
  *
  * @see [AIAgent] class
  */
@@ -498,7 +526,8 @@ public fun AIAgent(
     numberOfChoices: Int = 1,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
-    installFeatures: FeatureContext.() -> Unit = {}
+    resourceConfig: AgentResourceConfig = AgentResourceConfig.DEFAULT,
+    installFeatures: FeatureContext.() -> Unit = {},
 ): AIAgent<String, String> = AIAgent(
     id = id,
     promptExecutor = executor,
@@ -517,5 +546,6 @@ public fun AIAgent(
         maxAgentIterations = maxIterations,
     ),
     toolRegistry = toolRegistry,
+    resourceConfig = resourceConfig,
     installFeatures = installFeatures
 )

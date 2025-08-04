@@ -26,38 +26,40 @@ package ai.koog.agents.core.tools
  *
  * @property tools The list of tools contained in this registry
  */
-public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyList()) {
+public class ToolRegistry private constructor(
+    tools: List<Tool<*, *>> = emptyList()
+) {
 
-    private val _tools: MutableList<Tool<*, *>> = tools.toMutableList()
+    // O(1) lookup map - single source of truth
+    private val _toolsMap: MutableMap<String, Tool<*, *>> = tools.associateBy { it.name }.toMutableMap()
 
     /**
      * Provides an immutable list of tools currently available in the registry.
      *
-     * The tools are sourced from the internal backing collection and returned as
-     * a read-only list to prevent external modification of the registry state.
+     * The tools are sourced from the HashMap and returned as a read-only list
+     * to prevent external modification of the registry state.
      */
     public val tools: List<Tool<*, *>>
-        get() = _tools.toList()
+        get() = _toolsMap.values.toList()
 
     /**
      * Retrieves a tool by its name from the registry.
      *
-     * This method searches for a tool with the specified name.
+     * This method uses O(1) HashMap lookup for optimal performance.
      *
      * @param toolName The name of the tool to retrieve
      * @return The tool with the specified name
      * @throws IllegalArgumentException if no tool with the specified name is found
      */
     public fun getTool(toolName: String): Tool<*, *> {
-        return tools
-            .firstOrNull { it.name == toolName }
-            ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined")
+        return _toolsMap[toolName] ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined")
     }
 
     /**
      * Retrieves a tool by its type from registry.
      *
      * This method searches for a tool of the specified type.
+     * Note: Still requires O(n) iteration as type-based lookup cannot use HashMap optimization.
      *
      * @param T The type of tool to retrieve
      * @return The tool of the specified type
@@ -73,15 +75,16 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
     /**
      * Combines the tools from this registry and the provided registry into a new ToolRegistry.
      *
-     * This method merges the tools from both registries, ensuring that each tool is included only once,
-     * based on its name.
+     * This method merges the tools from both registries using HashMap for efficient deduplication,
+     * ensuring that each tool is included only once based on its name.
      *
      * @param toolRegistry The other ToolRegistry whose tools will be merged with the current registry.
      * @return A new ToolRegistry containing the combined list of tools from both registries.
      */
     public operator fun plus(toolRegistry: ToolRegistry): ToolRegistry {
-        val mergedTools = (this.tools + toolRegistry.tools).distinctBy { it.name }
-        return ToolRegistry(mergedTools)
+        val mergedMap = this._toolsMap.toMutableMap()
+        mergedMap.putAll(toolRegistry._toolsMap)
+        return ToolRegistry(mergedMap.values.toList())
     }
 
     /**
@@ -90,8 +93,8 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
      * @param tool The tool to be added to the registry.
      */
     public fun add(tool: Tool<*, *>) {
-        if (_tools.contains(tool)) return
-        _tools.add(tool)
+        if (_toolsMap.containsKey(tool.name)) return
+        _toolsMap[tool.name] = tool
     }
 
     /**
@@ -112,14 +115,14 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
      * It ensures that each tool added to the registry has a unique name.
      */
     public class Builder internal constructor() {
-        private val tools = mutableListOf<Tool<*, *>>()
+        private val toolsMap = mutableMapOf<String, Tool<*, *>>()
 
         /**
          * Add a tool to the registry
          */
         public fun tool(tool: Tool<*, *>) {
-            require(tool.name !in tools.map { it.name }) { "Tool \"${tool.name}\" is already defined" }
-            tools.add(tool)
+            require(tool.name !in toolsMap) { "Tool \"${tool.name}\" is already defined" }
+            toolsMap[tool.name] = tool
         }
 
         /**
@@ -130,7 +133,7 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
         }
 
         internal fun build(): ToolRegistry {
-            return ToolRegistry(tools)
+            return ToolRegistry(toolsMap.values.toList())
         }
     }
 
@@ -144,7 +147,9 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
          * @param init A lambda that configures the registry by adding tools
          * @return A new ToolRegistry instance configured according to the initialization block
          */
-        public operator fun invoke(init: Builder.() -> Unit): ToolRegistry = Builder().apply(init).build()
+        public operator fun invoke(
+            init: Builder.() -> Unit
+        ): ToolRegistry = Builder().apply(init).build()
 
         /**
          * A constant representing an empty registry with no tools.
