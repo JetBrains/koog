@@ -110,7 +110,7 @@ public class Tracing {
         ) {
             logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 
-            if (config.messageProcessor.isEmpty()) {
+            if (config.messageProcessors.isEmpty()) {
                 logger.warn {
                     "Tracing Feature. No feature out stream providers are defined. Trace streaming has no target."
                 }
@@ -305,7 +305,7 @@ public class Tracing {
                 return
             }
 
-            config.messageProcessor.onMessageForEachSafe(message)
+            config.messageProcessors.onMessageForEachSafe(message)
         }
 
         //endregion Private Methods

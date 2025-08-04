@@ -162,7 +162,7 @@ class DebuggerTest {
                     setPort(port)
 
                     launch {
-                        val messageProcessor = messageProcessor.single() as FeatureMessageRemoteWriter
+                        val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
                             messageProcessor.isOpen.first { it }
                         } != null

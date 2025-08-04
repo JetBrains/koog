@@ -11,18 +11,18 @@ import ai.koog.agents.core.feature.message.FeatureMessageProcessor
  */
 public abstract class FeatureConfig {
 
-    private val _messageProcessor = mutableListOf<FeatureMessageProcessor>()
+    private val _messageProcessors = mutableListOf<FeatureMessageProcessor>()
 
     /**
      * Provides a read-only list of `FeatureMessageProcessor` instances registered with the feature configuration.
      */
-    public val messageProcessor: List<FeatureMessageProcessor>
-        get() = _messageProcessor.toList()
+    public val messageProcessors: List<FeatureMessageProcessor>
+        get() = _messageProcessors.toList()
 
     /**
      * Adds a message processor to the configuration.
      */
     public fun addMessageProcessor(processor: FeatureMessageProcessor) {
-        _messageProcessor.add(processor)
+        _messageProcessors.add(processor)
     }
 }
