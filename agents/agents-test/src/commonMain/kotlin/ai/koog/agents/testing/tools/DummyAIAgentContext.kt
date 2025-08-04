@@ -56,7 +56,7 @@ public class DummyAIAgentContext(
     private var _stateManager: AIAgentStateManager? = builder.stateManager
     private var _storage: AIAgentStorage? = builder.storage
     private var _runId: String? = builder.runId
-    private var _strategyId: String? = builder.strategyId
+    private var _strategyName: String? = builder.strategyName
 
     @OptIn(InternalAgentsApi::class)
     private var _pipeline: AIAgentPipeline = AIAgentPipeline()
@@ -86,7 +86,7 @@ public class DummyAIAgentContext(
         get() = _runId ?: throw NotImplementedError("Session UUID is not mocked")
 
     override val strategyName: String
-        get() = _strategyId ?: throw NotImplementedError("Strategy ID is not mocked")
+        get() = _strategyName ?: throw NotImplementedError("Strategy name is not mocked")
 
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline
@@ -121,7 +121,7 @@ public class DummyAIAgentContext(
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
         runId: String,
-        strategyId: String,
+        strategyName: String,
         pipeline: AIAgentPipeline
     ): AIAgentContextBase = DummyAIAgentContext(
         builder.copy(
@@ -133,7 +133,7 @@ public class DummyAIAgentContext(
             stateManager = stateManager,
             storage = storage,
             runId = runId,
-            strategyId = strategyId,
+            strategyName = strategyName,
         ),
     )
 
@@ -249,7 +249,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
      * This variable allows specifying or retrieving the unique identifier associated with a
      * particular strategy. It can be null if no strategy is defined or required.
      */
-    public var strategyId: String?
+    public var strategyName: String?
 
     /**
      * Creates and returns a copy of the current instance of `AIAgentContextMockBuilderBase`.
@@ -265,7 +265,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContextBase>
         stateManager: AIAgentStateManager? = this.stateManager,
         storage: AIAgentStorage? = this.storage,
         runId: String? = this.runId,
-        strategyId: String? = this.strategyId,
+        strategyName: String? = this.strategyName,
     ): AIAgentContextMockBuilderBase
 
     /**
@@ -382,7 +382,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * Can be null if a strategy is not explicitly defined or required.
      */
-    override var strategyId: String? = null
+    override var strategyName: String? = null
 
     /**
      * Creates and returns a new copy of the current `AIAgentContextMockBuilder` instance.
@@ -399,7 +399,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
         runId: String?,
-        strategyId: String?,
+        strategyName: String?,
     ): AIAgentContextMockBuilder {
         return AIAgentContextMockBuilder().also {
             it.environment = environment
@@ -410,7 +410,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
             it.stateManager = stateManager
             it.storage = storage
             it.runId = runId
-            it.strategyId = strategyId
+            it.strategyName = strategyName
         }
     }
 

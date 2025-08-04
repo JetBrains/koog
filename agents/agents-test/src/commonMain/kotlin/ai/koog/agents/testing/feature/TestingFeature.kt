@@ -758,7 +758,7 @@ public class Testing {
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
                     runId: String?,
-                    strategyId: String?,
+                    strategyName: String?,
                 ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
 
@@ -866,7 +866,7 @@ public class Testing {
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
                     runId: String?,
-                    strategyId: String?,
+                    strategyName: String?,
                 ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
                 /**

@@ -75,7 +75,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
         runId: String,
-        strategyId: String,
+        strategyName: String,
         pipeline: AIAgentPipeline
     ): AIAgentContextBase = underlyingContextBase.copy(
         environment = environment,
@@ -86,7 +86,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         stateManager = stateManager,
         storage = storage,
         runId = runId,
-        strategyId = strategyId,
+        strategyName = strategyName,
         pipeline = pipeline
     )
 

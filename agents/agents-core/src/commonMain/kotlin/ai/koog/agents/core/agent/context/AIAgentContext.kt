@@ -164,8 +164,8 @@ public class AIAgentContext(
      * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
-     * @param runId The run Id, or `null` to retain the current run ID.
-     * @param strategyName The strategy identifier, or `null` to retain the current identifier.
+     * @param runId The run identifier, or `null` to retain the current run ID.
+     * @param strategyName The strategy name, or `null` to retain the current identifier.
      * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
      */
     override fun copy(
@@ -221,7 +221,7 @@ public class AIAgentContext(
 }
 
 /**
- * A storage key utilized for associating and retrieving `AgentContextData` within the AI agent's storage system.
+ * A storage key used for associating and retrieving `AgentContextData` within the AI agent's storage system.
  *
  * This key is intended for internal use within the AI agents' infrastructure to securely store and access
  * data related to an agent's context. The associated data includes details such as message history, node identifiers,

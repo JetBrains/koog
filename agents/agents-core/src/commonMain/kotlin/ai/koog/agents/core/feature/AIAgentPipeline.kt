@@ -667,8 +667,8 @@ public class AIAgentPipeline {
      * Example:
      * ```
      * pipeline.interceptStrategyStarted(InterceptContext) {
-     *     val strategyId = strategy.id
-     *     logger.info("Strategy $strategyId has started execution")
+     *     val strategyName = strategy.name
+     *     logger.info("Strategy $strategyName has started execution")
      * }
      * ```
      */
