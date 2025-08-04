@@ -1,10 +1,13 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
+import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -94,7 +97,8 @@ class CheckpointsTests {
             )
         )
 
-        checkpointStorageProvider.saveCheckpoint(testCheckpoint)
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), agentId)
+        checkpointStorageProvider.saveCheckpoint(testCheckpoint, testContext)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -146,8 +150,9 @@ class CheckpointsTests {
             )
         )
 
-        checkpointStorageProvider.saveCheckpoint(testCheckpoint)
-        checkpointStorageProvider.saveCheckpoint(testCheckpoint2)
+        val testContext2 = DummyAIAgentContext(AIAgentContextMockBuilder(), agentId)
+        checkpointStorageProvider.saveCheckpoint(testCheckpoint, testContext2)
+        checkpointStorageProvider.saveCheckpoint(testCheckpoint2, testContext2)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },

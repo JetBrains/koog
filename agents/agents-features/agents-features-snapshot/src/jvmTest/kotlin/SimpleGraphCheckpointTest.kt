@@ -6,6 +6,7 @@ import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
+import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -117,7 +118,7 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test")
 
         // Verify that a checkpoint was created and saved
-        val testContext = AIAgentContextMockBuilder().apply { agentId = "testAgentId" }.build()
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), "testAgentId")
         val checkpoint = checkpointStorageProvider.getCheckpoints(testContext).firstOrNull()
         assertNotNull(checkpoint, "No checkpoint was created")
         assertEquals("checkpointNode", checkpoint?.nodeId, "Checkpoint has incorrect node ID")
@@ -160,7 +161,7 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test")
 
         // Verify that a checkpoint was created and saved
-        val testContext = AIAgentContextMockBuilder().apply { agentId = "testAgentId" }.build()
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), "testAgentId")
         val checkpoint = checkpointStorageProvider.getCheckpoints(testContext).firstOrNull()
         if (checkpoint == null) {
             error("checkpoint is null")

@@ -1,10 +1,13 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistencyStorageProvider
+import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
+import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -85,7 +88,8 @@ class FileCheckpointsTests {
         )
 
         // Verify that the checkpoint was saved to the file system
-        val checkpoints = provider.getCheckpoints()
+        val testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), agentId)
+        val checkpoints = provider.getCheckpoints(testContext)
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
         assertEquals("checkpointId", checkpoints.first().checkpointId)
     }
@@ -128,7 +132,8 @@ class FileCheckpointsTests {
             )
         )
 
-        provider.saveCheckpoint(testCheckpoint)
+        val testContext1 = DummyAIAgentContext(AIAgentContextMockBuilder(), agentId)
+        provider.saveCheckpoint(testCheckpoint, testContext1)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -179,8 +184,9 @@ class FileCheckpointsTests {
             )
         )
 
-        provider.saveCheckpoint(testCheckpoint)
-        provider.saveCheckpoint(testCheckpoint2)
+        val testContext2 = DummyAIAgentContext(AIAgentContextMockBuilder(), agentId)
+        provider.saveCheckpoint(testCheckpoint, testContext2)
+        provider.saveCheckpoint(testCheckpoint2, testContext2)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -225,7 +231,8 @@ class FileCheckpointsTests {
         agent.run("Start the test")
 
         // Verify that checkpoints were automatically created
-        val checkpoints = provider.getCheckpoints()
+        val testContext3 = DummyAIAgentContext(AIAgentContextMockBuilder(), agentId)
+        val checkpoints = provider.getCheckpoints(testContext3)
         assertTrue(checkpoints.isNotEmpty(), "Should have automatically created checkpoints")
     }
 }

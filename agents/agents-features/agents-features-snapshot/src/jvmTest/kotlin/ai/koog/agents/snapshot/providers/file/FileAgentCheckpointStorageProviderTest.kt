@@ -3,6 +3,7 @@ package ai.koog.agents.snapshot.providers.file
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
+import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -26,9 +27,7 @@ class FileAgentCheckpointStorageProviderTest {
     fun setup() {
         tempDir = Files.createTempDirectory("checkpoint-test")
         provider = JVMFilePersistencyStorageProvider(tempDir)
-        testContext = AIAgentContextMockBuilder().apply {
-            agentId = "testAgentId"
-        }.build()
+        testContext = DummyAIAgentContext(AIAgentContextMockBuilder(), "testAgentId")
     }
 
     @AfterTest

@@ -150,7 +150,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
             "snapshot-id"
         )
 
-        saveCheckpoint(checkpoint ?: error("Checkpoint creation failed"))
+        saveCheckpoint(checkpoint ?: error("Checkpoint creation failed"), ctx)
 
         return@withPersistency "$input\nSnapshot created"
     }
