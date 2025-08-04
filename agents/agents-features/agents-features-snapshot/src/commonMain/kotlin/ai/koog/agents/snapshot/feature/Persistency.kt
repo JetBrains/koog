@@ -165,7 +165,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             )
         }
 
-        saveCheckpoint(checkpoint)
+        saveCheckpoint(checkpoint, agentContext)
         return checkpoint
     }
 
@@ -181,27 +181,30 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * Saves a checkpoint using the configured storage provider.
      *
      * @param checkpointData The checkpoint data to save
+     * @param agentContext The agent context for associating the checkpoint
      */
-    public suspend fun saveCheckpoint(checkpointData: AgentCheckpointData) {
-        persistencyStorageProvider.saveCheckpoint(checkpointData)
+    public suspend fun saveCheckpoint(checkpointData: AgentCheckpointData, agentContext: AIAgentContextBase) {
+        persistencyStorageProvider.saveCheckpoint(checkpointData, agentContext)
     }
 
     /**
      * Retrieves the latest checkpoint for the specified agent.
      *
+     * @param agentContext The agent context to find the latest checkpoint for
      * @return The latest checkpoint data, or null if no checkpoint exists
      */
-    public suspend fun getLatestCheckpoint(): AgentCheckpointData? =
-        persistencyStorageProvider.getLatestCheckpoint()
+    public suspend fun getLatestCheckpoint(agentContext: AIAgentContextBase): AgentCheckpointData? =
+        persistencyStorageProvider.getLatestCheckpoint(agentContext)
 
     /**
      * Retrieves a specific checkpoint by ID for the specified agent.
      *
      * @param checkpointId The ID of the checkpoint to retrieve
+     * @param agentContext The agent context for security/filtering
      * @return The checkpoint data with the specified ID, or null if not found
      */
-    public suspend fun getCheckpointById(checkpointId: String): AgentCheckpointData? =
-        persistencyStorageProvider.getCheckpoints().firstOrNull { it.checkpointId == checkpointId }
+    public suspend fun getCheckpointById(checkpointId: String, agentContext: AIAgentContextBase): AgentCheckpointData? =
+        persistencyStorageProvider.getCheckpointById(checkpointId, agentContext)
 
     /**
      * Sets the execution point of an agent to a specific state.
@@ -237,7 +240,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         checkpointId: String,
         agentContext: AIAgentContextBase
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
+        val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId, agentContext)
         if (checkpoint != null) {
             agentContext.store(checkpoint.toAgentContextData())
         }
@@ -256,7 +259,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
     public suspend fun rollbackToLatestCheckpoint(
         agentContext: AIAgentContextBase
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
+        val checkpoint: AgentCheckpointData? = getLatestCheckpoint(agentContext)
         if (checkpoint != null) {
             agentContext.store(checkpoint.toAgentContextData())
         }
