@@ -47,13 +47,11 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -216,12 +214,12 @@ public open class AIAgent<Input, Output>(
                 // Cancellation checkpoint before strategy execution
                 currentCoroutineContext().ensureActive()
                 var result = strategy.execute(context = agentContext, input = agentInput)
-                
+
                 while (result == null && agentContext.getAgentContextData() != null) {
                     // Cooperative cancellation checkpoint at loop start
                     currentCoroutineContext().ensureActive()
                     setExecutionPointIfNeeded(agentContext)
-                    
+
                     // Cancellation checkpoint before strategy execution
                     currentCoroutineContext().ensureActive()
                     result = strategy.execute(context = agentContext, input = agentInput)
@@ -253,24 +251,24 @@ public open class AIAgent<Input, Output>(
 
     /**
      * Executes the agent with cancellation support, returning a tri-state outcome.
-     * 
+     *
      * This method provides the same functionality as [run] but returns a [RunOutcome]
      * that distinguishes between successful completion, failure, and cancellation.
      * This enables proper handling of different execution states without treating
      * cancellation as either success or failure.
-     * 
-     * ✅ **STRUCTURED CONCURRENCY COMPLIANT**: 
+     *
+     * ✅ **STRUCTURED CONCURRENCY COMPLIANT**:
      * This method follows proper structured concurrency by allowing CancellationException
-     * to propagate to parent coroutines. Only user-initiated cancellations (via 
+     * to propagate to parent coroutines. Only user-initiated cancellations (via
      * AIAgentTerminationByClientException) are converted to RunOutcome.Cancelled.
-     * 
+     *
      * **USAGE GUIDELINES:**
      * - Use `runCancellable()` when you need to distinguish between failure and cancellation
-     * - Use `runWithTimeout()` for operations with time limits  
+     * - Use `runWithTimeout()` for operations with time limits
      * - Use `runOrThrow()` when you want exception-based error handling
      * - Use `runOrDefault()` when you need fallback values
      * - Use `run()` for normal structured concurrency behavior
-     * 
+     *
      * @param agentInput The input to provide to the agent
      * @return The outcome of the agent execution (Success, Failure, or Cancelled)
      */
@@ -293,26 +291,26 @@ public open class AIAgent<Input, Output>(
 
     /**
      * Starts the agent execution and returns a handle for external cancellation.
-     * 
+     *
      * This method enables external cancellation scenarios like CLI keyboard input,
      * web request cancellation, or background job control. The returned handle
      * provides access to the execution outcome and a cancellation function.
-     * 
+     *
      * **Use Cases:**
      * - CLI applications with Escape key cancellation
      * - Web requests that can be cancelled by client disconnect
      * - Background jobs with external cancellation APIs
      * - Interactive applications requiring responsive cancellation
-     * 
+     *
      * @param agentInput The input to provide to the agent
      * @return A [CancellableExecution] containing the outcome and cancellation function
      */
     public suspend fun startCancellable(agentInput: Input): CancellableExecution<Output> = coroutineScope {
         val execution = async { runCancellable(agentInput) }
-        
+
         CancellableExecution(
             outcome = execution,
-            cancel = { reason -> 
+            cancel = { reason ->
                 execution.cancel(CancellationException("Cancelled: ${reason.name}"))
             }
         )
@@ -320,27 +318,26 @@ public open class AIAgent<Input, Output>(
 
     /**
      * Executes the agent with external cancellation signal support.
-     * 
+     *
      * This method integrates with external cancellation sources through a Flow,
      * enabling reactive cancellation from various sources like user input,
      * network events, or system signals.
-     * 
+     *
      * @param agentInput The input to provide to the agent
      * @param cancellationSignal Flow that emits cancellation reasons from external sources
      * @return The outcome of the agent execution (Success, Failure, or Cancelled)
      */
     public suspend fun runWithCancellationSignal(
-        agentInput: Input, 
+        agentInput: Input,
         cancellationSignal: kotlinx.coroutines.flow.Flow<CancellationReason>
     ): RunOutcome<Output> = coroutineScope {
-        
         val execution = async { runCancellable(agentInput) }
         val cancellationJob = launch {
             cancellationSignal.collect { reason ->
                 execution.cancel(CancellationException("External cancellation: ${reason.name}"))
             }
         }
-        
+
         try {
             execution.await()
         } finally {
@@ -423,7 +420,7 @@ public open class AIAgent<Input, Output>(
         logger.info {
             formatLog(agentId = id, runId = runId, message = "Agent terminated: ${reason.name} - ${message ?: "no additional details"}")
         }
-        
+
         // Create the standard Koog wire protocol termination message
         val terminationMessage = ai.koog.agents.core.model.message.EnvironmentToAgentTerminationMessage(
             runId = runId,
@@ -433,11 +430,11 @@ public open class AIAgent<Input, Output>(
             ),
             error = null
         )
-        
+
         logger.debug {
             formatLog(agentId = id, runId = runId, message = "Created EnvironmentToAgentTerminationMessage: $terminationMessage")
         }
-        
+
         // Notify pipeline handlers about the termination (for extensibility)
         pipeline.onAgentTermination(
             agentId = id,
@@ -555,11 +552,11 @@ public open class AIAgent<Input, Output>(
         // call tools in parallel and return results with cancellation support
         val results = coroutineScope {
             message.content
-                .map { call -> 
-                    async { 
+                .map { call ->
+                    async {
                         // Add cancellation checkpoint before each tool call
                         currentCoroutineContext().ensureActive()
-                        processToolCall(call) 
+                        processToolCall(call)
                     }
                 }
                 .awaitAll()

@@ -2,7 +2,7 @@ package ai.koog.agents.core.agent
 
 /**
  * Represents the reason why an agent execution was cancelled.
- * 
+ *
  * This enum provides semantic context for cancellation events, enabling proper
  * handling of different cancellation scenarios in logging, telemetry, and error handling.
  */

@@ -1,8 +1,8 @@
 package ai.koog.agents.core.agent.entity
 
+import ai.koog.agents.core.agent.CancellationReason
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.agent.CancellationReason
 import ai.koog.agents.core.utils.runCatchingCancellable
 import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.json.Json
@@ -48,17 +48,17 @@ public class AIAgentStrategy<Input, Output>(
         return runCatchingCancellable {
             // Cooperative cancellation checkpoint at strategy start
             coroutineContext.ensureActive()
-            
+
             context.pipeline.onStrategyStarted(this, context)
-            
+
             // Another cancellation checkpoint before main execution
             coroutineContext.ensureActive()
-            
+
             val result = super.execute(context = context, input = input)
-            
+
             // Final cancellation checkpoint before finishing
             coroutineContext.ensureActive()
-            
+
             context.pipeline.onStrategyFinished(this, context, result, outputType)
             result
         }.onFailure { throwable ->

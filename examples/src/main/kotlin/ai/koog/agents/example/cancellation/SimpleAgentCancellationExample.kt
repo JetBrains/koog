@@ -1,10 +1,10 @@
 package ai.koog.agents.example.cancellation
 
+import ai.koog.agents.core.agent.*
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.CancellationReason
 import ai.koog.agents.core.agent.RunOutcome
 import ai.koog.agents.core.agent.singleRunStrategy
-import ai.koog.agents.core.agent.*
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -13,9 +13,9 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Simple example demonstrating the new agent cancellation functionality.
- * 
+ *
  * This example shows the key features of the direct AIAgent cancellation integration:
- * - Using runCancellable() for tri-state outcomes (Success/Failure/Cancelled)  
+ * - Using runCancellable() for tri-state outcomes (Success/Failure/Cancelled)
  * - Extension functions for common patterns (timeout, fallback values)
  * - Clean handling of different execution outcomes
  * - No additional runner infrastructure needed
@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 fun main(): Unit = runBlocking {
     println("🚀 Simple Agent Cancellation Example")
     println("=" * 50)
-    
+
     // Create a simple agent using the existing API
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
@@ -32,10 +32,10 @@ fun main(): Unit = runBlocking {
         strategy = singleRunStrategy()
     )
 
-    // Scenario 1: Normal execution with runCancellable() 
+    // Scenario 1: Normal execution with runCancellable()
     println("\n📖 Scenario 1: Normal Execution")
     val outcome1 = agent.runCancellable("Hello, how are you?")
-    
+
     when (outcome1) {
         is RunOutcome.Success -> println("✅ Success: ${outcome1.value}")
         is RunOutcome.Failure -> println("❌ Failure: ${outcome1.error.message}")
@@ -45,7 +45,7 @@ fun main(): Unit = runBlocking {
     // Scenario 2: Using extension function for timeout
     println("\n📖 Scenario 2: Timeout Protection")
     val outcome2 = agent.runWithTimeout("Tell me a long story", 2.seconds)
-    
+
     when (outcome2) {
         is RunOutcome.Success -> println("✅ Success: ${outcome2.value}")
         is RunOutcome.Failure -> println("❌ Failure: ${outcome2.error.message}")
@@ -57,7 +57,7 @@ fun main(): Unit = runBlocking {
         }
     }
 
-    // Scenario 3: Using fallback values 
+    // Scenario 3: Using fallback values
     println("\n📖 Scenario 3: Fallback Values")
     val result3 = agent.runOrDefault("What's the weather?", "Weather information unavailable")
     println("🌤️  Result with fallback: $result3")

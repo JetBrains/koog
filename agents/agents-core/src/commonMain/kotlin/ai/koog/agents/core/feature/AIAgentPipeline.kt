@@ -19,8 +19,8 @@ import ai.koog.agents.core.feature.handler.AgentFinishedHandler
 import ai.koog.agents.core.feature.handler.AgentHandler
 import ai.koog.agents.core.feature.handler.AgentRunErrorContext
 import ai.koog.agents.core.feature.handler.AgentRunErrorHandler
-import ai.koog.agents.core.feature.handler.AgentTerminationContext
 import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.core.feature.handler.AgentTerminationContext
 import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
 import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
@@ -258,9 +258,9 @@ public class AIAgentPipeline {
         message: String?
     ) {
         val eventContext = AgentTerminationContext(
-            agentId = agentId, 
-            runId = runId, 
-            reason = reason, 
+            agentId = agentId,
+            runId = runId,
+            reason = reason,
             message = message
         )
         agentHandlers.values.forEach { handler -> handler.agentTerminationHandler.handle(eventContext) }
