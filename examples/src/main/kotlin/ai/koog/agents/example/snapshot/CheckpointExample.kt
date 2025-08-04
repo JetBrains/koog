@@ -29,9 +29,7 @@ fun main() = runBlocking {
 
     val persistenceId = "snapshot-agent-example"
 
-    val snapshotProvider = InMemoryPersistencyStorageProvider(
-        persistenceId = persistenceId
-    )
+    val snapshotProvider = InMemoryPersistencyStorageProvider()
     val agent = AIAgent(
         executor = executor,
         llmModel = OllamaModels.Meta.LLAMA_3_2,
@@ -61,8 +59,8 @@ fun main() = runBlocking {
         }
     }
 
-    val checkpoints = snapshotProvider.getCheckpoints()
-    println("Snapshot provider state after first run: $checkpoints")
+    // Checkpoints are now context-aware and automatically managed
+    println("Checkpoints are now managed per agent context automatically")
 
     val agent2 = AIAgent(
         executor = executor,

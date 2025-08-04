@@ -48,7 +48,7 @@ class FileCheckpointsTests {
     @BeforeTest
     fun setup() {
         tempDir = Files.createTempDirectory("agent-checkpoint-test")
-        provider = JVMFilePersistencyStorageProvider(tempDir, "testAgentId")
+        provider = JVMFilePersistencyStorageProvider(tempDir)
     }
 
     @AfterTest

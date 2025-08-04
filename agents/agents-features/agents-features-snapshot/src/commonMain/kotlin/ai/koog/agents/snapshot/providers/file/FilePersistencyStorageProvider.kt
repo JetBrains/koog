@@ -1,5 +1,6 @@
 package ai.koog.agents.snapshot.providers.file
 
+import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.rag.base.files.FileMetadata
@@ -9,7 +10,7 @@ import kotlinx.serialization.json.Json
 /**
  * A file-based implementation of [PersistencyStorageProvider] that stores agent checkpoints in a file system.
  *
- * This implementation organizes checkpoints by agent ID and uses JSON serialization for storing and retrieving
+ * This implementation organizes checkpoints by agent context and uses JSON serialization for storing and retrieving
  * checkpoint data. It relies on [FileSystemProvider.ReadWrite] for file system operations.
  *
  * @param Path Type representing the file path in the storage system.
@@ -17,7 +18,6 @@ import kotlinx.serialization.json.Json
  * @param root Root file path where the checkpoint storage will organize data.
  */
 public open class FilePersistencyStorageProvider<Path>(
-    private val persistenceId: String,
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
 ) : PersistencyStorageProvider {
@@ -37,11 +37,12 @@ public open class FilePersistencyStorageProvider<Path>(
     /**
      * Directory for a specific agent's checkpoints
      */
-    private suspend fun agentCheckpointsDir(): Path {
+    private suspend fun agentCheckpointsDir(context: AIAgentContextBase): Path {
         val checkpointsDir = checkpointsDir()
-        val agentDir = fs.fromRelativeString(checkpointsDir, persistenceId)
+        val agentKey = getStorageKey(context)
+        val agentDir = fs.fromRelativeString(checkpointsDir, agentKey)
         if (!fs.exists(agentDir)) {
-            fs.create(checkpointsDir, persistenceId, FileMetadata.FileType.Directory)
+            fs.create(checkpointsDir, agentKey, FileMetadata.FileType.Directory)
         }
         return agentDir
     }
@@ -49,13 +50,13 @@ public open class FilePersistencyStorageProvider<Path>(
     /**
      * Get the path to a specific checkpoint file
      */
-    private suspend fun checkpointPath(checkpointId: String): Path {
-        val agentDir = agentCheckpointsDir()
+    private suspend fun checkpointPath(checkpointId: String, context: AIAgentContextBase): Path {
+        val agentDir = agentCheckpointsDir(context)
         return fs.fromRelativeString(agentDir, checkpointId)
     }
 
-    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
-        val agentDir = agentCheckpointsDir()
+    override suspend fun getCheckpoints(context: AIAgentContextBase): List<AgentCheckpointData> {
+        val agentDir = agentCheckpointsDir(context)
 
         if (!fs.exists(agentDir)) {
             return emptyList()
@@ -71,14 +72,25 @@ public open class FilePersistencyStorageProvider<Path>(
         }
     }
 
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        val checkpointPath = checkpointPath(agentCheckpointData.checkpointId)
+    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData, context: AIAgentContextBase) {
+        val checkpointPath = checkpointPath(agentCheckpointData.checkpointId, context)
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
         fs.write(checkpointPath, serialized.encodeToByteArray())
     }
 
-    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-        return getCheckpoints()
+    override suspend fun getLatestCheckpoint(context: AIAgentContextBase): AgentCheckpointData? {
+        return getCheckpoints(context)
             .maxByOrNull { it.createdAt }
+    }
+
+    override suspend fun getCheckpointById(checkpointId: String, context: AIAgentContextBase): AgentCheckpointData? {
+        return getCheckpoints(context)
+            .find { it.checkpointId == checkpointId }
+    }
+
+    private fun getStorageKey(context: AIAgentContextBase): String {
+        // Use agent ID as the storage key. In a real implementation, you might
+        // combine agent ID with user ID or session ID for proper multi-tenancy.
+        return context.agentId
     }
 }

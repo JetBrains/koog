@@ -40,7 +40,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -64,7 +64,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -79,7 +79,7 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
@@ -120,7 +120,7 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
         val time = Clock.System.now()
         val agentId = "testAgentId"
 

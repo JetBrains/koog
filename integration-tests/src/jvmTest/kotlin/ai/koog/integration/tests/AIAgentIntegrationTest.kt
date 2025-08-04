@@ -630,7 +630,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 120.seconds) {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("integration_AgentCreateAndRestoreTest")
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
         val sayHello = "Hello World!"
         val hello = "Hello"
         val savedMessage = "Saved the state – the agent is ready to work!"
@@ -718,7 +718,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 120.seconds) {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("integration_AgentCheckpointRollbackTest")
+        val checkpointStorageProvider = InMemoryPersistencyStorageProvider()
 
         val hello = "Hello"
         val save = "Save"
@@ -834,7 +834,7 @@ class AIAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 120.seconds) {
         val checkpointStorageProvider =
-            InMemoryPersistencyStorageProvider("integration_AgentCheckpointContinuousPersistenceTest")
+            InMemoryPersistencyStorageProvider()
 
         val strategyName = "continuous-persistence-strategy"
 
@@ -926,7 +926,7 @@ class AIAgentIntegrationTest {
         val incorrectNodeIdError = "Checkpoint has incorrect node ID"
 
         val fileStorageProvider =
-            JVMFilePersistencyStorageProvider(tempDir, "integration_AgentCheckpointStorageProvidersTest")
+            JVMFilePersistencyStorageProvider(tempDir)
 
         val simpleStrategy = strategy(strategyName) {
             val nodeHello by node<String, String>(hello) { input ->

@@ -8,7 +8,7 @@ import java.nio.file.Path
  * in a file system.
  *
  * This class utilizes JVM's [Path] for file system operations and [JVMFileSystemProvider.ReadWrite]
- * for file system access. It organizes checkpoints by agent ID in a structured directory format
+ * for file system access. It organizes checkpoints by agent context in a structured directory format
  * under the specified root directory.
  *
  * Use this class to persistently store and retrieve agent checkpoints to and from a file-based system
@@ -18,10 +18,8 @@ import java.nio.file.Path
  * @param root The root directory where all agent checkpoints will be stored.
  */
 public class JVMFilePersistencyStorageProvider(
-    root: Path,
-    persistenceId: String
+    root: Path
 ) : FilePersistencyStorageProvider<Path>(
     fs = JVMFileSystemProvider.ReadWrite,
-    root = root,
-    persistenceId = persistenceId
+    root = root
 )

@@ -33,7 +33,7 @@ class SubgraphSetExecutionPointTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -57,7 +57,7 @@ class SubgraphSetExecutionPointTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -85,7 +85,7 @@ class SubgraphSetExecutionPointTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -110,7 +110,7 @@ class SubgraphSetExecutionPointTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -137,7 +137,7 @@ class SubgraphSetExecutionPointTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -164,7 +164,7 @@ class SubgraphSetExecutionPointTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 

@@ -34,8 +34,8 @@ val agent = AIAgent(
     // other configuration parameters
 ) {
     install(Persistency) {
-        // Configure the storage provider
-        storage = InMemoryPersistencyStorageProvider("agent-persistence-id")
+        // Configure the storage provider - now uses dynamic agent context
+        storage = InMemoryPersistencyStorageProvider()
         
         // Optional: enable automatic checkpoint creation after each node
         enableAutomaticPersistency = true

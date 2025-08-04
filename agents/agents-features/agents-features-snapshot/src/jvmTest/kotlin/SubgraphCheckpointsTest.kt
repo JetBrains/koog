@@ -37,7 +37,7 @@ class SubgraphCheckpointsTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -64,7 +64,7 @@ class SubgraphCheckpointsTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -91,7 +91,7 @@ class SubgraphCheckpointsTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 
@@ -119,7 +119,7 @@ class SubgraphCheckpointsTest {
             toolRegistry = toolRegistry
         ) {
             install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+                storage = InMemoryPersistencyStorageProvider()
             }
         }
 

@@ -47,6 +47,6 @@ public class InMemoryPersistencyStorageProvider : PersistencyStorageProvider {
     private fun getStorageKey(context: AIAgentContextBase): String {
         // Use agent ID as the storage key. In a real implementation, you might
         // combine agent ID with user ID or session ID for proper multi-tenancy.
-        return context.agent.id
+        return context.agentId
     }
 }
