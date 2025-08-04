@@ -16,7 +16,11 @@ internal val Prompt.traceString: String
         val builder = StringBuilder()
             .append("id: ").append(id)
             .append(", messages: [")
-            .append(messages.joinToString(", ", prefix = "{", postfix = "}") { message -> "role: ${message.role}, message: ${message.content}" })
+            .append(
+                messages.joinToString(", ", prefix = "{", postfix = "}") { message ->
+                    "role: ${message.role}, message: ${message.content}"
+                }
+            )
             .append("]")
             .append(", ")
             .append("temperature: ").append(params.temperature)
@@ -34,7 +38,7 @@ internal val Prompt.traceString: String
  */
 internal val Message.Response.traceString: String
     get() {
-        return "role: ${role}, message: $content"
+        return "role: $role, message: $content"
     }
 
 /**

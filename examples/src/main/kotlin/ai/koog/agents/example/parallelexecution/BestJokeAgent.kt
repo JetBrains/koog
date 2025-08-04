@@ -19,7 +19,6 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 @LLMDescription("The result of the best joke selection")
 data class JokeWinner(
@@ -27,9 +26,7 @@ data class JokeWinner(
     @LLMDescription("The winning joke text") val jokeText: String
 )
 
-
 fun main(args: Array<String>) = runBlocking {
-
     val jokeSystemPrompt =
         "You are a comedian. Generate a funny joke about the given topic. Be creative and make it hilarious."
     val jokeCritiqueSystemPrompt = "You are a comedy critic. Give a critique for the given joke."
@@ -73,7 +70,9 @@ fun main(args: Array<String>) = runBlocking {
 
         // Define a node to select the best joke
         val nodeGenerateBestJoke by parallel(
-            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
+            nodeOpenAI,
+            nodeAnthropicSonnet,
+            nodeAnthropicOpus,
         ) {
             selectByIndex { jokes ->
                 // Another LLM (ex: GPT4o) would find the funniest joke:
@@ -89,7 +88,7 @@ fun main(args: Array<String>) = runBlocking {
                                 ${jokes.mapIndexed { index, joke -> "Joke $index:\n$joke" }.joinToString("\n\n")}
 
                                 Select the best joke and explain why it's the best.
-                            """.trimIndent()
+                                """.trimIndent()
                             )
                         }
                     }
@@ -103,21 +102,27 @@ fun main(args: Array<String>) = runBlocking {
 
         // unused
         val nodeGenerateJokes by parallel(
-            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
+            nodeOpenAI,
+            nodeAnthropicSonnet,
+            nodeAnthropicOpus,
         ) {
             fold("Jokes:\n") { result, joke -> "$result\n$joke" }
         }
 
         // unused
         val nodeGenerateLongestJoke by parallel(
-            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
+            nodeOpenAI,
+            nodeAnthropicSonnet,
+            nodeAnthropicOpus,
         ) {
             selectByMax { it.length }
         }
 
         // unused
         val nodeGenerateJetbrainsJoke by parallel(
-            nodeOpenAI, nodeAnthropicSonnet, nodeAnthropicOpus,
+            nodeOpenAI,
+            nodeAnthropicSonnet,
+            nodeAnthropicOpus,
         ) {
             selectBy { it.contains("jetbrains") }
         }
@@ -130,7 +135,9 @@ fun main(args: Array<String>) = runBlocking {
     val agentConfig = AIAgentConfig(
         prompt = prompt("best-joke-agent") {
             system("You are a joke generator that creates the best jokes about given topics.")
-        }, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10
+        },
+        model = OpenAIModels.Chat.GPT4o,
+        maxAgentIterations = 10
     )
 
     // Create the agent
@@ -138,7 +145,10 @@ fun main(args: Array<String>) = runBlocking {
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
             LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-        ), strategy = strategy, agentConfig = agentConfig, toolRegistry = ToolRegistry.EMPTY
+        ),
+        strategy = strategy,
+        agentConfig = agentConfig,
+        toolRegistry = ToolRegistry.EMPTY
     ) {
         install(OpenTelemetry) {
             // Add a console logger for local debugging

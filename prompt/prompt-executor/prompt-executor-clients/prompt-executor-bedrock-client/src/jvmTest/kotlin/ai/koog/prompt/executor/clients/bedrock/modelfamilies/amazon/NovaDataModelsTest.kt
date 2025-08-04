@@ -40,14 +40,22 @@ class NovaDataModelsTest {
         assert(serialized.contains("\"user\"")) { "Serialized JSON should contain 'user' role: $serialized" }
         assert(serialized.contains("\"content\"")) { "Serialized JSON should contain 'content' field: $serialized" }
         assert(serialized.contains("\"text\"")) { "Serialized JSON should contain 'text' field: $serialized" }
-        assert(serialized.contains("\"Tell me about Paris\"")) { "Serialized JSON should contain the message text: $serialized" }
-        assert(serialized.contains("\"inferenceConfig\"")) { "Serialized JSON should contain 'inferenceConfig' field: $serialized" }
-        assert(serialized.contains("\"temperature\"")) { "Serialized JSON should contain 'temperature' field: $serialized" }
+        assert(serialized.contains("\"Tell me about Paris\"")) {
+            "Serialized JSON should contain the message text: $serialized"
+        }
+        assert(serialized.contains("\"inferenceConfig\"")) {
+            "Serialized JSON should contain 'inferenceConfig' field: $serialized"
+        }
+        assert(serialized.contains("\"temperature\"")) {
+            "Serialized JSON should contain 'temperature' field: $serialized"
+        }
         assert(serialized.contains("0.7")) { "Serialized JSON should contain the temperature value: $serialized" }
         assert(serialized.contains("\"maxTokens\"")) { "Serialized JSON should contain 'maxTokens' field: $serialized" }
         assert(serialized.contains("1000")) { "Serialized JSON should contain the maxTokens value: $serialized" }
         assert(serialized.contains("\"system\"")) { "Serialized JSON should contain 'system' field: $serialized" }
-        assert(serialized.contains("\"You are a helpful assistant.\"")) { "Serialized JSON should contain the system message: $serialized" }
+        assert(serialized.contains("\"You are a helpful assistant.\"")) {
+            "Serialized JSON should contain the system message: $serialized"
+        }
     }
 
     @Test
@@ -67,8 +75,12 @@ class NovaDataModelsTest {
 
         assertNotNull(serialized)
         assert(serialized.contains("\"messages\"")) { "Serialized JSON should contain 'messages' field: $serialized" }
-        assert(!serialized.contains("\"inferenceConfig\"")) { "Serialized JSON should not contain 'inferenceConfig' field when it's null: $serialized" }
-        assert(!serialized.contains("\"system\"")) { "Serialized JSON should not contain 'system' field when it's null: $serialized" }
+        assert(!serialized.contains("\"inferenceConfig\"")) {
+            "Serialized JSON should not contain 'inferenceConfig' field when it's null: $serialized"
+        }
+        assert(!serialized.contains("\"system\"")) {
+            "Serialized JSON should not contain 'system' field when it's null: $serialized"
+        }
     }
 
     @Test

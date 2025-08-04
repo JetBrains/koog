@@ -2,9 +2,9 @@ package ai.koog.prompt.structure
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.structure.json.JsonStructureLanguage
@@ -13,7 +13,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
 
-private val logger = KotlinLogging.logger {  }
+private val logger = KotlinLogging.logger { }
 
 /**
  * Adds a structured representation of the given value to the text content using the specified language.
@@ -36,7 +36,11 @@ public inline fun <reified T> TextContentBuilderBase<*>.structure(language: Json
  * @param value The value to be serialized and added to the builder.
  * @param serializer The [KSerializer] instance used to serialize the value into the structured JSON format.
  */
-public fun <T> TextContentBuilderBase<*>.structure(language: JsonStructureLanguage, value: T, serializer: KSerializer<T>) {
+public fun <T> TextContentBuilderBase<*>.structure(
+    language: JsonStructureLanguage,
+    value: T,
+    serializer: KSerializer<T>
+) {
     +language.pretty(value, serializer)
 }
 

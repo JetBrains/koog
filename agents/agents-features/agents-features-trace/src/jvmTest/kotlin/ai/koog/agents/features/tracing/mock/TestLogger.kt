@@ -1,10 +1,9 @@
-package ai.koog.agents.features.tracing.writer
+package ai.koog.agents.features.tracing.mock
 
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KLoggingEventBuilder
 import io.github.oshai.kotlinlogging.Level
 import io.github.oshai.kotlinlogging.Marker
-
 
 class TestLogger(
     override val name: String,

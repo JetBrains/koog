@@ -8,7 +8,7 @@ import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import io.ktor.utils.io.*
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
@@ -54,17 +54,15 @@ object CalculatorChatExecutor : PromptExecutor {
 
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         flow {
-        try {
-            val response = execute(prompt, model)
-            emit(response.content)
+            try {
+                val response = execute(prompt, model)
+                emit(response.content)
+            } catch (t: CancellationException) {
+                throw t
+            } catch (t: Throwable) {
+                println("[DEBUG_LOG] Error while emitting response: ${t::class.simpleName}(${t.message})")
+            }
         }
-        catch (t: CancellationException) {
-            throw t
-        }
-        catch (t: Throwable) {
-            println("[DEBUG_LOG] Error while emitting response: ${t::class.simpleName}(${t.message})")
-        }
-    }
 
     override suspend fun moderate(
         prompt: Prompt,

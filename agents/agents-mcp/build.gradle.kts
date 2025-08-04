@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-
 // FIXME Kotlin MCP SDK only supports JVM target for now, so we only provide JVM target for this module too. Fix later
 kotlin {
     sourceSets {

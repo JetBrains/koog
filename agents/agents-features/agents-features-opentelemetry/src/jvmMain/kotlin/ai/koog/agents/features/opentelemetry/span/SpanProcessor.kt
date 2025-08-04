@@ -84,19 +84,23 @@ internal class SpanProcessor(private val tracer: Tracer) {
 
             val removedSpan = _spans.remove(spanId)
             if (removedSpan == null) {
-                logger.warn { "Span with id '$spanId' not found. Make sure you do not delete span with same id several times" }
+                logger.warn {
+                    "Span with id '$spanId' not found. Make sure you do not delete span with same id several times"
+                }
             }
         }
     }
 
-    inline fun <reified T>getSpan(spanId: String): T? where T : GenAIAgentSpan {
+    inline fun <reified T> getSpan(spanId: String): T? where T : GenAIAgentSpan {
         return _spans[spanId] as? T
     }
 
-    inline fun <reified T>getSpanOrThrow(id: String): T where T : GenAIAgentSpan {
+    inline fun <reified T> getSpanOrThrow(id: String): T where T : GenAIAgentSpan {
         val span = _spans[id] ?: error("Span with id: $id not found")
         return span as? T
-            ?: error("Span with id <$id> is not of expected type. Expected: <${T::class.simpleName}>, actual: <${span::class.simpleName}>")
+            ?: error(
+                "Span with id <$id> is not of expected type. Expected: <${T::class.simpleName}>, actual: <${span::class.simpleName}>"
+            )
     }
 
     fun endUnfinishedSpans(filter: (spanId: String) -> Boolean = { true }) {

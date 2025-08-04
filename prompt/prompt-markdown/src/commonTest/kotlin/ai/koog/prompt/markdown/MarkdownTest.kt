@@ -188,20 +188,23 @@ class MarkdownTest {
         val md = markdown {
             h1("Project Documentation")
             +"Welcome to the project documentation."
-            
+
             h2("Installation")
             +"To install the project, run the following command:"
             codeblock("npm install my-project", "bash")
-            
+
             h2("Usage")
             +"Here's how to use the project:"
-            codeblock("""
+            codeblock(
+                """
                 import { MyProject } from 'my-project';
                 
                 const project = new MyProject();
                 project.start();
-            """.trimIndent(), "javascript")
-            
+                """.trimIndent(),
+                "javascript"
+            )
+
             h2("Features")
 
             h2("Roadmap")
@@ -216,11 +219,11 @@ class MarkdownTest {
                 ),
                 alignments = listOf(TableAlignment.LEFT, TableAlignment.CENTER, TableAlignment.RIGHT)
             )
-            
+
             h2("License")
             blockquote("This project is licensed under the MIT License.")
         }
-        
+
         // We don't need to check the exact output, just that it doesn't throw exceptions
         // and produces a non-empty string
         assertTrue(md.isNotEmpty())

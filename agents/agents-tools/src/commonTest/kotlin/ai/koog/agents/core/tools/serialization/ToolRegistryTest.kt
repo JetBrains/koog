@@ -1,8 +1,14 @@
 package ai.koog.agents.core.tools.serialization
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolRegistry
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class ToolRegistryTest {
     private val tool1 = SampleTool("tool_1")
@@ -149,7 +155,7 @@ class ToolRegistryTest {
     @Test
     fun testToolRegistryAddAllExistingTool() = runTest {
         val toolRegistry = ToolRegistry {
-            tools(listOf(tool1,  tool2))
+            tools(listOf(tool1, tool2))
         }
         assertEquals(2, toolRegistry.tools.size)
 
@@ -165,7 +171,7 @@ class ToolRegistryTest {
         @Test
         fun testToolRegistryAddAllExistingTool() = runTest {
             val toolRegistry = ToolRegistry {
-                tools(listOf(tool1,  tool2))
+                tools(listOf(tool1, tool2))
             }
             assertEquals(2, toolRegistry.tools.size)
 

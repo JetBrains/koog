@@ -30,6 +30,25 @@ public data class LLMParams(
     val toolChoice: ToolChoice? = null,
     val user: String? = null,
 ) {
+    init {
+        temperature?.let { temp ->
+            require(temp in 0.0..2.0) { "Temperature must be between 0.0 and 2.0, but was $temp" }
+        }
+        numberOfChoices?.let { choices ->
+            require(choices > 0) { "Number of choices must be greater than 0, but was $choices" }
+        }
+        speculation?.let { spec ->
+            require(spec.isNotBlank()) { "Speculation must not be empty or blank" }
+        }
+        user?.let { userId ->
+            require(userId.isNotBlank()) { "User must not be empty or blank" }
+        }
+        toolChoice?.let { choice ->
+            if (choice is ToolChoice.Named) {
+                require(choice.name.isNotBlank()) { "Tool choice name must not be empty or blank" }
+            }
+        }
+    }
     /**
      * Combines the parameters of the current `LLMParams` instance with the provided default `LLMParams`
      * to produce a new instance. Fields that are null in the current instance are replaced by the
@@ -64,7 +83,7 @@ public data class LLMParams(
          * It extends the Schema interface and has a property for schema representation.
          */
         @Serializable
-        public sealed interface JSON: Schema {
+        public sealed interface JSON : Schema {
             /**
              * Represents the JSON schema definition as a JsonObject.
              *
@@ -86,7 +105,11 @@ public data class LLMParams(
              * @property schema The JSON schema associated with the structure.
              */
             @Serializable
-            public data class Simple(override val name: String, override val schema: JsonObject) : JSON
+            public data class Simple(override val name: String, override val schema: JsonObject) : JSON {
+                init {
+                    require(name.isNotBlank()) { "Schema name must not be empty or blank" }
+                }
+            }
             /**
              * Represents a complete JSON schema structure.
              *
@@ -97,7 +120,11 @@ public data class LLMParams(
              * @property schema The JSON schema definition as a `JsonObject`.
              */
             @Serializable
-            public data class Full(override val name: String, override val schema: JsonObject) : JSON
+            public data class Full(override val name: String, override val schema: JsonObject) : JSON {
+                init {
+                    require(name.isNotBlank()) { "Schema name must not be empty or blank" }
+                }
+            }
         }
     }
 
@@ -110,24 +137,28 @@ public data class LLMParams(
          *  LLM will call the tool [name] as a response
          */
         @Serializable
-        public data class Named(val name: String): ToolChoice()
+        public data class Named(val name: String) : ToolChoice() {
+            init {
+                require(name.isNotBlank()) { "Tool choice name must not be empty or blank" }
+            }
+        }
 
         /**
          * LLM will not call tools at all, and only generate text
          */
         @Serializable
-        public object None: ToolChoice()
+        public object None : ToolChoice()
 
         /**
          * LLM will automatically decide whether to call tools or to generate text
          */
         @Serializable
-        public object Auto: ToolChoice()
+        public object Auto : ToolChoice()
 
         /**
          * LLM will only call tools
          */
         @Serializable
-        public object Required: ToolChoice()
+        public object Required : ToolChoice()
     }
 }

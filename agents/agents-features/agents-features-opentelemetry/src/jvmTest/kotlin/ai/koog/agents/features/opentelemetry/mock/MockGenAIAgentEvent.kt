@@ -11,7 +11,6 @@ internal data class MockGenAIAgentEvent(
     override val verbose: Boolean = false
 ) : GenAIAgentEvent {
 
-
     override val bodyFields: List<EventBodyField> = buildList {
         fields.forEach { field ->
             if (!verbose && field.key.contains("content", ignoreCase = true)) {

@@ -1,0 +1,11 @@
+ktor:
+  application:
+    modules:
+      - ai.koog.agents.example.ktor.KtorIntegrationExampleKt.main
+
+koog:
+  openai.apikey: "your-openai-api-key"
+  anthropic.apikey: "your-anthropic-api-key"
+  google.apikey: "your-google-api-key"
+  openrouter.apikey: "your-openrouter-api-key"
+  ollama.enable: true

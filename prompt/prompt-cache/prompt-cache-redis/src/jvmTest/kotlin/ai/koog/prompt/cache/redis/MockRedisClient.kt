@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * An in-memory implementation of RedisClient for testing purposes.
  * This can be used in tests to avoid the need for a real Redis server.
- * 
+ *
  * Uses mockk to avoid implementing unnecessary methods.
  */
 class MockRedisClient(
@@ -26,7 +26,7 @@ class MockRedisClient(
 
     init {
         // Setup the mock commands to implement our in-memory Redis functionality
-        coEvery { mockCommands.get(any()) } answers { 
+        coEvery { mockCommands.get(any()) } answers {
             val key = firstArg<String>()
             val now = System.currentTimeMillis()
             dataStore[key]?.let { data ->

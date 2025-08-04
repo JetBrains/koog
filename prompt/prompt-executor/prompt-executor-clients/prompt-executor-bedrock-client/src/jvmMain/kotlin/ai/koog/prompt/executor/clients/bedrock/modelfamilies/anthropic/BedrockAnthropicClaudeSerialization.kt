@@ -70,7 +70,9 @@ internal object BedrockAnthropicClaudeSerialization {
                                 is Attachment.Image -> {
                                     val imageSource = when (val content = attachment.content) {
                                         is AttachmentContent.URL -> {
-                                            throw IllegalArgumentException("URL images not yet supported, please provide base64 encoded images")
+                                            throw IllegalArgumentException(
+                                                "URL images not yet supported, please provide base64 encoded images"
+                                            )
                                         }
 
                                         is AttachmentContent.Binary -> {
@@ -80,11 +82,15 @@ internal object BedrockAnthropicClaudeSerialization {
                                             )
                                         }
 
-                                        else -> throw IllegalArgumentException("Unsupported image content type: ${content::class.simpleName}")
+                                        else -> throw IllegalArgumentException(
+                                            "Unsupported image content type: ${content::class.simpleName}"
+                                        )
                                     }
                                     contentParts.add(AnthropicContent.Image(source = imageSource))
                                 }
-                                else -> throw IllegalArgumentException("Unsupported attachment type: ${attachment::class.simpleName}")
+                                else -> throw IllegalArgumentException(
+                                    "Unsupported attachment type: ${attachment::class.simpleName}"
+                                )
                             }
                         }
                     }
@@ -145,7 +151,9 @@ internal object BedrockAnthropicClaudeSerialization {
                     )
                 )
             }
-        } else null
+        } else {
+            null
+        }
 
         val toolChoice = if (tools.isNotEmpty()) {
             when (val choice = prompt.params.toolChoice) {
@@ -155,13 +163,22 @@ internal object BedrockAnthropicClaudeSerialization {
                 is LLMParams.ToolChoice.Named -> AnthropicToolChoice.Tool(choice.name)
                 null -> null
             }
-        } else null
+        } else {
+            null
+        }
 
         return AnthropicMessageRequest(
             model = model.id,
             messages = messages,
             maxTokens = 4096,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            temperature = if (model.capabilities.contains(
+                    LLMCapability.Temperature
+                )
+            ) {
+                prompt.params.temperature
+            } else {
+                null
+            },
             system = systemMessages.takeIf { it.isNotEmpty() },
             tools = anthropicTools,
             toolChoice = toolChoice

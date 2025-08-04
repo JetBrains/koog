@@ -1,6 +1,5 @@
-package ai.koog.agents.core.feature
+package ai.koog.agents.ext.llm.choice
 
-import ai.koog.agents.core.feature.choice.ChoiceSelectionStrategy
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor

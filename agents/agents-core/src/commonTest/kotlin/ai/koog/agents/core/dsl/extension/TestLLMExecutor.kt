@@ -35,7 +35,9 @@ class TestLLMExecutor : PromptExecutor {
         return listOf(handlePrompt(prompt))
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow { emit(handlePrompt(prompt).content) }
+    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+        emit(handlePrompt(prompt).content)
+    }
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel
@@ -52,7 +54,10 @@ class TestLLMExecutor : PromptExecutor {
         // For compression test, return a TLDR summary
         if (prompt.messages.any { it.content.contains("Create a comprehensive summary of this conversation") }) {
             tldrCount++
-            val tldrResponse = Message.Assistant("TLDR #$tldrCount: Summary of conversation history", metaInfo = ResponseMetaInfo.create(testClock))
+            val tldrResponse = Message.Assistant(
+                "TLDR #$tldrCount: Summary of conversation history",
+                metaInfo = ResponseMetaInfo.create(testClock)
+            )
             messages.add(tldrResponse)
             return tldrResponse
         }

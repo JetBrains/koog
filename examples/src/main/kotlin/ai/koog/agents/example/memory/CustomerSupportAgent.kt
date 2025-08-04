@@ -182,21 +182,25 @@ fun createCustomerSupportAgent(
                 scope = MemoryScopeType.PRODUCT
             )
 
-            nodeStart then nodeLoadUserPreferences then nodeLoadUserIssues then nodeLoadDiagnosticResults then nodeLoadOrganizationSolutions then nodeFinish
+            nodeStart then nodeLoadUserPreferences then nodeLoadUserIssues then nodeLoadDiagnosticResults then
+                nodeLoadOrganizationSolutions then
+                nodeFinish
         }
 
         val supportSession by subgraphWithTask<String>(
             tools = userInfoToolSet.asTools() + diagnosticToolSet.asTools() + knowledgeBaseToolSet.asTools()
         ) { userInput ->
             markdown {
-                h2("You are a customer support agent that helps users resolve issues and tracks information for future reference")
+                h2(
+                    "You are a customer support agent that helps users resolve issues and tracks information for future reference"
+                )
                 text("You should:")
                 br()
                 bulleted {
                     item {
                         text(
                             "Understand the user's preferences and communication style. " +
-                                    "Do not ask this explicitly, but use this information (if available) from your own knowledge or memory"
+                                "Do not ask this explicitly, but use this information (if available) from your own knowledge or memory"
                         )
                     }
                     item { text("Review the user's issue history to provide context") }
@@ -236,7 +240,9 @@ fun createCustomerSupportAgent(
                 scope = MemoryScopeType.PRODUCT
             )
 
-            nodeStart then saveUserPreferences then saveUserIssues then saveDiagnosticResults then saveOrganizationSolutions then nodeFinish
+            nodeStart then saveUserPreferences then saveUserIssues then saveDiagnosticResults then
+                saveOrganizationSolutions then
+                nodeFinish
         }
 
         nodeStart then loadMemory then supportSession then retrieveResult then saveToMemory then nodeFinish
@@ -283,7 +289,7 @@ fun main() = runBlocking {
         root = Path("path/to/memory/root")
     )
 
-    // Create and run the agent 
+    // Create and run the agent
     val agent = createCustomerSupportAgent(
         userInfoToolSet = UserInfoToolSet(),
         diagnosticToolSet = DiagnosticToolSet(),

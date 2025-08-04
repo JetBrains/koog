@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_3
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_3_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_3
@@ -7,7 +8,6 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_7
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4
-import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -25,7 +25,7 @@ import ai.koog.prompt.llm.LLModel
  * | [Sonnet_4]   | Fast            | $3-$15       | Text, Image, Tools | Text, Tools |
  * | [Opus_4]     | Moderately fast | $15-$75      | Text, Image, Tools | Text, Tools |
  */
-public object AnthropicModels: LLModelDefinitions {
+public object AnthropicModels : LLModelDefinitions {
 
     /**
      * Claude 3 Opus is Anthropic's most powerful model, designed for highly complex tasks.

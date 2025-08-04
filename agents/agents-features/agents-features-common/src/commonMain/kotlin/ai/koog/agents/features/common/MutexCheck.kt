@@ -6,7 +6,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal object MutexCheck {
 
-    private val logger = KotlinLogging.logger {  }
+    private val logger = KotlinLogging.logger { }
 
     /**
      * Executes the given [action] within a lock provided by the [Mutex]. Before acquiring the lock,

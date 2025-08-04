@@ -1,4 +1,4 @@
-package ai.koog.agents.core.feature.choice
+package ai.koog.agents.ext.llm.choice
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice

@@ -11,7 +11,6 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 
-
 fun main(): Unit = runBlocking {
     val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
 
@@ -29,7 +28,7 @@ fun main(): Unit = runBlocking {
                         callTool(BookTool::class, book)
                         callTool<BookTool>(book)
                         findTool(BookTool::class).execute(book)
-                    */
+                     */
                 }
 
 //              Also we can spawn parallel tool calls and not wait on a fly !!!

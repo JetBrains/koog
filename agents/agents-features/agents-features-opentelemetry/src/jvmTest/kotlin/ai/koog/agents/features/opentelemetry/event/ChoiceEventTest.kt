@@ -15,7 +15,6 @@ class ChoiceEventTest {
 
     @Test
     fun `test choice attributes verbose false`() {
-
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent)
         val llmProvider = MockLLMProvider()
@@ -36,7 +35,6 @@ class ChoiceEventTest {
 
     @Test
     fun `test choice attributes verbose true`() {
-
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent)
         val llmProvider = MockLLMProvider()
@@ -61,7 +59,6 @@ class ChoiceEventTest {
 
     @Test
     fun `test assistant message with verbose false`() {
-
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent)
 
@@ -81,7 +78,6 @@ class ChoiceEventTest {
 
     @Test
     fun `test assistant message with finish reason verbose false`() {
-
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent, "stop")
 
@@ -102,7 +98,6 @@ class ChoiceEventTest {
 
     @Test
     fun `test tool call message verbose false`() {
-
         val expectedContent = "Test message"
         val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
 
@@ -122,7 +117,6 @@ class ChoiceEventTest {
 
     @Test
     fun `test assistant message verbose true`() {
-
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent)
 
@@ -146,7 +140,6 @@ class ChoiceEventTest {
 
     @Test
     fun `test tool call message verbose true`() {
-
         val expectedContent = "Test message"
         val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
 
@@ -169,15 +162,20 @@ class ChoiceEventTest {
 
     //region Private Methods
 
-    private fun createTestAssistantMessage(content: String, finishReason: String? = null): Message.Assistant = Message.Assistant(
-        content = content, 
-        metaInfo = ResponseMetaInfo(Clock.System.now()),
-        finishReason = finishReason
-    )
+    private fun createTestAssistantMessage(content: String, finishReason: String? = null): Message.Assistant =
+        Message.Assistant(
+            content = content,
+            metaInfo = ResponseMetaInfo(Clock.System.now()),
+            finishReason = finishReason
+        )
 
-    private fun createTestToolCallMessage(id: String, tool: String, content: String): Message.Tool.Call = Message.Tool.Call(
-        id = id, tool = tool, content = content, metaInfo = ResponseMetaInfo(Clock.System.now())
-    )
+    private fun createTestToolCallMessage(id: String, tool: String, content: String): Message.Tool.Call =
+        Message.Tool.Call(
+            id = id,
+            tool = tool,
+            content = content,
+            metaInfo = ResponseMetaInfo(Clock.System.now())
+        )
 
     //endregion Private Methods
 }

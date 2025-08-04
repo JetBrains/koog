@@ -4,7 +4,15 @@ import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
@@ -120,14 +128,18 @@ class AIAgentLLMWriteSessionTest {
                 call("call_1", "test-tool", """{"input":"sample data"}""")
                 result("call_1", "test-tool", "Processed: sample data")
             }
-            assistant("I've processed your sample data. The result was: Processed: sample data. Would you like me to do anything else with it?")
+            assistant(
+                "I've processed your sample data. The result was: Processed: sample data. Would you like me to do anything else with it?"
+            )
             user("Can you also use the custom tool to process this data?")
             assistant("Sure, I'll use the custom tool for additional processing.")
             tool {
                 call("call_2", "custom-tool", """{"input":"additional processing"}""")
                 result("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}""")
             }
-            assistant("I've completed the additional processing. The custom tool returned: Custom processed: additional processing")
+            assistant(
+                "I've completed the additional processing. The custom tool returned: Custom processed: additional processing"
+            )
         }
     }
 

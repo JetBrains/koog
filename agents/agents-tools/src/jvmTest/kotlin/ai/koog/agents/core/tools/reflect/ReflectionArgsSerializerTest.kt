@@ -55,7 +55,6 @@ class ReflectionArgsSerializerTest {
         )
     }
 
-
     @Serializable
     data class MySpecificToolArgs(
         @LLMDescription("arg Long") val argLong: Long,
@@ -128,20 +127,24 @@ class ReflectionArgsSerializerTest {
             "Specific tool called with 42 and 3.14",
             runBlocking {
                 val args: ToolFromCallable.VarArgs =
-                    tool.decodeArgs(buildJsonObject {
-                        put(
-                            "args",
-                            buildJsonObject {
-                                put("argLong", JsonPrimitive(42))
-                                put("argDouble", JsonPrimitive(3.14))
-                            })
-                        put(
-                            "args2",
-                            buildJsonObject {
-                                put("argLong", JsonPrimitive(42))
-                                put("argDouble", JsonPrimitive(3.14))
-                            })
-                    })
+                    tool.decodeArgs(
+                        buildJsonObject {
+                            put(
+                                "args",
+                                buildJsonObject {
+                                    put("argLong", JsonPrimitive(42))
+                                    put("argDouble", JsonPrimitive(3.14))
+                                }
+                            )
+                            put(
+                                "args2",
+                                buildJsonObject {
+                                    put("argLong", JsonPrimitive(42))
+                                    put("argDouble", JsonPrimitive(3.14))
+                                }
+                            )
+                        }
+                    )
                 val rawResult = tool.execute(args, ToolsEnabler)
                 rawResult.result
             }
@@ -157,20 +160,27 @@ class ReflectionArgsSerializerTest {
             "Specific tool called with 42 and 3.14, 22 and 3.14",
             runBlocking {
                 val args: ToolFromCallable.VarArgs =
-                    tool.decodeArgs(buildJsonObject {
-                        put(
-                            "args",
-                            buildJsonArray {
-                                add(buildJsonObject {
-                                    put("argLong", JsonPrimitive(42))
-                                    put("argDouble", JsonPrimitive(3.14))
-                                })
-                                add(buildJsonObject {
-                                    put("argLong", JsonPrimitive(22))
-                                    put("argDouble", JsonPrimitive(3.14))
-                                })
-                            })
-                    })
+                    tool.decodeArgs(
+                        buildJsonObject {
+                            put(
+                                "args",
+                                buildJsonArray {
+                                    add(
+                                        buildJsonObject {
+                                            put("argLong", JsonPrimitive(42))
+                                            put("argDouble", JsonPrimitive(3.14))
+                                        }
+                                    )
+                                    add(
+                                        buildJsonObject {
+                                            put("argLong", JsonPrimitive(22))
+                                            put("argDouble", JsonPrimitive(3.14))
+                                        }
+                                    )
+                                }
+                            )
+                        }
+                    )
                 val rawResult = tool.execute(args, ToolsEnabler)
                 rawResult.result
             }

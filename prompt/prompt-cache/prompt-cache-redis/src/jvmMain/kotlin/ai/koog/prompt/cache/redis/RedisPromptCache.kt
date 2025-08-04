@@ -52,7 +52,7 @@ public class RedisPromptCache(
      *   exception if the cache type is not "redis".
      */
     public companion object : PromptCache.Factory.Named("redis") {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         private val defaultJson = Json {
             ignoreUnknownKeys = true
@@ -103,7 +103,7 @@ public class RedisPromptCache(
             // Store the value
             commands.setex(key, seconds = ttl.inWholeSeconds, value)
 
-            logger.info { "Set key '${key}' to Redis cache" }
+            logger.info { "Set key '$key' to Redis cache" }
         } catch (e: Exception) {
             throw RedisCacheException("Error storing in Redis cache", e)
         }
@@ -113,10 +113,10 @@ public class RedisPromptCache(
         try {
             val key = prefix + request.asCacheKey
             val value = commands.get(key) ?: run {
-                logger.info { "Get key '${key}' from Redis cache miss" }
+                logger.info { "Get key '$key' from Redis cache miss" }
                 return null
             }
-            logger.info { "Get key '${key}' from Redis cache hit" }
+            logger.info { "Get key '$key' from Redis cache hit" }
 
             // Update access time by setting the key with the same value but updated TTL
             commands.set(key, value)

@@ -6,7 +6,13 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.withMemory
-import ai.koog.agents.memory.model.*
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.DefaultTimeProvider
+import ai.koog.agents.memory.model.Fact
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.MultipleFacts
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.prompt.llm.LLModel
 import kotlinx.serialization.Serializable
@@ -45,7 +51,6 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
     subject: MemorySubject,
     scope: MemoryScopeType = MemoryScopeType.AGENT
 ): AIAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
-
 
 /**
  * Node that loads facts from memory for a given concept

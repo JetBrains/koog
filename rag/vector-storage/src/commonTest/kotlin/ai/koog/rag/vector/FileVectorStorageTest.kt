@@ -7,7 +7,11 @@ import ai.koog.rag.vector.mocks.MockFileSystem
 import ai.koog.rag.vector.mocks.MockFileSystemProvicer
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class FileVectorStorageTest {
     private fun createTestStorage(): FileVectorStorage<MockDocument, String> {

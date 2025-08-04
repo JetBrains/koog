@@ -12,7 +12,7 @@ import ai.koog.prompt.dsl.PromptDSL
  */
 @PromptDSL
 public abstract class TextContentBuilderBase<TContent> {
-        /**
+    /**
      * Represents the position of a caret within a text document.
      *
      * @property line The line number where the caret is located, starting from 0.
@@ -100,7 +100,6 @@ public abstract class TextContentBuilderBase<TContent> {
             +"$padding$line"
         }
     }
-
 
     /**
      * Appends a newline character to the underlying text builder.

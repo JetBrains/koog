@@ -1,6 +1,10 @@
 package ai.koog.agents.ext.tool
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
@@ -36,7 +40,9 @@ public object ExitTool : SimpleTool<ExitTool.Args>() {
             description = "Service tool, used by the agent to end conversation on user request or agent decision",
             requiredParameters = listOf(
                 ToolParameterDescriptor(
-                    name = "message", description = "Final message of the agent", type = ToolParameterType.String
+                    name = "message",
+                    description = "Final message of the agent",
+                    type = ToolParameterType.String
                 )
             )
         )

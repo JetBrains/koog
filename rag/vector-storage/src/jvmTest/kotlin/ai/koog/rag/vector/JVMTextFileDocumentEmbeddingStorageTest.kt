@@ -24,7 +24,7 @@ class JVMTextFileDocumentEmbeddingStorageTest {
             // Number of intersecting elements (words) in 2 texts
             val intersectionsSize = embedding1.values.count { it in embedding2.values }
             val totalSize = embedding1.values.size + embedding2.values.size
-            return 1.0 - 2.0 * intersectionsSize / totalSize;
+            return 1.0 - 2.0 * intersectionsSize / totalSize
         }
     }
 

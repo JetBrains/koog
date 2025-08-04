@@ -56,7 +56,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * Feature companion object that implements [AIAgentFeature] for the checkpoint functionality.
      */
     public companion object Feature : AIAgentFeature<PersistencyFeatureConfig, Persistency> {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         private val json = Json {
             prettyPrint = true
@@ -98,7 +98,9 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             }
 
             pipeline.interceptBeforeAgentStarted(interceptContext) { ctx ->
-                require(ctx.strategy.metadata.uniqueNames) { "Checkpoint feature requires unique node names in the strategy metadata" }
+                require(ctx.strategy.metadata.uniqueNames) {
+                    "Checkpoint feature requires unique node names in the strategy metadata"
+                }
                 val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
@@ -147,7 +149,9 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         val inputJson = trySerializeInput(lastInput, lastInputType)
 
         if (inputJson == null) {
-            logger.warn { "Failed to serialize input of type $lastInputType for checkpoint creation for $nodeId, skipping..." }
+            logger.warn {
+                "Failed to serialize input of type $lastInputType for checkpoint creation for $nodeId, skipping..."
+            }
             return null
         }
 

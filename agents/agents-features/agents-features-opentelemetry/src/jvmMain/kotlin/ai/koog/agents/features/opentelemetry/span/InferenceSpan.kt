@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
@@ -31,7 +30,6 @@ internal class InferenceSpan(
     override val spanId: String = createIdFromParent(parentId = parent.spanId, promptId = promptId)
 
     override val kind: SpanKind = SpanKind.CLIENT
-
 
     /**
      * Add the necessary attributes for the Inference Span according to the Open Telemetry Semantic Convention:

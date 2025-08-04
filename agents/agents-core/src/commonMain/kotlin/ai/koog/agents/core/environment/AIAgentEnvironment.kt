@@ -16,6 +16,7 @@ public interface AIAgentEnvironment {
      * the tool name, identifier, response content, and associated metadata.
      */
     public suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult>
+
     /**
      * Reports a problem that occurred within the environment.
      *

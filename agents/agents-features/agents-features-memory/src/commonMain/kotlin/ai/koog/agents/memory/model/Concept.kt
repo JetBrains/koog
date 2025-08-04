@@ -66,6 +66,7 @@ public sealed interface Fact {
      * and maintaining relationships between individual data points in the memory system.
      */
     public val concept: Concept
+
     /**
      * The timestamp indicating when the fact was created or stored, expressed as the number of
      * milliseconds elapsed since the Unix epoch (January 1, 1970, 00:00:00 UTC).
@@ -174,7 +175,6 @@ public abstract class MemorySubject() {
                 ?: throw IllegalArgumentException("No MemorySubject found with name: $name")
         }
     }
-
 
     /**
      * Represents a memory subject with the broadest scope, encompassing all important

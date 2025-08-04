@@ -81,7 +81,10 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * @param environment The AgentEnvironment to be transformed
      */
     @Suppress("UNCHECKED_CAST")
-    internal fun transformEnvironmentUnsafe(context: AgentTransformEnvironmentContext<*>, environment: AIAgentEnvironment) =
+    internal fun transformEnvironmentUnsafe(
+        context: AgentTransformEnvironmentContext<*>,
+        environment: AIAgentEnvironment
+    ) =
         transformEnvironment(context as AgentTransformEnvironmentContext<TFeature>, environment)
 
     /**
@@ -123,7 +126,10 @@ public fun interface AgentEnvironmentTransformer<TFeature : Any> {
      * @param environment The current agent environment to be transformed
      * @return The transformed agent environment
      */
-    public fun transform(context: AgentTransformEnvironmentContext<TFeature>, environment: AIAgentEnvironment): AIAgentEnvironment
+    public fun transform(
+        context: AgentTransformEnvironmentContext<TFeature>,
+        environment: AIAgentEnvironment
+    ): AIAgentEnvironment
 }
 
 /**
@@ -148,7 +154,7 @@ public fun interface AgentContextHandler<FeatureT : Any> {
  *
  * @param TFeature The type of the feature associated with the agent.
  */
-public fun interface BeforeAgentStartedHandler<TFeature: Any> {
+public fun interface BeforeAgentStartedHandler<TFeature : Any> {
     /**
      * Handles operations to be performed before an agent is started.
      * Provides access to the context containing information about the agent's strategy, feature, and related configurations.

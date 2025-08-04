@@ -1,6 +1,10 @@
 package ai.koog.agents.memory.providers
 
-import ai.koog.agents.memory.model.*
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.storage.Aes256GCMEncryptor
 import ai.koog.agents.memory.storage.EncryptedStorage
 import ai.koog.rag.base.files.FileSystemProvider
@@ -36,7 +40,7 @@ class LocalFileMemoryProviderTest {
     fun testDifferentMemoryScopes(@TempDir tempDir: Path) = runTest {
         val fs = JVMFileSystemProvider.ReadWrite
         val storage = createTestStorage(fs)
-        val config = LocalMemoryConfig(tempDir.toString())
+        val config = LocalMemoryConfig("memory-storage")
         val provider = LocalFileMemoryProvider(config, storage, fs, tempDir)
 
         val subject = UserSubject
@@ -90,7 +94,7 @@ class LocalFileMemoryProviderTest {
     fun testFactOperations(@TempDir tempDir: Path) = runTest {
         val fs = JVMFileSystemProvider.ReadWrite
         val storage = createTestStorage(fs)
-        val config = LocalMemoryConfig(tempDir.toString())
+        val config = LocalMemoryConfig("memory-storage")
         val provider = LocalFileMemoryProvider(config, storage, fs, tempDir)
 
         val subject = UserSubject

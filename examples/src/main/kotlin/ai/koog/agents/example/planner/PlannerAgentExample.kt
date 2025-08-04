@@ -131,11 +131,14 @@ suspend fun planWork(
 
             val newCurrentNode = SequentialNode.Builder(inputTask)
 
-            if (storage.get(currentNodeKey) == null) storage.set(
-                currentNodeKey,
-                PlannerNode.Builder.Reference(newCurrentNode)
-            )
-            else storage.get(currentNodeKey)!!.builder = newCurrentNode
+            if (storage.get(currentNodeKey) == null) {
+                storage.set(
+                    currentNodeKey,
+                    PlannerNode.Builder.Reference(newCurrentNode)
+                )
+            } else {
+                storage.get(currentNodeKey)!!.builder = newCurrentNode
+            }
 
             defineTask(inputTask = inputTask, prompt = DEFINE_CONSECUTIVE_PLANNING_TASK)
         }
@@ -147,11 +150,14 @@ suspend fun planWork(
 
             val newCurrentNode = ParallelNode.Builder(inputTask)
 
-            if (storage.get(currentNodeKey) == null) storage.set(
-                currentNodeKey,
-                PlannerNode.Builder.Reference(newCurrentNode)
-            )
-            else storage.get(currentNodeKey)!!.builder = newCurrentNode
+            if (storage.get(currentNodeKey) == null) {
+                storage.set(
+                    currentNodeKey,
+                    PlannerNode.Builder.Reference(newCurrentNode)
+                )
+            } else {
+                storage.get(currentNodeKey)!!.builder = newCurrentNode
+            }
 
             defineTask(inputTask = inputTask, prompt = DEFINE_PARALLEL_PLANNING_TASK)
         }
@@ -161,8 +167,9 @@ suspend fun planWork(
         }
 
         val saveNodesToState by node<ParsedSubNodesMessage, Unit> {
-            if (storage.get(unfinishedNodesKey) == null)
+            if (storage.get(unfinishedNodesKey) == null) {
                 storage.set(unfinishedNodesKey, mutableListOf())
+            }
 
             val currentNode = storage.get(currentNodeKey)!!.builder
             if (currentNode is IntermediatePlannerNode.Builder) {
@@ -201,32 +208,45 @@ suspend fun planWork(
         edge(askLLM forwardTo callTool onIsInstance Message.Tool.Call::class)
         edge(askLLM forwardTo parseLLMResponse onIsInstance Message.Assistant::class)
 
-        edge(parseLLMResponse forwardTo retryPlanning<ParsingErrorMessage>(nextNode = askLLM) onIsInstance ParsingErrorMessage::class)
-        edge(parseLLMResponse forwardTo retryPlanning<FailedToPlanParallelNode>(nextNode = tryFindingSequentialSubtasks) onIsInstance FailedToPlanParallelNode::class)
-        edge(parseLLMResponse forwardTo retryPlanning<FailedToPlanSequentialNode>(nextNode = tryFindingParallelSubtasks) onIsInstance FailedToPlanSequentialNode::class)
+        edge(
+            parseLLMResponse forwardTo retryPlanning<ParsingErrorMessage>(nextNode = askLLM) onIsInstance
+                ParsingErrorMessage::class
+        )
+        edge(
+            parseLLMResponse forwardTo retryPlanning<FailedToPlanParallelNode>(
+                nextNode = tryFindingSequentialSubtasks
+            ) onIsInstance
+                FailedToPlanParallelNode::class
+        )
+        edge(
+            parseLLMResponse forwardTo retryPlanning<FailedToPlanSequentialNode>(
+                nextNode = tryFindingParallelSubtasks
+            ) onIsInstance
+                FailedToPlanSequentialNode::class
+        )
 
         edge(parseLLMResponse forwardTo saveNodesToState onIsInstance ParsedSubNodesMessage::class)
         edge(saveNodesToState forwardTo pickNodeToBuild)
 
         edge(
             pickNodeToBuild forwardTo pickNodeToBuild
-                    onCondition { it?.builder is DelegateNode.Builder }
-                    transformed { }
+                onCondition { it?.builder is DelegateNode.Builder }
+                transformed { }
         )
         edge(
             pickNodeToBuild forwardTo tryFindingParallelSubtasks
-                    onCondition { it?.builder is ParallelNode.Builder }
-                    transformed { it!!.builder.subtaskDescription }
+                onCondition { it?.builder is ParallelNode.Builder }
+                transformed { it!!.builder.subtaskDescription }
         )
         edge(
             pickNodeToBuild forwardTo tryFindingSequentialSubtasks
-                    onCondition { it?.builder is SequentialNode.Builder }
-                    transformed { it!!.builder.subtaskDescription }
+                onCondition { it?.builder is SequentialNode.Builder }
+                transformed { it!!.builder.subtaskDescription }
         )
         edge(
             pickNodeToBuild forwardTo buildPlanTree
-                    onCondition { it == null }
-                    transformed {}
+                onCondition { it == null }
+                transformed {}
         )
 
         edge(buildPlanTree forwardTo nodeFinish transformed { "Done" })

@@ -33,12 +33,14 @@ dependencies {
     api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
     api(project(":prompt:prompt-executor:prompt-executor-llms"))
     api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+    api(project(":koog-ktor"))
 
     api(libs.kotlinx.datetime)
 
     implementation(libs.logback.classic)
     implementation(libs.opentelemetry.exporter.logging)
     implementation(libs.opentelemetry.exporter.otlp)
+    implementation(libs.ktor.server.cio)
     implementation(project.dependencies.platform(libs.opentelemetry.bom))
 
     testImplementation(kotlin("test"))
@@ -69,18 +71,36 @@ registerRunExampleTask("runExampleErrorFixing", "ai.koog.agents.example.errors.E
 registerRunExampleTask("runExampleErrorFixingLocal", "ai.koog.agents.example.errors.local.ErrorFixingLocalAgentKt")
 registerRunExampleTask("runExampleGuesser", "ai.koog.agents.example.guesser.GuesserKt")
 registerRunExampleTask("runExampleEssay", "ai.koog.agents.example.essay.EssayWriterKt")
-registerRunExampleTask("runExampleFleetProjectTemplateGeneration", "ai.koog.agents.example.templategen.FleetProjectTemplateGenerationKt")
+registerRunExampleTask(
+    "runExampleFleetProjectTemplateGeneration",
+    "ai.koog.agents.example.templategen.FleetProjectTemplateGenerationKt"
+)
 registerRunExampleTask("runExampleTemplate", "ai.koog.agents.example.template.TemplateKt")
 registerRunExampleTask("runProjectAnalyzer", "ai.koog.agents.example.ProjectAnalyzerAgentKt")
 registerRunExampleTask("runExampleStructuredOutput", "ai.koog.agents.example.structureddata.StructuredDataExampleKt")
-registerRunExampleTask("runExampleMarkdownStreaming", "ai.koog.agents.example.structureddata.MarkdownStreamingDataExampleKt")
-registerRunExampleTask("runExampleMarkdownStreamingWithTool", "ai.koog.agents.example.structureddata.MarkdownStreamingWithToolsExampleKt")
-registerRunExampleTask("runExampleRiderProjectTemplate", "ai.koog.agents.example.rider.project.template.RiderProjectTemplateKt")
+registerRunExampleTask(
+    "runExampleMarkdownStreaming",
+    "ai.koog.agents.example.structureddata.MarkdownStreamingDataExampleKt"
+)
+registerRunExampleTask(
+    "runExampleMarkdownStreamingWithTool",
+    "ai.koog.agents.example.structureddata.MarkdownStreamingWithToolsExampleKt"
+)
+registerRunExampleTask(
+    "runExampleRiderProjectTemplate",
+    "ai.koog.agents.example.rider.project.template.RiderProjectTemplateKt"
+)
 registerRunExampleTask("runExampleExecSandbox", "ai.koog.agents.example.execsandbox.ExecSandboxKt")
 registerRunExampleTask("runExampleLoopComponent", "ai.koog.agents.example.components.loop.ProjectGeneratorKt")
-registerRunExampleTask("runExampleInstagramPostDescriber", "ai.koog.agents.example.attachments.InstagramPostDescriberKt")
+registerRunExampleTask(
+    "runExampleInstagramPostDescriber",
+    "ai.koog.agents.example.attachments.InstagramPostDescriberKt"
+)
 registerRunExampleTask("runExampleRoutingViaGraph", "ai.koog.agents.example.banking.routing.RoutingViaGraphKt")
-registerRunExampleTask("runExampleRoutingViaAgentsAsTools", "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt")
+registerRunExampleTask(
+    "runExampleRoutingViaAgentsAsTools",
+    "ai.koog.agents.example.banking.routing.RoutingViaAgentsAsToolsKt"
+)
 registerRunExampleTask("runExampleFeatureOpenTelemetry", "ai.koog.agents.example.feature.OpenTelemetryKt")
 registerRunExampleTask("runExampleBedrockAgent", "ai.koog.agents.example.client.BedrockAgentKt")
 registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.moderation.JokesWithModerationKt")

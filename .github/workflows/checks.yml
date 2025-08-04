@@ -36,7 +36,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Assemble with Gradle Wrapper
-        run: ./gradlew assemble
+        run: ./gradlew assemble ktlintCheck
 
       - name: TestClasses with Gradle Wrapper
         run: ./gradlew jvmTestClasses jsTestClasses

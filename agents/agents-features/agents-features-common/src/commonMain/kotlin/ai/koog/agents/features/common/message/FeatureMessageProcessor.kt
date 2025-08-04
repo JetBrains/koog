@@ -30,4 +30,3 @@ public abstract class FeatureMessageProcessor : Closeable {
      */
     public abstract suspend fun processMessage(message: FeatureMessage)
 }
-

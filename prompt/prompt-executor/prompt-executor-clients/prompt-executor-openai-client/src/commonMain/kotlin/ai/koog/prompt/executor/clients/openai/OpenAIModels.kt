@@ -54,7 +54,8 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "omni-moderation-latest",
             capabilities = listOf(
-                LLMCapability.Moderation, LLMCapability.Vision.Image
+                LLMCapability.Moderation,
+                LLMCapability.Vision.Image
             ),
             contextLength = 32_768,
         )
@@ -101,8 +102,13 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4o-mini",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 128_000,
@@ -126,8 +132,12 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o3-mini",
             capabilities = listOf(
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Completion, LLMCapability.MultipleChoices
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices
             ),
             contextLength = 200_000,
             maxOutputTokens = 100_000,
@@ -150,7 +160,9 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o1-mini",
             capabilities = listOf(
-                LLMCapability.Speculation, LLMCapability.Schema.JSON.Full, LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 128_000,
@@ -174,8 +186,12 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o3",
             capabilities = listOf(
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 200_000,
@@ -198,8 +214,12 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o1",
             capabilities = listOf(
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 200_000,
@@ -230,8 +250,13 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4o",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.ToolChoice, LLMCapability.Schema.JSON.Full,
-                LLMCapability.Speculation, LLMCapability.Tools, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.ToolChoice,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 128_000,
@@ -253,8 +278,13 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4.1",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 1_047_576,
@@ -283,7 +313,10 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4o-mini-audio-preview",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice,
+                LLMCapability.Temperature,
+                LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
                 LLMCapability.Audio
             ),
             contextLength = 128_000,
@@ -303,7 +336,10 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4o-audio-preview",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice,
+                LLMCapability.Temperature,
+                LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
                 LLMCapability.Audio
             ),
             contextLength = 128_000,
@@ -334,8 +370,12 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o4-mini",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 200_000,
@@ -356,8 +396,13 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4.1-nano",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 1_047_576,
@@ -379,8 +424,13 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4.1-mini",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 1_047_576,
@@ -429,7 +479,8 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-3-small",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Embed
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Embed
             ),
             contextLength = 8_191,
         )
@@ -457,7 +508,8 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-3-large",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Embed
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Embed
             ),
             contextLength = 8_191,
         )
@@ -483,7 +535,8 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-ada-002",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Embed
+                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Embed
             ),
             contextLength = 8_191,
         )

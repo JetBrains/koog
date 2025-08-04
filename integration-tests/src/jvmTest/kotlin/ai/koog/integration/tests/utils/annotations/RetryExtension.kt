@@ -66,10 +66,14 @@ class RetryExtension : InvocationInterceptor {
                     return
                 }
 
-                println("[DEBUG_LOG] Test '${extensionContext.displayName}' failed on attempt $attempt: ${throwable.message}")
+                println(
+                    "[DEBUG_LOG] Test '${extensionContext.displayName}' failed on attempt $attempt: ${throwable.message}"
+                )
 
                 if (attempt < retry.times) {
-                    println("[DEBUG_LOG] Retrying test '${extensionContext.displayName}' (attempt ${attempt + 1} of ${retry.times})")
+                    println(
+                        "[DEBUG_LOG] Retrying test '${extensionContext.displayName}' (attempt ${attempt + 1} of ${retry.times})"
+                    )
 
                     if (retry.delayMs > 0) {
                         try {
@@ -80,7 +84,9 @@ class RetryExtension : InvocationInterceptor {
                         }
                     }
                 } else {
-                    println("[DEBUG_LOG] Maximum retry attempts (${retry.times}) reached for test '${extensionContext.displayName}'")
+                    println(
+                        "[DEBUG_LOG] Maximum retry attempts (${retry.times}) reached for test '${extensionContext.displayName}'"
+                    )
                 }
             }
         }

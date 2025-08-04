@@ -55,15 +55,15 @@ class NodeUniquenessCheckpointTest {
         val sg1 by subgraph("subgraph1") {
             // This node has the same name as node1 at the same level in the subgraph
             val sgNode1 by simpleNode(
-                "DuplicateNode", 
+                "DuplicateNode",
                 output = "Subgraph node 1 output"
             )
-            
+
             val sgNode2 by simpleNode(
                 "UniqueSubgraphNode",
                 output = "Subgraph node 2 output"
             )
-            
+
             nodeStart then sgNode1 then sgNode2 then nodeFinish
         }
 

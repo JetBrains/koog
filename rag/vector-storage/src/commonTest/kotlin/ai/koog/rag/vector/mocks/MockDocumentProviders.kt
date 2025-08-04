@@ -6,7 +6,6 @@ import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.io.Sink
 import kotlinx.io.Source
 
-
 sealed interface MockFSEntry
 
 data class MockDocument(val content: String) : MockFSEntry
@@ -33,7 +32,6 @@ class MockFileSystem {
     }
 }
 
-
 class MockDocumentProvider(val mockFileSystem: MockFileSystem) : DocumentProvider<String, MockDocument> {
     override suspend fun document(path: String): MockDocument {
         return mockFileSystem.readDocument(path) ?: throw IllegalArgumentException("Document not found: $path")
@@ -45,31 +43,29 @@ class MockDocumentProvider(val mockFileSystem: MockFileSystem) : DocumentProvide
 }
 
 class MockFileSystemProvicer(val mockFileSystem: MockFileSystem) : FileSystemProvider.ReadWrite<String> {
-    override fun toPathString(path: String): String = path
-
     override fun toAbsolutePathString(path: String): String = path
 
     override fun fromAbsoluteString(path: String): String = path
 
     override fun fromRelativeString(base: String, path: String): String = "$base/$path"
 
-    override suspend fun name(path: String): String = path.substringAfterLast('/')
+    override fun name(path: String): String = path.substringAfterLast('/')
 
-    override suspend fun extension(path: String): String = path.substringAfterLast('.')
+    override fun extension(path: String): String = path.substringAfterLast('.')
 
     override suspend fun metadata(path: String): FileMetadata? = null
 
-    override suspend fun list(path: String): List<String> {
+    override suspend fun list(directory: String): List<String> {
         return mockFileSystem.documents
             .filter { (docPath, entry) ->
-                docPath.startsWith(path.removeSuffix("/")) && entry is MockDocument
+                docPath.startsWith(directory.removeSuffix("/")) && entry is MockDocument
             }
             .keys.toList()
     }
 
-    override suspend fun parent(path: String): String? = path.substringBeforeLast('/', "").ifEmpty { null }
+    override fun parent(path: String): String? = path.substringBeforeLast('/', "").ifEmpty { null }
 
-    override suspend fun relativize(root: String, path: String): String? =
+    override fun relativize(root: String, path: String): String? =
         if (path.startsWith(root)) path.removePrefix(root) else null
 
     override suspend fun exists(path: String): Boolean = path in mockFileSystem.documents

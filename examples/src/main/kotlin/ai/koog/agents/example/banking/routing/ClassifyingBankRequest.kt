@@ -1,7 +1,7 @@
 package ai.koog.agents.example.banking.routing
 
-import ai.koog.agents.ext.agent.SerializableSubgraphResult
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.ext.agent.SerializableSubgraphResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

@@ -9,7 +9,14 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 
 class InMemoryPromptCacheTest {
@@ -25,7 +32,8 @@ class InMemoryPromptCacheTest {
         private val testTools = emptyList<ToolDescriptor>()
         private val testResponse = listOf(createAssistantMessage("Hello, user!"))
         private val updatedTestResponse = listOf(createAssistantMessage("Hello, user, updated!"))
-        private val testToolCallResponse = listOf(Message.Tool.Call("test-id", "test-tool", "test-content", ResponseMetaInfo.Empty))
+        private val testToolCallResponse =
+            listOf(Message.Tool.Call("test-id", "test-tool", "test-content", ResponseMetaInfo.Empty))
 
         private val testPrompts = (1..5).map { iter -> Prompt.build(testPrompt) { user("Hello, world! $iter") } }
         private val testResponses = (1..5).map { iter -> listOf(createAssistantMessage("Hello, user $iter")) }
@@ -90,9 +98,18 @@ class InMemoryPromptCacheTest {
         smallCache.put(testPrompt, testTools, testResponse)
 
         // Verify that the least recently used entry was removed
-        assertNotNull(smallCache.get(testPrompts[0], testTools, testClock), "Recently accessed entry should still be in cache")
-        assertNull(smallCache.get(testPrompts[1], testTools, testClock), "Least recently accessed entry should be removed")
-        assertNotNull(smallCache.get(testPrompts[2], testTools, testClock), "Recently accessed entry should still be in cache")
+        assertNotNull(
+            smallCache.get(testPrompts[0], testTools, testClock),
+            "Recently accessed entry should still be in cache"
+        )
+        assertNull(
+            smallCache.get(testPrompts[1], testTools, testClock),
+            "Least recently accessed entry should be removed"
+        )
+        assertNotNull(
+            smallCache.get(testPrompts[2], testTools, testClock),
+            "Recently accessed entry should still be in cache"
+        )
         assertNotNull(smallCache.get(testPrompt, testTools, testClock), "Newly added entry should be in cache")
     }
 
@@ -162,7 +179,8 @@ class InMemoryPromptCacheTest {
     fun `test cache retrieval with different timestamps`() = runTest {
         val originalPrompt = createTestPrompt(listOf(testUserMessage))
 
-        val sameUserMessageDifferentTime = testUserMessage.copy(metaInfo = testUserMessage.metaInfo.copy(timestamp = differentTestClock.now()))
+        val sameUserMessageDifferentTime =
+            testUserMessage.copy(metaInfo = testUserMessage.metaInfo.copy(timestamp = differentTestClock.now()))
         val samePromptDifferentTime = createTestPrompt(listOf(sameUserMessageDifferentTime))
 
         cache.put(originalPrompt, testTools, testResponse)
@@ -173,5 +191,90 @@ class InMemoryPromptCacheTest {
         // Verify the response is retrieved successfully
         assertNotNull(cachedResponse, "Should retrieve cache entry despite different timestamps")
         assertEquals(testResponse, cachedResponse, "Retrieved response should match original")
+    }
+
+    @Test
+    fun `test cache supports memory config`() {
+        val cacheTypes = listOf("memory", "memory:", "memory:unlimited", "memory:100")
+        val cacheNegativeTypes = listOf("redis", "file", "")
+
+        cacheTypes.forEach {
+            assertTrue(InMemoryPromptCache.supports(it), "Should support '$it' config")
+        }
+
+        cacheNegativeTypes.forEach {
+            assertFalse(InMemoryPromptCache.supports(it), "Should not support '$it' config")
+        }
+    }
+
+    @Test
+    fun `test cache with no limit configurations`() {
+        val cacheTypes = listOf("memory", "memory:", "memory:unlimited", "memory:UNLIMITED")
+
+        cacheTypes.forEach { cacheType ->
+            val cache = InMemoryPromptCache.create(cacheType)
+            assertTrue(
+                cache is InMemoryPromptCache,
+                "Should create InMemoryPromptCache instance with $cacheType cache type."
+            )
+        }
+    }
+
+    @Test
+    fun `test cache with numeric limit configurations`() {
+        val configs = listOf(100, 1)
+
+        configs.forEach {
+            val cache = InMemoryPromptCache.create("memory:$it")
+            assertTrue(cache is InMemoryPromptCache, "Should create InMemoryPromptCache instance with limit $it")
+        }
+    }
+
+    @Test
+    fun `test cache with invalid configurations`() {
+        val configs = listOf("abc", "100.5", "-100", "0")
+
+        configs.forEach {
+            assertFailsWith<IllegalStateException> {
+                InMemoryPromptCache.create("memory:$it")
+            }
+        }
+
+        assertFailsWith<IllegalArgumentException> {
+            InMemoryPromptCache.create("redis:100")
+        }
+    }
+
+    @Test
+    fun `cache with numeric limit functions correctly`() = runTest {
+        val limitedCache = InMemoryPromptCache.create("memory:2")
+
+        limitedCache.put(testPrompts[0], testTools, testResponses[0])
+        limitedCache.put(testPrompts[1], testTools, testResponses[1])
+
+        assertNotNull(limitedCache.get(testPrompts[0], testTools, testClock))
+        assertNotNull(limitedCache.get(testPrompts[1], testTools, testClock))
+
+        limitedCache.put(testPrompts[2], testTools, testResponses[2])
+
+        assertNull(limitedCache.get(testPrompts[0], testTools, testClock), "Oldest entry should be removed")
+        assertNotNull(limitedCache.get(testPrompts[1], testTools, testClock), "Second entry should still be in cache")
+        assertNotNull(limitedCache.get(testPrompts[2], testTools, testClock), "Newest entry should be in cache")
+    }
+
+    @Test
+    fun `cache with no limit functions correctly`() = runTest {
+        val unlimitedCache = InMemoryPromptCache.create("memory:unlimited")
+
+        testPrompts.zip(testResponses).forEach { (prompt, response) ->
+            unlimitedCache.put(prompt, testTools, response)
+        }
+
+        testPrompts.zip(testResponses).forEach { (prompt, _) ->
+            assertNotNull(
+                unlimitedCache.get(prompt, testTools, testClock),
+                "All entries should remain in unlimited cache"
+            )
+        }
     }
 }

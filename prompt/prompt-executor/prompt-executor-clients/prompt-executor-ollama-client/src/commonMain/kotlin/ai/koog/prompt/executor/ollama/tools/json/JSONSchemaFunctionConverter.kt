@@ -2,7 +2,10 @@ package ai.koog.prompt.executor.ollama.tools.json
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
@@ -45,11 +48,14 @@ public fun ToolDescriptor.toJSONSchema(): JsonObject {
             is ToolParameterType.Object -> {
                 put("type", JsonPrimitive("object"))
 
-                put("properties", buildJsonObject {
-                    type.properties.forEach { property ->
-                        put(property.name, toolParameterToSchema(property.type, property.description))
+                put(
+                    "properties",
+                    buildJsonObject {
+                        type.properties.forEach { property ->
+                            put(property.name, toolParameterToSchema(property.type, property.description))
+                        }
                     }
-                })
+                )
 
                 put("required", JsonArray(type.requiredProperties.map { JsonPrimitive(it) }))
             }

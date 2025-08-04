@@ -146,7 +146,6 @@ class FeatureMessageLogWriterTest {
 
     @Test
     fun `test logger with DEBUG level when debug logging is disabled`() = runBlocking {
-
         val testLogger = TestLogger("test-logger", infoEnabled = true, debugEnabled = false)
 
         val messages = listOf(
@@ -163,7 +162,6 @@ class FeatureMessageLogWriterTest {
 
     @Test
     fun `test logger with INFO level when info logging is disabled`() = runBlocking {
-
         val testLogger = TestLogger("test-logger", infoEnabled = false, debugEnabled = true)
 
         val messages = listOf(

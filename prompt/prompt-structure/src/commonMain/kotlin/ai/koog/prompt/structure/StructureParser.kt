@@ -1,14 +1,13 @@
 package ai.koog.prompt.structure
 
-import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.SerializationException
-
 
 /**
  * A parser for processing structured data that utilizes language models (LLMs) and attempts to
@@ -22,7 +21,7 @@ public class StructureParser(
     private val fixingModel: LLModel = OpenAIModels.Chat.GPT4o,
 ) {
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
 
     /**
@@ -65,13 +64,19 @@ public class StructureParser(
                         item("Evaluate what parts are incorrect and fix them.")
                         item("Drop unknown fields and come-up with values for missing fields based on semantics.")
                         item("Carefully check the types of the fields and fix if any are incorrect.")
-                        item("Utilize the provided exception to determine the possible error, but do not forget about other possible mistakes.")
+                        item(
+                            "Utilize the provided exception to determine the possible error, but do not forget about other possible mistakes."
+                        )
                     }
 
                     h2("KEY PRINCIPLES")
                     bulleted {
-                        item("You MUST stick to the original data, make as few changes as possible to convert it into valid JSON.")
-                        item("Do not drop, alter or change any semantic data unless it is necessary to fit into JSON schema.")
+                        item(
+                            "You MUST stick to the original data, make as few changes as possible to convert it into valid JSON."
+                        )
+                        item(
+                            "Do not drop, alter or change any semantic data unless it is necessary to fit into JSON schema."
+                        )
                     }
 
                     h2("DEFINITION")

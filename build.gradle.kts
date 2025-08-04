@@ -62,6 +62,7 @@ buildscript {
 plugins {
     id("ai.kotlin.dokka")
     alias(libs.plugins.kotlinx.kover)
+    alias(libs.plugins.ktlint)
 }
 
 allprojects {
@@ -72,9 +73,10 @@ allprojects {
 
 disableDistTasks()
 
-// Apply Kover to all subprojects
+// Apply Kover and ktlint to all subprojects
 subprojects {
     apply(plugin = "org.jetbrains.kotlinx.kover")
+    apply(plugin = "org.jlleitschuh.gradle.ktlint")
 }
 
 subprojects {
@@ -90,7 +92,7 @@ subprojects {
                 "OPEN_AI_API_TEST_KEY" to System.getenv("OPEN_AI_API_TEST_KEY"),
                 "GEMINI_API_TEST_KEY" to System.getenv("GEMINI_API_TEST_KEY"),
                 "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
-                "AWS_SECRET_KEY" to System.getenv("AWS_SECRET_KEY"),
+                "AWS_SECRET_ACCESS_KEY" to System.getenv("AWS_SECRET_ACCESS_KEY"),
                 "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
             )
         )
@@ -204,6 +206,7 @@ dependencies {
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
     dokka(project(":koog-spring-boot-starter"))
+    dokka(project(":koog-ktor"))
     dokka(project(":rag:rag-base"))
     dokka(project(":rag:vector-storage"))
 }
@@ -218,7 +221,6 @@ kover {
         subprojects {
             it.path !in excludedProjects
         }
-
     }
     reports {
         total {
@@ -227,5 +229,4 @@ kover {
             }
         }
     }
-
 }

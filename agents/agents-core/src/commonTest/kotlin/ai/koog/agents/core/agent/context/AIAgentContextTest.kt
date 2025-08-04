@@ -2,7 +2,11 @@ package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNotSame
+import kotlin.test.assertNull
 
 class AIAgentContextTest : AgentTestBase() {
 
@@ -231,6 +235,7 @@ class AIAgentContextTest : AgentTestBase() {
     )
 
     enum class TestEnum {
-        FIRST, SECOND
+        FIRST,
+        SECOND
     }
 }

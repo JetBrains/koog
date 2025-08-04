@@ -11,7 +11,7 @@ import ai.koog.prompt.llm.LLModel
  * OpenRouter models
  * Models available through the OpenRouter API
  */
-public object OpenRouterModels: LLModelDefinitions {
+public object OpenRouterModels : LLModelDefinitions {
     private val standardCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Temperature,
         LLMCapability.Schema.JSON.Full,

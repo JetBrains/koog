@@ -70,7 +70,7 @@ class MarkdownMultilineListTest {
         val md = markdown {
             numbered {
                 item("First item")
-                item() {
+                item {
                     +"Second item"
                     +("This is a paragraph\nwith multiple lines")
                     code("inline code")
@@ -122,18 +122,18 @@ class MarkdownMultilineListTest {
         val md = markdown {
             bulleted {
                 item("Top level item")
-                item() {
+                item {
                     +"Another top level"
                     +("This is a paragraph in a list item")
                     numbered {
                         item("Numbered sub-item")
-                        item() {
+                        item {
                             +"Another numbered"
                             +("Paragraph in numbered item")
                             code("code in numbered item")
                             bulleted {
                                 item("Task in numbered item")
-                                bulleted() {
+                                bulleted {
                                     +"Completed task"
                                     +("Paragraph in task")
                                     codeblock("function test() {\n  return true;\n}", "javascript")

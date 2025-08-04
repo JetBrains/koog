@@ -6,4 +6,3 @@ internal class MockEventBodyField(
     override val key: String,
     override val value: Any
 ) : EventBodyField()
-

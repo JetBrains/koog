@@ -1,7 +1,6 @@
 package ai.koog.rag.base.files
 
 import kotlinx.serialization.Serializable
-import kotlin.js.JsExport
 import kotlin.js.JsName
 import kotlin.math.max
 import kotlin.math.min
@@ -44,6 +43,7 @@ internal data class TextRange(val start: Int, val endExclusive: Int) {
      * @return `true` if the range is empty, otherwise `false`.
      */
     internal fun isEmpty(): Boolean = start >= endExclusive
+
     /**
      * Checks whether the text range is not empty.
      *
@@ -157,7 +157,8 @@ internal data class TextRange(val start: Int, val endExclusive: Int) {
         if (other.contains(this)) return emptyArray()
         if (this.contains(other)) {
             return arrayOf(
-                TextRange(this.start, other.start), TextRange(other.endExclusive, this.endExclusive)
+                TextRange(this.start, other.start),
+                TextRange(other.endExclusive, this.endExclusive)
             ).filter { it.isNotEmpty() }.toTypedArray()
         }
 

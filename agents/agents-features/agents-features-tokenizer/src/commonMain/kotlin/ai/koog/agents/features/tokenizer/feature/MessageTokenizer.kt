@@ -195,10 +195,11 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
             config: MessageTokenizerConfig,
             pipeline: AIAgentPipeline,
         ) {
-            val promptTokenizer = if (config.enableCaching)
+            val promptTokenizer = if (config.enableCaching) {
                 CachingTokenizer(config.tokenizer)
-            else
+            } else {
                 OnDemandTokenizer(config.tokenizer)
+            }
 
             val feature = MessageTokenizer(promptTokenizer)
 
@@ -219,4 +220,6 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
  *
  * Throws an exception if the `MessageTokenizer.Feature` is not available in the context.
  */
-public val AIAgentContextBase.tokenizer: PromptTokenizer get() = featureOrThrow(MessageTokenizer.Feature).promptTokenizer
+public val AIAgentContextBase.tokenizer: PromptTokenizer get() = featureOrThrow(
+    MessageTokenizer.Feature
+).promptTokenizer

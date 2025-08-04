@@ -8,8 +8,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.core.utils.RWLock
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 
@@ -42,7 +42,7 @@ public class AIAgentContext(
     override val strategyName: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
-    override val id: String,
+    override val agentId: String,
 ) : AIAgentContextBase {
 
     /**
@@ -190,7 +190,7 @@ public class AIAgentContext(
         runId = runId,
         strategyName = strategyName,
         pipeline = pipeline,
-        id = this.id,
+        agentId = this.agentId,
     )
 
     /**
@@ -232,7 +232,8 @@ public class AIAgentContext(
  * without notice.
  */
 @OptIn(InternalAgentsApi::class)
-public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> = AIAgentStorageKey("agent-context-data-key")
+public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> =
+    AIAgentStorageKey("agent-context-data-key")
 
 /**
  * Stores the given agent context data within the current AI agent context.

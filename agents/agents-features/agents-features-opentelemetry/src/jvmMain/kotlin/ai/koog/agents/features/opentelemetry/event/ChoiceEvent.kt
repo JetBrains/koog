@@ -27,10 +27,12 @@ internal class ChoiceEvent(
                 }
 
                 if (verbose) {
-                    add(EventBodyFields.Message(
-                        role = message.role.takeIf { role -> role != Message.Role.Assistant },
-                        content = message.content
-                    ))
+                    add(
+                        EventBodyFields.Message(
+                            role = message.role.takeIf { role -> role != Message.Role.Assistant },
+                            content = message.content
+                        )
+                    )
                 }
             }
 

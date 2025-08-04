@@ -33,10 +33,9 @@ import ai.koog.agents.core.dsl.extension.onToolCall
 public fun singleRunStrategy(runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL): AIAgentStrategy<String, String> =
     when (runMode) {
         ToolCalls.SEQUENTIAL -> singleRunWithParallelAbility(false)
-        ToolCalls.PARALLEL   -> singleRunWithParallelAbility(true)
-        ToolCalls.SINGLE_RUN_SEQUENTIAL     -> singleRunModeStrategy()
+        ToolCalls.PARALLEL -> singleRunWithParallelAbility(true)
+        ToolCalls.SINGLE_RUN_SEQUENTIAL -> singleRunModeStrategy()
     }
-
 
 private fun singleRunWithParallelAbility(parallelTools: Boolean) = strategy("single_run_sequential") {
     val nodeCallLLM by nodeLLMRequestMultiple()
@@ -45,15 +44,19 @@ private fun singleRunWithParallelAbility(parallelTools: Boolean) = strategy("sin
 
     edge(nodeStart forwardTo nodeCallLLM)
     edge(nodeCallLLM forwardTo nodeExecuteTool onMultipleToolCalls { true })
-    edge(nodeCallLLM forwardTo nodeFinish
+    edge(
+        nodeCallLLM forwardTo nodeFinish
             onMultipleAssistantMessages { true }
-            transformed { it.joinToString("\n") { message -> message.content } })
+            transformed { it.joinToString("\n") { message -> message.content } }
+    )
 
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
 
-    edge(nodeSendToolResult forwardTo nodeFinish
+    edge(
+        nodeSendToolResult forwardTo nodeFinish
             onMultipleAssistantMessages { true }
-            transformed { it.joinToString("\n") { message -> message.content } })
+            transformed { it.joinToString("\n") { message -> message.content } }
+    )
 
     edge(nodeSendToolResult forwardTo nodeExecuteTool onMultipleToolCalls { true })
 }
@@ -80,5 +83,7 @@ private fun singleRunModeStrategy() = strategy("single_run") {
  * - SINGLE: Multiple tool calls are not allowed.
  */
 public enum class ToolCalls {
-    SEQUENTIAL, PARALLEL, SINGLE_RUN_SEQUENTIAL
+    SEQUENTIAL,
+    PARALLEL,
+    SINGLE_RUN_SEQUENTIAL
 }

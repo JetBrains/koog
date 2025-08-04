@@ -3,12 +3,12 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.agent.AIAgentTerminationByClientException
 import ai.koog.agents.core.engine.UnexpectedAIAgentMessageException
 import ai.koog.agents.core.engine.UnexpectedDoubleInitializationException
+import ai.koog.agents.core.model.message.AIAgentEnvironmentToAgentInitializeMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentErrorMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentTerminationMessage
 import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMessage
 import ai.koog.agents.core.model.message.EnvironmentToolResultSingleToAgentMessage
-import ai.koog.agents.core.model.message.AIAgentEnvironmentToAgentInitializeMessage
 
 internal object AIAgentEnvironmentUtils {
     fun EnvironmentToAgentMessage.mapToToolResult(): List<ReceivedToolResult> {

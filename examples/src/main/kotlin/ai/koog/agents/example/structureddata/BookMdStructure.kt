@@ -19,9 +19,9 @@ data class Book(
     val bookName: String,
     val author: String,
     val description: String
-): ToolArgs
+) : ToolArgs
 
-class BookTool(): SimpleTool<Book>() {
+class BookTool() : SimpleTool<Book>() {
     companion object {
         const val NAME = "book"
     }
@@ -94,7 +94,9 @@ fun markdownBookDefinition(): MarkdownStructuredDataDefinition {
             header(1, "The Great Gatsby")
             bulleted {
                 item("F. Scott Fitzgerald")
-                item("A novel set in the Jazz Age that tells the story of Jay Gatsby's unrequited love for Daisy Buchanan.")
+                item(
+                    "A novel set in the Jazz Age that tells the story of Jay Gatsby's unrequited love for Daisy Buchanan."
+                )
             }
 
             header(1, "To Kill a Mockingbird")

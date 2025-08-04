@@ -59,7 +59,6 @@ class ParallelNodesMergeContextTest {
     @Test
     fun testMergeFold() = runTest {
         val agentStrategy = strategy("test-context") {
-
             val node1 by testNode("node1", "value1")
             val node2 by testNode("node2", "value2")
             val node3 by testNode("node3", "value3")
@@ -88,7 +87,6 @@ class ParallelNodesMergeContextTest {
     @Test
     fun testMergeSelectBy() = runTest {
         val agentStrategy = strategy("test-context") {
-
             val node1 by testNode("node1", "value1")
             val node2 by testNode("node2", "value2")
             val node3 by testNode("node3", "value3")
@@ -115,7 +113,6 @@ class ParallelNodesMergeContextTest {
     @Test
     fun testMergeSelectByIndex() = runTest {
         val agentStrategy = strategy("test-context") {
-
             val node1 by testNode("node1", "value1")
             val node2 by testNode("node2", "value2")
             val node3 by testNode("node3", "value3")
@@ -142,7 +139,6 @@ class ParallelNodesMergeContextTest {
     @Test
     fun testMergeSelectMax() = runTest {
         val agentStrategy = strategy("test-context") {
-
             val node1 by testNode("node1", "value1")
             val node2 by testNode("node2", "value2")
             val node3 by testNode("node3", "value3")

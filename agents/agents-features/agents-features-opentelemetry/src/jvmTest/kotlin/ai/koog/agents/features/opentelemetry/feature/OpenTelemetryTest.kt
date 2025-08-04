@@ -2,22 +2,33 @@ package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.data.SpanData
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
+import io.opentelemetry.sdk.trace.export.SpanExporter
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
-import org.junit.jupiter.api.Test
-import java.util.*
+import java.util.Properties
+import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -448,7 +459,7 @@ class OpenTelemetryTest {
 
             val mockExecutor = getMockExecutor(clock = testClock) {
                 mockLLMToolCall(TestGetWeatherTool, TestGetWeatherTool.Args("Paris")) onRequestEquals userPrompt
-                mockLLMAnswer(mockResponse) onRequestContains "57°F"
+                mockLLMAnswer(mockResponse) onRequestContains "rainy, 57°F"
             }
 
             val agent = createAgent(
@@ -788,9 +799,11 @@ class OpenTelemetryTest {
 
                 // Define a node to run joke generation in parallel
                 val nodeGenerateJokes by parallel(
-                    nodeFirstJoke, nodeSecondJoke, nodeThirdJoke
+                    nodeFirstJoke,
+                    nodeSecondJoke,
+                    nodeThirdJoke
                 ) {
-                    selectByIndex { jokes ->
+                    selectByIndex {
                         // Always select the first joke for testing purposes
                         0
                     }
@@ -852,7 +865,7 @@ class OpenTelemetryTest {
             // Check if we have the expected number of node spans (5 nodes)
             assertEquals(5, nodeSpanNames.size, "Expected 6 node spans but found ${nodeSpanNames.size}")
 
-            // Check for each specific node span
+            // Check for each node span
             assertTrue(nodeSpanNames.any { it.contains("nodeFirstJoke") }, "First joke node span should be created")
             assertTrue(nodeSpanNames.any { it.contains("nodeSecondJoke") }, "Second joke node span should be created")
             assertTrue(nodeSpanNames.any { it.contains("nodeThirdJoke") }, "Third joke node span should be created")
@@ -864,7 +877,11 @@ class OpenTelemetryTest {
             // Verify parallel node spans have the correct conversation ID
             val parallelNodeSpans = collectedSpans.filter {
                 it.name.startsWith("node.") &&
-                        (it.name.contains("nodeFirstJoke") || it.name.contains("nodeSecondJoke") || it.name.contains("nodeThirdJoke"))
+                    (
+                        it.name.contains("nodeFirstJoke") ||
+                            it.name.contains("nodeSecondJoke") ||
+                            it.name.contains("nodeThirdJoke")
+                        )
             }
 
             assertEquals(3, parallelNodeSpans.size, "Should have 3 parallel node spans")
@@ -875,10 +892,165 @@ class OpenTelemetryTest {
                 }
 
                 assertEquals(
-                    mockExporter.lastRunId, spanAttributes["gen_ai.conversation.id"],
+                    mockExporter.lastRunId,
+                    spanAttributes["gen_ai.conversation.id"],
                     "Parallel node span ${span.name} should have conversation ID '${mockExporter.lastRunId}'"
                 )
             }
+        }
+    }
+
+    @Test
+    fun `test install Open Telemetry feature with custom sdk, should use provided sdk`() = runBlocking {
+        val strategy = strategy<String, String>("test-strategy") {
+            edge(nodeStart forwardTo nodeFinish transformed { "Done" })
+        }
+
+        val expectedSdk = OpenTelemetrySdk.builder().build()
+        var actualSdk: OpenTelemetrySdk? = null
+
+        createAgent(
+            strategy = strategy,
+        ) {
+            install(OpenTelemetry) {
+                setSdk(expectedSdk)
+                actualSdk = sdk
+            }
+        }
+
+        assertEquals(expectedSdk, actualSdk)
+    }
+
+    @Test
+    fun `test Open Telemetry feature with custom sdk configuration emits correct spans`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+            val userPrompt = "What's the weather in Paris?"
+
+            val strategy = strategy("test-strategy") {
+                val nodeSendInput by nodeLLMRequest("test-llm-call")
+                edge(nodeStart forwardTo nodeSendInput)
+                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
+
+            val mockExecutor = getMockExecutor {
+                mockLLMAnswer(mockResponse) onRequestEquals userPrompt
+            }
+
+            val expectedSdk = createCustomSdk(mockExporter)
+
+            val agent = createAgent(
+                promptExecutor = mockExecutor,
+                strategy = strategy,
+            ) {
+                install(OpenTelemetry) {
+                    setSdk(expectedSdk)
+                }
+            }
+
+            agent.run(userPrompt)
+            val collectedSpans = mockExporter.collectedSpans
+            agent.close()
+
+            assertEquals(5, collectedSpans.size)
+        }
+    }
+
+    @Test
+    fun `test spans are created for agent with node execution error`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+
+            val userPrompt = "What's the weather in Paris?"
+            val agentId = "test-agent-id"
+            val promptId = "test-prompt-id"
+            val testClock = Clock.System
+            val model = OpenAIModels.Chat.GPT4o
+            val temperature = 0.4
+
+            val nodeWithErrorName = "node-with-error"
+            val testErrorMessage = "Test error"
+
+            val strategy = strategy("test-strategy") {
+                val nodeWithError by node<String, String>(nodeWithErrorName) {
+                    throw IllegalStateException(testErrorMessage)
+                }
+
+                edge(nodeStart forwardTo nodeWithError)
+                edge(nodeWithError forwardTo nodeFinish)
+            }
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                promptId = promptId,
+                model = model,
+                clock = testClock,
+                temperature = temperature
+            ) {
+                install(OpenTelemetry) {
+                    addSpanExporter(mockExporter)
+                }
+            }.use { agent ->
+                val throwable = assertFails {
+                    agent.run(userPrompt)
+                }
+
+                assertEquals(testErrorMessage, throwable.message)
+                assertTrue(mockExporter.collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
+            }
+
+            // Check each span
+
+            val expectedSpans = listOf(
+                mapOf(
+                    "agent.$agentId" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to "create_agent",
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.request.model" to model.id
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
+                    "run.${mockExporter.lastRunId}" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to "invoke_agent",
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Error.id),
+                            "koog.agent.strategy.name" to "test-strategy",
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.conversation.id" to mockExporter.lastRunId
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
+                    "node.node-with-error" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "koog.node.name" to "node-with-error",
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
+                    "node.__start__" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "koog.node.name" to "__start__"
+                        ),
+                        "events" to emptyMap()
+                    )
+                )
+            )
+
+            assertSpans(expectedSpans, mockExporter.collectedSpans)
         }
     }
 
@@ -931,6 +1103,20 @@ class OpenTelemetryTest {
         }
     }
 
+    private fun createCustomSdk(exporter: SpanExporter): OpenTelemetrySdk {
+        val builder = OpenTelemetrySdk.builder()
+
+        val traceProviderBuilder = SdkTracerProvider
+            .builder()
+            .addSpanProcessor(SimpleSpanProcessor.builder(exporter).build())
+
+        val sdk = builder
+            .setTracerProvider(traceProviderBuilder.build())
+            .build()
+
+        return sdk
+    }
+
     private fun assertSpanNames(expectedSpanNames: List<String>, actualSpanNames: List<String>) {
         assertEquals(
             expectedSpanNames.size,
@@ -953,7 +1139,9 @@ class OpenTelemetryTest {
         expectedEvents: Map<String, Map<String, Any>>,
         actualEvents: Map<String, Map<String, Any>>
     ) {
-        logger.debug { "Asserting events for the Span (name: $spanName).\nExpected events:\n$expectedEvents\nActual events:\n$actualEvents" }
+        logger.debug {
+            "Asserting events for the Span (name: $spanName).\nExpected events:\n$expectedEvents\nActual events:\n$actualEvents"
+        }
 
         assertEquals(
             expectedEvents.size,
@@ -984,15 +1172,31 @@ class OpenTelemetryTest {
         expectedAttributes: Map<String, Any>,
         actualAttributes: Map<String, Any>
     ) {
-        logger.debug { "Asserting attributes for the Span (name: $spanName).\nExpected attributes:\n$expectedAttributes\nActual attributes:\n$actualAttributes" }
+        logger.debug {
+            "Asserting attributes for the Span (name: $spanName).\nExpected attributes:\n$expectedAttributes\nActual attributes:\n$actualAttributes"
+        }
 
         assertEquals(
             expectedAttributes.size,
             actualAttributes.size,
-            "Expected collection of attributes should be the same size for the span (name: $spanName)"
+            "Expected collection of attributes should be the same size for the span (name: $spanName)\n" +
+                "Expected: <${expectedAttributes.toList().joinToString(
+                    prefix = "\n{\n",
+                    postfix = "\n}",
+                    separator = "\n"
+                ) { pair ->
+                    "  ${pair.first}=${pair.second}"
+                }}>,\n" +
+                "Actual: <${actualAttributes.toList().joinToString(
+                    prefix = "\n{\n",
+                    postfix = "\n}",
+                    separator = "\n"
+                ) { pair ->
+                    "  ${pair.first}=${pair.second}"
+                }}>"
         )
 
-        actualAttributes.forEach { (actualArgName, actualArgValue) ->
+        actualAttributes.forEach { (actualArgName: String, actualArgValue: Any) ->
 
             logger.debug { "Find expected attribute (name: $actualArgName) for the Span (name: $spanName)" }
             val expectedArgValue = expectedAttributes[actualArgName]
@@ -1001,11 +1205,35 @@ class OpenTelemetryTest {
                 expectedArgValue,
                 "Attribute (name: $actualArgName) not found in expected attributes for span (name: $spanName)"
             )
-            assertEquals(
-                expectedArgValue,
-                actualArgValue,
-                "Attribute values should be the same for the span (name: $spanName)()"
-            )
+
+            when (actualArgValue) {
+                is Map<*, *> -> {
+                    assertMapsEqual(expectedArgValue as Map<*, *>, actualArgValue)
+                }
+
+                is Iterable<*> -> {
+                    assertContentEquals(expectedArgValue as Iterable<*>, actualArgValue.asIterable())
+                }
+
+                else -> {
+                    assertEquals(
+                        expectedArgValue,
+                        actualArgValue,
+                        "Attribute values should be the same for the span (name: $spanName)\n" +
+                            "Expected: <$expectedArgValue>,\n" +
+                            "Actual: <$actualArgValue>"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun assertMapsEqual(expected: Map<*, *>, actual: Map<*, *>, message: String = "") {
+        assertEquals(expected.size, actual.size, "$message - Map sizes should be equal")
+
+        expected.forEach { (key, value) ->
+            assertTrue(actual.containsKey(key), "$message - Key '$key' should exist in actual map")
+            assertEquals(value, actual[key], "$message - Value for key '$key' should match")
         }
     }
 

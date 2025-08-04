@@ -8,17 +8,32 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.AgentMemory
-import ai.koog.agents.memory.model.*
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.DefaultTimeProvider
+import ai.koog.agents.memory.model.Fact
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.MultipleFacts
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
 import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import io.mockk.*
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkConstructor
+import io.mockk.mockkObject
+import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -27,21 +42,9 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-
 @OptIn(InternalAgentsApi::class)
 class AIAgentMemoryTest {
     object MemorySubjects {
-        /**
-         * Information specific to the local machine environment
-         * Examples: Installed tools, SDKs, OS configuration, available commands
-         */
-        @Serializable
-        data object Machine : MemorySubject() {
-            override val name: String = "machine"
-            override val promptDescription: String = "Technical environment (installed tools, package managers, packages, SDKs, OS, etc.)"
-            override val priorityLevel: Int = 1
-        }
-
         /**
          * Information specific to the current user
          * Examples: Preferences, settings, authentication tokens
@@ -49,30 +52,9 @@ class AIAgentMemoryTest {
         @Serializable
         data object User : MemorySubject() {
             override val name: String = "user"
-            override val promptDescription: String = "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
+            override val promptDescription: String =
+                "User's preferences, settings, and behavior patterns, expectations from the agent, preferred messaging style, etc."
             override val priorityLevel: Int = 2
-        }
-
-        /**
-         * Information specific to the current project
-         * Examples: Build configuration, dependencies, code style rules
-         */
-        @Serializable
-        data object Project : MemorySubject() {
-            override val name: String = "project"
-            override val promptDescription: String = "Project details, requirements, and constraints, dependencies, folders, technologies, modules, documentation, etc."
-            override val priorityLevel: Int = 3
-        }
-
-        /**
-         * Information shared across an organization
-         * Examples: Coding standards, shared configurations, team practices
-         */
-        @Serializable
-        data object Organization : MemorySubject() {
-            override val name: String = "organization"
-            override val promptDescription: String = "Organization structure and policies"
-            override val priorityLevel: Int = 4
         }
     }
 
@@ -107,7 +89,6 @@ class AIAgentMemoryTest {
     fun testSaveFactsFromHistory() = runTest {
         val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
-        val responseSlot = slot<Message.Response>()
 
         val response = mockk<Message.Response>()
         every { response.content } returns "Test fact"
@@ -147,8 +128,8 @@ class AIAgentMemoryTest {
             memoryProvider.save(
                 match {
                     it is SingleFact &&
-                            it.concept == concept &&
-                            it.timestamp > 0 // Verify timestamp is set
+                        it.concept == concept &&
+                        it.timestamp > 0 // Verify timestamp is set
                 },
                 MemorySubjects.User,
                 MemoryScope.Agent("test")
@@ -260,7 +241,9 @@ class AIAgentMemoryTest {
         coEvery {
             memoryProvider.load(any(), any(), any())
         } answers {
-            println("[DEBUG_LOG] Loading facts for subject: ${secondArg<MemorySubject>()}, scope: ${thirdArg<MemoryScope>()}")
+            println(
+                "[DEBUG_LOG] Loading facts for subject: ${secondArg<MemorySubject>()}, scope: ${thirdArg<MemoryScope>()}"
+            )
             listOf(machineFact)
         }
 
@@ -270,7 +253,7 @@ class AIAgentMemoryTest {
         // Mock LLM context to capture prompt updates
         mockkConstructor(AIAgentLLMWriteSession::class)
 
-        val llmContext = mockk<AIAgentLLMContext>() {
+        val llmContext = mockk<AIAgentLLMContext> {
             coEvery {
                 writeSession<Any?>(any<suspend AIAgentLLMWriteSession.() -> Any?>())
             } coAnswers {
@@ -389,6 +372,183 @@ class AIAgentMemoryTest {
         }
     }
 
+    @Test
+    fun testSaveFactsFromHistoryWithCustomModel() = runTest {
+        val customModel = OpenAIModels.CostOptimized.O3Mini
+        val originalModel = testModel
+
+        val memoryProvider = mockk<AgentMemoryProvider>()
+        val promptExecutor = mockk<PromptExecutor>()
+        val savedFacts = mutableListOf<Fact>()
+        val savedSubjects = mutableListOf<MemorySubject>()
+        val savedScopes = mutableListOf<MemoryScope>()
+        val fact = "Custom model extracted fact"
+
+        val response = mockk<Message.Response>()
+        every { response.content } returns """{"fact": "$fact"}"""
+
+        val capturedModels = mutableListOf<LLModel>()
+        coEvery {
+            promptExecutor.execute(any(), capture(capturedModels), any())
+        } returns listOf(response)
+
+        coEvery {
+            memoryProvider.save(capture(savedFacts), capture(savedSubjects), capture(savedScopes))
+        } returns Unit
+
+        val llmContext = AIAgentLLMContext(
+            tools = emptyList(),
+            prompt = prompt("test") {
+                system("Test system message")
+                user("I prefer using Java for enterprise applications")
+                assistant("I'll remember your preference for Java in enterprise development")
+            },
+            model = originalModel,
+            promptExecutor = promptExecutor,
+            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            config = AIAgentConfig(Prompt.Empty, originalModel, 100),
+            clock = testClock
+        )
+
+        val memory = AgentMemory(
+            agentMemory = memoryProvider,
+            llm = llmContext,
+            scopesProfile = MemoryScopesProfile()
+        )
+
+        val concept = Concept("programming-preference", "User's programming language preference", FactType.SINGLE)
+        val testSubject = MemorySubjects.User
+        val testScope = MemoryScope.Agent("test")
+
+        memory.saveFactsFromHistory(
+            concept = concept,
+            subject = testSubject,
+            scope = testScope,
+            retrievalModel = customModel
+        )
+
+        assertEquals(1, capturedModels.size, "PromptExecutor should be called exactly once")
+        assertEquals(customModel, capturedModels.first(), "Custom model should be used for fact extraction")
+
+        assertEquals(1, savedFacts.size, "Exactly one fact should be saved")
+        val savedFact = savedFacts.first()
+        assertTrue(savedFact is SingleFact, "Saved fact should be SingleFact type")
+        assertEquals(concept, savedFact.concept, "Fact concept should match input")
+        assertEquals(fact, savedFact.value, "Fact value should match response")
+        assertTrue(savedFact.timestamp > 0, "Fact should have valid timestamp")
+        assertTrue(savedFact.timestamp <= System.currentTimeMillis(), "Timestamp should not be in the future")
+
+        assertEquals(1, savedSubjects.size, "Exactly one subject should be saved")
+        assertEquals(testSubject, savedSubjects.first(), "Subject should match input")
+        assertEquals(1, savedScopes.size, "Exactly one scope should be saved")
+        assertEquals(testScope, savedScopes.first(), "Scope should match input")
+
+        coVerify(exactly = 1) {
+            memoryProvider.save(any(), testSubject, testScope)
+        }
+
+        coVerify(exactly = 1) {
+            promptExecutor.execute(any(), customModel, any())
+        }
+    }
+
+    @Test
+    fun testSaveFactsFromHistoryMultipleFactsWithCustomModel() = runTest {
+        val customModel = AnthropicModels.Sonnet_4
+        val memoryProvider = mockk<AgentMemoryProvider>()
+        val promptExecutor = mockk<PromptExecutor>()
+        val savedFacts = mutableListOf<Fact>()
+        val expectedFacts = listOf("Java for backend services", "Python for data analysis", "JavaScript for frontend")
+        val testScopeName = "test"
+
+        val response = mockk<Message.Response>()
+        every {
+            response.content
+        } returns """
+            {
+                "facts": [
+                    {"fact": "Java for backend services"},
+                    {"fact": "Python for data analysis"},
+                    {"fact": "JavaScript for frontend"}
+                ]
+            }
+        """.trimIndent()
+
+        val capturedModels = mutableListOf<LLModel>()
+        coEvery {
+            promptExecutor.execute(any(), capture(capturedModels), any())
+        } returns listOf(response)
+
+        coEvery {
+            memoryProvider.save(capture(savedFacts), any(), any())
+        } returns Unit
+
+        val llmContext = AIAgentLLMContext(
+            tools = emptyList(),
+            prompt = prompt("test") {
+                system("Test system message")
+                user("I use Java for backend, Python for data analysis, and JavaScript for frontend")
+                assistant("I'll remember your language preferences for different domains")
+            },
+            model = testModel,
+            promptExecutor = promptExecutor,
+            environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
+            config = AIAgentConfig(Prompt.Empty, testModel, 100),
+            clock = testClock
+        )
+
+        val memory = AgentMemory(
+            agentMemory = memoryProvider,
+            llm = llmContext,
+            scopesProfile = MemoryScopesProfile()
+        )
+
+        val concept =
+            Concept("language-preferences", "User's programming language preferences by domain", FactType.MULTIPLE)
+
+        memory.saveFactsFromHistory(
+            concept = concept,
+            subject = MemorySubjects.User,
+            scope = MemoryScope.Agent(testScopeName),
+            retrievalModel = customModel
+        )
+
+        assertEquals(1, capturedModels.size, "PromptExecutor should be called exactly once")
+        assertEquals(customModel, capturedModels.first(), "Custom model should be used")
+
+        assertEquals(1, savedFacts.size, "Exactly one MultipleFacts should be saved")
+        val savedFact = savedFacts.first()
+        assertTrue(savedFact is MultipleFacts, "Saved fact should be MultipleFacts type")
+        assertEquals(concept, savedFact.concept, "Fact concept should match input")
+        assertEquals(FactType.MULTIPLE, savedFact.concept.factType, "Concept should be MULTIPLE type")
+        assertTrue(savedFact.timestamp > 0, "Fact should have valid timestamp")
+
+        assertEquals(expectedFacts.size, savedFact.values.size, "Should have exactly ${expectedFacts.size} facts")
+        expectedFacts.forEach { expectedFact ->
+            assertTrue(
+                savedFact.values.contains(expectedFact),
+                "Should contain fact: '$expectedFact'. Actual values: ${savedFact.values}"
+            )
+        }
+
+        assertEquals(savedFact.values.size, savedFact.values.toSet().size, "Should not have duplicate facts")
+
+        coVerify(exactly = 1) {
+            memoryProvider.save(
+                match {
+                    it is MultipleFacts &&
+                        it.concept == concept &&
+                        it.timestamp > 0 &&
+                        it.values.size == expectedFacts.size &&
+                        expectedFacts.all { expected -> it.values.contains(expected) }
+                },
+                MemorySubjects.User,
+                MemoryScope.Agent(testScopeName)
+            )
+        }
+    }
+
+    @Test
     fun testLoadFactsToAgent() = runTest {
         val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
@@ -423,7 +583,11 @@ class AIAgentMemoryTest {
             )
         )
 
-        memory.loadFactsToAgent(concept)
+        memory.loadFactsToAgent(
+            concept,
+            scopes = listOf(MemoryScopeType.AGENT),
+            subjects = listOf(MemorySubjects.User)
+        )
 
         coVerify {
             memoryProvider.load(concept, any(), any())

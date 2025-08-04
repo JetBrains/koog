@@ -1,8 +1,12 @@
 package ai.koog.agents.mcp
 
-import io.ktor.server.cio.*
-import io.ktor.server.engine.*
-import io.modelcontextprotocol.kotlin.sdk.*
+import io.ktor.server.cio.CIO
+import io.ktor.server.engine.embeddedServer
+import io.modelcontextprotocol.kotlin.sdk.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.Implementation
+import io.modelcontextprotocol.kotlin.sdk.ServerCapabilities
+import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.Tool
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
@@ -48,25 +52,25 @@ class TestMcpServer(private val port: Int) {
             name = "greeting",
             description = "A simple greeting tool",
             inputSchema = Tool.Input(
-            properties = buildJsonObject {
-                putJsonObject("name") {
-                    put("type", "string")
-                    put("description", "A name to greet")
-                }
-                putJsonObject("title") {
-                    putJsonArray("anyOf") {
-                        addJsonObject {
-                            put("type", "null")
-                        }
-                        addJsonObject {
-                            put("type", "string")
-                        }
+                properties = buildJsonObject {
+                    putJsonObject("name") {
+                        put("type", "string")
+                        put("description", "A name to greet")
                     }
-                    put("description", "Title to use in the greeting")
-                }
-            },
-            required = listOf("name")
-        )
+                    putJsonObject("title") {
+                        putJsonArray("anyOf") {
+                            addJsonObject {
+                                put("type", "null")
+                            }
+                            addJsonObject {
+                                put("type", "string")
+                            }
+                        }
+                        put("description", "Title to use in the greeting")
+                    }
+                },
+                required = listOf("name")
+            )
         ) { request ->
             val name = request.arguments["name"]?.jsonPrimitive?.content
             val title = request.arguments["title"]?.jsonPrimitive?.content

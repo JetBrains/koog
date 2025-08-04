@@ -29,7 +29,6 @@ public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
         }
     }
 
-
     test()
 }
 
@@ -89,7 +88,10 @@ public fun Testing.Config.graph(test: Testing.Config.() -> Unit) {
  * }
  * ```
  */
-public fun <Input, Output> FeatureContext.testGraph(name: String, test: Testing.Config.SubgraphAssertionsBuilder<Input, Output>.() -> Unit): Unit =
+public fun <Input, Output> FeatureContext.testGraph(
+    name: String,
+    test: Testing.Config.SubgraphAssertionsBuilder<Input, Output>.() -> Unit
+): Unit =
     withTesting {
         graph {
             verifyStrategy(name) {

@@ -18,8 +18,8 @@ public interface NodeEventHandlerContext : EventHandlerContext
  * @property inputType [KType] representing the type of the [input].
  */
 public data class NodeBeforeExecuteContext(
-    val context: AIAgentContextBase,
     val node: AIAgentNodeBase<*, *>,
+    val context: AIAgentContextBase,
     val input: Any?,
     val inputType: KType,
 ) : NodeEventHandlerContext
@@ -35,10 +35,29 @@ public data class NodeBeforeExecuteContext(
  * @property outputType [KType] representing the type of the [output].
  */
 public data class NodeAfterExecuteContext(
-    val context: AIAgentContextBase,
     val node: AIAgentNodeBase<*, *>,
+    val context: AIAgentContextBase,
     val input: Any?,
     val output: Any?,
     val inputType: KType,
     val outputType: KType,
+) : NodeEventHandlerContext
+
+/**
+ * Represents the context for handling errors during the execution of an AI agent node.
+ *
+ * This context is typically used to capture information about the execution state and the
+ * error that occurred during the lifecycle of an AI agent node in a strategy graph. It provides
+ * details such as the identifier of the current run, the node where the error occurred, the
+ * execution context, and the specific error itself.
+ *
+ * @property node The AI agent node where the error occurred. This is an instance of [AIAgentNodeBase].
+ * @property context The execution context, encapsulated by [AIAgentContextBase], which provides
+ * runtime information and utilities for executing the node.
+ * @property throwable The exception or error encountered during the node execution.
+ */
+public data class NodeExecutionErrorContext(
+    val node: AIAgentNodeBase<*, *>,
+    val context: AIAgentContextBase,
+    val throwable: Throwable
 ) : NodeEventHandlerContext

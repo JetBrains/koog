@@ -4,18 +4,37 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.io.readString
 import kotlinx.io.writeString
 import org.jetbrains.annotations.TestOnly
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertAll
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import java.io.File
 import java.io.IOException
+import java.nio.file.FileAlreadyExistsException
 import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.InvalidPathException
+import java.nio.file.NoSuchFileException
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.absolute
+import kotlin.io.path.createDirectory
+import kotlin.io.path.createFile
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
+import kotlin.io.path.pathString
+import kotlin.io.path.readLines
+import kotlin.io.path.readText
+import kotlin.io.path.writeText
 import kotlin.test.assertContentEquals
+import kotlin.test.assertNull
 
 class JVMFileSystemProviderTest : KoogTestBase() {
     private val serialization = JVMFileSystemProvider.Serialization
@@ -48,9 +67,25 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test fake path from absolute string`() {
-        val filePathString = file1.absolute().pathString + "fake"
-        assertNotNull(serialization.fromAbsoluteString(filePathString))
+    fun `test fromAbsoluteString with non-existent path`() {
+        val nonExistentPath = file1.absolute().pathString + "non_existent"
+        val result = serialization.fromAbsoluteString(nonExistentPath).toString()
+        assertEquals(nonExistentPath, result)
+    }
+
+    @Test
+    fun `test toAbsolutePathString with non-existent path`() {
+        val nonExistentPath = Path.of(file1.absolute().pathString + "non_existent")
+        val result = serialization.toAbsolutePathString(nonExistentPath)
+        assertEquals(nonExistentPath.toString(), result)
+    }
+
+    @Test
+    fun `test fromAbsoluteString throws exception when resolved path is not absolute`() {
+        val relativePathString = "relative/test/path"
+        assertThrows(IllegalArgumentException::class.java) {
+            serialization.fromAbsoluteString(relativePathString)
+        }
     }
 
     @Test
@@ -76,13 +111,34 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test from relative string to root`() {
-        val rootPath = serialization.fromRelativeString(file3, FileSystems.getDefault().separator)
-        assertEquals(getRoot(file3), rootPath)
+    fun `test from relative string with absolute path`() {
+        val absolutePath = file1.absolute().pathString
+        assertThrows(IllegalArgumentException::class.java) {
+            serialization.fromRelativeString(file3, absolutePath)
+        }
     }
+
+    @Test
+    fun `test from relative string with absolute path throws exception`() {
+        val absolutePath = file1.absolute().pathString
+
+        assertThrows(IllegalArgumentException::class.java) {
+            serialization.fromRelativeString(src3, absolutePath)
+        }
+    }
+
+    @Test
+    fun `test fromRelativeString with non-existent path`() {
+        val nonExistentRelativePath = "non_existent_folder/non_existent_file.txt"
+        val result = serialization.fromRelativeString(src1, nonExistentRelativePath)
+        assertTrue(result.pathString.contains("non_existent_folder"))
+        assertTrue(result.pathString.contains("non_existent_file.txt"))
+    }
+
     //endregion
 
     //region JVMFileSystemProvider.Select
+
     @Test
     fun `test list dir sorted`() = runBlocking {
         val testList = select.list(resources)
@@ -97,21 +153,38 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test list fake dir`() = runBlocking {
-        val testList = select.list(Path.of(dir1.pathString + "fake"))
-        assertEquals(emptyList<Path>(), testList)
+    fun `test list is not recursive`() = runBlocking {
+        // dir1 contains src1, which contains resources and file1
+        // We should only get src1 when listing dir1, not the nested contents
+        val testList = select.list(dir1)
+        assertEquals(listOf(src1), testList)
     }
 
     @Test
-    fun `test list text file`() = runBlocking {
-        val testList = select.list(file1.absolute())
-        assertEquals(emptyList<Path>(), testList)
+    fun `test list fake dir`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                select.list(Path.of(dir1.pathString + "fake"))
+            }
+        }
     }
 
     @Test
-    fun `test list zip`() = runBlocking {
-        val testList = select.list(zip1.absolute())
-        assertEquals(emptyList<Path>(), testList)
+    fun `test list text file`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                select.list(file1.absolute())
+            }
+        }
+    }
+
+    @Test
+    fun `test list zip`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            runBlocking {
+                select.list(zip1.absolute())
+            }
+        }
     }
 
     @Test
@@ -130,7 +203,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         )
         val testMetadata = select.metadata(dir1)
         assertEquals(metadata, testMetadata)
-
     }
 
     @Test
@@ -152,6 +224,12 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test parent with non-existing path`() = runBlocking {
+        val testParent = select.parent(Path.of("non-existing-path"))
+        assertNull(testParent)
+    }
+
+    @Test
     fun `test relative`() = runBlocking {
         val target = resource1
         val targetParent = src1
@@ -159,6 +237,14 @@ class JVMFileSystemProviderTest : KoogTestBase() {
             target.pathString.substringAfter(targetParent.pathString + FileSystems.getDefault().separator)
         val testPath = select.relativize(targetParent, target)
         assertEquals(expectedRelativePath, testPath)
+    }
+
+    @Test
+    fun `test relative with no common prefix`() = runBlocking {
+        val target = src1
+        val targetParent = Path.of("non-existing-path")
+        val testPath = select.relativize(targetParent, target)
+        assertNull(testPath)
     }
     //endregion
 
@@ -197,7 +283,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     fun `test name dir`() = runBlocking {
         val testName = select.name(dir1)
         assertEquals("dir1", testName)
-
     }
 
     @Test
@@ -226,14 +311,14 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test read dir`() {
-        assertThrows(Exception::class.java) {
+        assertThrows(IllegalArgumentException::class.java) {
             runBlocking { read.read(dir2) }
         }
     }
 
     @Test
     fun `test read not exist`() {
-        assertThrows(Exception::class.java) {
+        assertThrows(IllegalArgumentException::class.java) {
             runBlocking { read.read(Path.of(file1.pathString + "fake")) }
         }
     }
@@ -277,9 +362,82 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         }
         assertEquals(testCode, actualContent)
     }
+
+    @Test
+    fun `test source method read non-existing file`() {
+        assertThrows<IllegalArgumentException> {
+            runBlocking {
+                read.source(Path.of(file1.pathString + "fake")).use { source ->
+                    source.readString()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test source method read directory`() {
+        assertThrows<IllegalArgumentException> {
+            runBlocking {
+                read.source(dir2).use { source ->
+                    source.readString()
+                }
+            }
+        }
+    }
     //endregion
 
     //region JVMFileSystemProvider.Write
+    @Test
+    fun `test write method overwrites existing file content`() = runBlocking {
+        val dirPath = dirEmpty
+        val fileName = "fileToOverwrite.txt"
+        val filePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
+
+        val initialContent = "Initial content"
+        filePath.writeText(initialContent)
+        assertEquals(initialContent, filePath.readText())
+
+        val newContent = "New content"
+        write.write(filePath, newContent.toByteArray())
+
+        val actualContent = filePath.readText()
+        assertEquals(newContent, actualContent)
+        assertFalse(actualContent.contains(initialContent), "File contents should be overwritten")
+    }
+
+    @Test
+    fun `test move throws IOException when source file doesn't exist`() {
+        val sourcePath = dirEmpty.resolve("non-existing-file.txt")
+        val targetPath = dirEmpty.resolve("target-path")
+
+        assertThrows(IOException::class.java) {
+            runBlocking {
+                write.move(sourcePath, targetPath)
+            }
+        }
+    }
+
+    @Test
+    fun `test move throws FileAlreadyExistsException when target file already exists`() {
+        val sourcePath = dirEmpty.resolve("source-file.txt").apply {
+            createFile()
+            writeText("source content")
+        }
+        val targetPath = dirEmpty.resolve("target-file.txt").apply {
+            createFile()
+            writeText("target content")
+        }
+
+        assertTrue(sourcePath.exists())
+        assertTrue(targetPath.exists())
+
+        assertThrows(FileAlreadyExistsException::class.java) {
+            runBlocking {
+                write.move(sourcePath, targetPath)
+            }
+        }
+    }
+
     @Test
     fun `test create file`() {
         runBlocking {
@@ -299,7 +457,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     fun `test create already existing file`() {
         val parent = dir1.parent
         val fileName = "newFile.txt"
-        assertThrows(IOException::class.java) {
+        assertThrows(FileAlreadyExistsException::class.java) {
             runBlocking {
                 write.create(parent, fileName, FileMetadata.FileType.File)
                 write.create(parent, fileName, FileMetadata.FileType.File)
@@ -312,13 +470,12 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         val dirPath = dirEmpty
         assertEmpty(dirPath.listDirectoryEntries())
         val fileName = "Dir" + String(byteArrayOf(0))
-        assertThrows(Exception::class.java) {
+        assertThrows(InvalidPathException::class.java) {
             runBlocking { write.create(dirEmpty, fileName, FileMetadata.FileType.File) }
         }
         assertEmpty(dirPath.listDirectoryEntries())
         dirPath.listDirectoryEntries().forEach { it.toFile().deleteRecursively() }
     }
-
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
@@ -384,7 +541,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         dirPath.listDirectoryEntries().forEach { it.toFile().deleteRecursively() }
     }
 
-
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `test create Windows invalid name directory`() {
@@ -441,7 +597,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         assertFalse(dirTest.exists())
     }
 
-
     @Test
     fun `test delete not empty directory`() {
         val dirPath = dirEmpty
@@ -491,56 +646,99 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test write to a file with sink with not-append mode`() = runBlocking {
+    fun `test sink to non-existing directory and file`() = runBlocking {
         val dirPath = dirEmpty
-
+        val nonExistingDir = dirPath.resolve("non-existing-dir")
         val fileName = "newFile.txt"
-        val tempFilePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
-        tempFilePath.writeText("Hello")
+        val filePath = nonExistingDir.resolve(fileName)
 
-        assertTrue(tempFilePath.exists())
-        assertEquals("Hello", tempFilePath.readText())
+        assertFalse(nonExistingDir.exists())
+        assertFalse(filePath.exists())
 
-        val testMessage = " world"
-        write.sink(tempFilePath, false).use { sink ->
-            sink.writeString(testMessage)
+        val testContent = "Test content for non-existing file"
+        write.sink(filePath, false).use { sink ->
+            sink.writeString(testContent)
             sink.flush()
         }
 
-        val actualLines = tempFilePath.readLines()
-        val expectedLines = listOf(testMessage)
+        assertTrue(nonExistingDir.exists())
+        assertTrue(filePath.exists())
+        assertEquals(testContent, filePath.readText())
+    }
+
+    @Test
+    fun `test write to a file with sink with overwrite mode`() = runBlocking {
+        val fileName = "newFile.txt"
+        val tempFilePath = Path.of(dirEmpty.pathString + FileSystems.getDefault().separator + fileName)
+        val initialContent = "Hello"
+        tempFilePath.writeText(initialContent)
+
+        assertTrue(tempFilePath.exists())
+        assertEquals(initialContent, tempFilePath.readText())
+
+        val newContent = " world"
+        write.sink(tempFilePath, false).use { sink ->
+            sink.writeString(newContent)
+            sink.flush()
+        }
+
+        val actualContent = tempFilePath.readText()
 
         assertAll(
-            { assertEquals(1, actualLines.size) { "Expected 1 line, but was ${actualLines.size}" } },
-            { assertContentEquals(expectedLines, actualLines) }
+            {
+                assertEquals(
+                    newContent,
+                    actualContent
+                ) { "Expected content to be overwritten with '$newContent', but was '$actualContent'" }
+            },
+            {
+                assertFalse(
+                    actualContent.contains(initialContent),
+                    "File should not contain the initial content when in overwrite mode"
+                )
+            }
         )
     }
 
     @Test
     fun `test write to a file with sink with append mode`() = runBlocking {
-        val dirPath = dirEmpty
-
         val fileName = "newFile.txt"
-        val tempFilePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
+        val tempFilePath = Path.of(dirEmpty.pathString + FileSystems.getDefault().separator + fileName)
 
-        val testMessageHello = "Hello"
-        tempFilePath.writeText(testMessageHello)
+        val initialContent = "Hello"
+        tempFilePath.writeText(initialContent)
 
         assertTrue(tempFilePath.exists())
-        assertEquals(testMessageHello, tempFilePath.readText())
+        assertEquals(initialContent, tempFilePath.readText())
 
-        val testMessageWorld = " world"
+        val additionalContent = " world"
         write.sink(tempFilePath, true).use { sink ->
-            sink.writeString(testMessageWorld)
+            sink.writeString(additionalContent)
             sink.flush()
         }
 
-        val actualLines = tempFilePath.readLines()
-        val expectedLines = listOf(testMessageHello + testMessageWorld)
+        val expectedCombinedContent = initialContent + additionalContent
+        val actualContent = tempFilePath.readText()
 
         assertAll(
-            { assertEquals(1, actualLines.size) { "Expected 1 line, but was ${actualLines.size}" } },
-            { assertContentEquals(expectedLines, actualLines) }
+            {
+                assertEquals(
+                    expectedCombinedContent,
+                    actualContent
+                ) { "Expected content to be '$expectedCombinedContent', but was '$actualContent'" }
+            },
+            {
+                assertTrue(
+                    actualContent.startsWith(initialContent),
+                    "File should start with the initial content when in append mode"
+                )
+            },
+            {
+                assertTrue(
+                    actualContent.endsWith(additionalContent),
+                    "File should end with the additional content when in append mode"
+                )
+            }
         )
     }
 
@@ -575,6 +773,14 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test ReadOnly fromRelativeString with absolute path`() {
+        val absolutePath = file1.absolute().pathString
+        assertThrows(IllegalArgumentException::class.java) {
+            readOnly.fromRelativeString(file3, absolutePath)
+        }
+    }
+
+    @Test
     fun `test ReadOnly name`() = runBlocking {
         val testName = readOnly.name(file1)
         assertEquals("TestGenerator.kt", testName)
@@ -588,7 +794,8 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadOnly metadata`() = runBlocking {
-        val metadata = FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
+        val metadata =
+            FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
         val testMetadata = readOnly.metadata(file1)
         assertEquals(metadata, testMetadata)
     }
@@ -637,6 +844,28 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test ReadOnly source with non-existing file`() {
+        assertThrows<IllegalArgumentException> {
+            runBlocking {
+                readOnly.source(Path.of(file1.pathString + "fake")).use { source ->
+                    source.readString()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test ReadOnly source with directory`() {
+        assertThrows<IllegalArgumentException> {
+            runBlocking {
+                readOnly.source(dir2).use { source ->
+                    source.readString()
+                }
+            }
+        }
+    }
+
+    @Test
     fun `test ReadOnly size`() = runBlocking {
         val size = readOnly.size(file1)
         assertTrue(size > 0) { "Expected size more than a zero, but was $size" }
@@ -665,6 +894,14 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test ReadWrite fromRelativeString with absolute path`() {
+        val absolutePath = file1.absolute().pathString
+        assertThrows(IllegalArgumentException::class.java) {
+            readWrite.fromRelativeString(file3, absolutePath)
+        }
+    }
+
+    @Test
     fun `test ReadWrite name`() = runBlocking {
         val testName = readWrite.name(file1)
         assertEquals("TestGenerator.kt", testName)
@@ -678,7 +915,8 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadWrite metadata`() = runBlocking {
-        val metadata = FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
+        val metadata =
+            FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
         val testMetadata = readWrite.metadata(file1)
         assertEquals(metadata, testMetadata)
     }
@@ -727,6 +965,28 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test ReadWrite source with non-existing file`() {
+        assertThrows<IllegalArgumentException> {
+            runBlocking {
+                readWrite.source(Path.of(file1.pathString + "fake")).use { source ->
+                    source.readString()
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `test ReadWrite source with directory`() {
+        assertThrows<IllegalArgumentException> {
+            runBlocking {
+                readWrite.source(dir2).use { source ->
+                    source.readString()
+                }
+            }
+        }
+    }
+
+    @Test
     fun `test ReadWrite size`() = runBlocking {
         val size = readWrite.size(file1)
         assertTrue(size > 0) { "Expected size more than a zero, but was $size" }
@@ -748,7 +1008,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test ReadWrite write`() = runBlocking {
+    fun `ReadWrite should create missing file when needed`() = runBlocking {
         val dirPath = dirEmpty
         val fileName = "newFileReadWrite.txt"
         val tempFilePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + fileName)
@@ -765,6 +1025,24 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
         val actualContent = tempFilePath.readText()
         assertEquals(testMessage, actualContent)
+    }
+
+    @Test
+    fun `ReadWrite should create missing directory when needed`() = runBlocking {
+        val dirPath = dirEmpty
+        val nonExistingDir = dirPath.resolve("non-existing-dir")
+        val fileName = "newFile.txt"
+        val filePath = nonExistingDir.resolve(fileName)
+
+        assertFalse(nonExistingDir.exists())
+        assertFalse(filePath.exists())
+
+        val testContent = "Test content for non-existing file"
+        readWrite.write(filePath, testContent.toByteArray())
+
+        assertTrue(nonExistingDir.exists())
+        assertTrue(filePath.exists())
+        assertEquals(testContent, filePath.readText())
     }
 
     @Test
@@ -825,6 +1103,23 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
         assertFalse(filePath.exists())
     }
+
+    @Test
+    fun `test ReadWrite delete with non-existing file`() {
+        val dirPath = dirEmpty
+        val fileName = dirPath.resolve("non-existing.txt").fileName.toString()
+        val exception = assertThrows(NoSuchFileException::class.java) {
+            runBlocking {
+                readWrite.delete(dirPath, fileName)
+            }
+        }
+        val expectedPath = dirPath.resolve(fileName).toString()
+        assertTrue(
+            exception.message?.contains(expectedPath) == true,
+            "Exception message should contain the file path: $expectedPath, but was: ${exception.message}"
+        )
+    }
+
     //endregion
 
     @TestOnly

@@ -182,7 +182,11 @@ public fun KFunction<*>.asTool(
     description: String? = null
 ): ToolFromCallable {
     val toolDescriptor = this.asToolDescriptor(name = name, description = description)
-    if (instanceParameter != null && thisRef == null) error("Instance parameter is not null, but no 'this' object is provided")
+    if (instanceParameter != null &&
+        thisRef == null
+    ) {
+        error("Instance parameter is not null, but no 'this' object is provided")
+    }
     return ToolFromCallable(callable = this, thisRef = thisRef, descriptor = toolDescriptor, json = json)
 }
 
@@ -289,7 +293,9 @@ public fun KFunction<*>.asToolDescriptor(name: String? = null, description: Stri
         val paramToolType = paramType.asToolType()
         val isOptional = param.isOptional
         val parameterDescriptor = ToolParameterDescriptor(
-            name = parameterName, type = paramToolType, description = toolParameterDescription
+            name = parameterName,
+            type = paramToolType,
+            description = toolParameterDescription
         )
         ParamInfo(descriptor = parameterDescriptor, isOptional = isOptional)
     }
@@ -298,7 +304,8 @@ public fun KFunction<*>.asToolDescriptor(name: String? = null, description: Stri
         name = toolName,
         description = toolDescription,
         requiredParameters = toolParameters.filter { !it.isOptional }.map { it.descriptor },
-        optionalParameters = toolParameters.filter { it.isOptional }.map { it.descriptor })
+        optionalParameters = toolParameters.filter { it.isOptional }.map { it.descriptor }
+    )
 }
 
 /**
