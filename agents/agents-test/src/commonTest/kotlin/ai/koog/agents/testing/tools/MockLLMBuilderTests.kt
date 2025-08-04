@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
+import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -336,5 +337,152 @@ class MockLLMBuilderTests {
         assertTrue(actionCalled)
         assertTrue(result is ToolResult.Text)
         assertEquals("Custom action result", (result as ToolResult.Text).text)
+    }
+
+    // Tests for structured mock responses
+
+    @Serializable
+    data class UserPreference(val language: String, val theme: String)
+
+    @Serializable 
+    data class ProjectInfo(val name: String, val version: String, val dependencies: List<String>)
+
+    @Test
+    fun testStructuredMockResponse() = runTest {
+        val expectedPreference = UserPreference("Kotlin", "dark")
+        
+        val mockExecutor = getMockExecutor {
+            mockLLMStructured(expectedPreference) onRequestContains "preferences"
+            mockLLMAnswer("Default response").asDefaultResponse
+        }
+
+        val prompt = prompt("test-structured") {
+            user("What are my preferences?")
+        }
+
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        
+        // The response should be the serialized JSON
+        val expectedJson = Json.encodeToString(UserPreference.serializer(), expectedPreference)
+        assertEquals(expectedJson, response.content)
+        
+        // Verify we can deserialize it back
+        val deserializedPreference = Json.decodeFromString<UserPreference>(response.content)
+        assertEquals("Kotlin", deserializedPreference.language)
+        assertEquals("dark", deserializedPreference.theme)
+    }
+
+    @Test
+    fun testStructuredMockResponseWithExplicitSerializer() = runTest {
+        val expectedProject = ProjectInfo("MyProject", "1.0.0", listOf("kotlinx-coroutines", "kotlinx-serialization"))
+        
+        val mockExecutor = getMockExecutor {
+            mockLLMStructured(expectedProject, ProjectInfo.serializer()) onRequestContains "project info"
+            mockLLMAnswer("Default response").asDefaultResponse
+        }
+
+        val prompt = prompt("test-structured-explicit") {
+            user("Tell me about the project info")
+        }
+
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        
+        // The response should be the serialized JSON
+        val expectedJson = Json.encodeToString(ProjectInfo.serializer(), expectedProject)
+        assertEquals(expectedJson, response.content)
+        
+        // Verify we can deserialize it back
+        val deserializedProject = Json.decodeFromString<ProjectInfo>(response.content)
+        assertEquals("MyProject", deserializedProject.name)
+        assertEquals("1.0.0", deserializedProject.version)
+        assertEquals(2, deserializedProject.dependencies.size)
+        assertTrue(deserializedProject.dependencies.contains("kotlinx-coroutines"))
+    }
+
+    @Test
+    fun testStructuredMockResponseWithOnRequestEquals() = runTest {
+        val expectedPreference = UserPreference("Java", "light")
+        
+        val mockExecutor = getMockExecutor {
+            mockLLMStructured(expectedPreference) onRequestEquals "exact preferences query"
+            mockLLMAnswer("Default response").asDefaultResponse
+        }
+
+        // Test exact match
+        val exactPrompt = prompt("test-structured-exact") {
+            user("exact preferences query")
+        }
+
+        val exactResponse = mockExecutor.execute(exactPrompt, OllamaModels.Meta.LLAMA_3_2)
+        val expectedJson = Json.encodeToString(UserPreference.serializer(), expectedPreference)
+        assertEquals(expectedJson, exactResponse.content)
+
+        // Test that partial match doesn't work
+        val partialPrompt = prompt("test-structured-partial") {
+            user("This contains exact preferences query in it")
+        }
+
+        val partialResponse = mockExecutor.execute(partialPrompt, OllamaModels.Meta.LLAMA_3_2)
+        assertEquals("Default response", partialResponse.content)
+    }
+
+    @Test
+    fun testStructuredMockResponseWithCondition() = runTest {
+        val expectedProject = ProjectInfo("ConditionalProject", "2.0.0", listOf("ktor", "exposed"))
+        
+        val mockExecutor = getMockExecutor {
+            mockLLMStructured(expectedProject) onCondition { it.contains("complex") && it.length > 15 }
+            mockLLMAnswer("Default response").asDefaultResponse
+        }
+
+        // Test that condition matches
+        val complexPrompt = prompt("test-structured-condition") {
+            user("This is a complex query about project details that should match")
+        }
+
+        val complexResponse = mockExecutor.execute(complexPrompt, OllamaModels.Meta.LLAMA_3_2)
+        val expectedJson = Json.encodeToString(ProjectInfo.serializer(), expectedProject)
+        assertEquals(expectedJson, complexResponse.content)
+
+        // Test that condition doesn't match
+        val simplePrompt = prompt("test-structured-simple") {
+            user("Simple query")
+        }
+
+        val simpleResponse = mockExecutor.execute(simplePrompt, OllamaModels.Meta.LLAMA_3_2)
+        assertEquals("Default response", simpleResponse.content)
+    }
+
+    @Test
+    fun testStructuredMockResponseWithComplexObject() = runTest {
+        @Serializable
+        data class NestedObject(val id: Int, val settings: Map<String, String>)
+        
+        val complexObject = NestedObject(
+            id = 42,
+            settings = mapOf(
+                "debug" to "true",
+                "log_level" to "info",
+                "max_connections" to "100"
+            )
+        )
+        
+        val mockExecutor = getMockExecutor {
+            mockLLMStructured(complexObject) onRequestContains "nested"
+            mockLLMAnswer("Default response").asDefaultResponse
+        }
+
+        val prompt = prompt("test-structured-complex") {
+            user("Show me the nested configuration")
+        }
+
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        
+        // Verify we can deserialize the complex object
+        val deserializedObject = Json.decodeFromString<NestedObject>(response.content)
+        assertEquals(42, deserializedObject.id)
+        assertEquals("true", deserializedObject.settings["debug"])
+        assertEquals("info", deserializedObject.settings["log_level"])
+        assertEquals("100", deserializedObject.settings["max_connections"])
     }
 }

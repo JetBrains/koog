@@ -10,6 +10,10 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -742,6 +746,56 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             tokenizer = tokenizer
         )
     }
+}
+
+/**
+ * Creates a mock LLM structured response using kotlinx.serialization.
+ *
+ * This function is the entry point for configuring how the LLM should respond with structured JSON
+ * when it receives specific inputs. The response object is automatically serialized to JSON.
+ *
+ * @param response The structured response object to return (will be serialized to JSON)
+ * @return A [DefaultResponseReceiver] for further configuration
+ *
+ * Example usage:
+ * ```kotlin
+ * @Serializable
+ * data class UserPreference(val language: String, val theme: String)
+ *
+ * // Mock a structured response
+ * mockLLMStructured(UserPreference("Kotlin", "dark")) onRequestContains "preferences"
+ * ```
+ */
+public inline fun <reified T> mockLLMStructured(response: T): DefaultResponseReceiver {
+    val jsonResponse = Json.encodeToString(response)
+    return DefaultResponseReceiver(jsonResponse)
+}
+
+/**
+ * Creates a mock LLM structured response using kotlinx.serialization with an explicit serializer.
+ *
+ * This function provides more control over serialization by allowing you to specify
+ * the serializer to use for converting the response to JSON.
+ *
+ * @param response The structured response object to return
+ * @param serializer The KSerializer to use for serialization
+ * @return A [DefaultResponseReceiver] for further configuration
+ *
+ * Example usage:
+ * ```kotlin
+ * @Serializable
+ * data class UserPreference(val language: String, val theme: String)
+ *
+ * // Mock a structured response with explicit serializer
+ * mockLLMStructured(
+ *     UserPreference("Kotlin", "dark"),
+ *     UserPreference.serializer()
+ * ) onRequestContains "preferences"
+ * ```
+ */
+public fun <T> mockLLMStructured(response: T, serializer: KSerializer<T>): DefaultResponseReceiver {
+    val jsonResponse = Json.encodeToString(serializer, response)
+    return DefaultResponseReceiver(jsonResponse)
 }
 
 /**

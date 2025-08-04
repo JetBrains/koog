@@ -8,6 +8,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.AgentMemory
+import ai.koog.agents.memory.feature.nodes.SubjectWithFact
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemory
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.koog.agents.memory.feature.withMemory
@@ -21,6 +22,7 @@ import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.testing.tools.mockLLMStructured
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -90,40 +92,41 @@ class MemoryNodesTest {
         }
     }
 
+    // Import the internal data class used by memory nodes
+    // We'll use SubjectWithFact directly for structured mocking
+
     private fun createMockExecutor() = getMockExecutor {
         mockLLMAnswer(
             "Here's a summary of the conversation: Test user asked questions and received responses."
         ) onRequestContains
             "Summarize all the main achievements"
-        mockLLMAnswer(
-            """
-            [
-                {
-                    "subject": "user",
-                    "keyword": "test-concept",
-                    "description": "Test concept description",
-                    "value": "Test fact value"
-                }
-            ]
-        """
+        // NEW APPROACH: Type-safe structured mocking using actual SubjectWithFact data class
+        mockLLMStructured(
+            listOf(
+                SubjectWithFact(
+                    subject = MemorySubjects.User,
+                    keyword = "test-concept", 
+                    description = "Test concept description",
+                    value = "Test fact value"
+                )
+            )
         ) onRequestContains "test-concept"
-        mockLLMAnswer(
-            """
-            [
-                {
-                    "subject": "user",
-                    "keyword": "user-preference-language",
-                    "description": "User's preferred programming language",
-                    "value": "Python for data analysis"
-                },
-                {
-                    "subject": "project",
-                    "keyword": "project-requirement-java",
-                    "description": "Project's Java version requirement",
-                    "value": "Java 11 or higher"
-                }
-            ]
-        """
+        // NEW APPROACH: Type-safe structured mocking for complex auto-detection using SubjectWithFact
+        mockLLMStructured(
+            listOf(
+                SubjectWithFact(
+                    subject = MemorySubjects.User,
+                    keyword = "user-preference-language",
+                    description = "User's preferred programming language", 
+                    value = "Python for data analysis"
+                ),
+                SubjectWithFact(
+                    subject = MemorySubjects.Project,
+                    keyword = "project-requirement-java",
+                    description = "Project's Java version requirement",
+                    value = "Java 11 or higher"  
+                )
+            )
         ) onRequestContains "Analyze the conversation history and identify important facts about:"
     }
 

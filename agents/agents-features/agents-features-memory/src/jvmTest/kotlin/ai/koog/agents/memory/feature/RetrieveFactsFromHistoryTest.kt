@@ -12,6 +12,7 @@ import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.testing.tools.mockLLMStructured
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
@@ -21,12 +22,20 @@ import io.mockk.mockkObject
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class RetrieveFactsFromHistoryTest {
+
+    // Data classes for structured mocking
+    @Serializable
+    data class FactResponse(val fact: String)
+
+    @Serializable
+    data class MultipleFactsResponse(val facts: List<FactResponse>)
 
     private val testModel = mockk<LLModel> {
         every { id } returns "test-model"
@@ -52,7 +61,8 @@ class RetrieveFactsFromHistoryTest {
 
         // Create a mock prompt executor that returns a response with the fact
         val promptExecutor = getMockExecutor(clock = testClock) {
-            mockLLMAnswer("""{"fact": "$factText"}""").asDefaultResponse
+            // NEW APPROACH: Type-safe structured mocking instead of manual JSON strings
+            mockLLMStructured(FactResponse(fact = factText)).asDefaultResponse
         }
 
         // Create a real AIAgentLLMContext and AIAgentLLMWriteSession
@@ -98,9 +108,11 @@ class RetrieveFactsFromHistoryTest {
 
         // Create a mock prompt executor that returns a response with multiple facts
         val promptExecutor = getMockExecutor(clock = testClock) {
-            mockLLMAnswer(
-                """{"facts": [{"fact": "Fact 1"}, {"fact": "Fact 2"}, {"fact": "Fact 3"}]}"""
-            ).asDefaultResponse
+            // NEW APPROACH: Type-safe structured mocking with data class
+            val factsResponse = MultipleFactsResponse(
+                facts = factsList.map { FactResponse(fact = it) }
+            )
+            mockLLMStructured(factsResponse).asDefaultResponse
         }
 
         // Create a real AIAgentLLMContext and AIAgentLLMWriteSession
