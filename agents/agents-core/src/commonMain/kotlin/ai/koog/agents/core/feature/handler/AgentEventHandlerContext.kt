@@ -81,3 +81,18 @@ public data class AgentRunErrorContext(
 public data class AgentBeforeCloseContext(
     val agentId: String,
 )
+
+/**
+ * Represents the context for handling agent termination events.
+ *
+ * @property agentId The unique identifier of the agent that was terminated.
+ * @property runId The identifier of the session during which the termination occurred.
+ * @property reason The reason why the agent execution was terminated.
+ * @property message Optional descriptive message about the termination.
+ */
+public data class AgentTerminationContext(
+    val agentId: String,
+    val runId: String,
+    val reason: ai.koog.agents.core.agent.CancellationReason,
+    val message: String?
+) : AgentEventHandlerContext

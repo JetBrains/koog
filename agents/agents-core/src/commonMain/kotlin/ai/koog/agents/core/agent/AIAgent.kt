@@ -419,6 +419,34 @@ public open class AIAgent<Input, Output>(
         )
     }
 
+    override suspend fun sendTermination(runId: String, reason: CancellationReason, message: String?) {
+        logger.info {
+            formatLog(agentId = id, runId = runId, message = "Agent terminated: ${reason.name} - ${message ?: "no additional details"}")
+        }
+        
+        // Create the standard Koog wire protocol termination message
+        val terminationMessage = ai.koog.agents.core.model.message.EnvironmentToAgentTerminationMessage(
+            runId = runId,
+            content = ai.koog.agents.core.model.message.EnvironmentToAgentTerminationContent(
+                agentId = id,
+                message = message ?: "Agent terminated: ${reason.name}"
+            ),
+            error = null
+        )
+        
+        logger.debug {
+            formatLog(agentId = id, runId = runId, message = "Created EnvironmentToAgentTerminationMessage: $terminationMessage")
+        }
+        
+        // Notify pipeline handlers about the termination (for extensibility)
+        pipeline.onAgentTermination(
+            agentId = id,
+            runId = runId,
+            reason = reason,
+            message = message
+        )
+    }
+
     override suspend fun close() {
         pipeline.onAgentBeforeClosed(agentId = id)
         pipeline.closeFeaturesStreamProviders()

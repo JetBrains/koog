@@ -19,6 +19,7 @@ import ai.koog.agents.core.feature.handler.AgentFinishedHandler
 import ai.koog.agents.core.feature.handler.AgentHandler
 import ai.koog.agents.core.feature.handler.AgentRunErrorContext
 import ai.koog.agents.core.feature.handler.AgentRunErrorHandler
+import ai.koog.agents.core.feature.handler.AgentTerminationContext
 import ai.koog.agents.core.feature.handler.AgentStartContext
 import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
 import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
@@ -240,6 +241,29 @@ public class AIAgentPipeline {
     ) {
         val eventContext = AgentRunErrorContext(agentId = agentId, runId = runId, throwable = throwable)
         agentHandlers.values.forEach { handler -> handler.agentRunErrorHandler.handle(eventContext) }
+    }
+
+    /**
+     * Notifies all registered handlers about an agent termination event.
+     *
+     * @param agentId The unique identifier of the agent that was terminated
+     * @param runId The unique identifier of the agent run
+     * @param reason The reason why the agent execution was terminated
+     * @param message Optional descriptive message about the termination
+     */
+    public suspend fun onAgentTermination(
+        agentId: String,
+        runId: String,
+        reason: ai.koog.agents.core.agent.CancellationReason,
+        message: String?
+    ) {
+        val eventContext = AgentTerminationContext(
+            agentId = agentId, 
+            runId = runId, 
+            reason = reason, 
+            message = message
+        )
+        agentHandlers.values.forEach { handler -> handler.agentTerminationHandler.handle(eventContext) }
     }
 
     /**

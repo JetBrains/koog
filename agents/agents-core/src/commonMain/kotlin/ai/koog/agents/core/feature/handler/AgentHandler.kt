@@ -65,6 +65,14 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
         AgentBeforeCloseHandler { _ -> }
 
     /**
+     * A handler invoked when an agent execution is terminated.
+     * This handler allows custom logic to be executed in response to agent termination,
+     * providing access to termination reason and context.
+     */
+    public var agentTerminationHandler: AgentTerminationHandler =
+        AgentTerminationHandler { _ -> }
+
+    /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
      *
      * @param environment The AgentEnvironment to be transformed
@@ -235,4 +243,21 @@ public fun interface AgentBeforeCloseHandler {
      *                     information such as the agent's identifier.
      */
     public suspend fun handle(eventContext: AgentBeforeCloseContext)
+}
+
+/**
+ * Functional interface for handling agent termination events.
+ *
+ * This handler is invoked when an agent execution is terminated, providing access to
+ * the termination context including the reason for termination and associated metadata.
+ * It enables custom termination-related logic such as sending notifications, logging,
+ * or cleanup operations specific to the termination scenario.
+ */
+public fun interface AgentTerminationHandler {
+    /**
+     * Handles an agent termination event.
+     *
+     * @param context The termination context containing agent ID, run ID, cancellation reason, and message.
+     */
+    public suspend fun handle(context: AgentTerminationContext)
 }
