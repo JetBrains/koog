@@ -292,17 +292,15 @@ public class FeatureMessageRemoteServer(
                 logger.debug { "Feature Message Remote Server. Received message: $message" }
 
                 receivedMessages.send(message)
-
-                        call.respond(HttpStatusCode.OK)
-                    } catch (t: CancellationException) {
-                        logger.debug {
-                            "Feature Message Remote Server. Received message has been canceled: ${t.message}"
-                        }
-                        throw t
-
-                    } catch (t: Throwable) {
-                        logger.error(t) { "Feature Message Remote Server. Error while receiving message: ${t.message}" }
-                        call.respond(HttpStatusCode.InternalServerError, "Error on receiving message: ${t.message}")
+                call.respond(HttpStatusCode.OK)
+            } catch (t: CancellationException) {
+                logger.debug {
+                    "Feature Message Remote Server. Received message has been canceled: ${t.message}"
+                }
+                throw t
+            } catch (t: Throwable) {
+                logger.error(t) { "Feature Message Remote Server. Error while receiving message: ${t.message}" }
+                call.respond(HttpStatusCode.InternalServerError, "Error on receiving message: ${t.message}")
             }
         }
     }

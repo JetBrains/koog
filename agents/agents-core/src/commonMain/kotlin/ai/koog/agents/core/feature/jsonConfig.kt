@@ -1,5 +1,7 @@
 package ai.koog.agents.core.feature
 
+import ai.koog.agents.core.feature.message.FeatureEvent
+import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
 import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
@@ -16,8 +18,6 @@ import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallFailureEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
-import ai.koog.agents.core.feature.message.FeatureEvent
-import ai.koog.agents.core.feature.message.FeatureMessage
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 

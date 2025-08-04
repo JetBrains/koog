@@ -1,5 +1,8 @@
 package ai.koog.agents.features.tracing.writer
 
+import ai.koog.agents.core.feature.message.FeatureEvent
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureStringMessage
 import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
 import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
@@ -15,9 +18,6 @@ import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallFailureEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
-import ai.koog.agents.core.feature.message.FeatureEvent
-import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.traceString
 
 @Suppress("UnusedReceiverParameter")

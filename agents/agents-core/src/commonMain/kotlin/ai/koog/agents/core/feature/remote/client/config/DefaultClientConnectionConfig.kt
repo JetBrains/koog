@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.remote.client.config
 
-import io.ktor.http.*
+import io.ktor.http.URLProtocol
 
 /**
  * Default implementation for configuring a client connection.

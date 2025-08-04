@@ -14,7 +14,6 @@ import kotlin.test.assertTrue
 class FeatureMessageProcessorTest {
 
     @Test
-
     @JsName("testProcessMessageAddsMessagesToTheList")
     fun `test processMessage adds messages to the list`() = runTest {
         val processor = TestFeatureMessageProcessor()
@@ -32,7 +31,7 @@ class FeatureMessageProcessorTest {
     }
 
     @Test
-   @JsName("testDefaultCloseSetsIsOpenFlagToFalse")
+    @JsName("testDefaultCloseSetsIsOpenFlagToFalse")
     fun `test default close sets isOpen flag to false`() = runTest {
         TestFeatureMessageProcessor().use { processor ->
             processor.initialize()

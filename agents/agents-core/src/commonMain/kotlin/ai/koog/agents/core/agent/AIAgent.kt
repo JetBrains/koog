@@ -22,6 +22,7 @@ import ai.koog.agents.core.exception.AgentEngineException
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.model.AgentServiceError
 import ai.koog.agents.core.model.AgentServiceErrorType
 import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
@@ -36,7 +37,6 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor

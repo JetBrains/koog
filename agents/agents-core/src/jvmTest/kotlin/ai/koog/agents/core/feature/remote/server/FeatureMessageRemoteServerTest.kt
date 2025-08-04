@@ -70,7 +70,8 @@ class FeatureMessageRemoteServerTest {
     }
 
     @Test
-    @Disabled("""Disable test for now for investigation
+    @Disabled(
+        """Disable test for now for investigation
         Test is passed, but exception inside server2.start() call cause the coroutine to be cancelled later and
         error result cause the further tests to fail.
         Test is not critical for general functionality of the remote server."""

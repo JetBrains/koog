@@ -49,6 +49,7 @@ public data class LLMParams(
             }
         }
     }
+
     /**
      * Combines the parameters of the current `LLMParams` instance with the provided default `LLMParams`
      * to produce a new instance. Fields that are null in the current instance are replaced by the
@@ -110,6 +111,7 @@ public data class LLMParams(
                     require(name.isNotBlank()) { "Schema name must not be empty or blank" }
                 }
             }
+
             /**
              * Represents a complete JSON schema structure.
              *
