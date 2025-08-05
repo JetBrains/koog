@@ -1,4 +1,4 @@
-package ai.koog.agents.features.opentelemetry.integrations
+package ai.koog.agents.features.opentelemetry.integration.langfuse
 
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Configure an OpenTelemetry span exporter that sends data to [Langfuse](https://langfuse.com/).
  *
- * @param langfuseUrl the base URL of the Langfuse instance. If not set is retrieved from `LANGFUSE_URL` environment variable. Defaults to [https://cloud.langfuse.com](https://cloud.langfuse.com).
+ * @param langfuseUrl the base URL of the Langfuse instance. If not set is retrieved from `LANGFUSE_HOST` environment variable. Defaults to [https://cloud.langfuse.com](https://cloud.langfuse.com).
  * @param langfusePublicKey if not set is retrieved from `LANGFUSE_PUBLIC_KEY` environment variable.
  * @param langfuseSecretKey if not set is retrieved from `LANGFUSE_SECRET_KEY` environment variable.
  * @param timeout OpenTelemetry SpanExporter timeout. See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
@@ -46,7 +46,7 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
             .build()
     )
 
-    // TODO: Add span adapter for Langfuse
+    addSpanAdapter(LangfuseSpanAdapter)
 }
 
 private val logger = KotlinLogging.logger {}

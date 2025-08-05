@@ -2,7 +2,7 @@ package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
-import ai.koog.agents.features.opentelemetry.integrations.SpanAdapter
+import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes

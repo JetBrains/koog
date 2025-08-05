@@ -1,4 +1,4 @@
-package ai.koog.agents.features.opentelemetry.integrations
+package ai.koog.agents.features.opentelemetry.integration.weave
 
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -46,7 +46,7 @@ public fun OpenTelemetryConfig.addWeaveExporter(
             .build()
     )
 
-    // TODO: Add span adapter for Langfuse
+    addSpanAdapter(WeaveSpanAdapter)
 }
 
 private val logger = KotlinLogging.logger { }

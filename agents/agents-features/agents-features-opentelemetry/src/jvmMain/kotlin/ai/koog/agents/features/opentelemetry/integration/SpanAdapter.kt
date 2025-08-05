@@ -1,4 +1,4 @@
-package ai.koog.agents.features.opentelemetry.integrations
+package ai.koog.agents.features.opentelemetry.integration
 
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 
