@@ -1,5 +1,7 @@
 package ai.koog.agents.features.opentelemetry.event
 
+import kotlinx.serialization.json.JsonObject
+
 internal object EventBodyFields {
 
     data class ToolCalls(
@@ -55,5 +57,9 @@ internal object EventBodyFields {
     data class Id(private val id: String) : EventBodyField() {
         override val key: String = "id"
         override val value: String = id
+    }
+    data class Arguments(private val arguments: JsonObject) : EventBodyField() {
+        override val key: String = "arguments"
+        override val value: JsonObject = arguments
     }
 }

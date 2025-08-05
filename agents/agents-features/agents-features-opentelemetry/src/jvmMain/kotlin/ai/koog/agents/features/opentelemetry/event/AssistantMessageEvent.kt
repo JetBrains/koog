@@ -32,6 +32,7 @@ internal data class AssistantMessageEvent(
             is Message.Tool.Call -> {
                 if (verbose) {
                     add(EventBodyFields.ToolCalls(tools = listOf(message)))
+                    add(EventBodyFields.Arguments(arguments = message.contentJson))
                 }
             }
         }
