@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
-import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
@@ -389,7 +388,6 @@ public class OpenTelemetry {
                                 provider = provider,
                                 toolCallId = eventContext.toolCallId,
                                 toolResult = toolResult,
-                                toolArgs = eventContext.toolArgs ,
                                 verbose = config.isVerbose
                             )
                         )
