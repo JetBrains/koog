@@ -18,7 +18,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Generate and verify code examples
         run: |
-          echo "Navigating to docs directory..."
+          echo "Navigating to /docs directory..."
           cd docs
           
           echo "Starting knit generation..."
