@@ -46,10 +46,11 @@ import kotlin.use
  */
 public object JVMFileSystemProvider {
     /**
-     * Provides functionality for serializing and deserializing file paths and handling metadata related to file paths.
-     * Implements the `FileSystemProvider.Serialization` interface for `Path` type.
+     * Provides operations for path serialization, structure navigation, and content reading using [Path] objects
+     * in a read-only manner without modifying the filesystem.
      */
-    public object Serialization : FileSystemProvider.Serialization<Path> {
+    public object ReadOnly : FileSystemProvider.ReadOnly<Path> {
+
         /**
          * Converts the given [path] to its absolute path representation as a string.
          * The path is normalized before being converted.
@@ -119,15 +120,7 @@ public object JVMFileSystemProvider {
             }
             return adjustedPath
         }
-    }
 
-    /**
-     * Object implementing file system operations and serialization for file paths.
-     * Provides functionality for retrieving metadata, listing directory contents,
-     * determining parent paths, checking the existence of paths, and computing relative paths.
-     * Delegates serialization-related functionality to the `Serialization` interface.
-     */
-    public object Select : FileSystemProvider.Select<Path>, FileSystemProvider.Serialization<Path> by Serialization {
         /**
          * Retrieves metadata for a given file or directory path.
          *
@@ -195,13 +188,7 @@ public object JVMFileSystemProvider {
          * @return `true` if the file or directory exists, `false` otherwise.
          */
         override suspend fun exists(path: Path): Boolean = path.exists()
-    }
 
-    /**
-     * Provides utility methods for reading file data and retrieving file-related metadata.
-     * Implements the `FileSystemProvider.Read` and delegates file serialization operations to the `Serialization` interface.
-     */
-    public object Read : FileSystemProvider.Read<Path>, FileSystemProvider.Serialization<Path> by Serialization {
         /**
          * Reads the contents of the file located at the specified path.
          *
@@ -248,123 +235,10 @@ public object JVMFileSystemProvider {
     }
 
     /**
-     * A read-only object implementing file system provider interfaces for handling file
-     * serialization, selection, and reading functionalities.
-     *
-     * This object combines the functionalities of `FileSystemProvider.ReadOnly`,
-     * `FileSystemProvider.Select`, and `FileSystemProvider.Read` using delegation.
-     * It provides operations for path serialization, structure navigation, and
-     * content reading in a read-only manner.
+     * This is the most comprehensive interface, offering complete filesystem operations using [Path] objects
+     * including reading, writing, and path manipulation.
      */
-    public object ReadOnly :
-        FileSystemProvider.ReadOnly<Path>,
-        FileSystemProvider.Select<Path> by Select,
-        FileSystemProvider.Read<Path> by Read {
-
-        /**
-         * Converts the given Path to its absolute path string representation.
-         *
-         * @param path the path to be converted to an absolute path string
-         * @return the absolute path string representation of the given path
-         */
-        override fun toAbsolutePathString(path: Path): String = Serialization.toAbsolutePathString(path)
-
-        /**
-         * Converts an absolute string representation of a file path into a normalized Path object.
-         *
-         * @param path The absolute string representation of the file path to convert.
-         * @return A normalized Path object corresponding to the given absolute string.
-         */
-        override fun fromAbsoluteString(path: String): Path = Serialization.fromAbsoluteString(path)
-
-        /**
-         * Resolves a given relative path string against a base path and returns the normalized path.
-         *
-         * @param base The base path to resolve the relative string against.
-         * @param path The relative path string to be resolved.
-         * @return The normalized absolute path obtained by resolving the relative path string against the base path.
-         */
-        override fun fromRelativeString(base: Path, path: String): Path = Serialization.fromRelativeString(base, path)
-
-        /**
-         * Retrieves the name of the given path.
-         *
-         * @param path the Path object from which the name will be extracted.
-         * @return the name of the provided path as a String.
-         */
-        override fun name(path: Path): String = Serialization.name(path)
-
-        /**
-         * Retrieves the file extension from the specified path using the serialization logic.
-         *
-         * @param path The path from which to extract the file extension.
-         * @return The file extension as a string.
-         */
-        override fun extension(path: Path): String = Serialization.extension(path)
-    }
-
-    /**
-     * Provides a combined object interface for performing both read and write file system operations.
-     *
-     * `ReadWrite` implements the `FileSystemProvider.ReadWrite` interface, extending both
-     * read-only and write capabilities. By delegating to `ReadOnly` and `Write` objects, it provides
-     * comprehensive file system operations including reading, writing, serialization, and path manipulation.
-     */
-    public object ReadWrite :
-        FileSystemProvider.ReadWrite<Path>,
-        FileSystemProvider.ReadOnly<Path> by ReadOnly,
-        FileSystemProvider.Write<Path> by Write {
-
-        /**
-         * Converts the specified [path] to its absolute path represented as a string.
-         *
-         * @param path the path to be converted into an absolute path string
-         * @return the absolute path as a string
-         */
-        override fun toAbsolutePathString(path: Path): String = Serialization.toAbsolutePathString(path)
-
-        /**
-         * Converts an absolute string path into a normalized Path object suitable for the current file system.
-         *
-         * @param path The absolute string path to be converted.
-         * @return A Path object representing the input absolute string, normalized for the current file system.
-         */
-        override fun fromAbsoluteString(path: String): Path = Serialization.fromAbsoluteString(path)
-
-        /**
-         * Resolves a relative path string against a given base path and normalizes the resulting path.
-         *
-         * @param base The base path against which the relative path string will be resolved.
-         * @param path The relative path string to be resolved.
-         * @return The resolved and normalized path as a `Path` object.
-         */
-        override fun fromRelativeString(base: Path, path: String): Path = Serialization.fromRelativeString(base, path)
-
-        /**
-         * Retrieves the name of the file or directory represented by the specified path.
-         *
-         * @param path the path from which the name should be extracted
-         * @return the name of the file or directory as a string
-         */
-        override fun name(path: Path): String = Serialization.name(path)
-
-        /**
-         * Gets the extension of the file represented by the given path.
-         *
-         * @param path The path of the file whose extension is to be determined.
-         * @return The file extension as a string.
-         */
-        override fun extension(path: Path): String = Serialization.extension(path)
-    }
-
-    /**
-     * Singleton object that provides implementations for creating, moving, writing, and deleting files or directories,
-     * while adhering to a serialization context. It also ensures compatibility with specific operating system constraints
-     * such as Windows reserved names.
-     * Implements the `FileSystemProvider.Write` interface with `Path` as the path type and delegates serialization functionalities
-     * to a `Serialization` implementation.
-     */
-    public object Write : FileSystemProvider.Write<Path>, FileSystemProvider.Serialization<Path> by Serialization {
+    public object ReadWrite : FileSystemProvider.ReadWrite<Path>, FileSystemProvider.ReadOnly<Path> by ReadOnly {
 
         /**
          * Contains a set of reserved file names in Windows operating systems.

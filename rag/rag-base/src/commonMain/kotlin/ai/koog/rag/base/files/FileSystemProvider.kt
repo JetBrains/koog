@@ -8,13 +8,11 @@ import kotlinx.io.Source
  * for interacting with a filesystem through file operations and content reading/writing.
  */
 public object FileSystemProvider {
-
     /**
-     * Handles serialization and deserialization of file paths.
+     * Provides operations for path serialization, structure navigation, and content reading
+     * in a read-only manner without modifying the filesystem.
      */
-    @Deprecated("For internal use only.")
-    public interface Serialization<Path> {
-
+    public interface ReadOnly<Path> {
         /**
          * Converts a [path] to its absolute path string representation.
          * This method works with the path structure
@@ -67,15 +65,7 @@ public object FileSystemProvider {
          * @return The extension of [path] or empty string if [path] doesn't have an extension.
          */
         public fun extension(path: Path): String
-    }
 
-    /**
-     * Provides operations for examining filesystem structure.
-     *
-     * @param Path The type representing file paths in the implementation.
-     */
-    @Deprecated("For internal use only.")
-    public interface Select<Path> : Serialization<Path> {
         /**
          * Retrieves metadata for a file or directory using a [path].
          *
@@ -125,15 +115,7 @@ public object FileSystemProvider {
          * @throws IOException if an I/O error occurs while checking [path] existence.
          */
         public suspend fun exists(path: Path): Boolean
-    }
 
-    /**
-     * Provides operations for reading file content.
-     *
-     * @param Path The type representing file paths in the implementation.
-     */
-    @Deprecated("For internal use only.")
-    public interface Read<Path> : Serialization<Path> {
         /**
          * Reads the content of a file at the specified [path].
          *
@@ -167,22 +149,10 @@ public object FileSystemProvider {
     }
 
     /**
-     * Provides a read-only interface that combines the functionalities of [FileSystemProvider.Serialization], [FileSystemProvider.Select],
-     * and [FileSystemProvider.Read].
-     *
-     * It provides operations for path serialization, structure navigation, and content reading
-     * in a read-only manner without modifying the filesystem.
+     * This is the most comprehensive interface, offering complete filesystem operations
+     * including reading, writing, and path manipulation.
      */
-    public interface ReadOnly<Path> : Serialization<Path>, Select<Path>, Read<Path>
-
-    /**
-     * Provides operations for creating, moving, writing, and deleting files or directories.
-     *
-     * This interface focuses on write operations and complements the read operations
-     * provided by other interfaces.
-     */
-    @Deprecated("For internal use only.")
-    public interface Write<Path> : Serialization<Path> {
+    public interface ReadWrite<Path> : ReadOnly<Path> {
         /**
          * Creates a new file or directory inside [parent] with specified [name] and [type].
          * Parent directories will be created if they don't exist.
@@ -242,12 +212,4 @@ public object FileSystemProvider {
          */
         public suspend fun delete(parent: Path, name: String)
     }
-
-    /**
-     * Provides a read-write interface that combines the functionalities of [FileSystemProvider.ReadOnly] and [FileSystemProvider.Write] for full filesystem access.
-     *
-     * This is the most comprehensive interface, offering complete filesystem operations
-     * including reading, writing, and path manipulation.
-     */
-    public interface ReadWrite<Path> : ReadOnly<Path>, Write<Path>
 }
