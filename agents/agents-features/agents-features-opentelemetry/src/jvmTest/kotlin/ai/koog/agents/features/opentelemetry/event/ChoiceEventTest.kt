@@ -24,6 +24,7 @@ class ChoiceEventTest {
         val choiceEvent = ChoiceEvent(
             provider = llmProvider,
             message = expectedMessage,
+            index = 0,
             verbose = false,
         )
 
@@ -44,6 +45,7 @@ class ChoiceEventTest {
         val choiceEvent = ChoiceEvent(
             provider = llmProvider,
             message = expectedMessage,
+            index = 0,
             verbose = true,
         )
 
@@ -67,6 +69,7 @@ class ChoiceEventTest {
         val choiceEvent = ChoiceEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
+            index = 0,
             verbose = false,
         )
 
@@ -86,6 +89,7 @@ class ChoiceEventTest {
         val choiceEvent = ChoiceEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
+            index = 0,
             verbose = false,
         )
 
@@ -106,6 +110,7 @@ class ChoiceEventTest {
         val choiceEvent = ChoiceEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
+            index = 0,
             verbose = false,
         )
 
@@ -125,6 +130,7 @@ class ChoiceEventTest {
         val choiceEvent = ChoiceEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
+            index = 0,
             verbose = true,
         )
 
@@ -148,6 +154,7 @@ class ChoiceEventTest {
         val choiceEvent = ChoiceEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
+            index = 0,
             verbose = true,
         )
 
@@ -177,6 +184,7 @@ class ChoiceEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             arguments = args,
+            index = 0,
             verbose = true,
         )
 
@@ -203,6 +211,7 @@ class ChoiceEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             arguments = args,
+            index = 0,
             verbose = false,
         )
 
@@ -224,6 +233,7 @@ class ChoiceEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             arguments = args,
+            index = 0,
             verbose = true,
         )
 
@@ -246,6 +256,7 @@ class ChoiceEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             arguments = args,
+            index = 0,
             verbose = false,
         )
 

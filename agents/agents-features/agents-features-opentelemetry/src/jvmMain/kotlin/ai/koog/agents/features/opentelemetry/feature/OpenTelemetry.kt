@@ -279,7 +279,6 @@ public class OpenTelemetry {
                     when (message) {
                         is Message.User -> UserMessageEvent(provider, message, verbose = config.isVerbose)
                         is Message.System -> SystemMessageEvent(provider, message, verbose = config.isVerbose)
-                        is Message.Assistant -> AssistantMessageEvent(provider, message, verbose = config.isVerbose)
                         is Message.Tool.Result -> {
                             ToolMessageEvent(
                                 provider = provider,
@@ -325,7 +324,7 @@ public class OpenTelemetry {
                         when (message) {
                             is Message.Assistant -> add(AssistantMessageEvent(provider, message, verbose = config.isVerbose))
                             is Message.Tool.Call -> add(
-                                ChoiceEvent(provider, message, arguments = message.contentJson, verbose = config.isVerbose)
+                                ChoiceEvent(provider, message, arguments = message.contentJson, index = 0, verbose = config.isVerbose)
                             )
                         }
                     }
