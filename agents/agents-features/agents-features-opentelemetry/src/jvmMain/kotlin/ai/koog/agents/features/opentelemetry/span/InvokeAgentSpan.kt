@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
@@ -12,10 +11,10 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class InvokeAgentSpan(
     parent: CreateAgentSpan,
-    private val provider: LLMProvider,
-    private val runId: String,
-    private val agentId: String,
-    private val strategyName: String,
+    provider: LLMProvider,
+    runId: String,
+    agentId: String,
+    strategyName: String,
 ) : GenAIAgentSpan(parent) {
 
     companion object {
@@ -61,20 +60,20 @@ internal class InvokeAgentSpan(
      * - gen_ai.usage.output_tokens (recommended)
      * - server.address (recommended)
      */
-    override val attributes: List<Attribute> = buildList {
+    init {
         // gen_ai.operation.name
-        add(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.INVOKE_AGENT))
+        addAttribute(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.INVOKE_AGENT))
 
         // gen_ai.system
-        add(CommonAttributes.System(provider))
+        addAttribute(CommonAttributes.System(provider))
 
         // gen_ai.agent.id
-        add(SpanAttributes.Agent.Id(agentId))
+        addAttribute(SpanAttributes.Agent.Id(agentId))
 
         // gen_ai.conversation.id
-        add(SpanAttributes.Conversation.Id(runId))
+        addAttribute(SpanAttributes.Conversation.Id(runId))
 
         // custom: strategy name
-        add(CustomAttribute("koog.agent.strategy.name", strategyName))
+        addAttribute(CustomAttribute("koog.agent.strategy.name", strategyName))
     }
 }

@@ -26,7 +26,7 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
     langfuseSecretKey: String? = null,
     timeout: Duration = 10.seconds,
 ) {
-    val url = langfuseUrl ?: System.getenv()["LANGFUSE_URL"] ?: "https://cloud.langfuse.com"
+    val url = langfuseUrl ?: System.getenv()["LANGFUSE_HOST"] ?: "https://cloud.langfuse.com"
 
     logger.debug { "Configured endpoint for Langfuse telemetry: $url" }
 
@@ -45,6 +45,8 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
             .addHeader("Authorization", "Basic $auth")
             .build()
     )
+
+    // TODO: Add span adapter for Langfuse
 }
 
 private val logger = KotlinLogging.logger {}

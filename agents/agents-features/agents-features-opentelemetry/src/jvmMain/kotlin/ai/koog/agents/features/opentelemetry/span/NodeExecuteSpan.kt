@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import io.opentelemetry.api.trace.SpanKind
@@ -12,8 +11,8 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class NodeExecuteSpan(
     parent: InvokeAgentSpan,
-    private val runId: String,
-    private val nodeName: String,
+    runId: String,
+    nodeName: String,
 ) : GenAIAgentSpan(parent) {
 
     companion object {
@@ -34,8 +33,8 @@ internal class NodeExecuteSpan(
      * Note: Node Execute Span is not defined in the Open Telemetry Semantic Convention.
      *       It is a custom span used to show a structure of Koog events
      */
-    override val attributes: List<Attribute> = buildList {
-        add(SpanAttributes.Conversation.Id(runId))
-        add(CustomAttribute("koog.node.name", nodeName))
+    init {
+        addAttribute(SpanAttributes.Conversation.Id(runId))
+        addAttribute(CustomAttribute("koog.node.name", nodeName))
     }
 }

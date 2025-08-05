@@ -2,6 +2,7 @@ package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
+import ai.koog.agents.features.opentelemetry.integrations.SpanAdapter
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
@@ -68,6 +69,8 @@ public class OpenTelemetryConfig : FeatureConfig() {
 
     private var _verbose: Boolean = false
 
+    private var _spanAdapter: SpanAdapter? = null
+
     /**
      * Indicates whether verbose telemetry data is enabled.
      *
@@ -121,6 +124,9 @@ public class OpenTelemetryConfig : FeatureConfig() {
      */
     public val serviceVersion: String
         get() = _serviceVersion
+
+    internal val spanAdapter: SpanAdapter?
+        get() = _spanAdapter
 
     /**
      * Sets the service information for the OpenTelemetry configuration.
@@ -204,6 +210,18 @@ public class OpenTelemetryConfig : FeatureConfig() {
      */
     public fun setSdk(sdk: OpenTelemetrySdk) {
         _sdk = sdk
+    }
+
+    /**
+     * Adds a custom span adapter for post-processing GenAI agent spans.
+     * The adapter can modify span data, add attributes/events, or perform other
+     * post-processing logic before spans are completed.
+     *
+     * @param adapter The ProcessSpanAdapter implementation that will handle
+     *                post-processing of GenAI agent spans
+     */
+    internal fun addSpanAdapter(adapter: SpanAdapter) {
+        _spanAdapter = adapter
     }
 
     //region Private Methods

@@ -9,9 +9,13 @@ import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
+import ai.koog.agents.features.opentelemetry.integrations.SpanAdapter
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
+import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.agents.utils.use
@@ -677,6 +681,7 @@ class OpenTelemetryTest {
             val agent = createAgent(
                 agentId = agentId,
                 strategy = strategy,
+                systemPrompt = systemPrompt,
                 promptId = promptId,
                 toolRegistry = toolRegistry,
                 promptExecutor = mockExecutor,
@@ -742,6 +747,9 @@ class OpenTelemetryTest {
                             "gen_ai.request.temperature" to temperature,
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                            ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                             ),
@@ -793,6 +801,9 @@ class OpenTelemetryTest {
                             "gen_ai.request.temperature" to temperature,
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                             ),
@@ -1096,6 +1107,89 @@ class OpenTelemetryTest {
             )
 
             assertSpans(expectedSpans, mockExporter.collectedSpans)
+        }
+    }
+
+    @Test
+    fun `test span adapter applies custom attribute to invoke agent span`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+
+            val userPrompt = "What's the weather in Paris?"
+            val agentId = "test-agent-id"
+            val promptId = "test-prompt-id"
+            val testClock = Clock.System
+            val model = OpenAIModels.Chat.GPT4o
+
+            val strategyName = "test-strategy"
+
+            val strategy = strategy(strategyName) {
+                val nodeSendInput by nodeLLMRequest("test-llm-call")
+
+                edge(nodeStart forwardTo nodeSendInput)
+                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val mockResponse = "Sunny"
+            val mockExecutor = getMockExecutor(clock = testClock) {
+                mockLLMAnswer(mockResponse) onRequestEquals userPrompt
+            }
+
+            // Custom SpanAdapter that adds a test attribute to each processed span
+            val customBeforeStartAttribute = CustomAttribute(key = "test.adapter.before.start.key", value = "test-value-before-start")
+            val customBeforeFinishAttribute = CustomAttribute(key = "test.adapter.before.finish.key", value = "test-value-before-finish")
+            val adapter = object : SpanAdapter() {
+                override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
+                    span.addAttribute(customBeforeStartAttribute)
+                }
+
+                override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
+                    span.addAttribute(customBeforeFinishAttribute)
+                }
+            }
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                promptId = promptId,
+                promptExecutor = mockExecutor,
+                model = model,
+                clock = testClock,
+            ) {
+                install(OpenTelemetry) {
+                    addSpanExporter(mockExporter)
+
+                    // Add custom span adapter
+                    addSpanAdapter(adapter)
+                }
+            }.use { agent ->
+                agent.run(userPrompt)
+            }
+
+            val collectedSpans = mockExporter.collectedSpans
+            assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
+
+            val actualInvokeAgentSpans = collectedSpans.filter { span -> span.name.startsWith("run.") }
+            assertEquals(1, actualInvokeAgentSpans.size, "Invoke agent span should be present")
+
+            val expectedInvokeAgentSpans = listOf(
+                mapOf(
+
+                    "run.${mockExporter.lastRunId}" to mapOf(
+                        "attributes" to mapOf(
+                            "koog.agent.strategy.name" to strategyName,
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            customBeforeStartAttribute.key to customBeforeStartAttribute.value,
+                            customBeforeFinishAttribute.key to customBeforeFinishAttribute.value,
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.operation.name" to SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id,
+                        ),
+                        "events" to emptyMap()
+                    )
+                )
+            )
+
+            assertSpans(expectedInvokeAgentSpans, actualInvokeAgentSpans)
         }
     }
 

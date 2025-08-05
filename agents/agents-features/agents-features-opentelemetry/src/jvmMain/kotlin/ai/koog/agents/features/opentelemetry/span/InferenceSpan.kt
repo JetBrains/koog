@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.prompt.llm.LLMProvider
@@ -12,10 +11,10 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class InferenceSpan(
     parent: NodeExecuteSpan,
-    private val provider: LLMProvider,
-    private val runId: String,
-    private val model: LLModel,
-    private val temperature: Double,
+    provider: LLMProvider,
+    runId: String,
+    model: LLModel,
+    temperature: Double,
     private val promptId: String,
 ) : GenAIAgentSpan(parent) {
 
@@ -59,20 +58,20 @@ internal class InferenceSpan(
      * - gen_ai.usage.output_tokens (recommended)
      * - server.address (recommended)
      */
-    override val attributes: List<Attribute> = buildList {
+    init {
         // gen_ai.operation.name
-        add(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CHAT))
+        addAttribute(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CHAT))
 
         // gen_ai.system
-        add(CommonAttributes.System(provider))
+        addAttribute(CommonAttributes.System(provider))
 
         // gen_ai.conversation.id
-        add(SpanAttributes.Conversation.Id(runId))
+        addAttribute(SpanAttributes.Conversation.Id(runId))
 
         // gen_ai.request.model
-        add(SpanAttributes.Request.Model(model))
+        addAttribute(SpanAttributes.Request.Model(model))
 
         // gen_ai.request.temperature
-        add(SpanAttributes.Request.Temperature(temperature))
+        addAttribute(SpanAttributes.Request.Temperature(temperature))
     }
 }

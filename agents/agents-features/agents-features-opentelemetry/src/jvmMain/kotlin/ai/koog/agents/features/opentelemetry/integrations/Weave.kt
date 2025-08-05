@@ -45,6 +45,8 @@ public fun OpenTelemetryConfig.addWeaveExporter(
             .addHeader("Authorization", "Basic $auth")
             .build()
     )
+
+    // TODO: Add span adapter for Langfuse
 }
 
-private val logger = KotlinLogging.logger {}
+private val logger = KotlinLogging.logger { }

@@ -118,7 +118,7 @@ class GenAIAgentSpanTest {
             )
         )
 
-        span.addEvents(events)
+        events.forEach { event -> span.addEvent(event) }
 
         // Verify events were added to the internal events set
         assertEquals(2, span.events.size)
@@ -138,11 +138,11 @@ class GenAIAgentSpanTest {
         )
 
         // Add the same event twice
-        span.addEvents(listOf(event))
-        span.addEvents(listOf(event))
+        span.addEvent(event)
+        span.addEvent(event)
 
-        // Verify the event was added only once
-        assertEquals(1, span.events.size)
+        // Verify that both event were added
+        assertEquals(2, span.events.size)
         assertTrue(span.events.contains(event))
     }
 
@@ -158,10 +158,45 @@ class GenAIAgentSpanTest {
             fields = listOf(EventBodyFields.Content("test content"))
         )
 
-        span.addEvents(listOf(event))
+        span.addEvent(event)
 
         // Verify the event was added
         assertEquals(1, span.events.size)
         assertTrue(span.events.contains(event))
+    }
+
+    @Test
+    fun `addAttributes(list) should add multiple attributes to span`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val attributes = listOf(
+            MockAttribute("stringKey", "stringValue"),
+            MockAttribute("numberKey", 123),
+            MockAttribute("booleanKey", true)
+        )
+
+        span.addAttributes(attributes)
+
+        assertEquals(3, span.attributes.size)
+        assertTrue(span.attributes.containsAll(attributes))
+    }
+
+    @Test
+    fun `addEvents(list) should add multiple events to span`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val events = listOf(
+            MockGenAIAgentEvent(name = "event1", attributes = listOf(MockAttribute("stringKey", "stringValue"))),
+            MockGenAIAgentEvent(name = "event2", attributes = listOf(MockAttribute("numberKey", 2)))
+        )
+
+        span.addEvents(events)
+
+        assertEquals(2, span.events.size)
+        assertTrue(span.events.containsAll(events))
     }
 }
