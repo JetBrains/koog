@@ -29,7 +29,8 @@ public object BedrockModels : LLModelDefinitions {
         LLMCapability.Tools,
         LLMCapability.ToolChoice,
         LLMCapability.Schema.JSON.Full,
-        LLMCapability.Vision.Image
+        LLMCapability.Vision.Image,
+        LLMCapability.Document
     )
 
     /**

@@ -306,7 +306,8 @@ public object OllamaModels {
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Simple,
                 LLMCapability.Tools,
-                LLMCapability.Vision.Image
+                LLMCapability.Vision.Image,
+                LLMCapability.Document
             ),
             contextLength = 16_384,
         )

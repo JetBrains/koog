@@ -108,6 +108,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -191,6 +192,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Full,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -219,6 +221,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Full,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -256,6 +259,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -284,6 +288,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -375,6 +380,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -402,6 +408,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -430,6 +437,7 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
