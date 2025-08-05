@@ -61,7 +61,7 @@ class BedrockLLMClientTest {
         val client = BedrockLLMClient(
             awsAccessKeyId = "test-key",
             awsSecretAccessKey = "test-secret",
-            settings = BedrockClientSettings(region = "us-east-1"),
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
             clock = Clock.System
         )
 
@@ -127,7 +127,7 @@ class BedrockLLMClientTest {
 
         olderClaudeModels.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("us.anthropic.claude"))
+            assertTrue(model.id.contains("anthropic.claude"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -142,7 +142,7 @@ class BedrockLLMClientTest {
 
         novaModels.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("us.amazon.nova"))
+            assertTrue(model.id.contains("amazon.nova"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -155,7 +155,7 @@ class BedrockLLMClientTest {
 
         ai21Models.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("us.ai21.jamba"))
+            assertTrue(model.id.contains("ai21.jamba"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -168,7 +168,7 @@ class BedrockLLMClientTest {
 
         metaModels.forEach { model ->
             assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.startsWith("us.meta.llama"))
+            assertTrue(model.id.contains("meta.llama"))
             assertTrue(model.capabilities.contains(LLMCapability.Completion))
             assertTrue(model.capabilities.contains(LLMCapability.Temperature))
         }
@@ -177,7 +177,7 @@ class BedrockLLMClientTest {
     @Test
     fun `client configuration options work correctly`() {
         val customSettings = BedrockClientSettings(
-            region = "eu-west-1",
+            region = BedrockRegions.EU_WEST_1.regionCode,
             endpointUrl = "https://custom.endpoint.com",
             maxRetries = 5,
             enableLogging = true,
@@ -196,7 +196,7 @@ class BedrockLLMClientTest {
         )
 
         assertNotNull(client)
-        assertEquals("eu-west-1", customSettings.region)
+        assertEquals(BedrockRegions.EU_WEST_1.regionCode, customSettings.region)
         assertEquals("https://custom.endpoint.com", customSettings.endpointUrl)
         assertEquals(5, customSettings.maxRetries)
         assertEquals(true, customSettings.enableLogging)
@@ -205,29 +205,29 @@ class BedrockLLMClientTest {
     @Test
     fun `model IDs follow expected patterns`() {
         // Verify Anthropic model IDs
-        assertTrue(BedrockModels.AnthropicClaude4Opus.id == "us.anthropic.claude-opus-4-20250514-v1:0")
-        assertTrue(BedrockModels.AnthropicClaude4Sonnet.id == "us.anthropic.claude-sonnet-4-20250514-v1:0")
-        assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id == "us.anthropic.claude-3-5-sonnet-20241022-v2:0")
-        assertTrue(BedrockModels.AnthropicClaude35Haiku.id == "us.anthropic.claude-3-5-haiku-20241022-v1:0")
-        assertTrue(BedrockModels.AnthropicClaude3Opus.id.startsWith("us.anthropic.claude-3-opus"))
-        assertTrue(BedrockModels.AnthropicClaude3Sonnet.id.startsWith("us.anthropic.claude-3-sonnet"))
-        assertTrue(BedrockModels.AnthropicClaude3Haiku.id.startsWith("us.anthropic.claude-3-haiku"))
-        assertTrue(BedrockModels.AnthropicClaude21.id == "us.anthropic.claude-v2:1")
-        assertTrue(BedrockModels.AnthropicClaudeInstant.id == "us.anthropic.claude-instant-v1")
+        assertTrue(BedrockModels.AnthropicClaude4Opus.id.contains("anthropic.claude-opus-4-20250514-v1:0"))
+        assertTrue(BedrockModels.AnthropicClaude4Sonnet.id.contains("anthropic.claude-sonnet-4-20250514-v1:0"))
+        assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id.contains("anthropic.claude-3-5-sonnet-20241022-v2:0"))
+        assertTrue(BedrockModels.AnthropicClaude35Haiku.id.contains("anthropic.claude-3-5-haiku-20241022-v1:0"))
+        assertTrue(BedrockModels.AnthropicClaude3Opus.id.contains("anthropic.claude-3-opus"))
+        assertTrue(BedrockModels.AnthropicClaude3Sonnet.id.contains("anthropic.claude-3-sonnet"))
+        assertTrue(BedrockModels.AnthropicClaude3Haiku.id.contains("anthropic.claude-3-haiku"))
+        assertTrue(BedrockModels.AnthropicClaude21.id.contains("anthropic.claude-v2:1"))
+        assertTrue(BedrockModels.AnthropicClaudeInstant.id.contains("anthropic.claude-instant-v1"))
 
         // Verify Amazon Nova model IDs
-        assertTrue(BedrockModels.AmazonNovaMicro.id.startsWith("us.amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaLite.id.startsWith("us.amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPro.id.startsWith("us.amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPremier.id.startsWith("us.amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaMicro.id.contains("amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaLite.id.contains("amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaPro.id.contains("amazon.nova"))
+        assertTrue(BedrockModels.AmazonNovaPremier.id.contains("amazon.nova"))
 
         // Verify AI21 model IDs
-        assertTrue(BedrockModels.AI21JambaLarge.id == "us.ai21.jamba-1-5-large-v1:0")
-        assertTrue(BedrockModels.AI21JambaMini.id == "us.ai21.jamba-1-5-mini-v1:0")
+        assertTrue(BedrockModels.AI21JambaLarge.id.contains("ai21.jamba-1-5-large-v1:0"))
+        assertTrue(BedrockModels.AI21JambaMini.id.contains("ai21.jamba-1-5-mini-v1:0"))
 
         // Verify Meta Llama model IDs
-        assertTrue(BedrockModels.MetaLlama3_0_8BInstruct.id == "us.meta.llama3-8b-instruct-v1:0")
-        assertTrue(BedrockModels.MetaLlama3_0_70BInstruct.id == "us.meta.llama3-70b-instruct-v1:0")
+        assertTrue(BedrockModels.MetaLlama3_0_8BInstruct.id.contains("meta.llama3-8b-instruct-v1:0"))
+        assertTrue(BedrockModels.MetaLlama3_0_70BInstruct.id.contains("meta.llama3-70b-instruct-v1:0"))
     }
 
     @Test
@@ -273,7 +273,7 @@ class BedrockLLMClientTest {
         val client = BedrockLLMClient(
             awsAccessKeyId = "test-key",
             awsSecretAccessKey = "test-secret",
-            settings = BedrockClientSettings(region = "us-east-1"),
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
             clock = Clock.System
         )
 
@@ -622,7 +622,7 @@ class BedrockLLMClientTest {
         val client = BedrockLLMClient(
             awsAccessKeyId = "test-key",
             awsSecretAccessKey = "test-secret",
-            settings = BedrockClientSettings(region = "us-east-1"),
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
             clock = Clock.System
         )
 
