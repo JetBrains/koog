@@ -1,6 +1,6 @@
 package ai.koog.rag.base.files
 
-import ai.koog.rag.base.files.filter.PathFilter
+import ai.koog.rag.base.files.filter.TraversalFilter
 import kotlinx.io.IOException
 import kotlinx.io.Sink
 import kotlinx.io.Source
@@ -10,7 +10,7 @@ import kotlinx.io.Source
  * only paths that are accepted by [filter] are visible and accessible.
  */
 public fun <Path> FileSystemProvider.ReadOnly<Path>.filter(
-    filter: PathFilter<Path>
+    filter: TraversalFilter<Path>
 ): FileSystemProvider.ReadOnly<Path> {
     return FilteredReadOnly(this, filter)
 }
@@ -20,16 +20,16 @@ public fun <Path> FileSystemProvider.ReadOnly<Path>.filter(
  * only paths that are accepted by [filter] are visible and accessible.
  */
 public fun <Path> FileSystemProvider.ReadWrite<Path>.filter(
-    filter: PathFilter<Path>
+    filter: TraversalFilter<Path>
 ): FileSystemProvider.ReadWrite<Path> {
     return FilteredReadWrite(this, filter)
 }
 
 internal open class FilteredReadOnly<P>(
     private val fs: FileSystemProvider.ReadOnly<P>,
-    private val filter: PathFilter<P>
+    private val filter: TraversalFilter<P>
 ) : FileSystemProvider.ReadOnly<P> {
-    private fun requireAllowed(path: P) {
+    private suspend fun requireAllowed(path: P) {
         require(filter.show(path, fs)) { "Path $path is hidden by filter" }
     }
 
@@ -88,9 +88,9 @@ internal open class FilteredReadOnly<P>(
 
 internal class FilteredReadWrite<P>(
     private val fs: FileSystemProvider.ReadWrite<P>,
-    private val filter: PathFilter<P>
+    private val filter: TraversalFilter<P>
 ) : FileSystemProvider.ReadWrite<P>, FilteredReadOnly<P>(fs, filter) {
-    private fun ensureAllowed(path: P) {
+    private suspend fun ensureAllowed(path: P) {
         if (filter.hide(path, fs)) {
             throw IOException("Path $path is not allowed by filter")
         }
