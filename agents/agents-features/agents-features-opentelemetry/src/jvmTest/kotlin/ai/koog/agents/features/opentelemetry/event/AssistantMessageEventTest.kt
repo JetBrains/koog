@@ -5,6 +5,8 @@ import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -134,6 +136,97 @@ class AssistantMessageEventTest {
     }
 
     //endregion Body Fields
+
+    //region Arguments Tests
+
+    @Test
+    fun `test assistant message verbose true with arguments`() {
+        val expectedContent = "Test message"
+        val expectedMessage = createTestAssistantMessage(expectedContent)
+        val args = buildJsonObject {
+            put("string", "value")
+            put("integer", 42)
+        }
+
+        val assistantMessageEvent = AssistantMessageEvent(
+            provider = MockLLMProvider(),
+            message = expectedMessage,
+            arguments = args,
+            verbose = true,
+        )
+
+        val expectedBodyFields = listOf(
+            EventBodyFields.Content(content = expectedContent),
+            EventBodyFields.Arguments(args)
+        )
+
+        assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
+        assertContentEquals(expectedBodyFields, assistantMessageEvent.bodyFields)
+    }
+
+    @Test
+    fun `test assistant message verbose false with arguments`() {
+        val expectedContent = "Test message"
+        val expectedMessage = createTestAssistantMessage(expectedContent)
+        val args = buildJsonObject { put("x", "y") }
+
+        val assistantMessageEvent = AssistantMessageEvent(
+            provider = MockLLMProvider(),
+            message = expectedMessage,
+            arguments = args,
+            verbose = false,
+        )
+
+        assertTrue(
+            assistantMessageEvent.bodyFields.isEmpty(),
+            "No body fields should be added with verbose set to 'false' even if arguments are provided"
+        )
+    }
+
+    @Test
+    fun `test tool call message verbose true ignores arguments`() {
+        val expectedContent = "Test message"
+        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
+        val args = buildJsonObject { put("ignored", true) }
+
+        val assistantMessageEvent = AssistantMessageEvent(
+            provider = MockLLMProvider(),
+            message = expectedMessage,
+            arguments = args,
+            verbose = true,
+        )
+
+        val expectedBodyFields = listOf(
+            EventBodyFields.Role(role = Message.Role.Tool),
+            EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
+        )
+
+        assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
+        assertContentEquals(expectedBodyFields, assistantMessageEvent.bodyFields)
+    }
+
+    @Test
+    fun `test tool call message verbose false ignores arguments`() {
+        val expectedContent = "Test message"
+        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
+        val args = buildJsonObject { put("ignored", true) }
+
+        val assistantMessageEvent = AssistantMessageEvent(
+            provider = MockLLMProvider(),
+            message = expectedMessage,
+            arguments = args,
+            verbose = false,
+        )
+
+        val expectedBodyFields = listOf(
+            EventBodyFields.Role(role = Message.Role.Tool)
+        )
+
+        assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
+        assertContentEquals(expectedBodyFields, assistantMessageEvent.bodyFields)
+    }
+
+    //endregion Arguments Tests
 
     //region Private Methods
 

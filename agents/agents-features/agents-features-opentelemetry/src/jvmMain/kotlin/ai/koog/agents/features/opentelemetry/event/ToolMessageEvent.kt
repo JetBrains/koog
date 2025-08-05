@@ -5,7 +5,7 @@ import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.prompt.llm.LLMProvider
 
 internal class ToolMessageEvent(
-    private val provider: LLMProvider,
+    provider: LLMProvider,
     private val toolCallId: String?,
     private val content: String,
     override val verbose: Boolean = false

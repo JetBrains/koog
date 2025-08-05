@@ -4,10 +4,12 @@ import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import kotlinx.serialization.json.JsonObject
 
-internal data class AssistantMessageEvent(
-    private val provider: LLMProvider,
+internal class AssistantMessageEvent(
+    provider: LLMProvider,
     private val message: Message.Response,
+    private val arguments: JsonObject? = null,
     override val verbose: Boolean = false
 ) : GenAIAgentEvent {
 
@@ -26,6 +28,7 @@ internal data class AssistantMessageEvent(
             is Message.Assistant -> {
                 if (verbose) {
                     add(EventBodyFields.Content(content = message.content))
+                    arguments?.let { add(EventBodyFields.Arguments(it)) }
                 }
             }
 

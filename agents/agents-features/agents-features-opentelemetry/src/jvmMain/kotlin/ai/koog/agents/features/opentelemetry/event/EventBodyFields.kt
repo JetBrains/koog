@@ -1,5 +1,7 @@
 package ai.koog.agents.features.opentelemetry.event
 
+import kotlinx.serialization.json.JsonObject
+
 internal object EventBodyFields {
 
     data class ToolCalls(
@@ -23,6 +25,11 @@ internal object EventBodyFields {
             }
     }
 
+    data class Arguments(private val arguments: JsonObject) : EventBodyField() {
+        override val key: String = "arguments"
+        override val value: String = arguments.toString()
+    }
+
     data class Content(private val content: String) : EventBodyField() {
         override val key: String = "content"
         override val value: String = content
@@ -43,8 +50,11 @@ internal object EventBodyFields {
         override val value: String = reason
     }
 
-    data class Message(private val role: ai.koog.prompt.message.Message.Role?, private val content: String) :
-        EventBodyField() {
+    data class Message(
+        private val role: ai.koog.prompt.message.Message.Role?,
+        private val content: String
+    ) : EventBodyField() {
+
         override val key: String = "message"
         override val value: Map<String, String> = buildMap {
             role?.let { role -> put("role", role.name.lowercase()) }

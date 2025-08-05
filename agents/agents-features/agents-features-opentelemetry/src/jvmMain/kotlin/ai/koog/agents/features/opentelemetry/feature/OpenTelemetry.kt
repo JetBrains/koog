@@ -305,7 +305,9 @@ public class OpenTelemetry {
                     eventContext.responses.map { message ->
                         when (message) {
                             is Message.Assistant -> add(AssistantMessageEvent(provider, message, verbose = config.isVerbose))
-                            is Message.Tool.Call -> add(ChoiceEvent(provider, message, verbose = config.isVerbose))
+                            is Message.Tool.Call -> add(
+                                ChoiceEvent(provider, message, arguments = message.contentJson, verbose = config.isVerbose)
+                            )
                         }
                     }
 
