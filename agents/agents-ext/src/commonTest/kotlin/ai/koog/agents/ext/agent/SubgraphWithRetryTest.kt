@@ -12,11 +12,11 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
-import kotlin.also
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
@@ -440,8 +440,11 @@ class SubgraphWithRetryTest {
         val testStrategy = strategy("test-strategy") {
             val retrySubgraph by subgraphWithRetry(
                 condition = { result ->
-                    if (result == SUCCESS) ConditionResult.Approve
-                    else ConditionResult.Reject("Retry ${++retries}")
+                    if (result == SUCCESS) {
+                        ConditionResult.Approve
+                    } else {
+                        ConditionResult.Reject("Retry ${++retries}")
+                    }
                 },
                 conditionDescription = "Condition description",
                 maxRetries = numRetries,
