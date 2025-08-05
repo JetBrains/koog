@@ -49,6 +49,17 @@ Sessions implement the `AutoCloseable` interface, ensuring they are properly cle
 
 Sessions are created using extension functions on the `AIAgentLLMContext` class:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 // Creating a write session
 llm.writeSession {
@@ -60,6 +71,7 @@ llm.readSession {
     // Session code here
 }
 ```
+<!--- KNIT example-sessions-01.kt -->
 
 These functions take a lambda block that runs within the context of the session. The session is automatically closed
 when the block completes.
@@ -78,15 +90,40 @@ This ensures that the conversation history is not corrupted by concurrent modifi
 
 Within a session, you can access the prompt and tools:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.readSession {
     val messageCount = prompt.messages.size
     val availableTools = tools.map { it.name }
 }
 ```
+<!--- KNIT example-sessions-02.kt -->
 
 In a write session, you can also modify these properties:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.tools.ToolDescriptor
+
+val newTools = listOf<ToolDescriptor>()
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     // Modify the prompt
@@ -98,6 +135,8 @@ llm.writeSession {
     tools = newTools
 }
 ```
+<!--- KNIT example-sessions-03.kt -->
+
 For more information, see the detailed API reference for [AIAgentLLMReadSession](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.session/-a-i-agent-l-l-m-read-session/index.html) and [AIAgentLLMWriteSession](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.agent.session/-a-i-agent-l-l-m-write-session/index.html).
 
 ## Making LLM requests
@@ -120,6 +159,17 @@ The most common methods for making LLM requests are:
 
 Example:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     // Make a request with tools enabled
@@ -132,6 +182,7 @@ llm.writeSession {
     val responses = requestLLMMultiple()
 }
 ```
+<!--- KNIT example-sessions-04.kt -->
 
 ### How requests work
 
@@ -148,6 +199,17 @@ until a response is received.
 When making requests with tools enabled, the LLM may respond with a tool call instead of a text response. The request
 methods handle this transparently:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.prompt.message.Message
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     val response = requestLLM()
@@ -160,6 +222,7 @@ llm.writeSession {
     }
 }
 ```
+<!--- KNIT example-sessions-05.kt -->
 
 In practice, you typically do not need to check the response type manually, as the agent graph handles this routing
 automatically.
@@ -176,6 +239,21 @@ For more advanced use cases, the platform provides methods for structured and st
 
 Example:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.example.exampleParallelNodeExecution07.JokeRating
+import ai.koog.prompt.structure.json.JsonStructuredData
+
+val myStructure = JsonStructuredData.createJsonStructure<JokeRating>()
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     // Make a structured request
@@ -188,6 +266,7 @@ llm.writeSession {
     }
 }
 ```
+<!--- KNIT example-sessions-06.kt -->
 
 ## Managing conversation history
 
@@ -195,6 +274,26 @@ llm.writeSession {
 
 In a write session, you can update the prompt (conversation history) using the `updatePrompt` method:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
+import kotlinx.datetime.Clock
+
+val myToolResult = Message.Tool.Result(
+    id = "",
+    tool = "",
+    content = "",
+    metaInfo = RequestMetaInfo(Clock.System.now())
+)
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     updatePrompt {
@@ -214,9 +313,23 @@ llm.writeSession {
     }
 }
 ```
+<!--- KNIT example-sessions-07.kt -->
 
 You can also completely rewrite the prompt using the `rewritePrompt` method:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.prompt.message.Message
+
+val filteredMessages = emptyList<Message>()
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     rewritePrompt { oldPrompt ->
@@ -225,11 +338,23 @@ llm.writeSession {
     }
 }
 ```
+<!--- KNIT example-sessions-08.kt -->
 
 ### Automatic history update on response
 
 When you make an LLM request in a write session, the response is automatically added to the conversation history:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     // Add a user message
@@ -243,6 +368,7 @@ llm.writeSession {
     // The prompt now includes both the user message and the model's response
 }
 ```
+<!--- KNIT example-sessions-09.kt -->
 
 This automatic history update is the key feature of write sessions, ensuring that the conversation flows naturally.
 
@@ -251,12 +377,25 @@ This automatic history update is the key feature of write sessions, ensuring tha
 For long-running conversations, the history can grow large and consume a lot of tokens. The platform provides methods
 for compressing history:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     // Compress the history using a TLDR approach
     replaceHistoryWithTLDR(HistoryCompressionStrategy.WholeHistory, preserveMemory = true)
 }
 ```
+<!--- KNIT example-sessions-10.kt -->
 
 You can also use the `nodeLLMCompressHistory` node in a strategy graph to compress history at specific points.
 
@@ -278,6 +417,23 @@ Write sessions provide several methods for calling tools:
 
 Example:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.ext.tool.AskUser
+
+val myTool = AskUser
+val myArgs = AskUser.Args("this is a string")
+
+typealias MyTool = AskUser
+
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     // Call a tool by reference
@@ -293,11 +449,29 @@ llm.writeSession {
     val rawResult = callToolRaw("myToolName", myArgs)
 }
 ```
+<!--- KNIT example-sessions-11.kt -->
 
 ### Parallel tool runs
 
 To run multiple tools in parallel, write sessions provide extension functions on `Flow`:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.ext.tool.AskUser
+import kotlinx.coroutines.flow.flow
+
+typealias MyTool = AskUser
+
+val data = ""
+fun parseDataToArgs(data: String) = flow { emit(AskUser.Args(data)) }
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     // Run tools in parallel
@@ -311,6 +485,7 @@ llm.writeSession {
     }
 }
 ```
+<!--- KNIT example-sessions-12.kt -->
 
 This is useful for processing large amounts of data efficiently.
 
@@ -350,11 +525,24 @@ block has completed. Make sure all session operations are performed within the s
 
 If your history becomes too large and consumes too many tokens, use history compression techniques:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
 ```kotlin
 llm.writeSession {
     replaceHistoryWithTLDR(HistoryCompressionStrategy.FromLastNMessages(10), preserveMemory = true)
 }
 ```
+<!--- KNIT example-sessions-13.kt -->
 
 For more information, see [History compression](history-compression.md)
 

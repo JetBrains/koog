@@ -12,6 +12,10 @@ The Prompt API uses Kotlin DSL to create prompts. It supports the following type
 
 Here's an example of a simple prompt:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.params.LLMParams
+-->
 ```kotlin
 val prompt = prompt("prompt_name", LLMParams()) {
     // Add a system message to set the context
@@ -27,17 +31,37 @@ val prompt = prompt("prompt_name", LLMParams()) {
     user("What are its key features?")
 }
 ```
+<!--- KNIT example-prompt-api-01.kt -->
 
 ## Execute a prompt
 
 To execute a prompt with a specific LLM, you need to the following:
 
 1. Create a corresponding LLM client that handles the connection between your application and LLM providers. For example:
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+const val apiKey = "apikey"
+-->
 ```kotlin
 // Create an OpenAI client
 val client = OpenAILLMClient(apiKey)
 ```
+<!--- KNIT example-prompt-api-02.kt -->
+
 2. Call the `execute` method with the prompt and LLM as arguments.
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi01.prompt
+import ai.koog.agents.example.examplePromptApi02.client
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+    }
+}
+-->
 ```kotlin
 // Execute the prompt
 val response = client.execute(
@@ -45,6 +69,8 @@ val response = client.execute(
     model = OpenAIModels.Chat.GPT4o  // You can choose different models
 )
 ```
+<!--- KNIT example-prompt-api-03.kt -->
+
 
 The following LLM clients are available:
 
@@ -53,36 +79,203 @@ The following LLM clients are available:
 * [GoogleLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-google-client/ai.koog.prompt.executor.clients.google/-google-l-l-m-client/index.html)
 * [OpenRouterLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client/ai.koog.prompt.executor.clients.openrouter/-open-router-l-l-m-client/index.html)
 * [OllamaClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-ollama-client/ai.koog.prompt.executor.ollama.client/-ollama-client/index.html)
+* [BedrockLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-bedrock-client/ai.koog.prompt.executor.clients.bedrock/-bedrock-l-l-m-client/index.html) (JVM only)
 
 
 Here's a simple example of using the Prompt API:
 
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.params.LLMParams
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
+
 fun main() {
-    // Set up the OpenAI client with your API key
-    val token = System.getenv("OPENAI_API_KEY")
-    val client = OpenAILLMClient(token)
+    runBlocking {
+        // Set up the OpenAI client with your API key
+        val token = System.getenv("OPENAI_API_KEY")
+        val client = OpenAILLMClient(token)
 
-    // Create a prompt
-    val prompt = prompt("prompt_name", LLMParams()) {
-        // Add a system message to set the context
-        system("You are a helpful assistant.")
+        // Create a prompt
+        val prompt = prompt("prompt_name", LLMParams()) {
+            // Add a system message to set the context
+            system("You are a helpful assistant.")
 
-        // Add a user message
-        user("Tell me about Kotlin")
+            // Add a user message
+            user("Tell me about Kotlin")
 
-        // You can also add assistant messages for few-shot examples
-        assistant("Kotlin is a modern programming language...")
+            // You can also add assistant messages for few-shot examples
+            assistant("Kotlin is a modern programming language...")
 
-        // Add another user message
-        user("What are its key features?")
+            // Add another user message
+            user("What are its key features?")
+        }
+
+        // Execute the prompt and get the response
+        val response = client.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
+        println(response)
     }
-
-    // Execute the prompt and get the response
-    val response = client.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
-    println(response)
 }
 ```
+<!--- KNIT example-prompt-api-04.kt -->
+
+## Multimodal inputs
+
+In addition to providing text messages within prompts, Koog also lets you send images, audio, video, and files to LLMs along with `user` messages. As with standard text-only prompts, you also add media to the prompt using the DSL structure for prompt construction.
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import kotlinx.io.files.Path
+-->
+```kotlin
+val prompt = prompt("multimodal_input") {
+    system("You are a helpful assistant.")
+
+    user {
+        +"Describe these images"
+
+        attachments {
+            image("https://example.com/test.png")
+            image(Path("/User/koog/image.png"))
+        }
+    }
+}
+```
+<!--- KNIT example-prompt-api-05.kt -->
+
+### Textual prompt content
+
+To accommodate for the support for various attachment types and create a clear distinction between text and file inputs in a prompt, you put text messages in a dedicated `content` parameter within a user prompt. 
+To add file inputs, provide them as a list within the `attachments` parameter. 
+
+The general format of a user message that includes a text message and a list of attachments is as follows:
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+
+val prompt = prompt("prompt") {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+user(
+    content = "This is the user message",
+    attachments = listOf(
+        // Add attachments
+    )
+)
+```
+<!--- KNIT example-prompt-api-06.kt -->
+
+### File attachments
+
+To include an attachment, provide the file in the `attachments` parameter, following the format below:
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
+
+val prompt = prompt("prompt") {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+user(
+    content = "Describe this image",
+    attachments = listOf(
+        Attachment.Image(
+            content = AttachmentContent.URL("https://example.com/capture.png"),
+            format = "png",
+            mimeType = "image/png",
+            fileName = "capture.png"
+        )
+    )
+)
+```
+<!--- KNIT example-prompt-api-07.kt -->
+
+The `attachments` parameter takes a list of file inputs, where each item is an instance of one of the following classes:
+
+- `Attachment.Image`: image attachments, such as `jpg` or `png` files.
+- `Attachment.Audio`: audio attachments, such as `mp3` or `wav` files.
+- `Attachment.Video`: video attachments, such as `mpg` or `avi` files.
+- `Attachment.File`: file attachments, such as `pdf` or `txt` files.
+
+Each of the classes above takes the following parameters:
+
+| Name       | Data type                               | Required                   | Description                                                                                                 |
+|------------|-----------------------------------------|----------------------------|-------------------------------------------------------------------------------------------------------------|
+| `content`  | [AttachmentContent](#attachmentcontent) | Yes                        | The source of the provided file content. For more information, see [AttachmentContent](#attachmentcontent). |
+| `format`   | String                                  | Yes                        | The format of the provided file. For example, `png`.                                                        |
+| `mimeType` | String                                  | Only for `Attachment.File` | The MIME Type of the provided file. For example, `image/png`.                                               |
+| `fileName` | String                                  | No                         | The name of the provided file including the extension. For example, `screenshot.png`.                       |
+
+#### AttachmentContent
+
+`AttachmentContent` defines the type and source of content that is provided as an input to the LLM. The following 
+classes are supported:
+
+`AttachmentContent.URL(val url: String)`
+
+Provides file content from the specified URL. Takes the following parameter:
+
+| Name   | Data type | Required | Description                      |
+|--------|-----------|----------|----------------------------------|
+| `url`  | String    | Yes      | The URL of the provided content. |
+
+`AttachmentContent.Binary.Bytes(val data: ByteArray)`
+
+Provides file content as a byte array. Takes the following parameter:
+
+| Name   | Data type | Required | Description                                |
+|--------|-----------|----------|--------------------------------------------|
+| `data` | ByteArray | Yes      | The file content provided as a byte array. |
+
+`AttachmentContent.Binary.Base64(val base64: String)`
+
+Provides file content encoded as a Base64 string. Takes the following parameter:
+
+| Name     | Data type | Required | Description                             |
+|----------|-----------|----------|-----------------------------------------|
+| `base64` | String    | Yes      | The Base64 string containing file data. |
+
+`AttachmentContent.PlainText(val text: String)`
+
+_Applies only if the attachment type is `Attachment.File`_. Provides content from a plain text file (such as the `text/plain` MIME type). Takes the following parameter:
+
+| Name   | Data type | Required | Description              |
+|--------|-----------|----------|--------------------------|
+| `text` | String    | Yes      | The content of the file. |
+
+### Mixed attachment content
+
+In addition to providing different types of attachments in separate prompts or messages, you can also provide multiple and mixed types of attachments in a single `user` message, as shown below:
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import kotlinx.io.files.Path
+-->
+```kotlin
+val prompt = prompt("mixed_content") {
+    system("You are a helpful assistant.")
+
+    user {
+        +"Compare the image with the document content."
+
+        attachments {
+            image(Path("/User/koog/page.png"))
+            binaryFile(Path("/User/koog/page.pdf"), "application/pdf")
+        }
+    }
+}
+```
+<!--- KNIT example-prompt-api-08.kt -->
 
 ## Prompt executors
 
@@ -109,11 +302,31 @@ To create a prompt executor for a specific LLM provider, use the corresponding f
 For example, to create the OpenAI prompt executor, you need to call the `simpleOpenAIExecutor` function and provide it with the API key required for authentication with the OpenAI service:
 
 1. Create a prompt executor:
+<!--- INCLUDE
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+const val apiToken = "YOUR_API_TOKEN"
+-->
 ```kotlin
 // Create an OpenAI executor
 val promptExecutor = simpleOpenAIExecutor(apiToken)
 ```
+<!--- KNIT example-prompt-api-09.kt -->
+
 2. Execute the prompt with a specific LLM:
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi08.prompt
+import ai.koog.agents.example.examplePromptApi09.promptExecutor
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+    }
+}
+-->
 ```kotlin
 // Execute a prompt
 val response = promptExecutor.execute(
@@ -121,25 +334,58 @@ val response = promptExecutor.execute(
     model = OpenAIModels.Chat.GPT4o
 )
 ```
+<!--- KNIT example-prompt-api-10.kt -->
 
 ### Create a multi-provider executor
 
 To create a prompt executor that works with multiple LLM providers, do the following:
 
 1. Configure clients for the required LLM providers with the corresponding API keys. For example:
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+-->
 ```kotlin
 val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
 val anthropicClient = AnthropicLLMClient(System.getenv("ANTHROPIC_KEY"))
 val googleClient = GoogleLLMClient(System.getenv("GOOGLE_KEY"))
 ```
+<!--- KNIT example-prompt-api-11.kt -->
+
 2. Pass the configured clients to the `DefaultMultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi11.anthropicClient
+import ai.koog.agents.example.examplePromptApi11.googleClient
+import ai.koog.agents.example.examplePromptApi11.openAIClient
+import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+-->
 ```kotlin
 val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 ```
+<!--- KNIT example-prompt-api-12.kt -->
+
 3. Execute the prompt with a specific LLM:
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi08.prompt
+import ai.koog.agents.example.examplePromptApi12.multiExecutor
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.PromptExecutorExt.execute
+import kotlinx.coroutines.runBlocking
+
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+    }
+}
+-->
 ```kotlin
 val response = multiExecutor.execute(
     prompt = prompt,
     model = OpenAIModels.Chat.GPT4o
 )
 ```
+<!--- KNIT example-prompt-api-13.kt -->
+

@@ -1,0 +1,21 @@
+[versions]
+koog = "0.3.0"
+logback = "1.5.13"
+kotlinx-serialization = "1.8.1"
+kotlinx-coroutines = "1.10.2"
+knit = "0.5.0"
+kotlin = "2.1.20"
+
+[libraries]
+koog = { module = "ai.koog:koog-agents", version.ref = "koog" }
+koog-test = { module = "ai.koog:agents-test", version.ref = "koog" }
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
+opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
+
+[plugins]
+knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

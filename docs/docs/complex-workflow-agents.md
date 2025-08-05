@@ -1,6 +1,7 @@
 # Complex workflow agents
 
-In addition to single-run agents, the `AIAgent` class lets you build agents that handle complex workflows by defining custom strategies, tools, and configurations.
+In addition to single-run agents, the `AIAgent` class lets you build agents that handle complex workflows by defining 
+custom strategies, tools, configurations, and custom input/output types.
 
 The process of creating and configuring such an agent typically includes the following steps:
 
@@ -42,26 +43,50 @@ To learn more, see [Prompt executors](prompt-api.md#prompt-executors).
 
 For example, to provide the OpenAI prompt executor, you need to call the `simpleOpenAIExecutor` function and provide it with the API key required for authentication with the OpenAI service:
 
+<!--- INCLUDE
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+
+const val token = ""
+-->
 ```kotlin
 val promptExecutor = simpleOpenAIExecutor(token)
 ```
+<!--- KNIT example-complex-workflow-agents-01.kt -->
 
 To create a prompt executor that works with multiple LLM providers, do the following:
 
 1. Configure clients for the required LLM providers with the corresponding API keys. For example:
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+-->
 ```kotlin
 val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
 val anthropicClient = AnthropicLLMClient(System.getenv("ANTHROPIC_KEY"))
 val googleClient = GoogleLLMClient(System.getenv("GOOGLE_KEY"))
 ```
+<!--- KNIT example-complex-workflow-agents-02.kt -->
 2. Pass the configured clients to the `DefaultMultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
+<!--- INCLUDE
+import ai.koog.agents.example.exampleComplexWorkflowAgents02.anthropicClient
+import ai.koog.agents.example.exampleComplexWorkflowAgents02.googleClient
+import ai.koog.agents.example.exampleComplexWorkflowAgents02.openAIClient
+import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+-->
 ```kotlin
 val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 ```
+<!--- KNIT example-complex-workflow-agents-03.kt -->
 
 ### 3. Define a strategy
 
-A strategy defines the workflow of your agent by using nodes and edges.
+A strategy defines the workflow of your agent by using nodes and edges. It can have arbitrary input and output types, 
+which can be specified in `strategy` function generic parameters. These will be input/output types of the `AIAgent` as well.
+Default type for both input and output is `String`.
+
+!!! tip
+    To learn more about strategies, see [Custom strategy graphs](custom-strategy-graphs.md)
 
 #### 3.1. Understand nodes and edges
 
@@ -69,6 +94,18 @@ Nodes and edges are the building blocks of the strategy.
 
 Nodes represent processing steps in your agent strategy.
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+class InputType
+
+class OutputType
+
+val transformedOutput = OutputType()
+val strategy = strategy<InputType, OutputType>("Simple calculator") {
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 val processNode by node<InputType, OutputType> { input ->
     // Process the input and return an output
@@ -77,11 +114,37 @@ val processNode by node<InputType, OutputType> { input ->
     transformedOutput
 }
 ```
+<!--- KNIT example-complex-workflow-agents-04.kt -->
 !!! tip
     There are also pre-defined nodes that you can use in your agent strategy. To learn more, see [Predefined nodes and components](nodes-and-components.md).
 
 Edges define the connections between nodes.
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+
+const val transformedOutput = "transformed-output"
+
+val strategy = strategy<String, String>("Simple calculator") {
+
+    val sourceNode by node<String, String> { input ->
+        // Process the input and return an output
+        // You can use llm.writeSession to interact with the LLM
+        // You can call tools using callTool, callToolRaw, etc.
+        transformedOutput
+    }
+
+    val targetNode by node<String, String> { input ->
+        // Process the input and return an output
+        // You can use llm.writeSession to interact with the LLM
+        // You can call tools using callTool, callToolRaw, etc.
+        transformedOutput
+    }
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 // Basic edge
 edge(sourceNode forwardTo targetNode)
@@ -101,10 +164,16 @@ edge(sourceNode forwardTo targetNode transformed { output ->
 // Combined condition and transformation
 edge(sourceNode forwardTo targetNode onCondition { it.isNotEmpty() } transformed { it.uppercase() })
 ```
+<!--- KNIT example-complex-workflow-agents-05.kt -->
 #### 3.2. Implement the strategy
 
 To implement the agent strategy, call the `strategy` function and define nodes and edges. For example:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.*
+-->
 ```kotlin
 val agentStrategy = strategy("Simple calculator") {
     // Define nodes for the strategy
@@ -140,6 +209,7 @@ val agentStrategy = strategy("Simple calculator") {
     )
 }
 ```
+<!--- KNIT example-complex-workflow-agents-06.kt -->
 !!! tip
     The `strategy` function lets you define multiple subgraphs, each containing its own set of nodes and edges.
     This approach offers more flexibility and functionality compared to using simplified strategy builders.
@@ -148,7 +218,9 @@ val agentStrategy = strategy("Simple calculator") {
 ### 4. Configure the agent
 
 Define agent behavior with a configuration:
-
+<!--- INCLUDE
+import ai.koog.agents.core.agent.config.AIAgentConfig
+-->
 ```kotlin
 val agentConfig = AIAgentConfig.withSystemPrompt(
     prompt = """
@@ -161,9 +233,14 @@ val agentConfig = AIAgentConfig.withSystemPrompt(
         """.trimIndent()
 )
 ```
+<!--- KNIT example-complex-workflow-agents-07.kt -->
 
 For more advanced configuration, you can specify which LLM the agent will use and set the maximum number of iterations the agent can perform to respond:
-
+<!--- INCLUDE
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+-->
 ```kotlin
 val agentConfig = AIAgentConfig(
     prompt = Prompt.build("simple-calculator") {
@@ -182,13 +259,20 @@ val agentConfig = AIAgentConfig(
     maxAgentIterations = 10
 )
 ```
+<!--- KNIT example-complex-workflow-agents-08.kt -->
 
 ### 5. Implement tools and set up a tool registry
 
 Tools let your agent perform specific tasks.
 To make a tool available for the agent, add it to a tool registry.
 For example:
-
+<!--- INCLUDE
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
+import ai.koog.agents.core.tools.reflect.tools
+-->
 ```kotlin
 // Implement a simple calculator tool that can add two numbers
 @LLMDescription("Tools for performing basic arithmetic operations")
@@ -212,6 +296,7 @@ val toolRegistry = ToolRegistry {
     tools(CalculatorTools())
 }
 ```
+<!--- KNIT example-complex-workflow-agents-09.kt -->
 
 To learn more about tools, see [Tools](tools-overview.md).
 
@@ -227,57 +312,86 @@ The following features are available:
 
 To install the feature, call the `install` function and provide the feature as an argument.
 For example, to install the event handler feature, you need to do the following:
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.feature.handler.AgentFinishedContext
+import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
 
+val agent = AIAgent(
+    executor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+-->
+<!--- SUFFIX
+)
+-->
 ```kotlin
+// install the EventHandler feature
 installFeatures = {
-    // install the EventHandler feature
     install(EventHandler) {
-        onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
-            println("Starting strategy: ${strategy.name}")
+        onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
+            println("Starting strategy: ${eventContext.strategy.name}")
         }
-        onAgentFinished { strategyName: String, result: String? ->
-            println("Result: $result")
+        onAgentFinished { eventContext: AgentFinishedContext ->
+            println("Result: ${eventContext.result}")
         }
     }
 }
 ```
+<!--- KNIT example-complex-workflow-agents-10.kt -->
 
 To learn more about feature configuration, see the dedicated page.
 
 ### 7. Run the agent
 
 Create the agent with the configuration option created in the previous stages and run it with the provided input:
-
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.feature.handler.AgentFinishedContext
+import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.example.exampleComplexWorkflowAgents01.promptExecutor
+import ai.koog.agents.example.exampleComplexWorkflowAgents06.agentStrategy
+import ai.koog.agents.example.exampleComplexWorkflowAgents07.agentConfig
+import ai.koog.agents.example.exampleComplexWorkflowAgents09.toolRegistry
+import ai.koog.agents.features.eventHandler.feature.EventHandler
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
 val agent = AIAgent(
     promptExecutor = promptExecutor,
+    toolRegistry = toolRegistry,
     strategy = agentStrategy,
     agentConfig = agentConfig,
-    toolRegistry = toolRegistry,
     installFeatures = {
         install(EventHandler) {
-            onBeforeAgentStarted = { strategy: AIAgentStrategy, agent: AIAgent ->
-                println("Starting strategy: ${strategy.name}")
+            onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
+                println("Starting strategy: ${eventContext.strategy.name}")
             }
-            onAgentFinished = { strategyName: String, result: String? ->
-                println("Result: $result")
+            onAgentFinished { eventContext: AgentFinishedContext ->
+                println("Result: ${eventContext.result}")
             }
         }
     }
 )
 
-suspend fun main() = runBlocking {
-    println("Enter two numbers to add (e.g., 'add 5 and 7' or '5 + 7'):")
+fun main() {
+    runBlocking {
+        println("Enter two numbers to add (e.g., 'add 5 and 7' or '5 + 7'):")
 
-    // Read the user input and send it to the agent
-    val userInput = readlnOrNull() ?: ""
-    agent.run(userInput)
+        // Read the user input and send it to the agent
+        val userInput = readlnOrNull() ?: ""
+        val agentResult = agent.run(userInput)
+        println("The agent returned: $agentResult")
+    }
 }
 ```
+<!--- KNIT example-complex-workflow-agents-11.kt -->
 
 ## Working with structured data
 
-The `AIAgent` can process structured data from LLM outputs. For more details, see [Streaming API](streaming-api.md).
+The `AIAgent` can process structured data from LLM outputs. For more details, see [Structured data processing](structured-data.md).
 
 ## Using parallel tool calls
 
@@ -288,7 +402,26 @@ For more details, see [Parallel tool calls](tools-overview.md#parallel-tool-call
 ## Full code sample
 
 Here is the complete implementation of the agent:
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.feature.handler.AgentFinishedContext
+import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
+import ai.koog.agents.core.tools.reflect.tools
+import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import kotlinx.coroutines.runBlocking
 
+-->
 ```kotlin
 // Use the OpenAI executor with an API key from an environment variable
 val promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
@@ -371,26 +504,30 @@ val toolRegistry = ToolRegistry {
 // Create the agent
 val agent = AIAgent(
     promptExecutor = promptExecutor,
+    toolRegistry = toolRegistry,
     strategy = agentStrategy,
     agentConfig = agentConfig,
-    toolRegistry = toolRegistry,
     installFeatures = {
-        // install the EventHandler feature
         install(EventHandler) {
-            onBeforeAgentStarted { strategy: AIAgentStrategy, agent: AIAgent ->
-                println("Starting strategy: ${strategy.name}")
+            onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
+                println("Starting strategy: ${eventContext.strategy.name}")
             }
-            onAgentFinished { strategyName: String, result: String? ->
-                println("Result: $result")
+            onAgentFinished { eventContext: AgentFinishedContext ->
+                println("Result: ${eventContext.result}")
             }
         }
     }
 )
 
-suspend fun main() = runBlocking {
-    println("Enter two numbers to add (e.g., 'add 5 and 7' or '5 + 7'):")
+fun main() {
+    runBlocking {
+        println("Enter two numbers to add (e.g., 'add 5 and 7' or '5 + 7'):")
 
-    val userInput = readlnOrNull() ?: ""
-    agent.run(userInput)
+        // Read the user input and send it to the agent
+        val userInput = readlnOrNull() ?: ""
+        val agentResult = agent.run(userInput)
+        println("The agent returned: $agentResult")
+    }
 }
 ```
+<!--- KNIT example-complex-workflow-agents-12.kt -->
