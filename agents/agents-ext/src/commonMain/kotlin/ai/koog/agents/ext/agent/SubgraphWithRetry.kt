@@ -3,6 +3,7 @@ package ai.koog.agents.ext.agent
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -79,6 +80,7 @@ public val Boolean.asConditionResult: ConditionResult
  * @param name The optional name of the subgraph.
  * @param defineAction A lambda defining the action subgraph to perform within the retry subgraph.
  */
+@AIAgentBuilderDslMarker
 public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetry(
     noinline condition: suspend AIAgentContextBase.(Output) -> ConditionResult,
     maxRetries: Int,
@@ -205,6 +207,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
  * edge(subgraphRetryCallLLM forwardTo nodeExecuteTool onToolCall { true })
  * ```
  */
+@AIAgentBuilderDslMarker
 public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
     noinline condition: suspend AIAgentContextBase.(Output) -> ConditionResult,
     maxRetries: Int,
