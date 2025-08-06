@@ -1,8 +1,8 @@
 package ai.koog.rag.base.files
 
-import ai.koog.rag.base.files.filter.PathFilter
-import ai.koog.rag.base.files.filter.PathFilter.Companion.not
 import ai.koog.rag.base.files.filter.PathFilters
+import ai.koog.rag.base.files.filter.TraversalFilter
+import ai.koog.rag.base.files.filter.TraversalFilter.Companion.not
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.IOException
 import org.junit.jupiter.api.Test
@@ -20,14 +20,14 @@ class JVMFilteredFileSystemProviderTest : KoogTestBase() {
     private lateinit var fsReadOnly: FileSystemProvider.ReadOnly<Path>
     private lateinit var fsReadWrite: FileSystemProvider.ReadWrite<Path>
 
-    private val none = PathFilter<Path> { _, _ -> false }
+    private val none = TraversalFilter<Path> { _, _ -> false }
 
     /* all the tests below have an assumption that JVMFileSystemProvider is covered by tests,
      and hence only the filtering should be verified */
 
     override fun setup() {
         super.setup()
-        val filter = PathFilter.any<Path>() and not(none) and PathFilters.byRoot(src1)
+        val filter = TraversalFilter.any<Path>() and not(none) and PathFilters.byRoot(src1)
         fsReadOnly = JVMFileSystemProvider.ReadOnly.filter(filter)
         fsReadWrite = JVMFileSystemProvider.ReadWrite.filter(filter)
     }
