@@ -347,6 +347,7 @@ public open class AnthropicLLMClient(
             when (content) {
                 is AnthropicResponseContent.Text -> {
                     Message.Assistant(
+                        id = response.id,
                         content = content.text,
                         finishReason = response.stopReason,
                         metaInfo = ResponseMetaInfo.create(
@@ -380,6 +381,7 @@ public open class AnthropicLLMClient(
             // If no messages where returned, return an empty message and check stopReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
+                    id = response.id,
                     content = "",
                     finishReason = response.stopReason,
                     metaInfo = ResponseMetaInfo.create(

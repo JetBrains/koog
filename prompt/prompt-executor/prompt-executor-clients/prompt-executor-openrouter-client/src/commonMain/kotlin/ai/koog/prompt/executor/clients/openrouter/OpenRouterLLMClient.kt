@@ -467,6 +467,7 @@ public class OpenRouterLLMClient(
             message.content != null -> {
                 listOf(
                     Message.Assistant(
+                        id = response.id,
                         content = message.content.text(),
                         finishReason = choice.finishReason,
                         metaInfo = ResponseMetaInfo.create(

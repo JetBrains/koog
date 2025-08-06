@@ -6,6 +6,8 @@ import ai.koog.prompt.message.Message.User
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Describes the way to reformat tool call/tool result messages,
@@ -55,8 +57,10 @@ public interface ToolCallDescriber {
          * such as tool ID, name, and arguments.
          * @return a [Message.Assistant] containing the serialized JSON representation of the tool call information.
          */
+        @OptIn(ExperimentalUuidApi::class)
         override fun describeToolCall(message: Message.Tool.Call): Message {
             return Assistant(
+                id = Uuid.random().toString(),
                 content = Json.encodeToString(
                     buildJsonObject {
                         message.id?.let { put("tool_call_id", JsonPrimitive(it)) }

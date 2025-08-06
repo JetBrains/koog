@@ -16,6 +16,11 @@ import kotlinx.serialization.json.jsonObject
 @Serializable
 public sealed interface Message {
     /**
+     * The id of the message.
+     */
+    public val id: String?
+
+    /**
      * The content of the message.
      */
     public val content: String
@@ -108,6 +113,7 @@ public sealed interface Message {
      */
     @Serializable
     public data class User(
+        override val id: String? = null,
         override val content: String,
         override val metaInfo: RequestMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
@@ -127,6 +133,7 @@ public sealed interface Message {
      */
     @Serializable
     public data class Assistant(
+        override val id: String?,
         override val content: String,
         override val metaInfo: ResponseMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
@@ -142,11 +149,6 @@ public sealed interface Message {
      */
     @Serializable
     public sealed interface Tool : Message {
-        /**
-         * The unique identifier of the tool call.
-         */
-        public val id: String?
-
         /**
          * The name of the tool used.
          */
@@ -207,8 +209,9 @@ public sealed interface Message {
      */
     @Serializable
     public data class System(
+        override val id: String?,
         override val content: String,
-        override val metaInfo: RequestMetaInfo
+        override val metaInfo: RequestMetaInfo,
     ) : Request {
         override val role: Role = Role.System
     }

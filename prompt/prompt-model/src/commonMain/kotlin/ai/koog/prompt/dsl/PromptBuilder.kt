@@ -7,6 +7,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
 import kotlinx.datetime.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * A builder class for creating prompts using a DSL approach.
@@ -56,8 +58,15 @@ public class PromptBuilder internal constructor(
      *
      * @param content The content of the system message
      */
-    public fun system(content: String) {
-        messages.add(Message.System(content, RequestMetaInfo.create(clock)))
+    @OptIn(ExperimentalUuidApi::class)
+    public fun system(content: String, id: String? = null) {
+        messages.add(
+            Message.System(
+                id = id ?: Uuid.random().toString(),
+                content = content,
+                metaInfo = RequestMetaInfo.create(clock)
+            )
+        )
     }
 
     /**
@@ -75,8 +84,8 @@ public class PromptBuilder internal constructor(
      *
      * @param init The initialization block for the TextContentBuilder
      */
-    public fun system(init: TextContentBuilder.() -> Unit) {
-        system(TextContentBuilder().apply(init).build())
+    public fun system(id: String? = null, init: TextContentBuilder.() -> Unit) {
+        system(TextContentBuilder().apply(init).build(), id)
     }
 
     /**
@@ -88,8 +97,16 @@ public class PromptBuilder internal constructor(
      * @param content The content of the user message.
      * @param attachments The list of attachments associated with the user message. Defaults to an empty list if no attachments are provided.
      */
-    public fun user(content: String, attachments: List<Attachment> = emptyList()) {
-        messages.add(Message.User(content, RequestMetaInfo.create(clock), attachments))
+    @OptIn(ExperimentalUuidApi::class)
+    public fun user(content: String, attachments: List<Attachment> = emptyList(), id: String? = null) {
+        messages.add(
+            Message.User(
+                id = id ?: Uuid.random().toString(),
+                content = content,
+                metaInfo = RequestMetaInfo.create(clock),
+                attachments = attachments
+            )
+        )
     }
 
     /**
@@ -112,8 +129,8 @@ public class PromptBuilder internal constructor(
      * @param content The content of the user message
      * @param block Optional lambda to configure attachments using AttachmentBuilder
      */
-    public fun user(content: String, block: AttachmentBuilder.() -> Unit) {
-        user(content, AttachmentBuilder().apply(block).build())
+    public fun user(id: String? = null, content: String, block: AttachmentBuilder.() -> Unit) {
+        user(content, AttachmentBuilder().apply(block).build(), id)
     }
 
     /**
@@ -135,9 +152,9 @@ public class PromptBuilder internal constructor(
      *
      * @param body The initialization block for the ContentBuilderWithAttachment
      */
-    public fun user(body: MessageContentBuilder.() -> Unit) {
+    public fun user(id: String? = null, body: MessageContentBuilder.() -> Unit) {
         val messageContent = MessageContentBuilder().apply(body).build()
-        user(messageContent.content, messageContent.attachments)
+        user(messageContent.content, messageContent.attachments, id)
     }
 
     /**
@@ -152,8 +169,16 @@ public class PromptBuilder internal constructor(
      *
      * @param content The content of the assistant message
      */
-    public fun assistant(content: String) {
-        messages.add(Message.Assistant(content, finishReason = null, metaInfo = ResponseMetaInfo.create(clock)))
+    @OptIn(ExperimentalUuidApi::class)
+    public fun assistant(content: String, id: String? = null) {
+        messages.add(
+            Message.Assistant(
+                id = id ?: Uuid.random().toString(),
+                content = content,
+                metaInfo = ResponseMetaInfo.create(clock),
+                finishReason = null,
+            )
+        )
     }
 
     /**
@@ -171,8 +196,8 @@ public class PromptBuilder internal constructor(
      *
      * @param init The initialization block for the TextContentBuilder
      */
-    public fun assistant(init: TextContentBuilder.() -> Unit) {
-        assistant(TextContentBuilder().apply(init).build())
+    public fun assistant(id: String? = null, init: TextContentBuilder.() -> Unit) {
+        assistant(TextContentBuilder().apply(init).build(), id)
     }
 
     /**

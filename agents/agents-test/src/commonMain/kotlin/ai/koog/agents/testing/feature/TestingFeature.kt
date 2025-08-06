@@ -1205,11 +1205,13 @@ public fun <Args : ToolArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.tool
  */
 public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
     text: String,
-    finishReason: String? = null
+    finishReason: String? = null,
+    id: String? = null
 ): Message.Assistant {
     val tokenCount = tokenizer?.countTokens(text)
 
     return Message.Assistant(
+        id = id,
         content = text,
         finishReason = finishReason,
         metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)

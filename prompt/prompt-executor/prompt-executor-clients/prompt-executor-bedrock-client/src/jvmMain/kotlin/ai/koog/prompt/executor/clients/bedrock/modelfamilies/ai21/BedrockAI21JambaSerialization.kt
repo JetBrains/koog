@@ -151,6 +151,7 @@ internal object BedrockAI21JambaSerialization {
             choice.message.content?.let { content ->
                 messages.add(
                     Message.Assistant(
+                        id = response.id,
                         content = content,
                         finishReason = choice.finishReason,
                         metaInfo = ResponseMetaInfo.create(

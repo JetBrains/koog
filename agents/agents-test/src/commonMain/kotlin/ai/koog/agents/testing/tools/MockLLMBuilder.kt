@@ -682,6 +682,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
+                    id = null,
                     text,
                     ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
                 )
@@ -717,6 +718,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             conditional = conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
                 listOf(
                     Message.Assistant(
+                        id = null,
                         content = textResponse,
                         metaInfo = ResponseMetaInfo.create(clock)
                     )

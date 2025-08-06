@@ -8,6 +8,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 internal object BedrockMetaLlamaSerialization {
 
@@ -41,11 +43,13 @@ internal object BedrockMetaLlamaSerialization {
         )
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     internal fun parseLlamaResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
         val response = json.decodeFromString<LlamaResponse>(responseBody)
 
         return listOf(
             Message.Assistant(
+                id = Uuid.random().toString(),
                 content = response.generation,
                 finishReason = response.stopReason,
                 metaInfo = ResponseMetaInfo.Companion.create(

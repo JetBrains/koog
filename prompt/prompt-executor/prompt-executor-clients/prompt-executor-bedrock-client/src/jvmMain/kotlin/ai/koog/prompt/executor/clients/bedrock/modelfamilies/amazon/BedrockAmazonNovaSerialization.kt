@@ -8,6 +8,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 internal object BedrockAmazonNovaSerialization {
 
@@ -59,6 +61,7 @@ internal object BedrockAmazonNovaSerialization {
         )
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     internal fun parseNovaResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
         val response = json.decodeFromString<NovaResponse>(responseBody)
         val messageContent = response.output.message.content.firstOrNull()?.text ?: ""
@@ -66,6 +69,7 @@ internal object BedrockAmazonNovaSerialization {
 
         return listOf(
             Message.Assistant(
+                id = Uuid.random().toString(),
                 content = messageContent,
                 metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = outputTokens)
             )

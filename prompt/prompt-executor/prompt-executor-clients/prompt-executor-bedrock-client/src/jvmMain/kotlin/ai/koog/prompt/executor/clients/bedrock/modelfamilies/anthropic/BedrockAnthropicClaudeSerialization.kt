@@ -196,6 +196,7 @@ internal object BedrockAnthropicClaudeSerialization {
         return response.content.map { content ->
             when (content) {
                 is AnthropicResponseContent.Text -> Message.Assistant(
+                    id = response.id,
                     content = content.text,
                     finishReason = response.stopReason,
                     metaInfo = ResponseMetaInfo.Companion.create(

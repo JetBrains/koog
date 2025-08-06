@@ -698,11 +698,11 @@ public open class OpenAILLMClient(
             outputTokensCount = outputTokensCount
         )
 
-        return response.choices.map { processOpenAIMessage(it, metaInfo) }
+        return response.choices.map { processOpenAIMessage(response.id, it, metaInfo) }
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    private fun processOpenAIMessage(choice: OpenAIChoice, metaInfo: ResponseMetaInfo): List<Message.Response> {
+    private fun processOpenAIMessage(responseId: String?, choice: OpenAIChoice, metaInfo: ResponseMetaInfo): List<Message.Response> {
         val message = choice.message
         return when {
             message.toolCalls != null && message.toolCalls.isNotEmpty() -> {
@@ -719,6 +719,7 @@ public open class OpenAILLMClient(
             message.content != null -> {
                 listOf(
                     Message.Assistant(
+                        id = responseId,
                         content = message.content.text(),
                         finishReason = choice.finishReason,
                         metaInfo = metaInfo
@@ -729,6 +730,7 @@ public open class OpenAILLMClient(
             message.audio != null -> {
                 listOf(
                     Message.Assistant(
+                        id = responseId,
                         content = message.audio.transcript ?: "",
                         attachments = listOf(
                             Attachment.Audio(

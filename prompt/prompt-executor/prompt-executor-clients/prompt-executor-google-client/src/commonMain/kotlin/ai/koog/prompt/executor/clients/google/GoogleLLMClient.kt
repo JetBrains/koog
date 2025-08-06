@@ -490,11 +490,12 @@ public open class GoogleLLMClient(
      * @return A list of response messages
      */
     @OptIn(ExperimentalUuidApi::class)
-    private fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
+    private fun processGoogleCandidate(responseId: String?, candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
         val parts = candidate.content?.parts.orEmpty()
         val responses = parts.map { part ->
             when (part) {
                 is GooglePart.Text -> Message.Assistant(
+                    id = responseId,
                     content = part.text,
                     finishReason = candidate.finishReason,
                     metaInfo = metaInfo
@@ -517,6 +518,7 @@ public open class GoogleLLMClient(
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
+                    id = responseId,
                     content = "",
                     finishReason = candidate.finishReason,
                     metaInfo = metaInfo
@@ -552,7 +554,9 @@ public open class GoogleLLMClient(
         )
 
         return response.candidates.map { candidate ->
-            processGoogleCandidate(candidate, metaInfo)
+            processGoogleCandidate(
+                response.responseId,
+                candidate, metaInfo)
         }
     }
 
