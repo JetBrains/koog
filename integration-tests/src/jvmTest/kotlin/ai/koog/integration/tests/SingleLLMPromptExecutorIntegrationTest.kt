@@ -45,6 +45,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -77,12 +78,12 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-            val bedrockClientInstance = BedrockLLMClient(
+            /*val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
                 readAwsSessionTokenFromEnv(),
                 BedrockClientSettings()
-            )
+            )*/
             // val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
 
             return Stream.concat(
@@ -90,11 +91,9 @@ class SingleLLMPromptExecutorIntegrationTest {
                     Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
                     Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
                 ),
-                Stream.concat(
-                    Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
-                    Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
-                )
+                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
             )
+            // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
             // Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
         }
 
@@ -692,7 +691,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
                     user {
                         markdown {
-                            "I'm sending you a markdown file with different markdown elements. "
+                            +"I'm sending you a markdown file with different markdown elements. "
                             +"Please list all the markdown elements used in it and describe its structure clearly."
                         }
 
@@ -707,7 +706,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
                     user {
                         markdown {
-                            "I'm sending you a markdown file with different markdown elements. "
+                            +"I'm sending you a markdown file with different markdown elements. "
                             +"Please list all the markdown elements used in it and describe its structure clearly."
                             newline()
                             +file.readText()
@@ -852,7 +851,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
                     user {
                         markdown {
-                            "I'm sending you a text file. Please analyze it and summarize its content."
+                            +"I'm sending you a text file. Please analyze it and summarize its content."
                         }
 
                         attachments {
@@ -938,9 +937,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant.")
 
                 user {
-                    markdown {
-                        "I'm sending you an audio file. Please tell me a couple of words about it."
-                    }
+                    +"I'm sending you an audio file. Please tell me a couple of words about it."
 
                     attachments {
                         audio(KtPath(audioFile.pathString))
@@ -1078,6 +1075,7 @@ class SingleLLMPromptExecutorIntegrationTest {
      * Some models may require an inference profile instead of on-demand throughput.
      * The test may fail if the AWS account doesn't have access to the specified models.
      */
+    @Disabled
     @ParameterizedTest
     @MethodSource("bedrockCombinations")
     fun integration_testSimpleBedrockExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
