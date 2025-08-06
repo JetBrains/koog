@@ -137,11 +137,11 @@ public data class Prompt(
      *
      * @property user An optional user identifier that can be used for tracking or personalization purposes. This property
      * is mutable to allow updates to the user context.
-     * 
+     *
      * @property includeThoughts If `true`, requests the model to add reasoning blocks to the response. Defaults to `null`.
      * When set to `true`, responses may include detailed reasoning steps.
      * When `false` or `null`, responses are typically shorter and faster.
-     * 
+     *
      * @property thinkingBudget Hard cap for reasoning tokens. Ignored by models that don't support budgets.
      * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
      */
