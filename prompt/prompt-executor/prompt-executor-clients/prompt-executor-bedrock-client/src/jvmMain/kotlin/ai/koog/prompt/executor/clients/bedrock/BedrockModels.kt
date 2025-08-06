@@ -14,6 +14,7 @@ import kotlinx.serialization.Serializable
  * to the model ID when making requests to AWS Bedrock.
  *
  * @param model The base LLModel to use
+ * @param modelId The ID of the used model. Defaults to the ID of the provided model.
  * @param inferenceProfilePrefix Optional prefix to prepend to the model ID
  */
 
@@ -21,19 +22,17 @@ import kotlinx.serialization.Serializable
 public data class BedrockModel(
     val model: LLModel,
     val modelId: String = model.id,
-    val inferenceProfilePrefix: String = BedrockInferencePrefixes.US.prefix,
+    val inferenceProfilePrefix: String = BedrockInferencePrefixes.US.prefix
 ) {
     /**
      * Returns the effective model ID with inference profile prefix if provided.
      */
-    val effectiveModelId: String
-        get() = "$inferenceProfilePrefix.$modelId"
+    val effectiveModelId: String = "$inferenceProfilePrefix.$modelId"
 
     /**
      * Returns the LLModel with the effective model ID.
      */
-    val effectiveModel: LLModel
-        get() = model.copy(provider = LLMProvider.Bedrock, id = effectiveModelId)
+    val effectiveModel: LLModel = model.copy(provider = LLMProvider.Bedrock, id = effectiveModelId)
 }
 
 /**
@@ -137,7 +136,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude3Opus: LLModel = BedrockModel(
         AnthropicModels.Opus_3,
-        "anthropic.claude-3-opus-20240229-v1:0"
+        "anthropic.claude-3-opus-20240229-v1:0",
     ).effectiveModel
 
     /**
@@ -154,7 +153,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude4Opus: LLModel = BedrockModel(
         AnthropicModels.Opus_4,
-        "anthropic.claude-opus-4-20250514-v1:0"
+        "anthropic.claude-opus-4-20250514-v1:0",
     ).effectiveModel
 
     /**
@@ -191,7 +190,7 @@ public object BedrockModels : LLModelDefinitions {
             capabilities = fullCapabilities,
             contextLength = 200_000,
             maxOutputTokens = 4_096,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -207,7 +206,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude35SonnetV2: LLModel = BedrockModel(
         AnthropicModels.Sonnet_3_5,
-        "anthropic.claude-3-5-sonnet-20241022-v2:0"
+        "anthropic.claude-3-5-sonnet-20241022-v2:0",
     ).effectiveModel
 
     /**
@@ -224,7 +223,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude35Haiku: LLModel = BedrockModel(
         AnthropicModels.Haiku_3_5,
-        "anthropic.claude-3-5-haiku-20241022-v1:0"
+        "anthropic.claude-3-5-haiku-20241022-v1:0",
     ).effectiveModel
 
     /**
@@ -239,7 +238,7 @@ public object BedrockModels : LLModelDefinitions {
      */
     public val AnthropicClaude3Haiku: LLModel = BedrockModel(
         AnthropicModels.Haiku_3,
-        "anthropic.claude-3-haiku-20240307-v1:0"
+        "anthropic.claude-3-haiku-20240307-v1:0",
     ).effectiveModel
 
     /**
@@ -258,7 +257,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "anthropic.claude-v2:1",
             capabilities = standardCapabilities,
             contextLength = 200_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -276,7 +275,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "anthropic.claude-instant-v1",
             capabilities = standardCapabilities,
             contextLength = 100_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -296,7 +295,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-micro-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -316,7 +315,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-lite-v1:0",
             capabilities = standardCapabilities,
             contextLength = 300_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -336,7 +335,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-pro-v1:0",
             capabilities = standardCapabilities,
             contextLength = 300_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -356,7 +355,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "amazon.nova-premier-v1:0",
             capabilities = standardCapabilities,
             contextLength = 1_000_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -378,7 +377,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "ai21.jamba-1-5-large-v1:0",
             capabilities = toolCapabilities,
             contextLength = 256_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -399,7 +398,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "ai21.jamba-1-5-mini-v1:0",
             capabilities = toolCapabilities,
             contextLength = 256_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -419,7 +418,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-8b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 8_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -439,7 +438,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-70b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 8_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -459,7 +458,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-8b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -479,7 +478,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-70b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -499,7 +498,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-1-405b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -519,7 +518,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-1b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -539,7 +538,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-3b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -559,7 +558,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-11b-instruct-v1:0",
             capabilities = fullCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -579,7 +578,7 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-2-90b-instruct-v1:0",
             capabilities = fullCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
 
     /**
@@ -599,6 +598,41 @@ public object BedrockModels : LLModelDefinitions {
             id = "meta.llama3-3-70b-instruct-v1:0",
             capabilities = standardCapabilities,
             contextLength = 128_000,
-        )
+        ),
     ).effectiveModel
+}
+
+/**
+ * Extension method to create a new LLModel with a different inference profile prefix.
+ * This allows you to easily switch inference profiles for predefined Bedrock models.
+ *
+ * @param inferencePrefix The inference profile prefix to use (e.g., "eu", "us", "ap")
+ * @return A new LLModel with the specified inference profile prefix
+ *
+ * Example usage:
+ * ```kotlin
+ * // Use EU inference profile instead of default US
+ * val euModel = BedrockModels.AnthropicClaude4Sonnet.withInferencePrefix(BedrockInferencePrefixes.EU.prefix)
+ * // euModel.id will be "eu.anthropic.claude-sonnet-4-20250514-v1:0"
+ * ```
+ */
+public fun LLModel.withInferencePrefix(inferencePrefix: String): LLModel {
+    require(provider == LLMProvider.Bedrock) {
+        "withInferencePrefix() can only be used with Bedrock models, but model provider is $provider"
+    }
+
+    val baseModelId = if (id.contains('.')) {
+        val potentialPrefix = id.substringBefore('.')
+        val validPrefixes = BedrockInferencePrefixes.entries.map { it.prefix }
+
+        if (potentialPrefix in validPrefixes) {
+            id.substringAfter('.')
+        } else {
+            id
+        }
+    } else {
+        id
+    }
+
+    return copy(id = "$inferencePrefix.$baseModelId")
 }

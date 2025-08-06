@@ -8,6 +8,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -52,6 +53,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -66,6 +68,45 @@ class BedrockLLMClientTest {
         )
 
         assertNotNull(client)
+    }
+
+    @Test
+    fun `can create BedrockModel with custom inference prefix`() {
+        val originalModel = BedrockModels.AnthropicClaude4Sonnet
+
+        val euModel = originalModel.withInferencePrefix(BedrockInferencePrefixes.EU.prefix)
+        val apModel = originalModel.withInferencePrefix(BedrockInferencePrefixes.AP.prefix)
+
+        assertTrue(originalModel.id.startsWith(BedrockInferencePrefixes.US.prefix))
+        assertTrue(originalModel.id.contains("us.anthropic"))
+
+        assertTrue(euModel.id.startsWith(BedrockInferencePrefixes.EU.prefix))
+        assertFalse(euModel.id.contains("us.anthropic"))
+        assertTrue(apModel.id.startsWith(BedrockInferencePrefixes.AP.prefix))
+        assertFalse(apModel.id.contains("us.anthropic"))
+
+        assertEquals(originalModel.provider, euModel.provider)
+        assertEquals(originalModel.capabilities, euModel.capabilities)
+        assertEquals(originalModel.contextLength, euModel.contextLength)
+        assertEquals(originalModel.maxOutputTokens, euModel.maxOutputTokens)
+    }
+
+    @Test
+    fun `withInferencePrefix throws exception for non-Bedrock models`() {
+        val nonBedrockModel = LLModel(
+            provider = LLMProvider.Anthropic,
+            id = "claude-3-sonnet-20240229",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 200_000
+        )
+
+        val exception = assertFailsWith<IllegalArgumentException> {
+            nonBedrockModel.withInferencePrefix("eu")
+        }
+
+        assertNotNull(exception.message, "Exception message should not be null")
+        assertTrue(exception.message!!.contains("withInferencePrefix() can only be used with Bedrock models"))
+        assertTrue(exception.message!!.contains("model provider is Anthropic"))
     }
 
     @Test
