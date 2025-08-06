@@ -1,5 +1,8 @@
+group = rootProject.group
+version = rootProject.version
+
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("ai.kotlin.jvm")
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.knit)
 }
@@ -10,8 +13,8 @@ repositories {
 
 dependencies {
     implementation(libs.logback.classic)
-    implementation(libs.koog)
-    implementation(libs.koog.test)
+    implementation(libs.docs.koog)
+    implementation(libs.docs.koog.test)
     implementation(libs.kotlinx.serialization.core)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.opentelemetry.exporter.otlp)

@@ -31,12 +31,12 @@ To ensure code snippets in documentation are compilable and up-to-date with the 
 Knit provides a Gradle plugin that extracts specially annotated Kotlin code snippets from markdown files and generates Kotlin source files. 
 To extract code snippets, run:
 ```
-./gradlew knit
+./gradlew :docs:knit
 ```
 
 To verify that all extracted files are compilable, run:
 ```
-./gradlew build
+./gradlew :docs:build
 ```
 
 **NB**: Before every release follow these actions:
