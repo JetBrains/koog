@@ -74,8 +74,8 @@ class BedrockLLMClientTest {
     fun `can create BedrockModel with custom inference prefix`() {
         val originalModel = BedrockModels.AnthropicClaude4Sonnet
 
-        val euModel = originalModel.withInferencePrefix(BedrockInferencePrefixes.EU.prefix)
-        val apModel = originalModel.withInferencePrefix(BedrockInferencePrefixes.AP.prefix)
+        val euModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.EU.prefix)
+        val apModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.AP.prefix)
 
         assertTrue(originalModel.id.startsWith(BedrockInferencePrefixes.US.prefix))
         assertTrue(originalModel.id.contains("us.anthropic"))
@@ -101,7 +101,7 @@ class BedrockLLMClientTest {
         )
 
         val exception = assertFailsWith<IllegalArgumentException> {
-            nonBedrockModel.withInferencePrefix("eu")
+            nonBedrockModel.withInferenceProfile("eu")
         }
 
         assertNotNull(exception.message, "Exception message should not be null")

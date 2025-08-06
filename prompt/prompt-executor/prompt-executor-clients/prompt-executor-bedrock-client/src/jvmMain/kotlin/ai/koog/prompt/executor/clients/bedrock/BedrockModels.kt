@@ -612,11 +612,11 @@ public object BedrockModels : LLModelDefinitions {
  * Example usage:
  * ```kotlin
  * // Use EU inference profile instead of default US
- * val euModel = BedrockModels.AnthropicClaude4Sonnet.withInferencePrefix(BedrockInferencePrefixes.EU.prefix)
+ * val euModel = BedrockModels.AnthropicClaude4Sonnet.withInferenceProfile(BedrockInferencePrefixes.EU.prefix)
  * // euModel.id will be "eu.anthropic.claude-sonnet-4-20250514-v1:0"
  * ```
  */
-public fun LLModel.withInferencePrefix(inferencePrefix: String): LLModel {
+public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     require(provider == LLMProvider.Bedrock) {
         "withInferencePrefix() can only be used with Bedrock models, but model provider is $provider"
     }
