@@ -9,6 +9,9 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>() {
+
+    const val RESULT: String = "rainy, 57°F"
+
     @Serializable
     data class Args(val location: String) : ToolArgs
 
@@ -27,6 +30,6 @@ internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>() {
     )
 
     override suspend fun doExecute(args: Args): String {
-        return "rainy, 57°F"
+        return RESULT
     }
 }

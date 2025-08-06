@@ -120,7 +120,9 @@ class OpenTelemetryTest {
     fun `test spans are created for agent with one llm call`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
 
+            val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
+
             val agentId = "test-agent-id"
             val promptId = "test-prompt-id"
             val testClock = Clock.System
@@ -144,6 +146,7 @@ class OpenTelemetryTest {
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
+                systemPrompt = systemPrompt,
                 promptExecutor = mockExecutor,
                 model = model,
                 clock = testClock,
@@ -217,13 +220,17 @@ class OpenTelemetryTest {
                         ),
 
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "body" to "{\"content\":\"${userPrompt}\"}"
                             ),
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse}\"}}"
+                                "body" to "{\"content\":\"${mockResponse}\"}"
                             )
                         )
                     )
@@ -247,6 +254,8 @@ class OpenTelemetryTest {
     @Test
     fun `test spans for same agent run multiple times`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
+
+            val systemPrompt = "You are the application that predicts weather"
 
             val userPrompt0 = "What's the weather in Paris?"
             val mockResponse0 = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
@@ -276,6 +285,7 @@ class OpenTelemetryTest {
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
+                systemPrompt = systemPrompt,
                 promptExecutor = mockExecutor,
                 model = model,
                 clock = testClock,
@@ -344,13 +354,17 @@ class OpenTelemetryTest {
                             "gen_ai.request.model" to model.id,
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "body" to "{\"content\":\"${userPrompt1}\"}"
                             ),
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse1}\"}}"
+                                "body" to "{\"content\":\"${mockResponse1}\"}"
                             )
                         )
                     )
@@ -400,13 +414,17 @@ class OpenTelemetryTest {
                             "gen_ai.request.model" to model.id,
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "body" to "{\"content\":\"${userPrompt0}\"}"
                             ),
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse0}\"}}"
+                                "body" to "{\"content\":\"${mockResponse0}\"}"
                             )
                         )
                     )
@@ -431,6 +449,7 @@ class OpenTelemetryTest {
     fun `test spans are created for agent with tool call`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
 
+            val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
             val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
 
@@ -466,6 +485,7 @@ class OpenTelemetryTest {
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
+                systemPrompt = systemPrompt,
                 toolRegistry = toolRegistry,
                 promptExecutor = mockExecutor,
                 model = model,
@@ -530,10 +550,22 @@ class OpenTelemetryTest {
                             "gen_ai.request.temperature" to temperature,
                         ),
                         "events" to mapOf(
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse}\"}}"
-                            )
+                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                            ),
+                            "gen_ai.user.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${userPrompt}\"}"
+                            ),
+                            "gen_ai.tool.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${TestGetWeatherTool.RESULT}\"}"
+                            ),
+                            "gen_ai.assistant.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${mockResponse}\"}"
+                            ),
                         )
                     )
                 ),
@@ -552,12 +584,7 @@ class OpenTelemetryTest {
                             "gen_ai.tool.description" to "The test tool to get a whether based on provided location.",
                             "gen_ai.tool.name" to "Get whether",
                         ),
-                        "events" to mapOf(
-                            "gen_ai.tool.message" to mapOf(
-                                "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"rainy, 57°F\"}" // Mocked return result defined in the Tool
-                            ),
-                        )
+                        "events" to mapOf()
                     )
                 ),
                 mapOf(
@@ -579,9 +606,17 @@ class OpenTelemetryTest {
                             "gen_ai.request.temperature" to temperature,
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "body" to "{\"content\":\"${userPrompt}\"}"
+                            ),
+                            "gen_ai.choice" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"index\":0,\"tool_calls\":[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"${TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"))}\"},\"id\":\"\",\"type\":\"function\"}]}"
                             ),
                         )
                     )
@@ -605,6 +640,7 @@ class OpenTelemetryTest {
     fun `test spans for agent with tool call and verbose level set to false`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
 
+            val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
             val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
 
@@ -704,10 +740,15 @@ class OpenTelemetryTest {
                             "gen_ai.request.temperature" to temperature,
                         ),
                         "events" to mapOf(
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0}"
-                            )
+                            ),
+                            "gen_ai.user.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                            ),
+                            "gen_ai.tool.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                            ),
                         )
                     )
                 ),
@@ -726,11 +767,7 @@ class OpenTelemetryTest {
                             "gen_ai.tool.description" to "The test tool to get a whether based on provided location.",
                             "gen_ai.tool.name" to "Get whether",
                         ),
-                        "events" to mapOf(
-                            "gen_ai.tool.message" to mapOf(
-                                "gen_ai.system" to model.provider.id,
-                            ),
-                        )
+                        "events" to mapOf()
                     )
                 ),
                 mapOf(
@@ -754,6 +791,10 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
+                            ),
+                            "gen_ai.choice" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"index\":0}"
                             ),
                         )
                     )

@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.span
 
+import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
@@ -119,8 +120,48 @@ class GenAIAgentSpanTest {
 
         span.addEvents(events)
 
-        // Since we can't directly verify the events were added (MockSpan doesn't track them),
-        // we're just verifying the method doesn't throw exceptions
-        assertTrue(true, "addEvents completed without exceptions")
+        // Verify events were added to the internal events set
+        assertEquals(2, span.events.size)
+        assertTrue(span.events.contains(events[0]))
+        assertTrue(span.events.contains(events[1]))
+    }
+
+    @Test
+    fun `addEvents should handle duplicate events`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val event = MockGenAIAgentEvent(
+            name = "duplicate-event",
+            attributes = listOf(MockAttribute("key", "value"))
+        )
+
+        // Add the same event twice
+        span.addEvents(listOf(event))
+        span.addEvents(listOf(event))
+
+        // Verify the event was added only once
+        assertEquals(1, span.events.size)
+        assertTrue(span.events.contains(event))
+    }
+
+    @Test
+    fun `addEvents should handle events with body fields`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val event = MockGenAIAgentEvent(
+            name = "event-with-body-fields",
+            attributes = listOf(MockAttribute("key", "value")),
+            fields = listOf(EventBodyFields.Content("test content"))
+        )
+
+        span.addEvents(listOf(event))
+
+        // Verify the event was added
+        assertEquals(1, span.events.size)
+        assertTrue(span.events.contains(event))
     }
 }

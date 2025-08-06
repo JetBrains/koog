@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.event
 
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.prompt.llm.LLMProvider
@@ -8,7 +7,7 @@ import ai.koog.prompt.llm.LLMProvider
 internal class ToolMessageEvent(
     private val provider: LLMProvider,
     private val toolCallId: String?,
-    private val toolResult: ToolResult,
+    private val content: String,
     override val verbose: Boolean = false
 ) : GenAIAgentEvent {
 
@@ -21,7 +20,7 @@ internal class ToolMessageEvent(
     override val bodyFields: List<EventBodyField> = buildList {
         // Content
         if (verbose) {
-            add(EventBodyFields.Content(content = toolResult.toStringDefault()))
+            add(EventBodyFields.Content(content = content))
         }
 
         // Id
