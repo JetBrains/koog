@@ -8,8 +8,8 @@ plugins {
 }
 
 dependencies {
-    api(project(":agents:agents-test"))
-    api(project(":koog-agents"))
+    implementation(project(":agents:agents-test"))
+    implementation(project(":koog-agents"))
     implementation(libs.opentelemetry.exporter.otlp)
     implementation(libs.opentelemetry.exporter.logging)
 }
