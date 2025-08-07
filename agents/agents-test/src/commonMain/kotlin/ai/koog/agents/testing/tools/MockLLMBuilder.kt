@@ -10,6 +10,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -677,12 +679,13 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      *
      * @return A configured MockLLMExecutor instance
      */
+    @OptIn(ExperimentalUuidApi::class)
     public fun build(): PromptExecutor {
         val processedAssistantMatches = assistantExactMatches.mapValues { (_, value) ->
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
-                    id = null,
+                    id = Uuid.random().toString(),
                     text,
                     ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
                 )
@@ -699,6 +702,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
+                    id = Uuid.random().toString(),
                     text,
                     ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
                 )
@@ -718,13 +722,19 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             conditional = conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
                 listOf(
                     Message.Assistant(
-                        id = null,
+                        id = Uuid.random().toString(),
                         content = textResponse,
                         metaInfo = ResponseMetaInfo.create(clock)
                     )
                 )
             },
-            defaultResponse = listOf(Message.Assistant(defaultResponse, ResponseMetaInfo.create(clock)))
+            defaultResponse = listOf(
+                Message.Assistant(
+                    id = Uuid.random().toString(),
+                    defaultResponse,
+                    ResponseMetaInfo.create(clock)
+                )
+            )
         )
 
         val moderationResponseMatcher = ResponseMatcher(

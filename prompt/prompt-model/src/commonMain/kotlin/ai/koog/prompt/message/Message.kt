@@ -113,10 +113,10 @@ public sealed interface Message {
      */
     @Serializable
     public data class User(
-        override val id: String? = null,
         override val content: String,
         override val metaInfo: RequestMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
+        override val id: String? = null,
     ) : Request, WithAttachments {
         override val role: Role = Role.User
     }

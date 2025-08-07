@@ -29,7 +29,12 @@ fun main() = runBlocking {
         )
 
         // Moderate user input
-        edge(nodeStart forwardTo moderateInput transformed { Message.User(it, metaInfo = RequestMetaInfo.Empty) })
+        edge(nodeStart forwardTo moderateInput transformed {
+            Message.User(
+                it,
+                metaInfo = RequestMetaInfo.Empty
+            )
+        })
 
         edge(
             moderateInput forwardTo callLLM
