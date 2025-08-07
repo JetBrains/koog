@@ -28,22 +28,23 @@ The documentation is available at [https://docs.koog.ai/](https://docs.koog.ai/)
 
 To ensure code snippets in documentation are compilable and up-to-date with the latest framework version, the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) library is used.
 
-Knit provides a Gradle plugin that extracts specially annotated Kotlin code snippets from markdown files and generates Kotlin source files. 
-To extract code snippets, run:
+Knit provides a Gradle plugin that extracts specially annotated Kotlin code snippets from markdown files and generates Kotlin source files.
+
+**How to fix docs**:
+1. Run knit to extract code snippets to /src/main/kotlin:
 ```
 ./gradlew :docs:knit
 ```
-
-To verify that all extracted files are compilable, run:
+2. Run assemble to get compilation arrows:
 ```
-./gradlew :docs:build
+./gradlew :docs:assemble
 ```
-
-**NB**: Before every release follow these actions:
-1. Build pre-release koog version x.x.x-demo
-2. Update koog version in [libs.versions.toml](gradle/libs.versions.toml) (add local repo if needed)
-3. Run knit locally and fix code snippets if compilation fails
-4. Commit fixed documentation
+3. Navigate to the file with the compilation error `example-[md-file-name]-[index].kt`
+4. Fix the error in this file
+5. Navigate to the code snippet in Markdown `md-file-name.md` by searing `<!--- KNIT example-[md-file-name]-[index].kt` -->`
+6. Update code snippet to reflect the changes in kt file
+   * Update dependencies (usually they are provided in `<!--- INCLUDE -->` section)
+   * Edit code (don't forget about tabulation when you just copy paste from kt)
 
 #### Knit Configuration
 
