@@ -112,14 +112,6 @@ internal fun Prompt.extractOllamaJsonFormat(): JsonObject? {
 }
 
 /**
- * Extracts options from the prompt, if temperature is defined.
- */
-internal fun Prompt.extractOllamaOptions(): OllamaChatRequestDTO.Options? {
-    val temperature = params.temperature
-    return temperature?.let { OllamaChatRequestDTO.Options(temperature = temperature) }
-}
-
-/**
  * Extracts tool calls from a ChatMessage.
  * Returns the first tool call for compatibility, but logs if multiple calls exist.
  */
