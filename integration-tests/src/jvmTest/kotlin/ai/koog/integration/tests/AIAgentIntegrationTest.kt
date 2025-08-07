@@ -983,6 +983,10 @@ class AIAgentIntegrationTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(
             model.id != GoogleModels.Gemini2_0Flash.id,
+            "gemini-2.0-flash returns flaky results and fails to call tools on a permanent basis"
+        )
+        assumeTrue(
+            model.id != GoogleModels.Gemini2_0Flash001.id,
             "gemini-2.0-flash-001 returns flaky results and fails to call tools on a permanent basis"
         )
 
