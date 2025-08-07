@@ -109,7 +109,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     // API keys for testing
-    private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
     private val googleApiKey: String get() = readTestGoogleAIKeyFromEnv()
@@ -117,7 +116,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
     // LLM clients
     private val openAIClient get() = OpenAILLMClient(openAIApiKey)
     private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
-    private val googleClient get() = GoogleLLMClient(geminiApiKey)
+    private val googleClient get() = GoogleLLMClient(googleApiKey)
     val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
     private fun createCalculatorTool(): ToolDescriptor {
