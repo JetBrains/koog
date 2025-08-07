@@ -87,7 +87,7 @@ class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemPro
             ?: throw IllegalArgumentException("Document not found: $path")
 
     override suspend fun readBytes(path: String): ByteArray =
-         mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.encodeToByteArray()
+        mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.encodeToByteArray()
             ?: throw IllegalArgumentException("Document not found: $path")
 
     @Deprecated("Use inputStream instead", replaceWith = ReplaceWith("inputStream(path)"))
