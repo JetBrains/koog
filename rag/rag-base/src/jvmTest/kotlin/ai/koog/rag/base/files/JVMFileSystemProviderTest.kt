@@ -475,7 +475,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
         assertFalse(readWrite.exists(Path.of(file1.pathString + "fake")))
     }
 
-
     @Test
     fun `test ReadWrite readBytes`() = runBlocking {
         val content = String(readWrite.readBytes(file1))
