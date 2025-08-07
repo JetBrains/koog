@@ -4,7 +4,7 @@ import ai.koog.embeddings.base.Vector
 import ai.koog.rag.vector.mocks.MockDocument
 import ai.koog.rag.vector.mocks.MockDocumentProvider
 import ai.koog.rag.vector.mocks.MockFileSystem
-import ai.koog.rag.vector.mocks.MockFileSystemProvicer
+import ai.koog.rag.vector.mocks.MockFileSystemProvider
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -36,7 +36,7 @@ class FileDocumentEmbeddingStorageTest {
     private suspend fun createTestStorage(): FileDocumentEmbeddingStorage<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
-        val mockFileSystemProvicer = MockFileSystemProvicer(mockFileSystem)
+        val mockFileSystemProvicer = MockFileSystemProvider(mockFileSystem)
         val mockEmbedder = MockDocumentEmbedder()
 
         return FileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvicer, "test-root")

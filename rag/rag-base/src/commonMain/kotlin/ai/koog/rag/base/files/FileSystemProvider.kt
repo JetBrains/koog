@@ -76,6 +76,16 @@ public object FileSystemProvider {
         public suspend fun metadata(path: Path): FileMetadata?
 
         /**
+         * Detects the type of content stored in a file using a [path].
+         *
+         * @param path The path to a file whose content type is to be detected.
+         * @return [FileMetadata.FileContentType.Text] for text files, [FileMetadata.FileContentType.Binary] for binary files.
+         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
+         * @throws IOException if an I/O error occurs while detecting the file content type.
+         */
+        public suspend fun getFileContentType(path: Path): FileMetadata.FileContentType
+
+        /**
          * Lists contents of a [directory].
          * Children are sorted by name.
          * The listing is not recursive.

@@ -63,6 +63,11 @@ internal open class FilteredReadOnly<P>(
         }
     }
 
+    override suspend fun getFileContentType(path: P): FileMetadata.FileContentType {
+        requireAllowed(path)
+        return fs.getFileContentType(path)
+    }
+
     override suspend fun exists(path: P): Boolean {
         return if (filter.show(path, fs)) {
             fs.exists(path)

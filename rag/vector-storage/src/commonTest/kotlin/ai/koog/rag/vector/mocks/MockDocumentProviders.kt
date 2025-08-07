@@ -42,7 +42,7 @@ class MockDocumentProvider(val mockFileSystem: MockFileSystem) : DocumentProvide
     }
 }
 
-class MockFileSystemProvicer(val mockFileSystem: MockFileSystem) : FileSystemProvider.ReadWrite<String> {
+class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemProvider.ReadWrite<String> {
     override fun toAbsolutePathString(path: String): String = path
 
     override fun fromAbsoluteString(path: String): String = path
@@ -69,6 +69,13 @@ class MockFileSystemProvicer(val mockFileSystem: MockFileSystem) : FileSystemPro
         if (path.startsWith(root)) path.removePrefix(root) else null
 
     override suspend fun exists(path: String): Boolean = path in mockFileSystem.documents
+
+    override suspend fun getFileContentType(path: String): FileMetadata.FileContentType =
+        when (mockFileSystem.documents[path]) {
+            is MockDocument -> FileMetadata.FileContentType.Text
+            is MockDirectory -> throw IllegalArgumentException("Path must be a regular file")
+            else -> throw IllegalArgumentException("Path must exist and be a regular file")
+        }
 
     override suspend fun read(path: String): ByteArray =
         mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.encodeToByteArray()

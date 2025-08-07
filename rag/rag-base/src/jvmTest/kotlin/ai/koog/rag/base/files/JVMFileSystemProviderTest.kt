@@ -181,8 +181,7 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadOnly metadata`() = runBlocking {
-        val metadata =
-            FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
+        val metadata = FileMetadata(FileMetadata.FileType.File, hidden = false)
         val testMetadata = readOnly.metadata(file1)
         assertEquals(metadata, testMetadata)
     }
@@ -344,11 +343,36 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test ReadOnly metadata dir`() = runBlocking {
+    fun `test metadata file`() = runBlocking {
+        val expectedMetadata = FileMetadata(FileMetadata.FileType.File, hidden = false)
+        val actualMetadata = readOnly.metadata(file1)
+        assertEquals(expectedMetadata, actualMetadata)
+    }
+
+    @Test
+    fun `test getFileContentType with Text type`() = runBlocking {
+        val contentType = readOnly.getFileContentType(file1)
+        assertEquals(FileMetadata.FileContentType.Text, contentType)
+    }
+
+    @Test
+    fun `test getFileContentType with directory throws IllegalArgumentException`() {
+        assertThrows<IllegalArgumentException> {
+            runBlocking { readOnly.getFileContentType(dirEmpty) }
+        }
+    }
+
+    @Test
+    fun `test getFileContentType with Binary type`() = runBlocking {
+        val contentType = readOnly.getFileContentType(zip1)
+        assertEquals(FileMetadata.FileContentType.Binary, contentType)
+    }
+
+    @Test
+    fun `test metadata dir`() = runBlocking {
         val metadata = FileMetadata(
             FileMetadata.FileType.Directory,
             hidden = false,
-            content = FileMetadata.FileContent.Inapplicable
         )
         val testMetadata = readOnly.metadata(dir1)
         assertEquals(metadata, testMetadata)
@@ -411,10 +435,9 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
     @Test
     fun `test ReadWrite metadata`() = runBlocking {
-        val metadata =
-            FileMetadata(FileMetadata.FileType.File, hidden = false, content = FileMetadata.FileContent.Text)
+        val expectedMetadata = FileMetadata(FileMetadata.FileType.File, hidden = false)
         val testMetadata = readWrite.metadata(file1)
-        assertEquals(metadata, testMetadata)
+        assertEquals(expectedMetadata, testMetadata)
     }
 
     @Test

@@ -1,6 +1,6 @@
 package ai.koog.rag.base.files
 
-import ai.koog.rag.base.files.FileMetadata.FileContent
+import ai.koog.rag.base.files.FileMetadata.FileContentType
 import ai.koog.rag.base.files.FileMetadata.FileType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -135,9 +135,9 @@ public object JVMFileSystemProvider {
          */
         override suspend fun metadata(path: Path): FileMetadata? {
             return if (path.isRegularFile()) {
-                FileMetadata(FileType.File, path.isHidden(), path.contentType())
+                FileMetadata(FileType.File, path.isHidden())
             } else if (path.isDirectory()) {
-                FileMetadata(FileType.Directory, path.isHidden(), path.contentType())
+                FileMetadata(FileType.Directory, path.isHidden())
             } else {
                 null
             }
@@ -188,6 +188,44 @@ public object JVMFileSystemProvider {
          * @return `true` if the file or directory exists, `false` otherwise.
          */
         override suspend fun exists(path: Path): Boolean = path.exists()
+
+        /**
+         * Detects the type of content stored in a file using a [path].
+         *
+         * @param path The path to the file whose content type is to be detected.
+         * @return [FileContentType.Text] for text files, [FileContentType.Binary] for binary files.
+         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
+         * @throws IOException if an I/O error occurs while detecting the file content type.
+         */
+        override suspend fun getFileContentType(path: Path): FileContentType {
+            require(path.exists()) { "Path must exist" }
+            require(path.isRegularFile()) { "Path must be a regular file" }
+            return if (path.isFileHeadTextBased()) FileContentType.Text else FileContentType.Binary
+        }
+
+        /**
+         * Determines if the beginning of a file's content is text-based, as opposed to binary.
+         * This method reads a specified amount of data from the start of the file,
+         * attempts decoding with a list of provided character sets, and checks if any succeed.
+         *
+         * @param headMaxSize The maximum number of bytes to read from the start of the file. Defaults to 1024 bytes.
+         * @param charsetsToTry A list of character sets to attempt decoding the file's content. Defaults to a list containing UTF-8.
+         * @return True if the file's head data is successfully decoded with one of the given character sets, otherwise false.
+         */
+        private fun Path.isFileHeadTextBased(
+            headMaxSize: Int = 1024,
+            charsetsToTry: List<Charset> = listOf(
+                Charsets.UTF_8,
+            )
+        ): Boolean {
+            return runCatching {
+                val headData = inputStream().use { stream ->
+                    val buffer = ByteArray(headMaxSize)
+                    stream.read(buffer, 0, headMaxSize).let { ByteBuffer.wrap(buffer.copyOf(it)) }
+                }
+                charsetsToTry.any { runCatching { it.newDecoder().decode(headData) }.isSuccess }
+            }.getOrElse { false }
+        }
 
         /**
          * Reads the contents of the file located at the specified path.
@@ -370,46 +408,5 @@ public object JVMFileSystemProvider {
                 }
             }
         }
-    }
-
-    /**
-     * Determines the type of content for a file represented by the Path.
-     *
-     * This function evaluates the file at the given Path to classify its content type as
-     * either textual, binary, or inapplicable. It checks if the file's head data can be
-     * classified as text using specific character sets, identifies binary content for regular files,
-     * and returns inapplicable for all other cases.
-     *
-     * @return the file content type as one of the [FileContent] values: [FileContent.Text],
-     * [FileContent.Binary], or [FileContent.Inapplicable].
-     */
-    private fun Path.contentType(): FileContent = when {
-        isFileHeadTextBased() -> FileContent.Text
-        isRegularFile() -> FileContent.Binary
-        else -> FileContent.Inapplicable
-    }
-
-    /**
-     * Determines if the beginning of a file's content is text-based, as opposed to binary.
-     * This method reads a specified amount of data from the start of the file,
-     * attempts decoding with a list of provided character sets, and checks if any succeed.
-     *
-     * @param headMaxSize The maximum number of bytes to read from the start of the file. Defaults to 1024 bytes.
-     * @param charsetsToTry A list of character sets to attempt decoding the file's content. Defaults to a list containing UTF-8.
-     * @return True if the file's head data is successfully decoded with one of the given character sets, otherwise false.
-     */
-    private fun Path.isFileHeadTextBased(
-        headMaxSize: Int = 1024,
-        charsetsToTry: List<Charset> = listOf(
-            Charsets.UTF_8,
-        )
-    ): Boolean {
-        return runCatching {
-            val headData = inputStream().use { stream ->
-                val buffer = ByteArray(headMaxSize)
-                stream.read(buffer, 0, headMaxSize).let { ByteBuffer.wrap(buffer.copyOf(it)) }
-            }
-            charsetsToTry.any { runCatching { it.newDecoder().decode(headData) }.isSuccess }
-        }.getOrElse { false }
     }
 }
