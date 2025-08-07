@@ -172,7 +172,7 @@ suspend fun example(context: AIAgentContextBase) {
         nodeId = "current-node-id",
         lastInput = inputData,
         lastInputType = inputType,
-        checkpointId = context.id,
+        checkpointId = context.runId,
     )
 
     // The checkpoint ID can be stored for later use
@@ -228,7 +228,7 @@ suspend fun example(context: AIAgentContextBase) {
             nodeId = "current-node-id",
             lastInput = inputData,
             lastInputType = inputType,
-            checkpointId = ctx.id,
+            checkpointId = ctx.runId,
         )
     }
 }

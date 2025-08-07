@@ -360,7 +360,7 @@ On the client side, you can use `FeatureMessageRemoteClient` to receive events a
 import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
 import ai.koog.agents.core.feature.model.DefinedFeatureEvent
 import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
-import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
+import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.utils.use
 import io.ktor.http.*
 import kotlinx.coroutines.*
@@ -522,12 +522,15 @@ Implement the `FeatureMessageProcessor` interface:
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
 import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureMessageProcessor
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureMessageProcessor
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 fun main() {
    runBlocking {
@@ -544,6 +547,13 @@ fun main() {
 -->
 ```kotlin
 class CustomTraceProcessor : FeatureMessageProcessor() {
+
+    // Current open state of the processor
+    private var _isOpen = MutableStateFlow(false)
+
+    override val isOpen: StateFlow<Boolean>
+        get() = _isOpen.asStateFlow()
+    
     override suspend fun processMessage(message: FeatureMessage) {
         // Custom processing logic
         when (message) {

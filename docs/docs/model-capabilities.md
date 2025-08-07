@@ -126,7 +126,8 @@ val basicModel = LLModel(
         LLMCapability.Temperature,
         LLMCapability.Tools,
         LLMCapability.Schema.JSON.Full
-    )
+    ),
+    contextLength = 128_000
 )
 ```
 <!--- KNIT example-model-capabilities-01.kt -->
@@ -147,7 +148,9 @@ val visionModel = LLModel(
         LLMCapability.Temperature,
         LLMCapability.Vision.Image,
         LLMCapability.MultipleChoices
-    )
+    ),
+    contextLength = 1_047_576,
+    maxOutputTokens = 32_768
 )
 ```
 <!--- KNIT example-model-capabilities-02.kt -->
@@ -168,7 +171,8 @@ val audioModel = LLModel(
         LLMCapability.Audio,
         LLMCapability.Temperature,
         LLMCapability.PromptCaching
-    )
+    ),
+    contextLength = 200_000
 )
 ```
 <!--- KNIT example-model-capabilities-03.kt -->

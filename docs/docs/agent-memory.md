@@ -137,7 +137,7 @@ loading facts, and can be installed as a feature in the agent configuration.
 The `AgentMemory.Config` class is the configuration class for the AgentMemory feature.
 
 <!--- INCLUDE
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory

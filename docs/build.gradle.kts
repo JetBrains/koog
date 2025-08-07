@@ -7,16 +7,9 @@ plugins {
     alias(libs.plugins.knit)
 }
 
-repositories {
-    mavenCentral()
-}
-
 dependencies {
-    implementation(libs.logback.classic)
-    implementation(libs.docs.koog)
-    implementation(libs.docs.koog.test)
-    implementation(libs.kotlinx.serialization.core)
-    implementation(libs.kotlinx.coroutines.core)
+    api(project(":agents:agents-test"))
+    api(project(":koog-agents"))
     implementation(libs.opentelemetry.exporter.otlp)
     implementation(libs.opentelemetry.exporter.logging)
 }
