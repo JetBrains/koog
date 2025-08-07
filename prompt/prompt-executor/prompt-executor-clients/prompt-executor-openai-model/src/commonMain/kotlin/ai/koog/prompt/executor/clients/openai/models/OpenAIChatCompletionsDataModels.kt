@@ -320,7 +320,6 @@ public sealed interface ContentPart {
     @SerialName("text")
     public class Text(public val text: String) : ContentPart
 
-
     /**
      * Image content part in the OpenAI chat completion API.
      *
@@ -746,8 +745,7 @@ public class OpenAIChatCompletionResponse(
     @SerialName("object")
     public val objectType: String,
     public val usage: OpenAIUsage? = null,
-) {
-}
+)
 
 /**
  * Chat completion choice
@@ -1000,7 +998,7 @@ internal object ContentSerializer : KSerializer<Content> {
 
             else -> throw SerializationException(
                 "Content must be either a string or an array of content parts. " +
-                        "Got: ${element::class.simpleName}"
+                    "Got: ${element::class.simpleName}"
             )
         }
     }

@@ -28,12 +28,14 @@ internal fun createMockHttpClient(responses: Map<String, MockResponse>): HttpCli
         }
     }
     install(ContentNegotiation) {
-        json(Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-            encodeDefaults = true
-            explicitNulls = false
-            namingStrategy = JsonNamingStrategy.SnakeCase
-        })
+        json(
+            Json {
+                ignoreUnknownKeys = true
+                isLenient = true
+                encodeDefaults = true
+                explicitNulls = false
+                namingStrategy = JsonNamingStrategy.SnakeCase
+            }
+        )
     }
 }
