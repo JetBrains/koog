@@ -40,6 +40,7 @@ public suspend fun <Path, Document> FileSystemProvider.ReadOnly<Path>.readText(
     }
     return readBytes(address).decodeToString()
 }
+
 /**
  * Reads the entire contents of a file as a string.
  *
@@ -60,7 +61,6 @@ public suspend fun <Path> FileSystemProvider.ReadOnly<Path>.readText(
  */
 public suspend fun <Path> FileSystemProvider.ReadWrite<Path>.writeText(address: Path, content: String) =
     writeBytes(address, content.encodeToByteArray())
-
 
 /**
  * Creates a file at the specified path.

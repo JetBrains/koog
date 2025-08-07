@@ -55,6 +55,7 @@ public object FileSystemProvider {
          * @return A `Path` object representing the resolved path.
          */
         public fun joinPath(base: Path, vararg parts: String): Path
+
         /**
          * Gets the name component of a [path].
          * This method works with the path structure
