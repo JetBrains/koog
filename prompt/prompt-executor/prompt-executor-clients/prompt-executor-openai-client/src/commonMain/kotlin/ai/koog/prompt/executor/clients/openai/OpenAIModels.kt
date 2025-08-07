@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.executor.clients.openai.OpenAIModels.Embeddings.TextEmbedding3Large
+import ai.koog.prompt.executor.clients.openai.OpenAIModels.Embeddings.TextEmbedding3Small
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -11,28 +13,28 @@ import ai.koog.prompt.llm.LLModel
  *
  * Note: All models with vision (image) capabilities also support sending PDF files.
  *
- * | Name                                | Speed     | Price              | Input              | Output             |
- * |-------------------------------------|-----------|--------------------|--------------------|--------------------|
- * | [Reasoning.GPT4oMini]               | Medium    | $1.1-$4.4          | Text, Image, Tools | Text, Tools        |
- * | [Reasoning.O3Mini]                  | Medium    | $1.1-$4.4          | Text, Tools        | Text, Tools        |
- * | [Reasoning.O1Mini]                  | Slow      | $1.1-$4.4          | Text               | Text               |
- * | [Reasoning.O3]                      | Slowest   | $10-$40            | Text, Image, Tools | Text, Tools        |
- * | [Reasoning.O1]                      | Slowest   | $15-$60            | Text, Image, Tools | Text, Tools        |
- * | [Chat.GPT4o]                        | Medium    | $2.5-$10           | Text, Image, Tools | Text, Tools        |
- * | [Chat.GPT4_1]                       | Medium    | $2-$8              | Text, Image, Tools | Text, Tools        |
- * | [Audio.GPT4oMiniAudio]              | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools | Text, Audio, Tools |
- * | [Audio.GPT4oAudio]                  | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools | Text, Audio, Tools |
- * | [CostOptimized.O4Mini]              | Medium    | $1.1-$4.4          | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.GPT4_1Nano]          | Very fast | $0.1-$0.4          | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.GPT4_1Mini]          | Fast      | $0.4-$1.6          | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.GPT4oMini]           | Fast      | $0.15-$0.6         | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.O1Mini]              | Slow      | $1.1-$4.4          | Text               | Text               |
- * | [CostOptimized.O3Mini]              | Medium    | $1.1-$4.4          | Text, Tools        | Text, Tools        |
- * | [Embeddings.TextEmbedding3Small]    | Medium    | $0.02              | Text               | Text               |
- * | [Embeddings.TextEmbedding3Large]    | Slow      | $0.13              | Text               | Text               |
- * | [Embeddings.TextEmbeddingAda002]    | Slow      | $0.1               | Text               | Text               |
- * | [Moderation.Text]                   | Medium    | -                  | Text               | Moderation Result  |
- * | [Moderation.Omni]                   | Medium    | $4.40              | Text               | Moderation Result  |
+ * | Name                                | Speed     | Price              | Input                        | Output             |
+ * |-------------------------------------|-----------|--------------------|------------------------------|--------------------|
+ * | [Reasoning.GPT4oMini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
+ * | [Reasoning.O3Mini]                  | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
+ * | [Reasoning.O1Mini]                  | Slow      | $1.1-$4.4          | Text                         | Text               |
+ * | [Reasoning.O3]                      | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools        |
+ * | [Reasoning.O1]                      | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT4o]                        | Medium    | $2.5-$10           | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT4_1]                       | Medium    | $2-$8              | Text, Image, Tools, Document | Text, Tools        |
+ * | [Audio.GPT4oMiniAudio]              | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools |
+ * | [Audio.GPT4oAudio]                  | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools |
+ * | [CostOptimized.O4Mini]              | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
+ * | [CostOptimized.GPT4_1Nano]          | Very fast | $0.1-$0.4          | Text, Image, Tools, Document | Text, Tools        |
+ * | [CostOptimized.GPT4_1Mini]          | Fast      | $0.4-$1.6          | Text, Image, Tools, Document | Text, Tools        |
+ * | [CostOptimized.GPT4oMini]           | Fast      | $0.15-$0.6         | Text, Image, Tools           | Text, Tools        |
+ * | [CostOptimized.O1Mini]              | Slow      | $1.1-$4.4          | Text                         | Text               |
+ * | [CostOptimized.O3Mini]              | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
+ * | [Embeddings.TextEmbedding3Small]    | Medium    | $0.02              | Text                         | Text               |
+ * | [Embeddings.TextEmbedding3Large]    | Slow      | $0.13              | Text                         | Text               |
+ * | [Embeddings.TextEmbeddingAda002]    | Slow      | $0.1               | Text                         | Text               |
+ * | [Moderation.Text]                   | Medium    | -                  | Text                         | Moderation Result  |
+ * | [Moderation.Omni]                   | Medium    | $4.40              | Text                         | Moderation Result  |
  */
 public object OpenAIModels : LLModelDefinitions {
     // TODO: support thinking tokens

@@ -31,6 +31,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -639,7 +640,7 @@ class AIAgentIntegrationTest {
         val bye = "Bye"
 
         val checkpointStrategy = strategy("checkpoint-strategy") {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 sayHello
             }
 
@@ -656,7 +657,7 @@ class AIAgentIntegrationTest {
                 savedMessage
             }
 
-            val nodeBye by node<String, String>(bye) { input ->
+            val nodeBye by node<String, String>(bye) {
                 sayBye
             }
 
@@ -744,7 +745,7 @@ class AIAgentIntegrationTest {
         val executionLog = StringBuilder()
 
         val rollbackStrategy = strategy("rollback-strategy") {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 executionLog.append(sayHelloLog)
                 sayHello
             }
@@ -762,12 +763,12 @@ class AIAgentIntegrationTest {
                 saySave
             }
 
-            val nodeBye by node<String, String>(bye) { input ->
+            val nodeBye by node<String, String>(bye) {
                 executionLog.append(sayByeLog)
                 sayBye
             }
 
-            val rollbackNode by node<String, String>(rollback) { input ->
+            val rollbackNode by node<String, String>(rollback) {
                 // Use a shared variable to prevent infinite rollbacks
                 // Only roll back once, then continue
                 if (!hasRolledBack) {
@@ -856,15 +857,15 @@ class AIAgentIntegrationTest {
         val noCheckpointByeError = "No checkpoint for Node Bye"
 
         val simpleStrategy = strategy(strategyName) {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 sayHello
             }
 
-            val nodeWorld by node<String, String>(world) { input ->
+            val nodeWorld by node<String, String>(world) {
                 sayWorld
             }
 
-            val node3 by node<String, String>(bye) { input ->
+            val node3 by node<String, String>(bye) {
                 sayBye
             }
 
@@ -929,7 +930,7 @@ class AIAgentIntegrationTest {
             JVMFilePersistencyStorageProvider(tempDir, "integration_AgentCheckpointStorageProvidersTest")
 
         val simpleStrategy = strategy(strategyName) {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 sayHello
             }
 
@@ -980,6 +981,10 @@ class AIAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model.id != GoogleModels.Gemini2_0Flash.id,
+            "gemini-2.0-flash-001 returns flaky results and fails to call tools on a permanent basis"
+        )
 
         val registry = ToolRegistry {
             tool(CalculatorToolNoArgs)

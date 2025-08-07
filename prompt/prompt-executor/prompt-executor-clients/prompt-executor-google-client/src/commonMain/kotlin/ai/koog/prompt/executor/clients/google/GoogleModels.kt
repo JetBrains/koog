@@ -63,7 +63,7 @@ public object GoogleModels : LLModelDefinitions {
      * Multimodal capabilities including vision (without tools)
      */
     private val multimodalCapabilities: List<LLMCapability> =
-        standardCapabilities + listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio, LLMCapability.Document)
+        standardCapabilities + listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio)
 
     /**
      * Full capabilities including multimodal and tools

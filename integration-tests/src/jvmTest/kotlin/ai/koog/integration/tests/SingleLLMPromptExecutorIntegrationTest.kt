@@ -685,35 +685,36 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
 
-            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
-                prompt("markdown-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze markdown files.")
+            val prompt =
+                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                    prompt("markdown-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze markdown files.")
 
-                    user {
-                        markdown {
-                            +"I'm sending you a markdown file with different markdown elements. "
-                            +"Please list all the markdown elements used in it and describe its structure clearly."
+                        user {
+                            markdown {
+                                +"I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                            }
+
+                            attachments {
+                                textFile(KtPath(file.pathString), "text/plain")
+                            }
                         }
+                    }
+                } else {
+                    prompt("markdown-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze markdown files.")
 
-                        attachments {
-                            file(file.pathString, "text/markdown")
+                        user {
+                            markdown {
+                                +"I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                                newline()
+                                +file.readText()
+                            }
                         }
                     }
                 }
-            } else {
-                prompt("markdown-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze markdown files.")
-
-                    user {
-                        markdown {
-                            +"I'm sending you a markdown file with different markdown elements. "
-                            +"Please list all the markdown elements used in it and describe its structure clearly."
-                            newline()
-                            +file.readText()
-                        }
-                    }
-                }
-            }
 
             try {
                 val response = executor.execute(prompt, model)
@@ -794,32 +795,36 @@ class SingleLLMPromptExecutorIntegrationTest {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
+                            assertEquals(
+                                e.message?.contains("400 Bad Request"),
+                                true,
                                 "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
-                            assertTrue(
-                                e.message?.contains("image exceeds") == true,
+                            assertEquals(
+                                e.message?.contains("image exceeds"),
+                                true,
                                 "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
                             )
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
+                            assertEquals(
+                                e.message?.contains("400 Bad Request"),
+                                true,
                                 "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertTrue(
-                                    e.message?.contains("Could not process image") == true,
+                                assertEquals(
+                                    e.message?.contains("Could not process image"),
+                                    true,
                                     "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
                                 )
                             } else if (model.provider == LLMProvider.OpenAI) {
-                                assertTrue(
+                                assertEquals(
                                     e.message?.contains(
                                         "You uploaded an unsupported image. Please make sure your image is valid."
-                                    ) ==
-                                        true,
+                                    ),
+                                    true,
                                     "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -838,40 +843,40 @@ class SingleLLMPromptExecutorIntegrationTest {
     fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
-            assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
 
             val client = getClient(model)
             val executor = SingleLLMPromptExecutor(client)
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
-            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
-                prompt("text-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze and process text.")
+            val prompt =
+                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                    prompt("text-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze and process text.")
 
-                    user {
-                        markdown {
-                            +"I'm sending you a text file. Please analyze it and summarize its content."
+                        user {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                            }
+
+                            attachments {
+                                textFile(KtPath(file.pathString), "text/plain")
+                            }
                         }
+                    }
+                } else {
+                    prompt("text-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze and process text.")
 
-                        attachments {
-                            textFile(KtPath(file.pathString), "text/plain")
+                        user {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                                newline()
+                                +file.readText()
+                            }
                         }
                     }
                 }
-            } else {
-                prompt("text-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze and process text.")
-
-                    user {
-                        markdown {
-                            +"I'm sending you a text file. Please analyze it and summarize its content."
-                            newline()
-                            +file.readText()
-                        }
-                    }
-                }
-            }
 
             withRetry {
                 try {
@@ -881,15 +886,16 @@ class SingleLLMPromptExecutorIntegrationTest {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
                             if (model.provider == LLMProvider.Google) {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
+                                assertEquals(
+                                    e.message?.contains("400 Bad Request"),
+                                    true,
                                     "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
-                                assertTrue(
+                                assertEquals(
                                     e.message?.contains(
                                         "Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."
-                                    ) ==
-                                        true,
+                                    ),
+                                    true,
                                     "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -897,12 +903,14 @@ class SingleLLMPromptExecutorIntegrationTest {
 
                         TextTestScenario.LONG_TEXT_5_MB -> {
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
+                                assertEquals(
+                                    e.message?.contains("400 Bad Request"),
+                                    true,
                                     "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
-                                assertTrue(
-                                    e.message?.contains("prompt is too long") == true,
+                                assertEquals(
+                                    e.message?.contains("prompt is too long"),
+                                    true,
                                     "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
                                 )
                             } else if (model.provider == LLMProvider.Google) {
@@ -951,18 +959,21 @@ class SingleLLMPromptExecutorIntegrationTest {
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
+                        assertEquals(
+                            e.message?.contains("400 Bad Request"),
+                            true,
                             "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                         )
                         if (model.provider == LLMProvider.OpenAI) {
-                            assertTrue(
-                                e.message?.contains("This model does not support the format you provided.") == true,
+                            assertEquals(
+                                e.message?.contains("This model does not support the format you provided."),
+                                true,
                                 "Expected exception for corrupted audio [This model does not support the format you provided.]"
                             )
                         } else if (model.provider == LLMProvider.Google) {
-                            assertTrue(
-                                e.message?.contains("Request contains an invalid argument.") == true,
+                            assertEquals(
+                                e.message?.contains("Request contains an invalid argument."),
+                                true,
                                 "Expected exception for corrupted audio [Request contains an invalid argument.]"
                             )
                         }
