@@ -18,6 +18,7 @@ import java.nio.file.NoSuchFileException
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.absolutePathString
+import kotlin.io.path.copyTo
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
@@ -82,10 +83,28 @@ public object JVMFileSystemProvider {
          * @return A normalized Path object representing the resolved path.
          * @throws IllegalArgumentException if [path] is absolute.
          */
+        @Deprecated("Use joinPath instead", replaceWith = ReplaceWith("joinPath(base, path)"))
         override fun fromRelativeString(base: Path, path: String): Path {
             val resolvedPath = Path.of(path)
             require(!resolvedPath.isAbsolute) { "Path must be relative, but was absolute: $path" }
             return base.resolve(path).normalize()
+        }
+
+        /**
+         * Converts a relative string representation of a path into a normalized Path object
+         * based on the provided base Path.
+         *
+         * @param base The base path against which the relative path will be resolved.
+         * @param parts Parts of a relative path as strings to be resolved.
+         * @return A normalized Path object representing the resolved path.
+         * @throws IllegalArgumentException if some [parts] are absolute.
+         */
+        override fun joinPath(base: Path, vararg parts: String): Path {
+            return parts.fold(base) { acc, part ->
+                val resolvedPath = Path.of(part)
+                require(!resolvedPath.isAbsolute) { "Path must be relative, but was absolute: $part" }
+                acc.resolve(part)
+            }.normalize()
         }
 
         /**
@@ -235,7 +254,23 @@ public object JVMFileSystemProvider {
          * @throws IllegalArgumentException if the specified path is not a regular file or does not exist.
          * @throws IOException if an I/O error occurs during reading.
          */
+        @Deprecated("Use readBytes instead", replaceWith = ReplaceWith("readBytes(path)"))
         override suspend fun read(path: Path): ByteArray {
+            require(path.exists()) { "Path must exist" }
+            require(path.isRegularFile()) { "Path must be a regular file" }
+
+            return withContext(Dispatchers.IO) { path.readBytes() }
+        }
+
+        /**
+         * Reads the contents of the file located at the specified path.
+         *
+         * @param path the path of the file to read, which must be a regular file and must exist.
+         * @return a ByteArray containing the contents of the file.
+         * @throws IllegalArgumentException if the specified path is not a regular file or does not exist.
+         * @throws IOException if an I/O error occurs during reading.
+         */
+        override suspend fun readBytes(path: Path): ByteArray {
             require(path.exists()) { "Path must exist" }
             require(path.isRegularFile()) { "Path must be a regular file" }
 
@@ -250,7 +285,22 @@ public object JVMFileSystemProvider {
          * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs during source creation.
          */
+        @Deprecated("Use inputStream instead", replaceWith = ReplaceWith("inputStream(path)"))
         override suspend fun source(path: Path): Source = withContext(Dispatchers.IO) {
+            require(path.exists()) { "Path must exist" }
+            require(path.isRegularFile()) { "Path must be a regular file" }
+            SystemFileSystem.source(path = kotlinx.io.files.Path(path.pathString)).buffered()
+        }
+
+        /**
+         * Opens a source to read from the specified file path.
+         *
+         * @param path The file path from which the source will be opened.
+         * @return A buffered source for reading from the file.
+         * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
+         * @throws IOException if an I/O error occurs during source creation.
+         */
+        override suspend fun inputStream(path: Path): Source = withContext(Dispatchers.IO) {
             require(path.exists()) { "Path must exist" }
             require(path.isRegularFile()) { "Path must be a regular file" }
             SystemFileSystem.source(path = kotlinx.io.files.Path(path.pathString)).buffered()
@@ -305,6 +355,7 @@ public object JVMFileSystemProvider {
          * @param type The type of file system entity to create, either a file or a directory, represented by the [FileType] enum.
          * @throws IOException If the name is invalid or an error occurs during creation.
          */
+        @Deprecated("Use create instead", replaceWith = ReplaceWith("create(joinPath(parent, name), type)"))
         override suspend fun create(parent: Path, name: String, type: FileType) {
             withContext(Dispatchers.IO) {
                 if (name in WINDOWS_RESERVED_NAMES && System.getProperty("os.name").lowercase().contains("win")) {
@@ -323,15 +374,49 @@ public object JVMFileSystemProvider {
         }
 
         /**
+         * Creates a new file or directory at the specified path.
+         *
+         * @param path The path to directory or file where it will be created.
+         * @param type The type of file system entity to create, either a file or a directory, represented by the [FileType] enum.
+         * @throws IOException If the name is invalid or an error occurs during creation.
+         */
+        override suspend fun create(path: Path, type: FileType) {
+            withContext(Dispatchers.IO) {
+                if (path.name in WINDOWS_RESERVED_NAMES && System.getProperty("os.name").lowercase().contains("win")) {
+                    throw IOException("Invalid file name: ${path.name}")
+                }
+
+                path.createParentDirectories()
+
+                when (type) {
+                    FileType.File -> path.createFile()
+                    FileType.Directory -> path.createDirectory()
+                }
+            }
+        }
+
+        /**
          * Writes the provided content to the specified path. Ensures that any necessary parent directories
          * for the path are created before writing the content.
          *
          * @param path The path where the content will be written.
          * @param content The byte array content to be written to the specified path.
          */
+        @Deprecated("Use writeBytes instead", replaceWith = ReplaceWith("writeBytes(path, content)"))
         override suspend fun write(path: Path, content: ByteArray) {
             path.createParentDirectories()
             withContext(Dispatchers.IO) { path.writeBytes(content) }
+        }
+        /**
+         * Writes the provided content to the specified path. Ensures that any necessary parent directories
+         * for the path are created before writing the content.
+         *
+         * @param path The path where the content will be written.
+         * @param data The byte array content to be written to the specified path.
+         */
+        override suspend fun writeBytes(path: Path, data: ByteArray) {
+            path.createParentDirectories()
+            withContext(Dispatchers.IO) { path.writeBytes(data) }
         }
 
         /**
@@ -344,7 +429,25 @@ public object JVMFileSystemProvider {
          *               if it already exists (true) or overwrite the file (false).
          * @return A buffered Sink for the specified path, ready for writing.
          */
+        @Deprecated("Use outputStream instead", replaceWith = ReplaceWith("outputStream(path, append)"))
         override suspend fun sink(path: Path, append: Boolean): Sink {
+            return withContext(Dispatchers.IO) {
+                path.createParentDirectories()
+                SystemFileSystem.sink(path = kotlinx.io.files.Path(path.pathString), append = append).buffered()
+            }
+        }
+
+        /**
+         * Creates and returns a Sink for the given file path, allowing data to be written to the file.
+         * It ensures that parent directories of the file path are created if they do not already exist.
+         * The operation is performed in the IO context.
+         *
+         * @param path The file path where the sink is to be created.
+         * @param append A boolean value indicating whether to append data to the file
+         *               if it already exists (true) or overwrite the file (false).
+         * @return A buffered Sink for the specified path, ready for writing.
+         */
+        override suspend fun outputStream(path: Path, append: Boolean): Sink {
             return withContext(Dispatchers.IO) {
                 path.createParentDirectories()
                 SystemFileSystem.sink(path = kotlinx.io.files.Path(path.pathString), append = append).buffered()
@@ -390,6 +493,43 @@ public object JVMFileSystemProvider {
         }
 
         /**
+         * Copies a file or directory from the source path to the target path.
+         * If the source is a directory, all its contents are copied recursively.
+         * If the source is a file, it is copied directly to the target.
+         * Ensures operations are performed using IO dispatchers.
+         *
+         * @param source The source path of the file or directory to be copied.
+         * @param destination The destination path where the file or directory should be copied.
+         * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
+         *   [destination] already exists, or any I/O error occurs.
+         */
+        override suspend fun copy(source: Path, destination: Path) {
+            withContext(Dispatchers.IO) {
+                if (destination.exists()) {
+                    throw FileAlreadyExistsException("Destination path already exists: $destination")
+                }
+                if (source.notExists()) {
+                    throw IOException("Source path doesn't exist: $source")
+                }
+
+                if (source.isDirectory()) {
+                    destination.createDirectories()
+                    Files.list(source).use { stream ->
+                        stream.forEach { child ->
+                            val targetChild = destination.resolve(child.name)
+                            child.copyTo(targetChild)
+                        }
+                    }
+                } else if (source.isRegularFile()) {
+                    destination.createParentDirectories()
+                    source.copyTo(destination)
+                } else {
+                    throw IOException("Source path is neither a file nor a directory: $source")
+                }
+            }
+        }
+
+        /**
          * Deletes a file or directory specified by the given parent path and name.
          * The deletion is performed in an IO-optimized context. If the target is a directory, it will be deleted recursively.
          *
@@ -397,10 +537,29 @@ public object JVMFileSystemProvider {
          * @param name The name of the file or directory to be deleted.
          * @throws NoSuchFileException if a file or directory doesn't exist.
          */
+        @Deprecated("Use delete instead", replaceWith = ReplaceWith("delete(joinPath(parent, name))"))
         @OptIn(ExperimentalPathApi::class)
         override suspend fun delete(parent: Path, name: String) {
             withContext(Dispatchers.IO) {
                 val path = parent.resolve(name)
+                if (path.isDirectory()) {
+                    path.deleteRecursively()
+                } else {
+                    path.deleteExisting()
+                }
+            }
+        }
+
+        /**
+         * Deletes a file or directory specified by the given parent path and name.
+         * The deletion is performed in an IO-optimized context. If the target is a directory, it will be deleted recursively.
+         *
+         * @param path The path of the file or directory to be deleted.
+         * @throws NoSuchFileException if a file or directory doesn't exist.
+         */
+        @OptIn(ExperimentalPathApi::class)
+        override suspend fun delete(path: Path) {
+            withContext(Dispatchers.IO) {
                 if (path.isDirectory()) {
                     path.deleteRecursively()
                 } else {

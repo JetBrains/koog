@@ -1,7 +1,10 @@
 package ai.koog.agents.memory.storage
 
-import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.createDirectory
+import ai.koog.rag.base.files.createFile
+import ai.koog.rag.base.files.readText
+import ai.koog.rag.base.files.writeText
 
 /**
  * Platform-independent encryption abstraction for secure data storage.
@@ -181,7 +184,7 @@ public open class SimpleStorage<Path>(
      */
     override suspend fun read(path: Path): String? {
         if (!fs.exists(path)) return null
-        return fs.read(path).decodeToString()
+        return fs.readText(path)
     }
 
     /**
@@ -201,9 +204,9 @@ public open class SimpleStorage<Path>(
         val name = fs.name(path)
 
         if (!fs.exists(path)) {
-            fs.create(parent, name, FileMetadata.FileType.File)
+            fs.createFile(fs.joinPath(parent, name))
         }
-        fs.write(path, content.encodeToByteArray())
+        fs.writeText(path, content)
     }
 
     /**
@@ -220,7 +223,7 @@ public open class SimpleStorage<Path>(
         if (!fs.exists(path)) {
             val parent = fs.parent(path) ?: return
             val name = fs.name(path)
-            fs.create(parent, name, FileMetadata.FileType.Directory)
+            fs.createDirectory(fs.joinPath(parent, name))
         }
     }
 }
@@ -282,7 +285,7 @@ public class EncryptedStorage<Path>(
      */
     override suspend fun read(path: Path): String? {
         if (!fs.exists(path)) return null
-        val content = fs.read(path).decodeToString()
+        val content = fs.readText(path)
         return encryption.decrypt(content)
     }
 
@@ -305,9 +308,9 @@ public class EncryptedStorage<Path>(
 
         val encrypted = encryption.encrypt(content)
         if (!fs.exists(path)) {
-            fs.create(parent, name, FileMetadata.FileType.File)
+            fs.createFile(fs.joinPath(parent, name))
         }
-        fs.write(path, encrypted.encodeToByteArray())
+        fs.writeText(path, encrypted)
     }
 
     /**
@@ -323,7 +326,7 @@ public class EncryptedStorage<Path>(
         if (!fs.exists(path)) {
             val parent = fs.parent(path) ?: return
             val name = fs.name(path)
-            fs.create(parent, name, FileMetadata.FileType.Directory)
+            fs.createDirectory(fs.joinPath(parent, name))
         }
     }
 }

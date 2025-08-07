@@ -33,10 +33,10 @@ class TextFileDocumentEmbeddingStorageTest {
     private suspend fun createTestStorage(): TextFileDocumentEmbeddingStorage<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
-        val mockFileSystemProvicer = MockFileSystemProvider(mockFileSystem)
+        val mockFileSystemProvider = MockFileSystemProvider(mockFileSystem)
         val mockEmbedder = MockEmbedder()
 
-        return TextFileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvicer, "test-root")
+        return TextFileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvider, "test-root")
     }
 
     @Test
@@ -93,8 +93,7 @@ class TextFileDocumentEmbeddingStorageTest {
     @Test
     fun testRankDocuments() = runTest {
         val storage = createTestStorage()
-        val documents =
-            listOf(MockDocument("hello world"), MockDocument("goodbye world"), MockDocument("hello universe"))
+        val documents = listOf(MockDocument("hello world"), MockDocument("goodbye world"), MockDocument("hello universe"))
         val documentIds = mutableListOf<String>()
 
         // Store documents

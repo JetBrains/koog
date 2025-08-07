@@ -36,10 +36,10 @@ class FileDocumentEmbeddingStorageTest {
     private suspend fun createTestStorage(): FileDocumentEmbeddingStorage<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
-        val mockFileSystemProvicer = MockFileSystemProvider(mockFileSystem)
+        val mockFileSystemProvider = MockFileSystemProvider(mockFileSystem)
         val mockEmbedder = MockDocumentEmbedder()
 
-        return FileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvicer, "test-root")
+        return FileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvider, "test-root")
     }
 
     @Test

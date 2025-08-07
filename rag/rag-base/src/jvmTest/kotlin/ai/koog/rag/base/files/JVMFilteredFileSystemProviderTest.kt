@@ -33,21 +33,21 @@ class JVMFilteredFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
-    fun `test read`(): Unit = runBlocking {
+    fun `test readBytes`(): Unit = runBlocking {
         assertThrows<IllegalArgumentException> {
-            fsReadOnly.read(file3)
+            fsReadOnly.readBytes(file3)
         }
 
-        fsReadOnly.read(resource1)
+        fsReadOnly.readBytes(resource1)
     }
 
     @Test
-    fun `test source`(): Unit = runBlocking {
+    fun `test inputStream`(): Unit = runBlocking {
         assertThrows<IllegalArgumentException> {
-            fsReadOnly.source(file3).close()
+            fsReadOnly.inputStream(file3).close()
         }
 
-        fsReadOnly.source(resource1).close()
+        fsReadOnly.inputStream(resource1).close()
     }
 
     @Test
@@ -90,8 +90,8 @@ class JVMFilteredFileSystemProviderTest : KoogTestBase() {
     @Test
     fun `test select does not throw`() {
         assertNotNull(fsReadOnly.parent(src2))
-        assertNotNull(fsReadOnly.fromRelativeString(src2, assertNotNull(fsReadOnly.relativize(src2, file2))))
-        assertNotNull(fsReadOnly.fromAbsolutePathString(assertNotNull(fsReadOnly.toAbsolutePathString(file2))))
+        assertNotNull(fsReadOnly.joinPath(src2, assertNotNull(fsReadOnly.relativize(src2, file2))))
+        assertNotNull(fsReadOnly.fromAbsoluteString(assertNotNull(fsReadOnly.toAbsolutePathString(file2))))
         assertNotNull(fsReadOnly.name(src2))
         assertNotNull(fsReadOnly.extension(file2))
     }
@@ -100,34 +100,34 @@ class JVMFilteredFileSystemProviderTest : KoogTestBase() {
     fun `test create`() = runBlocking {
         assertThrows<IOException> {
             // forbidden parent
-            fsReadWrite.create(dir2, "myNewDir", FileMetadata.FileType.Directory)
+            fsReadWrite.createDirectory(fsReadWrite.joinPath(dir2, "myNewDir"))
         }
 
         assertThrows<IOException> {
             // allowed parent
-            fsReadWrite.create(dir1, "myNewFile", FileMetadata.FileType.File)
+            fsReadWrite.createFile(fsReadWrite.joinPath(dir1, "myNewFile"))
         }
 
-        fsReadWrite.create(src1, "myNewDir", FileMetadata.FileType.Directory)
-        fsReadWrite.create(src1, "myNewFile", FileMetadata.FileType.File)
+        fsReadWrite.createDirectory(fsReadWrite.joinPath(src1, "myNewDir"))
+        fsReadWrite.createFile(fsReadWrite.joinPath(src1, "myNewFile"))
     }
 
     @Test
-    fun `test write`() = runBlocking {
+    fun `test writeBytes`() = runBlocking {
         assertThrows<IOException> {
-            fsReadWrite.write(file2, "myNewContent".toByteArray())
+            fsReadWrite.writeBytes(file2, "myNewContent".toByteArray())
         }
 
-        fsReadWrite.write(file1, "myNewContent".toByteArray())
+        fsReadWrite.writeBytes(file1, "myNewContent".toByteArray())
     }
 
     @Test
-    fun `test sink`() = runBlocking {
+    fun `test outputStream`() = runBlocking {
         assertThrows<IOException> {
-            fsReadWrite.sink(file2).close()
+            fsReadWrite.outputStream(file2).close()
         }
 
-        fsReadWrite.sink(file1).close()
+        fsReadWrite.outputStream(file1).close()
     }
 
     @Test
@@ -149,14 +149,14 @@ class JVMFilteredFileSystemProviderTest : KoogTestBase() {
     fun `test delete`() = runBlocking {
         assertThrows<IOException> {
             // forbidden parent
-            fsReadWrite.delete(src2, file2.name)
+            fsReadWrite.delete(fsReadWrite.joinPath(src2, file2.name))
         }
 
         assertThrows<IOException> {
             // allowed parent
-            fsReadWrite.delete(dir1, dir2.name)
+            fsReadWrite.delete(fsReadWrite.joinPath(dir1, dir2.name))
         }
 
-        fsReadWrite.delete(src1, file1.name)
+        fsReadWrite.delete(fsReadWrite.joinPath(src1, file1.name))
     }
 }

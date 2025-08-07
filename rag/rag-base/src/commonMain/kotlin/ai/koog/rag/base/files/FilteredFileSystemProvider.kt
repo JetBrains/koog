@@ -33,14 +33,26 @@ internal open class FilteredReadOnly<P>(
         require(filter.show(path, fs)) { "Path $path is hidden by filter" }
     }
 
+    @Deprecated("Use readBytes instead", replaceWith = ReplaceWith("readBytes(path)"))
     override suspend fun read(path: P): ByteArray {
         requireAllowed(path)
-        return fs.read(path)
+        return fs.readBytes(path)
     }
 
+    override suspend fun readBytes(path: P): ByteArray {
+        requireAllowed(path)
+        return fs.readBytes(path)
+    }
+
+    @Deprecated("Use inputStream instead", replaceWith = ReplaceWith("inputStream(path)"))
     override suspend fun source(path: P): Source {
         requireAllowed(path)
-        return fs.source(path)
+        return fs.inputStream(path)
+    }
+
+    override suspend fun inputStream(path: P): Source {
+        requireAllowed(path)
+        return fs.inputStream(path)
     }
 
     override suspend fun size(path: P): Long {
@@ -84,7 +96,11 @@ internal open class FilteredReadOnly<P>(
 
     override fun fromAbsolutePathString(path: String): P = fs.fromAbsolutePathString(path)
 
-    override fun fromRelativeString(base: P, path: String): P = fs.fromRelativeString(base, path)
+    @Deprecated("Use joinPath instead", replaceWith = ReplaceWith("joinPath(base, path)"))
+    override fun fromRelativeString(base: P, path: String): P = fs.joinPath(base, path)
+    override fun joinPath(base: P, vararg parts: String): P {
+        return fs.joinPath(base, *parts)
+    }
 
     override fun name(path: P): String = fs.name(path)
 
@@ -101,20 +117,38 @@ internal class FilteredReadWrite<P>(
         }
     }
 
+    @Deprecated("Use create instead", replaceWith = ReplaceWith("create(joinPath(parent, name), type)"))
     override suspend fun create(parent: P, name: String, type: FileMetadata.FileType) {
         ensureAllowed(parent)
-        ensureAllowed(fs.fromRelativeString(parent, name))
-        fs.create(parent, name, type)
+        ensureAllowed(fs.joinPath(parent, name))
+        fs.create(fs.joinPath(parent, name), type)
     }
 
+    override suspend fun create(path: P, type: FileMetadata.FileType) {
+        ensureAllowed(path)
+        fs.create(path, type)
+    }
+
+    @Deprecated("Use writeBytes instead", replaceWith = ReplaceWith("writeBytes(path, content)"))
     override suspend fun write(path: P, content: ByteArray) {
         ensureAllowed(path)
-        fs.write(path, content)
+        fs.writeBytes(path, content)
     }
 
+    override suspend fun writeBytes(path: P, data: ByteArray) {
+        ensureAllowed(path)
+        fs.writeBytes(path, data)
+    }
+
+    @Deprecated("Use outputStream instead", replaceWith = ReplaceWith("outputStream(path, append)"))
     override suspend fun sink(path: P, append: Boolean): Sink {
         ensureAllowed(path)
-        return fs.sink(path, append)
+        return fs.outputStream(path, append)
+    }
+
+    override suspend fun outputStream(path: P, append: Boolean): Sink {
+        ensureAllowed(path)
+        return fs.outputStream(path, append)
     }
 
     override suspend fun move(source: P, target: P) {
@@ -123,9 +157,21 @@ internal class FilteredReadWrite<P>(
         fs.move(source, target)
     }
 
+    override suspend fun copy(source: P, destination: P) {
+        ensureAllowed(source)
+        ensureAllowed(destination)
+        fs.copy(source, destination)
+    }
+
+    @Deprecated("Use delete(path) instead", replaceWith = ReplaceWith("delete(joinPath(parent, name))"))
     override suspend fun delete(parent: P, name: String) {
         ensureAllowed(parent)
-        ensureAllowed(fs.fromRelativeString(parent, name))
-        fs.delete(parent, name)
+        ensureAllowed(fs.joinPath(parent, name))
+        fs.delete(fs.joinPath(parent, name))
+    }
+
+    override suspend fun delete(path: P) {
+        ensureAllowed(path)
+        fs.delete(path)
     }
 }
