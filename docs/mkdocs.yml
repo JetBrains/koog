@@ -11,12 +11,16 @@ nav:
           - Overview: tools-overview.md
           - Built-in tools: built-in-tools.md
           - Annotation-based tools: annotation-based-tools.md
-          - Advanced implementation: advanced-tool-implementation.md
+          - Class-based tools: class-based-tools.md
       - Agent events: agent-events.md
-      - Custom strategy graphs: custom-strategy-graphs.md
-      - Pre-defined nodes and components: nodes-and-components.md
+      - Agent strategies:
+          - Custom strategy graphs: custom-strategy-graphs.md
+          - Pre-defined nodes and components: nodes-and-components.md
+          - Parallel node execution: parallel-node-execution.md
       - History compression: history-compression.md
       - Model Context Protocol: model-context-protocol.md
+      - Model capabilities: model-capabilities.md
+      - Content moderation: content-moderation.md
       - Advanced usage:
           - Structured data: structured-data.md
           - Streaming API: streaming-api.md
@@ -26,10 +30,13 @@ nav:
               - Overview: subgraphs-overview.md
               - Custom subgraphs: custom-subgraphs.md
           - Embeddings: embeddings.md
+          - Ranked document storage: ranked-document-storage.md
           - Features:
               - Overview: features-overview.md
               - Tracing: tracing.md
               - Memory: agent-memory.md
+              - Agent Persistency: agent-persistency.md
+              - OpenTelemetry: opentelemetry-support.md
       - Testing: testing.md
   - Examples: examples.md
   - API reference: https://api.koog.ai/
@@ -43,6 +50,13 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.superfences
   - admonition
+
+plugins:
+  - search
+  - redirects:
+      redirect_maps:
+        'simple-api-getting-started.md': 'index.md'
+        'advanced-tool-implementation.md': 'class-based-tools.md'
 
 theme:
   name: material
