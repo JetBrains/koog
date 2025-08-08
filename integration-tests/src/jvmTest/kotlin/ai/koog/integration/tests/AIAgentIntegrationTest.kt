@@ -981,14 +981,13 @@ class AIAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 120.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(
-            model.id != GoogleModels.Gemini2_0Flash.id,
-            "gemini-2.0-flash returns flaky results and fails to call tools on a permanent basis"
+        val flakyModels = listOf(
+            GoogleModels.Gemini2_0Flash.id,
+            GoogleModels.Gemini2_0Flash001.id,
+            GoogleModels.Gemini2_0FlashLite.id,
+            GoogleModels.Gemini2_0FlashLite001.id
         )
-        assumeTrue(
-            model.id != GoogleModels.Gemini2_0Flash001.id,
-            "gemini-2.0-flash-001 returns flaky results and fails to call tools on a permanent basis"
-        )
+        assumeTrue(!flakyModels.contains(model.id), "Model $model is flaky and fails to call tools")
 
         val registry = ToolRegistry {
             tool(CalculatorToolNoArgs)
