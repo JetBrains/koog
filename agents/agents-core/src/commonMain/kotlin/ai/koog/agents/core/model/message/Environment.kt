@@ -1,7 +1,7 @@
 package ai.koog.agents.core.model.message
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 
@@ -31,7 +31,7 @@ public data class AIAgentEnvironmentInitializeMessageContent(
 public data class AIAgentEnvironmentToAgentInitializeMessage(
     override val content: AIAgentEnvironmentInitializeMessageContent,
     val toolsForStages: Map<String, List<ToolDescriptor>>,
-    val agent: AIAgentStrategy<*, *>,
+    val agent: AIAgentGraphStrategy<*, *>,
 ) : EnvironmentInitializeToAgentMessage()
 
 /**

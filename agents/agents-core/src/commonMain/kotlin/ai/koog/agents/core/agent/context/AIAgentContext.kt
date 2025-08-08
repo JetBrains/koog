@@ -4,271 +4,158 @@ import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
-import kotlin.reflect.KType
 
 /**
- * Implements the [AIAgentContext] interface, providing the context required for an AI agent's execution.
- * This class encapsulates configurations, the execution pipeline,
- * agent environment, and tools for handling agent lifecycles and interactions.
- *
- * @constructor Creates an instance of the context with the given parameters.
- *
- * @param environment The AI agent environment responsible for tool execution and problem reporting.
- * @param agentInput The input message to be used for the agent's interaction with the environment.
- * @param config The configuration settings of the AI agent.
- * @param llm The contextual data and execution utilities for the AI agent's interaction with LLMs.
- * @param stateManager Manages the internal state of the AI agent.
- * @param storage Concurrent-safe storage for managing key-value data across the agent's lifecycle.
- * @param runId The unique identifier for the agent session.
- * @param strategyName The identifier for the selected strategy in the agent's lifecycle.
- * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
+ * The [AIAgentContext] interface represents the context of an AI agent in the lifecycle.
+ * It provides access to the environment, configuration, LLM context, state management, storage, and other
+ * metadata necessary for the operation of the agent.
+ * Additionally, it supports features for custom workflows and extensibility.
  */
-public class AIAgentContext(
-    override val environment: AIAgentEnvironment,
-    override val agentInputType: KType,
-    override val agentInput: Any?,
-    override val config: AIAgentConfigBase,
-    llm: AIAgentLLMContext,
-    stateManager: AIAgentStateManager,
-    storage: AIAgentStorage,
-    override val runId: String,
-    override val strategyName: String,
-    @OptIn(InternalAgentsApi::class)
-    override val pipeline: AIAgentPipeline,
-    override val agentId: String,
-) : AIAgentContextBase {
+public interface AIAgentContext {
 
     /**
-     * Mutable wrapper for AI agent context properties.
+     * Represents the environment in which the agent operates.
+     *
+     * This variable provides access to essential functionalities for the agent's execution,
+     * including interaction with tools, error reporting, and sending termination signals.
+     * It is used throughout the agent's lifecycle to facilitate actions and handle outcomes.
      */
-    internal class MutableAIAgentContext(
-        var llm: AIAgentLLMContext,
-        var stateManager: AIAgentStateManager,
-        var storage: AIAgentStorage,
-    ) {
-        private val rwLock = RWLock()
-
-        /**
-         * Creates a copy of the current [MutableAIAgentContext].
-         * @return A new instance of [MutableAIAgentContext] with copies of all mutable properties.
-         */
-        suspend fun copy(): MutableAIAgentContext {
-            return rwLock.withReadLock {
-                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy())
-            }
-        }
-
-        /**
-         * Replaces the current context with the provided context.
-         * @param llm The LLM context to replace the current context with.
-         * @param stateManager The state manager to replace the current context with.
-         * @param storage The storage to replace the current context with.
-         */
-        suspend fun replace(llm: AIAgentLLMContext?, stateManager: AIAgentStateManager?, storage: AIAgentStorage?) {
-            rwLock.withWriteLock {
-                llm?.let { this.llm = llm }
-                stateManager?.let { this.stateManager = stateManager }
-                storage?.let { this.storage = storage }
-            }
-        }
-    }
-
-    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
-
-    override val llm: AIAgentLLMContext
-        get() = mutableAIAgentContext.llm
-
-    override val storage: AIAgentStorage
-        get() = mutableAIAgentContext.storage
-
-    override val stateManager: AIAgentStateManager
-        get() = mutableAIAgentContext.stateManager
+    public val environment: AIAgentEnvironment
 
     /**
-     * A map storing features associated with the current AI agent context.
-     * The keys represent unique identifiers for specific features, defined as [AIAgentStorageKey].
-     * The values are the features themselves, which can be of any type.
+     * Represents the unique identifier for the agent.
      *
-     * This map is populated by invoking the [AIAgentPipeline.getAgentFeatures] method, retrieving features
-     * based on the handlers registered for the AI agent's execution context.
-     *
-     * Used internally to manage and access features during the execution of the AI agent pipeline.
+     * This identifier is used to distinguish between different agents and is essential
+     * for tracking and managing the agent's lifecycle, especially in multi-agent scenarios.
      */
-    @OptIn(InternalAgentsApi::class)
-    private val features: Map<AIAgentStorageKey<*>, Any> =
-        pipeline.getAgentFeatures(this)
-
-    private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
-
-    override fun store(key: AIAgentStorageKey<*>, value: Any) {
-        storeMap[key] = value
-    }
-
-    override fun <T> get(key: AIAgentStorageKey<*>): T? {
-        @Suppress("UNCHECKED_CAST")
-        return storeMap[key] as T?
-    }
-
-    override fun remove(key: AIAgentStorageKey<*>): Boolean {
-        return storeMap.remove(key) != null
-    }
+    public val agentId: String
 
     /**
-     * Retrieves a feature associated with the given key from the current context.
-     *
-     * @param key The key of the feature to retrieve.
-     * @return The feature associated with the specified key, or null if no such feature exists.
+     * A unique identifier for the current session associated with the AI agent context.
+     * Used to track and differentiate sessions within the execution of the agent pipeline.
      */
-    @Suppress("UNCHECKED_CAST")
-    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? = features[key] as Feature?
+    public val runId: String
 
     /**
-     * Retrieves an instance of the specified feature from the current context.
+     * Represents the input provided to the agent's execution.
      *
-     * @param feature The feature representation, including its key and configuration details,
-     *                for identifying and accessing the associated implementation.
-     * @return The feature implementation of the specified type if available, or null if it is not present.
+     * This variable provides access to the agent's input, which can be used to
+     * determine the agent's intent, context, or other relevant information at any stage of agents execution.
      */
-    override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? = feature(feature.key)
-
-    override suspend fun getHistory(): List<Message> {
-        return llm.readSession {
-            prompt.messages
-        }
-    }
+    public val agentInput: Any?
 
     /**
-     * Creates a new instance of [AIAgentContextBase] with an updated list of tools, replacing the current tools
-     * in the LLM context with the provided list.
+     * Represents the configuration for an AI agent.
      *
-     * @param tools The new list of tools to be used in the LLM context, represented as [ToolDescriptor] objects.
-     * @return A new instance of [AIAgentContextBase] with the updated tools configuration.
+     * This configuration is utilized during the execution to enforce constraints
+     * such as the maximum number of iterations an agent can perform, as well as providing
+     * the agent's prompt configuration.
      */
-    @InternalAgentsApi
-    override fun copyWithTools(tools: List<ToolDescriptor>): AIAgentContextBase {
-        return this.copy(llm = llm.copy(tools = tools))
-    }
+    public val config: AIAgentConfigBase
 
     /**
-     * Creates a copy of the current [AIAgentContext], allowing for selective overriding of its properties.
+     * Represents the AI agent's LLM context, providing mechanisms for managing tools, prompts,
+     * and interaction with the execution environment. It ensures thread safety during concurrent read and write
+     * operations through the use of sessions.
      *
-     * @param environment The [AIAgentEnvironment] to be used in the new context, or `null` to retain the current one.
-     * @param config The [AIAgentConfigBase] for the new context, or `null` to retain the current configuration.
-     * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
-     * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
-     * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
-     * @param runId The run identifier, or `null` to retain the current run ID.
-     * @param strategyName The strategy name, or `null` to retain the current identifier.
-     * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
+     * This context plays a foundational role in defining and manipulating tools, prompt execution, and overall
+     * behavior the agent's lifecycle.
      */
-    override fun copy(
-        environment: AIAgentEnvironment,
-        agentInput: Any?,
-        agentInputType: KType,
-        config: AIAgentConfigBase,
-        llm: AIAgentLLMContext,
-        stateManager: AIAgentStateManager,
-        storage: AIAgentStorage,
-        runId: String,
-        strategyName: String,
-        pipeline: AIAgentPipeline,
-    ): AIAgentContextBase = AIAgentContext(
-        environment = environment,
-        agentInput = agentInput,
-        agentInputType = agentInputType,
-        config = config,
-        llm = llm,
-        stateManager = stateManager,
-        storage = storage,
-        runId = runId,
-        strategyName = strategyName,
-        pipeline = pipeline,
-        agentId = this.agentId,
-    )
+    public val llm: AIAgentLLMContext
 
     /**
-     * Creates a copy of the current [AIAgentContext] with deep copies of all mutable properties.
+     * Manages and tracks the state of aт AI agent within the context of its execution.
      *
-     * @return A new instance of [AIAgentContext] with copies of all mutable properties.
+     * This variable provides synchronized access to the agent's state to ensure thread safety
+     * and consistent state transitions during concurrent operations. It acts as a central
+     * mechanism for managing state updates and validations across different
+     * nodes and subgraphes of the AI agent's execution flow.
+     *
+     * The [stateManager] is utilized extensively in coordinating state changes, such as
+     * tracking the number of iterations made by the agent and enforcing execution limits
+     * or conditions. This aids in maintaining predictable and controlled behavior
+     * of the agent during execution.
      */
-    override suspend fun fork(): AIAgentContextBase = copy(
-        llm = this.llm.copy(),
-        storage = this.storage.copy(),
-        stateManager = this.stateManager.copy(),
-    )
+    public val stateManager: AIAgentStateManager
 
     /**
-     * Replaces the current context with the provided context.
-     * This method is used to update the current context with values from another context,
-     * particularly useful in scenarios like parallel node execution where contexts need to be merged.
-     *
-     * @param context The context to replace the current context with.
+     * Concurrent-safe key-value storage for an agent, used to manage and persist data within the context of
+     * a the AI agent stage execution. The `storage` property provides a thread-safe mechanism for sharing
+     * and storing data specific to the agent's operation.
      */
-    override suspend fun replace(context: AIAgentContextBase) {
-        mutableAIAgentContext.replace(
-            context.llm,
-            context.stateManager,
-            context.storage
-        )
-    }
+    public val storage: AIAgentStorage
+
+    /**
+     * Represents the name of the strategy being used in the current AI agent context.
+     */
+    public val strategyName: String
+
+    /**
+     * Stores a feature in the agent's storage using the specified key.
+     *
+     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to store the feature.
+     * @param value The feature to be stored, which can be of any type.
+     */
+    public fun store(key: AIAgentStorageKey<*>, value: Any)
+
+    /**
+     * Retrieves data from the agent's storage using the specified key.
+     *
+     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding data.
+     * @return The data associated with the provided key, or null if no matching data is found.
+     */
+    public fun <T> get(key: AIAgentStorageKey<*>): T?
+
+    /**
+     * Removes a feature or data associated with the specified key from the agent's storage.
+     *
+     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to locate the data to be removed.
+     * @return `true` if the data was successfully removed, or `false` if no data was associated with the provided key.
+     */
+    public fun remove(key: AIAgentStorageKey<*>): Boolean
+
+    /**
+     * Retrieves a feature from the current context using the specified key.
+     *
+     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding feature.
+     * @return The feature associated with the provided key, or null if no matching feature is found.
+     */
+    public fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature?
+
+    /**
+     * Retrieves a feature of the specified type from the current context.
+     *
+     * @param feature The [AIAgentFeature] instance representing the feature to retrieve.
+     *                This parameter defines the configuration and unique identity of the feature.
+     * @return The feature instance of type [Feature], or null if the feature is not available in the context.
+     */
+    public fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature?
+
+    /**
+     * Retrieves a feature of the specified type from the context or throws an exception if it is not available.
+     *
+     * @param feature The [AIAgentFeature] defining the specific feature to be retrieved. This provides
+     *                the configuration and unique identification of the feature.
+     * @return The instance of the requested feature of type [Feature].
+     * @throws IllegalStateException if the requested feature is not installed in the agent.
+     */
+    public fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
+        feature(feature)
+            ?: throw IllegalStateException("Feature `${feature::class.simpleName}` is not installed to the agent")
+
+    /**
+     * Retrieves the history of messages exchanged during the agent's execution.
+     */
+    public suspend fun getHistory(): List<Message>
 }
 
 /**
- * A storage key used for associating and retrieving `AgentContextData` within the AI agent's storage system.
+ * Utility function to get [AIAgentContext.agentInput] and try to cast it to some expected type.
  *
- * This key is intended for internal use within the AI agents' infrastructure to securely store and access
- * data related to an agent's context. The associated data includes details such as message history, node identifiers,
- * and the last input processed by the agent, allowing seamless tracking and management of an agent's state.
- *
- * The storage key is marked with the `@InternalAgentsApi` annotation, indicating that it is part of the internal
- * mechanism and not meant for public or general-purpose development use. It may be subject to changes or removal
- * without notice.
+ * @throws ClassCastException If agent input can't be cast to [T]
  */
-@OptIn(InternalAgentsApi::class)
-public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> =
-    AIAgentStorageKey("agent-context-data-key")
-
-/**
- * Stores the given agent context data within the current AI agent context.
- *
- * @param data The context-specific data to be stored for later retrieval or use within the agent context.
- */
-@InternalAgentsApi
-public fun AIAgentContextBase.store(data: AgentContextData) {
-    this.store(agentContextDataAdditionalKey, data)
-}
-
-/**
- * Retrieves the agent-specific context data associated with the current instance.
- *
- * This function accesses and returns the contextual information stored as part of the agent's context,
- * or null if no such data is present.
- *
- * Note: This is part of the internal agents API and should be used cautiously, understanding that
- * it is subject to changes or removal in future updates.
- *
- * @return The agent context data, or null if no context data is associated.
- */
-@InternalAgentsApi
-public fun AIAgentContextBase.getAgentContextData(): AgentContextData? {
-    return this.get(agentContextDataAdditionalKey)
-}
-
-/**
- * Removes the agent-specific context data associated with the current context.
- *
- * This function attempts to remove the context data identified by the `agentContextDataAdditionalKey`.
- *
- * @return `true` if the agent context data was successfully removed, or `false` if no data was found to remove.
- */
-@OptIn(InternalAgentsApi::class)
-public fun AIAgentContextBase.removeAgentContextData(): Boolean {
-    return this.remove(agentContextDataAdditionalKey)
-}
+public inline fun <reified T> AIAgentContext.agentInput(): T =
+    agentInput as? T ?: throw ClassCastException("Can't cast agent input to ${T::class}. Agent input: $agentInput")

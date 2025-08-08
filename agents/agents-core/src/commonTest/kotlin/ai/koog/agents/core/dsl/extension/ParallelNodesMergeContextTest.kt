@@ -2,8 +2,8 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentStrategyBuilder
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -33,7 +33,7 @@ class ParallelNodesMergeContextTest {
         }
     }
 
-    suspend fun runAgent(strategy: AIAgentStrategy<String, String>): String? {
+    suspend fun runAgent(strategy: AIAgentGraphStrategy<String, String>): String? {
         val agentConfig = AIAgentConfig(
             prompt = prompt("test-agent") {},
             model = OllamaModels.Meta.LLAMA_3_2,

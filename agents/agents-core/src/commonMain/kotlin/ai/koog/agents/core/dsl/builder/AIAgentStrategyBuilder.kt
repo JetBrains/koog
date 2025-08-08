@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
@@ -20,12 +20,12 @@ public class AIAgentStrategyBuilder<Input, Output>(
     inputType: KType,
     outputType: KType,
     private val toolSelectionStrategy: ToolSelectionStrategy,
-) : AIAgentSubgraphBuilderBase<Input, Output>(), BaseBuilder<AIAgentStrategy<Input, Output>> {
+) : AIAgentSubgraphBuilderBase<Input, Output>(), BaseBuilder<AIAgentGraphStrategy<Input, Output>> {
     public override val nodeStart: StartNode<Input> = StartNode(type = inputType)
     public override val nodeFinish: FinishNode<Output> = FinishNode(type = outputType)
 
-    override fun build(): AIAgentStrategy<Input, Output> {
-        val strategy = AIAgentStrategy(
+    override fun build(): AIAgentGraphStrategy<Input, Output> {
+        val strategy = AIAgentGraphStrategy(
             name = name,
             nodeStart = nodeStart,
             nodeFinish = nodeFinish,
@@ -49,7 +49,7 @@ public inline fun <reified Input, reified Output> strategy(
     name: String,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     init: AIAgentStrategyBuilder<Input, Output>.() -> Unit,
-): AIAgentStrategy<Input, Output> {
+): AIAgentGraphStrategy<Input, Output> {
     return AIAgentStrategyBuilder<Input, Output>(
         name = name,
         inputType = typeOf<Input>(),

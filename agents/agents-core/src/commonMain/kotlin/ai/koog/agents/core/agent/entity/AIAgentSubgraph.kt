@@ -2,7 +2,8 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
@@ -86,7 +87,7 @@ public open class AIAgentSubgraph<Input, Output>(
     )
 
     @OptIn(DetachedPromptExecutorAPI::class)
-    private suspend fun selectTools(context: AIAgentContextBase) = when (toolSelectionStrategy) {
+    private suspend fun selectTools(context: AIAgentContext) = when (toolSelectionStrategy) {
         is ToolSelectionStrategy.ALL -> context.llm.tools
         is ToolSelectionStrategy.NONE -> emptyList()
         is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
@@ -128,7 +129,7 @@ public open class AIAgentSubgraph<Input, Output>(
      * @return The output of the AI agent execution, generated after processing the input.
      */
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output? {
+    override suspend fun execute(context: AIAgentGraphContextBase, input: Input): Output? {
         val newTools = selectTools(context)
 
         // Copy inner context with new tools, model and LLM params.
@@ -161,7 +162,7 @@ public open class AIAgentSubgraph<Input, Output>(
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output? {
+    private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: Input): Output? {
         logger.info { formatLog(context, "Executing subgraph $name") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
@@ -234,7 +235,7 @@ public open class AIAgentSubgraph<Input, Output>(
         return result
     }
 
-    private fun formatLog(context: AIAgentContextBase, message: String): String =
+    private fun formatLog(context: AIAgentContext, message: String): String =
         "$message [$name, ${context.strategyName}, ${context.runId}]"
 }
 

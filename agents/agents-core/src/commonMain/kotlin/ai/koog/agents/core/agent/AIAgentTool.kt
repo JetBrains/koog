@@ -28,7 +28,7 @@ import kotlinx.serialization.serializer
  * @param json Optional [Json] instance to customize de/serialization behavior.
  * @return A special tool that wraps the agent functionality.
  */
-public inline fun <reified Input, reified Output> AIAgentBase<Input, Output>.asTool(
+public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     agentName: String,
     agentDescription: String,
     inputDescriptor: ToolParameterDescriptor,
@@ -59,7 +59,7 @@ public inline fun <reified Input, reified Output> AIAgentBase<Input, Output>.asT
  * @param agentDescription A brief description of what the tool does.
  */
 public class AIAgentTool<Input, Output>(
-    private val agent: AIAgentBase<Input, Output>,
+    private val agent: AIAgent<Input, Output>,
     private val agentName: String,
     private val agentDescription: String,
     private val inputDescriptor: ToolParameterDescriptor,

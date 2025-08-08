@@ -1,7 +1,8 @@
 package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -9,7 +10,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 
@@ -26,9 +27,9 @@ import kotlin.reflect.KType
  */
 @OptIn(InternalAgentsApi::class)
 public class AIAgentParallelNodesMergeContext<Input, Output>(
-    private val underlyingContextBase: AIAgentContextBase,
+    private val underlyingContextBase: AIAgentGraphContextBase,
     public val results: List<ParallelResult<Input, Output>>,
-) : AIAgentContextBase {
+) : AIAgentGraphContextBase {
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
     override val agentId: String get() = underlyingContextBase.agentId
@@ -40,7 +41,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val storage: AIAgentStorage get() = underlyingContextBase.storage
     override val runId: String get() = underlyingContextBase.runId
     override val strategyName: String get() = underlyingContextBase.strategyName
-    override val pipeline: AIAgentPipeline get() = underlyingContextBase.pipeline
+    override val pipeline: AIAgentGraphPipeline get() = underlyingContextBase.pipeline
 
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         underlyingContextBase.store(key, value)
@@ -66,6 +67,9 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
 
     override suspend fun getHistory(): List<Message> = underlyingContextBase.getHistory()
 
+    /**
+     * Creates a copy of the current AIAgentContextBase object with the specified parameters.
+     */
     override fun copy(
         environment: AIAgentEnvironment,
         agentInput: Any?,
@@ -76,8 +80,8 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         storage: AIAgentStorage,
         runId: String,
         strategyName: String,
-        pipeline: AIAgentPipeline
-    ): AIAgentContextBase = underlyingContextBase.copy(
+        pipeline: AIAgentGraphPipeline
+    ): AIAgentGraphContextBase = underlyingContextBase.copy(
         environment = environment,
         agentInput = agentInput,
         agentInputType = agentInputType,
@@ -90,9 +94,22 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         pipeline = pipeline
     )
 
-    override suspend fun fork(): AIAgentContextBase = underlyingContextBase.fork()
+    /**
+     * Creates a forked instance of the underlying agent context, resulting in a new independent
+     * copy of the `AIAgentContextBase`. This can be used to create isolated contexts for
+     * parallel or independent operations.
+     *
+     * @return A new instance of `AIAgentContextBase` that is a fork of the current context.
+     */
+    override suspend fun fork(): AIAgentGraphContextBase = underlyingContextBase.fork()
 
-    override suspend fun replace(context: AIAgentContextBase): Unit = underlyingContextBase.replace(context)
+    /**
+     * Replaces the current context with the specified context in the underlying context base.
+     *
+     * @param context The new context to replace the current one in the underlying context base.
+     * @return Unit
+     */
+    override suspend fun replace(context: AIAgentContext): Unit = underlyingContextBase.replace(context)
 
     /**
      * Selects a result based on a predicate.

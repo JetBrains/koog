@@ -9,7 +9,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
@@ -82,10 +82,10 @@ open class AgentTestBase {
         storage: AIAgentStorage = createTestStorage(),
         runId: String = "test-run-id",
         strategyName: String = "test-strategy",
-        pipeline: AIAgentPipeline = AIAgentPipeline(),
+        pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(),
         agentInput: String = "test-input"
-    ): AIAgentContext {
-        return AIAgentContext(
+    ): AIAgentGraphContext {
+        return AIAgentGraphContext(
             environment = environment,
             agentInputType = typeOf<String>(),
             agentInput = agentInput,

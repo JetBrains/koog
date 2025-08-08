@@ -2,7 +2,7 @@ package ai.koog.agents.example.planner
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
@@ -110,7 +110,7 @@ suspend fun planWork(
     val result = CompletableDeferred<PlannerNode>()
 
     val planner = strategy<String, String>("planner") {
-        suspend fun AIAgentContextBase.defineTask(inputTask: String, prompt: String): Message.Response {
+        suspend fun AIAgentContext.defineTask(inputTask: String, prompt: String): Message.Response {
             return llm.writeSession {
                 updatePrompt {
                     system(prompt)

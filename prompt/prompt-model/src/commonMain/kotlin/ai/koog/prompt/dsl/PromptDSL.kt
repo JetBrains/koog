@@ -41,6 +41,15 @@ public fun prompt(
 }
 
 /**
+ * Constructs an empty instance of the [Prompt] class with no messages, default parameters,
+ * and an empty identifier. This empty prompt can be used as a default or placeholder.
+ *
+ * @return A new [Prompt] instance with no messages, an empty identifier, and default parameters.
+ */
+@PromptDSL
+public fun emptyPrompt(): Prompt = Prompt.build("") { }
+
+/**
  * Extends an existing prompt using the Prompt DSL.
  *
  * This function allows adding more messages to an existing prompt.

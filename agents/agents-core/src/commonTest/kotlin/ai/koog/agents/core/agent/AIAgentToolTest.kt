@@ -25,16 +25,19 @@ class AIAgentToolTest {
     private class MockAgent(
         private val executor: PromptExecutor,
         private val expectedResponse: String
-    ) : AIAgentBase<String, String> {
+    ) : AIAgent<String, String> {
         override val id: String = "mock_agent_id"
         override suspend fun run(agentInput: String): String {
             return expectedResponse
+        }
+
+        override suspend fun close() {
         }
     }
 
     companion object {
         const val RESPONSE = "This is the agent's response"
-        private fun createMockAgent(): AIAgentBase<String, String> {
+        private fun createMockAgent(): AIAgent<String, String> {
             val mockExecutor = getMockExecutor(clock = testClock) {
                 mockLLMAnswer(RESPONSE).asDefaultResponse
             }
@@ -106,12 +109,15 @@ class AIAgentToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolErrorHandling() = runTest {
-        val agent = object : AIAgentBase<String, String> {
+        val agent = object : AIAgent<String, String> {
 
             override val id: String = "mock_agent_id"
 
             override suspend fun run(agentInput: String): String {
                 throw IllegalStateException("Test error")
+            }
+
+            override suspend fun close() {
             }
         }
 
