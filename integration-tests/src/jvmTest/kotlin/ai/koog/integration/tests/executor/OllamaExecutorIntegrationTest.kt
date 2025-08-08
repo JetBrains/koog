@@ -1,8 +1,11 @@
-package ai.koog.integration.tests
+package ai.koog.integration.tests.executor
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.integration.tests.InjectOllamaTestFixture
+import ai.koog.integration.tests.OllamaTestFixture
+import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse

@@ -1,4 +1,4 @@
-package ai.koog.integration.tests
+package ai.koog.integration.tests.executor
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor

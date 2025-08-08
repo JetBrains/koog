@@ -202,6 +202,18 @@ public open class OpenAILLMClient(
             truncation = params.truncation,
             user = params.user,
         )
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        require(model.capabilities.contains(LLMCapability.Completion)) {
+            "Model ${model.id} does not support chat completions"
+        }
+        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
+            "Model ${model.id} does not support tools"
+        }
+
+        val response = processOpenAIResponse(getOpenAIResponse(prompt, model, tools)).first()
+        return response
+    }
 
         return json.encodeToString(request)
     }

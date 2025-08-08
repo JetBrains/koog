@@ -1,4 +1,4 @@
-package ai.koog.integration.tests
+package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -13,6 +13,9 @@ import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.integration.tests.InjectOllamaTestFixture
+import ai.koog.integration.tests.OllamaTestFixture
+import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.tools.AnswerVerificationTool
 import ai.koog.integration.tests.tools.GenericParameterTool
 import ai.koog.integration.tests.tools.GeographyQueryTool
