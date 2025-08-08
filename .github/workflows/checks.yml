@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - name: Configure Git
@@ -63,7 +63,7 @@ jobs:
           cd ./docs
           pip install mkdocs-material
           pip install mkdocs-redirects
-          mkdocs gh-deploy --force
+          mkdocs build
 
   tests:
 
