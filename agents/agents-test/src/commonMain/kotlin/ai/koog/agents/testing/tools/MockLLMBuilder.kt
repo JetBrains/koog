@@ -11,7 +11,6 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -685,7 +684,6 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
-                    id = Uuid.random().toString(),
                     text,
                     ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
                 )
@@ -702,7 +700,6 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
-                    id = Uuid.random().toString(),
                     text,
                     ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
                 )
@@ -722,7 +719,6 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             conditional = conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
                 listOf(
                     Message.Assistant(
-                        id = Uuid.random().toString(),
                         content = textResponse,
                         metaInfo = ResponseMetaInfo.create(clock)
                     )
@@ -730,9 +726,8 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             },
             defaultResponse = listOf(
                 Message.Assistant(
-                    id = Uuid.random().toString(),
-                    defaultResponse,
-                    ResponseMetaInfo.create(clock)
+                    content = defaultResponse,
+                    metaInfo = ResponseMetaInfo.create(clock)
                 )
             )
         )

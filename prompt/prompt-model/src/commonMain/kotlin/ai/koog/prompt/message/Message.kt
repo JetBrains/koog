@@ -133,10 +133,10 @@ public sealed interface Message {
      */
     @Serializable
     public data class Assistant(
-        override val id: String?,
         override val content: String,
         override val metaInfo: ResponseMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
+        override val id: String? = null,
         val finishReason: String? = null
     ) : Response, WithAttachments {
         override val role: Role = Role.Assistant
@@ -209,9 +209,9 @@ public sealed interface Message {
      */
     @Serializable
     public data class System(
-        override val id: String?,
         override val content: String,
         override val metaInfo: RequestMetaInfo,
+        override val id: String? = null,
     ) : Request {
         override val role: Role = Role.System
     }

@@ -59,10 +59,9 @@ public class PromptBuilder internal constructor(
      * @param content The content of the system message
      */
     @OptIn(ExperimentalUuidApi::class)
-    public fun system(content: String, id: String? = null) {
+    public fun system(content: String) {
         messages.add(
             Message.System(
-                id = id ?: Uuid.random().toString(),
                 content = content,
                 metaInfo = RequestMetaInfo.create(clock)
             )
@@ -71,7 +70,7 @@ public class PromptBuilder internal constructor(
 
     /**
      * Adds a system message to the prompt using a TextContentBuilder.
-     *
+     *x
      * This allows for more complex message construction.
      *
      * Example:
@@ -84,8 +83,8 @@ public class PromptBuilder internal constructor(
      *
      * @param init The initialization block for the TextContentBuilder
      */
-    public fun system(id: String? = null, init: TextContentBuilder.() -> Unit) {
-        system(TextContentBuilder().apply(init).build(), id)
+    public fun system(init: TextContentBuilder.() -> Unit) {
+        system(TextContentBuilder().apply(init).build())
     }
 
     /**
@@ -98,10 +97,9 @@ public class PromptBuilder internal constructor(
      * @param attachments The list of attachments associated with the user message. Defaults to an empty list if no attachments are provided.
      */
     @OptIn(ExperimentalUuidApi::class)
-    public fun user(content: String, attachments: List<Attachment> = emptyList(), id: String? = null) {
+    public fun user(content: String, attachments: List<Attachment> = emptyList()) {
         messages.add(
             Message.User(
-                id = id ?: Uuid.random().toString(),
                 content = content,
                 metaInfo = RequestMetaInfo.create(clock),
                 attachments = attachments
@@ -129,8 +127,8 @@ public class PromptBuilder internal constructor(
      * @param content The content of the user message
      * @param block Optional lambda to configure attachments using AttachmentBuilder
      */
-    public fun user(id: String? = null, content: String, block: AttachmentBuilder.() -> Unit) {
-        user(content, AttachmentBuilder().apply(block).build(), id)
+    public fun user(content: String, block: AttachmentBuilder.() -> Unit) {
+        user(content, AttachmentBuilder().apply(block).build())
     }
 
     /**
@@ -152,9 +150,9 @@ public class PromptBuilder internal constructor(
      *
      * @param body The initialization block for the ContentBuilderWithAttachment
      */
-    public fun user(id: String? = null, body: MessageContentBuilder.() -> Unit) {
+    public fun user(body: MessageContentBuilder.() -> Unit) {
         val messageContent = MessageContentBuilder().apply(body).build()
-        user(messageContent.content, messageContent.attachments, id)
+        user(messageContent.content, messageContent.attachments)
     }
 
     /**
@@ -170,10 +168,9 @@ public class PromptBuilder internal constructor(
      * @param content The content of the assistant message
      */
     @OptIn(ExperimentalUuidApi::class)
-    public fun assistant(content: String, id: String? = null) {
+    public fun assistant(content: String) {
         messages.add(
             Message.Assistant(
-                id = id ?: Uuid.random().toString(),
                 content = content,
                 metaInfo = ResponseMetaInfo.create(clock),
                 finishReason = null,
@@ -196,8 +193,8 @@ public class PromptBuilder internal constructor(
      *
      * @param init The initialization block for the TextContentBuilder
      */
-    public fun assistant(id: String? = null, init: TextContentBuilder.() -> Unit) {
-        assistant(TextContentBuilder().apply(init).build(), id)
+    public fun assistant(init: TextContentBuilder.() -> Unit) {
+        assistant(TextContentBuilder().apply(init).build())
     }
 
     /**
