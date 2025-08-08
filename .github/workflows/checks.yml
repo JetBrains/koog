@@ -64,6 +64,7 @@ jobs:
           pip install mkdocs-material
           pip install mkdocs-redirects
           mkdocs build
+          mkdocs gh-deploy
 
   tests:
 
