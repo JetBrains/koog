@@ -105,7 +105,8 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-4o-mini",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
@@ -138,7 +139,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -164,7 +166,8 @@ public object OpenAIModels : LLModelDefinitions {
             id = "o1-mini",
             capabilities = listOf(
                 LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
@@ -192,7 +195,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
@@ -221,7 +225,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
@@ -257,7 +262,8 @@ public object OpenAIModels : LLModelDefinitions {
             capabilities = listOf(
                 LLMCapability.Temperature,
                 LLMCapability.ToolChoice,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.Vision.Image,
@@ -285,7 +291,8 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-4.1",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
@@ -377,7 +384,8 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o4-mini",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
@@ -405,7 +413,8 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-4.1-nano",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
@@ -434,7 +443,8 @@ public object OpenAIModels : LLModelDefinitions {
             id = "gpt-4.1-mini",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
@@ -489,7 +499,6 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-3-small",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full,
                 LLMCapability.Embed
             ),
             contextLength = 8_191,
@@ -518,7 +527,6 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-3-large",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full,
                 LLMCapability.Embed
             ),
             contextLength = 8_191,
@@ -545,7 +553,6 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-ada-002",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full,
                 LLMCapability.Embed
             ),
             contextLength = 8_191,

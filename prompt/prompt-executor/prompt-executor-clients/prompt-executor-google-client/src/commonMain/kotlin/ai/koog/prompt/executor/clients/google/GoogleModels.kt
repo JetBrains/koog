@@ -46,7 +46,8 @@ public object GoogleModels : LLModelDefinitions {
      */
     private val standardCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Temperature,
-        LLMCapability.Schema.JSON.Full,
+        LLMCapability.Schema.JSON.Basic,
+        LLMCapability.Schema.JSON.Standard,
         LLMCapability.Completion,
         LLMCapability.MultipleChoices,
     )

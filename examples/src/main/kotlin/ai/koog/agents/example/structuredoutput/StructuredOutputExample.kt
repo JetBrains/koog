@@ -1,4 +1,4 @@
-package ai.koog.agents.example.structureddata
+package ai.koog.agents.example.structuredoutput
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -10,39 +10,56 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.text.text
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 /**
- * A showcase what structured output can handle and how to use it
+ * This is example how to use the simple structured output API. Unlike the full (advanced) version, it does not require
+ * specifying struct definitions and structured output modes manually. It attempts to find the best approach to provide
+ * a structured output based on the defined LLM capabilities.
+ *
+ * Check advanced examples for more details on how you can control this process.
+ *
+ * This example uses the models supporting full JSON schema capability, meaning they understand natively a subset of
+ * JSON schema specification when asked to provide a structured response.
+ * That's why more complex structure features are demonstrated, such as polymorphism.
  */
+
 @Serializable
 @SerialName("WeatherForecast")
 @LLMDescription("Weather forecast for a given location")
 data class WeatherForecast(
     @property:LLMDescription("Temperature in Celsius")
     val temperature: Int,
+    // properties with default values
     @property:LLMDescription("Weather conditions (e.g., sunny, cloudy, rainy)")
-    val conditions: String,
+    val conditions: String = "sunny",
+    // nullable properties
     @property:LLMDescription("Chance of precipitation in percentage")
-    val precipitation: Int,
+    val precipitation: Int?,
+    // nested classes
     @property:LLMDescription("Coordinates of the location")
     val latLon: LatLon,
+    // enums
     val pollution: Pollution,
+    // polymorphism
     val alert: WeatherAlert,
     // lists
     @property:LLMDescription("List of news articles")
     val news: List<WeatherNews>,
-    // maps
-    @property:LLMDescription("Map of weather sources")
-    val sources: Map<String, WeatherSource>
+//    // maps (string keys only, some providers don't support maps at all)
+//    @property:LLMDescription("Map of weather sources")
+//    val sources: Map<String, WeatherSource>
 ) {
     // Nested classes
     @Serializable
@@ -64,7 +81,7 @@ data class WeatherForecast(
         val link: String
     )
 
-    // ... and maps (but only with string keys)
+    // ... and maps (but only with string keys!)
     @Serializable
     @SerialName("WeatherSource")
     data class WeatherSource(
@@ -78,7 +95,19 @@ data class WeatherForecast(
     @Suppress("unused")
     @SerialName("Pollution")
     @Serializable
-    enum class Pollution { Low, Medium, High }
+    enum class Pollution {
+        @SerialName("None")
+        None,
+
+        @SerialName("LOW")
+        Low,
+
+        @SerialName("MEDIUM")
+        Medium,
+
+        @SerialName("HIGH")
+        High
+    }
 
     /*
      Polymorphism:
@@ -133,78 +162,11 @@ data class WeatherForecastRequest(
     val country: String
 )
 
+private val json = Json {
+    prettyPrint = true
+}
+
 fun main(): Unit = runBlocking {
-    // Optional examples, to help LLM understand the format better
-    val exampleForecasts = listOf(
-        WeatherForecast(
-            temperature = 25,
-            conditions = "Sunny",
-            precipitation = 0,
-            latLon = WeatherForecast.LatLon(lat = 40.7128, lon = -74.006),
-            pollution = WeatherForecast.Pollution.Low,
-            alert = WeatherForecast.WeatherAlert.StormAlert(
-                severity = WeatherForecast.WeatherAlert.Severity.Moderate,
-                message = "Possible thunderstorms in the evening",
-                windSpeed = 45.5
-            ),
-            news = emptyList(),
-            sources = emptyMap()
-        ),
-        WeatherForecast(
-            temperature = 18,
-            conditions = "Cloudy",
-            precipitation = 30,
-            latLon = WeatherForecast.LatLon(lat = 34.0522, lon = -118.2437),
-            pollution = WeatherForecast.Pollution.Medium,
-            alert = WeatherForecast.WeatherAlert.StormAlert(
-                severity = WeatherForecast.WeatherAlert.Severity.Moderate,
-                message = "Possible thunderstorms in the evening",
-                windSpeed = 45.5
-            ),
-            news = listOf(
-                WeatherForecast.WeatherNews(title = "Local news", link = "https://example.com/news"),
-                WeatherForecast.WeatherNews(title = "Global news", link = "https://example.com/global-news")
-            ),
-            sources = mapOf(
-                "MeteorologicalWatch" to WeatherForecast.WeatherSource(
-                    stationName = "MeteorologicalWatch",
-                    stationAuthority = "US Department of Agriculture"
-                ),
-                "MeteorologicalWatch2" to WeatherForecast.WeatherSource(
-                    stationName = "MeteorologicalWatch2",
-                    stationAuthority = "US Department of Agriculture"
-                )
-            )
-        ),
-        WeatherForecast(
-            temperature = 10,
-            conditions = "Rainy",
-            precipitation = 90,
-            latLon = WeatherForecast.LatLon(lat = 37.7739, lon = -122.4194),
-            pollution = WeatherForecast.Pollution.Low,
-            alert = WeatherForecast.WeatherAlert.FloodAlert(
-                severity = WeatherForecast.WeatherAlert.Severity.Severe,
-                message = "Heavy rainfall may cause local flooding",
-                expectedRainfall = 75.2
-            ),
-            news = listOf(
-                WeatherForecast.WeatherNews(title = "Local news", link = "https://example.com/news"),
-                WeatherForecast.WeatherNews(title = "Global news", link = "https://example.com/global-news")
-            ),
-            sources = mapOf(
-                "MeteorologicalWatch" to WeatherForecast.WeatherSource(
-                    stationName = "MeteorologicalWatch",
-                    stationAuthority = "US Department of Agriculture"
-                ),
-            )
-        )
-    )
-
-    val weatherForecastStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
-        // some models don't work well with json schema, so you may try simple, but it has more limitations (no polymorphism!)
-        examples = exampleForecasts,
-    )
-
     val agentStrategy = strategy<WeatherForecastRequest, WeatherForecast>("weather-forecast") {
         val prepareRequest by node<WeatherForecastRequest, String> { request ->
             text {
@@ -214,11 +176,24 @@ fun main(): Unit = runBlocking {
             }
         }
 
-        val getStructuredForecast by nodeLLMRequestStructured(
-            structure = weatherForecastStructure,
-            retries = 2,
-            // the model that would handle coercion if the output does not conform to the requested structure
-            fixingModel = AnthropicModels.Haiku_3_5,
+        /*
+         Simple API, let it figure out the optimal approach to get structured output itself.
+         So only the structure has to be supplied.
+         */
+        val getStructuredForecast by nodeLLMRequestStructured<WeatherForecast>(
+            /*
+             Optional: If the model you are using does not support native structured output, you can provide examples to help
+             it better understand the format.
+             */
+            examples = listOf(),
+            /*
+             Optional: If the model provides inaccurate structure leading to serialization exceptions, you can try fixing
+             parser to attempt to fix malformed output.
+             */
+            fixingParser = StructureFixingParser(
+                fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+                retries = 2
+            )
         )
 
         nodeStart then prepareRequest then getStructuredForecast
@@ -234,35 +209,36 @@ fun main(): Unit = runBlocking {
                 """.trimIndent()
             )
         },
-        model = AnthropicModels.Sonnet_3_7,
+        model = GoogleModels.Gemini2_5Flash,
+        // model = OpenAIModels.Chat.GPT4o,
+        // model = AnthropicModels.Sonnet_3_7,
         maxAgentIterations = 5
     )
 
-    val runner = AIAgent<WeatherForecastRequest, WeatherForecast>(
+    val agent = AIAgent<WeatherForecastRequest, WeatherForecast>(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
             LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
+            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
         ),
         strategy = agentStrategy, // no tools needed for this example
         agentConfig = agentConfig
     ) {
         handleEvents {
-            onAgentRunError { eventContext ->
-                println(
-                    "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
-                )
+            onAgentRunError { ctx ->
+                println("An error occurred: ${ctx.throwable.message}\n${ctx.throwable.stackTraceToString()}")
             }
         }
     }
 
     println(
         """
-        === Weather Forecast Example ===
-        This example demonstrates how to use StructuredData and sendStructuredAndUpdatePrompt
+        === Simple Weather Forecast Example ===
+        This example demonstrates how to use structured output with simple schema support
         to get properly structured output from the LLM.
         """.trimIndent()
     )
 
-    val result: WeatherForecast = runner.run(WeatherForecastRequest(city = "New York", country = "USA"))
+    val result: WeatherForecast = agent.run(WeatherForecastRequest(city = "New York", country = "USA"))
     println("Agent run result: $result")
 }

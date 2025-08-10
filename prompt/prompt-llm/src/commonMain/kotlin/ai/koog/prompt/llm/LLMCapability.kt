@@ -166,25 +166,24 @@ public sealed class LLMCapability(public val id: String) {
          * Represents a sealed class defining JSON schema support as a part of an AI model's capability.
          * Each subtype of this class specifies a distinct level of JSON support.
          *
-         * @property support Describes the type of JSON support (e.g., "simple", "full").
+         * @property support Describes the type of JSON support (e.g., "basic", "standard").
          */
         @Serializable
-        public sealed class JSON(public val support: String) : Schema("json-$support") {
+        public sealed class JSON(public val support: String) : Schema("$support-json") {
             /**
-             * Represents a simple JSON schema support capability within the context of language learning models (LLMs).
-             * Used to specify lightweight or basic JSON processing capabilities.
+             * Represents a basic JSON schema support capability.
+             * Used to specify lightweight or fundamental JSON processing capabilities.
+             * This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
              */
             @Serializable
-            public data object Simple : JSON("simple")
+            public data object Basic : JSON("basic")
 
             /**
-             * Represents a data object for the "full" JSON schema type.
-             *
-             * This class provides a specific implementation of the parent sealed class `JSON`, with
-             * the `support` parameter set to `"full"`. It is used to define JSON schema support for full capabilities.
+             * Represents a standard JSON schema support capability, according to https://json-schema.org/.
+             * This format is a proper subset of the official JSON Schema specification.
              */
             @Serializable
-            public data object Full : JSON("full")
+            public data object Standard : JSON("standard")
         }
     }
 }

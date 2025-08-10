@@ -89,8 +89,8 @@ The list below indicates the capabilities related to processing structured data:
 encoding using specific formats.
 Includes support for the following format:
     - **JSON** (`LLMCapability.Schema.JSON`): JSON schema support with different levels:
-        - **Simple** (`LLMCapability.Schema.JSON.Simple`): provides lightweight or basic JSON processing capabilities.
-        - **Full** (`LLMCapability.Schema.JSON.Full`): offers comprehensive JSON schema support for complex data 
+        - **Basic** (`LLMCapability.Schema.JSON.Basic`): provides lightweight or basic JSON processing capabilities.
+        - **Standard** (`LLMCapability.Schema.JSON.Standard`): offers comprehensive JSON schema support for complex data 
         structures.
 
 ## Creating a model (LLModel) configuration
@@ -125,7 +125,7 @@ val basicModel = LLModel(
     capabilities = listOf(
         LLMCapability.Temperature,
         LLMCapability.Tools,
-        LLMCapability.Schema.JSON.Full
+        LLMCapability.Schema.JSON.Standard
     ),
     contextLength = 128_000
 )
@@ -210,7 +210,7 @@ val supportsVideo = visionModel.capabilities.contains(LLMCapability.Vision.Video
 
 // Check for schema capabilities
 val jsonCapability = basicModel.capabilities.filterIsInstance<LLMCapability.Schema.JSON>().firstOrNull()
-val hasFullJsonSupport = jsonCapability is LLMCapability.Schema.JSON.Full // true
+val hasFullJsonSupport = jsonCapability is LLMCapability.Schema.JSON.Standard // true
 ```
 <!--- KNIT example-model-capabilities-05.kt -->
 

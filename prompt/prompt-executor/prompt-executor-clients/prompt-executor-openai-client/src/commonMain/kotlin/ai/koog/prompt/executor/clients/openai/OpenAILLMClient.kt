@@ -12,14 +12,20 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIToolChoice.FunctionName
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -93,8 +99,15 @@ public open class OpenAILLMClient(
     private val clock: Clock = Clock.System,
 ) : LLMEmbeddingProvider, LLMClient {
 
+    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val logger = KotlinLogging.logger { }
+
+        init {
+            // On class load register custom OpenAI JSON schema generators for structured output.
+            RegisteredBasicJsonSchemaGenerators[LLMProvider.OpenAI] = OpenAIBasicJsonSchemaGenerator
+            RegisteredStandardJsonSchemaGenerators[LLMProvider.OpenAI] = OpenAIStandardJsonSchemaGenerator
+        }
     }
 
     private val json = Json {
@@ -500,6 +513,27 @@ public open class OpenAILLMClient(
             )
         }
 
+        val responseFormat: OpenAIResponseFormat? = prompt.params.schema?.let { schema ->
+            require(schema.capability in model.capabilities) {
+                "Model ${model.id} does not support structured output schema ${schema.name}"
+            }
+
+            @Suppress("REDUNDANT_ELSE_IN_WHEN") // if more formats are added later
+            when (schema) {
+                is LLMParams.Schema.JSON -> {
+                    OpenAIResponseFormat.JsonSchema(
+                        jsonSchema = OpenAIResponseFormat.JsonSchema.JsonSchemaDefinition(
+                            name = schema.name,
+                            schema = schema.schema,
+                            strict = true,
+                        ),
+                    )
+                }
+
+                else -> throw IllegalArgumentException("Unsupported schema type: $schema")
+            }
+        }
+
         return OpenAIRequest(
             model = model.id,
             messages = messages,
@@ -524,6 +558,7 @@ public open class OpenAILLMClient(
             audio = audio,
             stream = stream,
             toolChoice = toolChoice,
+            responseFormat = responseFormat,
             user = prompt.params.user,
         )
     }

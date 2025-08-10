@@ -1,5 +1,6 @@
 package ai.koog.prompt.params
 
+import ai.koog.prompt.llm.LLMCapability
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -10,9 +11,13 @@ import kotlinx.serialization.json.JsonObject
  * encourage more diverse results, while lower values produce deterministically focused outputs.
  * The value is optional and defaults to null.
  *
+ * @property numberOfChoices Specifies the number of alternative completions to generate.
+ *
  * @property speculation Reserved for speculative proposition of how result would look like,
  * supported only by a number of models, but may greatly improve speed and accuracy of result.
  * For example, in OpenAI that feature is called PredictedOutput
+ *
+ * @property schema Defines the structure for the model's structured response format.
  *
  * @property toolChoice Used to switch tool calling behavior of LLM.
  *
@@ -67,62 +72,70 @@ public data class LLMParams(
     )
 
     /**
-     * Represents a generic schema for structured data, defining a common contract
-     * for schemas.
-     * This is a sealed interface, enabling a restrictive set of implementations.
+     * Represents a schema for the structured response.
      */
     @Serializable
     public sealed interface Schema {
         /**
-         * Represents a person's name as a string.
-         * This variable is intended to store the full name or a specific format of a name.
+         * Name identifier of the schema.
          */
         public val name: String
 
         /**
-         * Represents a sealed interface JSON that defines a schema entity.
-         * It extends the Schema interface and has a property for schema representation.
+         * Related LLM capability that has to be supported for a particular schema type.
+         */
+        public val capability: LLMCapability.Schema
+
+        /**
+         * Represents a schema in JSON format.
          */
         @Serializable
         public sealed interface JSON : Schema {
             /**
-             * Represents the JSON schema definition as a JsonObject.
-             *
-             * This property is used to store and define the structure or format of a JSON-based data schema,
-             * enabling serialization, validation, and adherence to a specific format. It is commonly utilized
-             * within implementations that require a structured schema for processing or validating JSON data.
+             * JSON schema definition as [JsonObject].
              */
             public val schema: JsonObject
 
             /**
-             * Represents a simplified JSON structure with a schema definition.
+             * Represents a basic JSON schema.
+             * Used to specify lightweight or fundamental JSON processing capabilities.
+             * This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
              *
-             * This data class implements the `JSON` interface and provides a basic representation
-             * of a JSON structure using a `name` and its corresponding `schema` in the form of a `JsonObject`.
+             * @property name Name identifier for the JSON schema structure.
+             * @property schema JSON schema definition as [JsonObject].
              *
-             * Use this class when a lightweight, minimal representation of a JSON schema is sufficient.
-             *
-             * @property name The identifier or name of the JSON structure.
-             * @property schema The JSON schema associated with the structure.
+             * @see [LLMCapability.Schema.JSON.Basic]
              */
             @Serializable
-            public data class Simple(override val name: String, override val schema: JsonObject) : JSON {
+            public data class Basic(
+                override val name: String,
+                override val schema: JsonObject
+            ) : JSON {
+                override val capability: LLMCapability.Schema = LLMCapability.Schema.JSON.Basic
+
                 init {
                     require(name.isNotBlank()) { "Schema name must not be empty or blank" }
                 }
             }
 
             /**
-             * Represents a complete JSON schema structure.
+             * Represents a standard JSON schema, according to https://json-schema.org/.
+             * This format is a proper subset of the official JSON Schema specification.
              *
-             * This data class implements the `JSON` interface and provides a representation
-             * for a fully described JSON schema object, including its associated name and schema data.
+             * **Note**: the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
              *
-             * @property name The name identifier for the JSON schema structure.
-             * @property schema The JSON schema definition as a `JsonObject`.
+             * @property name Name identifier for the JSON schema structure.
+             * @property schema JSON schema definition as [JsonObject].
+             *
+             * @see [LLMCapability.Schema.JSON.Standard]
              */
             @Serializable
-            public data class Full(override val name: String, override val schema: JsonObject) : JSON {
+            public data class Standard(
+                override val name: String,
+                override val schema: JsonObject
+            ) : JSON {
+                override val capability: LLMCapability.Schema = LLMCapability.Schema.JSON.Standard
+
                 init {
                     require(name.isNotBlank()) { "Schema name must not be empty or blank" }
                 }

@@ -1,4 +1,4 @@
-package ai.koog.agents.example.structureddata
+package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -23,7 +23,7 @@ fun main(): Unit = runBlocking {
                 val markdownStream = requestLLMStreaming(mdDefinition)
 
                 parseMarkdownStreamToBooks(markdownStream).collect { book ->
-                    callToolRaw(BookTool.NAME, book)
+                    callToolRaw(BookTool.Companion.NAME, book)
                     /* Other possible options:
                         callTool(BookTool::class, book)
                         callTool<BookTool>(book)
@@ -43,8 +43,6 @@ fun main(): Unit = runBlocking {
         edge(nodeStart forwardTo getMdOutput)
         edge(getMdOutput forwardTo nodeFinish)
     }
-
-    val token = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
 
     val toolRegistry = ToolRegistry {
         tool(BookTool())

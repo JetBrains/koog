@@ -112,16 +112,16 @@ public object BedrockModels : LLModelDefinitions {
     private val toolCapabilities: List<LLMCapability> = standardCapabilities + listOf(
         LLMCapability.Tools,
         LLMCapability.ToolChoice,
-        LLMCapability.Schema.JSON.Full
+        LLMCapability.Schema.JSON.Standard
     )
 
     // Full capabilities (multimodal + tools)
     private val fullCapabilities: List<LLMCapability> = standardCapabilities + listOf(
         LLMCapability.Tools,
         LLMCapability.ToolChoice,
-        LLMCapability.Schema.JSON.Full,
+        LLMCapability.Schema.JSON.Standard,
         LLMCapability.Vision.Image,
-        LLMCapability.Document
+        LLMCapability.Document,
     )
 
     /**

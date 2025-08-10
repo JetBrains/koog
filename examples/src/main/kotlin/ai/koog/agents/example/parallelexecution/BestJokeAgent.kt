@@ -17,7 +17,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.structure.json.JsonStructuredData
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
@@ -159,7 +158,7 @@ private suspend fun AIAgentContextBase.findTheBestJoke(
         }
     }
 
-    val response = requestLLMStructured(JsonStructuredData.createJsonStructure<JokeWinner>())
+    val response = requestLLMStructured<JokeWinner>()
     val bestJoke = response.getOrNull()!!.structure
     bestJoke.index
 }

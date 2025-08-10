@@ -44,7 +44,6 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
-            LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
         ),
         contextLength = 200_000,
@@ -68,7 +67,6 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
-            LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
         ),
         contextLength = 200_000,
@@ -93,7 +91,6 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
         ),
         contextLength = 200_000,
@@ -118,7 +115,6 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
         ),
         contextLength = 200_000,
@@ -143,7 +139,6 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
         ),
         contextLength = 200_000,
@@ -167,7 +162,6 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
         ),
         contextLength = 200_000,
@@ -192,7 +186,6 @@ public object AnthropicModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Vision.Image,
             LLMCapability.Document,
-            LLMCapability.Schema.JSON.Full,
             LLMCapability.Completion
         ),
         contextLength = 200_000,

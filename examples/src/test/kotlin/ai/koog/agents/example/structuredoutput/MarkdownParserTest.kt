@@ -1,4 +1,4 @@
-package ai.koog.agents.example.structureddata
+package ai.koog.agents.example.structuredoutput
 
 import ai.koog.prompt.structure.markdown.markdownParser
 import ai.koog.prompt.structure.markdown.markdownStreamingParser

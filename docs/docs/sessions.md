@@ -241,11 +241,7 @@ Example:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.example.exampleParallelNodeExecution07.JokeRating
-import ai.koog.prompt.structure.json.JsonStructuredData
-
-val myStructure = JsonStructuredData.createJsonStructure<JokeRating>()
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
     val node by node<Unit, Unit> {
@@ -257,7 +253,7 @@ val strategy = strategy<Unit, Unit>("strategy-name") {
 ```kotlin
 llm.writeSession {
     // Make a structured request
-    val structuredResponse = requestLLMStructured(myStructure)
+    val structuredResponse = requestLLMStructured<JokeRating>()
 
     // Make a streaming request
     val responseStream = requestLLMStreaming()

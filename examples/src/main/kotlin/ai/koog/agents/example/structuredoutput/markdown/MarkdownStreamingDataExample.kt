@@ -1,4 +1,4 @@
-package ai.koog.agents.example.structureddata
+package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -32,8 +32,6 @@ fun main(): Unit = runBlocking {
         edge(nodeStart forwardTo getMdOutput)
         edge(getMdOutput forwardTo nodeFinish)
     }
-
-    val token = System.getenv("GRAZIE_TOKEN") ?: error("Environment variable GRAZIE_TOKEN is not set")
 
     val agentConfig = AIAgentConfig.withSystemPrompt(
         prompt = """

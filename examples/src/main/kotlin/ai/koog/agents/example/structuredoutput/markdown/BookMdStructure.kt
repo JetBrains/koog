@@ -1,4 +1,4 @@
-package ai.koog.agents.example.structureddata
+package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolArgs

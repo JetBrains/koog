@@ -225,17 +225,17 @@ internal class GoogleFunctionDeclaration(
  * Configuration options for model generation and outputs. Not all parameters are configurable for every model.
  *
  * @property responseMimeType MIME type of the generated candidate text.
- * Supported MIME types are:
- *   - `text/plain`: (default) Text output.
- *   - `application/json`: JSON response in the response candidates.
- *   - `text/x.enum`: ENUM as a string response in the response candidates.
  * @property responseSchema Output schema of the generated candidate text.
- * Schemas must be a subset of the OpenAPI schema and can be objects, primitives, or arrays.
+ * Schemas must be a subset of the OpenAPI schema.
  * If set, a compatible [responseMimeType] must also be set.
- * Compatible MIME types: `application/json`: Schema for JSON response.
+ * Compatible MIME types: `application/json`
+ * @property responseJsonSchema Output schema of the generated candidate text.
+ * Schemas must be a subset of the JSON Schema.
+ * If set, a compatible [responseMimeType] must also be set.
+ * Compatible MIME types: `application/json`
  * @property maxOutputTokens The maximum number of tokens to include in a response candidate.
  * @property temperature Controls the randomness of the output.
- * @property numberOfChoices The number of reply choices to generate.
+ * @property candidateCount The number of reply choices to generate.
  * @property topP The maximum cumulative probability of tokens to consider when sampling.
  * @property topK The maximum number of tokens to consider when sampling.
  */
@@ -243,10 +243,10 @@ internal class GoogleFunctionDeclaration(
 internal class GoogleGenerationConfig(
     val responseMimeType: String? = null,
     val responseSchema: JsonObject? = null,
+    val responseJsonSchema: JsonObject? = null,
     val maxOutputTokens: Int? = null,
     val temperature: Double? = null,
-    @SerialName("candidateCount")
-    val numberOfChoices: Int? = null,
+    val candidateCount: Int? = null,
     val topP: Double? = null,
     val topK: Int? = null,
 )

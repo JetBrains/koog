@@ -14,9 +14,6 @@ public interface StructuredDataDefinition {
     /**
      * Defines the structure of textual content using the provided [TextContentBuilder].
      *
-     * This function allows customization of the content through the builder pattern,
-     * enabling users to add structured text and formatting as needed.
-     *
      * @param builder The [TextContentBuilderBase] instance for constructing textual content.
      * @return The modified [TextContentBuilderBase] containing the structured content.
      */

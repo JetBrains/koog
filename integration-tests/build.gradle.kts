@@ -50,15 +50,21 @@ val envs = credentialsResolver.resolve(
 )
 
 tasks.withType<Test> {
-    doFirst {
-        environment(envs.get())
-    }
-
     // Forward system properties to the test JVM
     System.getProperties().forEach { key, value ->
         systemProperty(key.toString(), value)
     }
 }
+
+// Try loading envs from file for integration tests only.
+tasks.withType<Test>()
+    .matching { it.name == "jvmIntegrationTest" }
+    .configureEach {
+        doFirst {
+            logger.info("Loading envs from local file")
+            environment(envs.get())
+        }
+    }
 
 dokka {
     dokkaSourceSets.configureEach {

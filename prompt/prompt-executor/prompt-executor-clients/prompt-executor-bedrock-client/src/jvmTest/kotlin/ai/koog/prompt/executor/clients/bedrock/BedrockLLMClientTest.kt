@@ -125,7 +125,6 @@ class BedrockLLMClientTest {
             assertTrue(model.capabilities.contains(LLMCapability.Tools))
             assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
             assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-            assertTrue(model.capabilities.contains(LLMCapability.Schema.JSON.Full))
         }
 
         // Test Claude 3.5 models with full capabilities
@@ -141,7 +140,6 @@ class BedrockLLMClientTest {
             assertTrue(model.capabilities.contains(LLMCapability.Tools))
             assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
             assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-            assertTrue(model.capabilities.contains(LLMCapability.Schema.JSON.Full))
         }
 
         // Test Claude 4 models with full capabilities
@@ -157,7 +155,6 @@ class BedrockLLMClientTest {
             assertTrue(model.capabilities.contains(LLMCapability.Tools))
             assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
             assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-            assertTrue(model.capabilities.contains(LLMCapability.Schema.JSON.Full))
         }
 
         // Test older Claude models with standard capabilities
@@ -531,11 +528,9 @@ class BedrockLLMClientTest {
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.Schema.JSON.Full))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Schema.JSON.Full))
 
         // Verify Claude 3.5 models have comprehensive tool support
         val claude35Sonnet = BedrockModels.AnthropicClaude35SonnetV2

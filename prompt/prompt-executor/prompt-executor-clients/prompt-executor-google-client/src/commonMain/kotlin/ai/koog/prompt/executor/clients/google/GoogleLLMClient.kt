@@ -8,14 +8,21 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
+import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -82,12 +89,19 @@ public open class GoogleLLMClient(
     private val clock: Clock = Clock.System
 ) : LLMClient {
 
+    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val logger = KotlinLogging.logger { }
 
         private const val DEFAULT_PATH = "v1beta/models"
         private const val DEFAULT_METHOD_GENERATE_CONTENT = "generateContent"
         private const val DEFAULT_METHOD_STREAM_GENERATE_CONTENT = "streamGenerateContent"
+
+        init {
+            // On class load register custom Google JSON schema generators for structured output.
+            RegisteredBasicJsonSchemaGenerators[LLMProvider.Google] = GoogleBasicJsonSchemaGenerator
+            RegisteredStandardJsonSchemaGenerators[LLMProvider.Google] = GoogleStandardJsonSchemaGenerator
+        }
     }
 
     private val json = Json {
@@ -317,23 +331,33 @@ public open class GoogleLLMClient(
             .takeIf { it.isNotEmpty() }
             ?.let { GoogleContent(parts = it) }
 
+        val responseFormat: GoogleResponseFormat? = prompt.params.schema?.let { schema ->
+            require(schema.capability in model.capabilities) {
+                "Model ${model.id} does not support structured output schema ${schema.name}"
+            }
+
+            @Suppress("REDUNDANT_ELSE_IN_WHEN") // if more formats are added later
+            when (schema) {
+                is LLMParams.Schema.JSON.Basic -> GoogleResponseFormat(
+                    responseMimeType = "application/json",
+                    responseSchema = schema.schema,
+                )
+
+                is LLMParams.Schema.JSON.Standard -> GoogleResponseFormat(
+                    responseMimeType = "application/json",
+                    responseJsonSchema = schema.schema,
+                )
+
+                else -> throw IllegalArgumentException("Unsupported schema type: $schema")
+            }
+        }
+
         val generationConfig = GoogleGenerationConfig(
-            temperature = if (model.capabilities.contains(
-                    LLMCapability.Temperature
-                )
-            ) {
-                prompt.params.temperature
-            } else {
-                null
-            },
-            numberOfChoices = if (model.capabilities.contains(
-                    LLMCapability.MultipleChoices
-                )
-            ) {
-                prompt.params.numberOfChoices
-            } else {
-                null
-            },
+            responseMimeType = responseFormat?.responseMimeType,
+            responseSchema = responseFormat?.responseSchema,
+            responseJsonSchema = responseFormat?.responseJsonSchema,
+            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
+            candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
             maxOutputTokens = 2048,
         )
 

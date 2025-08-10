@@ -11,19 +11,16 @@ import ai.koog.prompt.params.LLMParams
  *
  * @param TStruct The type of the structured data that this class handles.
  * @property id A unique identifier for the structured data entity.
- * @property examples A collection of example instances of the structured data type.
  * @property schema The schema that defines the structure and validation rules for the data.
+ * @property examples A collection of example instances of the structured data type.
  */
-public abstract class StructuredData<TStruct>(
+public abstract class StructuredData<TStruct, TSchema : LLMParams.Schema>(
     public val id: String,
+    public val schema: TSchema,
     public val examples: List<TStruct>,
-    public val schema: LLMParams.Schema
 ) : StructuredDataDefinition {
     /**
      * Parses the given text into a structured data representation.
-     *
-     * This method is designed to transform raw input text into a structured format
-     * defined by the implementing class.
      *
      * @param text The raw input text to be parsed into a structured format.
      * @return The structured data representation of type TStruct derived from the input text.

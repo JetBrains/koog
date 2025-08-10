@@ -14,6 +14,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import io.mockk.every
 import io.mockk.mockk
@@ -30,6 +31,7 @@ class RetrieveFactsFromHistoryTest {
 
     private val testModel = mockk<LLModel> {
         every { id } returns "test-model"
+        every { provider } returns mockk<LLMProvider>()
     }
 
     private val testClock: Clock = object : Clock {

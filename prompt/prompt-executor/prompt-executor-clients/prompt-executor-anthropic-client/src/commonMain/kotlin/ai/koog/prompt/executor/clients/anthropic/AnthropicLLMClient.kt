@@ -273,14 +273,17 @@ public open class AnthropicLLMClient(
             null -> null
         }
 
+        require(prompt.params.schema == null) {
+            "Anthropic does not currently support native structured output."
+        }
+
         // Always include max_tokens as it's required by the API
         return AnthropicMessageRequest(
             model = settings.modelVersionsMap[model]
                 ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
             maxTokens = 2048, // This is required by the API
-            // TODO why 0.7 and not 0.0?
-            temperature = prompt.params.temperature ?: 0.7, // Default temperature if not provided
+            temperature = prompt.params.temperature,
             system = systemMessage,
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
             stream = stream,

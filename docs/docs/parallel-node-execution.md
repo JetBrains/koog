@@ -180,7 +180,7 @@ val nodeBestJoke by parallel<String, String>(
             system("You are a comedy critic. Select the best joke.")
             user("Here are three jokes: ${jokes.joinToString("\n\n")}")
          }
-         val response = requestLLMStructured(JsonStructuredData.createJsonStructure<JokeRating>())
+         val response = requestLLMStructured<JokeRating>()
          response.getOrNull()!!.structure.bestJokeIndex
       }
    }
@@ -228,7 +228,6 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.structure.json.JsonStructuredData
 
 typealias Input = String
 typealias Output = String
@@ -299,7 +298,7 @@ val strategy = strategy("best-joke") {
                }
             }
 
-            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<JokeRating>())
+            val response = requestLLMStructured<JokeRating>()
             val bestJoke = response.getOrNull()!!.structure
             bestJoke.bestJokeIndex
          }

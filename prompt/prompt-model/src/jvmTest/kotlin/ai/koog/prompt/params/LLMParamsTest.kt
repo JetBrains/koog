@@ -68,7 +68,7 @@ class LLMParamsTest {
 
     @Test
     fun testValidValues() {
-        val schema = LLMParams.Schema.JSON.Simple(
+        val schema = LLMParams.Schema.JSON.Basic(
             "test-schema",
             STRING_JSON_SCHEMA
         )
@@ -172,27 +172,27 @@ class LLMParamsTest {
 
     @Test
     fun testValidSchemaNames() {
-        val simpleSchema = LLMParams.Schema.JSON.Simple(
+        val simpleSchema = LLMParams.Schema.JSON.Basic(
             VALID_SCHEMA_NAME,
             STRING_JSON_SCHEMA
         )
-        val fullSchema = LLMParams.Schema.JSON.Full(
+        val fullSchema = LLMParams.Schema.JSON.Standard(
             ANOTHER_VALID_NAME,
             OBJECT_JSON_SCHEMA
         )
 
-        val paramsSimple = LLMParams(schema = simpleSchema)
+        val paramsBasic = LLMParams(schema = simpleSchema)
         val paramsFull = LLMParams(schema = fullSchema)
 
-        assertEquals(VALID_SCHEMA_NAME, paramsSimple.schema?.name)
+        assertEquals(VALID_SCHEMA_NAME, paramsBasic.schema?.name)
         assertEquals(ANOTHER_VALID_NAME, paramsFull.schema?.name)
     }
 
     @ParameterizedTest
     @MethodSource("invalidStringParam")
-    fun testInvalidSimpleSchemaName(name: String) {
+    fun testInvalidBasicSchemaName(name: String) {
         assertThrows<IllegalArgumentException> {
-            LLMParams.Schema.JSON.Simple(
+            LLMParams.Schema.JSON.Basic(
                 name,
                 STRING_JSON_SCHEMA
             )
@@ -203,7 +203,7 @@ class LLMParamsTest {
     @MethodSource("invalidStringParam")
     fun testInvalidFullSchemaName(name: String) {
         assertThrows<IllegalArgumentException> {
-            LLMParams.Schema.JSON.Full(
+            LLMParams.Schema.JSON.Standard(
                 name,
                 OBJECT_JSON_SCHEMA
             )

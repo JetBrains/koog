@@ -42,7 +42,7 @@ class PromptTest {
         val toolCallContent = """{"operation": "add", "a": 5, "b": 3}"""
         val toolResultContent = "8"
         val finishReason = "stop"
-        val emptyName = ""
+        val schemaName = "test_schema"
 
         val simpleSchemaName = "simple-schema"
         val simpleSchema = buildJsonObject {
@@ -82,14 +82,14 @@ class PromptTest {
         @JvmStatic
         fun schemaSerializationProvider(): Stream<Array<Any>> = Stream.of(
             arrayOf(
-                LLMParams.Schema.JSON.Simple(simpleSchemaName, simpleSchema),
+                LLMParams.Schema.JSON.Basic(simpleSchemaName, simpleSchema),
                 simpleSchemaName,
-                LLMParams.Schema.JSON.Simple::class.java
+                LLMParams.Schema.JSON.Basic::class.java
             ),
             arrayOf(
-                LLMParams.Schema.JSON.Full(fullSchemaName, fullSchema),
+                LLMParams.Schema.JSON.Standard(fullSchemaName, fullSchema),
                 fullSchemaName,
-                LLMParams.Schema.JSON.Full::class.java
+                LLMParams.Schema.JSON.Standard::class.java
             )
         )
     }
@@ -145,7 +145,7 @@ class PromptTest {
         val prompt = basicPrompt.withUpdatedParams {
             temperature = 0.7
             speculation = speculationMessage
-            schema = LLMParams.Schema.JSON.Simple(simpleSchemaName, simpleSchema)
+            schema = LLMParams.Schema.JSON.Basic(simpleSchemaName, simpleSchema)
             toolChoice = LLMParams.ToolChoice.Auto
             user = "test_user"
         }
@@ -157,7 +157,7 @@ class PromptTest {
         assertEquals(prompt.messages.size, decodedPrompt.messages.size)
         assertEquals(0.7, decodedPrompt.params.temperature)
         assertEquals(speculationMessage, decodedPrompt.params.speculation)
-        assertTrue(decodedPrompt.params.schema is LLMParams.Schema.JSON.Simple)
+        assertTrue(decodedPrompt.params.schema is LLMParams.Schema.JSON)
         assertEquals(simpleSchemaName, decodedPrompt.params.schema?.name)
         assertTrue(decodedPrompt.params.toolChoice is LLMParams.ToolChoice.Auto)
         assertEquals("test_user", decodedPrompt.params.user)
@@ -260,7 +260,7 @@ class PromptTest {
         val newParams = LLMParams(
             temperature = 0.7,
             speculation = speculation,
-            schema = LLMParams.Schema.JSON.Simple(
+            schema = LLMParams.Schema.JSON.Basic(
                 schemaName,
                 buildJsonObject { put("type", "string") }
             ),
@@ -272,7 +272,7 @@ class PromptTest {
 
         assertEquals(0.7, updatedPrompt.params.temperature)
         assertEquals(speculation, updatedPrompt.params.speculation)
-        assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON.Simple)
+        assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON)
         assertEquals(schemaName, updatedPrompt.params.schema?.name)
         assertTrue(updatedPrompt.params.toolChoice is LLMParams.ToolChoice.Auto)
         assertEquals("test_user", updatedPrompt.params.user)
@@ -285,7 +285,7 @@ class PromptTest {
         val updatedPrompt = basicPrompt.withUpdatedParams {
             temperature = 0.8
             speculation = newSpeculation
-            schema = LLMParams.Schema.JSON.Full(
+            schema = LLMParams.Schema.JSON.Standard(
                 schemaName,
                 buildJsonObject {
                     put("type", "object")
@@ -298,7 +298,7 @@ class PromptTest {
 
         assertEquals(0.8, updatedPrompt.params.temperature)
         assertEquals(newSpeculation, updatedPrompt.params.speculation)
-        assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON.Full)
+        assertTrue(updatedPrompt.params.schema is LLMParams.Schema.JSON)
         assertEquals(schemaName, updatedPrompt.params.schema?.name)
         assertTrue(updatedPrompt.params.toolChoice is LLMParams.ToolChoice.Required)
         assertEquals("updated_user", updatedPrompt.params.user)
@@ -458,9 +458,49 @@ class PromptTest {
     }
 
     @Test
+    fun testToolChoiceNamedWithEmptyName() {
+        val toolChoiceWithEmptyName = LLMParams.ToolChoice.Named(schemaName)
+        val prompt = basicPrompt.withUpdatedParams {
+            toolChoice = toolChoiceWithEmptyName
+        }
+
+        assertTrue(prompt.params.toolChoice is LLMParams.ToolChoice.Named)
+        assertEquals(schemaName, (prompt.params.toolChoice as LLMParams.ToolChoice.Named).name)
+
+        val json = Json.encodeToString(prompt)
+        val decoded = Json.decodeFromString<Prompt>(json)
+
+        assertEquals(prompt, decoded)
+        assertTrue(decoded.params.toolChoice is LLMParams.ToolChoice.Named)
+        assertEquals(schemaName, (decoded.params.toolChoice as LLMParams.ToolChoice.Named).name)
+    }
+
+    @Test
+    fun testSchemaWithEmptyName() {
+        val schemaWithEmptyName = LLMParams.Schema.JSON.Basic(
+            schemaName,
+            buildJsonObject { put("type", "string") }
+        )
+
+        val prompt = basicPrompt.withUpdatedParams {
+            schema = schemaWithEmptyName
+        }
+
+        assertTrue(prompt.params.schema is LLMParams.Schema.JSON)
+        assertEquals(schemaName, prompt.params.schema?.name)
+
+        val json = Json.encodeToString(prompt)
+        val decoded = Json.decodeFromString<Prompt>(json)
+
+        assertEquals(prompt, decoded)
+        assertTrue(decoded.params.schema is LLMParams.Schema.JSON)
+        assertEquals(schemaName, decoded.params.schema?.name)
+    }
+
+    @Test
     fun testToolMessagesWithEmptyToolName() {
-        val toolCallWithEmptyName = Message.Tool.Call(toolCallId, emptyName, toolCallContent, testRespMetaInfo)
-        val toolResultWithEmptyName = Message.Tool.Result(toolCallId, emptyName, toolCallContent, testReqMetaInfo)
+        val toolCallWithEmptyName = Message.Tool.Call(toolCallId, schemaName, toolCallContent, testRespMetaInfo)
+        val toolResultWithEmptyName = Message.Tool.Result(toolCallId, schemaName, toolCallContent, testReqMetaInfo)
 
         val prompt = Prompt.build(promptId) {
             tool {
@@ -519,7 +559,7 @@ class PromptTest {
         val emptySchemaName = "empty-schema"
         val emptyJsonSchema = buildJsonObject { }
 
-        val schemaWithEmptyJson = LLMParams.Schema.JSON.Simple(emptySchemaName, emptyJsonSchema)
+        val schemaWithEmptyJson = LLMParams.Schema.JSON.Basic(emptySchemaName, emptyJsonSchema)
 
         assertTrue(schemaWithEmptyJson.schema.entries.isEmpty())
 
@@ -527,17 +567,17 @@ class PromptTest {
             schema = schemaWithEmptyJson
         }
 
-        assertTrue(prompt.params.schema is LLMParams.Schema.JSON.Simple)
+        assertTrue(prompt.params.schema is LLMParams.Schema.JSON)
         assertEquals(emptySchemaName, prompt.params.schema?.name)
-        assertTrue((prompt.params.schema as LLMParams.Schema.JSON.Simple).schema.entries.isEmpty())
+        assertTrue((prompt.params.schema as LLMParams.Schema.JSON).schema.entries.isEmpty())
 
         val json = Json.encodeToString(prompt)
         val decoded = Json.decodeFromString<Prompt>(json)
 
         assertEquals(prompt, decoded)
-        assertTrue(decoded.params.schema is LLMParams.Schema.JSON.Simple)
+        assertTrue(decoded.params.schema is LLMParams.Schema.JSON)
         assertEquals(emptySchemaName, decoded.params.schema?.name)
-        assertTrue((decoded.params.schema as LLMParams.Schema.JSON.Simple).schema.entries.isEmpty())
+        assertTrue((decoded.params.schema as LLMParams.Schema.JSON).schema.entries.isEmpty())
     }
 
     @Test

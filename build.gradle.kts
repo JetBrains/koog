@@ -4,6 +4,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
+import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import java.util.*
 
 group = "ai.koog"
@@ -80,6 +83,11 @@ subprojects {
 }
 
 subprojects {
+    extensions.configure<KtlintExtension> {
+        outputToConsole = true
+        coloredOutput = true
+    }
+
     tasks.withType<Test> {
         testLogging {
             showStandardStreams = true
@@ -229,4 +237,28 @@ kover {
             }
         }
     }
+}
+
+fun Project.getKotlinCompileTasks(sourceSetName: String): List<Task> {
+    return this.tasks
+        .withType<BaseKotlinCompile>()
+        // Filtering JS linking tasks, additional overhead and not needed for verification. Not used by assemble task.
+        .filter { it !is KotlinJsIrLink }
+        .filter { it.sourceSetName.get() == sourceSetName }
+}
+
+tasks.register("compileKotlinAll") {
+    description = """
+    Compiles all main Kotlin sources in all subprojects. Useful to verify that everything compiles for all supported platforms.
+    """.trimIndent()
+
+    dependsOn(subprojects.map { it.getKotlinCompileTasks("main") })
+}
+
+tasks.register("compileTestKotlinAll") {
+    description = """
+    Compiles all test Kotlin sources in all subprojects. Useful to verify that everything compiles for all supported platforms.
+    """.trimIndent()
+
+    dependsOn(subprojects.map { it.getKotlinCompileTasks("test") })
 }

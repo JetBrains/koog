@@ -30,7 +30,7 @@ public object OllamaModels {
             id = "llama3-groq-tool-use:8b",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Tools
             ),
             contextLength = 8_192,
@@ -55,7 +55,7 @@ public object OllamaModels {
             id = "llama3-groq-tool-use:70b",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Full,
+                LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Tools
             ),
             contextLength = 8_192,
@@ -87,7 +87,7 @@ public object OllamaModels {
             id = "llama3.2:3b",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools
             ),
             contextLength = 131_072,
@@ -110,7 +110,7 @@ public object OllamaModels {
             id = "llama3.2:latest",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools
             ),
             contextLength = 131_072,
@@ -129,7 +129,7 @@ public object OllamaModels {
             id = "llama4:latest",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools
             ),
             contextLength = 10_485_760,
@@ -187,7 +187,7 @@ public object OllamaModels {
             id = "qwen2.5:0.5b",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools
             ),
             contextLength = 32_768,
@@ -210,7 +210,7 @@ public object OllamaModels {
             id = "qwen3:0.6b",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools
             ),
             contextLength = 40_960,
@@ -233,7 +233,7 @@ public object OllamaModels {
             id = "qwq:32b",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools
             ),
             contextLength = 40_960,
@@ -272,7 +272,7 @@ public object OllamaModels {
             id = "qwen2.5-coder:32b",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools
             ),
             contextLength = 32_768,
@@ -304,7 +304,7 @@ public object OllamaModels {
             id = "granite3.2-vision",
             capabilities = listOf(
                 LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Simple,
+                LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Tools,
                 LLMCapability.Vision.Image,
                 LLMCapability.Document

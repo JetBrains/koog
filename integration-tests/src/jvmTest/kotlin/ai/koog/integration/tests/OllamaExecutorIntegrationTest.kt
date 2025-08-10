@@ -760,7 +760,7 @@ class OllamaExecutorIntegrationTest {
         assertEquals(3072, modelCard.embeddingLength)
         assertEquals("Q4_K_M", modelCard.quantizationLevel)
         assertEquals(
-            listOf(Completion, Tools, Temperature, Schema.JSON.Simple, Schema.JSON.Full),
+            listOf(Completion, Tools, Temperature, Schema.JSON.Basic, Schema.JSON.Standard),
             modelCard.capabilities
         )
     }

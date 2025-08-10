@@ -77,14 +77,21 @@ registerRunExampleTask(
 )
 registerRunExampleTask("runExampleTemplate", "ai.koog.agents.example.template.TemplateKt")
 registerRunExampleTask("runProjectAnalyzer", "ai.koog.agents.example.ProjectAnalyzerAgentKt")
-registerRunExampleTask("runExampleStructuredOutput", "ai.koog.agents.example.structureddata.StructuredDataExampleKt")
+registerRunExampleTask(
+    "runExampleAdvancedSimpleStructuredOutput",
+    "ai.koog.agents.example.structuredoutput.AdvancedSimpleStructuredOutputExampleKt"
+)
+registerRunExampleTask(
+    "runExampleAdvancedFullStructuredOutput",
+    "ai.koog.agents.example.structuredoutput.AdvancedFullStructuredOutputExampleKt"
+)
 registerRunExampleTask(
     "runExampleMarkdownStreaming",
-    "ai.koog.agents.example.structureddata.MarkdownStreamingDataExampleKt"
+    "ai.koog.agents.example.structuredoutput.MarkdownStreamingDataExampleKt"
 )
 registerRunExampleTask(
     "runExampleMarkdownStreamingWithTool",
-    "ai.koog.agents.example.structureddata.MarkdownStreamingWithToolsExampleKt"
+    "ai.koog.agents.example.structuredoutput.MarkdownStreamingWithToolsExampleKt"
 )
 registerRunExampleTask(
     "runExampleRiderProjectTemplate",

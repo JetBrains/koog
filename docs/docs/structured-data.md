@@ -167,14 +167,13 @@ Once you have defined your data structures, you can generate JSON schemas from t
 <!--- INCLUDE
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
 import ai.koog.agents.example.exampleStructuredData07.exampleForecasts
-import ai.koog.prompt.structure.json.JsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 -->
 ```kotlin
 val weatherForecastStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
-    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-    examples = exampleForecasts,
-    schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
+    schemaGenerator = BasicJsonSchemaGenerator.Default,
+    examples = exampleForecasts
 )
 ```
 <!--- KNIT example-structured-data-06.kt -->
@@ -263,6 +262,9 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.structure.executeStructured
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructureFixingParser
 import kotlinx.coroutines.runBlocking
 
 fun main() {
@@ -290,14 +292,16 @@ val structuredResponse = promptExecutor.executeStructured(
               "What is the weather forecast for Amsterdam?"
             )
         },
-        // Provide the expected data structure to the LLM
-        structure = weatherForecastStructure,
         // Define the main model that will execute the request
-        mainModel = OpenAIModels.CostOptimized.GPT4oMini,
-        // Set the maximum number of retries to get a proper structured response
-        retries = 5,
-        // Set the LLM used for output coercion (transformation of malformed outputs)
-        fixingModel = OpenAIModels.Chat.GPT4o
+        model = OpenAIModels.CostOptimized.GPT4oMini,
+        // Provide the structured data configuration
+        config = StructuredOutputConfig(
+            default = StructuredOutput.Manual(weatherForecastStructure),
+            fixingParser = StructureFixingParser(
+                fixingModel = OpenAIModels.Chat.GPT4o,
+                retries = 3
+            )
+        )
     )
 ```
 <!--- KNIT example-structured-data-08.kt -->
@@ -335,6 +339,9 @@ To request a structured response from an LLM, use the `requestLLMStructured` met
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.example.exampleStructuredData06.weatherForecastStructure
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructureFixingParser
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
     val node by node<Unit, Unit> {
@@ -346,8 +353,13 @@ val strategy = strategy<Unit, Unit>("strategy-name") {
 ```kotlin
 val structuredResponse = llm.writeSession {
     this.requestLLMStructured(
-        structure = weatherForecastStructure,
-        fixingModel = OpenAIModels.Chat.GPT4o,
+        config = StructuredOutputConfig(
+            default = StructuredOutput.Manual(weatherForecastStructure),
+            fixingParser = StructureFixingParser(
+                fixingModel = OpenAIModels.Chat.GPT4o,
+                retries = 3
+            )
+        )
     )
 }
 ```
@@ -366,6 +378,9 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.example.exampleStructuredData06.weatherForecastStructure
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructureFixingParser
 -->
 ```kotlin
 val agentStrategy = strategy("weather-forecast") {
@@ -374,8 +389,13 @@ val agentStrategy = strategy("weather-forecast") {
     val getStructuredForecast by node<Message.Response, String> { _ ->
         val structuredResponse = llm.writeSession {
             this.requestLLMStructured(
-                structure = weatherForecastStructure,
-                fixingModel = OpenAIModels.Chat.GPT4o,
+                config = StructuredOutputConfig(
+                    default = StructuredOutput.Manual(weatherForecastStructure),
+                    fixingParser = StructureFixingParser(
+                        fixingModel = OpenAIModels.Chat.GPT4o,
+                        retries = 3
+                    )
+                )
             )
         }
 
@@ -408,7 +428,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.structure.json.JsonSchemaGenerator
+import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.JsonStructuredData
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
@@ -447,9 +467,8 @@ fun main(): Unit = runBlocking {
 
     // Generate JSON Schema
     val forecastStructure = JsonStructuredData.createJsonStructure<SimpleWeatherForecast>(
-        schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-        examples = exampleForecasts,
-        schemaType = JsonStructuredData.JsonSchemaType.SIMPLE
+        schemaGenerator = BasicJsonSchemaGenerator.Default,
+        examples = exampleForecasts
     )
 
     // Define the agent strategy
@@ -458,10 +477,7 @@ fun main(): Unit = runBlocking {
   
         val getStructuredForecast by node<Message.Response, String> { _ ->
             val structuredResponse = llm.writeSession {
-                this.requestLLMStructured(
-                    structure = forecastStructure,
-                    fixingModel = OpenAIModels.Chat.GPT4o,
-                )
+                this.requestLLMStructured<SimpleWeatherForecast>()
             }
   
             """

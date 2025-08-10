@@ -13,8 +13,11 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.structure.json.JsonSchemaGenerator
+import ai.koog.prompt.structure.StructureFixingParser
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KType
@@ -99,11 +102,15 @@ public open class AIAgentSubgraph<Input, Output>(
             }
 
             val selectedTools = this.requestLLMStructured(
-                structure = JsonStructuredData.createJsonStructure<SelectedTools>(
-                    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                    examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
-                ),
-                retries = toolSelectionStrategy.maxRetries,
+                config = StructuredOutputConfig(
+                    default = StructuredOutput.Manual(
+                        JsonStructuredData.createJsonStructure<SelectedTools>(
+                            schemaGenerator = StandardJsonSchemaGenerator,
+                            examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
+                        ),
+                    ),
+                    fixingParser = toolSelectionStrategy.fixingParser,
+                )
             ).getOrThrow()
 
             prompt = initialPrompt
@@ -262,8 +269,9 @@ public sealed interface ToolSelectionStrategy {
      * This ensures that unnecessary tools are excluded, optimizing the toolset for the specific use case.
      *
      * @property subtaskDescription A description of the subtask for which the relevant tools should be selected.
+     * @property fixingParser Optional [StructureFixingParser] to attempt fixes when malformed structured response with tool list is received.
      */
-    public data class AutoSelectForTask(val subtaskDescription: String, val maxRetries: Int = 3) : ToolSelectionStrategy
+    public data class AutoSelectForTask(val subtaskDescription: String, val fixingParser: StructureFixingParser? = null) : ToolSelectionStrategy
 
     /**
      * Represents a subset of tools to be utilized within a subgraph or task.
