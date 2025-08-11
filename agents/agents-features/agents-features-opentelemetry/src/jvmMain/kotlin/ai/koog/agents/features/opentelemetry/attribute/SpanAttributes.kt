@@ -283,5 +283,17 @@ internal object SpanAttributes {
             override val key: String = super.key.concatKey("name")
             override val value: String = name
         }
+
+        // Custom tool attribute with tool arguments used for tool calls
+        data class InputValue(private val input: String) : Attribute {
+            override val key: String = "input.value"
+            override val value: Any = input
+        }
+
+        // Custom tool attribute with tool execution results used for tool calls
+        data class OutputValue(private val output: String) : Attribute {
+            override val key: String = "output.value"
+            override val value: Any = output
+        }
     }
 }

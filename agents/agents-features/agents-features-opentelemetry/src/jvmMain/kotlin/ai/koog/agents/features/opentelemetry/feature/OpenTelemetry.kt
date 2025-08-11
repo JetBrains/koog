@@ -345,7 +345,8 @@ public class OpenTelemetry {
 
                 val executeToolSpan = ExecuteToolSpan(
                     parent = nodeExecuteSpan,
-                    tool = eventContext.tool
+                    tool = eventContext.tool,
+                    toolArgs = eventContext.toolArgs,
                 )
 
                 spanProcessor.startSpan(executeToolSpan)
@@ -368,7 +369,16 @@ public class OpenTelemetry {
                 )
 
                 // End the ExecuteToolSpan span
-                spanProcessor.endSpan(executeToolSpanId)
+                val finishAttributes = buildList {
+                    eventContext.result?.toStringDefault()?.let { result ->
+                        add(SpanAttributes.Tool.OutputValue(result))
+                    }
+                }
+
+                spanProcessor.endSpan(
+                    spanId = executeToolSpanId,
+                    attributes = finishAttributes
+                )
             }
 
             pipeline.interceptToolCallFailure(interceptContext) { eventContext ->
