@@ -529,8 +529,7 @@ public object JVMFileSystemProvider {
 
                         if (!child.isDirectory()) {
                             child.copyTo(targetChild)
-                        }
-                        else {
+                        } else {
                             child.copyToRecursively(target = targetChild, followLinks = false, overwrite = false)
                         }
                     }
