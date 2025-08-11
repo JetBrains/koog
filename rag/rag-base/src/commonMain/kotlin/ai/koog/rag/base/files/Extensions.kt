@@ -22,65 +22,72 @@ private fun <Path> Path.components(fs: FileSystemProvider.ReadOnly<Path>): List<
 }
 
 /**
- * Reads the entire contents of a file as a string.
+ * Reads the entire content of a file as a string.
  *
- * @param address The file path to read
- * @param documentProvider Optional document provider to get text from if provided
- * @return String containing the file contents
+ * @param path The file path to read.
+ * @param documentProvider document provider to get unsaved text from.
+ * @return The file content as a string.
+ *
+ * @see [FileSystemProvider.ReadOnly.readBytes]
+ * @see [DocumentProvider.document]
+ * @see [DocumentProvider.text]
  */
 public suspend fun <Path, Document> FileSystemProvider.ReadOnly<Path>.readText(
-    address: Path,
-    documentProvider: DocumentProvider<Path, Document>? = null
+    path: Path,
+    documentProvider: DocumentProvider<Path, Document>?
 ): String {
     if (documentProvider != null) {
-        val document = documentProvider.document(address)
+        val document = documentProvider.document(path)
         if (document != null) {
             return documentProvider.text(document).toString()
         }
     }
-    return readBytes(address).decodeToString()
+    return readBytes(path).decodeToString()
 }
 
 /**
- * Reads the entire contents of a file as a string.
+ * Reads the entire content of a file as a string.
  *
- * @param address The file path to read
- * @return String containing the file contents
+ * @param path The file path to read.
+ * @return The file content as a string.
+ *
+ * @see [FileSystemProvider.ReadOnly.readBytes]
  */
-public suspend fun <Path> FileSystemProvider.ReadOnly<Path>.readText(
-    address: Path,
-): String {
-    return readBytes(address).decodeToString()
+public suspend fun <Path> FileSystemProvider.ReadOnly<Path>.readText(path: Path): String {
+    return readBytes(path).decodeToString()
 }
 
 /**
  * Writes a string to a file, replacing any existing content.
  *
- * @param address The file path to write to
- * @param content The string content to write
+ * @param path The file path to write to.
+ * @param content The string content to write.
+ *
+ * @see [FileSystemProvider.ReadWrite.writeBytes]
  */
-public suspend fun <Path> FileSystemProvider.ReadWrite<Path>.writeText(address: Path, content: String) =
-    writeBytes(address, content.encodeToByteArray())
+public suspend fun <Path> FileSystemProvider.ReadWrite<Path>.writeText(path: Path, content: String) {
+    writeBytes(path, content.encodeToByteArray())
+}
 
 /**
- * Creates a file at the specified path.
- *
+ * Creates a file at the specified [path].
  * Parent directories will be created automatically if they don't exist.
  *
- * @param path The path where the file should be created
- * @return true if the file was created successfully, false otherwise
+ * @param path The path where the file should be created.
+ *
+ * @see [FileSystemProvider.ReadWrite.create]
  */
 public suspend fun <Path> FileSystemProvider.ReadWrite<Path>.createFile(path: Path) {
     create(path, FileMetadata.FileType.File)
 }
 
 /**
- * Creates a directory at the specified path.
+ * Creates a directory at the specified [path].
+ * Parent directories will be created automatically if they don't exist.
  *
- * Creates any necessary parent directories.
+ * @param path The path where the directory should be created.
  *
- * @param path The path where the directory should be created
- * @return true if the directory was created successfully, false otherwise
+ * @see [FileSystemProvider.ReadWrite.create]
  */
 public suspend fun <Path> FileSystemProvider.ReadWrite<Path>.createDirectory(path: Path) {
     create(path, FileMetadata.FileType.Directory)
