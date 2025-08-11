@@ -16,17 +16,25 @@ dependencies {
     implementation(libs.opentelemetry.exporter.logging)
 }
 
-val knitProperties = Properties().apply {
-    file("knit.properties").inputStream().use { stream ->
-        load(stream)
-    }
-}
+val knitProperties: Provider<Properties> =
+    providers.fileContents(layout.projectDirectory.file("knit.properties"))
+        .asText
+        .map { text ->
+            Properties().apply {
+                text.reader().use { load(it) }
+            }
+        }
 
-val knitDirectory = knitProperties["knit.dir"]!!
+val knitDir: Provider<String> =
+    knitProperties.map { props ->
+        requireNotNull(props.getProperty("knit.dir")) {
+            "Missing 'knit.dir' in knit.properties"
+        }
+    }
 
 ktlint {
     filter {
-        exclude { it.file.path.contains("/docs/$knitDirectory/") }
+        exclude { it.file.path.contains("/docs/${knitDir.get()}/") }
     }
 }
 
@@ -37,22 +45,23 @@ knit {
     }
     moduleDocs = "docs/modules.md"
     siteRoot = "https://docs.koog.ai/"
-
-    tasks.register<Delete>("knitClean") {
-        delete(
-            fileTree(project.rootDir) {
-                include("**/docs/$knitDirectory/**")
-            }
-        )
-    }
-
-    tasks.named("clean") {
-        dependsOn("knitClean")
-    }
-
-    tasks.register<Delete>("knitAssemble") {
-        dependsOn("cleanKnit", "knit", "assemble")
-        tasks.findByName("knit")?.mustRunAfter("cleanKnit")
-        tasks.findByName("assemble")?.mustRunAfter("knit")
-    }
 }
+
+tasks.register<Delete>("knitClean") {
+    delete(
+        fileTree(project.rootDir) {
+            include("**/docs/${knitDir.get()}/**")
+        }
+    )
+}
+
+tasks.named("clean") {
+    dependsOn("knitClean")
+}
+
+tasks.register<Delete>("knitAssemble") {
+    dependsOn("knitClean", "knit", "assemble")
+}
+
+tasks.named("knit").configure { mustRunAfter("knitClean") }
+tasks.named("assemble").configure { mustRunAfter("knit") }
