@@ -215,7 +215,8 @@ kover {
     val excludedProjects = setOf(
         ":integration-tests",
         ":examples",
-        ":buildSrc"
+        ":buildSrc",
+        ":docs",
     )
     merge {
         subprojects {
