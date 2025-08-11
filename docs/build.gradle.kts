@@ -16,9 +16,15 @@ dependencies {
     implementation(libs.opentelemetry.exporter.logging)
 }
 
+val properties = Properties().apply {
+    load(file("knit.properties").inputStream())
+}
+
+val knitDirectory = properties["knit.dir"] ?: "src/main/kotlin"
+
 ktlint {
     filter {
-        exclude { it.file.path.contains("example-") }
+        exclude { it.file.path.contains("/docs/$knitDirectory/") }
     }
 }
 
@@ -31,13 +37,11 @@ knit {
     siteRoot = "https://docs.koog.ai/"
 
     tasks.register<Delete>("cleanKnit") {
-        val properties = Properties().apply {
-            load(file("knit.properties").inputStream())
-        }
-        val knitDirectory = properties["knit.dir"]
-        delete(fileTree(project.rootDir) {
-            include("**/docs/${knitDirectory}/**")
-        })
+        delete(
+            fileTree(project.rootDir) {
+                include("**/docs/$knitDirectory/**")
+            }
+        )
     }
 
     tasks.named("clean") {
