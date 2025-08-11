@@ -157,10 +157,10 @@ internal class FilteredReadWrite<P>(
         fs.move(source, target)
     }
 
-    override suspend fun copy(source: P, destination: P) {
+    override suspend fun copy(source: P, target: P) {
         ensureAllowed(source)
-        ensureAllowed(destination)
-        fs.copy(source, destination)
+        ensureAllowed(target)
+        fs.copy(source, target)
     }
 
     @Deprecated("Use delete(path) instead", replaceWith = ReplaceWith("delete(joinPath(parent, name))"))

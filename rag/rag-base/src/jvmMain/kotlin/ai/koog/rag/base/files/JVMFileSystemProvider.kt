@@ -500,30 +500,30 @@ public object JVMFileSystemProvider {
          * Ensures operations are performed using IO dispatchers.
          *
          * @param source The source path of the file or directory to be copied.
-         * @param destination The destination path where the file or directory should be copied.
+         * @param target The destination path where the file or directory should be copied.
          * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
-         *   [destination] already exists, or any I/O error occurs.
+         *   [target] already exists, or any I/O error occurs.
          */
-        override suspend fun copy(source: Path, destination: Path) {
+        override suspend fun copy(source: Path, target: Path) {
             withContext(Dispatchers.IO) {
-                if (destination.exists()) {
-                    throw FileAlreadyExistsException("Destination path already exists: $destination")
+                if (target.exists()) {
+                    throw FileAlreadyExistsException("Destination path already exists: $target")
                 }
                 if (source.notExists()) {
                     throw IOException("Source path doesn't exist: $source")
                 }
 
                 if (source.isDirectory()) {
-                    destination.createDirectories()
+                    target.createDirectories()
                     Files.list(source).use { stream ->
                         stream.forEach { child ->
-                            val targetChild = destination.resolve(child.name)
+                            val targetChild = target.resolve(child.name)
                             child.copyTo(targetChild)
                         }
                     }
                 } else if (source.isRegularFile()) {
-                    destination.createParentDirectories()
-                    source.copyTo(destination)
+                    target.createParentDirectories()
+                    source.copyTo(target)
                 } else {
                     throw IOException("Source path is neither a file nor a directory: $source")
                 }

@@ -128,11 +128,11 @@ class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemPro
         }
     }
 
-    override suspend fun copy(source: String, destination: String) {
+    override suspend fun copy(source: String, target: String) {
         mockFileSystem.documents[source]?.also {
             when (it) {
-                is MockDirectory -> mockFileSystem.createDirectory(destination)
-                is MockDocument -> mockFileSystem.saveDocument(destination, it.content)
+                is MockDirectory -> mockFileSystem.createDirectory(target)
+                is MockDocument -> mockFileSystem.saveDocument(target, it.content)
             }
         }
     }

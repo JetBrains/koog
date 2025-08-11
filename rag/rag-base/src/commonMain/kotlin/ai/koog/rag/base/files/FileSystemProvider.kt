@@ -48,11 +48,14 @@ public object FileSystemProvider {
         public fun fromRelativeString(base: Path, path: String): Path
 
         /**
-         * Converts a relative path string to a `Path` object by resolving it against a base path.
+         * Resolves strings from [parts] against a [base] path.
+         * This method works with the path structure
+         * and doesn't check if the path actually exists in the filesystem.
          *
-         * @param base The base `Path` against which the relative path will be resolved.
-         * @param parts Parts of the path to be added to base `Path`
-         * @return A `Path` object representing the resolved path.
+         * @param base The base path for resolution.
+         * @param parts The path strings to resolve.
+         * @return The resolved path object.
+         * @throws IllegalArgumentException if any of the [parts] is an absolute path.
          */
         public fun joinPath(base: Path, vararg parts: String): Path
 
@@ -171,12 +174,12 @@ public object FileSystemProvider {
 
         /**
          * Creates a [Source] for reading from a file at the specified [path].
-         * The returned Source is buffered.
+         * The returned [Source] is buffered.
          *
          * @param path The path to read from.
-         * @return A buffered Source object for reading.
+         * @return A buffered [Source] object for reading.
          * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
-         * @throws IOException if an I/O error occurs during source creation.
+         * @throws IOException if an I/O error occurs during [Source] creation.
          */
         public suspend fun inputStream(path: Path): Source
 
@@ -210,20 +213,20 @@ public object FileSystemProvider {
         public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
         /**
-         * Creates a new file or directory with [path] and [type].
+         * Creates a new file or directory denoted by the [path] using the specified [type].
          * Parent directories will be created if they don't exist.
          *
          * @param path The path of the new file or directory.
          * @param type The type (file or directory) to create.
-         * @throws IOException or its inheritor if a file or directory with [path] already exists,
+         * @throws IOException or its inheritor if the [path] already exists,
          *   or [path] is invalid (e.g., contains reserved characters), or if any other I/O error occurs.
          */
         public suspend fun create(path: Path, type: FileMetadata.FileType)
 
         /**
          * Moves a file or directory from [source] to [target].
-         * If the source is a directory, all its contents are moved recursively.
-         * Parent directories of the target will be created if they don't exist.
+         * If the [source] is a directory, all its contents are moved recursively.
+         * Parent directories of the [target] will be created if they don't exist.
          *
          * @param source The source path to move from.
          * @param target The target path to move to.
@@ -233,16 +236,16 @@ public object FileSystemProvider {
         public suspend fun move(source: Path, target: Path)
 
         /**
-         * Copies a file or directory from [source] to [destination].
-         * If the source is a directory, all its contents are copied recursively.
-         * Parent directories of the target will be created if they don't exist.
+         * Copies a file or directory from [source] to [target].
+         * If the [source] is a directory, all its contents are copied recursively.
+         * Parent directories of the [target] will be created if they don't exist.
          *
          * @param source The source path to copy from.
-         * @param destination The target path to copy to.
+         * @param target The target path to copy to.
          * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
-         *   [destination] already exists, or any I/O error occurs.
+         *   [target] already exists, or any I/O error occurs.
          */
-        public suspend fun copy(source: Path, destination: Path)
+        public suspend fun copy(source: Path, target: Path)
 
         /**
          * Writes content to a file.
@@ -289,10 +292,10 @@ public object FileSystemProvider {
          * If the parent directories don't exist, they will be created.
          * The returned [Sink] is buffered.
          *
-         * @param path The path where Sink will be created.
+         * @param path The path where [Sink] will be created.
          * @param append Append to existing content (true) or overwrite (false). Default is false (overwrite).
-         * @return A buffered Sink object for writing.
-         * @throws IOException if the path is a directory or any other I/O error occurs during sink creation.
+         * @return A buffered [Sink] object for writing.
+         * @throws IOException if the path is a directory or any other I/O error occurs during [Sink] creation.
          */
         public suspend fun outputStream(path: Path, append: Boolean = false): Sink
 
@@ -308,7 +311,7 @@ public object FileSystemProvider {
         public suspend fun delete(parent: Path, name: String)
 
         /**
-         * Deletes a file or directory from [path].
+         * Deletes a file or directory denoted by the [path].
          * If the item is a directory, it will be deleted recursively with all its contents.
          *
          * @param parent The path of the item to delete.
