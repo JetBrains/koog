@@ -2,6 +2,7 @@ package ai.koog.rag.base.files
 
 import ai.koog.rag.base.files.FileMetadata.FileContentType
 import ai.koog.rag.base.files.FileMetadata.FileType
+import ai.koog.rag.base.files.JVMFileSystemProvider.ReadWrite.parent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.io.Sink
@@ -91,13 +92,14 @@ public object JVMFileSystemProvider {
         }
 
         /**
-         * Converts a relative string representation of a path into a normalized Path object
-         * based on the provided base Path.
+         * Resolves strings from [parts] against a [base] path.
+         * This method works with the path structure
+         * and doesn't check if the path actually exists in the filesystem.
          *
-         * @param base The base path against which the relative path will be resolved.
-         * @param parts Parts of a relative path as strings to be resolved.
-         * @return A normalized Path object representing the resolved path.
-         * @throws IllegalArgumentException if some [parts] are absolute.
+         * @param base The base path for resolution.
+         * @param parts The path strings to resolve.
+         * @return A normalized [Path] object representing the resolved path.
+         * @throws IllegalArgumentException if any of the [parts] is an absolute path.
          */
         override fun joinPath(base: Path, vararg parts: String): Path {
             return parts.fold(base) { acc, part ->
@@ -263,18 +265,19 @@ public object JVMFileSystemProvider {
         }
 
         /**
-         * Reads the contents of the file located at the specified path.
+         * Reads the content of a file at the specified [path].
+         * Bytes are read with [Dispatchers.IO] context.
          *
-         * @param path the path of the file to read, which must be a regular file and must exist.
-         * @return a ByteArray containing the contents of the file.
-         * @throws IllegalArgumentException if the specified path is not a regular file or does not exist.
+         * @param path The path to read.
+         * @return The file content as a byte array.
+         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs during reading.
          */
-        override suspend fun readBytes(path: Path): ByteArray {
+        override suspend fun readBytes(path: Path): ByteArray = withContext(Dispatchers.IO) {
             require(path.exists()) { "Path must exist" }
             require(path.isRegularFile()) { "Path must be a regular file" }
 
-            return withContext(Dispatchers.IO) { path.readBytes() }
+            path.readBytes()
         }
 
         /**
@@ -293,12 +296,13 @@ public object JVMFileSystemProvider {
         }
 
         /**
-         * Opens a source to read from the specified file path.
+         * Creates a [Source] for reading from a file at the specified [path].
+         * The returned [Source] is buffered. It is created with [Dispatchers.IO] context.
          *
-         * @param path The file path from which the source will be opened.
-         * @return A buffered source for reading from the file.
+         * @param path The path to read from.
+         * @return A buffered [Source] object for reading.
          * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
-         * @throws IOException if an I/O error occurs during source creation.
+         * @throws IOException if an I/O error occurs during [Source] creation.
          */
         override suspend fun inputStream(path: Path): Source = withContext(Dispatchers.IO) {
             require(path.exists()) { "Path must exist" }
@@ -374,24 +378,25 @@ public object JVMFileSystemProvider {
         }
 
         /**
-         * Creates a new file or directory at the specified path.
+         * Creates a new file or directory denoted by the [path] using the specified [type].
+         * It is created with [Dispatchers.IO] context.
+         * Parent directories will be created if they don't exist.
          *
-         * @param path The path to directory or file where it will be created.
-         * @param type The type of file system entity to create, either a file or a directory, represented by the [FileType] enum.
-         * @throws IOException If the name is invalid or an error occurs during creation.
+         * @param path The path of the new file or directory.
+         * @param type The type (file or directory) to create.
+         * @throws IOException or its inheritor if the [path] already exists,
+         *   or [path] is invalid (e.g., contains reserved characters), or if any other I/O error occurs.
          */
-        override suspend fun create(path: Path, type: FileType) {
-            withContext(Dispatchers.IO) {
-                if (path.name in WINDOWS_RESERVED_NAMES && System.getProperty("os.name").lowercase().contains("win")) {
-                    throw IOException("Invalid file name: ${path.name}")
-                }
+        override suspend fun create(path: Path, type: FileType): Unit = withContext(Dispatchers.IO) {
+            if (path.name in WINDOWS_RESERVED_NAMES && System.getProperty("os.name").lowercase().contains("win")) {
+                throw IOException("Invalid file name: ${path.name}")
+            }
 
-                path.createParentDirectories()
+            path.createParentDirectories()
 
-                when (type) {
-                    FileType.File -> path.createFile()
-                    FileType.Directory -> path.createDirectory()
-                }
+            when (type) {
+                FileType.File -> path.createFile()
+                FileType.Directory -> path.createDirectory()
             }
         }
 
@@ -409,15 +414,19 @@ public object JVMFileSystemProvider {
         }
 
         /**
-         * Writes the provided content to the specified path. Ensures that any necessary parent directories
-         * for the path are created before writing the content.
+         * Writes content to a file.
+         * If the file doesn't exist, it will be created.
+         * If the file exists, its content will be overwritten.
+         * Parent directories will be created if they don't exist.
+         * The operation is performed with [Dispatchers.IO] context.
          *
-         * @param path The path where the content will be written.
-         * @param data The byte array content to be written to the specified path.
+         * @param path The path to write to.
+         * @param data The data to write as a byte array.
+         * @throws IOException if the path is a directory or any other I/O error occurs during writing.
          */
-        override suspend fun writeBytes(path: Path, data: ByteArray) {
+        override suspend fun writeBytes(path: Path, data: ByteArray): Unit = withContext(Dispatchers.IO) {
             path.createParentDirectories()
-            withContext(Dispatchers.IO) { path.writeBytes(data) }
+            path.writeBytes(data)
         }
 
         /**
@@ -439,94 +448,90 @@ public object JVMFileSystemProvider {
         }
 
         /**
-         * Creates and returns a Sink for the given file path, allowing data to be written to the file.
-         * It ensures that parent directories of the file path are created if they do not already exist.
-         * The operation is performed in the IO context.
+         * Creates a [Sink] for writing to a file.
+         * If the file doesn't exist, it will be created.
+         * If the parent directories don't exist, they will be created.
+         * The returned [Sink] is buffered.
+         * It is created with [Dispatchers.IO] context.
          *
-         * @param path The file path where the sink is to be created.
-         * @param append A boolean value indicating whether to append data to the file
-         *               if it already exists (true) or overwrite the file (false).
-         * @return A buffered Sink for the specified path, ready for writing.
+         * @param path The path where [Sink] will be created.
+         * @param append Append to existing content (true) or overwrite (false). Default is false (overwrite).
+         * @return A buffered [Sink] object for writing.
+         * @throws IOException if the path is a directory or any other I/O error occurs during [Sink] creation.
          */
-        override suspend fun outputStream(path: Path, append: Boolean): Sink {
-            return withContext(Dispatchers.IO) {
-                path.createParentDirectories()
-                SystemFileSystem.sink(path = kotlinx.io.files.Path(path.pathString), append = append).buffered()
+        override suspend fun outputStream(path: Path, append: Boolean): Sink = withContext(Dispatchers.IO) {
+            path.createParentDirectories()
+            SystemFileSystem.sink(path = kotlinx.io.files.Path(path.pathString), append = append).buffered()
+        }
+
+        /**
+         * Moves a file or directory from [source] to [target].
+         * If the [source] is a directory, all its contents are moved recursively.
+         * Parent directories of the [target] will be created if they don't exist.
+         * The operation is performed with [Dispatchers.IO] context.
+         *
+         * @param source The source path to move from.
+         * @param target The target path to move to.
+         * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
+         *   [target] already exists, or any I/O error occurs.
+         */
+        override suspend fun move(source: Path, target: Path): Unit = withContext(Dispatchers.IO) {
+            if (target.exists()) {
+                throw FileAlreadyExistsException("Target path already exists: $target")
+            }
+            if (source.notExists()) {
+                throw IOException("Source path doesn't exist: $source")
+            }
+
+            if (source.isDirectory()) {
+                target.createDirectories()
+                Files.list(source).use { stream ->
+                    stream.forEach { child ->
+                        val targetChild = target.resolve(child.name)
+                        child.moveTo(targetChild)
+                    }
+                }
+                source.deleteExisting()
+            } else if (source.isRegularFile()) {
+                target.createParentDirectories()
+                source.moveTo(target)
+            } else {
+                throw IOException("Source path is neither a file nor a directory: $source")
             }
         }
 
         /**
-         * Moves a file or directory from the source path to the target path.
-         * If the source is a directory, all its contents are moved recursively.
-         * If the source is a file, it is moved directly to the target.
-         * Ensures operations are performed using IO dispatchers.
+         * Copies a file or directory from [source] to [target].
+         * If the [source] is a directory, all its contents are copied recursively.
+         * Parent directories of the [target] will be created if they don't exist.
+         * The operation is performed with [Dispatchers.IO] context.
          *
-         * @param source The source path of the file or directory to be moved.
-         * @param target The target path where the file or directory should be moved.
+         * @param source The source path to copy from.
+         * @param target The target path to copy to.
          * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
          *   [target] already exists, or any I/O error occurs.
          */
-        override suspend fun move(source: Path, target: Path) {
-            withContext(Dispatchers.IO) {
-                if (target.exists()) {
-                    throw FileAlreadyExistsException("Target path already exists: $target")
-                }
-                if (source.notExists()) {
-                    throw IOException("Source path doesn't exist: $source")
-                }
-
-                if (source.isDirectory()) {
-                    target.createDirectories()
-                    Files.list(source).use { stream ->
-                        stream.forEach { child ->
-                            val targetChild = target.resolve(child.name)
-                            child.moveTo(targetChild)
-                        }
-                    }
-                    source.deleteExisting()
-                } else if (source.isRegularFile()) {
-                    target.createParentDirectories()
-                    source.moveTo(target)
-                } else {
-                    throw IOException("Source path is neither a file nor a directory: $source")
-                }
+        override suspend fun copy(source: Path, target: Path): Unit = withContext(Dispatchers.IO) {
+            if (target.exists()) {
+                throw FileAlreadyExistsException("Destination path already exists: $target")
             }
-        }
+            if (source.notExists()) {
+                throw IOException("Source path doesn't exist: $source")
+            }
 
-        /**
-         * Copies a file or directory from the source path to the target path.
-         * If the source is a directory, all its contents are copied recursively.
-         * If the source is a file, it is copied directly to the target.
-         * Ensures operations are performed using IO dispatchers.
-         *
-         * @param source The source path of the file or directory to be copied.
-         * @param target The destination path where the file or directory should be copied.
-         * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
-         *   [target] already exists, or any I/O error occurs.
-         */
-        override suspend fun copy(source: Path, target: Path) {
-            withContext(Dispatchers.IO) {
-                if (target.exists()) {
-                    throw FileAlreadyExistsException("Destination path already exists: $target")
-                }
-                if (source.notExists()) {
-                    throw IOException("Source path doesn't exist: $source")
-                }
-
-                if (source.isDirectory()) {
-                    target.createDirectories()
-                    Files.list(source).use { stream ->
-                        stream.forEach { child ->
-                            val targetChild = target.resolve(child.name)
-                            child.copyTo(targetChild)
-                        }
+            if (source.isDirectory()) {
+                target.createDirectories()
+                Files.list(source).use { stream ->
+                    stream.forEach { child ->
+                        val targetChild = target.resolve(child.name)
+                        child.copyTo(targetChild)
                     }
-                } else if (source.isRegularFile()) {
-                    target.createParentDirectories()
-                    source.copyTo(target)
-                } else {
-                    throw IOException("Source path is neither a file nor a directory: $source")
                 }
+            } else if (source.isRegularFile()) {
+                target.createParentDirectories()
+                source.copyTo(target)
+            } else {
+                throw IOException("Source path is neither a file nor a directory: $source")
             }
         }
 
@@ -552,20 +557,19 @@ public object JVMFileSystemProvider {
         }
 
         /**
-         * Deletes a file or directory specified by the given parent path and name.
-         * The deletion is performed in an IO-optimized context. If the target is a directory, it will be deleted recursively.
+         * Deletes a file or directory denoted by the [path].
+         * If the item is a directory, it will be deleted recursively with all its contents.
+         * The operation is performed with [Dispatchers.IO] context.
          *
-         * @param path The path of the file or directory to be deleted.
-         * @throws NoSuchFileException if a file or directory doesn't exist.
+         * @param parent The path of the item to delete.
+         * @throws IOException or its inheritor if the file or directory doesn't exist or can't be deleted for any other reason.
          */
         @OptIn(ExperimentalPathApi::class)
-        override suspend fun delete(path: Path) {
-            withContext(Dispatchers.IO) {
-                if (path.isDirectory()) {
-                    path.deleteRecursively()
-                } else {
-                    path.deleteExisting()
-                }
+        override suspend fun delete(path: Path): Unit = withContext(Dispatchers.IO) {
+            if (path.isDirectory()) {
+                path.deleteRecursively()
+            } else {
+                path.deleteExisting()
             }
         }
     }
