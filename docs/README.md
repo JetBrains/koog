@@ -31,18 +31,14 @@ To ensure code snippets in documentation are compilable and up-to-date with the 
 Knit provides a Gradle plugin that extracts specially annotated Kotlin code snippets from markdown files and generates Kotlin source files.
 
 #### How to fix docs?
-1. Run knit to extract code snippets to /src/main/kotlin:
+1. Run `:docs:knitAssemble` task which will clean old knit-generated files, extract fresh code snippets to /src/main/kotlin and assemble the docs project:
 ```
-./gradlew :docs:knit
+./gradlew :docs:knitAssemble
 ```
-2. Run assemble to get compilation arrows:
-```
-./gradlew :docs:assemble
-```
-3. Navigate to the file with the compilation error `example-[md-file-name]-[index].kt`
-4. Fix the error in this file
-5. Navigate to the code snippet in Markdown `md-file-name.md` by searing `<!--- KNIT example-[md-file-name]-[index].kt` -->`
-6. Update the code snippet to reflect the changes in kt file
+2. Navigate to the file with the compilation error `example-[md-file-name]-[index].kt`
+3. Fix the error in this file
+4. Navigate to the code snippet in Markdown `md-file-name.md` by searing `<!--- KNIT example-[md-file-name]-[index].kt` -->`
+5. Update the code snippet to reflect the changes in kt file
    * Update dependencies (usually they are provided in `<!--- INCLUDE -->` section)
    * Edit code (don't forget about tabulation when you just copy paste from kt)
 
