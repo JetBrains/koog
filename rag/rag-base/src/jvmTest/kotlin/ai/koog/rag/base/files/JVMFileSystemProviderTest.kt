@@ -32,6 +32,7 @@ import kotlin.io.path.name
 import kotlin.io.path.pathString
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class JVMFileSystemProviderTest : KoogTestBase() {
@@ -575,6 +576,174 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test ReadWrite move file`() = runBlocking {
+        val dirPath = dirEmpty
+        val sourceFileName = "sourceFileReadWrite.txt"
+        val targetFileName = "targetFileReadWrite.txt"
+        val sourcePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + sourceFileName)
+        val targetPath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + targetFileName)
+
+        sourcePath.createFile()
+        val testContent = "Test content for move operation"
+        sourcePath.writeText(testContent)
+
+        assertTrue(sourcePath.exists())
+        assertFalse(targetPath.exists())
+
+        readWrite.move(sourcePath, targetPath)
+
+        assertFalse(sourcePath.exists())
+        assertTrue(targetPath.exists())
+        assertEquals(testContent, targetPath.readText())
+    }
+
+    @Test
+    fun `test ReadWrite move dir`(): Unit = runBlocking {
+        // dirEmpty -> dirA -> fileA;dirB -> fileB
+        // and then
+        // dirEmpty -> dirC -> dirA -> fileA;dirB -> fileB
+
+        val dirA = readWrite.joinPath(dirEmpty, "dirA")
+
+        val fileA = readWrite.joinPath(dirA, "fileA")
+        readWrite.createFile(fileA)
+        readWrite.writeText(fileA, "fileA content")
+
+        val dirB = readWrite.joinPath(dirA, "dirB")
+
+        val fileB = readWrite.joinPath(dirB, "fileB")
+        readWrite.createFile(fileB)
+        readWrite.writeText(fileB, "fileB content")
+
+        val targetPath = readWrite.joinPath(dirEmpty, "dirC", "dirA")
+        readWrite.move(dirA, targetPath)
+
+        readWrite.list(dirEmpty).let { children ->
+            assertEquals(1, children.size)
+            assertNotNull(children.find { it.name == "dirC" }) { "Expected dirC to exist" }
+        }
+
+        readWrite.list(targetPath).let { children ->
+            assertEquals(2, children.size)
+            assertNotNull(children.find { it.name == "fileA" }) { "Expected fileA to exist" }
+            assertNotNull(children.find { it.name == "dirB" }) { "Expected dirB to exist" }
+        }
+
+        val newFileA = readWrite.joinPath(targetPath, "fileA")
+        assertEquals("fileA content", newFileA.readText())
+
+        val newDirB = readWrite.joinPath(targetPath, "dirB")
+        readWrite.list(newDirB).let { children ->
+            assertEquals(1, children.size)
+            assertNotNull(children.find { it.name == "fileB" }) { "Expected fileB to exist" }
+        }
+
+        assertEquals("fileB content", readWrite.joinPath(newDirB, "fileB").readText())
+    }
+
+    @Test
+    fun `test ReadWrite copy throws IOException when source file doesn't exist`() {
+        val sourcePath = dirEmpty.resolve("non-existing-file.txt")
+        val targetPath = dirEmpty.resolve("target-path")
+
+        assertThrows(IOException::class.java) {
+            runBlocking {
+                readWrite.copy(sourcePath, targetPath)
+            }
+        }
+    }
+
+    @Test
+    fun `test ReadWrite copy throws FileAlreadyExistsException when target file already exists`() {
+        val sourcePath = dirEmpty.resolve("source-file.txt").apply {
+            createFile()
+            writeText("source content")
+        }
+        val targetPath = dirEmpty.resolve("target-file.txt").apply {
+            createFile()
+            writeText("target content")
+        }
+
+        assertTrue(sourcePath.exists())
+        assertTrue(targetPath.exists())
+
+        assertThrows(FileAlreadyExistsException::class.java) {
+            runBlocking {
+                readWrite.copy(sourcePath, targetPath)
+            }
+        }
+    }
+
+    @Test
+    fun `test ReadWrite copy file`() = runBlocking {
+        val dirPath = dirEmpty
+        val sourceFileName = "sourceFileReadWrite.txt"
+        val targetFileName = "targetFileReadWrite.txt"
+        val sourcePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + sourceFileName)
+        val targetPath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + targetFileName)
+
+        sourcePath.createFile()
+        val testContent = "Test content for copy operation"
+        sourcePath.writeText(testContent)
+
+        assertTrue(sourcePath.exists())
+        assertFalse(targetPath.exists())
+
+        readWrite.copy(sourcePath, targetPath)
+
+        assertTrue(sourcePath.exists())
+        assertTrue(targetPath.exists())
+        assertEquals(testContent, targetPath.readText())
+    }
+
+    @Test
+    fun `test ReadWrite copy dir`(): Unit = runBlocking {
+        // dirEmpty -> dirA -> fileA;dirB -> fileB
+        // and then additionally
+        // dirEmpty -> dirC -> dirA -> fileA;dirB -> fileB
+
+        val dirA = readWrite.joinPath(dirEmpty, "dirA")
+
+        val fileA = readWrite.joinPath(dirA, "fileA")
+        readWrite.createFile(fileA)
+        readWrite.writeText(fileA, "fileA content")
+
+        val dirB = readWrite.joinPath(dirA, "dirB")
+
+        val fileB = readWrite.joinPath(dirB, "fileB")
+        readWrite.createFile(fileB)
+        readWrite.writeText(fileB, "fileB content")
+
+        val targetPath = readWrite.joinPath(dirEmpty, "dirC", "dirA")
+        readWrite.copy(dirA, targetPath)
+
+        readWrite.list(dirEmpty).let { children ->
+            assertEquals(2, children.size)
+            assertNotNull(children.find { it.name == "dirA" }) { "Expected dirA to exist" }
+            assertNotNull(children.find { it.name == "dirC" }) { "Expected dirC to exist" }
+        }
+
+        listOf(dirA, targetPath).forEach { targetPath ->
+            readWrite.list(targetPath).let { children ->
+                assertEquals(2, children.size)
+                assertNotNull(children.find { it.name == "fileA" }) { "Expected fileA to exist" }
+                assertNotNull(children.find { it.name == "dirB" }) { "Expected dirB to exist" }
+            }
+
+            val newFileA = readWrite.joinPath(targetPath, "fileA")
+            assertEquals("fileA content", newFileA.readText())
+
+            val newDirB = readWrite.joinPath(targetPath, "dirB")
+            readWrite.list(newDirB).let { children ->
+                assertEquals(1, children.size)
+                assertNotNull(children.find { it.name == "fileB" }) { "Expected fileB to exist" }
+            }
+
+            assertEquals("fileB content", readWrite.joinPath(newDirB, "fileB").readText())
+        }
+    }
+
+    @Test
     fun `test ReadWrite create already existing file`() {
         val parent = dir1.parent
         val fileName = "newFile.txt"
@@ -889,28 +1058,6 @@ class JVMFileSystemProviderTest : KoogTestBase() {
 
         val actualContent = tempFilePath.readText()
         assertEquals(testMessage, actualContent)
-    }
-
-    @Test
-    fun `test ReadWrite move`() = runBlocking {
-        val dirPath = dirEmpty
-        val sourceFileName = "sourceFileReadWrite.txt"
-        val targetFileName = "targetFileReadWrite.txt"
-        val sourcePath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + sourceFileName)
-        val targetPath = Path.of(dirPath.pathString + FileSystems.getDefault().separator + targetFileName)
-
-        sourcePath.createFile()
-        val testContent = "Test content for move operation"
-        sourcePath.writeText(testContent)
-
-        assertTrue(sourcePath.exists())
-        assertFalse(targetPath.exists())
-
-        readWrite.move(sourcePath, targetPath)
-
-        assertFalse(sourcePath.exists())
-        assertTrue(targetPath.exists())
-        assertEquals(testContent, targetPath.readText())
     }
 
     @Test

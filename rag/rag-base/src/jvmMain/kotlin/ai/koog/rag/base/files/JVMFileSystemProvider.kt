@@ -20,6 +20,7 @@ import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.copyTo
+import kotlin.io.path.copyToRecursively
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createDirectory
 import kotlin.io.path.createFile
@@ -511,6 +512,7 @@ public object JVMFileSystemProvider {
          * @throws IOException or its inheritor if the [source] doesn't exist, isn't a file or directory,
          *   [target] already exists, or any I/O error occurs.
          */
+        @OptIn(ExperimentalPathApi::class)
         override suspend fun copy(source: Path, target: Path): Unit = withContext(Dispatchers.IO) {
             if (target.exists()) {
                 throw FileAlreadyExistsException("Destination path already exists: $target")
@@ -524,7 +526,13 @@ public object JVMFileSystemProvider {
                 Files.list(source).use { stream ->
                     stream.forEach { child ->
                         val targetChild = target.resolve(child.name)
-                        child.copyTo(targetChild)
+
+                        if (!child.isDirectory()) {
+                            child.copyTo(targetChild)
+                        }
+                        else {
+                            child.copyToRecursively(target = targetChild, followLinks = false, overwrite = false)
+                        }
                     }
                 }
             } else if (source.isRegularFile()) {
