@@ -82,7 +82,7 @@ internal open class FilteredReadOnly<P>(
 
     override fun toAbsolutePathString(path: P): String = fs.toAbsolutePathString(path)
 
-    override fun fromAbsoluteString(path: String): P = fs.fromAbsoluteString(path)
+    override fun fromAbsolutePathString(path: String): P = fs.fromAbsolutePathString(path)
 
     override fun fromRelativeString(base: P, path: String): P = fs.fromRelativeString(base, path)
 

@@ -32,7 +32,7 @@ public object FileSystemProvider {
          * @return A path object representing the absolute path.
          * @throws IllegalArgumentException if [path] is not absolute.
          */
-        public fun fromAbsoluteString(path: String): Path
+        public fun fromAbsolutePathString(path: String): Path
 
         /**
          * Resolves a [path] string against a [base] path.

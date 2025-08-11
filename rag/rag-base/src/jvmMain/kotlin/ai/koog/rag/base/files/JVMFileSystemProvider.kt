@@ -67,7 +67,7 @@ public object JVMFileSystemProvider {
          * @return The normalized Path representation of the given string.
          * @throws IllegalArgumentException if the resolved path is not absolute.
          */
-        override fun fromAbsoluteString(path: String): Path {
+        override fun fromAbsolutePathString(path: String): Path {
             val resolvedPath = Path.of(toSystemDependentName(path)).normalize()
             require(resolvedPath.isAbsolute) { "Resolved path must be absolute" }
             return resolvedPath

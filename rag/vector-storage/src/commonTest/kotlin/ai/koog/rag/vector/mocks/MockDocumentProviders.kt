@@ -45,7 +45,7 @@ class MockDocumentProvider(val mockFileSystem: MockFileSystem) : DocumentProvide
 class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemProvider.ReadWrite<String> {
     override fun toAbsolutePathString(path: String): String = path
 
-    override fun fromAbsoluteString(path: String): String = path
+    override fun fromAbsolutePathString(path: String): String = path
 
     override fun fromRelativeString(base: String, path: String): String = "$base/$path"
 
