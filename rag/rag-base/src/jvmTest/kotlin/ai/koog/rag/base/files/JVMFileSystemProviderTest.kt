@@ -169,6 +169,14 @@ class JVMFileSystemProviderTest : KoogTestBase() {
     }
 
     @Test
+    fun `test ReadOnly joinPath with absolute path in the middle`() {
+        val absolutePath = file1.absolute().pathString
+        assertThrows(IllegalArgumentException::class.java) {
+            readOnly.joinPath(file3, "abc", absolutePath, "def")
+        }
+    }
+
+    @Test
     fun `test ReadOnly name`() = runBlocking {
         val testName = readOnly.name(file1)
         assertEquals("TestGenerator.kt", testName)
