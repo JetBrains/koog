@@ -99,9 +99,9 @@ jobs:
         if: matrix.os != 'ubuntu-latest'
         run: ./gradlew jvmTest --continue
 
-      - name: iosX64Test with Gradle Wrapper
+      - name: iosSimulatorArm64Test with Gradle Wrapper
         if: matrix.os == 'macos-latest'
-        run: ./gradlew iosX64Test --continue
+        run: ./gradlew iosSimulatorArm64Test --continue
 
       - name: Archive coverage data
         if: matrix.os == 'ubuntu-latest'

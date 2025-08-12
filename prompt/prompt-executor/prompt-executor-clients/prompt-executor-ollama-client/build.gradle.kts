@@ -37,18 +37,6 @@ kotlin {
             }
         }
 
-        linuxMain {
-            dependencies {
-                api(libs.ktor.client.curl)
-            }
-        }
-
-        mingwMain {
-            dependencies {
-                api(libs.ktor.client.winhttp)
-            }
-        }
-
         jsMain {
             dependencies {
                 api(libs.ktor.client.js)
