@@ -125,7 +125,7 @@ public sealed class LLMCapability(public val id: String) {
     /**
      * Represents the "completion" capability for Language Learning Models (LLMs). This capability
      * typically encompasses the generation of text or content based on the given input context.
-     * It belongs to the `LLMCapability` sealed class hierarchy and is identifiable by the `embed` ID.
+     * It belongs to the `LLMCapability` sealed class hierarchy and is identifiable by the `completion` ID.
      *
      * This capability can be utilized within an LLM to perform tasks such as completing a sentence,
      * generating suggestions, or producing content that aligns with the given input data and context.
