@@ -133,13 +133,15 @@ public object JVMFileSystemProvider {
          * and constructs the metadata accordingly. If the path does not represent a regular file
          * or directory, it returns null.
          *
+         * The operation is performed with [Dispatchers.IO] context.
+         *
          * @param path The path for which the metadata is to be retrieved.
          * @return A [FileMetadata] instance containing information about the file or directory,
          * or null if the path does not represent a valid file or directory.
          * @throws IOException if an I/O error occurs while retrieving metadata.
          */
-        override suspend fun metadata(path: Path): FileMetadata? {
-            return if (path.isRegularFile()) {
+        override suspend fun metadata(path: Path): FileMetadata? = withContext(Dispatchers.IO) {
+            if (path.isRegularFile()) {
                 FileMetadata(FileType.File, path.isHidden())
             } else if (path.isDirectory()) {
                 FileMetadata(FileType.Directory, path.isHidden())
@@ -152,17 +154,19 @@ public object JVMFileSystemProvider {
          * Retrieves a sorted list of paths within the specified directory.
          * The listing is not recursive.
          *
+         * The operation is performed with [Dispatchers.IO] context.
+         *
          * @param directory The directory path whose contents are to be listed.
          * @return A list of paths within the specified directory, sorted by name.
          *         Returns an empty list if an error occurs or the directory is empty.
          * @throws IllegalArgumentException if [directory] is not a directory or doesn't exist.
          * @throws IOException if an I/O error occurs during listing.
          */
-        override suspend fun list(directory: Path): List<Path> {
+        override suspend fun list(directory: Path): List<Path> = withContext(Dispatchers.IO) {
             require(directory.exists()) { "Path must exist" }
             require(directory.isDirectory()) { "Path must be a directory" }
 
-            return Files.list(directory).use {
+            Files.list(directory).use {
                 it.sorted { a, b -> a.name.compareTo(b.name) }.toList()
             }
         }
@@ -189,23 +193,27 @@ public object JVMFileSystemProvider {
         /**
          * Checks if the specified file or directory exists at the given path.
          *
+         * The operation is performed with [Dispatchers.IO] context.
+         *
          * @param path The path to the file or directory to be checked.
          * @return `true` if the file or directory exists, `false` otherwise.
          */
-        override suspend fun exists(path: Path): Boolean = path.exists()
+        override suspend fun exists(path: Path): Boolean = withContext(Dispatchers.IO) { path.exists() }
 
         /**
          * Detects the type of content stored in a file using a [path].
+         *
+         * The operation is performed with [Dispatchers.IO] context.
          *
          * @param path The path to the file whose content type is to be detected.
          * @return [FileContentType.Text] for text files, [FileContentType.Binary] for binary files.
          * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs while detecting the file content type.
          */
-        override suspend fun getFileContentType(path: Path): FileContentType {
+        override suspend fun getFileContentType(path: Path): FileContentType = withContext(Dispatchers.IO) {
             require(path.exists()) { "Path must exist" }
             require(path.isRegularFile()) { "Path must be a regular file" }
-            return if (path.isFileHeadTextBased()) FileContentType.Text else FileContentType.Binary
+            if (path.isFileHeadTextBased()) FileContentType.Text else FileContentType.Binary
         }
 
         /**
@@ -266,16 +274,18 @@ public object JVMFileSystemProvider {
         /**
          * Returns the size of the regular file at the specified path.
          *
+         * The operation is performed with [Dispatchers.IO] context.
+         *
          * @param path the path to the file whose size is to be obtained.
          * Must be a regular file and exist.
          * @return the size of the file in bytes.
          * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs while determining the file size.
          */
-        override suspend fun size(path: Path): Long {
+        override suspend fun size(path: Path): Long = withContext(Dispatchers.IO) {
             require(path.exists()) { "Path must exist" }
             require(path.isRegularFile()) { "Path must be a regular file" }
-            return withContext(Dispatchers.IO) { path.fileSize() }
+            path.fileSize()
         }
     }
 
