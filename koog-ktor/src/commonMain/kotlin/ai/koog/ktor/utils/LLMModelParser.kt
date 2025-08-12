@@ -162,7 +162,7 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt4_1" to OpenAIModels.Chat.GPT4_1
     ),
     "reasoning" to mapOf(
-        "gpt4omini" to OpenAIModels.Reasoning.GPT4oMini,
+        "o4mini" to OpenAIModels.Reasoning.O4Mini,
         "o3mini" to OpenAIModels.Reasoning.O3Mini,
         "o1mini" to OpenAIModels.Reasoning.O1Mini,
         "o3" to OpenAIModels.Reasoning.O3,

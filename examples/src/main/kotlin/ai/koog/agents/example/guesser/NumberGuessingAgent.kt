@@ -28,7 +28,7 @@ fun main() = runBlocking {
     // Create a chat agent with a system prompt and the tool registry
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = """
             You are a number guessing agent. Your goal is to guess a number that the user is thinking of.
             

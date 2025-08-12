@@ -15,7 +15,7 @@ import ai.koog.prompt.llm.LLModel
  *
  * | Name                                | Speed     | Price              | Input                        | Output             |
  * |-------------------------------------|-----------|--------------------|------------------------------|--------------------|
- * | [Reasoning.GPT4oMini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
+ * | [Reasoning.O4Mini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
  * | [Reasoning.O3Mini]                  | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
  * | [Reasoning.O1Mini]                  | Slow      | $1.1-$4.4          | Text                         | Text               |
  * | [Reasoning.O3]                      | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools        |
@@ -91,20 +91,22 @@ public object OpenAIModels : LLModelDefinitions {
      */
     public object Reasoning {
         /**
-         * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
-         * more cost-effective. It's designed for tasks that don't require the full capabilities of GPT-4o.
+         * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being
+         * more cost-effective. It's optimized for fast, effective reasoning with exceptionally efficient
+         * performance in coding and visual tasks.
          *
-         * 128K context window.
-         * 16,384 max output tokens
-         * Oct 01, 2023 knowledge cutoff
+         * 200,000 context window
+         * 100,000 max output tokens
+         * Jun 01, 2024 knowledge cutoff
+         * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">
+         *
+         * @see <a href="https://platform.openai.com/docs/models/o4-mini">
          */
-        public val GPT4oMini: LLModel = LLModel(
+        public val O4Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
-            id = "gpt-4o-mini",
+            id = "o4-mini",
             capabilities = listOf(
-                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -115,8 +117,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
-            contextLength = 128_000,
-            maxOutputTokens = 16_384,
+            contextLength = 200_000,
+            maxOutputTokens = 100_000,
         )
 
         /**
@@ -367,36 +369,6 @@ public object OpenAIModels : LLModelDefinitions {
      * and affordability, catering to various tasks like reasoning, speculation, and tools integration.
      */
     public object CostOptimized {
-        /**
-         * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being
-         * more cost-effective. It's optimized for fast, effective reasoning with exceptionally efficient
-         * performance in coding and visual tasks..
-         *
-         * 200,000 context window
-         * 100,000 max output tokens
-         * Jun 01, 2024 knowledge cutoff
-         * Reasoning token support
-         *
-         *
-         * @see <a href="https://platform.openai.com/docs/models/o4-mini">
-         */
-        public val O4Mini: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "o4-mini",
-            capabilities = listOf(
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices
-            ),
-            contextLength = 200_000,
-            maxOutputTokens = 100_000,
-        )
 
         /**
          * GPT-4.1-nano is the smallest and most affordable model in the GPT-4.1 family.
@@ -458,9 +430,38 @@ public object OpenAIModels : LLModelDefinitions {
         )
 
         /**
-         * See [Reasoning.GPT4oMini]
+         * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
+         * more cost-effective. It's designed for tasks that don't require the full capabilities of GPT-4o.
+         *
+         * 128K context window.
+         * 16,384 max output tokens
+         * Oct 01, 2023 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">
          */
-        public val GPT4oMini: LLModel get() = Reasoning.GPT4oMini
+        public val GPT4oMini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-4o-mini",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices
+            ),
+            contextLength = 128_000,
+            maxOutputTokens = 16_384,
+        )
+
+        /**
+         * See [Reasoning.O4Mini]
+         */
+        public val O4Mini: LLModel get() = Reasoning.O4Mini
 
         /**
          * See [Reasoning.O1Mini]

@@ -23,15 +23,15 @@ object Models {
             OpenAIModels.Chat.GPT4o,
             OpenAIModels.Chat.GPT4_1,
 
-            OpenAIModels.Reasoning.GPT4oMini,
+            OpenAIModels.Reasoning.O4Mini,
             OpenAIModels.Reasoning.O3Mini,
             OpenAIModels.Reasoning.O1Mini,
             OpenAIModels.Reasoning.O3,
             OpenAIModels.Reasoning.O1,
 
-            OpenAIModels.CostOptimized.O4Mini,
             OpenAIModels.CostOptimized.GPT4_1Nano,
             OpenAIModels.CostOptimized.GPT4_1Mini,
+            OpenAIModels.CostOptimized.GPT4oMini,
 
             OpenAIModels.Audio.GPT4oMiniAudio,
             OpenAIModels.Audio.GPT4oAudio,

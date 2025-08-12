@@ -31,7 +31,7 @@ fun main() = runBlocking {
 
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.Reasoning.O4Mini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(OpenTelemetry) {

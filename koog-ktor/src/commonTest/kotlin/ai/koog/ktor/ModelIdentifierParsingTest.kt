@@ -33,10 +33,10 @@ class ModelIdentifierParsingTest {
     @Test
     fun testOpenAIReasoningModels() = runTest {
         // Test GPT-4o Mini
-        val gpt4oMini = getModelFromIdentifier("openai.reasoning.gpt4omini")
-        assertNotNull(gpt4oMini)
-        assertEquals(LLMProvider.OpenAI, gpt4oMini.provider)
-        assertEquals(OpenAIModels.Reasoning.GPT4oMini, gpt4oMini)
+        val o4Mini = getModelFromIdentifier("openai.reasoning.o4mini")
+        assertNotNull(o4Mini)
+        assertEquals(LLMProvider.OpenAI, o4Mini.provider)
+        assertEquals(OpenAIModels.Reasoning.O4Mini, o4Mini)
 
         // Test O3 Mini
         val o3Mini = getModelFromIdentifier("openai.reasoning.o3mini")
