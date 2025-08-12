@@ -141,18 +141,7 @@ public class BedrockLLMClient(
                 this.secretAccessKey = awsSecretAccessKey
                 awsSessionToken?.let { this.sessionToken = it }
             }
-        )
-
-            // Configure a custom endpoint if provided
-            settings.endpointUrl?.let { url ->
-                this.endpointUrl = Url.parse(url)
-            }
-
-            // Configure retry policy
-            this.retryStrategy = StandardRetryStrategy {
-                maxAttempts = settings.maxRetries
-            }
-        },
+        ),
         moderationGuardrailsSettings = settings.moderationGuardrailsSettings,
         clock = clock
     )
@@ -160,19 +149,19 @@ public class BedrockLLMClient(
     /**
      * Creates a new Bedrock LLM client configured with the specified AWS profile.
      *
-     * @param credentialsProvider any [CredentialsProvider] implementation to use for authentication
+     * @param awsProfileName The name of the AWS config profile defined in ~/.aws/config
      * @param settings Configuration settings for the Bedrock client, such as region and endpoint
      * @param clock A clock used for time-based operations
      * @return A configured [LLMClient] instance for Bedrock
      */
     public constructor(
-        credentialsProvider: CredentialsProvider,
+        awsProfileName: String,
         settings: BedrockClientSettings = BedrockClientSettings(),
         clock: Clock = Clock.System,
     ) : this(
         bedrockClient = bedrockClient(
             settings = settings,
-            credentialsProvider = credentialsProvider
+            credentialsProvider = ProfileCredentialsProvider(profileName = awsProfileName)
         ),
         moderationGuardrailsSettings = settings.moderationGuardrailsSettings,
         clock = clock
