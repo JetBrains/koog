@@ -47,8 +47,6 @@ class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemPro
 
     override fun fromAbsolutePathString(path: String): String = path
 
-    @Deprecated("Use joinPath instead", replaceWith = ReplaceWith("joinPath(base, path)"))
-    override fun fromRelativeString(base: String, path: String): String = "$base/$path"
     override fun joinPath(base: String, vararg parts: String): String {
         return parts.fold(base) { acc, part -> "$acc/$part" }
     }
@@ -81,33 +79,14 @@ class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemPro
             else -> throw IllegalArgumentException("Path must exist and be a regular file")
         }
 
-    @Deprecated("Use readBytes instead", replaceWith = ReplaceWith("readBytes(path)"))
-    override suspend fun read(path: String): ByteArray =
-        mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.encodeToByteArray()
-            ?: throw IllegalArgumentException("Document not found: $path")
-
     override suspend fun readBytes(path: String): ByteArray =
         mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.encodeToByteArray()
             ?: throw IllegalArgumentException("Document not found: $path")
 
-    @Deprecated("Use inputStream instead", replaceWith = ReplaceWith("inputStream(path)"))
-    override suspend fun source(path: String): Source = throw UnsupportedOperationException()
     override suspend fun inputStream(path: String): Source = throw UnsupportedOperationException()
 
     override suspend fun size(path: String): Long =
         mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.length?.toLong() ?: 0L
-
-    @Deprecated("Use create instead", replaceWith = ReplaceWith("create(joinPath(parent, name), type)"))
-    override suspend fun create(
-        parent: String,
-        name: String,
-        type: FileMetadata.FileType
-    ) {
-        when (type) {
-            FileMetadata.FileType.File -> mockFileSystem.saveDocument(joinPath(parent, name), "")
-            FileMetadata.FileType.Directory -> mockFileSystem.createDirectory(joinPath(parent, name))
-        }
-    }
 
     override suspend fun create(path: String, type: FileMetadata.FileType) {
         when (type) {
@@ -137,23 +116,11 @@ class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemPro
         }
     }
 
-    @Deprecated("Use writeBytes instead", replaceWith = ReplaceWith("writeBytes(path, content)"))
-    override suspend fun write(path: String, content: ByteArray) {
-        mockFileSystem.saveDocument(path, content.decodeToString())
-    }
-
     override suspend fun writeBytes(path: String, data: ByteArray) {
         mockFileSystem.saveDocument(path, data.decodeToString())
     }
 
-    @Deprecated("Use outputStream instead", replaceWith = ReplaceWith("outputStream(path, append)"))
-    override suspend fun sink(path: String, append: Boolean): Sink = throw UnsupportedOperationException()
     override suspend fun outputStream(path: String, append: Boolean): Sink = throw UnsupportedOperationException()
-
-    @Deprecated("Use delete instead", replaceWith = ReplaceWith("delete(joinPath(parent, name))"))
-    override suspend fun delete(parent: String, name: String) {
-        mockFileSystem.deleteDocument(joinPath(parent, name))
-    }
 
     override suspend fun delete(path: String) {
         mockFileSystem.deleteDocument(path)

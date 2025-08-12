@@ -35,19 +35,6 @@ public object FileSystemProvider {
         public fun fromAbsolutePathString(path: String): Path
 
         /**
-         * Resolves a [path] string against a [base] path.
-         * This method works with the path structure
-         * and doesn't check if the path actually exists in the filesystem.
-         *
-         * @param base The base path for resolution.
-         * @param path The path string to resolve.
-         * @return The resolved path object.
-         * @throws IllegalArgumentException if [path] is an absolute path.
-         */
-        @Deprecated("Use joinPath instead", ReplaceWith("joinPath(base, path)"))
-        public fun fromRelativeString(base: Path, path: String): Path
-
-        /**
          * Resolves strings from [parts] against a [base] path.
          * This method works with the path structure
          * and doesn't check if the path actually exists in the filesystem.
@@ -147,30 +134,7 @@ public object FileSystemProvider {
          * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs during reading.
          */
-        @Deprecated("Use readBytes instead", ReplaceWith("readBytes(path)"))
-        public suspend fun read(path: Path): ByteArray
-
-        /**
-         * Reads the content of a file at the specified [path].
-         *
-         * @param path The path to read.
-         * @return The file content as a byte array.
-         * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
-         * @throws IOException if an I/O error occurs during reading.
-         */
         public suspend fun readBytes(path: Path): ByteArray
-
-        /**
-         * Creates a [Source] for reading from a file at the specified [path].
-         * The returned Source is buffered.
-         *
-         * @param path The path to read from.
-         * @return A buffered Source object for reading.
-         * @throws IllegalArgumentException if [path] doesn't exist or isn't a regular file.
-         * @throws IOException if an I/O error occurs during source creation.
-         */
-        @Deprecated("Use inputStream instead", ReplaceWith("inputStream(path)"))
-        public suspend fun source(path: Path): Source
 
         /**
          * Creates a [Source] for reading from a file at the specified [path].
@@ -199,18 +163,6 @@ public object FileSystemProvider {
      * including reading, writing, and path manipulation.
      */
     public interface ReadWrite<Path> : ReadOnly<Path> {
-        /**
-         * Creates a new file or directory inside [parent] with specified [name] and [type].
-         * Parent directories will be created if they don't exist.
-         *
-         * @param parent The parent directory path.
-         * @param name The name of the new file or directory.
-         * @param type The type (file or directory) to create.
-         * @throws IOException or its inheritor if a file or directory with [name] already exists in [parent],
-         *   or [name] is invalid (e.g., contains reserved characters), or if any other I/O error occurs.
-         */
-        @Deprecated("Use create instead", ReplaceWith("create(joinPath(parent, name), type)"))
-        public suspend fun create(parent: Path, name: String, type: FileMetadata.FileType)
 
         /**
          * Creates a new file or directory denoted by the [path] using the specified [type].
@@ -254,37 +206,10 @@ public object FileSystemProvider {
          * Parent directories will be created if they don't exist.
          *
          * @param path The path to write to.
-         * @param content The content to write as a byte array.
-         * @throws IOException if the path is a directory or any other I/O error occurs during writing.
-         */
-        @Deprecated("Use writeBytes instead", ReplaceWith("writeBytes(path, content)"))
-        public suspend fun write(path: Path, content: ByteArray)
-
-        /**
-         * Writes content to a file.
-         * If the file doesn't exist, it will be created.
-         * If the file exists, its content will be overwritten.
-         * Parent directories will be created if they don't exist.
-         *
-         * @param path The path to write to.
          * @param data The data to write as a byte array.
          * @throws IOException if the path is a directory or any other I/O error occurs during writing.
          */
         public suspend fun writeBytes(path: Path, data: ByteArray)
-
-        /**
-         * Creates a [Sink] for writing to a file.
-         * If the file doesn't exist, it will be created.
-         * If the parent directories don't exist, they will be created.
-         * The returned [Sink] is buffered.
-         *
-         * @param path The path where Sink will be created.
-         * @param append Append to existing content (true) or overwrite (false). Default is false (overwrite).
-         * @return A buffered Sink object for writing.
-         * @throws IOException if the path is a directory or any other I/O error occurs during sink creation.
-         */
-        @Deprecated("Use outputStream instead", ReplaceWith("outputStream(path, append)"))
-        public suspend fun sink(path: Path, append: Boolean = false): Sink
 
         /**
          * Creates a [Sink] for writing to a file.
@@ -298,17 +223,6 @@ public object FileSystemProvider {
          * @throws IOException if the path is a directory or any other I/O error occurs during [Sink] creation.
          */
         public suspend fun outputStream(path: Path, append: Boolean = false): Sink
-
-        /**
-         * Deletes a file or directory from [parent] using [name].
-         * If the item is a directory, it will be deleted recursively with all its contents.
-         *
-         * @param parent The parent directory containing the item to delete.
-         * @param name The name of the item to delete.
-         * @throws IOException or its inheritor if the file or directory doesn't exist or can't be deleted for any other reason.
-         */
-        @Deprecated("Use delete instead", ReplaceWith("delete(joinPath(parent, name))"))
-        public suspend fun delete(parent: Path, name: String)
 
         /**
          * Deletes a file or directory denoted by the [path].
