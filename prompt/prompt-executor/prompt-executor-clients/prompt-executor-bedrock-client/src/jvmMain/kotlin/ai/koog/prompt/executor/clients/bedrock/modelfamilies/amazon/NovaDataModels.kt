@@ -46,7 +46,7 @@ internal data class NovaInferenceConfig(
     val topK: Int? = null,
     @SerialName("maxTokens")
     val maxTokens: Int? = MAX_TOKENS_DEFAULT
-)  {
+) {
     /**
      * Companion object with default values for request
      */
