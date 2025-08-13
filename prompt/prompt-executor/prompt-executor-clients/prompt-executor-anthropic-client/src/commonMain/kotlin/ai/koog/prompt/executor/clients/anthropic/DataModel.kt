@@ -34,6 +34,13 @@ public data class AnthropicMessageRequest(
     val stream: Boolean = false,
     val toolChoice: AnthropicToolChoice? = null,
 ) {
+    init {
+        require(maxTokens > 0) { "maxTokens must be greater than 0, but was $maxTokens" }
+        if (temperature != null) {
+            require(temperature >= 0) { "temperature must be greater than 0, but was $temperature" }
+        }
+    }
+
     /**
      * Companion object with default values for request
      */

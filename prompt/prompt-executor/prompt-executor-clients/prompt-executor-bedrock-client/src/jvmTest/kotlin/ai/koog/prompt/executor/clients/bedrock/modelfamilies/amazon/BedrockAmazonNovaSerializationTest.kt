@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon.NovaInferenceConfig.Companion.MAX_TOKENS_DEFAULT
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -50,8 +51,21 @@ class BedrockAmazonNovaSerializationTest {
         assertEquals(userMessage, request.messages[0].content[0].text)
 
         assertNotNull(request.inferenceConfig)
-        assertEquals(4096, request.inferenceConfig.maxTokens)
+        assertEquals(MAX_TOKENS_DEFAULT, request.inferenceConfig.maxTokens)
         assertEquals(temperature, request.inferenceConfig.temperature)
+    }
+
+    @Test
+    fun `createNovaRequest with default maxTokens`() {
+        val maxTokens = 1000
+
+        val prompt = Prompt.build("test", params = LLMParams(maxTokens = maxTokens)) {
+            system(systemMessage)
+            user(userMessage)
+        }
+
+        val request = BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
+        assertEquals(maxTokens, request.inferenceConfig!!.maxTokens)
     }
 
     @Test
