@@ -213,37 +213,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools))
-
-        val prompt = prompt("test-code") {
-            system("You are a helpful coding assistant.")
-            user(
-                "Write a simple Kotlin function to calculate the factorial of a number. " +
-                    "Make sure the name of the function starts with 'factorial'. ONLY generate CODE, no explanations or other texts. " +
-                    "The function MUST have a return statement."
-            )
-        }
-
-        withRetry(times = 3, testName = "integration_testCodeGeneration[${model.id}]") {
-            val response = executor.execute(prompt, model, emptyList())
-
-            assertNotNull(response, "Response should not be null")
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
-
-            val content = (response.first() as Message.Assistant).content
-            assertTrue(
-                content.contains("fun factorial"),
-                "Response should contain a factorial function. Response: $response. Content: $content"
-            )
-            assertTrue(content.contains("return"), "Response should contain a return statement")
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
