@@ -36,6 +36,7 @@ import kotlinx.serialization.json.JsonObject
 @Serializable
 public data class LLMParams(
     val temperature: Double? = null,
+    val maxTokens: Int? = null,
     val numberOfChoices: Int? = null,
     val speculation: String? = null,
     val schema: Schema? = null,
@@ -74,6 +75,7 @@ public data class LLMParams(
      */
     public fun default(default: LLMParams): LLMParams = copy(
         temperature = temperature ?: default.temperature,
+        maxTokens = maxTokens ?: default.maxTokens,
         numberOfChoices = numberOfChoices ?: default.numberOfChoices,
         speculation = speculation ?: default.speculation,
         schema = schema ?: default.schema,

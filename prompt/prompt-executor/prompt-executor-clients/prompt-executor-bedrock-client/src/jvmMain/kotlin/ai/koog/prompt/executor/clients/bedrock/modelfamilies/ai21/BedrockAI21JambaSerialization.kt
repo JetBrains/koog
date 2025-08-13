@@ -123,7 +123,7 @@ internal object BedrockAI21JambaSerialization {
         return JambaRequest(
             model = model.id,
             messages = messages,
-            maxTokens = 4096,
+            maxTokens = JambaRequest.MAX_TOKENS_DEFAULT,
             temperature = if (model.capabilities.contains(
                     LLMCapability.Temperature
                 )

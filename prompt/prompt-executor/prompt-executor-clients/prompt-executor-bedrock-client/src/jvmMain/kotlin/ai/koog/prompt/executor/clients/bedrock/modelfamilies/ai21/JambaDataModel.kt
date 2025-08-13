@@ -9,7 +9,7 @@ internal data class JambaRequest(
     public val model: String,
     public val messages: List<JambaMessage>,
     @SerialName("max_tokens")
-    public val maxTokens: Int? = null,
+    public val maxTokens: Int? = MAX_TOKENS_DEFAULT,
     public val temperature: Double? = null,
     @SerialName("top_p")
     public val topP: Double? = null,
@@ -19,7 +19,17 @@ internal data class JambaRequest(
     public val tools: List<JambaTool>? = null,
     @SerialName("response_format")
     public val responseFormat: JambaResponseFormat? = null
-)
+) {
+    /**
+     * Companion object with default values for request
+     */
+    companion object {
+        /**
+         * Default max tokens
+         */
+        const val MAX_TOKENS_DEFAULT: Int = 4096
+    }
+}
 
 @Serializable
 internal data class JambaMessage(

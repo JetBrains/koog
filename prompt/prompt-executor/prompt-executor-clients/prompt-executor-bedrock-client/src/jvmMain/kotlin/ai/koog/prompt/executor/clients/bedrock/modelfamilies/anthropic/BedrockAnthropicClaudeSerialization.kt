@@ -170,7 +170,7 @@ internal object BedrockAnthropicClaudeSerialization {
         return AnthropicMessageRequest(
             model = model.id,
             messages = messages,
-            maxTokens = 4096,
+            maxTokens = prompt.params.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
             temperature = if (model.capabilities.contains(
                     LLMCapability.Temperature
                 )

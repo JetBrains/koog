@@ -282,7 +282,7 @@ public open class AnthropicLLMClient(
             model = settings.modelVersionsMap[model]
                 ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
-            maxTokens = 2048, // This is required by the API
+            maxTokens = prompt.params.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
             temperature = prompt.params.temperature,
             system = systemMessage,
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
