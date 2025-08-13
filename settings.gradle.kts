@@ -22,6 +22,9 @@ include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")
 
+include(":agents:agents-a2a:agents-a2a-core")
+include(":agents:agents-a2a:agents-a2a-client")
+
 include(":examples")
 
 include(":integration-tests")
