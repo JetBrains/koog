@@ -5,9 +5,9 @@ import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.time.Clock
 
 /**
  * Represents a sealed class for defining feature-related events in the system.

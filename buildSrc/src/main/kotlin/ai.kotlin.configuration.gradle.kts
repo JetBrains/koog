@@ -11,6 +11,7 @@ extensions.getByType<KotlinProjectExtension>().apply {
         languageSettings {
             // K/Common
             optIn("kotlin.RequiresOptIn")
+            optIn("kotlin.time.ExperimentalTime")
             optIn("kotlinx.serialization.ExperimentalSerializationApi")
             optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
             // K/JS

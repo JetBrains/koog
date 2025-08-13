@@ -6,7 +6,7 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents the result or response received from a tool operation.

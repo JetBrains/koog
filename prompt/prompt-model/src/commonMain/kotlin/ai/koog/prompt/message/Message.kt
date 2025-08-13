@@ -1,11 +1,11 @@
 package ai.koog.prompt.message
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 /**
  * Represents a message exchanged in a chat with LLM. Messages can be categorized

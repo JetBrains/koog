@@ -6,11 +6,11 @@ import ai.koog.prompt.executor.model.PromptExecutorExt.singleResponse
 import ai.koog.prompt.executor.model.PromptExecutorExt.singleResponseOrNull
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Instant
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.time.Instant
 
 class PromptExecutorExtTest {
 

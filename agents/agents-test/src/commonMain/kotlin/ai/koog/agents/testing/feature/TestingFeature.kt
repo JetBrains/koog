@@ -34,9 +34,9 @@ import ai.koog.agents.testing.tools.MockEnvironment
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 
 /**

@@ -5,7 +5,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import kotlin.test.AfterTest
@@ -14,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 class FileAgentCheckpointStorageProviderTest {
     private lateinit var tempDir: java.nio.file.Path

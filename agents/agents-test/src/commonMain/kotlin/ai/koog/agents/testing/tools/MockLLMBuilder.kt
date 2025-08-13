@@ -9,7 +9,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents a condition for a tool call and its corresponding result.

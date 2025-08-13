@@ -5,9 +5,9 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlin.time.Instant
 
 /**
  * Represents the checkpoint data for an agent's state during a session.

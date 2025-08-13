@@ -12,7 +12,7 @@ import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.

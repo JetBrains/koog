@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.message
 
-import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.time.Clock
 
 /**
  * Represents a feature message or event within the system.
