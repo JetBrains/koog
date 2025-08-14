@@ -65,7 +65,7 @@ object MediaTestScenarios {
         val scenarios = MarkdownTestScenario.entries.toTypedArray()
         val models = listOf(
             AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini2_5Pro,
+            GoogleModels.Gemini2_0Flash, // see KG-256
             OpenAIModels.Chat.GPT4o,
         )
         return scenarios.flatMap { scenario ->
