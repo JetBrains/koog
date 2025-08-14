@@ -6,6 +6,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents a message exchanged in a chat with LLM. Messages can be categorized
@@ -18,7 +20,7 @@ public sealed interface Message {
     /**
      * The id of the message.
      */
-    public val id: String?
+    public val id: String
 
     /**
      * The content of the message.
@@ -112,11 +114,11 @@ public sealed interface Message {
      * @property role The role of the message, which is fixed as [Role.User] for this implementation.
      */
     @Serializable
-    public data class User(
+    public data class User @OptIn(ExperimentalUuidApi::class) constructor(
         override val content: String,
         override val metaInfo: RequestMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
-        override val id: String? = null,
+        override val id: String = Uuid.random().toString(),
     ) : Request, WithAttachments {
         override val role: Role = Role.User
     }
@@ -132,11 +134,11 @@ public sealed interface Message {
      * @property role The role associated with the response, which is fixed as `Role.Assistant`.
      */
     @Serializable
-    public data class Assistant(
+    public data class Assistant @OptIn(ExperimentalUuidApi::class) constructor(
         override val content: String,
         override val metaInfo: ResponseMetaInfo,
         override val attachments: List<Attachment> = emptyList(),
-        override val id: String? = null,
+        override val id: String = Uuid.random().toString(),
         val finishReason: String? = null
     ) : Response, WithAttachments {
         override val role: Role = Role.Assistant
@@ -163,8 +165,8 @@ public sealed interface Message {
          * @property metaInfo Metadata related to the response, including token counts and timestamp.
          */
         @Serializable
-        public data class Call(
-            override val id: String?,
+        public data class Call @OptIn(ExperimentalUuidApi::class) constructor(
+            override val id: String = Uuid.random().toString(),
             override val tool: String,
             override val content: String,
             override val metaInfo: ResponseMetaInfo
@@ -184,14 +186,14 @@ public sealed interface Message {
         /**
          * Represents the result of a tool call sent as a request.
          *
-         * @property id The unique identifier of the tool result.
+         * @property id The unique identifier of the tool call.
          * @property tool The name of the tool that provided the result.
          * @property content The content of the tool result.
          * @property metaInfo Metadata associated with the request, including timestamp information. Defaults to a new [RequestMetaInfo].
          */
         @Serializable
-        public data class Result(
-            override val id: String?,
+        public data class Result @OptIn(ExperimentalUuidApi::class) constructor(
+            override val id: String,
             override val tool: String,
             override val content: String,
             override val metaInfo: RequestMetaInfo
@@ -208,10 +210,10 @@ public sealed interface Message {
      *
      */
     @Serializable
-    public data class System(
+    public data class System @OptIn(ExperimentalUuidApi::class) constructor(
         override val content: String,
         override val metaInfo: RequestMetaInfo,
-        override val id: String? = null,
+        override val id: String = Uuid.random().toString(),
     ) : Request {
         override val role: Role = Role.System
     }

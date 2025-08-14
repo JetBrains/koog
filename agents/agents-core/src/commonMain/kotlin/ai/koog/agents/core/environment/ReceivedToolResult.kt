@@ -17,7 +17,7 @@ import kotlinx.datetime.Clock
  * @property result The detailed result produced by the tool, implementing the [ToolResult] interface.
  */
 public data class ReceivedToolResult(
-    val id: String?,
+    val id: String,
     val tool: String,
     val content: String,
     val result: ToolResult?

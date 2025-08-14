@@ -215,34 +215,36 @@ class MissingToolsConversionStrategyTest {
     }
 
     @Test
-    fun testNullIdToolCall() {
-        val nullIdToolCall = Message.Tool.Call(
-            id = null,
+    fun testToolCallId() {
+        val toolCall = Message.Tool.Call(
+            id = "call-1",
             tool = "test-tool",
             content = """{"param": "value"}""",
             metaInfo = ResponseMetaInfo.create(testClock)
         )
 
-        val result = allStrategy.convertMessage(nullIdToolCall)
+        val result = allStrategy.convertMessage(toolCall)
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
         assertTrue(result is Message.Assistant)
         assertEquals(expectedContent, result.content)
+        assertEquals(toolCall.id, result.id)
     }
 
     @Test
-    fun testNullIdToolResult() {
-        val nullIdToolResult = Message.Tool.Result(
-            id = null,
+    fun testToolResultId() {
+        val toolResult = Message.Tool.Result(
+            id = "call_1",
             tool = "test-tool",
             content = "Test result content",
             metaInfo = RequestMetaInfo.create(testClock)
         )
 
-        val result = allStrategy.convertMessage(nullIdToolResult)
+        val result = allStrategy.convertMessage(toolResult)
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
         assertTrue(result is Message.User)
         assertEquals(expectedContent, result.content)
+        assertEquals(toolResult.id, result.id)
     }
 }

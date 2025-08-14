@@ -103,22 +103,24 @@ class GraphTestingFeatureTest {
 
                     assertNodes {
                         askLLM withInput "Hello" outputs assistantMessage("Hello!")
-                        askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
+                        askLLM withInput "Solve task" outputs toolCallMessage("call_1", CreateTool, CreateTool.Args("solve"))
 
                         callTool withInput toolCallMessage(
+                            "call_1",
                             SolveTool,
                             SolveTool.Args("solve")
-                        ) outputs toolResult(SolveTool, "solved")
+                        ) outputs toolResult("call_1", SolveTool, "solved")
 
                         callTool withInput toolCallMessage(
+                            "call_2",
                             CreateTool,
                             CreateTool.Args("solve")
-                        ) outputs toolResult(CreateTool, "created")
+                        ) outputs toolResult("call_2", CreateTool, "created")
                     }
 
                     assertEdges {
                         askLLM withOutput assistantMessage("Hello!") goesTo giveFeedback
-                        askLLM withOutput toolCallMessage(CreateTool, CreateTool.Args("solve")) goesTo callTool
+                        askLLM withOutput toolCallMessage("call_1", CreateTool, CreateTool.Args("solve")) goesTo callTool
                     }
                 }
             }

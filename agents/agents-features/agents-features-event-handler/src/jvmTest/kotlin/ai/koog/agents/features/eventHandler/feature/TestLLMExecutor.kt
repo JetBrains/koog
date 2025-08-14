@@ -28,11 +28,12 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor {
         if (prompt.messages.any { it.content.contains("Summarize all the main achievements") }) {
             return Message.Assistant(
                 "Here's a summary of the conversation: Test user asked questions and received responses.",
-                metaInfo = ResponseMetaInfo.create(clock)
+                metaInfo = ResponseMetaInfo.create(clock),
+                id = "test-id"
             )
         }
 
-        return Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(clock))
+        return Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(clock), id = "test-id")
     }
 
     override suspend fun moderate(

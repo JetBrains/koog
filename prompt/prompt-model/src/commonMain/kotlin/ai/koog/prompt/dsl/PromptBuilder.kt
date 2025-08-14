@@ -7,8 +7,6 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
 import kotlinx.datetime.Clock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * A builder class for creating prompts using a DSL approach.
@@ -58,7 +56,6 @@ public class PromptBuilder internal constructor(
      *
      * @param content The content of the system message
      */
-    @OptIn(ExperimentalUuidApi::class)
     public fun system(content: String) {
         messages.add(
             Message.System(
@@ -82,6 +79,7 @@ public class PromptBuilder internal constructor(
      * ```
      *
      * @param init The initialization block for the TextContentBuilder
+     * @param id The custom id of the system message
      */
     public fun system(init: TextContentBuilder.() -> Unit) {
         system(TextContentBuilder().apply(init).build())
@@ -96,7 +94,6 @@ public class PromptBuilder internal constructor(
      * @param content The content of the user message.
      * @param attachments The list of attachments associated with the user message. Defaults to an empty list if no attachments are provided.
      */
-    @OptIn(ExperimentalUuidApi::class)
     public fun user(content: String, attachments: List<Attachment> = emptyList()) {
         messages.add(
             Message.User(
@@ -167,7 +164,6 @@ public class PromptBuilder internal constructor(
      *
      * @param content The content of the assistant message
      */
-    @OptIn(ExperimentalUuidApi::class)
     public fun assistant(content: String) {
         messages.add(
             Message.Assistant(
@@ -260,7 +256,7 @@ public class PromptBuilder internal constructor(
          * @param tool The name of the tool being called.
          * @param content The content or payload of the tool call.
          */
-        public fun call(id: String?, tool: String, content: String) {
+        public fun call(id: String, tool: String, content: String) {
             call(Message.Tool.Call(id, tool, content, ResponseMetaInfo.create(clock)))
         }
 
@@ -289,7 +285,7 @@ public class PromptBuilder internal constructor(
          * @param tool The name of the tool that provided the result.
          * @param content The content or payload of the tool result.
          */
-        public fun result(id: String?, tool: String, content: String) {
+        public fun result(id: String, tool: String, content: String) {
             result(Message.Tool.Result(id, tool, content, RequestMetaInfo.create(clock)))
         }
     }

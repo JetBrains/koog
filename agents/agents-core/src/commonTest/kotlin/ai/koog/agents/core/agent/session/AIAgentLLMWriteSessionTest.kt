@@ -35,9 +35,14 @@ import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class AIAgentLLMWriteSessionTest {
-    private fun systemMessage(content: String) = Message.System(content, RequestMetaInfo.create(testClock))
-    private fun userMessage(content: String) = Message.User(content, RequestMetaInfo.create(testClock))
-    private fun assistantMessage(content: String) = Message.Assistant(content, ResponseMetaInfo.create(testClock))
+    private fun systemMessage(content: String, id: String) =
+        Message.System(content, RequestMetaInfo.create(testClock), id = id)
+
+    private fun userMessage(content: String, id: String) =
+        Message.User(content, RequestMetaInfo.create(testClock), id = id)
+
+    private fun assistantMessage(content: String, id: String) =
+        Message.Assistant(content, ResponseMetaInfo.create(testClock), id = id)
 
     private object TestToolsEnabler : DirectToolCallsEnabler
 
@@ -186,7 +191,10 @@ class AIAgentLLMWriteSessionTest {
 
         assertEquals("This is a test response", response.content)
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
-        assertEquals(assistantMessage("This is a test response"), session.prompt.messages.last())
+        assertEquals(
+            assistantMessage("This is a test response", session.prompt.messages.last().id),
+            session.prompt.messages.last()
+        )
     }
 
     @Test
@@ -202,7 +210,10 @@ class AIAgentLLMWriteSessionTest {
 
         assertEquals("Response without tools", response.content)
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
-        assertEquals(assistantMessage("Response without tools"), session.prompt.messages.last())
+        assertEquals(
+            assistantMessage("Response without tools", session.prompt.messages.last().id),
+            session.prompt.messages.last()
+        )
     }
 
     @Test
@@ -299,9 +310,9 @@ class AIAgentLLMWriteSessionTest {
         }
 
         assertEquals(3, session.prompt.messages.size)
-        assertEquals(systemMessage("Initial system message"), session.prompt.messages[0])
-        assertEquals(userMessage("Initial user message"), session.prompt.messages[1])
-        assertEquals(userMessage("Additional user message"), session.prompt.messages[2])
+        assertEquals(systemMessage("Initial system message", session.prompt.messages[0].id), session.prompt.messages[0])
+        assertEquals(userMessage("Initial user message", session.prompt.messages[1].id), session.prompt.messages[1])
+        assertEquals(userMessage("Additional user message", session.prompt.messages[2].id), session.prompt.messages[2])
 
         val response = session.requestLLM()
         assertEquals("Updated prompt response", response.content)
@@ -328,8 +339,11 @@ class AIAgentLLMWriteSessionTest {
         }
 
         assertEquals(2, session.prompt.messages.size)
-        assertEquals(systemMessage("Rewritten system message"), session.prompt.messages[0])
-        assertEquals(userMessage("Rewritten user message"), session.prompt.messages[1])
+        assertEquals(
+            systemMessage("Rewritten system message", session.prompt.messages[0].id),
+            session.prompt.messages[0]
+        )
+        assertEquals(userMessage("Rewritten user message", session.prompt.messages[1].id), session.prompt.messages[1])
 
         val response = session.requestLLM()
         assertEquals("Rewritten prompt response", response.content)

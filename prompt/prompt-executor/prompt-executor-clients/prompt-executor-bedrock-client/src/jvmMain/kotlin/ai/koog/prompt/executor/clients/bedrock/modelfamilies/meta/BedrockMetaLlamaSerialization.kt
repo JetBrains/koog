@@ -49,7 +49,6 @@ internal object BedrockMetaLlamaSerialization {
 
         return listOf(
             Message.Assistant(
-                id = Uuid.random().toString(),
                 content = response.generation,
                 finishReason = response.stopReason,
                 metaInfo = ResponseMetaInfo.Companion.create(

@@ -164,7 +164,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
         pattern: String,
         tool: Tool<Args, *>,
         args: Args,
-        toolCallId: String?
+        toolCallId: String
     ) {
         toolCallExactMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
             listOf(
@@ -185,11 +185,16 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
+    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(
+        pattern: String,
+        tool: Tool<Args, *>,
+        args: Args,
+        toolCallId: String
+    ) {
         toolCallPartialMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
             listOf(
                 Message.Tool.Call(
-                    id = null,
+                    id = toolCallId,
                     tool = tool.name,
                     content = toolContent,
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
@@ -207,12 +212,13 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      */
     public fun <Args : ToolArgs> addLLMAnswerPartialPattern(
         pattern: String,
-        toolCalls: List<Pair<Tool<Args, *>, Args>>
+        toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        toolCallId: String
     ) {
         toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
-                    id = null,
+                    id = toolCallId,
                     tool = tool.name,
                     content = toolContent,
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
@@ -227,11 +233,15 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param pattern The exact input string to match
      * @param toolCalls Tool calls with args
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(
+        pattern: String,
+        toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        toolCallId: String
+    ) {
         toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
-                    id = null,
+                    id = toolCallId,
                     tool = tool.name,
                     content = toolContent,
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
@@ -251,12 +261,13 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     public fun <Args : ToolArgs> addLLMAnswerExactPattern(
         pattern: String,
         toolCalls: List<Pair<Tool<Args, *>, Args>>,
-        responses: List<String>
+        responses: List<String>,
+        toolCallId: String
     ) {
         toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
-                    id = null,
+                    id = toolCallId,
                     tool = tool.name,
                     content = toolContent,
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
@@ -287,12 +298,13 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     public fun <Args : ToolArgs> addLLMAnswerPartialPattern(
         pattern: String,
         toolCalls: List<Pair<Tool<Args, *>, Args>>,
-        responses: List<String>
+        responses: List<String>,
+        toolCallId: String
     ) {
         toolCallPartialMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
-                    id = null,
+                    id = toolCallId,
                     tool = tool.name,
                     content = toolContent,
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
@@ -338,10 +350,11 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param args The arguments to pass to the tool
      * @return A [ToolCallReceiver] for further configuration
      */
+    @OptIn(ExperimentalUuidApi::class)
     public fun <Args : ToolArgs> mockLLMToolCall(
         tool: Tool<Args, *>,
         args: Args,
-        toolCallId: String? = null
+        toolCallId: String = "tool-call-id"
     ): ToolCallReceiver<Args> =
         ToolCallReceiver(tool, args, toolCallId, this)
 
@@ -439,7 +452,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     public class ToolCallReceiver<Args : ToolArgs>(
         private val tool: Tool<Args, *>,
         private val args: Args,
-        private val toolCallId: String?,
+        private val toolCallId: String,
         private val builder: MockLLMBuilder
     ) {
         /**
@@ -464,7 +477,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
          * @return The [pattern] string for method chaining
          */
         public infix fun onRequestContains(pattern: String): String {
-            builder.addLLMAnswerPartialPattern(pattern, tool, args)
+            builder.addLLMAnswerPartialPattern(pattern, tool, args, toolCallId)
 
             return pattern
         }
@@ -678,14 +691,14 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      *
      * @return A configured MockLLMExecutor instance
      */
-    @OptIn(ExperimentalUuidApi::class)
     public fun build(): PromptExecutor {
         val processedAssistantMatches = assistantExactMatches.mapValues { (_, value) ->
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
                     text,
-                    ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
+                    ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text)),
+                    id = ""
                 )
             }
         }

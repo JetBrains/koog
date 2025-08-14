@@ -41,7 +41,7 @@ public sealed interface AgentToolCallToEnvironmentMessage : AgentToEnvironmentMe
 public data class AgentToolCallToEnvironmentContent(
     val agentId: String,
     val runId: String,
-    val toolCallId: String?,
+    val toolCallId: String,
     val toolName: String,
     val toolArgs: JsonObject,
 )

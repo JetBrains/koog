@@ -49,8 +49,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
@@ -172,7 +170,6 @@ public class OllamaClient(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun parseResponse(response: OllamaChatResponseDTO): List<Message.Response> {
         val messages = response.message ?: return emptyList()
         val content = messages.content
@@ -201,7 +198,6 @@ public class OllamaClient(
             content.isNotEmpty() && toolCalls.isEmpty() -> {
                 listOf(
                     Message.Assistant(
-                        id = Uuid.random().toString(),
                         content = content,
                         metaInfo = responseMetadata
                     )
@@ -215,7 +211,6 @@ public class OllamaClient(
             else -> {
                 val toolCallMessages = messages.getToolCalls(responseMetadata)
                 val assistantMessage = Message.Assistant(
-                    id = Uuid.random().toString(),
                     content = content,
                     metaInfo = responseMetadata
                 )

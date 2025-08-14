@@ -411,7 +411,7 @@ public open class AIAgent<Input, Output>(
     }
 
     private fun toolResult(
-        toolCallId: String?,
+        toolCallId: String,
         toolName: String,
         agentId: String,
         message: String,

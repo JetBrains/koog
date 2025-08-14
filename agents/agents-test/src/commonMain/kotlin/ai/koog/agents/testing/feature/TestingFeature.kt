@@ -1182,6 +1182,7 @@ public class Testing {
  * ```
  */
 public fun <Args : ToolArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage(
+    toolCallId: String,
     tool: Tool<Args, *>,
     args: Args
 ): Message.Tool.Call {
@@ -1189,7 +1190,7 @@ public fun <Args : ToolArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.tool
     val tokenCount = tokenizer?.countTokens(toolContent)
 
     return Message.Tool.Call(
-        id = null,
+        id = toolCallId,
         tool = tool.name,
         content = toolContent,
         metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
@@ -1206,12 +1207,10 @@ public fun <Args : ToolArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.tool
 public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
     text: String,
     finishReason: String? = null,
-    id: String? = null
 ): Message.Assistant {
     val tokenCount = tokenizer?.countTokens(text)
 
     return Message.Assistant(
-        id = id,
         content = text,
         finishReason = finishReason,
         metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
@@ -1239,8 +1238,8 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
  * }
  * ```
  */
-public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
-    ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), result)
+public fun <Result : ToolResult> toolResult(toolCallId: String, tool: Tool<*, Result>, result: Result): ReceivedToolResult =
+    ReceivedToolResult(toolCallId, tool.name, tool.encodeResultToString(result), result)
 
 /**
  * Constructs a `ReceivedToolResult` object using the provided tool and result string.
@@ -1263,8 +1262,8 @@ public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Resul
  * }
  * ```
  */
-public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
-    toolResult(tool, ToolResult.Text(result))
+public fun toolResult(toolCallId: String, tool: SimpleTool<*>, result: String): ReceivedToolResult =
+    toolResult(toolCallId, tool, ToolResult.Text(result))
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

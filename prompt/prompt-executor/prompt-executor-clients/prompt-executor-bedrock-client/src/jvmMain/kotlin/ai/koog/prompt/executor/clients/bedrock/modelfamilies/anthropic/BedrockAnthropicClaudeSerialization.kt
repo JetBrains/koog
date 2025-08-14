@@ -111,7 +111,7 @@ internal object BedrockAnthropicClaudeSerialization {
                             role = "assistant",
                             content = listOf(
                                 AnthropicContent.ToolUse(
-                                    id = msg.id ?: Uuid.Companion.random().toString(),
+                                    id = msg.id,
                                     name = msg.tool,
                                     input = json.parseToJsonElement(msg.content).jsonObject
                                 )
@@ -126,7 +126,7 @@ internal object BedrockAnthropicClaudeSerialization {
                             role = "user",
                             content = listOf(
                                 AnthropicContent.ToolResult(
-                                    toolUseId = msg.id ?: Uuid.Companion.random().toString(),
+                                    toolUseId = msg.id,
                                     content = msg.content
                                 )
                             )
@@ -185,7 +185,6 @@ internal object BedrockAnthropicClaudeSerialization {
         )
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     internal fun parseAnthropicResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
         val response = json.decodeFromString<AnthropicResponse>(responseBody)
 
@@ -196,7 +195,6 @@ internal object BedrockAnthropicClaudeSerialization {
         return response.content.map { content ->
             when (content) {
                 is AnthropicResponseContent.Text -> Message.Assistant(
-                    id = response.id,
                     content = content.text,
                     finishReason = response.stopReason,
                     metaInfo = ResponseMetaInfo.Companion.create(

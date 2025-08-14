@@ -55,9 +55,9 @@ class ToolCallDescriberTest {
     }
 
     @Test
-    fun testDescribeToolCallWithNullId() {
+    fun testDescribeToolCallWithId() {
         val nullIdToolCall = Message.Tool.Call(
-            id = null,
+            id = "test-call-id",
             tool = "test-tool",
             content = """{"param": "value"}""",
             metaInfo = ResponseMetaInfo.create(testClock),
@@ -71,9 +71,9 @@ class ToolCallDescriberTest {
     }
 
     @Test
-    fun testDescribeToolResultWithNullId() {
+    fun testDescribeToolResultWithId() {
         val nullIdToolResult = Message.Tool.Result(
-            id = null,
+            id = "test-call-id",
             tool = "test-tool",
             content = "Test result content",
             metaInfo = RequestMetaInfo.create(testClock),

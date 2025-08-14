@@ -137,7 +137,6 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
     public suspend fun execute(args: TArgs): Result<TResult> {
         return environment.executeTool(
             Message.Tool.Call(
-                id = null,
                 tool = tool.name,
                 content = tool.encodeArgs(args).toString(),
                 metaInfo = ResponseMetaInfo.create(clock)
@@ -154,7 +153,6 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
     public suspend fun executeRaw(args: TArgs): String {
         return environment.executeTool(
             Message.Tool.Call(
-                id = null,
                 tool = tool.name,
                 content = tool.encodeArgs(args).toString(),
                 metaInfo = ResponseMetaInfo.create(clock)
@@ -173,7 +171,6 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
     public suspend fun executeUnsafe(args: ToolArgs): Result<TResult> {
         return environment.executeTool(
             Message.Tool.Call(
-                id = null,
                 tool = tool.name,
                 content = tool.encodeArgs(args as TArgs).toString(),
                 metaInfo = ResponseMetaInfo.create(clock)

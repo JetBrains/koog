@@ -46,7 +46,7 @@ public data class AIAgentEnvironmentToAgentInitializeMessage(
  * @property toolResult The result of the tool call, encapsulated as an optional `ToolResult` object.
  */
 public data class AIAgentEnvironmentToolResultToAgentContent(
-    override val toolCallId: String?,
+    override val toolCallId: String,
     override val toolName: String,
     override val agentId: String,
     override val message: String,

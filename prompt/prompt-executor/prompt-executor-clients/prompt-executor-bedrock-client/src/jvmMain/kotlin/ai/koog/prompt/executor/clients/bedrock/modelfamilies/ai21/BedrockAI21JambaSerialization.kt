@@ -49,7 +49,7 @@ internal object BedrockAI21JambaSerialization {
                     if (lastMessage?.role == "assistant" && lastMessage.toolCalls != null) {
                         // Add to existing tool calls
                         val updatedToolCalls = lastMessage.toolCalls + JambaToolCall(
-                            id = msg.id ?: Uuid.random().toString(),
+                            id = msg.id,
                             function = JambaFunctionCall(
                                 name = msg.tool,
                                 arguments = msg.content
@@ -64,7 +64,7 @@ internal object BedrockAI21JambaSerialization {
                                 content = null,
                                 toolCalls = listOf(
                                     JambaToolCall(
-                                        id = msg.id ?: Uuid.random().toString(),
+                                        id = msg.id,
                                         function = JambaFunctionCall(
                                             name = msg.tool,
                                             arguments = msg.content
@@ -80,7 +80,7 @@ internal object BedrockAI21JambaSerialization {
                     JambaMessage(
                         role = "tool",
                         content = msg.content,
-                        toolCallId = msg.id ?: Uuid.random().toString()
+                        toolCallId = msg.id
                     )
                 )
             }
@@ -151,7 +151,6 @@ internal object BedrockAI21JambaSerialization {
             choice.message.content?.let { content ->
                 messages.add(
                     Message.Assistant(
-                        id = response.id,
                         content = content,
                         finishReason = choice.finishReason,
                         metaInfo = ResponseMetaInfo.create(

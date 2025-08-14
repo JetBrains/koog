@@ -218,7 +218,7 @@ public open class AnthropicLLMClient(
                             role = "user",
                             content = listOf(
                                 AnthropicContent.ToolResult(
-                                    toolUseId = message.id ?: "",
+                                    toolUseId = message.id,
                                     content = message.content
                                 )
                             )
@@ -233,7 +233,7 @@ public open class AnthropicLLMClient(
                             role = "assistant",
                             content = listOf(
                                 AnthropicContent.ToolUse(
-                                    id = message.id ?: Uuid.random().toString(),
+                                    id = message.id,
                                     name = message.tool,
                                     input = Json.parseToJsonElement(message.content).jsonObject
                                 )
@@ -347,7 +347,6 @@ public open class AnthropicLLMClient(
             when (content) {
                 is AnthropicResponseContent.Text -> {
                     Message.Assistant(
-                        id = response.id,
                         content = content.text,
                         finishReason = response.stopReason,
                         metaInfo = ResponseMetaInfo.create(
@@ -381,7 +380,6 @@ public open class AnthropicLLMClient(
             // If no messages where returned, return an empty message and check stopReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
-                    id = response.id,
                     content = "",
                     finishReason = response.stopReason,
                     metaInfo = ResponseMetaInfo.create(

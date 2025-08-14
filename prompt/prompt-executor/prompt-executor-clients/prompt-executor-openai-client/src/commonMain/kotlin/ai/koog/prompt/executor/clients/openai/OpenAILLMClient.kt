@@ -719,7 +719,6 @@ public open class OpenAILLMClient(
             message.content != null -> {
                 listOf(
                     Message.Assistant(
-                        id = responseId,
                         content = message.content.text(),
                         finishReason = choice.finishReason,
                         metaInfo = metaInfo
@@ -730,7 +729,6 @@ public open class OpenAILLMClient(
             message.audio != null -> {
                 listOf(
                     Message.Assistant(
-                        id = responseId,
                         content = message.audio.transcript ?: "",
                         attachments = listOf(
                             Attachment.Audio(

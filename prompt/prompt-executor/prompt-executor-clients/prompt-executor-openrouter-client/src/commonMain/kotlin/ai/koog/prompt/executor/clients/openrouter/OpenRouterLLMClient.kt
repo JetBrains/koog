@@ -52,8 +52,6 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Configuration settings for connecting to the OpenRouter API.
@@ -184,7 +182,6 @@ public class OpenRouterLLMClient(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun createOpenRouterRequest(
         prompt: Prompt,
         model: LLModel,
@@ -240,7 +237,7 @@ public class OpenRouterLLMClient(
                 }
 
                 is Message.Tool.Call -> pendingCalls += OpenRouterToolCall(
-                    id = message.id ?: Uuid.random().toString(),
+                    id = message.id,
                     function = OpenRouterFunction(message.tool, message.content)
                 )
             }
@@ -467,7 +464,6 @@ public class OpenRouterLLMClient(
             message.content != null -> {
                 listOf(
                     Message.Assistant(
-                        id = response.id,
                         content = message.content.text(),
                         finishReason = choice.finishReason,
                         metaInfo = ResponseMetaInfo.create(

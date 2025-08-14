@@ -373,36 +373,6 @@ class PromptTest {
     }
 
     @Test
-    fun testToolMessagesWithNullId() {
-        val toolCallWithNullId = Message.Tool.Call(null, toolName, toolCallContent, testRespMetaInfo)
-        val toolResultWithNullId = Message.Tool.Result(null, toolName, toolCallContent, testReqMetaInfo)
-
-        assertNull(toolCallWithNullId.id)
-        assertNull(toolResultWithNullId.id)
-
-        val prompt = Prompt.build(promptId) {
-            tool {
-                call(null, toolName, toolCallContent)
-                result(null, toolName, toolCallContent)
-            }
-        }
-
-        assertEquals(2, prompt.messages.size)
-
-        assertTrue(prompt.messages[0] is Message.Tool.Call)
-        assertTrue(prompt.messages[1] is Message.Tool.Result)
-        assertNull((prompt.messages[0] as Message.Tool.Call).id)
-        assertNull((prompt.messages[1] as Message.Tool.Result).id)
-
-        val json = Json.encodeToString(prompt)
-        val decoded = Json.decodeFromString<Prompt>(json)
-
-        assertEquals(prompt, decoded)
-        assertNull((decoded.messages[0] as Message.Tool.Call).id)
-        assertNull((decoded.messages[1] as Message.Tool.Result).id)
-    }
-
-    @Test
     fun testAssistantMessageWithNullFinishReason() {
         val prompt = Prompt.build(promptId) {
             message(Message.Assistant(assistantMessage, testRespMetaInfo))
