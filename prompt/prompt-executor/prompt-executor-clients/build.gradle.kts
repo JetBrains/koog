@@ -22,6 +22,12 @@ kotlin {
                 api(kotlin("reflect"))
             }
         }
+        commonTest {
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
+            }
+        }
     }
 
     explicitApi()
