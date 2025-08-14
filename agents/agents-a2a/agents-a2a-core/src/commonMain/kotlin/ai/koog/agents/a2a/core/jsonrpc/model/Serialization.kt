@@ -51,13 +51,17 @@ internal object RequestIdSerializer : KSerializer<RequestId> {
     }
 }
 
-internal object JSONRPCRequestSerializer : JsonContentPolymorphicSerializer<JSONRPCRequest>(JSONRPCRequest::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<JSONRPCRequest> {
+internal object JSONRPCMessageSerializer : JsonContentPolymorphicSerializer<JSONRPCMessage>(JSONRPCMessage::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<JSONRPCMessage> {
         val jsonObject = element.jsonObject
 
         return when {
-            "id" in jsonObject -> JSONRPCResultRequest.serializer()
-            else -> JSONRPCNotificationRequest.serializer()
+            "method" in jsonObject -> when {
+                "id" in jsonObject -> JSONRPCRequest.serializer()
+                else -> JSONRPCNotification.serializer()
+            }
+
+            else -> JSONRPCResponseSerializer
         }
     }
 }
@@ -70,17 +74,6 @@ internal object JSONRPCResponseSerializer : JsonContentPolymorphicSerializer<JSO
             "result" in jsonObject -> JSONRPCSuccessResponse.serializer()
             "error" in jsonObject -> JSONRPCErrorResponse.serializer()
             else -> error("Invalid JSON format")
-        }
-    }
-}
-
-internal object JSONRPCMessageSerializer : JsonContentPolymorphicSerializer<JSONRPCMessage>(JSONRPCMessage::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<JSONRPCMessage> {
-        val jsonObject = element.jsonObject
-
-        return when {
-            "method" in jsonObject -> JSONRPCRequestSerializer
-            else -> JSONRPCResponseSerializer
         }
     }
 }

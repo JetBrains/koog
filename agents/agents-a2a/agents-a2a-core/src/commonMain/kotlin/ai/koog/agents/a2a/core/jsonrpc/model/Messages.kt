@@ -35,31 +35,25 @@ public sealed interface JSONRPCMessage {
     public val jsonrpc: String
 }
 
-@Serializable(with = JSONRPCRequestSerializer::class)
-public sealed interface JSONRPCRequest : JSONRPCMessage {
-    public val method: String
-    public val params: JsonElement?
-}
-
 @Serializable(with = JSONRPCResponseSerializer::class)
 public sealed interface JSONRPCResponse : JSONRPCMessage
 
 @Serializable
-public data class JSONRPCResultRequest(
+public data class JSONRPCRequest(
     public val id: RequestId,
-    override val method: String,
-    override val params: JsonElement?,
+    val method: String,
+    val params: JsonElement?,
     @EncodeDefault
     override val jsonrpc: String = JSONRPC_VERSION,
-) : JSONRPCRequest
+) : JSONRPCMessage
 
 @Serializable
-public data class JSONRPCNotificationRequest(
-    override val method: String,
-    override val params: JsonElement?,
+public data class JSONRPCNotification(
+    val method: String,
+    val params: JsonElement?,
     @EncodeDefault
     override val jsonrpc: String = JSONRPC_VERSION,
-) : JSONRPCRequest
+) : JSONRPCMessage
 
 @Serializable
 public data class JSONRPCSuccessResponse(

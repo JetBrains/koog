@@ -43,8 +43,8 @@ class JsonRpcSerializationTest {
     }
 
     @Test
-    fun testJSONRPCResultRequest() {
-        val request: JSONRPCMessage = JSONRPCResultRequest(
+    fun testJSONRPCRequest() {
+        val request: JSONRPCMessage = JSONRPCRequest(
             id = RequestId.NumberId(42),
             method = "add",
             params = null
@@ -61,8 +61,8 @@ class JsonRpcSerializationTest {
     }
 
     @Test
-    fun testJSONRPCNotificationRequest() {
-        val request: JSONRPCMessage = JSONRPCNotificationRequest(
+    fun testJSONRPCNotification() {
+        val request: JSONRPCMessage = JSONRPCNotification(
             method = "update",
             params = JsonPrimitive("notification-params")
         )
@@ -78,8 +78,8 @@ class JsonRpcSerializationTest {
     }
 
     @Test
-    fun testJSONRPCNotificationRequestWithoutParams() {
-        val request: JSONRPCMessage = JSONRPCNotificationRequest(
+    fun testJSONRPCNotificationWithoutParams() {
+        val request: JSONRPCMessage = JSONRPCNotification(
             method = "notify",
             params = null
         )
