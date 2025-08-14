@@ -149,7 +149,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant.")
                         user("Say hello in one short sentence.")
                     }
-                    withRetry(times = 2, testName = "positive_completion[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_completion[${'$'}{model.id}]") {
                         val resp = executor.execute(prompt, model)
                         assertTrue(resp.content.isNotBlank())
                         assertTrue(resp is Message.Assistant)
@@ -162,7 +162,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant with a calculator tool. Always use the tool.")
                         user("Compute 2 + 3.")
                     }
-                    withRetry(times = 2, testName = "positive_tools[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_tools[${'$'}{model.id}]") {
                         val client = clientFor(model)
                         val responses = client.execute(prompt, model, listOf(tools))
                         assertTrue(responses.isNotEmpty())
@@ -177,7 +177,7 @@ class ModelCapabilitiesIntegrationTest {
                             system("You are a helpful assistant with tools. Always choose to use a tool when required.")
                             user("Compute 2 + 3.")
                         }
-                    withRetry(times = 2, testName = "positive_toolchoice[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_toolchoice[${'$'}{model.id}]") {
                         val client = clientFor(model)
                         val responses = client.execute(prompt, model, listOf(tools))
                         assertTrue(responses.isNotEmpty())
@@ -206,7 +206,7 @@ class ModelCapabilitiesIntegrationTest {
                             }
                         }
                     }
-                    withRetry(times = 2, testName = "positive_vision_image[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_vision_image[${'$'}{model.id}]") {
                         val resp = executor.execute(prompt, model)
                         assertTrue(resp.content.isNotBlank())
                         assertTrue(resp is Message.Assistant)
@@ -233,7 +233,7 @@ class ModelCapabilitiesIntegrationTest {
                             }
                         }
                     }
-                    withRetry(times = 2, testName = "positive_audio[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_audio[${'$'}{model.id}]") {
                         val resp = executor.execute(prompt, model)
                         assertTrue(resp.content.isNotBlank())
                     }
@@ -256,7 +256,7 @@ class ModelCapabilitiesIntegrationTest {
                             attachments { textFile(KtPath(file.pathString), "text/plain") }
                         }
                     }
-                    withRetry(times = 2, testName = "positive_document[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_document[${'$'}{model.id}]") {
                         val resp = executor.execute(prompt, model)
                         assertTrue(resp.content.isNotBlank())
                     }
@@ -266,7 +266,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-moderation-positive") {
                         user("This is a harmless request about the weather.")
                     }
-                    withRetry(times = 2, testName = "positive_moderation[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_moderation[${'$'}{model.id}]") {
                         val result = executor.moderate(prompt, model)
                         assertNotNull(result)
                         assertFalse(result.isHarmful)
@@ -281,7 +281,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant. Provide concise answers.")
                         user("Name a popular programming language.")
                     }
-                    withRetry(times = 2, testName = "positive_multiple_choices[${'$'}{model.id}]") {
+                    withRetry(times = 3, testName = "positive_multiple_choices[${'$'}{model.id}]") {
                         val client = clientFor(model)
                         val choices = client.executeMultipleChoices(prompt, model, emptyList())
                         assertTrue(choices.size >= 2, "Expected at least 2 choices, got ${'$'}{choices.size}")
@@ -313,7 +313,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant.")
                         user("This should fail because the model is not a chat completion model.")
                     }
-                    withRetry(times = 2, testName = "negative_completion[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_completion[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
@@ -331,7 +331,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant with tools.")
                         user("Try to use a tool.")
                     }
-                    withRetry(times = 2, testName = "negative_tools[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_tools[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
                             clientFor(model).execute(prompt, model, listOf(tools))
                         }
@@ -350,7 +350,7 @@ class ModelCapabilitiesIntegrationTest {
                             system("You are a helpful assistant with tools.")
                             user("Try to use a tool.")
                         }
-                    withRetry(times = 2, testName = "negative_toolchoice[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_toolchoice[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
                             clientFor(model).execute(prompt, model, listOf(tools))
                         }
@@ -387,7 +387,7 @@ class ModelCapabilitiesIntegrationTest {
                             }
                         }
                     }
-                    withRetry(times = 2, testName = "negative_vision_image[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_vision_image[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
@@ -425,7 +425,7 @@ class ModelCapabilitiesIntegrationTest {
                             }
                         }
                     }
-                    withRetry(times = 2, testName = "negative_audio[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_audio[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
@@ -455,7 +455,7 @@ class ModelCapabilitiesIntegrationTest {
                             attachments { textFile(KtPath(file.pathString), "text/plain") }
                         }
                     }
-                    withRetry(times = 2, testName = "negative_document[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_document[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
@@ -478,7 +478,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-moderation-negative") {
                         user("Is this content allowed?")
                     }
-                    withRetry(times = 2, testName = "negative_moderation[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_moderation[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
                             executor.moderate(prompt, model)
                         }
@@ -500,7 +500,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant.")
                         user("Provide multiple distinct options for a team name.")
                     }
-                    withRetry(times = 2, testName = "negative_multiple_choices[${model.id}]") {
+                    withRetry(times = 3, testName = "negative_multiple_choices[${model.id}]") {
                         val ex = assertFailsWith<Throwable> {
                             val client = clientFor(model)
                             client.executeMultipleChoices(prompt, model, emptyList())
