@@ -27,7 +27,6 @@ import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import kotlinx.coroutines.runBlocking
-import kotlin.time.Clock
 import java.util.Properties
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -35,6 +34,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Clock
 
 /**
  * Tests for the OpenTelemetry feature.
