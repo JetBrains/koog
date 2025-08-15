@@ -23,7 +23,11 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -51,6 +55,8 @@ class ModelCapabilitiesIntegrationTest {
     private lateinit var executor: DefaultMultiLLMPromptExecutor
     private lateinit var testResourcesDir: Path
 
+    private val logger = logger { }
+
     @BeforeAll
     fun setup() {
         val openAIKey = TestUtils.readTestOpenAIKeyFromEnv()
@@ -76,9 +82,6 @@ class ModelCapabilitiesIntegrationTest {
 
         private val allCapabilities = listOf(
             // todo: add video?
-            // todo: remove caps with comments?
-            LLMCapability.Speculation, // remove?
-            LLMCapability.Temperature, // remove?
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
             LLMCapability.MultipleChoices,
@@ -86,12 +89,11 @@ class ModelCapabilitiesIntegrationTest {
             LLMCapability.Vision.Video,
             LLMCapability.Audio,
             LLMCapability.Document,
-            LLMCapability.Embed, // remove?
+            LLMCapability.Embed,
             LLMCapability.Completion,
-            LLMCapability.PromptCaching, // remove?
             LLMCapability.Moderation,
-            LLMCapability.Schema.JSON.Basic, // remove?
-            LLMCapability.Schema.JSON.Standard // remove?
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         )
 
         @JvmStatic
@@ -512,8 +514,142 @@ class ModelCapabilitiesIntegrationTest {
                     }
                 }
 
+                LLMCapability.Vision.Video -> {
+                    val fakeVideoBytes = ByteArray(64) { 0 }
+                    val base64 = Base64.encode(fakeVideoBytes)
+                    val prompt = prompt("cap-vision-video-negative") {
+                        system("You are a helpful assistant.")
+                        user {
+                            markdown { +"This should fail due to unsupported video capability." }
+                            attachments {
+                                video(
+                                    Attachment.Video(
+                                        content = AttachmentContent.Binary.Base64(base64),
+                                        format = "mp4",
+                                        mimeType = "video/mp4"
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    withRetry(times = 3, testName = "negative_vision_video[${model.id}]") {
+                        val ex = assertFailsWith<Exception> {
+                            executor.execute(prompt, model)
+                        }
+                        val msg = ex.message ?: ""
+                        assertEquals(
+                            true,
+                            msg.contains("does not support video", ignoreCase = true) ||
+                                msg.contains("Unsupported attachment type", ignoreCase = true),
+                            "Exception message doesn't contain expected error: ${ex.message}"
+                        )
+                    }
+                }
+
+                LLMCapability.Embed -> {
+                    val client = clientFor(model)
+                    withRetry(times = 3, testName = "negative_embed[${model.id}]") {
+                        val ex = assertFailsWith<Exception> {
+                            if (client is OpenAILLMClient) {
+                                client.embed("this should fail for non-embedding models", model)
+                            } else {
+                                error("Model ${model.id} does not support embeddings")
+                            }
+                        }
+                        val msg = ex.message ?: ""
+                        assertEquals(
+                            true,
+                            msg.contains("does not support", ignoreCase = true) ||
+                                msg.contains("embedding", ignoreCase = true) ||
+                                msg.contains("does not have the Embed capability", ignoreCase = true) ||
+                                msg.contains("Unsupported", ignoreCase = true),
+                            "Exception message doesn't contain expected error: ${ex.message}"
+                        )
+                    }
+                }
+
+                LLMCapability.Schema.JSON.Basic -> {
+                    val schema = buildJsonObject {
+                        put("type", JsonPrimitive("object"))
+                        put(
+                            "properties",
+                            buildJsonObject {
+                                put(
+                                    "x",
+                                    buildJsonObject { put("type", JsonPrimitive("integer")) }
+                                )
+                            }
+                        )
+                        put("required", buildJsonArray { add(JsonPrimitive("x")) })
+                    }
+                    val prompt = prompt(
+                        "cap-json-basic-negative",
+                        params = LLMParams(schema = LLMParams.Schema.JSON.Basic(name = "XSchema", schema = schema))
+                    ) {
+                        system("Reply strictly as JSON.")
+                        user("Return an integer x.")
+                    }
+                    withRetry(times = 3, testName = "negative_json_basic[${model.id}]") {
+                        val ex = assertFailsWith<Exception> {
+                            executor.execute(prompt, model)
+                        }
+                        val msg = ex.message ?: ""
+                        assertEquals(
+                            true,
+                            msg.contains("does not support structured output schema", ignoreCase = true) ||
+                                msg.contains("does not support", ignoreCase = true) ||
+                                msg.contains("structured output", ignoreCase = true) ||
+                                msg.contains(
+                                    "Anthropic does not currently support native structured output",
+                                    ignoreCase = true
+                                ),
+                            "Exception message doesn't contain expected error: ${ex.message}"
+                        )
+                    }
+                }
+
+                LLMCapability.Schema.JSON.Standard -> {
+                    val schema = buildJsonObject {
+                        put("type", JsonPrimitive("object"))
+                        put(
+                            "properties",
+                            buildJsonObject {
+                                put(
+                                    "y",
+                                    buildJsonObject { put("type", JsonPrimitive("string")) }
+                                )
+                            }
+                        )
+                        put("required", buildJsonArray { add(JsonPrimitive("y")) })
+                    }
+                    val prompt = prompt(
+                        "cap-json-standard-negative",
+                        params = LLMParams(schema = LLMParams.Schema.JSON.Standard(name = "YSchema", schema = schema))
+                    ) {
+                        system("Reply strictly as JSON.")
+                        user("Return a string y.")
+                    }
+                    withRetry(times = 3, testName = "negative_json_standard[${model.id}]") {
+                        val ex = assertFailsWith<Exception> {
+                            executor.execute(prompt, model)
+                        }
+                        val msg = ex.message ?: ""
+                        assertEquals(
+                            true,
+                            msg.contains("does not support structured output schema", ignoreCase = true) ||
+                                msg.contains("does not support", ignoreCase = true) ||
+                                msg.contains("structured output", ignoreCase = true) ||
+                                msg.contains(
+                                    "Anthropic does not currently support native structured output",
+                                    ignoreCase = true
+                                ),
+                            "Exception message doesn't contain expected error: ${ex.message}"
+                        )
+                    }
+                }
+
                 else -> {
-                    // skip other hard-to-verify capabilities
+                    logger.warn { "Skipping hard-to-verify capability verification for $capability on $model" }
                 }
             }
         }
