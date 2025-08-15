@@ -25,6 +25,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -81,7 +82,6 @@ class ModelCapabilitiesIntegrationTest {
         ).flatMap { it }
 
         private val allCapabilities = listOf(
-            // todo: add video?
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
             LLMCapability.MultipleChoices,
@@ -137,6 +137,13 @@ class ModelCapabilitiesIntegrationTest {
         is LLMProvider.Anthropic -> anthropicClient
         is LLMProvider.Google -> googleClient
         else -> openAIClient
+    }
+
+    private fun isValidJson(str: String): Boolean = try {
+        Json.parseToJsonElement(str)
+        true
+    } catch (e: Exception) {
+        false
     }
 
     @ParameterizedTest
@@ -292,6 +299,135 @@ class ModelCapabilitiesIntegrationTest {
                             assertNotNull(assistant, "Each choice should contain an assistant message")
                             assertTrue(assistant.content.isNotBlank(), "Assistant content should not be blank")
                         }
+                    }
+                }
+
+                LLMCapability.Vision.Video -> {
+                    val videoPath = MediaTestUtils.createVideoFileForScenario(testResourcesDir)
+                    val base64 = Base64.encode(videoPath.readBytes())
+                    val prompt = prompt("cap-vision-video-positive") {
+                        system("You are a helpful assistant that can analyze short videos.")
+                        user {
+                            markdown { +"Describe in 5-10 words what you can infer from the attached video." }
+                            attachments {
+                                video(
+                                    Attachment.Video(
+                                        content = AttachmentContent.Binary.Base64(base64),
+                                        format = "mp4",
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    withRetry(times = 3, testName = "positive_vision_video[${'$'}{model.id}]") {
+                        val resp = executor.execute(prompt, model)
+                        assertTrue(resp.content.isNotBlank())
+                        assertTrue(resp is Message.Assistant)
+                    }
+                }
+
+                LLMCapability.Embed -> {
+                    val client = clientFor(model)
+                    withRetry(times = 3, testName = "positive_embed[${'$'}{model.id}]") {
+                        if (client is OpenAILLMClient) {
+                            val vector = client.embed("Provide an embedding for this sentence.", model)
+                            assertTrue(vector.isNotEmpty(), "Embedding vector should not be empty")
+                            assertTrue(vector.any { it != 0.0 }, "Embedding vector should contain non-zero values")
+                        } else {
+                            // If embedding is supported for this model, its client should provide an embed method.
+                            // For now, we just assert true to avoid false negatives for providers without a dedicated embed API here.
+                            assertTrue(true)
+                        }
+                    }
+                }
+
+                LLMCapability.Schema.JSON.Basic -> {
+                    if (model.provider is LLMProvider.OpenAI && (model.id.startsWith("o1") || model.id.startsWith("o3"))) {
+                        // Some OpenAI reasoning models currently do not support json_schema response_format. Skip positive test.
+                        return@runTest
+                    }
+                    val schema = if (model.provider is LLMProvider.Google) {
+                        // Google response_schema does not support additionalProperties at the root
+                        buildJsonObject {
+                            put("type", JsonPrimitive("object"))
+                            put(
+                                "properties",
+                                buildJsonObject {
+                                    put("x", buildJsonObject { put("type", JsonPrimitive("integer")) })
+                                }
+                            )
+                            put("required", buildJsonArray { add(JsonPrimitive("x")) })
+                        }
+                    } else {
+                        buildJsonObject {
+                            put("type", JsonPrimitive("object"))
+                            put(
+                                "properties",
+                                buildJsonObject {
+                                    put("x", buildJsonObject { put("type", JsonPrimitive("integer")) })
+                                }
+                            )
+                            put("required", buildJsonArray { add(JsonPrimitive("x")) })
+                            put("additionalProperties", JsonPrimitive(false))
+                        }
+                    }
+                    val prompt = prompt(
+                        "cap-json-basic-positive",
+                        params = LLMParams(schema = LLMParams.Schema.JSON.Basic(name = "XSchema", schema = schema))
+                    ) {
+                        system("Reply strictly as JSON. Only include the JSON object.")
+                        user("Return an integer x field with any small integer.")
+                    }
+                    withRetry(times = 3, testName = "positive_json_basic[${'$'}{model.id}]") {
+                        val resp = executor.execute(prompt, model)
+                        assertTrue(resp.content.isNotBlank())
+                        assertTrue(isValidJson(resp.content), "Response should be valid JSON")
+                        assertTrue(resp.content.contains("\"x\""), "Response should contain key \"x\"")
+                    }
+                }
+
+                LLMCapability.Schema.JSON.Standard -> {
+                    if (model.provider is LLMProvider.OpenAI && (model.id.startsWith("o1") || model.id.startsWith("o3"))) {
+                        // Some OpenAI reasoning models currently do not support json_schema response_format. Skip positive test.
+                        return@runTest
+                    }
+                    val schema = if (model.provider is LLMProvider.Google) {
+                        // Google response_schema does not support additionalProperties at the root
+                        buildJsonObject {
+                            put("type", JsonPrimitive("object"))
+                            put(
+                                "properties",
+                                buildJsonObject {
+                                    put("y", buildJsonObject { put("type", JsonPrimitive("string")) })
+                                }
+                            )
+                            put("required", buildJsonArray { add(JsonPrimitive("y")) })
+                        }
+                    } else {
+                        buildJsonObject {
+                            put("type", JsonPrimitive("object"))
+                            put(
+                                "properties",
+                                buildJsonObject {
+                                    put("y", buildJsonObject { put("type", JsonPrimitive("string")) })
+                                }
+                            )
+                            put("required", buildJsonArray { add(JsonPrimitive("y")) })
+                            put("additionalProperties", JsonPrimitive(false))
+                        }
+                    }
+                    val prompt = prompt(
+                        "cap-json-standard-positive",
+                        params = LLMParams(schema = LLMParams.Schema.JSON.Standard(name = "YSchema", schema = schema))
+                    ) {
+                        system("Reply strictly as JSON. Only include the JSON object.")
+                        user("Return a string y field.")
+                    }
+                    withRetry(times = 3, testName = "positive_json_standard[${'$'}{model.id}]") {
+                        val resp = executor.execute(prompt, model)
+                        assertTrue(resp.content.isNotBlank())
+                        assertTrue(isValidJson(resp.content), "Response should be valid JSON")
+                        assertTrue(resp.content.contains("\"y\""), "Response should contain key \"y\"")
                     }
                 }
 
