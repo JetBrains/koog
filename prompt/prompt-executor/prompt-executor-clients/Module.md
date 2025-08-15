@@ -106,9 +106,6 @@ println(response)
 Wrap any client with `RetryingLLMClient` to add automatic retry capabilities:
 
 ```kotlin
-import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
-import ai.koog.prompt.executor.clients.retry.RetryConfig
-
 val baseClient = OpenAILLMClient(apiKey = System.getenv("OPENAI_API_KEY"))
 val resilientClient = RetryingLLMClient(
     delegate = baseClient,
