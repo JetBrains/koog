@@ -63,8 +63,7 @@ class ModelCapabilitiesIntegrationTest {
         executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
         val resourceUrl = this::class.java.getResource("/media")
-        require(resourceUrl != null) { "Test resources directory '/media' not found on classpath" }
-        testResourcesDir = Path.of(resourceUrl.toURI())
+        testResourcesDir = Path.of(resourceUrl!!.toURI())
     }
 
     companion object {
@@ -76,8 +75,9 @@ class ModelCapabilitiesIntegrationTest {
         ).flatMap { it }
 
         private val allCapabilities = listOf(
-            LLMCapability.Speculation,
-            LLMCapability.Temperature,
+            // todo: add video?
+            LLMCapability.Speculation, // todo: remove caps with comments?
+            LLMCapability.Temperature, // remove?
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
             LLMCapability.MultipleChoices,
@@ -85,12 +85,12 @@ class ModelCapabilitiesIntegrationTest {
             LLMCapability.Vision.Video,
             LLMCapability.Audio,
             LLMCapability.Document,
-            LLMCapability.Embed,
+            LLMCapability.Embed, // remove?
             LLMCapability.Completion,
-            LLMCapability.PromptCaching,
+            LLMCapability.PromptCaching, // remove?
             LLMCapability.Moderation,
-            LLMCapability.Schema.JSON.Basic,
-            LLMCapability.Schema.JSON.Standard
+            LLMCapability.Schema.JSON.Basic, // remove?
+            LLMCapability.Schema.JSON.Standard // remove?
         )
 
         @JvmStatic
@@ -116,17 +116,17 @@ class ModelCapabilitiesIntegrationTest {
                     name = "calculator",
                     description = "Perform basic arithmetic",
                     requiredParameters = listOf(
-                        ToolParameterDescriptor("operation", "Operation", ToolParameterType.Enum(arrayOf("ADD"))),
+                        ToolParameterDescriptor(
+                            "operation",
+                            "Arithmetic operation to perform",
+                            ToolParameterType.Enum(arrayOf("ADD"))
+                        ),
                         ToolParameterDescriptor("a", "First number", ToolParameterType.Integer),
                         ToolParameterDescriptor("b", "Second number", ToolParameterType.Integer),
                     )
                 )
             )
         )
-    }
-
-    private fun assumeProvider(model: LLModel) {
-        Models.assumeAvailable(model.provider)
     }
 
     private fun clientFor(model: LLModel) = when (model.provider) {
@@ -141,8 +141,6 @@ class ModelCapabilitiesIntegrationTest {
     @OptIn(ExperimentalEncodingApi::class)
     fun integration_positiveCapabilityShouldWork(model: LLModel, capability: LLMCapability) =
         runTest(timeout = 300.seconds) {
-            assumeProvider(model)
-
             when (capability) {
                 LLMCapability.Completion -> {
                     val prompt = prompt("cap-completion-positive") {
@@ -215,7 +213,7 @@ class ModelCapabilitiesIntegrationTest {
 
                 LLMCapability.Audio -> {
                     val audioPath = MediaTestUtils.createAudioFileForScenario(
-                        MediaTestScenarios.AudioTestScenario.BASIC_WAV,
+                        MediaTestScenarios.AudioTestScenario.BASIC_MP3,
                         testResourcesDir
                     )
                     val base64 = Base64.encode(audioPath.readBytes())
@@ -227,7 +225,7 @@ class ModelCapabilitiesIntegrationTest {
                                 audio(
                                     Attachment.Audio(
                                         AttachmentContent.Binary.Base64(base64),
-                                        format = "wav"
+                                        format = "mp3"
                                     )
                                 )
                             }
@@ -305,8 +303,6 @@ class ModelCapabilitiesIntegrationTest {
     @OptIn(ExperimentalEncodingApi::class)
     fun integration_negativeCapabilityShouldFail(model: LLModel, capability: LLMCapability) =
         runTest(timeout = 300.seconds) {
-            assumeProvider(model)
-
             when (capability) {
                 LLMCapability.Completion -> {
                     val prompt = prompt("cap-completion-negative") {
