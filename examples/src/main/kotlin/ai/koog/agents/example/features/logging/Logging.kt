@@ -6,9 +6,9 @@ import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.example.ApiKeyService
-import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.CoroutineScope
@@ -68,11 +68,17 @@ class Logging(val logger: Logger) {
             }
 
             pipeline.interceptAfterNode(interceptContext) { eventContext ->
-                logger.info("Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}")
+                logger.info(
+                    "Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}"
+                )
             }
 
             pipeline.interceptBeforeLLMCall(interceptContext) { eventContext ->
-                logger.info("Before LLM call with prompt: ${eventContext.prompt}, tools: [${eventContext.tools.joinToString { it.name }}]")
+                logger.info(
+                    "Before LLM call with prompt: ${eventContext.prompt}, tools: [${eventContext.tools.joinToString {
+                        it.name
+                    }}]"
+                )
             }
 
             pipeline.interceptAfterLLMCall(interceptContext) { eventContext ->

@@ -9,12 +9,12 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.PromptExecutorWithChoiceSelection
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.chess.ChessGame
 import ai.koog.agents.example.chess.Move
 import ai.koog.agents.example.chess.nodeTrimHistory
+import ai.koog.agents.ext.llm.choice.PromptExecutorWithChoiceSelection
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message

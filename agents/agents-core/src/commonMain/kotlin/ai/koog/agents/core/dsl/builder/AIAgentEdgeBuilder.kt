@@ -1,9 +1,9 @@
 package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.utils.Option
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.utils.Option
 
 /**
  * Marks a function as a transformation specific to edges within the AI agent's DSL
@@ -26,7 +26,7 @@ public annotation class EdgeTransformationDslMarker
  * @property edgeIntermediateBuilder The intermediate configuration used for building the edge. It includes
  * the source and target nodes, as well as the functionality for processing the output of the source node.
  */
-public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput, CompatibleOutput: OutgoingInput> internal constructor(
+public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput, CompatibleOutput : OutgoingInput> internal constructor(
     private val edgeIntermediateBuilder: AIAgentEdgeBuilderIntermediate<IncomingOutput, CompatibleOutput, OutgoingInput>,
 ) : BaseBuilder<AIAgentEdge<IncomingOutput, OutgoingInput>> {
     override fun build(): AIAgentEdge<IncomingOutput, OutgoingInput> {
@@ -77,7 +77,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
             forwardOutputComposition = { ctx, output ->
                 forwardOutputComposition(ctx, output)
                     .filter { transOutput -> ctx.block(transOutput) }
-           },
+            },
         )
     }
 

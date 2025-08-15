@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
  */
 class MockTracer() : Tracer {
     val createdSpans = mutableListOf<MockSpan>()
-    
+
     override fun spanBuilder(spanName: String): SpanBuilder {
         return MockSpanBuilder(this)
     }
@@ -38,7 +38,7 @@ class MockSpanBuilder(
     private var startTimestamp: Long = System.currentTimeMillis()
     private var startTimestampUnit: TimeUnit = TimeUnit.MILLISECONDS
     private val attributes = mutableMapOf<String, Any?>()
-    
+
     override fun setParent(context: Context): SpanBuilder {
         return this
     }

@@ -1,7 +1,8 @@
 package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import io.opentelemetry.api.trace.SpanKind
 
@@ -10,7 +11,8 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class ExecuteToolSpan(
     parent: NodeExecuteSpan,
-    private val tool: Tool<*, *>,
+    tool: Tool<*, *>,
+    private val toolArgs: ToolArgs
 ) : GenAIAgentSpan(parent) {
 
     companion object {
@@ -26,7 +28,7 @@ internal class ExecuteToolSpan(
     override val kind: SpanKind = SpanKind.INTERNAL
 
     /**
-     * Add the necessary attributes for the Execute Tool Span according to the Open Telemetry Semantic Convention:
+     * Add the necessary attributes for the Execute Tool Span, according to the Open Telemetry Semantic Convention:
      * https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-spans/#execute-tool-span
      *
      * Attribute description:
@@ -35,11 +37,17 @@ internal class ExecuteToolSpan(
      * - gen_ai.tool.description (recommended)
      * - gen_ai.tool.name (recommended)
      */
-    override val attributes: List<Attribute> = buildList {
+    init {
         // gen_ai.tool.description
-        add(SpanAttributes.Tool.Description(description = tool.descriptor.description))
+        addAttribute(SpanAttributes.Tool.Description(description = tool.descriptor.description))
 
         // gen_ai.tool.name
-        add(SpanAttributes.Tool.Name(name = tool.name))
+        addAttribute(SpanAttributes.Tool.Name(name = tool.name))
+
+        // Tool arguments custom attribute
+        @Suppress("UNCHECKED_CAST")
+        (tool as? Tool<ToolArgs, ToolResult>)?.let { tool ->
+            addAttribute(SpanAttributes.Tool.InputValue(tool.encodeArgsToString(toolArgs)))
+        }
     }
 }

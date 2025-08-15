@@ -10,7 +10,9 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.provider.Arguments
 import java.util.stream.Stream
 
@@ -54,20 +56,11 @@ object Models {
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
-            GoogleModels.Gemini1_5Pro,
-            GoogleModels.Gemini1_5ProLatest,
             GoogleModels.Gemini2_5Pro,
-
             GoogleModels.Gemini2_0Flash,
             GoogleModels.Gemini2_0Flash001,
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
-            GoogleModels.Gemini1_5Flash,
-            GoogleModels.Gemini1_5FlashLatest,
-            GoogleModels.Gemini1_5Flash002,
-            GoogleModels.Gemini1_5Flash8B,
-            GoogleModels.Gemini1_5Flash8B001,
-            GoogleModels.Gemini1_5Flash8BLatest,
             GoogleModels.Gemini2_5Flash,
         )
     }
@@ -76,10 +69,8 @@ object Models {
     @JvmStatic
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
-            BedrockModels.AI21JambaMini,
-            BedrockModels.AmazonNovaLite,
             BedrockModels.AnthropicClaude35Haiku,
-            BedrockModels.MetaLlama3_1_8BInstruct,
+            BedrockModels.MetaLlama3_1_70BInstruct,
         )
     }
 
@@ -106,6 +97,28 @@ object Models {
                     model.capabilities.contains(LLMCapability.Vision.Image)
                 }
                 .map { model -> Arguments.of(model, anthropicClient) }
+        )
+    }
+
+    /**
+     * Checks if a model's provider should be skipped based on the system property "skip.llm.providers".
+     * This property is meant to be provided when running the tests
+     * to signal one does not have an API key for this or that provider
+     *
+     * @param provider The LLM provider to check
+     */
+    @JvmStatic
+    fun assumeAvailable(provider: LLMProvider) {
+        val skipProvidersRaw = System.getProperty("skip.llm.providers", "")
+        val skipProviders = skipProvidersRaw
+            .split(",")
+            .map { it.trim().lowercase() }
+            .filter { it.isNotEmpty() }
+
+        val shouldSkip = skipProviders.contains(provider.id.lowercase())
+        assumeTrue(
+            !shouldSkip,
+            "Test skipped because provider ${provider.display} is in the skip list ($skipProvidersRaw)"
         )
     }
 }

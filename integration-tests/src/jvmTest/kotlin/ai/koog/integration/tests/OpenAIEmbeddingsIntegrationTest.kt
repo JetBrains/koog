@@ -1,8 +1,10 @@
 package ai.koog.integration.tests
 
+import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.llm.LLMProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import kotlin.test.assertNotNull
@@ -15,6 +17,7 @@ class OpenAIEmbeddingsIntegrationTest {
 
     @Test
     fun integration_testEmbed() = runTest {
+        Models.assumeAvailable(LLMProvider.OpenAI)
         val client = OpenAILLMClient(apiKey)
 
         val text = "This is a test text for embedding."
@@ -38,6 +41,7 @@ class OpenAIEmbeddingsIntegrationTest {
 
     @Test
     fun integration_testEmbedWithCustomModel() = runTest {
+        Models.assumeAvailable(LLMProvider.OpenAI)
         val client = OpenAILLMClient(apiKey)
 
         val text = "This is a test text for embedding with a custom model."

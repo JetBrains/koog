@@ -52,12 +52,14 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
          * @return `true` if the result is an instance of `Success`, otherwise `false`.
          */
         public fun isSuccessful(): Boolean = this is Success<TResult>
+
         /**
          * Determines whether the current instance represents a failure state.
          *
          * @return `true` if the current instance is of type `Failure`, otherwise `false`.
          */
         public fun isFailure(): Boolean = this is Failure<TResult>
+
         /**
          * Casts the current instance of `Result` to a `Success` type if it is a successful result.
          *
@@ -94,7 +96,11 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
          * @property result The tool result encapsulated within this success instance.
          * @property content The associated content describing or representing the result in string format.
          */
-        public data class Success<TResult : ToolResult>(val result: TResult, override val content: String) : Result<TResult>
+        public data class Success<TResult : ToolResult>(
+            val result: TResult,
+            override val content: String
+        ) : Result<TResult>
+
         /**
          * Represents a failed result encapsulating an error message.
          *

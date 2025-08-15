@@ -114,5 +114,10 @@ Koog is licensed under the [Apache 2.0 License](LICENSE.txt).
 
 ## Support
 
-Please feel free to ask any questions in our official Slack channel ([link](https://kotlinlang.slack.com/messages/koog-agentic-framework/))
+Please feel free to ask any questions in our official Slack
+channel ([link](https://kotlinlang.slack.com/messages/koog-agentic-framework/)) and to
+use [Koog official YouTrack project](https://youtrack.jetbrains.com/issues/KG)
+for filing feature requests and bug reports.
+
+
 

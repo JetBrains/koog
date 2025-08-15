@@ -68,12 +68,12 @@ class FileAgentCheckpointStorageProviderTest {
         assertEquals(nodeId, retrievedCheckpoint.nodeId)
         assertEquals(lastInput, retrievedCheckpoint.lastInput)
         assertEquals(messageHistory.size, retrievedCheckpoint.messageHistory.size)
-        
+
         // Check first message (User)
         val originalUserMsg = messageHistory[0] as Message.User
         val retrievedUserMsg = retrievedCheckpoint.messageHistory[0] as Message.User
         assertEquals(originalUserMsg.content, retrievedUserMsg.content)
-        
+
         // Check second message (Assistant)
         val originalAssistantMsg = messageHistory[1] as Message.Assistant
         val retrievedAssistantMsg = retrievedCheckpoint.messageHistory[1] as Message.Assistant

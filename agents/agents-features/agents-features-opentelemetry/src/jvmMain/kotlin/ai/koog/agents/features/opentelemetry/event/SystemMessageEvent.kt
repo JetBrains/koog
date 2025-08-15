@@ -5,8 +5,8 @@ import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
 
-internal data class SystemMessageEvent(
-    private val provider: LLMProvider,
+internal class SystemMessageEvent(
+    provider: LLMProvider,
     private val message: Message.System,
     override val verbose: Boolean = false
 ) : GenAIAgentEvent {

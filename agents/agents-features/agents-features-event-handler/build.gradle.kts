@@ -14,7 +14,6 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-core"))
-                api(project(":agents:agents-features:agents-features-common"))
             }
         }
 
@@ -28,6 +27,7 @@ kotlin {
 
         jvmTest {
             dependencies {
+                implementation(project(":agents:agents-test"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(kotlin("test-junit5"))
             }

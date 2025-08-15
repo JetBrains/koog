@@ -45,11 +45,13 @@ class SubgraphCheckpointsTest {
 
         assertEquals(
             "Start the test\n" +
-                    "Node 1 output\n" +
-                    "sg1 node output\n" +
-                    "Checkpoint Created\n" +
-                    "sg2 node output\n" +
-                    "Node 2 output", output)
+                "Node 1 output\n" +
+                "sg1 node output\n" +
+                "Checkpoint Created\n" +
+                "sg2 node output\n" +
+                "Node 2 output",
+            output
+        )
     }
 
     @Test
@@ -68,13 +70,15 @@ class SubgraphCheckpointsTest {
 
         val output = agent.run("Start the test")
 
-        assertEquals("History: You are a test agent.\n" +
+        assertEquals(
+            "History: You are a test agent.\n" +
                 "Node 1 output\n" +
                 "sg1 node output\n" +
                 "Checkpoint created with ID: test-checkpoint\n" +
                 "sg2 node output\n" +
                 "Skipped rollback because it was already performed",
-            output)
+            output
+        )
     }
 
     @Test
@@ -95,12 +99,14 @@ class SubgraphCheckpointsTest {
 
         assertEquals(
             "History: You are a test agent.\n" +
-                    "Node 1 output\n" +
-                    "sgNode1 node output\n" +
-                    "sg2Node1 node output\n" +
-                    "Checkpoint created with ID: test-checkpoint\n" +
-                    "sg2Node2 node output\n" +
-                    "sgNode2 node output", output)
+                "Node 1 output\n" +
+                "sgNode1 node output\n" +
+                "sg2Node1 node output\n" +
+                "Checkpoint created with ID: test-checkpoint\n" +
+                "sg2Node2 node output\n" +
+                "sgNode2 node output",
+            output
+        )
     }
 
     @Test
@@ -119,7 +125,8 @@ class SubgraphCheckpointsTest {
 
         val output = agent.run("Start the test")
 
-        assertEquals("History: You are a test agent.\n" +
+        assertEquals(
+            "History: You are a test agent.\n" +
                 "Node 1 output\n" +
                 "sgNode1 node output\n" +
                 "sg2Node1 node output\n" +
@@ -127,6 +134,7 @@ class SubgraphCheckpointsTest {
                 "sg2Node2 node output\n" +
                 "Skipped rollback because it was already performed\n" +
                 "sgNode2 node output",
-            output)
+            output
+        )
     }
 }

@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon
 
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon.NovaInferenceConfig.Companion.MAX_TOKENS_DEFAULT
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -9,7 +10,11 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class BedrockAmazonNovaSerializationTest {
 
@@ -46,8 +51,21 @@ class BedrockAmazonNovaSerializationTest {
         assertEquals(userMessage, request.messages[0].content[0].text)
 
         assertNotNull(request.inferenceConfig)
-        assertEquals(4096, request.inferenceConfig.maxTokens)
+        assertEquals(MAX_TOKENS_DEFAULT, request.inferenceConfig.maxTokens)
         assertEquals(temperature, request.inferenceConfig.temperature)
+    }
+
+    @Test
+    fun `createNovaRequest with default maxTokens`() {
+        val maxTokens = 1000
+
+        val prompt = Prompt.build("test", params = LLMParams(maxTokens = maxTokens)) {
+            system(systemMessage)
+            user(userMessage)
+        }
+
+        val request = BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
+        assertEquals(maxTokens, request.inferenceConfig!!.maxTokens)
     }
 
     @Test
@@ -93,7 +111,8 @@ class BedrockAmazonNovaSerializationTest {
         val modelWithoutTemperature = LLModel(
             provider = LLMProvider.Bedrock,
             id = "test-model",
-            capabilities = listOf(LLMCapability.Completion) // No temperature capability
+            capabilities = listOf(LLMCapability.Completion), // No temperature capability
+            contextLength = 1_000L,
         )
 
         val requestWithoutTemp = BedrockAmazonNovaSerialization.createNovaRequest(

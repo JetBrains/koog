@@ -22,12 +22,21 @@ import ai.koog.agents.core.exception.AgentEngineException
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.model.AgentServiceError
 import ai.koog.agents.core.model.AgentServiceErrorType
-import ai.koog.agents.core.model.message.*
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
+import ai.koog.agents.core.model.message.AgentToolCallToEnvironmentContent
+import ai.koog.agents.core.model.message.AgentToolCallsToEnvironmentMessage
+import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMessage
+import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolException
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -35,9 +44,13 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.*
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -178,7 +191,7 @@ public open class AIAgent<Input, Output>(
                 runId = runId,
                 strategyName = strategy.name,
                 pipeline = pipeline,
-                id = id,
+                agentId = id,
             )
 
             logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }
@@ -255,8 +268,8 @@ public open class AIAgent<Input, Output>(
         val results = processToolCallMultiple(message).mapToToolResult()
         logger.debug {
             "Received results from tools call (" +
-                    "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
-                    "results: [${results.joinToString(", ") { it.result?.toStringDefault() ?: "null" }}])"
+                "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
+                "results: [${results.joinToString(", ") { it.result?.toStringDefault() ?: "null" }}])"
         }
 
         return results
@@ -294,7 +307,9 @@ public open class AIAgent<Input, Output>(
     }
 
     @OptIn(InternalAgentToolsApi::class)
-    private suspend fun processToolCall(content: AgentToolCallToEnvironmentContent): EnvironmentToolResultToAgentContent =
+    private suspend fun processToolCall(
+        content: AgentToolCallToEnvironmentContent
+    ): EnvironmentToolResultToAgentContent =
         allowToolCalls {
             logger.debug { "Handling tool call sent by server..." }
             val tool = toolRegistry.getTool(content.toolName)
@@ -324,7 +339,6 @@ public open class AIAgent<Input, Output>(
                 @Suppress("UNCHECKED_CAST")
                 (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
-
                 pipeline.onToolValidationError(
                     runId = content.runId,
                     toolCallId = content.toolCallId,
@@ -341,7 +355,6 @@ public open class AIAgent<Input, Output>(
                     result = null
                 )
             } catch (e: Exception) {
-
                 logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
 
                 pipeline.onToolCallFailure(
@@ -381,7 +394,9 @@ public open class AIAgent<Input, Output>(
             )
         }
 
-    private suspend fun processToolCallMultiple(message: AgentToolCallsToEnvironmentMessage): EnvironmentToolResultMultipleToAgentMessage {
+    private suspend fun processToolCallMultiple(
+        message: AgentToolCallsToEnvironmentMessage
+    ): EnvironmentToolResultMultipleToAgentMessage {
         // call tools in parallel and return results
         val results = supervisorScope {
             message.content

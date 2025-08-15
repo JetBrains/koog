@@ -6,7 +6,6 @@ import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.io.Sink
 import kotlinx.io.Source
 
-
 sealed interface MockFSEntry
 
 data class MockDocument(val content: String) : MockFSEntry
@@ -33,7 +32,6 @@ class MockFileSystem {
     }
 }
 
-
 class MockDocumentProvider(val mockFileSystem: MockFileSystem) : DocumentProvider<String, MockDocument> {
     override suspend fun document(path: String): MockDocument {
         return mockFileSystem.readDocument(path) ?: throw IllegalArgumentException("Document not found: $path")
@@ -44,53 +42,56 @@ class MockDocumentProvider(val mockFileSystem: MockFileSystem) : DocumentProvide
     }
 }
 
-class MockFileSystemProvicer(val mockFileSystem: MockFileSystem) : FileSystemProvider.ReadWrite<String> {
-    override fun toPathString(path: String): String = path
-
+class MockFileSystemProvider(val mockFileSystem: MockFileSystem) : FileSystemProvider.ReadWrite<String> {
     override fun toAbsolutePathString(path: String): String = path
 
-    override fun fromAbsoluteString(path: String): String = path
+    override fun fromAbsolutePathString(path: String): String = path
 
-    override fun fromRelativeString(base: String, path: String): String = "$base/$path"
+    override fun joinPath(base: String, vararg parts: String): String {
+        return parts.fold(base) { acc, part -> "$acc/$part" }
+    }
 
-    override suspend fun name(path: String): String = path.substringAfterLast('/')
+    override fun name(path: String): String = path.substringAfterLast('/')
 
-    override suspend fun extension(path: String): String = path.substringAfterLast('.')
+    override fun extension(path: String): String = path.substringAfterLast('.')
 
     override suspend fun metadata(path: String): FileMetadata? = null
 
-    override suspend fun list(path: String): List<String> {
+    override suspend fun list(directory: String): List<String> {
         return mockFileSystem.documents
             .filter { (docPath, entry) ->
-                docPath.startsWith(path.removeSuffix("/")) && entry is MockDocument
+                docPath.startsWith(directory.removeSuffix("/")) && entry is MockDocument
             }
             .keys.toList()
     }
 
-    override suspend fun parent(path: String): String? = path.substringBeforeLast('/', "").ifEmpty { null }
+    override fun parent(path: String): String? = path.substringBeforeLast('/', "").ifEmpty { null }
 
-    override suspend fun relativize(root: String, path: String): String? =
+    override fun relativize(root: String, path: String): String? =
         if (path.startsWith(root)) path.removePrefix(root) else null
 
     override suspend fun exists(path: String): Boolean = path in mockFileSystem.documents
 
-    override suspend fun read(path: String): ByteArray =
+    override suspend fun getFileContentType(path: String): FileMetadata.FileContentType =
+        when (mockFileSystem.documents[path]) {
+            is MockDocument -> FileMetadata.FileContentType.Text
+            is MockDirectory -> throw IllegalArgumentException("Path must be a regular file")
+            else -> throw IllegalArgumentException("Path must exist and be a regular file")
+        }
+
+    override suspend fun readBytes(path: String): ByteArray =
         mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.encodeToByteArray()
             ?: throw IllegalArgumentException("Document not found: $path")
 
-    override suspend fun source(path: String): Source = throw UnsupportedOperationException()
+    override suspend fun inputStream(path: String): Source = throw UnsupportedOperationException()
 
     override suspend fun size(path: String): Long =
         mockFileSystem.documents[path]?.let { it as? MockDocument }?.content?.length?.toLong() ?: 0L
 
-    override suspend fun create(
-        parent: String,
-        name: String,
-        type: FileMetadata.FileType
-    ) {
+    override suspend fun create(path: String, type: FileMetadata.FileType) {
         when (type) {
-            FileMetadata.FileType.File -> mockFileSystem.saveDocument(fromRelativeString(parent, name), "")
-            FileMetadata.FileType.Directory -> mockFileSystem.createDirectory(fromRelativeString(parent, name))
+            FileMetadata.FileType.File -> mockFileSystem.saveDocument(path, "")
+            FileMetadata.FileType.Directory -> mockFileSystem.createDirectory(path)
         }
     }
 
@@ -106,13 +107,22 @@ class MockFileSystemProvicer(val mockFileSystem: MockFileSystem) : FileSystemPro
         }
     }
 
-    override suspend fun write(path: String, content: ByteArray) {
-        mockFileSystem.saveDocument(path, content.decodeToString())
+    override suspend fun copy(source: String, target: String) {
+        mockFileSystem.documents[source]?.also {
+            when (it) {
+                is MockDirectory -> mockFileSystem.createDirectory(target)
+                is MockDocument -> mockFileSystem.saveDocument(target, it.content)
+            }
+        }
     }
 
-    override suspend fun sink(path: String, append: Boolean): Sink = throw UnsupportedOperationException()
+    override suspend fun writeBytes(path: String, data: ByteArray) {
+        mockFileSystem.saveDocument(path, data.decodeToString())
+    }
 
-    override suspend fun delete(parent: String, name: String) {
-        mockFileSystem.deleteDocument(fromRelativeString(parent, name))
+    override suspend fun outputStream(path: String, append: Boolean): Sink = throw UnsupportedOperationException()
+
+    override suspend fun delete(path: String) {
+        mockFileSystem.deleteDocument(path)
     }
 }

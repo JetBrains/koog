@@ -25,7 +25,6 @@ class SwitchTools(val switch: Switch) : ToolSet {
         return "Switched to ${if (state) "on" else "off"}"
     }
 
-
     @Tool
     @LLMDescription("Returns the state of the switch")
     fun switchState(state: Boolean): String {

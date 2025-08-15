@@ -18,7 +18,9 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
  * @param apiToken The API token used for authentication with the OpenAI API.
  * @return A new instance of `SingleLLMPromptExecutor` configured with the `OpenAILLMClient`.
  */
-public fun simpleOpenAIExecutor(apiToken: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
+public fun simpleOpenAIExecutor(
+    apiToken: String
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenAILLMClient(apiToken))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OpenAILLMClient` configured for Azure OpenAI.
@@ -57,25 +59,33 @@ public fun simpleAzureOpenAIExecutor(
  *
  * @param apiKey The API token used for authentication with the Anthropic LLM client.
  */
-public fun simpleAnthropicExecutor(apiKey: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(AnthropicLLMClient(apiKey))
+public fun simpleAnthropicExecutor(
+    apiKey: String
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(AnthropicLLMClient(apiKey))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OpenRouterLLMClient`.
  *
  * @param apiKey The API token used for authentication with the OpenRouter API.
  */
-public fun simpleOpenRouterExecutor(apiKey: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenRouterLLMClient(apiKey))
+public fun simpleOpenRouterExecutor(
+    apiKey: String
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OpenRouterLLMClient(apiKey))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `GoogleLLMClient`.
  *
  * @param apiKey The API token used for authentication with the Google AI service.
  */
-public fun simpleGoogleAIExecutor(apiKey: String): SingleLLMPromptExecutor = SingleLLMPromptExecutor(GoogleLLMClient(apiKey))
+public fun simpleGoogleAIExecutor(
+    apiKey: String
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(GoogleLLMClient(apiKey))
 
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with an `OllamaClient`.
  *
  * @param baseUrl url used to access Ollama server.
  */
-public fun simpleOllamaAIExecutor(baseUrl: String = "http://localhost:11434"): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
+public fun simpleOllamaAIExecutor(
+    baseUrl: String = "http://localhost:11434"
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))

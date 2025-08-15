@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  */
 public class MarkdownParserBuilder {
     private var headerHandlers = mutableMapOf<Int, suspend (String) -> Unit>()
-    private var bulletHandler:  (suspend (String) -> Unit)? = null
+    private var bulletHandler: (suspend (String) -> Unit)? = null
     private var finishedHandler: (suspend (String) -> Unit)? = null
     private var codeBlockHandler: (suspend (String) -> Unit)? = null
     private var lineMatchingHandlers = mutableMapOf<Regex?, suspend (String) -> Unit>()
@@ -81,7 +81,8 @@ public class MarkdownParserBuilder {
                     isBeginningOfCodeBlock(trimmedLine) -> {
                         inCodeBlock = handleCodeBlockMarker(
                             inCodeBlock,
-                            codeBlockContent)
+                            codeBlockContent
+                        )
                     }
 
                     // Handle content inside code blocks
@@ -117,7 +118,7 @@ public class MarkdownParserBuilder {
 
     /**
      * Handles a code block marker line (starting with ```)
-     * 
+     *
      * @param currentlyInCodeBlock Whether we're currently inside a code block
      * @param line The line containing the code block marker
      * @param content The StringBuilder collecting code block content
@@ -128,7 +129,6 @@ public class MarkdownParserBuilder {
         currentlyInCodeBlock: Boolean,
         content: StringBuilder,
     ): Boolean {
-
         if (!currentlyInCodeBlock) {
             // Start of code block
             // Extract language identifier if present
@@ -144,7 +144,7 @@ public class MarkdownParserBuilder {
 
     /**
      * Processes a header line (starting with #)
-     * 
+     *
      * @param line The header line to process
      */
     private suspend fun processHeader(line: String) {
@@ -159,7 +159,7 @@ public class MarkdownParserBuilder {
 
     /**
      * Processes a bullet point line (starting with -)
-     * 
+     *
      * @param line The bullet point line to process
      */
     private suspend fun processBulletPoint(line: String) {
@@ -172,7 +172,7 @@ public class MarkdownParserBuilder {
 
     /**
      * Processes line matching for a given line
-     * 
+     *
      * @param line The line to match against registered patterns
      */
     private suspend fun processLineMatching(line: String) {

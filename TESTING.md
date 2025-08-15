@@ -97,6 +97,32 @@ You need to set these environment variables before running the integration tests
 To simplify development, you can also create `env.properties` file (already gitignored) using [env.template.propertes](./integration-tests/env.template.properties) as a template.
 Then properties specified there would be automatically applied as environment variables when you run any test task.
 
+### Skipping tests for specific LLM providers
+
+If you don't have API keys for certain LLM providers, you can skip the tests for those providers using the `skip.llm.providers` system property. This is useful when you want to run integration tests but only have API keys for some of the providers.
+
+To skip tests for specific providers, use the `-Dskip.llm.providers` flag with a comma-separated list of provider IDs:
+
+```bash
+./gradlew :integration-tests:jvmIntegrationTest -Dskip.llm.providers=openai,google
+```
+
+This will skip all tests that use OpenAI and Google models, but still run tests for other providers like Anthropic.
+
+Available provider IDs:
+- `openai` - Skip tests using OpenAI models
+- `anthropic` - Skip tests using Anthropic models
+- `google` - Skip tests using Google models
+- `openrouter` - Skip tests using OpenRouter models
+
+You can also run a specific test class with provider skipping:
+
+```bash
+./gradlew :integration-tests:jvmIntegrationTest --tests "ai.koog.integration.tests.AIAgentIntegrationTest" -Dskip.llm.providers=anthropic,gemini
+```
+
+When tests are skipped due to provider filtering, they will be reported as "skipped" in the test results rather than "failed".
+
 ## Running Ollama tests
 
 Ollama tests are integration tests that use the Ollama LLM client. These tests are located in the `integration-tests`

@@ -96,7 +96,7 @@ class UserMessageEventTest {
     //region Private Methods
 
     private fun createTestUserMessage(content: String): Message.User = Message.User(
-        content = content, 
+        content = content,
         metaInfo = RequestMetaInfo(Clock.System.now())
     )
 

@@ -45,6 +45,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.ktor.client.mock)
                 runtimeOnly(libs.slf4j.simple)
             }
         }
@@ -52,6 +53,5 @@ kotlin {
 
     explicitApi()
 }
-
 
 publishToMaven()

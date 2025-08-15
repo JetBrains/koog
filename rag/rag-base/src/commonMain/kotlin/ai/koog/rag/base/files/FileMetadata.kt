@@ -8,14 +8,12 @@ import kotlinx.serialization.Serializable
  *
  * @property type The type of the file, indicating whether it is a file or a directory.
  * @property hidden A flag indicating whether the file or directory is hidden.
- * @property content The type of content stored in the file.
  */
 @Serializable
 public data class FileMetadata(
     @SerialName("content_type")
     val type: FileType,
     val hidden: Boolean,
-    val content: FileContent,
 ) {
     /**
      * Represents the type of a file in the context of file metadata.
@@ -28,6 +26,7 @@ public data class FileMetadata(
          * between files and directories.
          */
         File,
+
         /**
          * Represents a directory in the file system.
          *
@@ -59,26 +58,19 @@ public data class FileMetadata(
      *
      * @property display A string representation of the content type.
      */
-    public enum class FileContent(public val display: String) {
+    public enum class FileContentType(public val display: String) {
         /**
          * Represents textual file content.
          * Associated with the string display value "text".
          */
         Text("text"),
+
         /**
          * Represents the binary file content type within the FileContent enum.
          *
          * This value is used to denote that the content of a file is binary data, as opposed to plain text or other types.
          * It provides a display string ("binary") to identify this content type.
          */
-        Binary("binary"),
-        /**
-         * Represents a file content type that is not applicable or relevant.
-         * Typically used in scenarios where the file content type does not
-         * conform to valid or expected classifications.
-         *
-         * This enumeration is part of the `FileContent` enum.
-         */
-        Inapplicable("inapplicable");
+        Binary("binary")
     }
 }

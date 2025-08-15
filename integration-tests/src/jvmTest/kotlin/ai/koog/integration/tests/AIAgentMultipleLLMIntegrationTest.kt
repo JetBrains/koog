@@ -1,22 +1,33 @@
 package ai.koog.integration.tests
 
-import ai.koog.integration.tests.ReportingLLMLLMClient.Event
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestLogPrinter
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.agentInput
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
+import ai.koog.integration.tests.ReportingLLMLLMClient.Event
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestLogPrinter
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -50,13 +61,18 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.util.stream.Stream
-import kotlin.test.*
+import kotlin.test.Ignore
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 internal class ReportingLLMLLMClient(
     private val eventsChannel: Channel<Event>,
-    private val underlyingClient
-    : LLMClient
+    private val underlyingClient: LLMClient
 ) : LLMClient {
     sealed interface Event {
         data class Message(
@@ -142,7 +158,10 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @Serializable
     enum class CalculatorOperation {
-        ADD, SUBTRACT, MULTIPLY, DIVIDE
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE
     }
 
     object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
@@ -405,8 +424,8 @@ class AIAgentMultipleLLMIntegrationTest {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
                                     "You are a helpful assistant. You need to solve my task. " +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
-                                            "WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                        "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
+                                        "WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
                                 )
                             }
                         }
@@ -416,7 +435,6 @@ class AIAgentMultipleLLMIntegrationTest {
                 val callLLM by nodeLLMRequest(allowToolCalls = true)
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
-
 
                 edge(nodeStart forwardTo definePromptAnthropic transformed {})
                 edge(definePromptAnthropic forwardTo callLLM transformed { agentInput<String>() })
@@ -434,12 +452,14 @@ class AIAgentMultipleLLMIntegrationTest {
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
-                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
-                                            "Please analyze the whole produced solution, and check that it is valid." +
-                                            "Write concise verification result." +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! " +
-                                            "ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE " +
-                                            "AFTER CALLING THE TOOLS!"
+                                    """
+                                    You are a helpful assistant. You need to verify that the task is solved correctly.
+                                    Please analyze the whole produced solution, and check that it is valid.
+                                    Write concise verification result.
+                                    CALL TOOLS!!! DO NOT SEND MESSAGES!!!!!
+                                    ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE
+                                    AFTER CALLING THE TOOLS! 
+                                    """.trimIndent()
                                 )
                             }
                         }
@@ -449,7 +469,6 @@ class AIAgentMultipleLLMIntegrationTest {
                 val callLLM by nodeLLMRequest(allowToolCalls = true)
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
-
 
                 edge(nodeStart forwardTo definePromptOpenAI)
                 edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
@@ -510,21 +529,21 @@ class AIAgentMultipleLLMIntegrationTest {
                         rewritePrompt {
                             prompt("test") {
                                 system(
-                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
-                                            "Please analyze the whole produced solution, and check that it is valid." +
-                                            "Write concise verification result." +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                    """
+                                    You are a helpful assistant. You need to verify that the task is solved correctly.
+                                    Please analyze the whole produced solution, and check that it is valid.
+                                    Write concise verification result.
+                                    CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!
+                                    """.trimIndent()
                                 )
                             }
                         }
                     }
                 }
 
-
                 val callLLM by nodeLLMRequest(allowToolCalls = true)
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
-
 
                 edge(nodeStart forwardTo definePromptOpenAI transformed {})
                 edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
@@ -542,10 +561,12 @@ class AIAgentMultipleLLMIntegrationTest {
                         rewritePrompt {
                             prompt("test") {
                                 system(
-                                    "You are a helpful assistant. You need to verify that the task is solved correctly. " +
-                                            "Please analyze the whole produced solution, and check that it is valid." +
-                                            "Write concise verification result." +
-                                            "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                    """
+                                    You are a helpful assistant. You need to verify that the task is solved correctly.
+                                    Please analyze the whole produced solution, and check that it is valid.
+                                    Write concise verification result.
+                                    CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!
+                                    """.trimIndent()
                                 )
                             }
                         }
@@ -555,7 +576,6 @@ class AIAgentMultipleLLMIntegrationTest {
                 val callLLM by nodeLLMRequest(allowToolCalls = true)
                 val callTool by nodeExecuteTool()
                 val sendToolResult by nodeLLMSendToolResult()
-
 
                 edge(nodeStart forwardTo definePromptOpenAI)
                 edge(definePromptOpenAI forwardTo callLLM transformed { agentInput<String>() })
@@ -595,6 +615,8 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @Test
     fun integration_testAIAgentOpenAIAndAnthropic() = runTest(timeout = 600.seconds) {
+        Models.assumeAvailable(LLMProvider.OpenAI)
+        Models.assumeAvailable(LLMProvider.Anthropic)
         // Create the clients
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
@@ -631,8 +653,11 @@ class AIAgentMultipleLLMIntegrationTest {
 
         val messages = mutableListOf<Event.Message>()
         for (msg in eventsChannel) {
-            if (msg is Event.Message) messages.add(msg)
-            else break
+            if (msg is Event.Message) {
+                messages.add(msg)
+            } else {
+                break
+            }
         }
 
         assertTrue(
@@ -662,6 +687,9 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @Test
     fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
+        Models.assumeAvailable(LLMProvider.OpenAI)
+        Models.assumeAvailable(LLMProvider.Anthropic)
+
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         var errorMessage: String? = null
@@ -695,7 +723,7 @@ class AIAgentMultipleLLMIntegrationTest {
         } finally {
             assertEquals(
                 "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
-                        "Please, consider increasing `maxAgentIterations` value in agent's configuration",
+                    "Please, consider increasing `maxAgentIterations` value in agent's configuration",
                 errorMessage
             )
         }
@@ -703,6 +731,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @Test
     fun integration_testAnthropicAgent() = runTest {
+        Models.assumeAvailable(LLMProvider.Anthropic)
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
@@ -733,6 +762,8 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @Test
     fun integration_testOpenAIAnthropicAgentWithTools() = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(LLMProvider.OpenAI)
+        Models.assumeAvailable(LLMProvider.Anthropic)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall { eventContext ->
@@ -755,9 +786,11 @@ class AIAgentMultipleLLMIntegrationTest {
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
         runBlocking {
+            val llmModel = AnthropicModels.Sonnet_3_7
+            Models.assumeAvailable(llmModel.provider)
             val agent = AIAgent(
                 executor = simpleAnthropicExecutor(anthropicApiKey),
-                llmModel = AnthropicModels.Sonnet_3_7,
+                llmModel = llmModel,
                 systemPrompt = "You are a calculator with access to the calculator tools. Please call tools!!!",
                 toolRegistry = ToolRegistry {
                     tool(CalculatorTool)
@@ -765,7 +798,9 @@ class AIAgentMultipleLLMIntegrationTest {
                 installFeatures = {
                     install(EventHandler) {
                         onAgentRunError { eventContext ->
-                            println("error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}")
+                            println(
+                                "error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}"
+                            )
                             true
                         }
                         onToolCall { eventContext ->
@@ -790,6 +825,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
     fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall { eventContext ->
@@ -852,6 +888,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
     fun integration_testAgentWithImageCapabilityPrompt(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall { eventContext ->
@@ -892,7 +929,6 @@ class AIAgentMultipleLLMIntegrationTest {
 
             else -> createTestOpenaiAgent(fs, eventHandlerConfig, maxAgentIterations = 20)
         }
-
 
         val result = agent.run("Hi! Please analyse my image.")
 

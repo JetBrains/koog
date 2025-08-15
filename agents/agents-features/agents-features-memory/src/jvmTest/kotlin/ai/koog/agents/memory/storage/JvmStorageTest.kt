@@ -1,6 +1,7 @@
 package ai.koog.agents.memory.storage
 
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.rag.base.files.readText
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -21,7 +22,7 @@ class JvmStorageTest {
         val storage = EncryptedStorage(fs, encryptor)
 
         // Test file creation and writing
-        val testPath = fs.fromRelativeString(tempDir, "test.txt")
+        val testPath = fs.joinPath(tempDir, "test.txt")
         val testContent = "Hello, World!"
         storage.write(testPath, testContent)
 
@@ -33,23 +34,23 @@ class JvmStorageTest {
         assertEquals(testContent, readContent)
 
         // Test directory creation
-        val dirPath = fs.fromRelativeString(tempDir, "test/nested/dir")
+        val dirPath = fs.joinPath(tempDir, "test/nested/dir")
         storage.createDirectories(dirPath)
         assertTrue(storage.exists(dirPath))
 
         // Test file in nested directory
-        val nestedPath = fs.fromRelativeString(tempDir, "test/nested/dir/nested.txt")
+        val nestedPath = fs.joinPath(tempDir, "test/nested/dir/nested.txt")
         storage.write(nestedPath, testContent)
         assertTrue(storage.exists(nestedPath))
         assertEquals(testContent, storage.read(nestedPath))
 
         // Test non-existent file
-        val nonExistentPath = fs.fromRelativeString(tempDir, "non-existent.txt")
+        val nonExistentPath = fs.joinPath(tempDir, "non-existent.txt")
         assertFalse(storage.exists(nonExistentPath))
         assertEquals(null, storage.read(nonExistentPath))
 
         // Test encryption
-        val encryptedContent = fs.read(testPath).decodeToString()
+        val encryptedContent = fs.readText(testPath)
         assertFalse(encryptedContent.contains(testContent), "Content should be encrypted")
     }
 

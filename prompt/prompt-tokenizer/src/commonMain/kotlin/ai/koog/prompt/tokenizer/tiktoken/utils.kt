@@ -46,6 +46,7 @@ public class ByteArrayKey(private val bytes: ByteArray) {
      * @return An integer hash code representing the contents of the byte array.
      */
     override fun hashCode(): Int = bytes.contentHashCode()
+
     /**
      * Returns a string representation of the byte array encapsulated in the `ByteArrayKey` object.
      *

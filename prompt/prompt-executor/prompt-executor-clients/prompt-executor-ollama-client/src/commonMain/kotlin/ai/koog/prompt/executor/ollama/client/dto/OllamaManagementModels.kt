@@ -60,10 +60,15 @@ internal data class OllamaShowModelResponseDTO(
     @Serializable
     enum class Capability {
         @SerialName("completion") COMPLETION,
+
         @SerialName("embedding") EMBEDDING,
+
         @SerialName("insert") INSERT,
+
         @SerialName("vision") VISION,
+
         @SerialName("thinking") THINKING,
+
         @SerialName("tools") TOOLS,
     }
 }

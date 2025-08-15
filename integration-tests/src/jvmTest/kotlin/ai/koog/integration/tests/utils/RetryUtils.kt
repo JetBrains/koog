@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.utils
 
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 
 /*
@@ -30,25 +31,24 @@ object RetryUtils {
         )
 
         val message = e.message
-        return message != null && errorMessages.any { errorPattern ->
-            message.contains(errorPattern, ignoreCase = true)
-        }
+        return message != null &&
+            errorMessages.any { errorPattern ->
+                message.contains(errorPattern, ignoreCase = true)
+            }
     }
 
-    suspend fun <T> withRetry(
+    fun <T> withRetry(
         times: Int = 3,
         delayMs: Long = 1000,
         testName: String = "test",
         action: suspend () -> T
-    ): T {
+    ): T = runBlocking {
         var lastException: Throwable? = null
 
         for (attempt in 1..times) {
             try {
-                println("[DEBUG_LOG] Test '$testName' - attempt $attempt of $times")
                 val result = action()
-                println("[DEBUG_LOG] Test '$testName' succeeded on attempt $attempt")
-                return result
+                return@runBlocking result
             } catch (throwable: Throwable) {
                 lastException = throwable
 
@@ -58,14 +58,10 @@ object RetryUtils {
                         false,
                         "Skipping test due to third-party service error: ${throwable.message}"
                     )
-                    return action()
+                    return@runBlocking action()
                 }
 
-                println("[DEBUG_LOG] Test '$testName' failed on attempt $attempt: ${throwable.message}")
-
                 if (attempt < times) {
-                    println("[DEBUG_LOG] Retrying test '$testName' (attempt ${attempt + 1} of $times)")
-
                     if (delayMs > 0) {
                         delay(delayMs)
                     }

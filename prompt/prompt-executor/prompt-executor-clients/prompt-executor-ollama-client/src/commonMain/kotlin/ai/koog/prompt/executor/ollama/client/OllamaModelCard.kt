@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.ollama.client
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Represents metadata and configuration details about an Ollama model card.
@@ -40,6 +41,10 @@ public class OllamaModelCard internal constructor(
  */
 public val OllamaModelCard.nameWithoutTag: String get() = name.withoutTag
 
+private val logger = KotlinLogging.logger { }
+
+private const val DEFAULT_CONTEXT_LENGTH: Long = 4_096
+
 /**
  * Converts an instance of `OllamaModelCard` to an `LLModel` representation.
  *
@@ -54,4 +59,10 @@ public fun OllamaModelCard.toLLModel(): LLModel = LLModel(
     provider = LLMProvider.Ollama,
     id = name,
     capabilities = capabilities,
+    contextLength = contextLength.let { contextLength ->
+        if (contextLength == null) {
+            logger.warn { "Context length was null for model '${this.name}', falling back to $DEFAULT_CONTEXT_LENGTH" }
+        }
+        contextLength ?: DEFAULT_CONTEXT_LENGTH
+    },
 )

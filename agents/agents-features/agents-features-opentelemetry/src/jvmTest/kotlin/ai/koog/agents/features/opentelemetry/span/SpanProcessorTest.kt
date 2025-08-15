@@ -1,13 +1,18 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.mock.MockTracer
-import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
+import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.mock.MockTracer
 import io.opentelemetry.api.trace.StatusCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class SpanProcessorTest {
 
@@ -50,7 +55,7 @@ class SpanProcessorTest {
         val retrievedSpan = spanProcessor.getSpan<GenAIAgentSpan>(spanId)
 
         assertNull(retrievedSpan)
-        assertEquals(0,  spanProcessor.spansCount)
+        assertEquals(0, spanProcessor.spansCount)
     }
 
     @Test
@@ -114,7 +119,7 @@ class SpanProcessorTest {
         }
 
         assertEquals(
-            "Span with id <${spanId}> is not of expected type. Expected: <${InvokeAgentSpan::class.simpleName}>, actual: <${MockGenAIAgentSpan::class.simpleName}>",
+            "Span with id <$spanId> is not of expected type. Expected: <${InvokeAgentSpan::class.simpleName}>, actual: <${MockGenAIAgentSpan::class.simpleName}>",
             throwable.message
         )
 
@@ -131,28 +136,11 @@ class SpanProcessorTest {
         spanProcessor.startSpan(span)
         assertEquals(1, spanProcessor.spansCount)
 
-        spanProcessor.endSpan(spanId)
+        spanProcessor.endSpan(span)
         assertEquals(0, spanProcessor.spansCount)
 
         val retrievedSpan = spanProcessor.getSpan<GenAIAgentSpan>(spanId)
         assertNull(retrievedSpan)
-        assertEquals(0, spanProcessor.spansCount)
-    }
-
-    @Test
-    fun `endSpan should throw when span not found`() {
-        val spanProcessor = SpanProcessor(MockTracer())
-        val nonExistentSpanId = "non-existent-span"
-        assertEquals(0, spanProcessor.spansCount)
-
-        val throwable = assertThrows<IllegalStateException> {
-            spanProcessor.endSpan(nonExistentSpanId)
-        }
-
-        assertEquals(
-            "Span with id '$nonExistentSpanId' not found. Make sure span was started or was not finished previously",
-            throwable.message
-        )
         assertEquals(0, spanProcessor.spansCount)
     }
 
@@ -178,7 +166,7 @@ class SpanProcessorTest {
         assertEquals(3, spanProcessor.spansCount)
 
         // End one of the spans
-        spanProcessor.endSpan(span2.spanId)
+        spanProcessor.endSpan(span2)
         assertEquals(2, spanProcessor.spansCount)
 
         // Verify initial state
@@ -190,7 +178,7 @@ class SpanProcessorTest {
         assertFalse(span3.isEnded)
 
         // End spans that match the filter (only span1)
-        spanProcessor.endUnfinishedSpans { id -> id == span1Id }
+        spanProcessor.endUnfinishedSpans { span -> span.spanId == span1Id }
 
         // Verify span1 is ended, span2 was already ended, span3 is still not ended
         assertTrue(span1.isStarted)

@@ -3,7 +3,12 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
 
 /**
@@ -51,11 +56,11 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         )
     }
 
-    private fun parseParameterType(element: JsonObject, depth: Int = 0 ): ToolParameterType {
+    private fun parseParameterType(element: JsonObject, depth: Int = 0): ToolParameterType {
         if (depth > MAX_DEPTH) {
             throw IllegalArgumentException(
                 "Maximum recursion depth ($MAX_DEPTH) exceeded. " +
-                        "This may indicate a circular reference in the parameter definition."
+                    "This may indicate a circular reference in the parameter definition."
             )
         }
 
@@ -91,7 +96,6 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
             throw IllegalArgumentException("Parameter $title must have type property")
         }
 
-
         // Convert the type string to a ToolParameterType
         return when (typeStr.lowercase()) {
             // Primitive types
@@ -126,7 +130,6 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
                 val required = element["required"]?.jsonArray?.map { it.jsonPrimitive.content } ?: emptyList()
 
-
                 val additionalProperties = if ("additionalProperties" in element) {
                     when (element.getValue("additionalProperties")) {
                         is JsonPrimitive -> element.getValue("additionalProperties").jsonPrimitive.boolean
@@ -139,7 +142,10 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
                 val additionalPropertiesType = if ("additionalProperties" in element) {
                     when (element.getValue("additionalProperties")) {
-                        is JsonObject -> parseParameterType(element.getValue("additionalProperties").jsonObject, depth + 1)
+                        is JsonObject -> parseParameterType(
+                            element.getValue("additionalProperties").jsonObject,
+                            depth + 1
+                        )
                         else -> null
                     }
                 } else {
@@ -171,7 +177,9 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
 
             // Create a ToolParameterDescriptor
             ToolParameterDescriptor(
-                name = name, description = description, type = type
+                name = name,
+                description = description,
+                type = type
             )
         }
     }

@@ -20,7 +20,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for CHAR value`() {
         testToAttributeConversion(
@@ -32,7 +32,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for BOOLEAN value`() {
         testToAttributeConversion(
@@ -44,7 +44,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for INT value`() {
         testToAttributeConversion(
@@ -56,7 +56,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for LONG value`() {
         testToAttributeConversion(
@@ -68,7 +68,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for DOUBLE value`() {
         testToAttributeConversion(
@@ -80,7 +80,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for FLOAT value`() {
         testToAttributeConversion(
@@ -92,7 +92,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for the LIST OF STRINGS`() {
         val list = listOf("value1", "value2")
@@ -102,11 +102,13 @@ class EventBodyFieldTest {
             value = list,
             verbose = true,
             expectedKey = "body",
-            expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\""}}}",
+            expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") {
+                "\"$it\""
+            }}}",
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for the LIST OF BOLEANS`() {
         val list = listOf(true, false)
@@ -120,9 +122,9 @@ class EventBodyFieldTest {
             expectedVerbose = true
         )
     }
-    
+
     @Test
-    fun `test  toAttribute for the LIST OF INTEGERS`() {
+    fun `test toAttribute for the LIST OF INTEGERS`() {
         val list = listOf(1, 2, 3)
 
         testToAttributeConversion(
@@ -134,7 +136,7 @@ class EventBodyFieldTest {
             expectedVerbose = true
         )
     }
-    
+
     @Test
     fun `test toAttribute for the LIST with unsupported types is converted to string representation`() {
         val unsupportedType1 = UnsupportedType("value1")
@@ -150,7 +152,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for the MAP is converted to string representation`() {
         val map = mapOf("key1" to "value1", "key2" to "value2")
@@ -160,11 +162,13 @@ class EventBodyFieldTest {
             value = map,
             verbose = true,
             expectedKey = "body",
-            expectedValue = "{\"testKey\":${map.entries.joinToString(separator = ",", prefix = "{", postfix = "}") { "\"${it.key}\":\"${it.value}\""}}}",
+            expectedValue = "{\"testKey\":${map.entries.joinToString(separator = ",", prefix = "{", postfix = "}") {
+                "\"${it.key}\":\"${it.value}\""
+            }}}",
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for unsupported type is converted to string using toString`() {
         val unsupportedType = UnsupportedType("testValue")
@@ -174,11 +178,11 @@ class EventBodyFieldTest {
             value = unsupportedType,
             verbose = true,
             expectedKey = "body",
-            expectedValue = "{\"testKey\":${unsupportedType}}",
+            expectedValue = "{\"testKey\":$unsupportedType}",
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute for verbose property is propagated to attribute`() {
         testToAttributeConversion(
@@ -190,7 +194,7 @@ class EventBodyFieldTest {
             expectedVerbose = true,
         )
     }
-    
+
     @Test
     fun `test toAttribute throws exception when bodyFields is empty`() {
         val field = MockGenAIAgentEvent(fields = emptyList(), verbose = true)
@@ -204,7 +208,7 @@ class EventBodyFieldTest {
             exception.message
         )
     }
-    
+
     @Test
     fun `test toAttribute filter body fields when verbose is false`() {
         val bodyField = MockEventBodyField("testKey", "testValue")

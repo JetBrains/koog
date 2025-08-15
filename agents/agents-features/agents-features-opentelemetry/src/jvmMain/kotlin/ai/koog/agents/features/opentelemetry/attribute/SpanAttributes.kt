@@ -206,11 +206,21 @@ internal object SpanAttributes {
 
         sealed interface FinishReasonType {
             val id: String
-            object ContentFilter : FinishReasonType { override val id = "content_filter" }
-            object Error : FinishReasonType { override val id = "error" }
-            object Length : FinishReasonType { override val id = "length" }
-            object Stop : FinishReasonType { override val id = "stop" }
-            object ToolCalls : FinishReasonType { override val id = "tool_calls" }
+            object ContentFilter : FinishReasonType {
+                override val id = "content_filter"
+            }
+            object Error : FinishReasonType {
+                override val id = "error"
+            }
+            object Length : FinishReasonType {
+                override val id = "length"
+            }
+            object Stop : FinishReasonType {
+                override val id = "stop"
+            }
+            object ToolCalls : FinishReasonType {
+                override val id = "tool_calls"
+            }
             data class Custom(override val id: String) : FinishReasonType
         }
 
@@ -272,6 +282,18 @@ internal object SpanAttributes {
         data class Name(private val name: String) : Tool {
             override val key: String = super.key.concatKey("name")
             override val value: String = name
+        }
+
+        // Custom tool attribute with tool arguments used for tool calls
+        data class InputValue(private val input: String) : Attribute {
+            override val key: String = "input.value"
+            override val value: Any = input
+        }
+
+        // Custom tool attribute with tool execution results used for tool calls
+        data class OutputValue(private val output: String) : Attribute {
+            override val key: String = "output.value"
+            override val value: Any = output
         }
     }
 }

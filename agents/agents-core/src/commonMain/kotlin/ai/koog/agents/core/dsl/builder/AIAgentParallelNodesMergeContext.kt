@@ -31,7 +31,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
 ) : AIAgentContextBase {
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
-    override val id: String get() = underlyingContextBase.id
+    override val agentId: String get() = underlyingContextBase.agentId
     override val agentInput: Any? get() = underlyingContextBase.agentInput
     override val agentInputType: KType get() = underlyingContextBase.agentInputType
     override val config: AIAgentConfigBase get() = underlyingContextBase.config
@@ -58,7 +58,6 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? =
         underlyingContextBase.feature(key)
 
-
     override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
         underlyingContextBase.feature(feature)
 
@@ -76,7 +75,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
         runId: String,
-        strategyId: String,
+        strategyName: String,
         pipeline: AIAgentPipeline
     ): AIAgentContextBase = underlyingContextBase.copy(
         environment = environment,
@@ -87,7 +86,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         stateManager = stateManager,
         storage = storage,
         runId = runId,
-        strategyId = strategyId,
+        strategyName = strategyName,
         pipeline = pipeline
     )
 
@@ -116,7 +115,9 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      *         value as determined by the comparison function.
      * @throws NoSuchElementException if the results list is empty.
      */
-    public suspend fun <T : Comparable<T>> selectByMax(function: suspend (Output) -> T): ParallelNodeExecutionResult<Output> {
+    public suspend fun <T : Comparable<T>> selectByMax(
+        function: suspend (Output) -> T
+    ): ParallelNodeExecutionResult<Output> {
         return results.maxBy { function(it.nodeResult.output) }
             .let { ParallelNodeExecutionResult(it.nodeResult.output, it.nodeResult.context) }
     }
@@ -130,7 +131,10 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      */
     public suspend fun selectByIndex(selectIndex: suspend (List<Output>) -> Int): ParallelNodeExecutionResult<Output> {
         val indexOfBest = selectIndex(results.map { it.nodeResult.output })
-        return ParallelNodeExecutionResult(results[indexOfBest].nodeResult.output, results[indexOfBest].nodeResult.context)
+        return ParallelNodeExecutionResult(
+            results[indexOfBest].nodeResult.output,
+            results[indexOfBest].nodeResult.context
+        )
     }
 
     /**

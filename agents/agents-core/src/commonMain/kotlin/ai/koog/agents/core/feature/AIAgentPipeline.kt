@@ -7,12 +7,49 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.feature.handler.*
+import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.handler.AfterLLMCallContext
+import ai.koog.agents.core.feature.handler.AfterLLMCallHandler
+import ai.koog.agents.core.feature.handler.AfterNodeHandler
+import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
+import ai.koog.agents.core.feature.handler.AgentBeforeCloseHandler
+import ai.koog.agents.core.feature.handler.AgentContextHandler
+import ai.koog.agents.core.feature.handler.AgentEnvironmentTransformer
+import ai.koog.agents.core.feature.handler.AgentFinishedContext
+import ai.koog.agents.core.feature.handler.AgentFinishedHandler
+import ai.koog.agents.core.feature.handler.AgentHandler
+import ai.koog.agents.core.feature.handler.AgentRunErrorContext
+import ai.koog.agents.core.feature.handler.AgentRunErrorHandler
+import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
+import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
+import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
+import ai.koog.agents.core.feature.handler.BeforeLLMCallHandler
+import ai.koog.agents.core.feature.handler.BeforeNodeHandler
+import ai.koog.agents.core.feature.handler.ExecuteLLMHandler
+import ai.koog.agents.core.feature.handler.ExecuteNodeHandler
+import ai.koog.agents.core.feature.handler.ExecuteToolHandler
+import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
+import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
+import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
+import ai.koog.agents.core.feature.handler.NodeExecutionErrorHandler
+import ai.koog.agents.core.feature.handler.StrategyFinishContext
+import ai.koog.agents.core.feature.handler.StrategyFinishedHandler
+import ai.koog.agents.core.feature.handler.StrategyHandler
+import ai.koog.agents.core.feature.handler.StrategyStartContext
+import ai.koog.agents.core.feature.handler.StrategyStartedHandler
+import ai.koog.agents.core.feature.handler.ToolCallContext
+import ai.koog.agents.core.feature.handler.ToolCallFailureContext
+import ai.koog.agents.core.feature.handler.ToolCallFailureHandler
+import ai.koog.agents.core.feature.handler.ToolCallHandler
+import ai.koog.agents.core.feature.handler.ToolCallResultContext
+import ai.koog.agents.core.feature.handler.ToolCallResultHandler
+import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
+import ai.koog.agents.core.feature.handler.ToolValidationErrorHandler
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
@@ -121,7 +158,7 @@ public class AIAgentPipeline {
     internal suspend fun prepareFeatures() {
         withContext(featurePrepareDispatcher) {
             registeredFeatures.values.forEach { featureConfig ->
-                featureConfig.messageProcessor.map { processor ->
+                featureConfig.messageProcessors.map { processor ->
                     launch {
                         logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
                         processor.initialize()
@@ -139,7 +176,7 @@ public class AIAgentPipeline {
      * ensuring resources are released appropriately.
      */
     internal suspend fun closeFeaturesStreamProviders() {
-        registeredFeatures.values.forEach { config -> config.messageProcessor.forEach { provider -> provider.close() } }
+        registeredFeatures.values.forEach { config -> config.messageProcessors.forEach { provider -> provider.close() } }
     }
 
     //region Trigger Agent Handlers
@@ -152,10 +189,21 @@ public class AIAgentPipeline {
      * @param strategy The strategy being executed by the agent
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(runId: String, agent: AIAgent<*, *>, strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase,) {
+    public suspend fun onBeforeAgentStarted(
+        runId: String,
+        agent: AIAgent<*, *>,
+        strategy: AIAgentStrategy<*, *>,
+        context: AIAgentContextBase
+    ) {
         agentHandlers.values.forEach { handler ->
             val eventContext =
-                AgentStartContext(agent = agent, runId = runId, strategy = strategy, feature = handler.feature, context = context)
+                AgentStartContext(
+                    agent = agent,
+                    runId = runId,
+                    strategy = strategy,
+                    feature = handler.feature,
+                    context = context
+                )
             handler.handleBeforeAgentStartedUnsafe(eventContext)
         }
     }
@@ -173,7 +221,8 @@ public class AIAgentPipeline {
         result: Any?,
         resultType: KType,
     ) {
-        val eventContext = AgentFinishedContext(agentId = agentId, runId = runId, result = result, resultType = resultType)
+        val eventContext =
+            AgentFinishedContext(agentId = agentId, runId = runId, result = result, resultType = resultType)
         agentHandlers.values.forEach { handler -> handler.agentFinishedHandler.handle(eventContext) }
     }
 
@@ -305,7 +354,7 @@ public class AIAgentPipeline {
         input: Any?,
         inputType: KType
     ) {
-        val eventContext = NodeBeforeExecuteContext(context, node, input, inputType)
+        val eventContext = NodeBeforeExecuteContext(node, context, input, inputType)
         executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(eventContext) }
     }
 
@@ -325,8 +374,24 @@ public class AIAgentPipeline {
         inputType: KType,
         outputType: KType,
     ) {
-        val eventContext = NodeAfterExecuteContext(context, node, input, output, inputType, outputType)
+        val eventContext = NodeAfterExecuteContext(node, context, input, output, inputType, outputType)
         executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(eventContext) }
+    }
+
+    /**
+     * Handles errors occurring during the execution of a node by invoking all registered node execution error handlers.
+     *
+     * @param node The instance of the node where the error occurred.
+     * @param context The context associated with the AI agent executing the node.
+     * @param throwable The exception or error that occurred during node execution.
+     */
+    public suspend fun onNodeExecutionError(
+        node: AIAgentNodeBase<*, *>,
+        context: AIAgentContextBase,
+        throwable: Throwable
+    ) {
+        val eventContext = NodeExecutionErrorContext(node, context, throwable)
+        executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionErrorHandler.handle(eventContext) }
     }
 
     //endregion Trigger Node Handlers
@@ -602,8 +667,8 @@ public class AIAgentPipeline {
      * Example:
      * ```
      * pipeline.interceptStrategyStarted(InterceptContext) {
-     *     val strategyId = strategy.id
-     *     logger.info("Strategy $strategyId has started execution")
+     *     val strategyName = strategy.name
+     *     logger.info("Strategy $strategyName has started execution")
      * }
      * ```
      */
@@ -611,13 +676,14 @@ public class AIAgentPipeline {
         context: InterceptContext<TFeature>,
         handle: suspend (StrategyStartContext<TFeature>) -> Unit
     ) {
-        val existingHandler = strategyHandlers.getOrPut(context.feature.key) { StrategyHandler(context.featureImpl) }
+        val existingHandler = strategyHandlers
+            .getOrPut(context.feature.key) { StrategyHandler(context.featureImpl) }
 
         @Suppress("UNCHECKED_CAST")
         if (existingHandler as? StrategyHandler<TFeature> == null) {
             logger.debug {
                 "Expected to get an agent handler for feature of type <${context.featureImpl::class}>, but get a handler of type <${context.feature.key}> instead. " +
-                        "Skipping adding strategy started interceptor for feature."
+                    "Skipping adding strategy started interceptor for feature."
             }
             return
         }
@@ -650,7 +716,7 @@ public class AIAgentPipeline {
         if (existingHandler as? StrategyHandler<TFeature> == null) {
             logger.debug {
                 "Expected to get an agent handler for feature of type <${context.featureImpl::class}>, but get a handler of type <${context.feature.key}> instead. " +
-                        "Skipping adding strategy finished interceptor for feature."
+                    "Skipping adding strategy finished interceptor for feature."
             }
             return
         }
@@ -704,6 +770,31 @@ public class AIAgentPipeline {
         existingHandler.afterNodeHandler = AfterNodeHandler { eventContext: NodeAfterExecuteContext ->
             with(interceptContext.featureImpl) { handle(eventContext) }
         }
+    }
+
+    /**
+     * Intercepts and handles node execution errors for a given feature.
+     *
+     * @param interceptContext The context containing the feature and its implementation required for interception.
+     * @param handle A suspend function that processes the node execution error within the scope of the provided feature.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptNodeExecutionError(InterceptContext) { eventContext ->
+     *     logger.error("Node ${eventContext.node.name} execution failed with error: ${eventContext.throwable}")
+     * }
+     * ```
+     */
+    public fun <TFeature : Any> interceptNodeExecutionError(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: NodeExecutionErrorContext) -> Unit
+    ) {
+        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
+
+        existingHandler.nodeExecutionErrorHandler =
+            NodeExecutionErrorHandler { eventContext: NodeExecutionErrorContext ->
+                with(interceptContext.featureImpl) { handle(eventContext) }
+            }
     }
 
     /**

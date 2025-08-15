@@ -6,3 +6,5 @@ build
 env.properties
 .qodana/code-coverage
 local.properties
+/kotlin-js-store/yarn.lock
+docs/src/main/kotlin/*.kt

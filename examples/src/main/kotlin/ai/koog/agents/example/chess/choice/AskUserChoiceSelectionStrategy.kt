@@ -1,6 +1,6 @@
 package ai.koog.agents.example.chess.choice
 
-import ai.koog.agents.core.feature.choice.ChoiceSelectionStrategy
+import ai.koog.agents.ext.llm.choice.ChoiceSelectionStrategy
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 
@@ -41,6 +41,6 @@ class AskUserChoiceSelectionStrategy(
     private fun ask(numChoices: Int): Int? {
         print("Please choose a choice. Enter a number between 1 and $numChoices: ")
 
-        return read()?.toIntOrNull()?.takeIf { 1 <= it && it <= numChoices}
+        return read()?.toIntOrNull()?.takeIf { it in 1..numChoices }
     }
 }

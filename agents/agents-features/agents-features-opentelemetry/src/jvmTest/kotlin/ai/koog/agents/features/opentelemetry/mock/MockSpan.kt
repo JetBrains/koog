@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 /**
  * A mock implementation of Open Telemetry Span for testing.
  */
-class MockSpan(): Span {
+class MockSpan() : Span {
 
     var isStarted = true
 

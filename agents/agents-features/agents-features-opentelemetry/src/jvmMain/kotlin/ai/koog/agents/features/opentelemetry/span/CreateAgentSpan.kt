@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.prompt.llm.LLModel
@@ -37,17 +36,17 @@ internal class CreateAgentSpan(
      * - server.port (conditional/required)
      * - server.address (recommended)
      */
-    override val attributes: List<Attribute> = buildList {
+    init {
         // gen_ai.operation.name
-        add(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CREATE_AGENT))
+        addAttribute(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.CREATE_AGENT))
 
         // gen_ai.system
-        add(CommonAttributes.System(model.provider))
+        addAttribute(CommonAttributes.System(model.provider))
 
         // gen_ai.agent.id
-        add(SpanAttributes.Agent.Id(agentId))
+        addAttribute(SpanAttributes.Agent.Id(agentId))
 
         // gen_ai.request.model
-        add(SpanAttributes.Request.Model(model))
+        addAttribute(SpanAttributes.Request.Model(model))
     }
 }

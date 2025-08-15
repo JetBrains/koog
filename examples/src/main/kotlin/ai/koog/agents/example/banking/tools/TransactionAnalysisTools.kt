@@ -1,10 +1,10 @@
 package ai.koog.agents.example.banking.tools
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -60,8 +60,8 @@ class TransactionAnalysisTools : ToolSet {
     @Tool
     @LLMDescription(
         "Retrieves transactions filtered by userId, category, start date, and end date. All parameters are optional. " +
-                "If no parameters are provided, all transactions are returned. " +
-                "Dates should be in the format YYYY-MM-DD."
+            "If no parameters are provided, all transactions are returned. " +
+            "Dates should be in the format YYYY-MM-DD."
     )
     fun getTransactions(
         @LLMDescription("The ID of the user whose transactions to retrieve.")

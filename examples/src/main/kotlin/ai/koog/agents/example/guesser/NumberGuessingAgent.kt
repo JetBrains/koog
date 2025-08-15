@@ -3,6 +3,7 @@ package ai.koog.agents.example.guesser
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
+import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
@@ -16,6 +17,7 @@ fun main() = runBlocking {
     val toolRegistry = ToolRegistry {
         tools(
             listOf(
+                SayToUser,
                 LessThanTool,
                 GreaterThanTool,
                 ProposeNumberTool
@@ -33,6 +35,7 @@ fun main() = runBlocking {
             Follow these steps:
             1. Start by asking the user to think of a number between 1 and 100.
             2. Use the less_than and greater_than tools to narrow down the range.
+                a. If it's neither greater nor smaller, use the propose_number tool.
             3. Once you're confident about the number, use the propose_number tool to check if your guess is correct.
             4. If your guess is correct, congratulate the user. If not, continue guessing.
             

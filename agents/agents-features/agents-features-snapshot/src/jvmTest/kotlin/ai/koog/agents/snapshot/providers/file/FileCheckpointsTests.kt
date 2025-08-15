@@ -2,8 +2,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistencyStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -16,19 +16,23 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 /**
  * Tests for agent with file-based checkpoint provider.
- * 
+ *
  * These tests verify that an agent can use the file-based checkpoint provider
  * to persist and restore its state across executions.
  */
 class FileCheckpointsTests {
     private lateinit var tempDir: Path
     private lateinit var provider: JVMFilePersistencyStorageProvider
-    
+
     val systemPrompt = "You are a test agent."
     val agentConfig = AIAgentConfig(
         prompt = prompt("test") {
@@ -67,19 +71,19 @@ class FileCheckpointsTests {
         ) {
             install(Persistency) {
                 storage = provider
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "History: You are a test agent.\n" +
-                    "Node 1 output\n" +
-                    "Checkpoint created with ID: checkpointId\n" +
-                    "Node 2 output\n" +
-                    "Skipped rollback because it was already performed",
-            output)
-        
+                "Node 1 output\n" +
+                "Checkpoint created with ID: checkpointId\n" +
+                "Node 2 output\n" +
+                "Skipped rollback because it was already performed",
+            output
+        )
+
         // Verify that the checkpoint was saved to the file system
         val checkpoints = provider.getCheckpoints()
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
@@ -96,16 +100,16 @@ class FileCheckpointsTests {
         ) {
             install(Persistency) {
                 storage = provider
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "History: You are a test agent.\n" +
-                    "Node 1 output\n" +
-                    "Node 2 output",
-            output)
+                "Node 1 output\n" +
+                "Node 2 output",
+            output
+        )
     }
 
     @Test
@@ -135,7 +139,6 @@ class FileCheckpointsTests {
         ) {
             install(Persistency) {
                 storage = provider
-
             }
         }
 
@@ -143,8 +146,8 @@ class FileCheckpointsTests {
 
         assertEquals(
             "History: User message\n" +
-                    "Assistant message\n" +
-                    "Node 2 output",
+                "Assistant message\n" +
+                "Node 2 output",
             output
         )
     }
@@ -188,7 +191,6 @@ class FileCheckpointsTests {
         ) {
             install(Persistency) {
                 storage = provider
-
             }
         }
 
@@ -196,15 +198,16 @@ class FileCheckpointsTests {
 
         assertEquals(
             "History: User message\n" +
-                    "Assistant message\n" +
-                    "Node 2 output",
-            output)
+                "Assistant message\n" +
+                "Node 2 output",
+            output
+        )
     }
-    
+
     @Test
     fun testAgentWithContinuousPersistence() = runTest {
         val agentId = "continuousAgentId"
-        
+
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
             strategy = straightForwardGraphNoCheckpoint(),
@@ -220,7 +223,7 @@ class FileCheckpointsTests {
         }
 
         agent.run("Start the test")
-        
+
         // Verify that checkpoints were automatically created
         val checkpoints = provider.getCheckpoints()
         assertTrue(checkpoints.isNotEmpty(), "Should have automatically created checkpoints")

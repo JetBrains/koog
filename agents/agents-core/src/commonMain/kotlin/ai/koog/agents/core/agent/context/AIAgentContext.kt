@@ -8,8 +8,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.core.utils.RWLock
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 
@@ -42,7 +42,7 @@ public class AIAgentContext(
     override val strategyName: String,
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentPipeline,
-    override val id: String,
+    override val agentId: String,
 ) : AIAgentContextBase {
 
     /**
@@ -121,7 +121,7 @@ public class AIAgentContext(
     }
 
     /**
-     * Retrieves a feature associated with the given key from the AI agent storage.
+     * Retrieves a feature associated with the given key from the current context.
      *
      * @param key The key of the feature to retrieve.
      * @return The feature associated with the specified key, or null if no such feature exists.
@@ -130,7 +130,7 @@ public class AIAgentContext(
     override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? = features[key] as Feature?
 
     /**
-     * Retrieves an instance of the specified feature from the AI agent's storage.
+     * Retrieves an instance of the specified feature from the current context.
      *
      * @param feature The feature representation, including its key and configuration details,
      *                for identifying and accessing the associated implementation.
@@ -164,8 +164,8 @@ public class AIAgentContext(
      * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
-     * @param runId The run Id, or `null` to retain the current run ID.
-     * @param strategyId The strategy identifier, or `null` to retain the current identifier.
+     * @param runId The run identifier, or `null` to retain the current run ID.
+     * @param strategyName The strategy name, or `null` to retain the current identifier.
      * @param pipeline The [AIAgentPipeline] to be used, or `null` to retain the current pipeline.
      */
     override fun copy(
@@ -177,7 +177,7 @@ public class AIAgentContext(
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
         runId: String,
-        strategyId: String,
+        strategyName: String,
         pipeline: AIAgentPipeline,
     ): AIAgentContextBase = AIAgentContext(
         environment = environment,
@@ -188,9 +188,9 @@ public class AIAgentContext(
         stateManager = stateManager,
         storage = storage,
         runId = runId,
-        strategyName = strategyId,
+        strategyName = strategyName,
         pipeline = pipeline,
-        id = this.id,
+        agentId = this.agentId,
     )
 
     /**
@@ -221,7 +221,7 @@ public class AIAgentContext(
 }
 
 /**
- * A storage key utilized for associating and retrieving `AgentContextData` within the AI agent's storage system.
+ * A storage key used for associating and retrieving `AgentContextData` within the AI agent's storage system.
  *
  * This key is intended for internal use within the AI agents' infrastructure to securely store and access
  * data related to an agent's context. The associated data includes details such as message history, node identifiers,
@@ -232,7 +232,8 @@ public class AIAgentContext(
  * without notice.
  */
 @OptIn(InternalAgentsApi::class)
-public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> = AIAgentStorageKey("agent-context-data-key")
+public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> =
+    AIAgentStorageKey("agent-context-data-key")
 
 /**
  * Stores the given agent context data within the current AI agent context.

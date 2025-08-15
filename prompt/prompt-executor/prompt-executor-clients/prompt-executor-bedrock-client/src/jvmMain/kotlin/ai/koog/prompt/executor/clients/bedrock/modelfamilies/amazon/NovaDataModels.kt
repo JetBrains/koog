@@ -45,8 +45,18 @@ internal data class NovaInferenceConfig(
     @SerialName("topK")
     val topK: Int? = null,
     @SerialName("maxTokens")
-    val maxTokens: Int? = null
-)
+    val maxTokens: Int? = MAX_TOKENS_DEFAULT
+) {
+    /**
+     * Companion object with default values for request
+     */
+    companion object {
+        /**
+         * Default max tokens
+         */
+        const val MAX_TOKENS_DEFAULT: Int = 4096
+    }
+}
 
 /**
  * Response data classes for Amazon Nova models

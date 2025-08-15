@@ -12,14 +12,14 @@ import kotlinx.serialization.Serializable
  * Instances of this class can be created directly from a `Throwable`.
  *
  * @property message A human-readable description of the error. Defaults to "Unknown error"
- * if not provided by the originating throwable.
+ *           if not provided by the originating throwable.
  * @property stackTrace The stack trace of the error as a string, providing a detailed
- * representation of where the error occurred.
+ *           representation of where the error occurred.
  * @property cause The stack trace of the root cause if available, or null if no cause is set.
- * This helps trace back the chain of exceptions leading to the current error.
+ *           This helps trace back the chain of exceptions leading to the current error.
  */
 @Serializable
-public class AIAgentError private constructor(
+public data class AIAgentError(
     public val message: String,
     public val stackTrace: String,
     public val cause: String? = null
@@ -35,7 +35,8 @@ public class AIAgentError private constructor(
     public constructor(throwable: Throwable) : this(
         message = throwable.message ?: "Unknown error",
         stackTrace = throwable.stackTraceToString(),
-        cause = throwable.cause?.stackTraceToString())
+        cause = throwable.cause?.stackTraceToString()
+    )
 }
 
 /**

@@ -29,9 +29,9 @@ import kotlinx.datetime.Clock
 @RequiresOptIn(
     level = RequiresOptIn.Level.ERROR,
     message = "Calls to PromptExecutor used from `AIAgentLLMContext` will not be connected to the agent logic, " +
-            "and will not impact the agent's state. " +
-            "Other than that, `ToolsConversionStrategy` will not be applied. " +
-            "Please be cautious when using this API."
+        "and will not impact the agent's state. " +
+        "Other than that, `ToolsConversionStrategy` will not be applied. " +
+        "Please be cautious when using this API."
 )
 public annotation class DetachedPromptExecutorAPI
 

@@ -6,14 +6,14 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
 kotlinx-io = "0.7.0"
 kotlinx-serialization = "1.8.1" # check with IJ
-ktor3 = "3.1.3"
+ktor3 = "3.2.2"
 lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
 oshai-logging = "7.0.7"
 mockk = "1.13.8"
 shadow = "8.1.1"
 slf4j = "2.0.17"
-mcp = "0.5.0"
+mcp = "0.6.0"
 dokka = "2.0.0"
 jetsign = "45.47"
 testcontainers = "1.19.7"
@@ -23,6 +23,8 @@ spring-boot = "3.5.3"
 spring-management = "1.1.7"
 opentelemetry = "1.51.0"
 aws-sdk-kotlin = "1.4.119"
+ktlint = "13.0.0"
+knit = "0.5.0"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -41,7 +43,9 @@ ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
 ktor-client-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor3" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor3" }
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor3" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
@@ -58,7 +62,9 @@ opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
 opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
+aws-sdk-kotlin-bedrock = { module = "aws.sdk.kotlin:bedrock", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-bedrockruntime = { module = "aws.sdk.kotlin:bedrockruntime", version.ref = "aws-sdk-kotlin" }
+aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
 
 # Spring
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -95,3 +101,5 @@ shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
+knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

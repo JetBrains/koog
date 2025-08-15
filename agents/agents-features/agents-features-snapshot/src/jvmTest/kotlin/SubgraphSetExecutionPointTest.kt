@@ -34,17 +34,17 @@ class SubgraphSetExecutionPointTest {
         ) {
             install(Persistency) {
                 storage = InMemoryPersistencyStorageProvider("testAgentId")
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "Start the test\n" +
-                    "Node 1 output\n" +
-                    "sg1 node output\n" +
-                    "Teleported\n" +
-                    "Node 2 output", output
+                "Node 1 output\n" +
+                "sg1 node output\n" +
+                "Teleported\n" +
+                "Node 2 output",
+            output
         )
     }
 
@@ -58,21 +58,20 @@ class SubgraphSetExecutionPointTest {
         ) {
             install(Persistency) {
                 storage = InMemoryPersistencyStorageProvider("testAgentId")
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "Start the test\n" +
-                    "Node 1 output\n" +
-                    "sg1 node output\n" +
-                    "Teleported\n" +
-                    "Node 1 output\n" +
-                    "sg1 node output\n" +
-                    "Already teleported, passing by\n" +
-                    "sg2 node output\n" +
-                    "Node 2 output",
+                "Node 1 output\n" +
+                "sg1 node output\n" +
+                "Teleported\n" +
+                "Node 1 output\n" +
+                "sg1 node output\n" +
+                "Already teleported, passing by\n" +
+                "sg2 node output\n" +
+                "Node 2 output",
             output
         )
     }
@@ -87,22 +86,20 @@ class SubgraphSetExecutionPointTest {
         ) {
             install(Persistency) {
                 storage = InMemoryPersistencyStorageProvider("testAgentId")
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "Start the test\n" +
-                    "Node 1 output\n" +
-                    "sg1 node output\n" +
-                    "Teleported\n" +
-                    "sg2 node output\n" +
-                    "Node 2 output",
+                "Node 1 output\n" +
+                "sg1 node output\n" +
+                "Teleported\n" +
+                "sg2 node output\n" +
+                "Node 2 output",
             output
         )
     }
-
 
     @Test
     fun test_singleSubgraph_teleportInsideSubgraph_teleportBackwards() = runTest {
@@ -114,20 +111,19 @@ class SubgraphSetExecutionPointTest {
         ) {
             install(Persistency) {
                 storage = InMemoryPersistencyStorageProvider("testAgentId")
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "Start the test\n" +
-                    "Node 1 output\n" +
-                    "sg1 node output\n" +
-                    "Teleported\n" +
-                    "sg1 node output\n" +
-                    "Already teleported, passing by\n" +
-                    "sg2 node output\n" +
-                    "Node 2 output",
+                "Node 1 output\n" +
+                "sg1 node output\n" +
+                "Teleported\n" +
+                "sg1 node output\n" +
+                "Already teleported, passing by\n" +
+                "sg2 node output\n" +
+                "Node 2 output",
             output
         )
     }
@@ -142,20 +138,19 @@ class SubgraphSetExecutionPointTest {
         ) {
             install(Persistency) {
                 storage = InMemoryPersistencyStorageProvider("testAgentId")
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "Start the test\n" +
-                    "Node 1 output\n" +
-                    "sgNode1 node output\n" +
-                    "sg2Node1 node output\n" +
-                    "sg2Node2 node output\n" +
-                    "Teleported\n" +
-                    "sgNode2 node output\n" +
-                    "Node 2 output",
+                "Node 1 output\n" +
+                "sgNode1 node output\n" +
+                "sg2Node1 node output\n" +
+                "sg2Node2 node output\n" +
+                "Teleported\n" +
+                "sgNode2 node output\n" +
+                "Node 2 output",
             output
         )
     }
@@ -170,24 +165,23 @@ class SubgraphSetExecutionPointTest {
         ) {
             install(Persistency) {
                 storage = InMemoryPersistencyStorageProvider("testAgentId")
-
             }
         }
 
         val output = agent.run("Start the test")
         assertEquals(
             "Start the test\n" +
-                    "Node 1 output\n" +
-                    "sgNode1 node output\n" +
-                    "sg2Node1 node output\n" +
-                    "sg2Node2 node output\n" +
-                    "Teleported\n" +
-                    "sgNode1 node output\n" +
-                    "sg2Node1 node output\n" +
-                    "sg2Node2 node output\n" +
-                    "Already teleported, passing by\n" +
-                    "sgNode2 node output\n" +
-                    "Node 2 output",
+                "Node 1 output\n" +
+                "sgNode1 node output\n" +
+                "sg2Node1 node output\n" +
+                "sg2Node2 node output\n" +
+                "Teleported\n" +
+                "sgNode1 node output\n" +
+                "sg2Node1 node output\n" +
+                "sg2Node2 node output\n" +
+                "Already teleported, passing by\n" +
+                "sgNode2 node output\n" +
+                "Node 2 output",
             output
         )
     }

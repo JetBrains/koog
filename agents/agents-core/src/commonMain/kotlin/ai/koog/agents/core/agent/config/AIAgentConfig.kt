@@ -21,9 +21,8 @@ public class AIAgentConfig(
     override val prompt: Prompt,
     override val model: LLModel,
     override val maxAgentIterations: Int,
-    override val missingToolsConversionStrategy: MissingToolsConversionStrategy = MissingToolsConversionStrategy.Missing(
-        ToolCallDescriber.JSON
-    )
+    override val missingToolsConversionStrategy: MissingToolsConversionStrategy =
+        MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
 ) : AIAgentConfigBase {
 
     init {

@@ -1,0 +1,7 @@
+rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/FileSystemProvider.kt @skarpovdev @sproshev
+
+rag/rag-base/src/jvmMain/kotlin/ai/koog/rag/base/files/JVMFileSystemProvider.kt @skarpovdev @sproshev
+rag/rag-base/src/jvmTest/kotlin/ai/koog/rag/base/files/JVMFileSystemProviderTest.kt @skarpovdev @sproshev
+
+rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/FilteredFileSystemProvider.kt @skarpovdev @sproshev
+rag/rag-base/src/jvmTest/kotlin/ai/koog/rag/base/files/JVMFilteredFileSystemProviderTest.kt @skarpovdev @sproshev

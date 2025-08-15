@@ -1,10 +1,14 @@
 package ai.koog.prompt.executor.llms.all
 
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureMessageProcessor
-
-
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureMessageProcessor
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 class TestLogPrinter : FeatureMessageProcessor() {
+
+    override val isOpen: StateFlow<Boolean> =
+        MutableStateFlow(true)
+
     override suspend fun processMessage(message: FeatureMessage) {
         println(message)
     }

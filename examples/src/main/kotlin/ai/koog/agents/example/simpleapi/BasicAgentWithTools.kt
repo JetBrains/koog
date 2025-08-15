@@ -12,13 +12,13 @@ fun main(): Unit = runBlocking {
     val switch = Switch()
 
     /*
-    *
-    * You can also use the DSL to create a tool registry:
-    *   val toolRegistry = SimpleToolRegistry {
-    *       tool(SwitchTool(switch))
-    *       tool(SwitchStateTool(switch))
-    *   }
-    * */
+     *
+     * You can also use the DSL to create a tool registry:
+     *   val toolRegistry = SimpleToolRegistry {
+     *       tool(SwitchTool(switch))
+     *       tool(SwitchStateTool(switch))
+     *   }
+     * */
     val toolRegistry = ToolRegistry {
         tools(SwitchTools(switch).asTools())
     }

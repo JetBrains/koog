@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent.entity
 
-
 /**
  * Represents a node in the execution graph of an AI agent that can explicitly enforce execution
  * at a specified node with optional input data.

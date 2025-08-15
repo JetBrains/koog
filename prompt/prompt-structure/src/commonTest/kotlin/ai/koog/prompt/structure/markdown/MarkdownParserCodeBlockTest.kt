@@ -104,8 +104,10 @@ class MarkdownParserCodeBlockTest {
         parser(markdown)
 
         assertEquals(1, codeBlocks.size, "Should capture one code block")
-        assertTrue(codeBlocks[0].contains("This is a code block without a language specified."),
-                  "Should capture the code content")
+        assertTrue(
+            codeBlocks[0].contains("This is a code block without a language specified."),
+            "Should capture the code content"
+        )
     }
 
     @Test
@@ -159,7 +161,9 @@ class MarkdownParserCodeBlockTest {
 
         assertEquals(1, codeBlocks.size, "Should capture the unclosed code block")
         assertTrue(codeBlocks[0].contains("fun main()"), "Should capture the code content")
-        assertTrue(codeBlocks[0].contains("println(\"This code block is not closed\")"),
-                  "Should capture the code content")
+        assertTrue(
+            codeBlocks[0].contains("println(\"This code block is not closed\")"),
+            "Should capture the code content"
+        )
     }
 }

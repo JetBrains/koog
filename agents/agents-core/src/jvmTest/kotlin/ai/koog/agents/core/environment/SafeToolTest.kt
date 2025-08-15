@@ -37,7 +37,9 @@ class SafeToolTest {
     }
 
     enum class TestEnum {
-        FIRST, SECOND, THIRD
+        FIRST,
+        SECOND,
+        THIRD
     }
 
     @Serializable
@@ -95,7 +97,6 @@ class SafeToolTest {
             throw exception
         }
     }
-
 
     @Test
     fun testExecuteSuccess() = runTest {

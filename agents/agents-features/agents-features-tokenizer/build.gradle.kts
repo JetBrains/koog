@@ -14,7 +14,6 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":prompt:prompt-tokenizer"))
-                api(project(":agents:agents-features:agents-features-common"))
 
                 api(libs.kotlinx.serialization.json)
 

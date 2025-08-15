@@ -1,9 +1,9 @@
 package ai.koog.embeddings.local
 
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
-import ai.koog.prompt.llm.LLModel
 import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.llm.LLModel
 
 /**
  * Implementation of the [Embedder] interface that uses Ollama models for embedding text.

@@ -37,7 +37,6 @@ kotlin {
             }
         }
 
-
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
@@ -49,7 +48,6 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
                 implementation(kotlin("test-junit5"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-core"))

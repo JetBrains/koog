@@ -15,7 +15,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class CachedPromptExecutorTest {
     companion object {
@@ -25,7 +27,12 @@ class CachedPromptExecutorTest {
         private val testClock = object : Clock {
             override fun now() = testResponse.first().metaInfo.timestamp
         }
-        private val testModel = LLModel(object : LLMProvider("", "") {}, "", emptyList())
+        private val testModel = LLModel(
+            provider = object : LLMProvider("", "") {},
+            id = "",
+            capabilities = emptyList(),
+            contextLength = 1_000L,
+        )
     }
 
     // Mock implementation of PromptCache

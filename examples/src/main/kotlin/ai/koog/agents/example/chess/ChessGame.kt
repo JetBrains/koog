@@ -80,7 +80,9 @@ class ChessGame {
     }
 
     enum class Player {
-        White, Black, None;
+        White,
+        Black,
+        None;
 
         fun opponent(): Player = when (this) {
             White -> Black
@@ -90,7 +92,13 @@ class ChessGame {
     }
 
     enum class PieceType(val id: Char) {
-        King('K'), Queen('Q'), Rook('R'), Bishop('B'), Knight('N'), Pawn('P'), None('*');
+        King('K'),
+        Queen('Q'),
+        Rook('R'),
+        Bishop('B'),
+        Knight('N'),
+        Pawn('P'),
+        None('*');
 
         companion object {
             fun fromId(id: String): PieceType {
@@ -124,7 +132,7 @@ class ChessGame {
             require(row in 1..8 && col in 'a'..'h') { "Invalid position: $col$row" }
         }
 
-        constructor(position: String): this(
+        constructor(position: String) : this(
             position[1].digitToIntOrNull() ?: throw IllegalArgumentException("Incorrect position: $position"),
             position[0],
         ) {
@@ -134,7 +142,14 @@ class ChessGame {
 
     private class ChessBoard {
         private val backRow = listOf(
-            PieceType.Rook, PieceType.Knight, PieceType.Bishop, PieceType.Queen, PieceType.King, PieceType.Bishop, PieceType.Knight, PieceType.Rook
+            PieceType.Rook,
+            PieceType.Knight,
+            PieceType.Bishop,
+            PieceType.Queen,
+            PieceType.King,
+            PieceType.Bishop,
+            PieceType.Knight,
+            PieceType.Rook
         )
 
         private val board: List<MutableList<Piece>> = listOf(
@@ -160,6 +175,7 @@ class ChessGame {
     }
 
     enum class Side {
-        King, Queen
+        King,
+        Queen
     }
 }

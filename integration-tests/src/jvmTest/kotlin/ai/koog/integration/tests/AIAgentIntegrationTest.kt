@@ -4,11 +4,17 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.singleRunStrategy
+import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -25,6 +31,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
@@ -60,6 +67,20 @@ import kotlin.time.Duration.Companion.seconds
 
 class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
+
+    @Serializable
+    private object CalculatorToolNoArgs : SimpleTool<ToolArgs.Empty>() {
+        override val argsSerializer = ToolArgs.Empty.serializer()
+
+        override val descriptor = ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that performs basic calculations. No parameters needed.",
+        )
+
+        override suspend fun doExecute(args: ToolArgs.Empty): String {
+            return "The result of 123 + 456 is 579"
+        }
+    }
 
     @Serializable
     data class GetTransactionsArgs(
@@ -294,11 +315,12 @@ class AIAgentIntegrationTest {
     }
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runBlocking {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         /* Some models are not calling tools in parallel:
-        * see https://youtrack.jetbrains.com/issue/KG-115
-        */
+         * see https://youtrack.jetbrains.com/issue/KG-115
+         */
 
         withRetry {
             val multiToolAgent =
@@ -320,9 +342,9 @@ class AIAgentIntegrationTest {
             if (runMode == ToolCalls.PARALLEL) {
                 assertTrue(
                     firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
-                            firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
-                            firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
-                            firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
+                        firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
+                        firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
+                        firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
                     "At least one of the metadata should be equal for parallel tool calls"
                 )
             }
@@ -335,12 +357,9 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+        Models.assumeAvailable(model.provider)
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-            }
+            val executor = getExecutor(model)
 
             val agent = AIAgent(
                 executor = executor,
@@ -359,6 +378,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {
+        Models.assumeAvailable(model.provider)
         val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -367,15 +387,17 @@ class AIAgentIntegrationTest {
         }
 
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-            }
+            val executor = getExecutor(model)
 
             val agent = AIAgent(
                 executor = executor,
-                systemPrompt = if (model.id == OpenAIModels.CostOptimized.O4Mini.id) systemPromptForSmallLLM else systemPrompt,
+                systemPrompt = if (model.id ==
+                    OpenAIModels.CostOptimized.O4Mini.id
+                ) {
+                    systemPromptForSmallLLM
+                } else {
+                    systemPrompt
+                },
                 llmModel = model,
                 temperature = 1.0,
                 toolRegistry = toolRegistry,
@@ -395,6 +417,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
     fun integration_AIAgentWithImageCapabilityTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
         val imageFile = testResourcesDir.resolve("test.png")
@@ -411,11 +434,7 @@ class AIAgentIntegrationTest {
         """.trimIndent()
 
         withRetry {
-            val executor = when (model.provider) {
-                is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-                is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-                else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-            }
+            val executor = getExecutor(model)
 
             val agent = AIAgent(
                 executor = executor,
@@ -449,13 +468,10 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testRequestLLMWithoutToolsTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val executor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
+        val executor = getExecutor(model)
 
         val toolRegistry = ToolRegistry {
             tool(CalculatorTool)
@@ -518,6 +534,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
 
@@ -606,7 +623,7 @@ class AIAgentIntegrationTest {
             assertTrue(
                 reasoningCallsCount == expectedReasoningCalls,
                 "With reasoningInterval=$interval and ${toolExecutionCounter.size} tool calls, " +
-                        "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
+                    "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
             )
         }
     }
@@ -623,7 +640,7 @@ class AIAgentIntegrationTest {
         val bye = "Bye"
 
         val checkpointStrategy = strategy("checkpoint-strategy") {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 sayHello
             }
 
@@ -640,7 +657,7 @@ class AIAgentIntegrationTest {
                 savedMessage
             }
 
-            val nodeBye by node<String, String>(bye) { input ->
+            val nodeBye by node<String, String>(bye) {
                 sayBye
             }
 
@@ -728,7 +745,7 @@ class AIAgentIntegrationTest {
         val executionLog = StringBuilder()
 
         val rollbackStrategy = strategy("rollback-strategy") {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 executionLog.append(sayHelloLog)
                 sayHello
             }
@@ -746,12 +763,12 @@ class AIAgentIntegrationTest {
                 saySave
             }
 
-            val nodeBye by node<String, String>(bye) { input ->
+            val nodeBye by node<String, String>(bye) {
                 executionLog.append(sayByeLog)
                 sayBye
             }
 
-            val rollbackNode by node<String, String>(rollback) { input ->
+            val rollbackNode by node<String, String>(rollback) {
                 // Use a shared variable to prevent infinite rollbacks
                 // Only roll back once, then continue
                 if (!hasRolledBack) {
@@ -830,7 +847,6 @@ class AIAgentIntegrationTest {
         val sayWorld = "World, hello!"
         val sayBye = "Bye World!"
 
-
         val promptName = "continuous-persistence-test"
         val systemMessage = "You are a helpful assistant."
         val testInput = "Start the test"
@@ -841,15 +857,15 @@ class AIAgentIntegrationTest {
         val noCheckpointByeError = "No checkpoint for Node Bye"
 
         val simpleStrategy = strategy(strategyName) {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 sayHello
             }
 
-            val nodeWorld by node<String, String>(world) { input ->
+            val nodeWorld by node<String, String>(world) {
                 sayWorld
             }
 
-            val node3 by node<String, String>(bye) { input ->
+            val node3 by node<String, String>(bye) {
                 sayBye
             }
 
@@ -914,7 +930,7 @@ class AIAgentIntegrationTest {
             JVMFilePersistencyStorageProvider(tempDir, "integration_AgentCheckpointStorageProvidersTest")
 
         val simpleStrategy = strategy(strategyName) {
-            val nodeHello by node<String, String>(hello) { input ->
+            val nodeHello by node<String, String>(hello) {
                 sayHello
             }
 
@@ -959,5 +975,187 @@ class AIAgentIntegrationTest {
         val checkpoints = fileStorageProvider.getCheckpoints()
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        val flakyModels = listOf(
+            GoogleModels.Gemini2_0Flash.id,
+            GoogleModels.Gemini2_0Flash001.id,
+            GoogleModels.Gemini2_0FlashLite.id,
+            GoogleModels.Gemini2_0FlashLite001.id
+        )
+        assumeTrue(!flakyModels.contains(model.id), "Model $model is flaky and fails to call tools")
+
+        val registry = ToolRegistry {
+            tool(CalculatorToolNoArgs)
+        }
+
+        withRetry {
+            val executor = getExecutor(model)
+
+            val agent = AIAgent(
+                promptExecutor = executor,
+                strategy = singleRunStrategy(),
+                agentConfig = AIAgentConfig(
+                    prompt = prompt(
+                        id = "calculator-agent-test",
+                        params = LLMParams(
+                            temperature = 0.1,
+                            toolChoice = ToolChoice.Auto, // KG-163
+                        )
+                    ) {
+                        system(
+                            systemPrompt +
+                                "YOU'RE OBLIGED TO USE TOOLS. THIS IS MANDATORY." +
+                                "I'M CHARGING YOU IF YOU AREN'T CALLING TOOLS!!!"
+                        )
+                    },
+                    model = model,
+                    maxAgentIterations = 10
+                ),
+                toolRegistry = registry,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+            )
+            agent.run("What is 123 + 456?")
+
+            assertEquals(
+                listOf(CalculatorToolNoArgs.descriptor.name),
+                actualToolCalls,
+                "Only the ${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model"
+            )
+
+            assertTrue(errors.isEmpty(), "There should be no errors")
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val parallelStrategy = strategy<String, String>("parallel-nodes-strategy") {
+            // Create three nodes that process different computations
+            val mathNode by node<Unit, String>("math") {
+                "Math result: ${7 * 8}"
+            }
+
+            val textNode by node<Unit, String>("text") {
+                "Text result: Hello World"
+            }
+
+            val countNode by node<Unit, String>("count") {
+                "Count result: ${(1..5).sum()}"
+            }
+
+            val parallelNode by parallel(
+                mathNode,
+                textNode,
+                countNode,
+                name = "parallelProcessor"
+            ) {
+                val combinedResult = fold("") { acc, result ->
+                    if (acc.isEmpty()) result else "$acc | $result"
+                }
+                ParallelNodeExecutionResult("Combined: ${combinedResult.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        withRetry {
+            val agent = AIAgent<String, String>(
+                promptExecutor = getExecutor(model),
+                strategy = parallelStrategy,
+                agentConfig = AIAgentConfig(
+                    prompt = prompt("parallel-test") {
+                        system("You are a helpful assistant.")
+                    },
+                    model = model,
+                    maxAgentIterations = 10
+                ),
+                toolRegistry = ToolRegistry {},
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
+
+            agent.run("Hi")
+
+            assertTrue(errors.isEmpty(), "There should be no errors during parallel execution")
+            assertTrue(results.isNotEmpty(), "There should be results from parallel execution")
+
+            val finalResult = results.first() as String
+            assertTrue(
+                finalResult.contains("Math result: 56"),
+                "Result should contain math computation (7*8=56)"
+            )
+            assertTrue(
+                finalResult.contains("Text result: Hello World"),
+                "Result should contain text processing result"
+            )
+            assertTrue(
+                finalResult.contains("Count result: 15"),
+                "Result should contain count computation (1+2+3+4+5=15)"
+            )
+            assertTrue(
+                finalResult.contains("Combined:"),
+                "Result should show that parallel results were combined"
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 120.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val selectionStrategy = strategy<String, String>("parallel-selection-strategy") {
+            val smallNode by node<Unit, String>("small") { "10" }
+            val mediumNode by node<Unit, String>("medium") { "50" }
+            val largeNode by node<Unit, String>("large") { "100" }
+
+            val parallelNode by parallel(
+                smallNode,
+                mediumNode,
+                largeNode,
+                name = "maxSelector"
+            ) {
+                val maxResult = selectByMax { output -> output.toInt() }
+                ParallelNodeExecutionResult("Maximum value: ${maxResult.output}", this)
+            }
+
+            edge(nodeStart forwardTo parallelNode transformed { })
+            edge(parallelNode forwardTo nodeFinish)
+        }
+
+        withRetry {
+            val agent = AIAgent<String, String>(
+                promptExecutor = getExecutor(model),
+                strategy = selectionStrategy,
+                agentConfig = AIAgentConfig(
+                    prompt = prompt("parallel-selection-test") {
+                        system("You are a helpful assistant.")
+                    },
+                    model = model,
+                    maxAgentIterations = 10
+                ),
+                toolRegistry = ToolRegistry {},
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
+            )
+
+            agent.run("Find the maximum value")
+
+            assertTrue(errors.isEmpty(), "There should be no errors during parallel selection")
+            assertTrue(results.isNotEmpty(), "There should be results from parallel selection")
+
+            val finalResult = results.first() as String
+
+            assertTrue(
+                finalResult.contains("Maximum value: 100"),
+                "Result should contain the maximum value (100) from parallel execution"
+            )
+        }
     }
 }

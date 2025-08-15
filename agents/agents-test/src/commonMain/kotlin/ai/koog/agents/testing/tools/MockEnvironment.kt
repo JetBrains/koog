@@ -100,7 +100,6 @@ public class MockEnvironment(
         val args = tool.decodeArgs(functionCall.contentJson)
         val result = tool.executeUnsafe(args, MockToolsEnabler)
 
-
         return ReceivedToolResult(
             id = functionCall.id,
             tool = functionCall.tool,
@@ -121,5 +120,4 @@ public class MockEnvironment(
     override suspend fun reportProblem(exception: Throwable) {
         throw exception
     }
-
 }

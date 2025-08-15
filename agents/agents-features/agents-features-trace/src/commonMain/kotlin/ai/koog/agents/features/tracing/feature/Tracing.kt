@@ -4,15 +4,33 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
-import ai.koog.agents.core.feature.model.*
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureMessageProcessorUtil.onMessageForEachSafe
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
+import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
+import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
+import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
+import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
+import ai.koog.agents.core.feature.model.AIAgentRunErrorEvent
+import ai.koog.agents.core.feature.model.AIAgentStartedEvent
+import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
+import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
+import ai.koog.agents.core.feature.model.AfterLLMCallEvent
+import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.ToolCallEvent
+import ai.koog.agents.core.feature.model.ToolCallFailureEvent
+import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.tracing.eventString
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
- * 
+ *
  * Tracing is crucial for evaluation and analysis of the working agent, as it captures detailed information about:
  * - All LLM calls and their responses
  * - Prompts sent to LLMs
@@ -20,9 +38,9 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * - Graph node visits and execution flow
  * - Agent lifecycle events (creation, start, finish, errors)
  * - Strategy execution events
- * 
+ *
  * This data can be used for debugging, performance analysis, auditing, and improving agent behavior.
- * 
+ *
  * Example of installing tracing to an agent:
  * ```kotlin
  * val agent = AIAgent(
@@ -34,16 +52,16 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *         // Configure message processors to handle trace events
  *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
  *         addMessageProcessor(TraceFeatureMessageFileWriter(outputFile, fileSystem::sink))
- *         
+ *
  *         // Optionally filter messages
- *         messageFilter = { message -> 
+ *         messageFilter = { message ->
  *             // Only trace LLM calls and tool calls
  *             message is BeforeLLMCallEvent || message is ToolCallEvent
  *         }
  *     }
  * }
  * ```
- * 
+ *
  * Example of logs produced by tracing:
  * ```
  * AIAgentStartedEvent (agentId: agent-123, runId: session-456, strategyName: my-agent-strategy)
@@ -62,12 +80,12 @@ public class Tracing {
 
     /**
      * Feature implementation for the Tracing functionality.
-     * 
+     *
      * This companion object implements [AIAgentFeature] and provides methods for creating
      * an initial configuration and installing the tracing feature in an agent pipeline.
-     * 
+     *
      * To use tracing in your agent, install it during agent creation:
-     * 
+     *
      * ```kotlin
      * val agent = AIAgent(...) {
      *     install(Tracing) {
@@ -79,7 +97,7 @@ public class Tracing {
      */
     public companion object Feature : AIAgentFeature<TraceFeatureConfig, Tracing> {
 
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         override val key: AIAgentStorageKey<Tracing> =
             AIAgentStorageKey("agents-features-tracing")
@@ -92,8 +110,10 @@ public class Tracing {
         ) {
             logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 
-            if (config.messageProcessor.isEmpty()) {
-                logger.warn { "Tracing Feature. No feature out stream providers are defined. Trace streaming has no target." }
+            if (config.messageProcessors.isEmpty()) {
+                logger.warn {
+                    "Tracing Feature. No feature out stream providers are defined. Trace streaming has no target."
+                }
             }
 
             val interceptContext = InterceptContext(this, Tracing())
@@ -178,6 +198,15 @@ public class Tracing {
                 processMessage(config, event)
             }
 
+            pipeline.interceptNodeExecutionError(interceptContext) intercept@{ eventContext ->
+                val event = AIAgentNodeExecutionErrorEvent(
+                    runId = eventContext.context.runId,
+                    nodeName = eventContext.node.name,
+                    error = eventContext.throwable.toAgentError()
+                )
+                processMessage(config, event)
+            }
+
             //endregion Intercept Node Events
 
             //region Intercept LLM Call Events
@@ -208,44 +237,60 @@ public class Tracing {
             //region Intercept Tool Call Events
 
             pipeline.interceptToolCall(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolCallEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs)
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolValidationError(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolValidationErrorEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs,
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
                     error = eventContext.error
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolCallFailure(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolCallFailureEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs,
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
                     error = eventContext.throwable.toAgentError()
                 )
                 processMessage(config, event)
             }
 
             pipeline.interceptToolCallResult(interceptContext) intercept@{ eventContext ->
+
+                @Suppress("UNCHECKED_CAST")
+                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+
                 val event = ToolCallResultEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.toolArgs,
-                    result = eventContext.result
+                    toolName = tool.name,
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) }
                 )
                 processMessage(config, event)
             }
@@ -260,7 +305,7 @@ public class Tracing {
                 return
             }
 
-            config.messageProcessor.onMessageForEachSafe(message)
+            config.messageProcessors.onMessageForEachSafe(message)
         }
 
         //endregion Private Methods

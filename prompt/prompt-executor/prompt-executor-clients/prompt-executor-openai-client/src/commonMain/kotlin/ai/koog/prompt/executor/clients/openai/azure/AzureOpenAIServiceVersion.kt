@@ -23,7 +23,6 @@ public class AzureOpenAIServiceVersion private constructor(
         private val values: MutableMap<String, AzureOpenAIServiceVersion> =
             mutableMapOf<String, AzureOpenAIServiceVersion>()
 
-
         /**
          * Returns the latest stable version of the Azure OpenAI Service.
          */
@@ -162,7 +161,6 @@ public class AzureOpenAIServiceVersion private constructor(
          */
         @JvmStatic
         public val V2025_03_01_PREVIEW: AzureOpenAIServiceVersion = fromString("2025-03-01-preview")
-
     }
 
     override fun equals(other: Any?): Boolean =
@@ -171,5 +169,4 @@ public class AzureOpenAIServiceVersion private constructor(
     override fun hashCode(): Int = value.hashCode()
 
     override fun toString(): String = "AzureOpenAIServiceVersion{value=$value}"
-
 }
