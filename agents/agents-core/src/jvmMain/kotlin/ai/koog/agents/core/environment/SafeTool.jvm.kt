@@ -6,8 +6,8 @@ import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlin.time.Clock
 import kotlin.reflect.KFunction
+import kotlin.time.Clock
 
 /**
  * A wrapper class that creates a safer abstraction for executing a tool function alongside an associated environment.
