@@ -36,12 +36,12 @@ import io.mockk.mockkConstructor
 import io.mockk.mockkObject
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @OptIn(InternalAgentsApi::class)
 class AIAgentMemoryTest {

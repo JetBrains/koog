@@ -6,7 +6,7 @@ import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.reflect.KFunction
 
 /**

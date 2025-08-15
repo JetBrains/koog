@@ -10,11 +10,12 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlin.time.Clock
+import kotlin.time.Instant
 
 class TestLLMExecutor : PromptExecutor {
     companion object {
         val testClock: Clock = object : Clock {
-            override fun now(): kotlinx.datetime.Instant = kotlinx.datetime.Instant.parse("2023-01-01T00:00:00Z")
+            override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
         }
     }
 
