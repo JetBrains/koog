@@ -601,8 +601,8 @@ val promptExecutor = simpleOpenAIExecutor(apiToken)
 
 2. Execute the prompt with a specific LLM:
 <!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi08.prompt
-import ai.koog.agents.example.examplePromptApi09.promptExecutor
+import ai.koog.agents.example.examplePromptApi12.prompt
+import ai.koog.agents.example.examplePromptApi16.promptExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import kotlinx.coroutines.runBlocking
@@ -642,9 +642,9 @@ val googleClient = GoogleLLMClient(System.getenv("GOOGLE_KEY"))
 
 2. Pass the configured clients to the `DefaultMultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
 <!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi11.anthropicClient
-import ai.koog.agents.example.examplePromptApi11.googleClient
-import ai.koog.agents.example.examplePromptApi11.openAIClient
+import ai.koog.agents.example.examplePromptApi18.anthropicClient
+import ai.koog.agents.example.examplePromptApi18.googleClient
+import ai.koog.agents.example.examplePromptApi18.openAIClient
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
 -->
 ```kotlin
@@ -654,8 +654,8 @@ val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient,
 
 3. Execute the prompt with a specific LLM:
 <!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi08.prompt
-import ai.koog.agents.example.examplePromptApi12.multiExecutor
+import ai.koog.agents.example.examplePromptApi12.prompt
+import ai.koog.agents.example.examplePromptApi19.multiExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import kotlinx.coroutines.runBlocking
