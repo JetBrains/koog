@@ -1,9 +1,5 @@
 package ai.koog.agents.ext.tool
 
-import io.kotest.assertions.assertSoftly
-import io.kotest.assertions.withClue
-import io.kotest.matchers.shouldBe
-import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -11,6 +7,8 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
 
 internal class TimeToolTest {
 
@@ -24,13 +22,15 @@ internal class TimeToolTest {
 
     @BeforeTest
     fun setup() {
-        currentTime = Clock.System.now()
+        currentTime = Instant.fromEpochMilliseconds(
+            Clock.System.now().toEpochMilliseconds()
+        )
         subject = TimeTool(
             clock = clock,
         )
     }
 
-    private fun verifyTimeAtTimezone(
+    private fun assertTimeAtTimezone(
         toolResponse: String,
         timezone: TimeZone,
         truncateToSeconds: Boolean
@@ -40,10 +40,12 @@ internal class TimeToolTest {
         } else {
             currentTime
         }.toLocalDateTime(timezone)
-
-        withClue("Unexpected tool response") {
-            toolResponse shouldBe "Current time: $expectedTime (Timezone: $timezone)"
-        }
+        // then
+        assertEquals(
+            expected = "Current time: $expectedTime (Timezone: $timezone)",
+            actual = toolResponse,
+            message = "Unexpected tool response"
+        )
     }
 
     @Test
@@ -53,63 +55,82 @@ internal class TimeToolTest {
         // when
         val result = subject.doExecute(TimeTool.Args())
         // then
-        assertSoftly(result) {
-            withClue("Response should contain current time") {
-                it shouldContain "Current time: "
-            }
-            withClue("Response should contain system timezone") {
-                it shouldContain " (Timezone: ${TimeZone.currentSystemDefault()})"
-            }
-        }
+        assertContains(
+            charSequence = result,
+            other = "Current time: ",
+            message = "Response should contain current time"
+        )
+        assertContains(
+            charSequence = result,
+            other = " (Timezone: ${TimeZone.currentSystemDefault()})",
+            message = "Response should contain system timezone"
+        )
     }
 
     @Test
     fun testTimeToolWithDefaultTimezone() = runTest {
+        // given
         val defaultTimezone = TimeZone.of("Antarctica/South_Pole") // something exotic
         subject = TimeTool(
             clock = clock,
             timezone = defaultTimezone,
             truncateToSeconds = false,
         )
-
+        // when
         val result = subject.doExecute(TimeTool.Args())
-
-        verifyTimeAtTimezone(result, defaultTimezone, false)
+        // then
+        assertTimeAtTimezone(result, defaultTimezone, false)
     }
 
     @Test
     fun testTimeToolWithMilliseconds() = runTest {
+        // given
         val defaultTimezone = TimeZone.of("Europe/Tallinn")
         subject = TimeTool(
             clock = clock,
             timezone = defaultTimezone,
             truncateToSeconds = false,
         )
-
+        // when
         val result = subject.doExecute(TimeTool.Args())
+        // then
+        assertTimeAtTimezone(result, defaultTimezone, false)
+    }
 
-        verifyTimeAtTimezone(result, defaultTimezone, false)
+    private suspend fun verifyTimeToolAtTimezone(timeZoneString: String) {
+        assertTimeAtTimezone(
+            toolResponse = subject.doExecute(TimeTool.Args(timeZoneString)),
+            timezone = TimeZone.of(timeZoneString),
+            truncateToSeconds = true
+        )
     }
 
     @Test
-    fun testTimeToolWithSpecificTimezone() = runTest {
-        listOf("UTC", "Europe/Paris", "+01:00").forEach { timezone ->
-            val resultText = subject.doExecute(TimeTool.Args(timezone))
+    fun testTimeToolWithUTCTimezone() = runTest {
+        verifyTimeToolAtTimezone("UTC")
+    }
 
-            val timeZone = TimeZone.of(timezone)
+    @Test
+    fun testTimeToolWithSpecificTimezoneName() = runTest {
+        verifyTimeToolAtTimezone("Europe/Paris")
+    }
 
-            verifyTimeAtTimezone(resultText, timeZone, true)
-        }
+    @Test
+    fun testTimeToolWithSpecificTimezoneOffset() = runTest {
+        verifyTimeToolAtTimezone("+01:00")
     }
 
     @Test
     fun testTimeToolWithInvalidTimezone() = runTest {
-        val invalidTimezone = "InvalidTimezone"
+        // given
+        val invalidTimezone = "Mars/BaseAlpha"
+        // when
         val resultText = subject.doExecute(TimeTool.Args(invalidTimezone))
-
-        withClue("Unexpected error response") {
-            resultText shouldBe "Invalid timezone: $invalidTimezone. Please provide a valid timezone like 'Europe/Paris' or an offset like '+01:00'."
-        }
+        // then
+        assertEquals(
+            expected = "Invalid timezone: $invalidTimezone. Please provide a valid timezone like 'Europe/Paris' or an offset like '+01:00'.",
+            actual = resultText,
+            message = "Unexpected error response"
+        )
     }
 }
-

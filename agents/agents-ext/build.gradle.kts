@@ -25,7 +25,6 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-test"))
-                implementation(libs.kotest.assertions.core)
             }
         }
 

@@ -1,6 +1,10 @@
 package ai.koog.agents.ext.tool
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -79,7 +83,7 @@ public class TimeTool(
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "__time__",
+        name = "time",
         description = "Service tool, used by the agent to get current time",
         requiredParameters = emptyList(),
         optionalParameters = listOf(
