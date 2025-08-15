@@ -235,19 +235,22 @@ class RetryingLLMClientTest {
     }
 
     @Test
-    fun testStreamingWithoutRetry() = runTest {
+    fun testStreamingSucceedOnFirstAttempt() = runTest {
         val mockClient = MockLLMClient(
-            streamResponse = flowOf("chunk1", "chunk2", "chunk3")
+            streamResponse = flowOf("chunk1", "chunk2"),
+            streamFailuresBeforeSuccess = 0
         )
 
         val retryingClient = RetryingLLMClient(
             mockClient,
-            RetryConfig(enableStreamingRetry = false)
+            RetryConfig(
+                maxAttempts = 2
+            )
         )
 
         val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
 
-        assertEquals(listOf("chunk1", "chunk2", "chunk3"), result)
+        assertEquals(listOf("chunk1", "chunk2"), result)
         assertEquals(1, mockClient.streamCalls)
     }
 
@@ -264,7 +267,6 @@ class RetryingLLMClientTest {
             RetryConfig(
                 maxAttempts = 2,
                 initialDelay = 10.milliseconds,
-                enableStreamingRetry = true
             )
         )
 
@@ -272,6 +274,32 @@ class RetryingLLMClientTest {
 
         assertEquals(listOf("chunk1", "chunk2"), result)
         assertEquals(2, mockClient.streamCalls)
+    }
+
+    @Test
+    fun testStreamingNoRetryAfterFirstToken() = runTest {
+        // Mock that emits one token then fails
+        val mockClient = MockLLMClient(
+            streamResponse = flow {
+                emit("first-token")
+                throw RuntimeException("Connection lost after first token")
+            }
+        )
+
+        val retryingClient = RetryingLLMClient(
+            mockClient,
+            RetryConfig(
+                maxAttempts = 3,
+            )
+        )
+
+        // Should not retry because we already received a token
+        val exception = assertFailsWith<RuntimeException> {
+            retryingClient.executeStreaming(testPrompt, testModel).toList()
+        }
+        
+        assertEquals("Connection lost after first token", exception.message)
+        assertEquals(1, mockClient.streamCalls) // No retry
     }
 
     @Test

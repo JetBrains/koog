@@ -21,7 +21,6 @@ class RetryConfigTest {
         assertEquals(30.seconds, config.maxDelay)
         assertEquals(2.0, config.backoffMultiplier)
         assertEquals(0.1, config.jitterFactor)
-        assertFalse(config.enableStreamingRetry)
         assertNotNull(config.retryAfterExtractor)
         assertTrue(config.retryablePatterns.isNotEmpty())
     }
@@ -73,6 +72,27 @@ class RetryConfigTest {
     }
 
     @Test
+    fun `should validate initialDelay not greater than maxDelay`() {
+        assertFailsWith<IllegalArgumentException> {
+            RetryConfig(
+                initialDelay = 60.seconds,
+                maxDelay = 30.seconds
+            )
+        }
+
+        // Should not throw
+        RetryConfig(
+            initialDelay = 30.seconds,
+            maxDelay = 60.seconds
+        )
+        RetryConfig(
+            initialDelay = 30.seconds,
+            maxDelay = 30.seconds
+        )
+    }
+
+
+    @Test
     fun `CONSERVATIVE config should have expected values`() {
         val config = RetryConfig.CONSERVATIVE
 
@@ -109,7 +129,7 @@ class RetryConfigTest {
 
         // Check for important keywords
         assertTrue(patterns.any { it is RetryablePattern.Keyword && it.keyword == "rate limit" })
-        assertTrue(patterns.any { it is RetryablePattern.Keyword && it.keyword == "timeout" })
+        assertTrue(patterns.any { it is RetryablePattern.Keyword && it.keyword == "request timeout" })
     }
 }
 

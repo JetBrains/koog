@@ -308,7 +308,6 @@ fun main() {
 -->
 ```kotlin
 val config = RetryConfig(
-    enableStreamingRetry = true,  // Enable stream retry
     maxAttempts = 3
 )
 
@@ -317,7 +316,7 @@ val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
 ```
 <!--- KNIT example-prompt-api-09.kt -->
 
-> **Note**: Stream retry restarts from the beginning. Already emitted chunks cannot be replayed.
+> **Note**: Streaming retry only applies to connection failures before the first token is received. Once streaming begins, errors are passed through to preserve content integrity.
 
 ### Timeout Configuration
 

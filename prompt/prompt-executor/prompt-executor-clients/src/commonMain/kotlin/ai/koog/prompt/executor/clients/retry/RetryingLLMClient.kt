@@ -11,7 +11,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlin.random.Random
 import kotlin.time.Duration
@@ -49,66 +48,41 @@ public class RetryingLLMClient(
         delegate.execute(prompt, model, tools)
     }
 
+    // Streaming retry: Only retries connection failures before the first token is received.
+    // Once streaming starts, errors are passed through to avoid content duplication.
     override fun executeStreaming(
         prompt: Prompt,
         model: LLModel
     ): Flow<String> {
-        if (!config.enableStreamingRetry) {
-            // Simple passthrough if streaming retry is disabled
-            return delegate.executeStreaming(prompt, model)
-        }
-
-        // Streaming retry with reconnection support
         return flow {
-            var attempt = 0
-            var lastError: Throwable? = null
-
-            while (attempt < config.maxAttempts) {
+            repeat(config.maxAttempts) { attempt ->
+                var firstTokenReceived = false
                 try {
-                    delegate.executeStreaming(prompt, model)
-                        .catch { error ->
-                            if (shouldRetry(error) && attempt < config.maxAttempts - 1) {
-                                throw StreamRetrySignal(error)
-                            } else {
-                                throw error
-                            }
-                        }
-                        .collect { chunk ->
-                            emit(chunk)
-                        }
-                    return@flow // Success
-                } catch (e: StreamRetrySignal) {
-                    lastError = e.cause
-                    attempt++
-
-                    if (attempt < config.maxAttempts) {
-                        val delay = calculateDelay(attempt - 1)
-                        logger.warn {
-                            "Stream interrupted (attempt $attempt/${config.maxAttempts}). " +
-                                "Retrying in ${delay.inWholeMilliseconds}ms. Error: ${e.cause.message}"
-                        }
-                        delay(delay)
+                    delegate.executeStreaming(prompt, model).collect { chunk ->
+                        firstTokenReceived = true
+                        emit(chunk)
                     }
+                    return@flow
                 } catch (e: CancellationException) {
-                    throw e
+                    throw e // Never retry cancellations
                 } catch (e: Throwable) {
-                    if (!shouldRetry(e)) throw e
+                    // If we already received tokens, don't retry - pass error through
+                    if (firstTokenReceived) {
+                        throw e
+                    }
+                    
+                    if (!shouldRetry(e) || attempt >= config.maxAttempts - 1) {
+                        throw e
+                    }
 
-                    lastError = e
-                    attempt++
-
-                    if (attempt >= config.maxAttempts) throw e
-
-                    val delay = calculateDelay(attempt - 1)
+                    val delay = calculateDelay(attempt, e)
                     logger.warn {
-                        "Stream failed (attempt $attempt/${config.maxAttempts}). " +
-                            "Retrying in ${delay.inWholeMilliseconds}ms"
+                        "Stream connection failed before first token (attempt ${attempt + 1}/${config.maxAttempts}). " +
+                            "Retrying in ${delay.inWholeMilliseconds}ms. Error: ${e.message}"
                     }
                     delay(delay)
                 }
             }
-
-            throw lastError ?: IllegalStateException("Stream retry exhausted")
         }
     }
 
@@ -181,12 +155,11 @@ public class RetryingLLMClient(
         }
         val boundedMs = minOf(exponentialMs, config.maxDelay.inWholeMilliseconds.toDouble())
 
-        // Add jitter
-        val jitter = Random.nextDouble(1.0 - config.jitterFactor, 1.0 + config.jitterFactor)
-        val finalMs = (boundedMs * jitter).toLong()
+        // Add jitter (only increases delay, never decreases)
+        val jitterMs = Random.nextDouble(0.0, boundedMs * config.jitterFactor)
+        val finalMs = (boundedMs + jitterMs).toLong()
 
         return finalMs.milliseconds
     }
 
-    private class StreamRetrySignal(override val cause: Throwable) : Exception(cause)
 }

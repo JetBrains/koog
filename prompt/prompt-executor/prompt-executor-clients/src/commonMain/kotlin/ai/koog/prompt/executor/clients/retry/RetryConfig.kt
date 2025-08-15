@@ -13,7 +13,6 @@ import kotlin.time.Duration.Companion.seconds
  * @property backoffMultiplier Multiplier for exponential backoff
  * @property jitterFactor Random jitter factor (0.0 to 1.0)
  * @property retryablePatterns Patterns to identify retryable errors
- * @property enableStreamingRetry Whether to retry streaming operations
  * @property retryAfterExtractor Optional extractor for retry-after hints
  */
 public data class RetryConfig(
@@ -23,13 +22,13 @@ public data class RetryConfig(
     val backoffMultiplier: Double = 2.0,
     val jitterFactor: Double = 0.1,
     val retryablePatterns: List<RetryablePattern> = DEFAULT_PATTERNS,
-    val enableStreamingRetry: Boolean = false,
     val retryAfterExtractor: RetryAfterExtractor? = DefaultRetryAfterExtractor
 ) {
     init {
         require(maxAttempts >= 1) { "maxAttempts must be at least 1" }
         require(backoffMultiplier >= 1.0) { "backoffMultiplier must be at least 1.0" }
         require(jitterFactor in 0.0..1.0) { "jitterFactor must be between 0.0 and 1.0" }
+        require(initialDelay <= maxDelay) { "initialDelay ($initialDelay) must not be greater than maxDelay ($maxDelay)" }
     }
 
     public companion object {
@@ -49,12 +48,14 @@ public data class RetryConfig(
             RetryablePattern.Keyword("rate limit"),
             RetryablePattern.Keyword("too many requests"),
             RetryablePattern.Keyword("overloaded"),
-            RetryablePattern.Keyword("timeout"),
-            RetryablePattern.Keyword("timed out"),
-            RetryablePattern.Keyword("connection reset"),
+            RetryablePattern.Keyword("request timeout"),
+            RetryablePattern.Keyword("connection timeout"),
+            RetryablePattern.Keyword("read timeout"),
+            RetryablePattern.Keyword("write timeout"),
+            RetryablePattern.Keyword("connection reset by peer"),
             RetryablePattern.Keyword("connection refused"),
-            RetryablePattern.Keyword("EOF"),
-            RetryablePattern.Keyword("temporarily unavailable")
+            RetryablePattern.Keyword("temporarily unavailable"),
+            RetryablePattern.Keyword("service unavailable")
         )
 
         /**
