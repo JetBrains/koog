@@ -76,7 +76,8 @@ class ModelCapabilitiesIntegrationTest {
 
         private val allCapabilities = listOf(
             // todo: add video?
-            LLMCapability.Speculation, // todo: remove caps with comments?
+            // todo: remove caps with comments?
+            LLMCapability.Speculation, // remove?
             LLMCapability.Temperature, // remove?
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
