@@ -56,20 +56,11 @@ object Models {
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
-            GoogleModels.Gemini1_5Pro,
-            GoogleModels.Gemini1_5ProLatest,
             GoogleModels.Gemini2_5Pro,
-
             GoogleModels.Gemini2_0Flash,
             GoogleModels.Gemini2_0Flash001,
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
-            GoogleModels.Gemini1_5Flash,
-            GoogleModels.Gemini1_5FlashLatest,
-            GoogleModels.Gemini1_5Flash002,
-            GoogleModels.Gemini1_5Flash8B,
-            GoogleModels.Gemini1_5Flash8B001,
-            GoogleModels.Gemini1_5Flash8BLatest,
             GoogleModels.Gemini2_5Flash,
         )
     }
@@ -115,7 +106,6 @@ object Models {
      * to signal one does not have an API key for this or that provider
      *
      * @param provider The LLM provider to check
-     * @param skipProvidersOverride Optional override for the skip providers list, used for testing
      */
     @JvmStatic
     fun assumeAvailable(provider: LLMProvider) {

@@ -60,25 +60,12 @@ object MediaTestScenarios {
         CORRUPTED_AUDIO
     }
 
-    enum class PdfTestScenario {
-        BASIC_PDF,
-        BIG_PDF, // 20MB for OpenAI/Gemini, 5MB for Anthropic
-        CORRUPTED_PDF
-    }
-
-    enum class VideoTestScenario {
-        // Only Gemini
-        BASIC_VIDEO, // video/mp4
-        BIG_VIDEO, // 20MB
-        CORRUPTED_VIDEO
-    }
-
     @JvmStatic
     fun markdownScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = MarkdownTestScenario.entries.toTypedArray()
         val models = listOf(
             AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini1_5Pro,
+            GoogleModels.Gemini2_5Pro,
             OpenAIModels.Chat.GPT4o,
         )
         return scenarios.flatMap { scenario ->
@@ -94,7 +81,7 @@ object MediaTestScenarios {
         val models = listOf(
             OpenAIModels.Chat.GPT4o,
             AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini1_5Pro
+            GoogleModels.Gemini2_5Pro
         )
         return scenarios.flatMap { scenario ->
             models.map { model ->
@@ -109,7 +96,7 @@ object MediaTestScenarios {
         val models = listOf(
             OpenAIModels.Chat.GPT4o,
             AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini1_5Pro
+            GoogleModels.Gemini2_5Pro
         )
         return scenarios.flatMap { scenario ->
             models.map { model ->
@@ -123,35 +110,7 @@ object MediaTestScenarios {
         val scenarios = AudioTestScenario.entries.toTypedArray()
         val models = listOf(
             OpenAIModels.Audio.GPT4oAudio,
-            GoogleModels.Gemini1_5Pro
-        )
-        return scenarios.flatMap { scenario ->
-            models.map { model ->
-                Arguments.of(scenario, model)
-            }
-        }.stream()
-    }
-
-    @JvmStatic
-    fun pdfScenarioModelCombinations(): Stream<Arguments> {
-        val scenarios = PdfTestScenario.entries.toTypedArray()
-        val models = listOf(
-            OpenAIModels.Chat.GPT4o,
-            AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini1_5Pro
-        )
-        return scenarios.flatMap { scenario ->
-            models.map { model ->
-                Arguments.of(scenario, model)
-            }
-        }.stream()
-    }
-
-    @JvmStatic
-    fun videoScenarioModelCombinations(): Stream<Arguments> {
-        val scenarios = VideoTestScenario.entries.toTypedArray()
-        val models = listOf(
-            GoogleModels.Gemini1_5Pro
+            GoogleModels.Gemini2_5Pro
         )
         return scenarios.flatMap { scenario ->
             models.map { model ->

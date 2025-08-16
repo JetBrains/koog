@@ -184,17 +184,16 @@ class ModelIdentifierParsingTest {
     // Google model identifier tests
     @Test
     fun testGoogleModels() = runTest {
-        // Test Gemini 1.5 Pro
-        val gemini1_5Pro = getModelFromIdentifier("google.gemini1_5pro")
-        assertNotNull(gemini1_5Pro)
-        assertEquals(LLMProvider.Google, gemini1_5Pro.provider)
-        assertEquals(GoogleModels.Gemini1_5Pro, gemini1_5Pro)
+        // Test Gemini 2.0 Flash
+        val gemini20Flash = getModelFromIdentifier("google.gemini2_0flash")
+        assertNotNull(gemini20Flash)
+        assertEquals(LLMProvider.Google, gemini20Flash.provider)
+        assertEquals(GoogleModels.Gemini2_0Flash, gemini20Flash)
 
-        // Test Gemini 1.5 Pro Latest
-        val gemini1_5ProLatest = getModelFromIdentifier("google.gemini1_5prolatest")
-        assertNotNull(gemini1_5ProLatest)
-        assertEquals(LLMProvider.Google, gemini1_5ProLatest.provider)
-        assertEquals(GoogleModels.Gemini1_5ProLatest, gemini1_5ProLatest)
+        val gemini25Pro = getModelFromIdentifier("google.gemini2_5pro")
+        assertNotNull(gemini25Pro)
+        assertEquals(LLMProvider.Google, gemini25Pro.provider)
+        assertEquals(GoogleModels.Gemini2_5Pro, gemini25Pro)
     }
 
     // OpenRouter model identifier tests

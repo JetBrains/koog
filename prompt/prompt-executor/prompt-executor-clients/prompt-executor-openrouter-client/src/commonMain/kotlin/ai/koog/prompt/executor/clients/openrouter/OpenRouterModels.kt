@@ -2,7 +2,6 @@ package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -124,30 +123,6 @@ public object OpenRouterModels : LLModelDefinitions {
         id = "openai/gpt-3.5-turbo",
         capabilities = standardCapabilities,
         contextLength = 16_385,
-    )
-
-    /**
-     * Represents the Google Gemini 1.5 Pro language model accessed through the OpenRouter provider.
-     *
-     * This model supports multimodal capabilities, which enable handling multiple types of input or tasks.
-     * It is identified by the `google/gemini-1.5-pro` model ID within the OpenRouter ecosystem.
-     */
-    public val Gemini15Pro: LLModel = GoogleModels.Gemini1_5Pro.copy(
-        provider = LLMProvider.OpenRouter,
-        id = "google/gemini-1.5-pro",
-        capabilities = multimodalCapabilities,
-    )
-
-    /**
-     * Represents the Gemini 1.5 Flash language model provided via the OpenRouter platform.
-     *
-     * This language model is identified by its unique `id` and supports multimodal capabilities,
-     * enabling it to handle various modes of input and output effectively.
-     */
-    public val Gemini15Flash: LLModel = GoogleModels.Gemini1_5Flash.copy(
-        provider = LLMProvider.OpenRouter,
-        id = "google/gemini-1.5-flash",
-        capabilities = multimodalCapabilities,
     )
 
     /**
