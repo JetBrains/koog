@@ -169,7 +169,7 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
             PrimitiveKind.BYTE, PrimitiveKind.SHORT, PrimitiveKind.INT, PrimitiveKind.LONG -> JsonSchemaConsts.Types.INTEGER
             PrimitiveKind.FLOAT, PrimitiveKind.DOUBLE -> JsonSchemaConsts.Types.NUMBER
             StructureKind.LIST -> JsonSchemaConsts.Types.ARRAY
-            else -> return property // Ne rien faire pour les autres types
+            else -> return property
         }
 
         if (min != null) {
@@ -218,11 +218,9 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
                     val propertyName = context.descriptor.getElementName(i)
                     val propertyDescriptor = context.descriptor.getElementDescriptor(i)
 
-                    // Obtenir les contraintes min/max de la propriété
                     val elementMin = context.getElementMin(i)
                     val elementMax = context.getElementMax(i)
 
-                    // Créer un nouveau contexte avec ces contraintes
                     val propertyContext = context.copy(
                         descriptor = propertyDescriptor,
                         currentDefPath = context.currentDefPath + context.descriptor,
@@ -230,9 +228,7 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
                             ?: context.copy(descriptor = propertyDescriptor).getTypeDescription()
                     )
 
-                    // Passer les contraintes min/max via la nouvelle classe PropertyConstraints
                     val processedProperty = if (elementMin != null || elementMax != null) {
-                        // Appliquer les contraintes min/max spécifiques à cette propriété
                         val baseProperty = process(propertyContext)
                         applyConstraints(baseProperty, propertyDescriptor.kind, elementMin, elementMax)
                     } else {
