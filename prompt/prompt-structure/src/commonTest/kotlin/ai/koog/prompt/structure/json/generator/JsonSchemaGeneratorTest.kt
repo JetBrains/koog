@@ -1,6 +1,9 @@
 package ai.koog.prompt.structure.json.generator
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.LLMMax
+import ai.koog.agents.core.tools.annotations.LLMMin
+import ai.koog.agents.core.tools.annotations.LLMRange
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode
@@ -9,7 +12,9 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.serializer
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 
 class JsonSchemaGeneratorTest {
@@ -161,6 +166,181 @@ class JsonSchemaGeneratorTest {
     data class RecursiveTestClass(
         val recursiveProperty: RecursiveTestClass?
     )
+
+
+    @Serializable
+    @SerialName("IntMinTest")
+    data class IntMinTest(
+        @property:LLMMin(5) val min: Int
+    )
+
+    @Serializable
+    @SerialName("IntMaxTest")
+    data class IntMaxTest(
+        @property:LLMMax(5) val max: Int
+    )
+
+    @Serializable
+    @SerialName("IntRangeTest")
+    data class IntRangeTest(
+        @property:LLMRange(5, 10) val range: Int
+    )
+
+    @Serializable
+    @SerialName("IntDuplicateAnnotationTest")
+    data class IntDuplicateAnnotationTest(
+        @property:LLMMax(5)
+        @property:LLMRange(7, 9)
+        val stringProperty: Int
+    )
+
+
+    @Serializable
+    @SerialName("StringMinTest")
+    data class StringMinTest(
+        @property:LLMMin(5) val min: String
+    )
+
+    @Serializable
+    @SerialName("StringMaxTest")
+    data class StringMaxTest(
+        @property:LLMMax(5) val max: String
+    )
+
+    @Serializable
+    @SerialName("StringRangeTest")
+    data class StringRangeTest(
+        @property:LLMRange(5, 10) val range: String
+    )
+
+    @Serializable
+    @SerialName("StringDuplicateAnnotationTest")
+    data class StringDuplicateAnnotationTest(
+        @property:LLMMax(5)
+        @property:LLMRange(7, 9)
+        val stringProperty: String
+    )
+
+
+    @Serializable
+    @SerialName("ListMinTest")
+    data class ListMinTest(
+        @property:LLMMin(5) val array: List<String>
+    )
+
+    @Serializable
+    @SerialName("ListMaxTest")
+    data class ListMaxTest(
+        @property:LLMMax(5) val array: List<String>
+    )
+
+    @Serializable
+    @SerialName("ListRangeTest")
+    data class ListRangeTest(
+        @property:LLMRange(5, 10) val array: List<String>
+    )
+
+    @Serializable
+    @SerialName("ListDuplicateAnnotationTest")
+    data class ListDuplicateAnnotationTest(
+        @property:LLMMax(5)
+        @property:LLMRange(7, 9)
+        val array: List<String>
+    )
+
+
+    @Test
+    fun testIntMin() {
+        val result = basicGenerator.generate(json, "IntMinTest", serializer<IntMinTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+
+        assertContains(schema, "\"minimum\": 5")
+    }
+
+    @Test
+    fun testIntMax() {
+        val result = basicGenerator.generate(json, "IntMaxTest", serializer<IntMaxTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+
+        assertContains(schema, "\"maximum\": 5")
+    }
+
+    @Test
+    fun testIntRange() {
+        val result = basicGenerator.generate(json, "IntRangeTest", serializer<IntRangeTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+
+        assertContains(schema, "\"minimum\": 5")
+        assertContains(schema, "\"maximum\": 10")
+    }
+
+    @Test
+    fun testIntDuplicateAnnotation() {
+        assertFailsWith<IllegalStateException> {
+            basicGenerator.generate(json, "IntDuplicateAnnotationTest", serializer<IntDuplicateAnnotationTest>(), emptyMap())
+        }
+    }
+
+
+    @Test
+    fun testStringMin() {
+        val result = basicGenerator.generate(json, "StringMinTest", serializer<StringMinTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+        assertContains(schema, "\"minLength\": 5")
+    }
+
+    @Test
+    fun testStringMax() {
+        val result = basicGenerator.generate(json, "StringMaxTest", serializer<StringMaxTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+        assertContains(schema, "\"maxLength\": 5")
+    }
+
+    @Test
+    fun testStringRange() {
+        val result = basicGenerator.generate(json, "StringRangeTest", serializer<StringRangeTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+        assertContains(schema, "\"minLength\": 5")
+        assertContains(schema, "\"maxLength\": 10")
+    }
+
+    @Test
+    fun testStringDuplicateAnnotation() {
+        assertFailsWith<IllegalStateException> {
+            basicGenerator.generate(json, "StringDuplicateAnnotationTest", serializer<StringDuplicateAnnotationTest>(), emptyMap())
+        }
+    }
+
+
+    @Test
+    fun testListMin() {
+        val result = basicGenerator.generate(json, "ListMinTest", serializer<ListMinTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+        assertContains(schema, "\"minContains\": 5")
+    }
+
+    @Test
+    fun testListMax() {
+        val result = basicGenerator.generate(json, "ListMaxTest", serializer<ListMaxTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+        assertContains(schema, "\"maxContains\": 5")
+    }
+
+    @Test
+    fun testListRange() {
+        val result = basicGenerator.generate(json, "ListRangeTest", serializer<ListRangeTest>(), emptyMap())
+        val schema = json.encodeToString(result.schema)
+        assertContains(schema, "\"minContains\": 5")
+        assertContains(schema, "\"maxContains\": 10")
+    }
+
+    @Test
+    fun testListDuplicateAnnotation() {
+        assertFailsWith<IllegalStateException> {
+            basicGenerator.generate(json, "ListDuplicateAnnotationTest", serializer<ListDuplicateAnnotationTest>(), emptyMap())
+        }
+    }
+
 
     @Test
     fun testGenerateStandardSchema() {

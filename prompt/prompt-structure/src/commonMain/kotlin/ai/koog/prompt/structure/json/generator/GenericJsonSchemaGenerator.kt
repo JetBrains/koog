@@ -68,9 +68,34 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
         }
     }
 
+    protected fun JsonObjectBuilder.putMax(max: Int?, type: String) {
+        max?.let {
+            when (type) {
+                JsonSchemaConsts.Types.STRING -> put(JsonSchemaConsts.Keys.MAX_LENGTH, it)
+                JsonSchemaConsts.Types.NUMBER -> put(JsonSchemaConsts.Keys.MAX, it)
+                JsonSchemaConsts.Types.INTEGER -> put(JsonSchemaConsts.Keys.MAX, it)
+                JsonSchemaConsts.Types.ARRAY -> put(JsonSchemaConsts.Keys.MAX_ITEMS, it)
+                else -> throw IllegalArgumentException("Unsupported type for max: $type")
+            }
+        }
+    }
+    protected fun JsonObjectBuilder.putMin(min: Int?, type: String) {
+        min?.let {
+            when (type) {
+                JsonSchemaConsts.Types.STRING -> put(JsonSchemaConsts.Keys.MIN_LENGTH, it)
+                JsonSchemaConsts.Types.NUMBER -> put(JsonSchemaConsts.Keys.MIN, it)
+                JsonSchemaConsts.Types.INTEGER -> put(JsonSchemaConsts.Keys.MIN, it)
+                JsonSchemaConsts.Types.ARRAY -> put(JsonSchemaConsts.Keys.MIN_ITEMS, it)
+                else -> throw IllegalArgumentException("Unsupported type for min: $type")
+            }
+        }
+    }
+
     override fun processString(context: GenerationContext): JsonObject = buildJsonObject {
         put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.STRING)
         putDescription(context.currentDescription)
+        putMax(context.getTypeMax(), JsonSchemaConsts.Types.STRING)
+        putMin(context.getTypeMin(), JsonSchemaConsts.Types.STRING)
     }
 
     override fun processBoolean(context: GenerationContext): JsonObject = buildJsonObject {
@@ -81,11 +106,15 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
     override fun processInteger(context: GenerationContext): JsonObject = buildJsonObject {
         put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.INTEGER)
         putDescription(context.currentDescription)
+        putMax(context.getTypeMax(), JsonSchemaConsts.Types.INTEGER)
+        putMin(context.getTypeMin(), JsonSchemaConsts.Types.INTEGER)
     }
 
     override fun processNumber(context: GenerationContext): JsonObject = buildJsonObject {
         put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.NUMBER)
         putDescription(context.currentDescription)
+        putMax(context.getTypeMax(), JsonSchemaConsts.Types.NUMBER)
+        putMin(context.getTypeMin(), JsonSchemaConsts.Types.NUMBER)
     }
 
     override fun processEnum(context: GenerationContext): JsonObject = buildJsonObject {
@@ -102,6 +131,8 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
         val itemDescriptor = context.descriptor.getElementDescriptor(0)
 
         put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.ARRAY)
+        putMin(context.getTypeMin(), JsonSchemaConsts.Types.ARRAY)
+        putMax(context.getTypeMax(), JsonSchemaConsts.Types.ARRAY)
         put(JsonSchemaConsts.Keys.ITEMS, process(context.copy(descriptor = itemDescriptor, currentDescription = null)))
 
         putDescription(context.currentDescription)
@@ -123,6 +154,43 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
         )
 
         putDescription(context.currentDescription)
+    }
+
+    private fun applyConstraints(
+        property: JsonObject,
+        kind: SerialKind,
+        min: Int?,
+        max: Int?
+    ): JsonObject {
+        val result = property.toMutableMap()
+
+        val type = when (kind) {
+            PrimitiveKind.STRING -> JsonSchemaConsts.Types.STRING
+            PrimitiveKind.BYTE, PrimitiveKind.SHORT, PrimitiveKind.INT, PrimitiveKind.LONG -> JsonSchemaConsts.Types.INTEGER
+            PrimitiveKind.FLOAT, PrimitiveKind.DOUBLE -> JsonSchemaConsts.Types.NUMBER
+            StructureKind.LIST -> JsonSchemaConsts.Types.ARRAY
+            else -> return property // Ne rien faire pour les autres types
+        }
+
+        if (min != null) {
+            val key = when (type) {
+                JsonSchemaConsts.Types.STRING -> JsonSchemaConsts.Keys.MIN_LENGTH
+                JsonSchemaConsts.Types.ARRAY -> JsonSchemaConsts.Keys.MIN_ITEMS
+                else -> JsonSchemaConsts.Keys.MIN
+            }
+            result[key] = JsonPrimitive(min)
+        }
+
+        if (max != null) {
+            val key = when (type) {
+                JsonSchemaConsts.Types.STRING -> JsonSchemaConsts.Keys.MAX_LENGTH
+                JsonSchemaConsts.Types.ARRAY -> JsonSchemaConsts.Keys.MAX_ITEMS
+                else -> JsonSchemaConsts.Keys.MAX
+            }
+            result[key] = JsonPrimitive(max)
+        }
+
+        return JsonObject(result)
     }
 
     override fun processObject(context: GenerationContext): JsonObject {
@@ -150,18 +218,28 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
                     val propertyName = context.descriptor.getElementName(i)
                     val propertyDescriptor = context.descriptor.getElementDescriptor(i)
 
-                    put(
-                        propertyName,
-                        process(
-                            context.copy(
-                                descriptor = propertyDescriptor,
-                                currentDefPath = context.currentDefPath + context.descriptor,
-                                // Put description for a property or fallback to the description for a type of the property
-                                currentDescription = context.getElementDescription(i)
-                                    ?: context.copy(descriptor = propertyDescriptor).getTypeDescription()
-                            )
-                        )
+                    // Obtenir les contraintes min/max de la propriété
+                    val elementMin = context.getElementMin(i)
+                    val elementMax = context.getElementMax(i)
+
+                    // Créer un nouveau contexte avec ces contraintes
+                    val propertyContext = context.copy(
+                        descriptor = propertyDescriptor,
+                        currentDefPath = context.currentDefPath + context.descriptor,
+                        currentDescription = context.getElementDescription(i)
+                            ?: context.copy(descriptor = propertyDescriptor).getTypeDescription()
                     )
+
+                    // Passer les contraintes min/max via la nouvelle classe PropertyConstraints
+                    val processedProperty = if (elementMin != null || elementMax != null) {
+                        // Appliquer les contraintes min/max spécifiques à cette propriété
+                        val baseProperty = process(propertyContext)
+                        applyConstraints(baseProperty, propertyDescriptor.kind, elementMin, elementMax)
+                    } else {
+                        process(propertyContext)
+                    }
+
+                    put(propertyName, processedProperty)
                 }
             }
 

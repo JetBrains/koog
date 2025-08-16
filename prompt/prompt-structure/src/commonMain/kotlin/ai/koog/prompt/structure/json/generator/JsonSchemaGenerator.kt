@@ -1,6 +1,9 @@
 package ai.koog.prompt.structure.json.generator
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.LLMMax
+import ai.koog.agents.core.tools.annotations.LLMMin
+import ai.koog.agents.core.tools.annotations.LLMRange
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PolymorphicKind
@@ -78,6 +81,112 @@ public abstract class JsonSchemaGenerator {
 
             return elementDescriptionOverride ?: elementDescriptionAnnotation
         }
+
+
+        /**
+         * Retrieves the maximum allowable numeric value for the descriptor type based on the `@LLMMax`
+         * or `@LLMRange` annotations. If both annotations are present, an exception is thrown.
+         * If neither annotation is found, returns null.
+         *
+         * @return The maximum numeric value defined by the `@LLMMax` or `@LLMRange` annotation,
+         * or null if no maximum value is specified.
+         * @throws IllegalStateException if both `@LLMMax` and `@LLMRange` annotations are present.
+         */
+        public fun getTypeMax(): Int? {
+            val typeMaxAnnotation = descriptor.annotations
+                .filterIsInstance<LLMMax>()
+                .firstOrNull()
+            val typeRangeAnnotation = descriptor.annotations
+                .filterIsInstance<LLMRange>()
+                .firstOrNull()
+
+            if (typeMaxAnnotation != null && typeRangeAnnotation != null)
+                throw IllegalStateException("Both @LLMMax and @LLMRange annotations are present for type ${descriptor.serialName}")
+
+            return typeMaxAnnotation?.max ?: typeRangeAnnotation?.max
+        }
+
+        /**
+         * Retrieves the maximum allowable numeric value for an element in the `descriptor` based on the
+         * `@LLMMax` or `@LLMRange` annotations. If both annotations are present, an exception is thrown.
+         * If neither annotation is found, returns null.
+         *
+         * @param index The index of the element in the `descriptor`.
+         * @return The maximum numeric value defined by the `@LLMMax` or `@LLMRange` annotation for the
+         *         specified element, or null if no maximum value is specified.
+         * @throws IllegalStateException if both `@LLMMax` and `@LLMRange` annotations are present for the element.
+         */
+        public fun getElementMax(index: Int): Int? {
+            val elementName = descriptor.getElementName(index)
+            val elementAnnotations = descriptor.getElementAnnotations(index)
+
+            val lookupKey = "${descriptor.serialName}.$elementName"
+            val elementMaxAnnotation = elementAnnotations
+                .filterIsInstance<LLMMax>()
+                .firstOrNull()
+            val elementRangeAnnotation = elementAnnotations
+                .filterIsInstance<LLMRange>()
+                .firstOrNull()
+
+            if (elementMaxAnnotation != null && elementRangeAnnotation != null)
+                throw IllegalStateException("Both @LLMMax and @LLMRange annotations are present for element $lookupKey")
+
+            return elementMaxAnnotation?.max ?: elementRangeAnnotation?.max
+        }
+
+
+
+        /**
+         * Retrieves the minimum allowable numeric value for the descriptor type based on the `@LLMMin`
+         * or `@LLMRange` annotations. If both annotations are present, an exception is thrown.
+         * If neither annotation is found, returns null.
+         *
+         * @return The minimum numeric value defined by the `@LLMMin` or `@LLMRange` annotation,
+         * or null if no minimum value is specified.
+         * @throws IllegalStateException if both `@LLMMin` and `@LLMRange` annotations are present.
+         */
+        public fun getTypeMin(): Int? {
+            val typeMinAnnotation = descriptor.annotations
+                .filterIsInstance<LLMMin>()
+                .firstOrNull()
+            val typeRangeAnnotation = descriptor.annotations
+                .filterIsInstance<LLMRange>()
+                .firstOrNull()
+
+            if (typeMinAnnotation != null && typeRangeAnnotation != null)
+                throw IllegalStateException("Both @LLMMin and @LLMRange annotations are present for type ${descriptor.serialName}")
+
+            return typeMinAnnotation?.min ?: typeRangeAnnotation?.min
+        }
+
+        /**
+         * Retrieves the minimum allowable numeric value for an element in the `descriptor` based on
+         * the `@LLMMin` or `@LLMRange` annotations. If both annotations are present, an exception is thrown.
+         * If neither annotation is found, returns null.
+         *
+         * @param index The index of the element in the `descriptor`.
+         * @return The minimum numeric value defined by the `@LLMMin` or `@LLMRange` annotation for the
+         * specified element, or null if no minimum value is specified.
+         * @throws IllegalStateException if both `@LLMMin` and `@LLMRange` annotations are present for the element.
+         */
+        public fun getElementMin(index: Int): Int? {
+            val elementName = descriptor.getElementName(index)
+            val elementAnnotations = descriptor.getElementAnnotations(index)
+
+            val lookupKey = "${descriptor.serialName}.$elementName"
+            val elementMinAnnotation = elementAnnotations
+                .filterIsInstance<LLMMin>()
+                .firstOrNull()
+            val elementRangeAnnotation = elementAnnotations
+                .filterIsInstance<LLMRange>()
+                .firstOrNull()
+
+            if (elementMinAnnotation != null && elementRangeAnnotation != null)
+                throw IllegalStateException("Both @LLMMin and @LLMRange annotations are present for element $lookupKey")
+
+            return elementMinAnnotation?.min ?: elementRangeAnnotation?.min
+        }
+
     }
 
     /**
