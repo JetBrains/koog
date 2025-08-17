@@ -15,9 +15,6 @@ import kotlinx.serialization.SerialInfo
 @SerialInfo
 @Target(
     AnnotationTarget.PROPERTY,
-    AnnotationTarget.CLASS,
-    AnnotationTarget.TYPE,
     AnnotationTarget.VALUE_PARAMETER,
-    AnnotationTarget.FUNCTION
 )
 public annotation class LLMMax(val max: Int)
