@@ -87,16 +87,21 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
         }
     }
 
-    private fun minMaxCheck(min: Int?, max: Int?): Boolean = min == null || max == null || min <= max
+    private fun minMaxCheck(min: Int?, max: Int?, rejectNegative: Boolean): Error? {
+        if (min != null && min < 0 && rejectNegative)   error("Minimum value ($min) cannot be negative")
+        if (max != null && max < 0 && rejectNegative)   error("Maximum value ($max) cannot be negative")
+        if (min != null && max != null && min > max)    error("Minimum ($min) cannot be greater than maximum ($max)")
+        return null
+    }
 
     override fun processString(context: GenerationContext): JsonObject = buildJsonObject {
         put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.STRING)
         putDescription(context.currentDescription)
 
-        val maxLength = context.getTypeMax()
         val minLength = context.getTypeMin()
+        val maxLength = context.getTypeMax()
 
-        require(minMaxCheck(minLength, maxLength)) { "Maximum length ($maxLength) cannot be less than minimum length ($minLength)" }
+        minMaxCheck(minLength, maxLength, true)
 
         if (minLength != null) {
             require(minLength >= 0) { "Minimum length ($minLength) cannot be negative for string type" }
@@ -117,10 +122,10 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
         put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.INTEGER)
         putDescription(context.currentDescription)
 
-        val maximum = context.getTypeMax()
         val minimum = context.getTypeMin()
+        val maximum = context.getTypeMax()
 
-        require(minMaxCheck(minimum, maximum)) { "Maximum ($maximum) cannot be less than minimum ($minimum)" }
+        minMaxCheck(minimum, maximum, false)
 
         if (minimum != null) putMin(minimum, JsonSchemaConsts.Types.INTEGER)
         if (maximum != null) putMax(maximum, JsonSchemaConsts.Types.INTEGER)
@@ -130,10 +135,10 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
         put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.NUMBER)
         putDescription(context.currentDescription)
 
-        val maximum = context.getTypeMax()
         val minimum = context.getTypeMin()
+        val maximum = context.getTypeMax()
 
-        require(minMaxCheck(minimum, maximum)) { "Maximum ($maximum) cannot be less than minimum ($minimum)" }
+        minMaxCheck(minimum, maximum, false)
 
         if (minimum != null) putMin(minimum, JsonSchemaConsts.Types.NUMBER)
         if (maximum != null) putMax(maximum, JsonSchemaConsts.Types.NUMBER)
@@ -157,7 +162,7 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
         val itemMin = context.getTypeMin()
         val itemMax = context.getTypeMax()
 
-        require(minMaxCheck(itemMin, itemMax)) { "Maximum ($itemMin) cannot be less than minimum ($itemMax)" }
+        minMaxCheck(itemMin, itemMax, true)
 
         if (itemMin != null) putMin(itemMin, JsonSchemaConsts.Types.ARRAY)
         if (itemMax != null) putMax(itemMax, JsonSchemaConsts.Types.ARRAY)
