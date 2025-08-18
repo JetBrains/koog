@@ -374,7 +374,7 @@ class SpanProcessorTest {
         // Assert attributes for the collected event when the verbose flag is set to 'false'
         val expectedEventAttributes = mapOf(
             AttributeKey.stringKey("secretKey") to HiddenString.HIDDEN_STRING_PLACEHOLDER,
-            AttributeKey.stringKey("body") to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}",
+            AttributeKey.stringKey("content") to HiddenString.HIDDEN_STRING_PLACEHOLDER,
         )
 
         assertEquals(expectedEventAttributes.size, actualEventAttributes.size)

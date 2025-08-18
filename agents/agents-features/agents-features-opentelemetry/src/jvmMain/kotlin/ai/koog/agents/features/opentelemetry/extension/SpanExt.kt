@@ -27,9 +27,10 @@ internal fun Span.setEvents(events: List<GenAIAgentEvent>, verbose: Boolean) {
         // The 'opentelemetry-java' SDK does not have support for event body fields at the moment.
         // Pass body fields as attributes until an API is updated.
         val attributes = buildList {
-            // Collect all body fields into a single attribute with the 'body' key and JSON string structure as a value.
-            // Can be updated to [bodyFieldsToAttributes] to collect body fields as event attributes.
-            event.bodyFieldsToBodyAttribute(verbose)
+            // Collect all body fields into separate attributes.
+            // Please use [bodyFieldsToBodyAttribute] method to collect body fields into a single attribute
+            // with the 'body' key and JSON string structure as a value.
+            event.bodyFieldsToAttributes(verbose)
             addAll(event.attributes)
         }
 

@@ -3,6 +3,7 @@ package ai.koog.agents.features.opentelemetry.extension
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
+import ai.koog.agents.utils.HiddenString
 
 /**
  * Converts the attributes and body fields of a GenAIAgentEvent into span attributes
@@ -11,10 +12,11 @@ import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
  * @param span The span to which the converted attributes will be added.
  */
 internal fun GenAIAgentEvent.toSpanAttributes(
-    span: GenAIAgentSpan
+    span: GenAIAgentSpan,
+    verbose: Boolean
 ) {
     // 1. Convert all event body fields into attributes
-    this.bodyFieldsToAttributes()
+    this.bodyFieldsToAttributes(verbose)
 
     // 2. Convert all event attributes into the span attributes
     attributes.forEach { attribute -> span.addAttribute(attribute) }
@@ -25,12 +27,47 @@ internal fun GenAIAgentEvent.toSpanAttributes(
  * Each body field is transformed into a custom attribute representation using the
  * `toCustomAttribute` method, and the result is added as an attribute to the event.
  */
-internal fun GenAIAgentEvent.bodyFieldsToAttributes() {
+internal fun GenAIAgentEvent.bodyFieldsToAttributes(verbose: Boolean) {
     val bodyFieldsToProcess = bodyFields.toList()
 
     // Convert each Body Field into an event attribute
     bodyFieldsToProcess.forEach { bodyField ->
-        val attribute = bodyField.toCustomAttribute()
+        val attribute = bodyField.toCustomAttribute { field ->
+            val value = field.value
+            val valueToProcess = when (value) {
+                is HiddenString, is CharSequence, is Char, is Boolean, is Long, is Int, is Float, is Double -> {
+                    // SDK Primitives
+                    field.value
+                }
+                is List<*> -> {
+                    // SDK Array Primitives
+                    val isSdkArrayPrimitive = value.all { v ->
+                        v is HiddenString ||
+                            v is CharSequence ||
+                            v is Char ||
+                            v is Boolean ||
+                            v is Long ||
+                            v is Int ||
+                            v is Float ||
+                            v is Double
+                    }
+
+                    // Add value as is if SDK supports this type and [String] type for the rest
+                    if (isSdkArrayPrimitive) {
+                        field.value
+                    } else {
+                        field.valueString(verbose)
+                    }
+                }
+                else -> {
+                    field.valueString(verbose)
+                }
+            }
+
+            // Custom attribute
+            CustomAttribute(field.key, valueToProcess)
+        }
+
         this.addAttribute(attribute)
     }
 
