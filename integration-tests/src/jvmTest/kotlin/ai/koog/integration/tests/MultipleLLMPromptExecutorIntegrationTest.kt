@@ -28,7 +28,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -716,7 +715,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     when (scenario) {
                         MarkdownTestScenario.MALFORMED_SYNTAX,
                         MarkdownTestScenario.MATH_NOTATION,
@@ -784,7 +783,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     // For some edge cases, exceptions are expected
@@ -872,7 +871,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     when (scenario) {
@@ -946,7 +945,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
@@ -1014,7 +1013,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
@@ -1054,7 +1053,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
@@ -1177,9 +1176,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val modelAnthropic = AnthropicModels.Haiku_3_5
         val modelGemini = GoogleModels.Gemini2_0Flash
 
-        val responseOpenAI = executor.execute(prompt, modelOpenAI)
-        val responseAnthropic = executor.execute(prompt, modelAnthropic)
-        val responseGemini = executor.execute(prompt, modelGemini)
+        val responseOpenAI = executor.execute(prompt, modelOpenAI).single()
+        val responseAnthropic = executor.execute(prompt, modelAnthropic).single()
+        val responseGemini = executor.execute(prompt, modelGemini).single()
 
         assertTrue(responseOpenAI.content.isNotEmpty(), "OpenAI response should not be empty")
         assertTrue(responseAnthropic.content.isNotEmpty(), "Anthropic response should not be empty")

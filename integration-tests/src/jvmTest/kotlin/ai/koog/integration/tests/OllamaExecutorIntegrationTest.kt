@@ -9,7 +9,6 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.ollama.client.findByNameOrNull
 import ai.koog.prompt.llm.LLMCapability.Completion
 import ai.koog.prompt.llm.LLMCapability.Schema
@@ -84,7 +83,7 @@ class OllamaExecutorIntegrationTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model)
+        val response = executor.execute(prompt = prompt, model = model).single()
 
         assertTrue(response.content.isNotEmpty(), "Response should not be empty")
         assertTrue(response.content.contains("Paris"), "Response should contain 'Paris'")
@@ -799,7 +798,7 @@ class OllamaExecutorIntegrationTest {
         }
 
         try {
-            val response = executor.execute(prompt, visionModel)
+            val response = executor.execute(prompt, visionModel).single()
 
             when (scenario) {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
