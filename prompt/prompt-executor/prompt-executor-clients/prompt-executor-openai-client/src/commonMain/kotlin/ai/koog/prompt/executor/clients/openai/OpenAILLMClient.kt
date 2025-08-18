@@ -10,11 +10,16 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.models.Content
 import ai.koog.prompt.executor.clients.openai.models.ContentPart
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -59,6 +64,8 @@ public open class OpenAILLMClient(
     clock: Clock = Clock.System,
 ) : AbstractOpenAILLMClient(apiKey, settings, baseClient, clock), LLMEmbeddingProvider {
 
+
+    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
 

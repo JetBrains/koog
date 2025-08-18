@@ -33,7 +33,8 @@ public object DeepSeekModels : LLModelDefinitions {
             LLMCapability.Temperature,
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
-            LLMCapability.Schema.JSON.Full,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ),
         contextLength = 64_000,
         maxOutputTokens = 8_000
@@ -52,7 +53,8 @@ public object DeepSeekModels : LLModelDefinitions {
             LLMCapability.Temperature,
             LLMCapability.Tools,
             LLMCapability.ToolChoice,
-            LLMCapability.Schema.JSON.Full,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ),
         contextLength = 64_000,
         maxOutputTokens = 64_000
