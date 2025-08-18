@@ -91,7 +91,6 @@ class RetryConfigTest {
         )
     }
 
-
     @Test
     fun `CONSERVATIVE config should have expected values`() {
         val config = RetryConfig.CONSERVATIVE

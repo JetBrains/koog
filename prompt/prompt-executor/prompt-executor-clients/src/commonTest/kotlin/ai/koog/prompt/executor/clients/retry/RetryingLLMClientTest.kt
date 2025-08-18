@@ -297,7 +297,7 @@ class RetryingLLMClientTest {
         val exception = assertFailsWith<RuntimeException> {
             retryingClient.executeStreaming(testPrompt, testModel).toList()
         }
-        
+
         assertEquals("Connection lost after first token", exception.message)
         assertEquals(1, mockClient.streamCalls) // No retry
     }

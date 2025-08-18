@@ -70,7 +70,7 @@ public class RetryingLLMClient(
                     if (firstTokenReceived) {
                         throw e
                     }
-                    
+
                     if (!shouldRetry(e) || attempt >= config.maxAttempts - 1) {
                         throw e
                     }
@@ -161,5 +161,4 @@ public class RetryingLLMClient(
 
         return finalMs.milliseconds
     }
-
 }
