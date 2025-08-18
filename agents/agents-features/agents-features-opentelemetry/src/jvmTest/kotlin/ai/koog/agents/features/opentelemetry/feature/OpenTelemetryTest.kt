@@ -828,8 +828,8 @@ class OpenTelemetryTest {
                 mapOf(
                     "tool.Get whether" to mapOf(
                         "attributes" to mapOf(
-                            "output.value" to TestGetWeatherTool.RESULT,
-                            "input.value" to "{\"location\":\"Paris\"}",
+                            "output.value" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                            "input.value" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             "gen_ai.tool.description" to "The test tool to get a whether based on provided location.",
                             "gen_ai.tool.name" to "Get whether",
                         ),
