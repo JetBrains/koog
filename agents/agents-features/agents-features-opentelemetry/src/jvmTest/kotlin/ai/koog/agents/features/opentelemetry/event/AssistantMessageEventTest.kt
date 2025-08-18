@@ -17,8 +17,7 @@ class AssistantMessageEventTest {
 
     @Test
     fun `test assistant message attributes`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
+        val expectedMessage = createTestAssistantMessage("Test message")
         val llmProvider = MockLLMProvider()
 
         val assistantMessageEvent = AssistantMessageEvent(
@@ -40,8 +39,7 @@ class AssistantMessageEventTest {
 
     @Test
     fun `test tool call message`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
+        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", "Test message")
 
         val assistantMessageEvent = AssistantMessageEvent(
             provider = MockLLMProvider(),
@@ -59,8 +57,7 @@ class AssistantMessageEventTest {
 
     @Test
     fun `test assistant message`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
+        val expectedMessage = createTestAssistantMessage("Test message")
 
         val assistantMessageEvent = AssistantMessageEvent(
             provider = MockLLMProvider(),
@@ -68,7 +65,8 @@ class AssistantMessageEventTest {
         )
 
         val expectedBodyFields = listOf(
-            EventBodyFields.Content(content = expectedContent)
+            EventBodyFields.Role(role = expectedMessage.role),
+            EventBodyFields.Content(content = expectedMessage.content)
         )
 
         assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
@@ -81,8 +79,7 @@ class AssistantMessageEventTest {
 
     @Test
     fun `test assistant message with arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
+        val expectedMessage = createTestAssistantMessage("Test message")
         val args = buildJsonObject {
             put("string", "value")
             put("integer", 42)
@@ -95,7 +92,8 @@ class AssistantMessageEventTest {
         )
 
         val expectedBodyFields = listOf(
-            EventBodyFields.Content(content = expectedContent),
+            EventBodyFields.Role(role = expectedMessage.role),
+            EventBodyFields.Content(content = expectedMessage.content),
             EventBodyFields.Arguments(args)
         )
 
@@ -105,8 +103,7 @@ class AssistantMessageEventTest {
 
     @Test
     fun `test tool call message ignores arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
+        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", "Test message")
         val args = buildJsonObject { put("ignored", true) }
 
         val assistantMessageEvent = AssistantMessageEvent(

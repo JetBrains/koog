@@ -3,6 +3,7 @@ package ai.koog.agents.features.opentelemetry.event
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
+import ai.koog.prompt.message.Message
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -47,6 +48,7 @@ class ToolMessageEventTest {
         )
 
         val expectedBodyFields = listOf(
+            EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.Content(content = toolResult.toStringDefault()),
             EventBodyFields.Id(id = toolCallId)
         )
@@ -67,6 +69,7 @@ class ToolMessageEventTest {
         )
 
         val expectedBodyFields = listOf(
+            EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.Content(content = toolResult.toStringDefault())
         )
 

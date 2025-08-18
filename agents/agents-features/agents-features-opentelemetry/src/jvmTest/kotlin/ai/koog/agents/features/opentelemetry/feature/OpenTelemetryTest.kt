@@ -231,22 +231,22 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${userPrompt}\"}"
                             )
                         ),
 
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                                "body" to "{\"role\":\"system\",\"content\":\"${systemPrompt}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${userPrompt}\"}"
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${mockResponse}\"}"
+                                "body" to "{\"role\":\"assistant\",\"content\":\"${mockResponse}\"}"
                             )
                         )
                     )
@@ -382,15 +382,15 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                                "body" to "{\"role\":\"system\",\"content\":\"${systemPrompt}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt1}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${userPrompt1}\"}"
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${mockResponse1}\"}"
+                                "body" to "{\"role\":\"assistant\",\"content\":\"${mockResponse1}\"}"
                             )
                         )
                     )
@@ -452,15 +452,15 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                                "body" to "{\"role\":\"system\",\"content\":\"${systemPrompt}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt0}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${userPrompt0}\"}"
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${mockResponse0}\"}"
+                                "body" to "{\"role\":\"assistant\",\"content\":\"${mockResponse0}\"}"
                             )
                         )
                     )
@@ -597,19 +597,19 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                                "body" to "{\"role\":\"system\",\"content\":\"${systemPrompt}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${userPrompt}\"}"
                             ),
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${TestGetWeatherTool.RESULT}\"}"
+                                "body" to "{\"role\":\"tool\",\"content\":\"${TestGetWeatherTool.RESULT}\"}"
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${mockResponse}\"}"
+                                "body" to "{\"role\":\"assistant\",\"content\":\"${mockResponse}\"}"
                             ),
                         )
                     )
@@ -655,11 +655,11 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${systemPrompt}\"}"
+                                "body" to "{\"role\":\"system\",\"content\":\"${systemPrompt}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${userPrompt}\"}"
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
@@ -799,19 +799,19 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
+                                "body" to "{\"role\":\"system\",\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
+                                "body" to "{\"role\":\"tool\",\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
+                                "body" to "{\"role\":\"assistant\",\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                         )
                     )
@@ -857,11 +857,11 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
+                                "body" to "{\"role\":\"system\",\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
+                                "body" to "{\"role\":\"user\",\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,

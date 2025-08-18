@@ -19,10 +19,7 @@ internal class AssistantMessageEvent(
     }
 
     override val bodyFields: List<EventBodyField> = buildList {
-        if (message.role != Message.Role.Assistant) {
-            add(EventBodyFields.Role(role = message.role))
-        }
-
+        add(EventBodyFields.Role(role = message.role))
         when (message) {
             is Message.Assistant -> {
                 add(EventBodyFields.Content(content = message.content))

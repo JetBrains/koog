@@ -17,11 +17,7 @@ internal class UserMessageEvent(
     }
 
     override val bodyFields: List<EventBodyField> = buildList {
-
-        if (message.role != Message.Role.User) {
-            add(EventBodyFields.Role(role = message.role))
-        }
-
+        add(EventBodyFields.Role(role = message.role))
         add(EventBodyFields.Content(content = message.content))
     }
 }

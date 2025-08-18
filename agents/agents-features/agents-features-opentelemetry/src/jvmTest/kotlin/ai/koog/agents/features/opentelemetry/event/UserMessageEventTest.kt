@@ -38,8 +38,7 @@ class UserMessageEventTest {
 
     @Test
     fun `test user message body fields`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestUserMessage(expectedContent)
+        val expectedMessage = createTestUserMessage("Test message")
 
         val userMessageEvent = UserMessageEvent(
             provider = MockLLMProvider(),
@@ -47,7 +46,8 @@ class UserMessageEventTest {
         )
 
         val expectedBodyFields = listOf(
-            EventBodyFields.Content(content = expectedContent)
+            EventBodyFields.Role(role = expectedMessage.role),
+            EventBodyFields.Content(content = expectedMessage.content),
         )
 
         assertEquals(expectedBodyFields.size, userMessageEvent.bodyFields.size)

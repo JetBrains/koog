@@ -30,7 +30,7 @@ internal class ChoiceEvent(
 
                 add(
                     EventBodyFields.Message(
-                        role = message.role.takeIf { role -> role != Message.Role.Assistant },
+                        role = message.role,
                         content = message.content
                     )
                 )

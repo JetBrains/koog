@@ -53,7 +53,7 @@ class ChoiceEventTest {
         val expectedBodyFields = listOf(
             EventBodyFields.Index(0),
             EventBodyFields.FinishReason("stop"),
-            EventBodyFields.Message(null, expectedMessage.content)
+            EventBodyFields.Message(expectedMessage.role, expectedMessage.content)
         )
 
         assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
@@ -94,8 +94,8 @@ class ChoiceEventTest {
         val expectedBodyFields = listOf(
             EventBodyFields.Index(0),
             EventBodyFields.Message(
-                role = null,
-                content = expectedContent
+                role = expectedMessage.role,
+                content = expectedMessage.content
             )
         )
 
@@ -125,10 +125,7 @@ class ChoiceEventTest {
 
         val expectedBodyFields = listOf(
             EventBodyFields.Index(0),
-            EventBodyFields.Message(
-                role = null,
-                content = expectedContent
-            ),
+            EventBodyFields.Message(expectedMessage.role, expectedMessage.content),
             EventBodyFields.Arguments(args)
         )
 

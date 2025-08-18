@@ -38,8 +38,7 @@ class SystemMessageEventTest {
 
     @Test
     fun `test system message body fields`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestSystemMessage(expectedContent)
+        val expectedMessage = createTestSystemMessage("Test message")
 
         val systemMessageEvent = SystemMessageEvent(
             provider = MockLLMProvider(),
@@ -47,7 +46,8 @@ class SystemMessageEventTest {
         )
 
         val expectedBodyFields = listOf(
-            EventBodyFields.Content(content = expectedContent)
+            EventBodyFields.Role(role = expectedMessage.role),
+            EventBodyFields.Content(content = expectedMessage.content),
         )
 
         assertEquals(expectedBodyFields.size, systemMessageEvent.bodyFields.size)
