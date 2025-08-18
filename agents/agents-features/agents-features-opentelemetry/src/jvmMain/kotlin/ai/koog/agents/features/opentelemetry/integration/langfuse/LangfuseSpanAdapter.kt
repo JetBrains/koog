@@ -11,7 +11,9 @@ import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.InferenceSpan
+import ai.koog.agents.features.opentelemetry.span.NodeExecuteSpan
 import ai.koog.prompt.message.Message
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Internal adapter class for enhancing and modifying spans related to GenAI agent processing.
@@ -24,6 +26,8 @@ import ai.koog.prompt.message.Message
  * are removed from the span's event list after conversion.
  */
 internal class LangfuseSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
+
+    private val stepKey = AtomicInteger(0)
 
     override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
         when (span) {
@@ -51,6 +55,24 @@ internal class LangfuseSpanAdapter(private val verbose: Boolean) : SpanAdapter()
                         }
                     }
                 }
+            }
+
+            is NodeExecuteSpan -> {
+                val step = stepKey.getAndIncrement()
+
+                span.addAttribute(
+                    CustomAttribute(
+                        "langfuse.observation.metadata.langgraph_step",
+                        step
+                    )
+                )
+
+                span.addAttribute(
+                    CustomAttribute(
+                        "langfuse.observation.metadata.langgraph_node",
+                        span.nodeName
+                    )
+                )
             }
         }
     }
