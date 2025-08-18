@@ -5,7 +5,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.tokenizer.Tokenizer
@@ -90,7 +89,7 @@ internal class MockLLMExecutor(
      * @return A flow containing a single string response
      */
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        val response = execute(prompt = prompt, model = model)
+        val response = execute(prompt = prompt, model = model).single()
         return flowOf(response.content)
     }
 

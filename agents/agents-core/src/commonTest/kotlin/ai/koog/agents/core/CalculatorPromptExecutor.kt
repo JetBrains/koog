@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -55,7 +54,7 @@ object CalculatorChatExecutor : PromptExecutor {
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         flow {
             try {
-                val response = execute(prompt, model)
+                val response = execute(prompt, model).single()
                 emit(response.content)
             } catch (t: CancellationException) {
                 throw t
