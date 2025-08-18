@@ -317,7 +317,6 @@ val promptExecutor = simpleOpenAIExecutor(apiToken)
 import ai.koog.agents.example.examplePromptApi08.prompt
 import ai.koog.agents.example.examplePromptApi09.promptExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import kotlinx.coroutines.runBlocking
 
 fun main() {
@@ -332,7 +331,7 @@ fun main() {
 val response = promptExecutor.execute(
     prompt = prompt,
     model = OpenAIModels.Chat.GPT4o
-)
+).single()
 ```
 <!--- KNIT example-prompt-api-10.kt -->
 
@@ -370,7 +369,6 @@ val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient,
 import ai.koog.agents.example.examplePromptApi08.prompt
 import ai.koog.agents.example.examplePromptApi12.multiExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import kotlinx.coroutines.runBlocking
 
 
@@ -385,7 +383,7 @@ fun main() {
 val response = multiExecutor.execute(
     prompt = prompt,
     model = OpenAIModels.Chat.GPT4o
-)
+).single()
 ```
 <!--- KNIT example-prompt-api-13.kt -->
 
