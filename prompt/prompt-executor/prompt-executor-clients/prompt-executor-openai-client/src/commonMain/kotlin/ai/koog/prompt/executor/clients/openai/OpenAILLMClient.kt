@@ -64,7 +64,6 @@ public open class OpenAILLMClient(
     clock: Clock = Clock.System,
 ) : AbstractOpenAILLMClient(apiKey, settings, baseClient, clock), LLMEmbeddingProvider {
 
-
     @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
