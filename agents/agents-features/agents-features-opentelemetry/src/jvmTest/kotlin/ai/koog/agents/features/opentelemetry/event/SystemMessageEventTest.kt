@@ -14,7 +14,7 @@ class SystemMessageEventTest {
     //region Attributes
 
     @Test
-    fun `test system message attributes verbose false`() {
+    fun `test system message attributes`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestSystemMessage(expectedContent)
         val llmProvider = MockLLMProvider()
@@ -22,27 +22,6 @@ class SystemMessageEventTest {
         val systemMessageEvent = SystemMessageEvent(
             provider = llmProvider,
             message = expectedMessage,
-            verbose = false,
-        )
-
-        val expectedAttributes = listOf(
-            CommonAttributes.System(llmProvider)
-        )
-
-        assertEquals(expectedAttributes.size, systemMessageEvent.attributes.size)
-        assertContentEquals(expectedAttributes, systemMessageEvent.attributes)
-    }
-
-    @Test
-    fun `test system message attributes verbose true`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestSystemMessage(expectedContent)
-        val llmProvider = MockLLMProvider()
-
-        val systemMessageEvent = SystemMessageEvent(
-            provider = llmProvider,
-            message = expectedMessage,
-            verbose = true,
         )
 
         val expectedAttributes = listOf(
@@ -58,31 +37,13 @@ class SystemMessageEventTest {
     //region Body Fields
 
     @Test
-    fun `test system message body fields verbose false`() {
+    fun `test system message body fields`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestSystemMessage(expectedContent)
 
         val systemMessageEvent = SystemMessageEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
-            verbose = false,
-        )
-
-        val expectedBodyFields = emptyList<EventBodyField>()
-
-        assertEquals(expectedBodyFields.size, systemMessageEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, systemMessageEvent.bodyFields)
-    }
-
-    @Test
-    fun `test system message body fields verbose true`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestSystemMessage(expectedContent)
-
-        val systemMessageEvent = SystemMessageEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            verbose = true,
         )
 
         val expectedBodyFields = listOf(

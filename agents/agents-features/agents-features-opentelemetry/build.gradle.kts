@@ -16,6 +16,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-core"))
+                api(project(":agents:agents-utils"))
                 api(libs.kotlinx.serialization.json)
             }
         }

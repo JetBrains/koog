@@ -14,7 +14,10 @@ import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-internal class SpanProcessor(private val tracer: Tracer) {
+internal class SpanProcessor(
+    private val tracer: Tracer,
+    private val verbose: Boolean = false
+) {
 
     companion object {
         private val logger = KotlinLogging.logger { }
@@ -40,6 +43,11 @@ internal class SpanProcessor(private val tracer: Tracer) {
     ) {
         logger.debug { "Starting span (name: ${span.name}, id: ${span.spanId})" }
 
+        if (_spans.containsKey(span.spanId)) {
+            logger.warn { "Span with id '${span.spanId}' already started" }
+            return
+        }
+
         val spanKind = span.kind
         val parentContext = span.parent?.context ?: Context.current()
 
@@ -48,7 +56,7 @@ internal class SpanProcessor(private val tracer: Tracer) {
             .setSpanKind(spanKind)
             .setParent(parentContext)
 
-        spanBuilder.setAttributes(span.attributes)
+        spanBuilder.setAttributes(span.attributes, verbose)
 
         val startedSpan = spanBuilder.startSpan()
 
@@ -70,8 +78,8 @@ internal class SpanProcessor(private val tracer: Tracer) {
 
         val spanToFinish = span.span
 
-        spanToFinish.setAttributes(span.attributes)
-        spanToFinish.setEvents(span.events)
+        spanToFinish.setAttributes(span.attributes, verbose)
+        spanToFinish.setEvents(span.events, verbose)
         spanToFinish.setSpanStatus(spanEndStatus)
         spanToFinish.end()
 

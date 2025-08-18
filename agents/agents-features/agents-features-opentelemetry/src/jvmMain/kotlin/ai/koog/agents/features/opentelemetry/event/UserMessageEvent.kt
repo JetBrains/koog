@@ -7,8 +7,7 @@ import ai.koog.prompt.message.Message
 
 internal class UserMessageEvent(
     provider: LLMProvider,
-    private val message: Message.User,
-    override val verbose: Boolean = false
+    private val message: Message.User
 ) : GenAIAgentEvent {
 
     override val name: String = super.name.concatName("user.message")
@@ -23,8 +22,6 @@ internal class UserMessageEvent(
             add(EventBodyFields.Role(role = message.role))
         }
 
-        if (verbose) {
-            add(EventBodyFields.Content(content = message.content))
-        }
+        add(EventBodyFields.Content(content = message.content))
     }
 }

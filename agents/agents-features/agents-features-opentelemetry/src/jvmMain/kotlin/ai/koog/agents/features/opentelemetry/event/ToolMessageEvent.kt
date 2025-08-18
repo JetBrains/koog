@@ -8,7 +8,6 @@ internal class ToolMessageEvent(
     provider: LLMProvider,
     private val toolCallId: String?,
     private val content: String,
-    override val verbose: Boolean = false
 ) : GenAIAgentEvent {
 
     override val name: String = super.name.concatName("tool.message")
@@ -19,9 +18,7 @@ internal class ToolMessageEvent(
 
     override val bodyFields: List<EventBodyField> = buildList {
         // Content
-        if (verbose) {
-            add(EventBodyFields.Content(content = content))
-        }
+        add(EventBodyFields.Content(content = content))
 
         // Id
         toolCallId?.let { id ->

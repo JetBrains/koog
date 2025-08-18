@@ -7,15 +7,11 @@ import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 internal data class MockGenAIAgentEvent(
     override val name: String = "test_event",
     override val attributes: List<Attribute> = listOf(),
-    private val fields: List<EventBodyField> = emptyList(),
-    override val verbose: Boolean = false
+    private val fields: List<EventBodyField> = emptyList()
 ) : GenAIAgentEvent {
 
     override val bodyFields: List<EventBodyField> = buildList {
         fields.forEach { field ->
-            if (!verbose && field.key.contains("content", ignoreCase = true)) {
-                return@forEach
-            }
             add(field)
         }
     }

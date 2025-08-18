@@ -11,7 +11,6 @@ internal class ChoiceEvent(
     private val message: Message.Response,
     private val arguments: JsonObject? = null,
     val index: Int,
-    override val verbose: Boolean = false,
 ) : GenAIAgentEvent {
 
     override val name: String = super.name.concatName("choice")
@@ -29,22 +28,18 @@ internal class ChoiceEvent(
                     add(EventBodyFields.FinishReason(reason))
                 }
 
-                if (verbose) {
-                    add(
-                        EventBodyFields.Message(
-                            role = message.role.takeIf { role -> role != Message.Role.Assistant },
-                            content = message.content
-                        )
+                add(
+                    EventBodyFields.Message(
+                        role = message.role.takeIf { role -> role != Message.Role.Assistant },
+                        content = message.content
                     )
+                )
 
-                    arguments?.let { add(EventBodyFields.Arguments(it)) }
-                }
+                arguments?.let { add(EventBodyFields.Arguments(it)) }
             }
 
             is Message.Tool.Call -> {
-                if (verbose) {
-                    add(EventBodyFields.ToolCalls(tools = listOf(message)))
-                }
+                add(EventBodyFields.ToolCalls(tools = listOf(message)))
             }
         }
     }

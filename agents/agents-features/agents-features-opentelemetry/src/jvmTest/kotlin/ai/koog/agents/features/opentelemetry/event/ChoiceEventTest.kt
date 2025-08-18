@@ -16,7 +16,7 @@ class ChoiceEventTest {
     //region Attributes
 
     @Test
-    fun `test choice attributes verbose false`() {
+    fun `test choice attributes`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent)
         val llmProvider = MockLLMProvider()
@@ -25,28 +25,6 @@ class ChoiceEventTest {
             provider = llmProvider,
             message = expectedMessage,
             index = 0,
-            verbose = false,
-        )
-
-        val expectedAttributes = listOf(
-            CommonAttributes.System(llmProvider)
-        )
-
-        assertEquals(expectedAttributes.size, choiceEvent.attributes.size)
-        assertContentEquals(expectedAttributes, choiceEvent.attributes)
-    }
-
-    @Test
-    fun `test choice attributes verbose true`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
-        val llmProvider = MockLLMProvider()
-
-        val choiceEvent = ChoiceEvent(
-            provider = llmProvider,
-            message = expectedMessage,
-            index = 0,
-            verbose = true,
         )
 
         val expectedAttributes = listOf(
@@ -62,27 +40,7 @@ class ChoiceEventTest {
     //region Body Fields
 
     @Test
-    fun `test assistant message with verbose false`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
-
-        val choiceEvent = ChoiceEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            index = 0,
-            verbose = false,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Index(0)
-        )
-
-        assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, choiceEvent.bodyFields)
-    }
-
-    @Test
-    fun `test assistant message with finish reason verbose false`() {
+    fun `test assistant message with finish reason`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent, "stop")
 
@@ -90,12 +48,12 @@ class ChoiceEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             index = 0,
-            verbose = false,
         )
 
         val expectedBodyFields = listOf(
             EventBodyFields.Index(0),
-            EventBodyFields.FinishReason("stop")
+            EventBodyFields.FinishReason("stop"),
+            EventBodyFields.Message(null, expectedMessage.content)
         )
 
         assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
@@ -103,7 +61,7 @@ class ChoiceEventTest {
     }
 
     @Test
-    fun `test tool call message verbose false`() {
+    fun `test tool call message`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
 
@@ -111,11 +69,11 @@ class ChoiceEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             index = 0,
-            verbose = false,
         )
 
         val expectedBodyFields = listOf(
-            EventBodyFields.Index(0)
+            EventBodyFields.Index(0),
+            EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
         )
 
         assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
@@ -123,7 +81,7 @@ class ChoiceEventTest {
     }
 
     @Test
-    fun `test assistant message verbose true`() {
+    fun `test assistant message`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent)
 
@@ -131,7 +89,6 @@ class ChoiceEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             index = 0,
-            verbose = true,
         )
 
         val expectedBodyFields = listOf(
@@ -146,33 +103,12 @@ class ChoiceEventTest {
         assertContentEquals(expectedBodyFields, choiceEvent.bodyFields)
     }
 
-    @Test
-    fun `test tool call message verbose true`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
-
-        val choiceEvent = ChoiceEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            index = 0,
-            verbose = true,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Index(0),
-            EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
-        )
-
-        assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, choiceEvent.bodyFields)
-    }
-
     //endregion Body Fields
 
     //region Arguments Tests
 
     @Test
-    fun `test assistant message verbose true with arguments`() {
+    fun `test assistant message with arguments`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestAssistantMessage(expectedContent)
         val args = buildJsonObject {
@@ -185,7 +121,6 @@ class ChoiceEventTest {
             message = expectedMessage,
             arguments = args,
             index = 0,
-            verbose = true,
         )
 
         val expectedBodyFields = listOf(
@@ -202,29 +137,7 @@ class ChoiceEventTest {
     }
 
     @Test
-    fun `test assistant message verbose false with arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
-        val args = buildJsonObject { put("x", "y") }
-
-        val choiceEvent = ChoiceEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            arguments = args,
-            index = 0,
-            verbose = false,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Index(0)
-        )
-
-        assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, choiceEvent.bodyFields)
-    }
-
-    @Test
-    fun `test tool call message verbose true ignores arguments`() {
+    fun `test tool call message ignores arguments`() {
         val expectedContent = "Test message"
         val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
         val args = buildJsonObject { put("ignored", true) }
@@ -234,34 +147,11 @@ class ChoiceEventTest {
             message = expectedMessage,
             arguments = args,
             index = 0,
-            verbose = true,
         )
 
         val expectedBodyFields = listOf(
             EventBodyFields.Index(0),
             EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
-        )
-
-        assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, choiceEvent.bodyFields)
-    }
-
-    @Test
-    fun `test tool call message verbose false ignores arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
-        val args = buildJsonObject { put("ignored", true) }
-
-        val choiceEvent = ChoiceEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            arguments = args,
-            index = 0,
-            verbose = false,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Index(0)
         )
 
         assertEquals(expectedBodyFields.size, choiceEvent.bodyFields.size)

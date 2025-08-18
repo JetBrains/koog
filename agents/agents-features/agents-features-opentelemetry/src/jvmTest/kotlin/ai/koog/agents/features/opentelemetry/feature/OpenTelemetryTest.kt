@@ -8,6 +8,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
@@ -18,6 +19,7 @@ import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.utils.HiddenString
 import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -749,15 +751,19 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                            ),
-                            "gen_ai.assistant.message" to mapOf(
-                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
+                            ),
+                            "gen_ai.assistant.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                         )
                     )
@@ -803,13 +809,15 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
+                                "body" to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}"
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0}"
+                                "body" to "{\"index\":0,\"tool_calls\":[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"\",\"type\":\"function\"}]}"
                             ),
                         )
                     )
@@ -1364,15 +1372,6 @@ class OpenTelemetryTest {
                     )
                 }
             }
-        }
-    }
-
-    private fun assertMapsEqual(expected: Map<*, *>, actual: Map<*, *>, message: String = "") {
-        assertEquals(expected.size, actual.size, "$message - Map sizes should be equal")
-
-        expected.forEach { (key, value) ->
-            assertTrue(actual.containsKey(key), "$message - Key '$key' should exist in actual map")
-            assertEquals(value, actual[key], "$message - Value for key '$key' should match")
         }
     }
 

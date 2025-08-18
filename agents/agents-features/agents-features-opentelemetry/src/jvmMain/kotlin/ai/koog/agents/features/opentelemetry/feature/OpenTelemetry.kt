@@ -63,7 +63,7 @@ public class OpenTelemetry {
         ) {
             val interceptContext = InterceptContext(this, OpenTelemetry())
             val tracer = config.tracer
-            val spanProcessor = SpanProcessor(tracer)
+            val spanProcessor = SpanProcessor(tracer = tracer, verbose = config.isVerbose)
             val spanAdapter = config.spanAdapter
 
             // Stop all unfinished spans on a process finish to report them
@@ -277,14 +277,13 @@ public class OpenTelemetry {
                 // Add events to the InferenceSpan after the span is created
                 val eventsFromMessages = eventContext.prompt.messages.mapNotNull { message ->
                     when (message) {
-                        is Message.User -> UserMessageEvent(provider, message, verbose = config.isVerbose)
-                        is Message.System -> SystemMessageEvent(provider, message, verbose = config.isVerbose)
+                        is Message.User -> UserMessageEvent(provider, message)
+                        is Message.System -> SystemMessageEvent(provider, message)
                         is Message.Tool.Result -> {
                             ToolMessageEvent(
                                 provider = provider,
                                 toolCallId = message.id,
-                                content = message.content,
-                                verbose = config.isVerbose
+                                content = message.content
                             )
                         }
                         else -> null
@@ -322,15 +321,15 @@ public class OpenTelemetry {
                 val eventsToAdd = buildList {
                     eventContext.responses.map { message ->
                         when (message) {
-                            is Message.Assistant -> add(AssistantMessageEvent(provider, message, verbose = config.isVerbose))
+                            is Message.Assistant -> add(AssistantMessageEvent(provider, message))
                             is Message.Tool.Call -> add(
-                                ChoiceEvent(provider, message, arguments = message.contentJson, index = 0, verbose = config.isVerbose)
+                                ChoiceEvent(provider, message, arguments = message.contentJson, index = 0)
                             )
                         }
                     }
 
                     eventContext.moderationResponse?.let { response ->
-                        add(ModerationResponseEvent(provider, response, config.isVerbose))
+                        add(ModerationResponseEvent(provider, response))
                     }
                 }
 

@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.attribute
 
+import ai.koog.agents.utils.HiddenString
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.common.AttributesBuilder
@@ -13,8 +14,8 @@ internal fun AttributesBuilder.addAttributes(attributes: Map<AttributeKey<*>, An
     return this
 }
 
-internal fun List<Attribute>.toSdkAttributes(): Attributes {
-    val sdkAttributesMap = this.associate { it.toSdkAttribute() }
+internal fun List<Attribute>.toSdkAttributes(verbose: Boolean): Attributes {
+    val sdkAttributesMap = this.associate { it.toSdkAttribute(verbose) }
 
     return object : Attributes {
 
@@ -37,11 +38,15 @@ internal fun List<Attribute>.toSdkAttributes(): Attributes {
     }
 }
 
-private fun Attribute.toSdkAttribute(): Pair<AttributeKey<*>, Any> {
+private fun Attribute.toSdkAttribute(verbose: Boolean): Pair<AttributeKey<*>, Any> {
     val key = this.key
     val value = this.value
 
     return when (value) {
+        is HiddenString -> {
+            val unwrappedValue = if (verbose) value.value else value.toString()
+            Pair(AttributeKey.stringKey(key), unwrappedValue)
+        }
         is CharSequence,
         is Char -> {
             Pair(AttributeKey.stringKey(key), value)
@@ -55,14 +60,20 @@ private fun Attribute.toSdkAttribute(): Pair<AttributeKey<*>, Any> {
         is Long -> {
             Pair(AttributeKey.longKey(key), value)
         }
+        is Float -> {
+            Pair(AttributeKey.doubleKey(key), value)
+        }
         is Double -> {
             Pair(AttributeKey.doubleKey(key), value)
         }
-        is Float -> {
-            Pair(AttributeKey.doubleKey(key), value.toDouble())
-        }
         is List<*> -> {
-            if (value.all { it is CharSequence || it is Char }) {
+            if (value.all { it is HiddenString }) {
+                val unwrappedValue = value.map {
+                    val hiddenStringValue = it as HiddenString
+                    if (verbose) hiddenStringValue.value else hiddenStringValue.toString()
+                }
+                Pair(AttributeKey.stringArrayKey(key), unwrappedValue)
+            } else if (value.all { it is CharSequence || it is Char }) {
                 Pair(AttributeKey.stringArrayKey(key), value)
             } else if (value.all { it is Boolean }) {
                 Pair(AttributeKey.booleanArrayKey(key), value)

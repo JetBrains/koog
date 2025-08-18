@@ -10,7 +10,6 @@ internal class AssistantMessageEvent(
     provider: LLMProvider,
     private val message: Message.Response,
     private val arguments: JsonObject? = null,
-    override val verbose: Boolean = false
 ) : GenAIAgentEvent {
 
     override val name: String = super.name.concatName("assistant.message")
@@ -26,16 +25,12 @@ internal class AssistantMessageEvent(
 
         when (message) {
             is Message.Assistant -> {
-                if (verbose) {
-                    add(EventBodyFields.Content(content = message.content))
-                    arguments?.let { add(EventBodyFields.Arguments(it)) }
-                }
+                add(EventBodyFields.Content(content = message.content))
+                arguments?.let { add(EventBodyFields.Arguments(it)) }
             }
 
             is Message.Tool.Call -> {
-                if (verbose) {
-                    add(EventBodyFields.ToolCalls(tools = listOf(message)))
-                }
+                add(EventBodyFields.ToolCalls(tools = listOf(message)))
             }
         }
     }

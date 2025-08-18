@@ -1,13 +1,11 @@
 package ai.koog.agents.features.opentelemetry.mock
 
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
-import ai.koog.agents.features.opentelemetry.span.SpanEndStatus
 import io.opentelemetry.api.trace.StatusCode
 
 internal class MockGenAIAgentSpan(
     override val spanId: String,
-    parent: GenAIAgentSpan? = null,
-    private val spanEndStatus: SpanEndStatus? = null,
+    parent: GenAIAgentSpan? = null
 ) : GenAIAgentSpan(parent) {
 
     val isStarted: Boolean

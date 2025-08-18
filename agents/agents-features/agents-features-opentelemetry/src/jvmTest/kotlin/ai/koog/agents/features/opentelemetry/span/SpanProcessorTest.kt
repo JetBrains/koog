@@ -1,9 +1,14 @@
 package ai.koog.agents.features.opentelemetry.span
 
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
+import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
+import ai.koog.agents.features.opentelemetry.mock.MockSpan
 import ai.koog.agents.features.opentelemetry.mock.MockTracer
+import ai.koog.agents.utils.HiddenString
+import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.StatusCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -18,13 +23,13 @@ class SpanProcessorTest {
 
     @Test
     fun `spanProcessor should have zero spans initially`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         assertEquals(0, spanProcessor.spansCount)
     }
 
     @Test
     fun `startSpan should add span to processor`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val spanId = "test-span-id"
         val span = MockGenAIAgentSpan(spanId)
 
@@ -35,7 +40,7 @@ class SpanProcessorTest {
 
     @Test
     fun `getSpan should return span by id when it exists`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val spanId = "test-span-id"
         val span = MockGenAIAgentSpan(spanId)
 
@@ -48,7 +53,7 @@ class SpanProcessorTest {
 
     @Test
     fun `getSpan should return null when no spans are added`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val spanId = "test-span-id"
         assertEquals(0, spanProcessor.spansCount)
 
@@ -60,7 +65,7 @@ class SpanProcessorTest {
 
     @Test
     fun `getSpan should return null when span with given id not found`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
 
         val spanId = "test-span-id"
         val span = MockGenAIAgentSpan(spanId)
@@ -76,7 +81,7 @@ class SpanProcessorTest {
 
     @Test
     fun `getSpanOrThrow should return span when it exists`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val spanId = "test-span-id"
         val span = MockGenAIAgentSpan(spanId)
         assertEquals(0, spanProcessor.spansCount)
@@ -91,7 +96,7 @@ class SpanProcessorTest {
 
     @Test
     fun `getSpanOrThrow should throw when span not found`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val nonExistentSpanId = "non-existent-span"
         assertEquals(0, spanProcessor.spansCount)
 
@@ -104,7 +109,7 @@ class SpanProcessorTest {
 
     @Test
     fun `getSpanOrThrow should throw when span is of wrong type`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val spanId = "test-span-id"
         val span = MockGenAIAgentSpan(spanId)
         assertEquals(0, spanProcessor.spansCount)
@@ -128,7 +133,7 @@ class SpanProcessorTest {
 
     @Test
     fun `endSpan should remove span from processor`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val spanId = "test-span-id"
         val span = MockGenAIAgentSpan(spanId)
         assertEquals(0, spanProcessor.spansCount)
@@ -146,7 +151,7 @@ class SpanProcessorTest {
 
     @Test
     fun `endUnfinishedSpans should end spans that match the filter`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
 
         // Create spans with different IDs
         val span1Id = "span1"
@@ -206,7 +211,7 @@ class SpanProcessorTest {
 
     @Test
     fun `endUnfinishedInvokeAgentSpans should end all spans except agent and agent run spans`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
 
         val agentId = "test-agent"
         val runId = "test-run"
@@ -259,7 +264,7 @@ class SpanProcessorTest {
 
     @Test
     fun `addEventsToSpan should add events to the span`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val spanId = "test-span-id"
         val span = MockGenAIAgentSpan(spanId)
 
@@ -294,7 +299,7 @@ class SpanProcessorTest {
 
     @Test
     fun `addEventsToSpan should throw when span not found`() {
-        val spanProcessor = SpanProcessor(MockTracer())
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = true)
         val nonExistentSpanId = "non-existent-span"
 
         // Create a test event
@@ -311,5 +316,81 @@ class SpanProcessorTest {
         }
 
         assertEquals("Span with id '$nonExistentSpanId' not found", exception.message)
+    }
+
+    @Test
+    fun `test mask HiddenString values in attributes when verbose set to false`() {
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = false)
+
+        val span = MockGenAIAgentSpan("test-span")
+        val mockSpan = MockSpan()
+
+        // Start the span to replace the span instance later with a mocked value
+        spanProcessor.startSpan(span)
+        assertEquals(1, spanProcessor.spansCount)
+
+        // Replace started span with the mock instance
+        span.span = mockSpan
+        val attributes = listOf(
+            MockAttribute(key = "secretKey", value = HiddenString("super-secret")),
+            MockAttribute(key = "arraySecretKey", value = listOf(HiddenString("one"), HiddenString("two"))),
+            MockAttribute("regularKey", "visible")
+        )
+        span.addAttributes(attributes)
+
+        spanProcessor.endSpan(span)
+        assertEquals(0, spanProcessor.spansCount)
+
+        // Verify exact converted values when verbose is set to 'false'
+        val expectedAttributes = mapOf(
+            AttributeKey.stringKey("secretKey") to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+            AttributeKey.stringArrayKey("arraySecretKey") to listOf(HiddenString.HIDDEN_STRING_PLACEHOLDER, HiddenString.HIDDEN_STRING_PLACEHOLDER),
+            AttributeKey.stringKey("regularKey") to "visible"
+        )
+
+        assertEquals(expectedAttributes.size, mockSpan.collectedAttributes.size)
+        assertMapsEqual(expectedAttributes, mockSpan.collectedAttributes)
+    }
+
+    @Test
+    fun `test mask HiddenString values in event attributes and body fields with verbose set to false`() {
+        val spanProcessor = SpanProcessor(MockTracer(), verbose = false)
+
+        val span = MockGenAIAgentSpan("test-span")
+        val mockSpan = MockSpan()
+
+        // Start the span to replace the span instance later with a mocked value
+        spanProcessor.startSpan(span)
+        assertEquals(1, spanProcessor.spansCount)
+
+        // Event with attribute HiddenString and a body field that contains HiddenString
+        // Replace started span with the mock instance
+        span.span = mockSpan
+        val event = MockGenAIAgentEvent(
+            name = "event",
+            attributes = listOf(
+                MockAttribute("secretKey", HiddenString("secretValue"))
+            ),
+            fields = listOf(
+                EventBodyFields.Content("some sensitive content")
+            )
+        )
+        span.addEvent(event)
+
+        spanProcessor.endSpan(span)
+        assertEquals(0, spanProcessor.spansCount)
+
+        // Assert collected event
+        assertEquals(1, mockSpan.collectedEvents.size)
+        val actualEventAttributes = mockSpan.collectedEvents.getValue("event").asMap()
+
+        // Assert attributes for the collected event when the verbose flag is set to 'false'
+        val expectedEventAttributes = mapOf(
+            AttributeKey.stringKey("secretKey") to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+            AttributeKey.stringKey("body") to "{\"content\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}",
+        )
+
+        assertEquals(expectedEventAttributes.size, actualEventAttributes.size)
+        assertMapsEqual(expectedEventAttributes, actualEventAttributes)
     }
 }

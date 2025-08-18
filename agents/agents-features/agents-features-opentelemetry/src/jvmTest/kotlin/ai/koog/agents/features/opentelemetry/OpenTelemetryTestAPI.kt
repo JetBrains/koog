@@ -11,6 +11,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 internal object OpenTelemetryTestAPI {
 
@@ -47,5 +49,14 @@ internal object OpenTelemetryTestAPI {
             clock = clock,
             installFeatures = installFeatures,
         )
+    }
+
+    fun assertMapsEqual(expected: Map<*, *>, actual: Map<*, *>, message: String = "") {
+        assertEquals(expected.size, actual.size, "$message - Map sizes should be equal")
+
+        expected.forEach { (key, value) ->
+            assertTrue(actual.containsKey(key), "$message - Key '$key' should exist in actual map")
+            assertEquals(value, actual[key], "$message - Value for key '$key' should match")
+        }
     }
 }

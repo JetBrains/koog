@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.event
 
+import ai.koog.agents.utils.HiddenString
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -16,13 +17,21 @@ internal abstract class EventBodyField {
 
     abstract val value: Any
 
-    val valueString: String
-        get() = convertValueToString(key, value)
+    fun valueString(verbose: Boolean): String {
+        return convertValueToString(key, value, verbose)
+    }
 
     //region Private Methods
 
-    private fun convertValueToString(key: Any, value: Any): String {
+    private fun convertValueToString(key: Any, value: Any, verbose: Boolean): String {
         return when (value) {
+            is HiddenString -> {
+                if (verbose) {
+                    convertValueToString(key, value.value, true)
+                } else {
+                    convertValueToString(key, value.toString(), false)
+                }
+            }
             is CharSequence, is Char -> {
                 "\"${value}\""
             }
@@ -33,15 +42,15 @@ internal abstract class EventBodyField {
             }
             is List<*> -> {
                 value.filterNotNull().joinToString(separator = ",", prefix = "[", postfix = "]") { item ->
-                    convertValueToString(key, item)
+                    convertValueToString(key, item, verbose)
                 }
             }
 
             is Map<*, *> -> {
                 value.entries
                     .filter { it.key != null && it.value != null }
-                    .joinToString(separator = ",", prefix = "{", postfix = "}") { entry ->
-                        "\"${entry.key}\":${convertValueToString(entry.key!!, entry.value!!)}"
+                    .joinToString(separator = ",", prefix = "{", postfix = "}") { (key, value) ->
+                        "\"$key\":${convertValueToString(key!!, value!!, verbose)}"
                     }
             }
 
