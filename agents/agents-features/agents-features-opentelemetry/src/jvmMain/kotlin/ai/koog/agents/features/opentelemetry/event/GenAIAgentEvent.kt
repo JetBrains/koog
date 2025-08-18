@@ -1,14 +1,22 @@
 package ai.koog.agents.features.opentelemetry.event
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
-import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 
-internal interface GenAIAgentEvent {
+internal abstract class GenAIAgentEvent {
 
-    val name: String
+    open val name: String
         get() = "gen_ai"
 
+    private val _attributes: MutableList<Attribute> = mutableListOf()
+
+    private val _bodyFields: MutableList<EventBodyField> = mutableListOf()
+
+    /**
+     * Provides a list of attributes associated with this event. These attributes are typically
+     * used to provide metadata or additional contextual information.
+     */
     val attributes: List<Attribute>
+        get() = _attributes
 
     /**
      * The body field for the event.
@@ -18,18 +26,23 @@ internal interface GenAIAgentEvent {
      *       Fields are merged with attributes when creating the event.
      */
     val bodyFields: List<EventBodyField>
+        get() = _bodyFields
+
+    fun addAttribute(attribute: Attribute) {
+        _attributes.add(attribute)
+    }
+
+    fun addAttributes(attributes: List<Attribute>) {
+        _attributes.addAll(attributes)
+    }
+
+    fun addBodyField(eventField: EventBodyField) {
+        _bodyFields.add(eventField)
+    }
+
+    fun removeBodyField(eventField: EventBodyField): Boolean {
+        return _bodyFields.remove(eventField)
+    }
 
     fun String.concatName(other: String): String = "$this.$other"
-
-    fun bodyFieldsAsAttribute(verbose: Boolean): Attribute {
-        check(bodyFields.isNotEmpty()) {
-            "Unable to convert Event Body Fields into Attribute because no body fields found"
-        }
-
-        val value = bodyFields.joinToString(separator = ",", prefix = "{", postfix = "}") { bodyField ->
-            "\"${bodyField.key}\":${bodyField.valueString(verbose)}"
-        }
-
-        return CustomAttribute("body", value)
-    }
 }

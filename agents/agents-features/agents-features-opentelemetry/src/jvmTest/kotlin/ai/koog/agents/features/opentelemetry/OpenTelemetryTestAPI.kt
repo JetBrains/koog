@@ -56,7 +56,15 @@ internal object OpenTelemetryTestAPI {
 
         expected.forEach { (key, value) ->
             assertTrue(actual.containsKey(key), "$message - Key '$key' should exist in actual map")
-            assertEquals(value, actual[key], "$message - Value for key '$key' should match")
+
+            val actualValue = actual[key]
+            assertEquals(
+                value,
+                actualValue,
+                "$message - Value for key '$key' should match. " +
+                    "Expected: <$value: ${value?.javaClass?.simpleName}>, " +
+                    "Actual: <$actualValue: ${actualValue?.javaClass?.simpleName}>."
+            )
         }
     }
 }

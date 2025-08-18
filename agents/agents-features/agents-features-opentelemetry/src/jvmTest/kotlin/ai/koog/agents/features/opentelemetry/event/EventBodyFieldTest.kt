@@ -1,12 +1,14 @@
 package ai.koog.agents.features.opentelemetry.event
 
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.extension.bodyFieldsToBodyAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockEventBodyField
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.UnsupportedType
 import ai.koog.agents.utils.HiddenString
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class EventBodyFieldTest {
 
@@ -183,41 +185,54 @@ class EventBodyFieldTest {
     }
 
     @Test
-    fun `test toAttribute throws exception when bodyFields is empty`() {
-        val field = MockGenAIAgentEvent(fields = emptyList())
+    fun `test toAttribute do nothing when bodyFields is empty`() {
+        val event = MockGenAIAgentEvent(fields = emptyList())
+        assertEquals(0, event.attributes.size)
+        assertEquals(0, event.bodyFields.size)
 
-        val exception = assertFailsWith<IllegalStateException> {
-            field.bodyFieldsAsAttribute(verbose = true)
-        }
+        event.bodyFieldsToBodyAttribute(verbose = true)
 
-        assertEquals(
-            "Unable to convert Event Body Fields into Attribute because no body fields found",
-            exception.message
-        )
+        assertEquals(0, event.attributes.size)
+        assertEquals(0, event.bodyFields.size)
     }
 
     @Test
     fun `test toAttribute filter body fields with string value when verbose is false`() {
         val bodyField = MockEventBodyField("testKey", "testValue")
         val bodyFieldContent = MockEventBodyField("testContent", "testContentValue")
-        val field = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent))
+        val event = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent))
 
-        val actualAttribute = field.bodyFieldsAsAttribute(verbose = false)
+        event.bodyFieldsToBodyAttribute(verbose = false)
 
-        assertEquals("body", actualAttribute.key)
-        assertEquals("{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}", actualAttribute.value)
+        val actualAttributes = event.attributes
+
+        val expectedAttributes = listOf(
+            CustomAttribute("body", "{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}")
+        )
+
+        assertEquals(expectedAttributes.size, actualAttributes.size)
+        assertContentEquals(expectedAttributes, actualAttributes)
     }
 
     @Test
     fun `test toAttribute does not filter body fields when verbose is true`() {
         val bodyField = MockEventBodyField("testKey", "testValue")
         val bodyFieldContent = MockEventBodyField("testContent", "testContentValue")
-        val field = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent))
+        val event = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent))
 
-        val actualAttribute = field.bodyFieldsAsAttribute(verbose = true)
+        event.bodyFieldsToBodyAttribute(verbose = true)
 
-        assertEquals("body", actualAttribute.key)
-        assertEquals("{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}", actualAttribute.value)
+        val actualAttributes = event.attributes
+
+        val expectedAttributes = listOf(
+            CustomAttribute(
+                key = "body",
+                value = "{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}",
+            )
+        )
+
+        assertEquals(expectedAttributes.size, actualAttributes.size)
+        assertContentEquals(expectedAttributes, actualAttributes)
     }
 
     @Test
@@ -252,8 +267,10 @@ class EventBodyFieldTest {
         expectedValue: Any
     ) {
         val bodyField = MockEventBodyField(key, value)
-        val field = MockGenAIAgentEvent(fields = listOf(bodyField))
-        val actualAttribute = field.bodyFieldsAsAttribute(verbose = verbose)
+        val event = MockGenAIAgentEvent(fields = listOf(bodyField))
+
+        event.bodyFieldsToBodyAttribute(verbose = verbose)
+        val actualAttribute = event.attributes.single()
 
         assertEquals(expectedKey, actualAttribute.key)
         assertEquals(expectedValue, actualAttribute.value)

@@ -10,7 +10,8 @@ import kotlinx.serialization.Serializable
 
 internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>() {
 
-    const val RESULT: String = "rainy, 57°F"
+    const val DEFAULT_PARIS_RESULT: String = "rainy, 57°F"
+    const val DEFAULT_LONDON_RESULT: String = "cloudy, 62°F"
 
     @Serializable
     data class Args(val location: String) : ToolArgs
@@ -29,7 +30,12 @@ internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>() {
         )
     )
 
-    override suspend fun doExecute(args: Args): String {
-        return RESULT
-    }
+    override suspend fun doExecute(args: Args): String =
+        if (args.location.contains("Paris")) {
+            DEFAULT_PARIS_RESULT
+        } else if (args.location.contains("London")) {
+            DEFAULT_LONDON_RESULT
+        } else {
+            DEFAULT_PARIS_RESULT
+        }
 }

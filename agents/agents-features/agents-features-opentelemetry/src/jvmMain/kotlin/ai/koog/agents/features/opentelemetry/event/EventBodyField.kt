@@ -18,18 +18,18 @@ internal abstract class EventBodyField {
     abstract val value: Any
 
     fun valueString(verbose: Boolean): String {
-        return convertValueToString(key, value, verbose)
+        return convertValueToString(value, verbose)
     }
 
     //region Private Methods
 
-    private fun convertValueToString(key: Any, value: Any, verbose: Boolean): String {
+    private fun convertValueToString(value: Any, verbose: Boolean): String {
         return when (value) {
             is HiddenString -> {
                 if (verbose) {
-                    convertValueToString(key, value.value, true)
+                    convertValueToString(value.value, true)
                 } else {
-                    convertValueToString(key, value.toString(), false)
+                    convertValueToString(value.toString(), false)
                 }
             }
             is CharSequence, is Char -> {
@@ -42,7 +42,7 @@ internal abstract class EventBodyField {
             }
             is List<*> -> {
                 value.filterNotNull().joinToString(separator = ",", prefix = "[", postfix = "]") { item ->
-                    convertValueToString(key, item, verbose)
+                    convertValueToString(item, verbose)
                 }
             }
 
@@ -50,7 +50,7 @@ internal abstract class EventBodyField {
                 value.entries
                     .filter { it.key != null && it.value != null }
                     .joinToString(separator = ",", prefix = "{", postfix = "}") { (key, value) ->
-                        "\"$key\":${convertValueToString(key!!, value!!, verbose)}"
+                        "\"$key\":${convertValueToString(value!!, verbose)}"
                     }
             }
 

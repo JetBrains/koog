@@ -103,19 +103,13 @@ class GenAIAgentSpanTest {
         span.span = mockSpan
 
         val events = listOf(
-            MockGenAIAgentEvent(
-                name = "event1",
-                attributes = listOf(
-                    MockAttribute("key1", "value1"),
-                    MockAttribute("key2", 42)
-                )
-            ),
-            MockGenAIAgentEvent(
-                name = "event2",
-                attributes = listOf(
-                    MockAttribute("key3", true)
-                )
-            )
+            MockGenAIAgentEvent(name = "event1").apply {
+                addAttribute(MockAttribute("key1", "value1"))
+                addAttribute(MockAttribute("key2", 42))
+            },
+            MockGenAIAgentEvent(name = "event2").apply {
+                addAttribute(MockAttribute("key3", true))
+            },
         )
 
         events.forEach { event -> span.addEvent(event) }
@@ -132,10 +126,9 @@ class GenAIAgentSpanTest {
         val mockSpan = MockSpan()
         span.span = mockSpan
 
-        val event = MockGenAIAgentEvent(
-            name = "duplicate-event",
-            attributes = listOf(MockAttribute("key", "value"))
-        )
+        val event = MockGenAIAgentEvent(name = "duplicate-event").apply {
+            addAttribute(MockAttribute("key", "value"))
+        }
 
         // Add the same event twice
         span.addEvent(event)
@@ -152,11 +145,10 @@ class GenAIAgentSpanTest {
         val mockSpan = MockSpan()
         span.span = mockSpan
 
-        val event = MockGenAIAgentEvent(
-            name = "event-with-body-fields",
-            attributes = listOf(MockAttribute("key", "value")),
-            fields = listOf(EventBodyFields.Content("test content"))
-        )
+        val event = MockGenAIAgentEvent(name = "event-with-body-fields").apply {
+            addAttribute(MockAttribute("key", "value"))
+            addBodyField(EventBodyFields.Content("test content"))
+        }
 
         span.addEvent(event)
 
@@ -190,8 +182,8 @@ class GenAIAgentSpanTest {
         span.span = mockSpan
 
         val events = listOf(
-            MockGenAIAgentEvent(name = "event1", attributes = listOf(MockAttribute("stringKey", "stringValue"))),
-            MockGenAIAgentEvent(name = "event2", attributes = listOf(MockAttribute("numberKey", 2)))
+            MockGenAIAgentEvent(name = "event1").apply { addAttribute(MockAttribute("stringKey", "stringValue")) },
+            MockGenAIAgentEvent(name = "event2").apply { addAttribute(MockAttribute("numberKey", 2)) },
         )
 
         span.addEvents(events)

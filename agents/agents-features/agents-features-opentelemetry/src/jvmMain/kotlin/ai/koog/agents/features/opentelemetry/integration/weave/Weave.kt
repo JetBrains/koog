@@ -11,12 +11,19 @@ import kotlin.time.Duration.Companion.seconds
 /**
  * Configure an OpenTelemetry span exporter that sends data to [W&B Weave](https://wandb.ai/site/weave/).
  *
- * @param weaveOtelBaseUrl the URL of the Weave OpenTelemetry endpoint. If not set is retrieved from `WEAVE_URL` environment variable. Defaults to [https://trace.wandb.ai](https://trace.wandb.ai).
- * @param weaveEntity can be found by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home) and checking the *Teams* field in the left sidebar.
- * If not set is retrieved from `WEAVE_ENTITY` environment variable.
- * @param weaveProjectName name of your Weave project. If not set is retrieved from `WEAVE_PROJECT_NAME` environment variable.
- * @param weaveApiKey can be created on the [https://wandb.ai/authorize](https://wandb.ai/authorize) page. If not set is retrieved from `WEAVE_API_KEY` environment variable.
- * @param timeout OpenTelemetry SpanExporter timeout. See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+ * @param weaveOtelBaseUrl the URL of the Weave OpenTelemetry endpoint.
+ *        If not set is retrieved from `WEAVE_URL` environment variable.
+ *        Defaults to [https://trace.wandb.ai](https://trace.wandb.ai).
+ * @param weaveEntity can be found by visiting your W&B dashboard at [https://wandb.ai/home](https://wandb.ai/home) and
+ *        checking the *Teams* field in the left sidebar.
+ *        If not set is retrieved from `WEAVE_ENTITY` environment variable.
+ * @param weaveProjectName name of your Weave project.
+ *        If not set is retrieved from `WEAVE_PROJECT_NAME` environment variable.
+ * @param weaveApiKey can be created on the [https://wandb.ai/authorize](https://wandb.ai/authorize) page.
+ *        If not set is retrieved from `WEAVE_API_KEY` environment variable.
+ * @param timeout OpenTelemetry SpanExporter timeout.
+ *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+ * @param verbose flag to enable verbose logging for the Weave span adapter. Defaults to 'false'.
  *
  * @see <a href="https://weave-docs.wandb.ai/guides/tracking/otel/">Weave OpenTelemetry Docs</a>
  */
@@ -26,6 +33,7 @@ public fun OpenTelemetryConfig.addWeaveExporter(
     weaveProjectName: String? = null,
     weaveApiKey: String? = null,
     timeout: Duration = 10.seconds,
+    verbose: Boolean = false,
 ) {
     val url = weaveOtelBaseUrl ?: System.getenv()["WEAVE_URL"] ?: "https://trace.wandb.ai"
 
@@ -46,7 +54,7 @@ public fun OpenTelemetryConfig.addWeaveExporter(
             .build()
     )
 
-    addSpanAdapter(WeaveSpanAdapter)
+    addSpanAdapter(WeaveSpanAdapter(verbose))
 }
 
 private val logger = KotlinLogging.logger { }

@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.event
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
@@ -9,24 +8,19 @@ internal class ToolMessageEvent(
     provider: LLMProvider,
     private val toolCallId: String?,
     private val content: String,
-) : GenAIAgentEvent {
+) : GenAIAgentEvent() {
 
-    override val name: String = super.name.concatName("tool.message")
+    init {
+        // Attributes
+        addAttribute(CommonAttributes.System(provider))
 
-    override val attributes: List<Attribute> = buildList {
-        add(CommonAttributes.System(provider))
-    }
-
-    override val bodyFields: List<EventBodyField> = buildList {
-        // Role (conditional).
-        add(EventBodyFields.Role(role = Message.Role.Tool))
-
-        // Content
-        add(EventBodyFields.Content(content = content))
-
-        // Id
+        // Body Fields
+        addBodyField(EventBodyFields.Role(role = Message.Role.Tool))
+        addBodyField(EventBodyFields.Content(content = content))
         toolCallId?.let { id ->
-            add(EventBodyFields.Id(id = id))
+            addBodyField(EventBodyFields.Id(id = id))
         }
     }
+
+    override val name: String = super.name.concatName("tool.message")
 }

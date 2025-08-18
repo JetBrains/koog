@@ -73,6 +73,7 @@ class ChoiceEventTest {
 
         val expectedBodyFields = listOf(
             EventBodyFields.Index(0),
+            EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
         )
 
@@ -148,6 +149,7 @@ class ChoiceEventTest {
 
         val expectedBodyFields = listOf(
             EventBodyFields.Index(0),
+            EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
         )
 
