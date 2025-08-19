@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.llms.all
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.azure.AzureOpenAIServiceVersion
@@ -89,3 +90,8 @@ public fun simpleGoogleAIExecutor(
 public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434"
 ): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
+
+
+public fun simpleMistralAIExecutor(
+    apiKey: String
+): SingleLLMPromptExecutor = SingleLLMPromptExecutor(MistralAILLMClient(apiKey))

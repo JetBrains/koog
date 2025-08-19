@@ -45,6 +45,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthrop
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base")

@@ -16,6 +16,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))

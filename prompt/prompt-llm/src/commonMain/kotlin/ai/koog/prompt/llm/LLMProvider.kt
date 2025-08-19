@@ -123,4 +123,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
      */
     @Serializable
     public data object DeepSeek : LLMProvider("deepseek", "DeepSeek")
+
+    @Serializable
+    public data object MistralAI : LLMProvider("mistralai", "MistralAI")
 }
