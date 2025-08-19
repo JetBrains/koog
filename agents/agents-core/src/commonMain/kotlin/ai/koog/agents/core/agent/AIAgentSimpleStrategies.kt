@@ -26,7 +26,7 @@ import ai.koog.agents.core.dsl.extension.onToolCall
  * 5. Repeat until LLM indicates no further tool calls are needed or the agent finishes.
  * @param runMode The mode in which the single-run strategy should operate. Defaults to SingleRunMode.SINGLE.
  *                - SingleRunMode.SINGLE: Executes without allowing multiple simultaneous tool calls.
- *                - SingleRunMode.SEQUENTIAL: Executes simultaneous tool calls sequentially.
+ *                - SingleRunMode.SINGLE_RUN_SEQUENTIAL: Executes simultaneous tool calls sequentially.
  *                - SingleRunMode.PARALLEL: Executes multiple tool calls in parallel.
  * @return An instance of AIAgentStrategy configured according to the specified single-run mode.
  */
