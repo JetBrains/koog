@@ -65,6 +65,7 @@ theme:
   logo: img/favicon.ico
   features:
     - content.code.copy
+    - content.action.edit
     - navigation.expand
     - navigation.tabs
     - navigation.tabs.sticky
@@ -93,6 +94,7 @@ extra_css:
 
 repo_url: https://github.com/JetBrains/koog
 repo_name: "Koog on GitHub"
+edit_uri: edit/develop/docs/docs/
 copyright: Copyright © 2000-2025 JetBrains s.r.o.
 
 extra:
